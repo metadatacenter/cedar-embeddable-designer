@@ -1,15 +1,7 @@
-// SHIM: Lightweight JSON → YAML converter for the CEDAR model subset.
-// Handles: strings, numbers, booleans, null, arrays, plain objects.
-// No dependency on js-yaml or similar libraries.
-// Replace with a proper YAML library or the cedar-ts serialize.toYaml() call
-// when migrating away from this shim.
+// SHIM: JSON → YAML converter for the CEDAR Model format.
+// Formats CEDAR Template Model objects according to the CEDAR Structural Specification:
+// https://metadatacenter.github.io/cedar-structural-spec/grammar.html
 
-/**
- * Converts any JSON-serializable value to a YAML string.
- *
- * SHIM: Replace with serialize.toYaml(cedarTpl) from @metadatacenter/cedar-model
- * once that API is available.
- */
 export function toCedarYaml(value: unknown, indent = 0): string {
   const pad = '  '.repeat(indent);
 
@@ -26,13 +18,29 @@ export function toCedarYaml(value: unknown, indent = 0): string {
   }
 
   if (typeof value === 'string') {
-    return yamlString(value);
+    return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
   }
 
   if (Array.isArray(value)) {
     if (value.length === 0) return '[]';
     return value
-      .map((item) => `${pad}- ${toCedarYaml(item, indent + 1).trimStart()}`)
+      .map((item) => {
+        if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
+          const entries = Object.entries(item as Record<string, unknown>);
+          if (entries.length === 0) return `${pad}- {}`;
+          const [firstKey, firstVal] = entries[0];
+          const firstLine = `${pad}- ${firstKey}: ${toCedarYaml(firstVal, indent + 1)}`;
+          const restLines = entries.slice(1).map(([k, v]) => {
+            const keyPad = '  '.repeat(indent + 1);
+            if (typeof v === 'object' && v !== null) {
+              return `${keyPad}${k}:\n${toCedarYaml(v, indent + 2)}`;
+            }
+            return `${keyPad}${k}: ${toCedarYaml(v, indent + 1)}`;
+          });
+          return [firstLine, ...restLines].join('\n');
+        }
+        return `${pad}- ${toCedarYaml(item, indent + 1)}`;
+      })
       .join('\n');
   }
 
@@ -41,57 +49,19 @@ export function toCedarYaml(value: unknown, indent = 0): string {
     if (entries.length === 0) return '{}';
     return entries
       .map(([k, v]) => {
-        const key = yamlKey(k);
-        if (v === null || v === undefined) return `${pad}${key}: null`;
-        if (typeof v === 'object' && !Array.isArray(v) && Object.keys(v as object).length === 0) {
-          return `${pad}${key}: {}`;
+        if (v === null || v === undefined) return `${pad}${k}: null`;
+        if (typeof v === 'object' && !Array.isArray(v)) {
+          if (Object.keys(v as object).length === 0) return `${pad}${k}: {}`;
+          return `${pad}${k}:\n${toCedarYaml(v, indent + 1)}`;
         }
-        if (Array.isArray(v) && v.length === 0) {
-          return `${pad}${key}: []`;
+        if (Array.isArray(v)) {
+          if (v.length === 0) return `${pad}${k}: []`;
+          return `${pad}${k}:\n${toCedarYaml(v, indent + 1)}`;
         }
-        if (typeof v === 'object') {
-          return `${pad}${key}:\n${toCedarYaml(v, indent + 1)}`;
-        }
-        return `${pad}${key}: ${toCedarYaml(v, indent + 1)}`;
+        return `${pad}${k}: ${toCedarYaml(v, indent + 1)}`;
       })
       .join('\n');
   }
 
   return String(value);
-}
-
-/** Wraps a YAML key in quotes if it contains special characters */
-function yamlKey(key: string): string {
-  // Quote keys that contain YAML-special chars or start with special chars
-  if (/[:#\[\]{},&*?|<>=!%@`]/.test(key) || /^\s|\s$/.test(key) || key === '') {
-    return `"${key.replace(/"/g, '\\"')}"`;
-  }
-  return key;
-}
-
-/** Serializes a string value for YAML — quotes if multiline or contains special chars */
-function yamlString(s: string): string {
-  if (s === '') return "''";
-
-  // Multiline: use literal block scalar
-  if (s.includes('\n')) {
-    const lines = s.split('\n').map((l) => `  ${l}`).join('\n');
-    return `|\n${lines}`;
-  }
-
-  // Quote strings that look like YAML scalars or contain special characters
-  const needsQuotes =
-    /^[:\-#\[\]{},!&*?|<>=@`%]/.test(s) ||
-    /^(true|false|null|yes|no|on|off)$/i.test(s) ||
-    /^\d/.test(s) ||
-    s.includes(': ') ||
-    s.includes(' #') ||
-    s.startsWith("'") ||
-    s.startsWith('"');
-
-  if (needsQuotes) {
-    return `"${s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
-  }
-
-  return s;
 }
