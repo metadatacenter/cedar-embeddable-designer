@@ -124,10 +124,10 @@
       <button
         *ngIf="field.options.length > 1"
         (click)="service.deleteOption(field.id, optIdx)"
-        class="text-gray-400 hover:text-red-600 transition-colors cursor-pointer border-none bg-transparent"
+        class="text-gray-400 hover:text-red-600 transition-colors cursor-pointer border-none bg-transparent flex items-center justify-center p-1"
         title="Delete option"
       >
-        <span class="text-sm font-bold">×</span>
+        <app-icon key="trash" className="w-3.5 h-3.5 text-gray-400 hover:text-red-600"></app-icon>
       </button>
     </div>
     <!-- Add Option Button -->
@@ -210,7 +210,7 @@
       class="text-gray-400 hover:text-red-600 p-1 transition-colors border-none bg-transparent cursor-pointer ml-2"
       title="Delete field"
     >
-      <app-icon key="settings" className="w-4 h-4 text-gray-400 hover:text-red-600 rotate-45"></app-icon>
+      <app-icon key="trash" className="w-4 h-4 text-gray-400 hover:text-red-600"></app-icon>
     </button>
   </div>
 </div>
