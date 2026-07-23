@@ -92,9 +92,10 @@ export class TemplateService {
       id: Date.now(),
       type: customField.baseType,
       name: customField.name,
+      helpText: customField.description || '',
+      defaultValue: customField.placeholder || '',
       status: 'optional',
       options: customField.baseType === 'multipleChoice' || customField.baseType === 'checkboxes' ? ['Option 1'] : [],
-      defaultValue: '',
       allowMultiple: false,
       customFieldId: customField.id,
       libraryId: customField.libraryId
@@ -145,12 +146,40 @@ export class TemplateService {
       ...f,
       type: customField.baseType,
       name: customField.name,
+      helpText: customField.description || f.helpText,
+      defaultValue: customField.placeholder || f.defaultValue,
       options: customField.baseType === 'multipleChoice' || customField.baseType === 'checkboxes' ? (f.options.length > 0 ? f.options : ['Option 1']) : [],
-      defaultValue: '',
       allowMultiple: false,
       customFieldId: customField.id,
       libraryId: customField.libraryId
     } : f));
+  }
+
+  updateCustomField(updatedCustomField: CustomField) {
+    // 1. Update customFields signal
+    this.customFields.update(prev =>
+      prev.map(cf => cf.id === updatedCustomField.id ? updatedCustomField : cf)
+    );
+
+    // 2. Sync changes automatically to all fields in the template created from this custom field
+    this.fields.update(prev =>
+      prev.map(f => {
+        if (f.customFieldId === updatedCustomField.id) {
+          return {
+            ...f,
+            name: updatedCustomField.name,
+            type: updatedCustomField.baseType,
+            helpText: updatedCustomField.description || f.helpText,
+            defaultValue: updatedCustomField.placeholder || f.defaultValue
+          };
+        }
+        return f;
+      })
+    );
+  }
+
+  deleteCustomField(id: number) {
+    this.customFields.update(prev => prev.filter(cf => cf.id !== id));
   }
 
   updateFieldStatus(id: number, status: string) {

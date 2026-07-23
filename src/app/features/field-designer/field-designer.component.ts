@@ -18,6 +18,7 @@ export class FieldDesignerComponent {
   readonly activeTab = signal<'custom' | 'libraries'>('libraries');
   readonly showCreateForm = signal(false);
   readonly showCreateLibrary = signal(false);
+  readonly editingCustomFieldId = signal<number | null>(null);
 
   // Form state for custom fields
   fieldName = '';
@@ -56,8 +57,20 @@ export class FieldDesignerComponent {
 
   openCreateForm() {
     if (this.service.libraries().length > 0) {
+      this.resetForm();
       this.showCreateForm.set(true);
     }
+  }
+
+  editCustomField(cf: CustomField) {
+    this.editingCustomFieldId.set(cf.id);
+    this.fieldName = cf.name;
+    this.baseType = cf.baseType;
+    this.description = cf.description || '';
+    this.placeholder = cf.placeholder || '';
+    this.validationRules = [...cf.validationRules];
+    this.selectedLibraryId = cf.libraryId;
+    this.showCreateForm.set(true);
   }
 
   addValidationRule() {
@@ -77,18 +90,33 @@ export class FieldDesignerComponent {
   handleCreateField() {
     if (!this.fieldName.trim()) return;
     
-    const newField: CustomField = {
-      id: Date.now(),
-      name: this.fieldName,
-      icon: 'text',
-      baseType: this.baseType,
-      libraryId: Number(this.selectedLibraryId),
-      description: this.description,
-      placeholder: this.placeholder,
-      validationRules: this.validationRules
-    };
+    const editingId = this.editingCustomFieldId();
+    if (editingId !== null) {
+      const updatedField: CustomField = {
+        id: editingId,
+        name: this.fieldName,
+        icon: 'text',
+        baseType: this.baseType,
+        libraryId: Number(this.selectedLibraryId),
+        description: this.description,
+        placeholder: this.placeholder,
+        validationRules: this.validationRules
+      };
+      this.service.updateCustomField(updatedField);
+    } else {
+      const newField: CustomField = {
+        id: Date.now(),
+        name: this.fieldName,
+        icon: 'text',
+        baseType: this.baseType,
+        libraryId: Number(this.selectedLibraryId),
+        description: this.description,
+        placeholder: this.placeholder,
+        validationRules: this.validationRules
+      };
+      this.service.customFields.update(prev => [...prev, newField]);
+    }
 
-    this.service.customFields.update(prev => [...prev, newField]);
     this.resetForm();
   }
 
@@ -99,6 +127,7 @@ export class FieldDesignerComponent {
     this.placeholder = '';
     this.validationRules = [];
     this.showCreateForm.set(false);
+    this.editingCustomFieldId.set(null);
     this.selectedLibraryId = 0;
   }
 
