@@ -262,4 +262,37 @@ export class TemplateService {
   getActivePreset(): 'basic' | 'semantic' | 'modular' | null {
     return this.preferencesService.getActivePreset();
   }
+
+  // Programmatic Web Component Methods
+  setBioPortalApiKey(key: string) {
+    if (key) {
+      this.preferencesService.bioportalApiKey.set(key);
+    }
+  }
+
+  loadTemplate(templateData: any) {
+    if (!templateData) return;
+    if (typeof templateData === 'string') {
+      try {
+        templateData = JSON.parse(templateData);
+      } catch {
+        return;
+      }
+    }
+    if (templateData['schema:name']) this.templateName.set(templateData['schema:name']);
+    else if (templateData.name) this.templateName.set(templateData.name);
+
+    if (templateData['schema:description']) this.templateDesc.set(templateData['schema:description']);
+    else if (templateData.description) this.templateDesc.set(templateData.description);
+
+    if (templateData['schema:identifier']) this.templateIdentifier.set(templateData['schema:identifier']);
+    else if (templateData.identifier) this.templateIdentifier.set(templateData.identifier);
+
+    if (templateData['pav:version']) this.templateVersion.set(templateData['pav:version']);
+    else if (templateData.version) this.templateVersion.set(templateData.version);
+
+    if (Array.isArray(templateData.fields)) {
+      this.fields.set(templateData.fields);
+    }
+  }
 }
