@@ -157,15 +157,23 @@
 }
 
 .template-header-card__inputs {
-  @apply flex-1;
+  @apply flex-1 flex flex-col gap-1;
 }
 
-.template-title-input {
-  @apply text-lg font-medium text-gray-900 border-none outline-none w-full bg-transparent mb-1 pb-1 border-b-2 border-transparent focus:border-teal-600 transition-colors;
+.template-header-row {
+  @apply flex items-end gap-4 w-full;
 }
 
-.template-desc-input {
-  @apply text-sm text-gray-600 border-none outline-none w-full bg-transparent;
+.template-field-group {
+  @apply flex flex-col;
+}
+
+.template-field-label {
+  @apply text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1;
+}
+
+.template-input {
+  @apply bg-transparent border-b-2 border-transparent outline-none pb-0.5 transition-colors w-full focus:border-teal-600;
 }
 
 /* ─── Fields Drop List ────────────────────────────────────────────────────── */

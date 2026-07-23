@@ -4,22 +4,23 @@ import { TemplateService } from '../../core/services/template.service';
 import { toCedarJson, toCedarYaml } from '../../core/cedar-shim';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 
-export type ExportFormat = 'json' | 'yaml';
-
 @Component({
-  selector: 'app-cedar-export-panel',
+  selector: 'app-cedar-export-accordions',
   standalone: true,
   imports: [CommonModule, IconComponent],
-  templateUrl: './cedar-export-panel.component.html',
-  styleUrls: ['./cedar-export-panel.component.scss']
+  templateUrl: './cedar-export-accordions.component.html',
+  styleUrls: ['./cedar-export-accordions.component.scss']
 })
-export class CedarExportPanelComponent {
+export class CedarExportAccordionsComponent {
   readonly service = inject(TemplateService);
 
-  readonly activeFormat = signal<ExportFormat>('json');
-  readonly copied = signal(false);
+  readonly jsonOpen = signal(false);
+  readonly yamlOpen = signal(false);
 
-  /** Reactive CEDAR JSON-LD object — recomputes whenever template state changes */
+  readonly jsonCopied = signal(false);
+  readonly yamlCopied = signal(false);
+
+  /** Reactive CEDAR JSON-LD object */
   readonly cedarJson = computed(() =>
     toCedarJson(
       this.service.templateName(),
@@ -31,55 +32,55 @@ export class CedarExportPanelComponent {
   );
 
   /** Formatted JSON string */
-  readonly cedarJsonString = computed(() =>
+  readonly jsonString = computed(() =>
     JSON.stringify(this.cedarJson(), null, 2)
   );
 
-  /** YAML string derived from JSON object */
-  readonly cedarYamlString = computed(() =>
+  /** Formatted YAML string */
+  readonly yamlString = computed(() =>
     toCedarYaml(this.cedarJson())
   );
 
-  /** Currently displayed code */
-  readonly activeCode = computed(() =>
-    this.activeFormat() === 'json'
-      ? this.cedarJsonString()
-      : this.cedarYamlString()
-  );
+  readonly jsonLineCount = computed(() => this.jsonString().split('\n').length);
+  readonly yamlLineCount = computed(() => this.yamlString().split('\n').length);
 
-  setFormat(format: ExportFormat): void {
-    this.activeFormat.set(format);
+  readonly highlightedJson = computed(() => highlightJson(this.jsonString()));
+  readonly highlightedYaml = computed(() => highlightYaml(this.yamlString()));
+
+  toggleJson(): void {
+    this.jsonOpen.set(!this.jsonOpen());
   }
 
-  async copyToClipboard(): Promise<void> {
+  toggleYaml(): void {
+    this.yamlOpen.set(!this.yamlOpen());
+  }
+
+  async copyJson(event?: MouseEvent): Promise<void> {
+    if (event) event.stopPropagation();
+    await this.copyText(this.jsonString());
+    this.jsonCopied.set(true);
+    setTimeout(() => this.jsonCopied.set(false), 2000);
+  }
+
+  async copyYaml(event?: MouseEvent): Promise<void> {
+    if (event) event.stopPropagation();
+    await this.copyText(this.yamlString());
+    this.yamlCopied.set(true);
+    setTimeout(() => this.yamlCopied.set(false), 2000);
+  }
+
+  private async copyText(text: string): Promise<void> {
     try {
-      await navigator.clipboard.writeText(this.activeCode());
-      this.copied.set(true);
-      setTimeout(() => this.copied.set(false), 2000);
+      await navigator.clipboard.writeText(text);
     } catch {
-      // Fallback for browsers without clipboard API
       const el = document.createElement('textarea');
-      el.value = this.activeCode();
+      el.value = text;
       document.body.appendChild(el);
       el.select();
       document.execCommand('copy');
       document.body.removeChild(el);
-      this.copied.set(true);
-      setTimeout(() => this.copied.set(false), 2000);
     }
   }
-
-  /** Line count for display */
-  readonly lineCount = computed(() =>
-    this.activeCode().split('\n').length
-  );
-
-  /** Syntax-highlighted HTML for code display */
-  readonly highlightedCode = computed(() => {
-    const code = this.activeCode();
-    const format = this.activeFormat();
-    return format === 'json' ? highlightJson(code) : highlightYaml(code);
-  });
 }
 
 // ─── Syntax Highlighters ─────────────────────────────────────────────────────
@@ -112,16 +113,13 @@ function highlightYaml(code: string): string {
     .replace(/>/g, '&gt;')
     .split('\n')
     .map((line) => {
-      // Comment
       if (/^\s*#/.test(line)) return `<span class="hl-comment">${line}</span>`;
-      // Key: value
       const keyMatch = line.match(/^(\s*)([\w\-@:'"]+)(\s*:)(.*)/);
       if (keyMatch) {
         const [, indent, key, colon, rest] = keyMatch;
         const highlightedRest = highlightYamlValue(rest);
         return `${indent}<span class="hl-key">${key}</span><span class="hl-punct">${colon}</span>${highlightedRest}`;
       }
-      // List item
       const listMatch = line.match(/^(\s*-\s*)(.*)/);
       if (listMatch) {
         const [, bullet, rest] = listMatch;

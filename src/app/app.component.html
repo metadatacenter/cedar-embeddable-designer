@@ -149,20 +149,53 @@
                 <app-icon key="paragraph" className="w-6 h-6" [style.color]="service.COLORS.primary"></app-icon>
               </div>
               <div class="template-header-card__inputs">
-                <input
-                  type="text"
-                  [ngModel]="service.templateName()"
-                  (ngModelChange)="service.templateName.set($event)"
-                  class="template-title-input"
-                  placeholder="Template title"
-                />
-                <input
-                  type="text"
-                  [ngModel]="service.templateDesc()"
-                  (ngModelChange)="service.templateDesc.set($event)"
-                  class="template-desc-input"
-                  placeholder="Add description..."
-                />
+                <!-- Top Row: Name, Identifier, Version -->
+                <div class="template-header-row">
+                  <div class="template-field-group flex-1">
+                    <label class="template-field-label">Name</label>
+                    <input
+                      type="text"
+                      [ngModel]="service.templateName()"
+                      (ngModelChange)="service.templateName.set($event)"
+                      class="template-input font-medium text-base text-gray-900"
+                      placeholder="Template name"
+                    />
+                  </div>
+
+                  <div class="template-field-group w-44">
+                    <label class="template-field-label">Identifier</label>
+                    <input
+                      type="text"
+                      [ngModel]="service.templateIdentifier()"
+                      (ngModelChange)="service.templateIdentifier.set($event)"
+                      class="template-input font-medium text-sm text-gray-800"
+                      placeholder="Identifier"
+                    />
+                  </div>
+
+                  <div class="template-field-group w-24">
+                    <label class="template-field-label">Version</label>
+                    <input
+                      type="text"
+                      [ngModel]="service.templateVersion()"
+                      (ngModelChange)="service.templateVersion.set($event)"
+                      class="template-input font-medium text-sm text-gray-800 text-center"
+                      placeholder="0.0.1"
+                    />
+                  </div>
+                </div>
+
+                <!-- Bottom Row: Description -->
+                <div class="template-field-group mt-3">
+                  <label class="template-field-label">Description</label>
+                  <input
+                    type="text"
+                    [ngModel]="service.templateDesc()"
+                    (ngModelChange)="service.templateDesc.set($event)"
+                    class="template-input text-sm text-gray-600"
+                    placeholder="Add description..."
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -213,6 +246,9 @@
               <app-field-type-picker [insertPosition]="service.fields().length"></app-field-type-picker>
             </div>
           </div>
+
+          <!-- JSON Schema & YAML Accordions -->
+          <app-cedar-export-accordions></app-cedar-export-accordions>
 
         </div>
       </div>

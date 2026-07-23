@@ -211,9 +211,11 @@ function buildCedarField(field: Field): CedarField {
 export function toCedarJson(
   name: string,
   description: string,
-  fields: Field[]
+  fields: Field[],
+  identifier?: string,
+  version?: string
 ): CedarTemplate {
-  const templateId = `${CEDAR_REPO_TEMPLATE}${shimUuid()}`;
+  const templateId = identifier ? (identifier.startsWith('http') ? identifier : `${CEDAR_REPO_TEMPLATE}${identifier}`) : `${CEDAR_REPO_TEMPLATE}${shimUuid()}`;
   const now = new Date().toISOString();
 
   // Build unique field keys (disambiguate duplicate names)
@@ -263,7 +265,7 @@ export function toCedarJson(
     },
     '@type':              `${CEDAR_CORE}Template`,
     '@id':                templateId,
-    'schema:identifier':  shimUuid(),
+    'schema:identifier':  identifier || shimUuid(),
     'schema:name':        name,
     'schema:description': description,
     'pav:createdOn':      now,
@@ -271,7 +273,7 @@ export function toCedarJson(
     'pav:lastUpdatedOn':  now,
     'oslc:modifiedBy':    null,
     'schema:schemaVersion': SCHEMA_VERSION,
-    'pav:version':        '0.0.1',
+    'pav:version':        version || '0.0.1',
     'bibo:status':        'bibo:draft',
     _ui: {
       order:               uniqueKeys,

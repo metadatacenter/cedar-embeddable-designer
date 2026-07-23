@@ -22,6 +22,8 @@ export class TemplateService {
   // State Signals
   readonly templateName = signal<string>('Untitled Template');
   readonly templateDesc = signal<string>('');
+  readonly templateIdentifier = signal<string>('');
+  readonly templateVersion = signal<string>('0.0.1');
   
   readonly fields = signal<Field[]>([
     { id: 1, type: 'text', name: 'Title', status: 'required', options: [], defaultValue: '', allowMultiple: false },
