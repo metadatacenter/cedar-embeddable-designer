@@ -3,12 +3,81 @@
   <!-- Header -->
   <header class="app-header">
     <div class="app-header__inner">
-      <div class="app-header__brand">
-        <app-icon key="paragraph" [style.color]="service.COLORS.primary" className="w-7 h-7"></app-icon>
-        <h1 class="app-header__title">Template Builder</h1>
+      <div class="app-header__brand flex items-center gap-3">
+        <div class="flex flex-col items-center justify-center text-center cursor-default group">
+          <div class="w-7 h-7 rounded-full bg-[#0c4335] flex items-center justify-center p-1 shadow-xs">
+            <img src="cedar-logo.png" alt="CEDAR Logo" class="w-full h-full object-contain" />
+          </div>
+          <span class="font-bold text-[10px] text-gray-900 tracking-wider leading-none mt-0.5">CETD</span>
+          <span class="text-[9px] font-medium text-gray-500 leading-none scale-90">0.1.0</span>
+        </div>
+
+        <!-- Dropdown "File" menu next to logo -->
+        <div class="relative file-menu-container ml-2">
+          <button
+            (click)="showFileMenu.set(!showFileMenu())"
+            class="px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100/80 rounded flex items-center gap-1 transition-colors"
+          >
+            <span>File</span>
+            <app-icon key="chevronDown" className="w-3.5 h-3.5 text-gray-500"></app-icon>
+          </button>
+
+          <!-- File Dropdown Menu -->
+          <div
+            *ngIf="showFileMenu()"
+            class="absolute top-full left-0 mt-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50 animate-in fade-in zoom-in-95 duration-100"
+          >
+            <button
+              (click)="newTemplate(); showFileMenu.set(false)"
+              class="w-full px-3.5 py-2 text-left text-xs font-medium text-gray-700 hover:bg-gray-100 flex items-center justify-between"
+            >
+              <span class="flex items-center gap-2">
+                <app-icon key="filePlus" className="w-4 h-4 text-gray-500"></app-icon>
+                New Template
+              </span>
+              <kbd class="text-[10px] text-gray-400 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded">⌘N</kbd>
+            </button>
+
+            <button
+              (click)="openTemplateFile(); showFileMenu.set(false)"
+              class="w-full px-3.5 py-2 text-left text-xs font-medium text-gray-700 hover:bg-gray-100 flex items-center justify-between"
+            >
+              <span class="flex items-center gap-2">
+                <app-icon key="folder" className="w-4 h-4 text-gray-500"></app-icon>
+                Open Template...
+              </span>
+              <kbd class="text-[10px] text-gray-400 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded">⌘O</kbd>
+            </button>
+
+            <div class="my-1 border-t border-gray-100"></div>
+
+            <button
+              (click)="saveTemplate(); showFileMenu.set(false)"
+              class="w-full px-3.5 py-2 text-left text-xs font-medium text-gray-700 hover:bg-gray-100 flex items-center justify-between"
+            >
+              <span class="flex items-center gap-2">
+                <app-icon key="save" className="w-4 h-4 text-[#2D6F5F]"></app-icon>
+                Save Template
+              </span>
+              <kbd class="text-[10px] text-gray-400 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded">⌘S</kbd>
+            </button>
+
+            <button
+              (click)="saveTemplateAs(); showFileMenu.set(false)"
+              class="w-full px-3.5 py-2 text-left text-xs font-medium text-gray-700 hover:bg-gray-100 flex items-center justify-between"
+            >
+              <span class="flex items-center gap-2">
+                <app-icon key="save" className="w-4 h-4 text-gray-500"></app-icon>
+                Save Template As...
+              </span>
+              <kbd class="text-[10px] text-gray-400 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded">⇧⌘S</kbd>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="app-header__actions">
+
         <!-- Field Designer Button -->
         <button
           *ngIf="service.preferences().showFieldDesigner"
@@ -251,10 +320,10 @@
     <div class="floating-save__wrapper">
       <button
         (click)="saveTemplate()"
-        class="btn-save"
+        class="btn-save flex items-center justify-center"
         [style.backgroundColor]="service.COLORS.primary"
       >
-        <span class="text-xl">💾</span>
+        <app-icon key="save" className="w-5 h-5 text-white"></app-icon>
       </button>
       <div class="floating-save__tooltip">Save Template</div>
     </div>

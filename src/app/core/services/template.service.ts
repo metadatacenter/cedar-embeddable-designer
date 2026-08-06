@@ -270,6 +270,18 @@ export class TemplateService {
     }
   }
 
+  resetTemplate() {
+    this.templateName.set('Untitled Template');
+    this.templateDesc.set('');
+    this.templateIdentifier.set('');
+    this.templateVersion.set('0.0.1');
+    this.fields.set([
+      { id: 1, type: 'text', name: 'Title', status: 'required', options: [], defaultValue: '', allowMultiple: false },
+      { id: 2, type: 'multipleChoice', name: 'Category', status: 'optional', options: ['Option 1', 'Option 2'], defaultValue: '', allowMultiple: false },
+      { id: 3, type: 'date', name: 'Publication Date', status: 'optional', options: [], defaultValue: '', allowMultiple: false }
+    ]);
+  }
+
   loadTemplate(templateData: any) {
     if (!templateData) return;
     if (typeof templateData === 'string') {
@@ -279,19 +291,57 @@ export class TemplateService {
         return;
       }
     }
-    if (templateData['schema:name']) this.templateName.set(templateData['schema:name']);
-    else if (templateData.name) this.templateName.set(templateData.name);
+    if (templateData.name) this.templateName.set(templateData.name);
+    else if (templateData['schema:name']) this.templateName.set(templateData['schema:name']);
 
-    if (templateData['schema:description']) this.templateDesc.set(templateData['schema:description']);
-    else if (templateData.description) this.templateDesc.set(templateData.description);
+    if (templateData.description !== undefined) this.templateDesc.set(templateData.description);
+    else if (templateData['schema:description']) this.templateDesc.set(templateData['schema:description']);
 
-    if (templateData['schema:identifier']) this.templateIdentifier.set(templateData['schema:identifier']);
-    else if (templateData.identifier) this.templateIdentifier.set(templateData.identifier);
+    if (templateData.id) this.templateIdentifier.set(templateData.id);
+    else if (templateData['schema:identifier']) this.templateIdentifier.set(templateData['schema:identifier']);
 
-    if (templateData['pav:version']) this.templateVersion.set(templateData['pav:version']);
-    else if (templateData.version) this.templateVersion.set(templateData.version);
+    if (templateData.version) this.templateVersion.set(templateData.version);
+    else if (templateData['pav:version']) this.templateVersion.set(templateData['pav:version']);
 
-    if (Array.isArray(templateData.fields)) {
+    if (Array.isArray(templateData.children)) {
+      // Parse CEDAR 1.6.0 structural model format
+      const cedarTypeToEditorType: Record<string, string> = {
+        'text-field': 'text',
+        'textarea-field': 'paragraph',
+        'radio-field': 'multipleChoice',
+        'checkbox-field': 'checkboxes',
+        'temporal-field': 'date',
+        'email-field': 'email',
+        'link-field': 'link',
+        'phone-number-field': 'phone',
+        'numeric-field': 'number',
+        'image-field': 'image',
+        'orcid-field': 'orcid',
+        'controlled-term-field': 'controlledTerms'
+      };
+
+      const parsedFields: Field[] = templateData.children.map((child: any, idx: number) => {
+        const type = cedarTypeToEditorType[child.type] || 'text';
+        const options = Array.isArray(child.values)
+          ? child.values.map((v: any) => v.label || v)
+          : [];
+        const isRequired = child.configuration?.required === true;
+
+        return {
+          id: Date.now() + idx,
+          type,
+          name: child.name || child.key || `Field ${idx + 1}`,
+          helpText: child.description || '',
+          status: isRequired ? 'required' : 'optional',
+          options,
+          defaultValue: '',
+          allowMultiple: false
+        };
+      });
+
+      this.fields.set(parsedFields);
+    } else if (Array.isArray(templateData.fields)) {
+      // Internal editor state format
       this.fields.set(templateData.fields);
     }
   }
