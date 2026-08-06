@@ -251,20 +251,51 @@ export class AppComponent implements OnInit, OnDestroy {
 
   async saveTemplateAs() {
     if (this.electronService.isElectron) {
-      const suggestedName = (this.service.templateName() || 'template')
-        .toLowerCase()
-        .replace(/[^a-z0-9_-]/g, '_') + '.json';
+      try {
+        const suggestedName = (this.service.templateName() || 'template')
+          .toLowerCase()
+          .replace(/[^a-z0-9_-]/g, '_') + '.json';
 
-      const result = await this.electronService.showSaveDialog(suggestedName, [
-        { name: 'CEDAR JSON Model (*.json)', extensions: ['json'] },
-        { name: 'CEDAR YAML Model (*.yaml)', extensions: ['yaml', 'yml'] }
-      ]);
+        const result = await this.electronService.showSaveDialog(suggestedName, [
+          { name: 'CEDAR JSON Model (*.json)', extensions: ['json'] },
+          { name: 'CEDAR YAML Model (*.yaml)', extensions: ['yaml', 'yml'] }
+        ]);
 
-      if (result && !result.canceled && result.filePath) {
-        await this.writeToFile(result.filePath);
+        if (result && !result.canceled && result.filePath) {
+          await this.writeToFile(result.filePath);
+        }
+      } catch (err: any) {
+        console.error('Error in saveTemplateAs:', err);
+        alert('Failed to save file: ' + (err?.message || err));
       }
     } else {
       // Web fallback download
+      try {
+        const cedarJson = toCedarJson(
+          this.service.templateName(),
+          this.service.templateDesc(),
+          this.service.fields(),
+          this.service.templateIdentifier(),
+          this.service.templateVersion()
+        );
+        const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(cedarJson, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute('href', dataStr);
+        downloadAnchor.setAttribute('download', `${this.service.templateName() || 'template'}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+        this.electronService.isDirty.set(false);
+      } catch (err: any) {
+        console.error('Error generating web template download:', err);
+        alert('Failed to generate template download: ' + (err?.message || err));
+      }
+    }
+  }
+
+  private async writeToFile(filePath: string) {
+    try {
+      const isYaml = filePath.endsWith('.yaml') || filePath.endsWith('.yml');
       const cedarJson = toCedarJson(
         this.service.templateName(),
         this.service.templateDesc(),
@@ -272,37 +303,21 @@ export class AppComponent implements OnInit, OnDestroy {
         this.service.templateIdentifier(),
         this.service.templateVersion()
       );
-      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(cedarJson, null, 2));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute('href', dataStr);
-      downloadAnchor.setAttribute('download', `${this.service.templateName() || 'template'}.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-      this.electronService.isDirty.set(false);
-    }
-  }
 
-  private async writeToFile(filePath: string) {
-    const isYaml = filePath.endsWith('.yaml') || filePath.endsWith('.yml');
-    const cedarJson = toCedarJson(
-      this.service.templateName(),
-      this.service.templateDesc(),
-      this.service.fields(),
-      this.service.templateIdentifier(),
-      this.service.templateVersion()
-    );
+      const fileContent = isYaml
+        ? toCedarYaml(cedarJson)
+        : JSON.stringify(cedarJson, null, 2);
 
-    const fileContent = isYaml
-      ? toCedarYaml(cedarJson)
-      : JSON.stringify(cedarJson, null, 2);
-
-    const res = await this.electronService.writeFile(filePath, fileContent);
-    if (res.success) {
-      this.electronService.currentFilePath.set(filePath);
-      this.electronService.isDirty.set(false);
-    } else {
-      alert('Failed to save file: ' + (res.error || 'Unknown error'));
+      const res = await this.electronService.writeFile(filePath, fileContent);
+      if (res.success) {
+        this.electronService.currentFilePath.set(filePath);
+        this.electronService.isDirty.set(false);
+      } else {
+        alert('Failed to save file: ' + (res.error || 'Unknown error'));
+      }
+    } catch (err: any) {
+      console.error('Error writing file:', err);
+      alert('Failed to write file: ' + (err?.message || err));
     }
   }
 }

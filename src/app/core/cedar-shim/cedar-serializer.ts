@@ -117,7 +117,8 @@ export function toCedarJson(
     };
 
     if (f.type === 'multipleChoice' || f.type === 'checkboxes') {
-      item.values = (f.options.length > 0 ? f.options : ['Option 1']).map((opt) => ({
+      const optionsList = Array.isArray(f.options) && f.options.length > 0 ? f.options : ['Option 1'];
+      item.values = optionsList.map((opt) => ({
         label: opt,
       }));
     }

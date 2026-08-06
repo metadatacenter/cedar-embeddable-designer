@@ -131,14 +131,27 @@ function createWindow() {
 }
 
 // IPC Handlers
-ipcMain.handle('show-save-dialog', async (event, options) => {
-  if (!mainWindow) return { canceled: true };
-  return await dialog.showSaveDialog(mainWindow, options);
+ipcMain.handle('show-save-dialog', async (event, options = {}) => {
+  try {
+    if (!mainWindow) return { canceled: true };
+    if (options.defaultPath && typeof options.defaultPath === 'string' && !path.isAbsolute(options.defaultPath)) {
+      options.defaultPath = path.join(app.getPath('documents'), options.defaultPath);
+    }
+    return await dialog.showSaveDialog(mainWindow, options);
+  } catch (error) {
+    console.error('Error in show-save-dialog:', error);
+    return { canceled: true, error: error.message };
+  }
 });
 
-ipcMain.handle('show-open-dialog', async (event, options) => {
-  if (!mainWindow) return { canceled: true };
-  return await dialog.showOpenDialog(mainWindow, options);
+ipcMain.handle('show-open-dialog', async (event, options = {}) => {
+  try {
+    if (!mainWindow) return { canceled: true };
+    return await dialog.showOpenDialog(mainWindow, options);
+  } catch (error) {
+    console.error('Error in show-open-dialog:', error);
+    return { canceled: true, error: error.message };
+  }
 });
 
 ipcMain.handle('read-file', async (event, filePath) => {
@@ -146,15 +159,32 @@ ipcMain.handle('read-file', async (event, filePath) => {
     const content = await fs.readFile(filePath, 'utf-8');
     return { success: true, content };
   } catch (error) {
+    console.error('Error reading file:', error);
     return { success: false, error: error.message };
   }
 });
 
-ipcMain.handle('write-file', async (event, { filePath, content }) => {
+ipcMain.handle('write-file', async (event, payload, contentArg) => {
   try {
+    let filePath = '';
+    let content = '';
+
+    if (typeof payload === 'string') {
+      filePath = payload;
+      content = contentArg || '';
+    } else if (typeof payload === 'object' && payload !== null) {
+      filePath = payload.filePath;
+      content = payload.content || '';
+    }
+
+    if (!filePath) {
+      throw new Error('No target file path specified for save');
+    }
+
     await fs.writeFile(filePath, content, 'utf-8');
     return { success: true };
   } catch (error) {
+    console.error('Error writing file:', error);
     return { success: false, error: error.message };
   }
 });
