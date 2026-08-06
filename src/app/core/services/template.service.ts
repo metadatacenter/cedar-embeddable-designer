@@ -1,6 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { Field, Library, CustomField, ControlledTermConfig, UserPreferences, FIELD_TYPES } from '../models/types';
 import { PreferencesService } from './preferences.service';
+import { fromCedarYaml } from '../cedar-shim';
 
 export { FIELD_TYPES } from '../models/types';
 
@@ -288,9 +289,15 @@ export class TemplateService {
       try {
         templateData = JSON.parse(templateData);
       } catch {
-        return;
+        try {
+          templateData = fromCedarYaml(templateData);
+        } catch (e) {
+          console.error('Failed to parse template as JSON or YAML:', e);
+          return;
+        }
       }
     }
+    if (!templateData || typeof templateData !== 'object') return;
     if (templateData.name) this.templateName.set(templateData.name);
     else if (templateData['schema:name']) this.templateName.set(templateData['schema:name']);
 

@@ -12,4 +12,4 @@
 
 export { toCedarJson } from './cedar-serializer';
 export type { CedarTemplate, CedarField } from './cedar-model.types';
-export { toCedarYaml } from './cedar-yaml';
+export { toCedarYaml, fromCedarYaml } from './cedar-yaml';

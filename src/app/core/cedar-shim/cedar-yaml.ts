@@ -65,3 +65,113 @@ export function toCedarYaml(value: unknown, indent = 0): string {
 
   return String(value);
 }
+
+/**
+ * Parses a YAML string (emitted by toCedarYaml or standard CEDAR YAML) into an object structure.
+ */
+export function fromCedarYaml(yamlStr: string): any {
+  if (!yamlStr || typeof yamlStr !== 'string') return null;
+
+  const trimmed = yamlStr.trim();
+  if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+      // Fall through
+    }
+  }
+
+  const lines = yamlStr.split(/\r?\n/).filter((l) => l.trim().length > 0 && !l.trim().startsWith('#'));
+  if (lines.length === 0) return null;
+
+  function parseVal(v: string): any {
+    v = v.trim();
+    if (v === 'null' || v === '~') return null;
+    if (v === 'true') return true;
+    if (v === 'false') return false;
+    if (/^-?\d+(\.\d+)?$/.test(v)) return Number(v);
+    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+      return v.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+    }
+    return v;
+  }
+
+  const root: any = {};
+  const stack: { indent: number; container: any; parentObj?: any; keyInParent?: string }[] = [
+    { indent: -1, container: root }
+  ];
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i];
+    const indent = rawLine.search(/\S/);
+    const line = rawLine.trim();
+
+    while (stack.length > 1 && stack[stack.length - 1].indent >= indent) {
+      stack.pop();
+    }
+
+    const currentFrame = stack[stack.length - 1];
+
+    if (line.startsWith('- ')) {
+      const itemContent = line.slice(2).trim();
+
+      if (!Array.isArray(currentFrame.container)) {
+        const arr: any[] = [];
+        if (currentFrame.parentObj && currentFrame.keyInParent) {
+          currentFrame.parentObj[currentFrame.keyInParent] = arr;
+        }
+        currentFrame.container = arr;
+      }
+
+      const targetArray = currentFrame.container as any[];
+
+      if (itemContent.includes(':')) {
+        const colonIdx = itemContent.indexOf(':');
+        const k = itemContent.slice(0, colonIdx).trim();
+        const rawV = itemContent.slice(colonIdx + 1).trim();
+        const obj: any = {};
+        if (rawV.length > 0) {
+          obj[k] = parseVal(rawV);
+        }
+        targetArray.push(obj);
+        stack.push({ indent, container: obj });
+      } else {
+        const parsed = parseVal(itemContent);
+        targetArray.push(parsed);
+      }
+    } else if (line.includes(':')) {
+      const colonIdx = line.indexOf(':');
+      const key = line.slice(0, colonIdx).trim();
+      const valStr = line.slice(colonIdx + 1).trim();
+
+      let targetObj = currentFrame.container;
+      if (Array.isArray(targetObj)) {
+        targetObj = targetObj[targetObj.length - 1];
+      }
+
+      if (valStr.length > 0) {
+        targetObj[key] = parseVal(valStr);
+      } else {
+        let isNextArray = false;
+        if (i + 1 < lines.length) {
+          const nextRaw = lines[i + 1];
+          const nextIndent = nextRaw.search(/\S/);
+          if (nextIndent > indent && nextRaw.trim().startsWith('- ')) {
+            isNextArray = true;
+          }
+        }
+
+        const newContainer = isNextArray ? [] : {};
+        targetObj[key] = newContainer;
+        stack.push({
+          indent,
+          container: newContainer,
+          parentObj: targetObj,
+          keyInParent: key
+        });
+      }
+    }
+  }
+
+  return root;
+}
