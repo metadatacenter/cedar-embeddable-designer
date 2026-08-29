@@ -128,9 +128,9 @@ is written without imports so its declarations stand alone. Adding an import to
 that file breaks the declaration build rather than shipping a `.d.ts` that names
 paths only this repository has.
 
-`public/demo.html` is an embedding fixture, copied into both outputs. Serve the
-element build's directory and open it to see the component inside a host page
-whose own styles are chosen to be as intrusive as possible.
+`browser/fixtures/host.html` is the embedding fixture, and the browser suite
+serves it: a host page whose own styles are chosen to be as intrusive as
+possible, loading the distribution and nothing else.
 
 ## Testing
 

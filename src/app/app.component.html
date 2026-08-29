@@ -94,18 +94,6 @@
       </div>
 
       <div class="app-header__actions">
-        <!-- Field Designer Button -->
-        @if (service.preferences().showFieldDesigner) {
-          <button
-            (click)="service.showFieldDesigner.set(true)"
-            class="btn-header btn-header--primary"
-            [style.backgroundColor]="service.COLORS.primary"
-          >
-            <app-icon key="library" className="w-4 h-4"></app-icon>
-            Field Designer
-          </button>
-        }
-
         <!-- Preview Toggle -->
         @if (!service.showPreview()) {
           <button
@@ -117,49 +105,12 @@
           </button>
         }
 
-        <!-- User Menu -->
-        <div class="relative user-menu-container">
-          <button
-            (click)="service.showUserMenu.set(!service.showUserMenu())"
-            class="user-menu-trigger"
-            title="User Menu"
-          >
-            <div class="user-menu-avatar" [style.backgroundColor]="service.COLORS.primary">
-              <app-icon key="user" className="w-4 h-4"></app-icon>
-            </div>
-          </button>
-
-          <!-- Dropdown -->
-          @if (service.showUserMenu()) {
-            <div class="user-menu-dropdown">
-              <button
-                (click)="service.showPreferencesModal.set(true); service.showUserMenu.set(false)"
-                class="user-menu-item"
-              >
-                <app-icon key="settings" className="w-4 h-4"></app-icon>
-                <span class="font-medium">Preferences</span>
-              </button>
-              <button
-                (click)="service.showPresetDefinitionsModal.set(true); service.showUserMenu.set(false)"
-                class="user-menu-item"
-              >
-                <app-icon key="library" className="w-4 h-4"></app-icon>
-                <span class="font-medium">Define Presets</span>
-              </button>
-            </div>
-          }
-        </div>
       </div>
     </div>
   </header>
 
   <!-- Main Content Area -->
   <div class="main-content">
-    <!-- Field Library Sidebar -->
-    @if (service.preferences().fieldSelectionStyle === 'sidebar') {
-      <app-field-library-sidebar></app-field-library-sidebar>
-    }
-
     <!-- Editor Side -->
     <div [ngClass]="getEditorClasses()">
       <div class="editor-grid" [style.gridTemplateColumns]="getGridTemplateColumns()">
@@ -279,18 +230,15 @@
           <div cdkDropList (cdkDropListDropped)="onFieldDrop($event)" class="fields-drop-list">
             @for (field of service.fields(); track field; let idx = $index) {
               <div class="field-drop-item" [id]="'field-card-' + field.id">
-                <!-- Insert Zone (modal style) -->
-                @if (service.preferences().fieldSelectionStyle === 'modal') {
-                  <div class="insert-zone" (click)="service.showPicker.set(idx)">
-                    <button class="btn-insert-here" [style.backgroundColor]="service.COLORS.primary">
-                      ＋ Add field here
-                    </button>
+                <div class="insert-zone" (click)="service.showPicker.set(idx)">
+                  <button class="btn-insert-here" [style.backgroundColor]="service.COLORS.primary">
+                    ＋ Add field here
+                  </button>
+                </div>
+                @if (service.showPicker() === idx) {
+                  <div class="my-3">
+                    <app-field-type-picker [insertPosition]="idx"></app-field-type-picker>
                   </div>
-                  @if (service.showPicker() === idx) {
-                    <div class="my-3">
-                      <app-field-type-picker [insertPosition]="idx"></app-field-type-picker>
-                    </div>
-                  }
                 }
                 <!-- Drag Container -->
                 <div
@@ -308,9 +256,8 @@
             }
           </div>
 
-          <!-- Bottom Add Field Section (modal style) -->
-          @if (service.preferences().fieldSelectionStyle === 'modal') {
-            <div class="add-field-section">
+          <!-- Bottom Add Field Section -->
+          <div class="add-field-section">
               <button
                 (click)="service.showPicker.set(service.fields().length)"
                 class="btn-add-field"
@@ -319,13 +266,12 @@
                 <span class="text-base font-bold">＋</span>
                 Add Field
               </button>
-              @if (service.showPicker() === service.fields().length) {
-                <div class="add-field-section__picker">
-                  <app-field-type-picker [insertPosition]="service.fields().length"></app-field-type-picker>
-                </div>
-              }
-            </div>
-          }
+            @if (service.showPicker() === service.fields().length) {
+              <div class="add-field-section__picker">
+                <app-field-type-picker [insertPosition]="service.fields().length"></app-field-type-picker>
+              </div>
+            }
+          </div>
 
           <!-- JSON Schema & YAML Accordions -->
           <app-cedar-export-accordions></app-cedar-export-accordions>
@@ -353,12 +299,4 @@
     </div>
   </div>
 
-  <!-- Modals -->
-  <app-preferences-modal></app-preferences-modal>
-  <app-preset-definitions-modal></app-preset-definitions-modal>
 </div>
-
-<!-- Field Designer Overlay -->
-@if (service.showFieldDesigner()) {
-  <app-field-designer class="fixed inset-0 z-50"></app-field-designer>
-}

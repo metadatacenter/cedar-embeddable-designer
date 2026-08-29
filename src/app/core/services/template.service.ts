@@ -1,6 +1,5 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
-import { Field, Library, CustomField, ControlledTermConfig, UserPreferences, FIELD_TYPES } from '../models/types';
-import { PreferencesService } from './preferences.service';
+import { Injectable, signal, computed } from '@angular/core';
+import { ControlledTermConfig, Field, FIELD_TYPES } from '../models/types';
 import {
   EditorTemplate,
   buildTemplate,
@@ -61,9 +60,6 @@ function starterFields(): Field[] {
   providedIn: 'root',
 })
 export class TemplateService {
-  // Inject PreferencesService
-  readonly preferencesService = inject(PreferencesService);
-
   // Cedar green color palette
   readonly COLORS = {
     primary: '#2D6F5F', // Cedar green
@@ -138,36 +134,12 @@ export class TemplateService {
   readonly templateJson = computed(() => templateToJson(this.template()));
   readonly templateYaml = computed(() => templateToYaml(this.template()));
 
-  readonly libraries = signal<Library[]>([]);
-  readonly customFields = signal<CustomField[]>([]);
-  readonly selectedLibraryId = signal<number | null>(null);
-  readonly sidebarCollapsed = signal<boolean>(false);
-
   // Modal & Navigation States
   readonly showPicker = signal<number | null>(null);
   readonly showPreview = signal<boolean>(false);
   readonly previewInitialTab = signal<'preview' | 'json' | 'yaml'>('preview');
-  readonly showFieldDesigner = signal<boolean>(false);
   readonly selectedField = signal<number | null>(null);
   readonly fieldTypeDropdown = signal<number | null>(null);
-  readonly fieldTypeDropdownLibrary = signal<number | null>(null);
-
-  // Proxies for PreferencesService State
-  get preferences() {
-    return this.preferencesService.preferences;
-  }
-  get presetDefinitions() {
-    return this.preferencesService.presetDefinitions;
-  }
-  get showPreferencesModal() {
-    return this.preferencesService.showPreferencesModal;
-  }
-  get showPresetDefinitionsModal() {
-    return this.preferencesService.showPresetDefinitionsModal;
-  }
-  get showUserMenu() {
-    return this.preferencesService.showUserMenu;
-  }
 
   constructor() {
     this.markSaved();
@@ -214,33 +186,6 @@ export class TemplateService {
     this.scrollRequest.set(newField.id);
   }
 
-  addCustomFieldToTemplate(customField: CustomField, position: number) {
-    const newField: Field = {
-      id: Date.now(),
-      ...newFieldIdentity(),
-      type: customField.baseType,
-      name: customField.name,
-      helpText: customField.description || '',
-      defaultValue: customField.placeholder || '',
-      status: 'optional',
-      options: customField.baseType === 'multipleChoice' || customField.baseType === 'checkboxes' ? ['Option 1'] : [],
-      allowMultiple: false,
-      customFieldId: customField.id,
-      libraryId: customField.libraryId,
-    };
-
-    this.fields.update((prev) => {
-      const updated = [...prev];
-      updated.splice(position, 0, newField);
-      return updated;
-    });
-
-    this.showPicker.set(null);
-    this.selectedField.set(newField.id);
-
-    this.scrollRequest.set(newField.id);
-  }
-
   deleteField(id: number) {
     this.fields.update((prev) => prev.filter((f) => f.id !== id));
     if (this.selectedField() === id) {
@@ -273,56 +218,6 @@ export class TemplateService {
           : f,
       ),
     );
-  }
-
-  convertFieldToCustomField(fieldId: number, customField: CustomField) {
-    this.fields.update((prev) =>
-      prev.map((f) =>
-        f.id === fieldId
-          ? {
-              ...f,
-              type: customField.baseType,
-              name: customField.name,
-              helpText: customField.description || f.helpText,
-              defaultValue: customField.placeholder || f.defaultValue,
-              options:
-                customField.baseType === 'multipleChoice' || customField.baseType === 'checkboxes'
-                  ? f.options.length > 0
-                    ? f.options
-                    : ['Option 1']
-                  : [],
-              allowMultiple: false,
-              customFieldId: customField.id,
-              libraryId: customField.libraryId,
-            }
-          : f,
-      ),
-    );
-  }
-
-  updateCustomField(updatedCustomField: CustomField) {
-    // 1. Update customFields signal
-    this.customFields.update((prev) => prev.map((cf) => (cf.id === updatedCustomField.id ? updatedCustomField : cf)));
-
-    // 2. Sync changes automatically to all fields in the template created from this custom field
-    this.fields.update((prev) =>
-      prev.map((f) => {
-        if (f.customFieldId === updatedCustomField.id) {
-          return {
-            ...f,
-            name: updatedCustomField.name,
-            type: updatedCustomField.baseType,
-            helpText: updatedCustomField.description || f.helpText,
-            defaultValue: updatedCustomField.placeholder || f.defaultValue,
-          };
-        }
-        return f;
-      }),
-    );
-  }
-
-  deleteCustomField(id: number) {
-    this.customFields.update((prev) => prev.filter((cf) => cf.id !== id));
   }
 
   updateFieldStatus(id: number, status: string) {
@@ -394,27 +289,6 @@ export class TemplateService {
       updated.splice(hoverIndex, 0, dragField);
       return updated;
     });
-  }
-
-  // Proxies for PreferencesService Methods
-  updatePreference<K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) {
-    this.preferencesService.updatePreference(key, value);
-  }
-
-  updateFieldTypeVisibility(fieldType: string, visible: boolean) {
-    this.preferencesService.updateFieldTypeVisibility(fieldType, visible);
-  }
-
-  toggleAllFieldTypes(visible: boolean) {
-    this.preferencesService.toggleAllFieldTypes(visible);
-  }
-
-  applyPreset(preset: 'basic' | 'semantic' | 'modular') {
-    this.preferencesService.applyPreset(preset);
-  }
-
-  getActivePreset(): 'basic' | 'semantic' | 'modular' | null {
-    return this.preferencesService.getActivePreset();
   }
 
   resetTemplate() {

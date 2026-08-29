@@ -6,7 +6,7 @@
  * gzip figure, because a CDN serves the compressed one and a file: URL serves the
  * raw one, and the two do not move together.
  *
- * Baseline on 2026-08-29: 968,954 raw and 237,705 gzip-9 bytes, at Angular 22
+ * Baseline on 2026-08-29: 901,852 raw and 225,140 gzip-9 bytes, at Angular 22
  * with the CEDAR model library. The limits leave headroom deliberately. Raising
  * one is a decision to be taken on evidence and recorded here, not a step in
  * making a build pass.

@@ -57,20 +57,10 @@ export class FieldCardComponent {
   }
 
   getFieldIcon(field: Field): string {
-    if (field.customFieldId) {
-      const customField = this.service.customFields().find((cf) => cf.id === field.customFieldId);
-      if (customField) {
-        return customField.baseType;
-      }
-    }
     return field.type;
   }
 
   getFieldTypeName(field: Field): string {
-    if (field.customFieldId) {
-      const customField = this.service.customFields().find((cf) => cf.id === field.customFieldId);
-      if (customField) return customField.name;
-    }
     return FIELD_TYPES[field.type]?.label || field.type;
   }
 }

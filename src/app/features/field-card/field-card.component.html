@@ -43,7 +43,7 @@
                     service.fieldTypeDropdown.set(null)
                   "
                   class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left border-none bg-transparent cursor-pointer"
-                  [class.bg-teal-50]="field.type === item.key && !field.customFieldId"
+                  [class.bg-teal-50]="field.type === item.key"
                 >
                   <app-icon [key]="item.key" className="w-5 h-5 text-gray-500"></app-icon>
                   <div class="flex-1 min-w-0">
@@ -53,56 +53,6 @@
                 </button>
               }
             </div>
-            <!-- Custom fields from libraries -->
-            @if (service.libraries().length > 0) {
-              <div class="border-t border-gray-200 pt-2">
-                <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide px-2 py-1">Custom Fields</p>
-                <!-- Library Selection -->
-                @if (service.fieldTypeDropdownLibrary() === null) {
-                  @for (lib of service.libraries(); track lib) {
-                    <button
-                      (click)="$event.stopPropagation(); service.fieldTypeDropdownLibrary.set(lib.id)"
-                      class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left border-none bg-transparent cursor-pointer"
-                    >
-                      <app-icon key="library" className="w-5 h-5 text-gray-500"></app-icon>
-                      <div class="flex-1 min-w-0">
-                        <span class="text-sm font-medium text-gray-900 block">{{ lib.name }}</span>
-                      </div>
-                      <span class="text-gray-400 text-xs">▶</span>
-                    </button>
-                  }
-                } @else {
-                  <button
-                    (click)="$event.stopPropagation(); service.fieldTypeDropdownLibrary.set(null)"
-                    class="w-full flex items-center gap-2 p-2 hover:bg-gray-50 text-left border-none bg-transparent cursor-pointer text-gray-600 mb-1"
-                  >
-                    <span class="text-xs">◀ Back</span>
-                  </button>
-                  @for (cf of service.customFields(); track cf) {
-                    <button
-                      [style.display]="cf.libraryId === service.fieldTypeDropdownLibrary() ? 'flex' : 'none'"
-                      (click)="
-                        $event.stopPropagation();
-                        service.convertFieldToCustomField(field.id, cf);
-                        service.fieldTypeDropdown.set(null);
-                        service.fieldTypeDropdownLibrary.set(null)
-                      "
-                      class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left border-none bg-transparent cursor-pointer"
-                      [class.bg-teal-50]="field.customFieldId === cf.id"
-                    >
-                      <app-icon [key]="cf.baseType" className="w-5 h-5 text-gray-500"></app-icon>
-                      <div class="flex-1 min-w-0">
-                        <span class="text-sm font-medium text-gray-900 block">{{ cf.name }}</span>
-                        @if (cf.description) {
-                          <span class="text-xs text-gray-500 truncate block">{{ cf.description }}</span>
-                        }
-                      </div>
-                    </button>
-                  }
-                }
-                <!-- Custom Fields under library list -->
-              </div>
-            }
           </div>
         </div>
       }
@@ -201,9 +151,9 @@
   }
 
   <!-- Help Text and Default Value editing (Only if configured in preferences) -->
-  @if (service.preferences().showHelpText || (service.preferences().showDefaultValue && allowsStatus(field.type))) {
+  @if (true) {
     <div class="space-y-3 mb-4 px-1 border-t border-gray-100 pt-3">
-      @if (service.preferences().showHelpText) {
+      @if (true) {
         <div>
           <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Help Text</label>
           <input
@@ -218,7 +168,7 @@
       }
       <!-- A static field shows something rather than collecting one, so it has
            no default for a form-filler to start from. -->
-      @if (service.preferences().showDefaultValue && allowsStatus(field.type)) {
+      @if (allowsStatus(field.type)) {
         <div>
           <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block"
             >Default Value</label
@@ -239,7 +189,7 @@
   <!-- Field Action Controls footer -->
   <div class="flex items-center justify-end gap-6 pt-2 border-t border-gray-100 px-1">
     <!-- Required Toggle -->
-    @if (service.preferences().showRequired && allowsStatus(field.type)) {
+    @if (allowsStatus(field.type)) {
       <label class="flex items-center gap-1.5 cursor-pointer group">
         <input
           type="checkbox"
@@ -252,7 +202,7 @@
     }
 
     <!-- Allow Multiple Toggle -->
-    @if (service.preferences().showAllowMultiple && allowsMultiple(field.type)) {
+    @if (allowsMultiple(field.type)) {
       <label class="flex items-center gap-1.5 cursor-pointer group">
         <input
           type="checkbox"

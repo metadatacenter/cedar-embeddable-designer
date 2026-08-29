@@ -2,103 +2,20 @@
   <div class="picker-header">
     <div class="picker-header-left">
       <h3 class="picker-title">Choose field type</h3>
-
-      <!-- Library Dropdown with Autocomplete -->
-      @if (service.libraries().length > 0) {
-        <div class="library-dropdown-container">
-          <button (click)="showDropdown.set(!showDropdown())" class="btn-library-dropdown">
-            <span class="dropdown-text">{{ selectedLibraryName }}</span>
-            <span class="dropdown-arrow">▼</span>
-          </button>
-          <!-- Dropdown Options Panel -->
-          @if (showDropdown()) {
-            <div class="dropdown-panel animate-fade-in">
-              <!-- Search Input -->
-              <div class="dropdown-search-box">
-                <input
-                  type="text"
-                  [(ngModel)]="searchText"
-                  placeholder="Search libraries..."
-                  class="dropdown-search-input"
-                  autoFocus
-                />
-              </div>
-              <!-- Options list -->
-              <div class="dropdown-options-list custom-scrollbar">
-                <!-- Standard Option -->
-                <button
-                  (click)="handleSelectLibrary(null)"
-                  class="dropdown-option"
-                  [class.active]="service.fieldTypeDropdownLibrary() === null"
-                >
-                  Standard
-                </button>
-                <!-- Filtered Library Options -->
-                @for (lib of filteredLibraries; track lib) {
-                  <button
-                    (click)="handleSelectLibrary(lib.id)"
-                    class="dropdown-option"
-                    [class.active]="service.fieldTypeDropdownLibrary() === lib.id"
-                  >
-                    {{ lib.name }}
-                  </button>
-                }
-                @if (filteredLibraries.length === 0 && searchText) {
-                  <div class="dropdown-empty-state">No libraries found</div>
-                }
-              </div>
-            </div>
-          }
-        </div>
-      }
     </div>
-
-    <button (click)="close()" class="btn-close">
-      <app-icon key="close" className="w-5 h-5"></app-icon>
+    <button (click)="close()" class="btn-close" title="Close">
+      <app-icon key="close" className="w-4 h-4"></app-icon>
     </button>
   </div>
 
-  <!-- Custom Fields Section - Only show when a library is selected -->
-  @if (service.fieldTypeDropdownLibrary() !== null && libraryCustomFields.length > 0) {
-    <div class="fields-section">
-      <div class="fields-grid">
-        @for (customField of libraryCustomFields; track customField) {
-          <button (click)="onCustomFieldClick(customField)" class="btn-field-item" [title]="customField.description">
-            <div class="field-item-icon">
-              <app-icon [key]="customField.baseType" className="w-5 h-5"></app-icon>
-            </div>
-            <span class="field-item-label">
-              {{ customField.name }}
-            </span>
-          </button>
-        }
-      </div>
-    </div>
-  }
-
-  <!-- Message when library is selected but no custom fields -->
-  @if (service.fieldTypeDropdownLibrary() !== null && libraryCustomFields.length === 0) {
-    <div class="custom-fields-empty-msg">
-      <p class="custom-fields-empty-text">
-        No custom fields in this library yet. Create custom fields in the Field Designer and assign them to this
-        library.
-      </p>
-    </div>
-  }
-
-  <!-- Standard Fields Section - Only show when "Standard" (null) is selected -->
-  @if (service.fieldTypeDropdownLibrary() === null) {
-    <div>
-      <div class="fields-grid">
-        @for (item of visibleFieldTypesList(); track item) {
-          <button (click)="onFieldClick(item.key)" class="btn-field-item">
-            <div class="field-item-icon">
-              <app-icon [key]="item.key" className="w-5 h-5"></app-icon>
-            </div>
-            <span class="field-item-label">{{ item.value.label }}</span>
-          </button>
-        }
-      </div>
-    </div>
-  }
+  <div class="fields-grid">
+    @for (item of fieldTypesList(); track item.key) {
+      <button (click)="onFieldClick(item.key)" class="btn-field-item">
+        <div class="field-item-icon">
+          <app-icon [key]="item.key" className="w-5 h-5"></app-icon>
+        </div>
+        <span class="field-item-label">{{ item.value.label }}</span>
+      </button>
+    }
+  </div>
 </div>

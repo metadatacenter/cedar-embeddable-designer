@@ -33,8 +33,8 @@ drives it in a browser.
   a sibling web component the embedding page loads alongside the designer. A
   field's constraint is chosen from what the terminology server holds instead of
   typed from memory. Where the picker is absent the panel says so.
-- Tests: 115 unit tests through the Angular CLI's Vitest builder, 5 covering the
-  publish-channel rule, and 37 browser tests driving the built bundle in a host
+- Tests: 207 unit tests through the Angular CLI's Vitest builder, 5 covering the
+  publish-channel rule, and 38 browser tests driving the built bundle in a host
   page whose own CSS is chosen to be as intrusive as possible. The browser suite
   is hermetic — no test reaches a terminology server, and the picker is stubbed.
 - A CI workflow running lint, typecheck, unit tests, packaging tests, both
@@ -77,7 +77,8 @@ drives it in a browser.
 - The element was registered from the `.then` of `bootstrapApplication`, so a page
   without `<app-root>` failed the bootstrap and never defined it, while a page
   with one got a whole application it had not asked for.
-- `public/demo.html` named the element and loaded no script at all.
+- `public/demo.html` named the element and loaded no script at all. It has since
+  been replaced by the browser suite's host fixture, which loads the distribution.
 - Exported templates dropped the recommended status, the multiple-values flag,
   default values and every controlled-term constraint.
 - A time field was written as `xsd:dateTime`, so it read back as a date and
@@ -108,6 +109,12 @@ drives it in a browser.
 
 ### Removed
 
+- The features the Figma Make export invented, which have no CEDAR counterpart:
+  the Field Designer and the custom fields and libraries it created, the
+  preferences modal, and the presets that decided which field types an author
+  could see. CEDAR reuses structure through template elements, and which types a
+  designer offers is a question for its host rather than a user setting. Some
+  1,700 lines, and 76 kB off what an embedder downloads.
 - The Electron shell, its IPC bridge — which accepted any filesystem path the
   renderer offered — the service behind it, the menu wiring and five
   devDependencies. Open and save are a file input and a download.
