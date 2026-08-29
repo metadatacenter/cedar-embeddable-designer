@@ -9,7 +9,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
   selector: 'app-controlled-term-config',
   standalone: true,
   imports: [FormsModule, IconComponent],
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './controlled-term-config.component.html',
 })
 export class ControlledTermConfigComponent {

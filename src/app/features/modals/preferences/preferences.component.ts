@@ -9,7 +9,7 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
   standalone: true,
   imports: [FormsModule, IconComponent],
   templateUrl: './preferences.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./preferences.component.scss'],
 })
 export class PreferencesModalComponent {

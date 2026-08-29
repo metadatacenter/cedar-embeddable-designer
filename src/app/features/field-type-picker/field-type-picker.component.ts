@@ -19,7 +19,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
   standalone: true,
   imports: [FormsModule, IconComponent],
   templateUrl: './field-type-picker.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./field-type-picker.component.scss'],
 })
 export class FieldTypePickerComponent {

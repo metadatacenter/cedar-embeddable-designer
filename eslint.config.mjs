@@ -65,19 +65,6 @@ export default tseslint.config(
        */
 
       /*
-       * 15 components. `ng update` stamped `ChangeDetectionStrategy.Eager` onto every
-       * one of them on the way to 22, where a component naming no strategy now gets
-       * OnPush.
-       *
-       * State here is held in signals, so OnPush is very likely correct — but "very
-       * likely" is the problem. There is no test suite yet, so flipping fifteen
-       * components would be an untested behavioural change across every screen, and
-       * the failure mode is a view that silently stops updating. The rule goes back on
-       * once there are component tests to flip them against.
-       */
-      '@angular-eslint/prefer-on-push-component-change-detection': 'off',
-
-      /*
        * 26 sites, 22 of which are in code that is being deleted or rewritten: the
        * hand-written YAML parser, `TemplateService.loadTemplate`, the element wrapper
        * and the Electron service. Typing them where they stand would be work thrown

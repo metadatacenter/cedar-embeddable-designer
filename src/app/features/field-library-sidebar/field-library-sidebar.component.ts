@@ -10,7 +10,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
   standalone: true,
   imports: [DragDropModule, IconComponent],
   templateUrl: './field-library-sidebar.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./field-library-sidebar.component.scss'],
 })
 export class FieldLibrarySidebarComponent {

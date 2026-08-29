@@ -1,0 +1,41 @@
+/*
+  One palette for the highlighted code, in both places that show it.
+
+  The two export panels each styled the same seven token classes, in different
+  colours: a key was #38bdf8 in one and #79c0ff in the other, a boolean pink in
+  one and red in the other. The same JSON therefore rendered two ways in one
+  application, which nobody had chosen — it is what two copies of a stylesheet
+  drift into.
+
+  `::ng-deep`, because the highlighted markup is assigned through `[innerHTML]`
+  and so carries none of the attributes emulated encapsulation scopes by.
+*/
+@mixin code-highlight-tokens {
+  :host ::ng-deep {
+    .hl-key {
+      color: #79c0ff;
+      font-weight: 500;
+    }
+    .hl-string {
+      color: #a5d6ff;
+    }
+    .hl-number {
+      color: #f2cc60;
+    }
+    .hl-bool {
+      color: #ff7b72;
+      font-weight: 600;
+    }
+    .hl-null {
+      color: #8b949e;
+      font-style: italic;
+    }
+    .hl-comment {
+      color: #8b949e;
+      font-style: italic;
+    }
+    .hl-punct {
+      color: #8b949e;
+    }
+  }
+}

@@ -10,7 +10,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
   standalone: true,
   imports: [FormsModule, IconComponent],
   templateUrl: './field-designer.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./field-designer.component.scss'],
 })
 export class FieldDesignerComponent {

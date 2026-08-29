@@ -14,7 +14,7 @@ export type PreviewTab = 'preview' | 'json' | 'yaml';
   standalone: true,
   imports: [FormsModule, IconComponent, BioPortalSearchModalComponent, CedarExportPanelComponent],
   templateUrl: './preview-panel.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./preview-panel.component.scss'],
 })
 export class PreviewPanelComponent {

@@ -10,7 +10,7 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
   standalone: true,
   imports: [FormsModule, IconComponent],
   templateUrl: './preset-definitions.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./preset-definitions.component.scss'],
 })
 export class PresetDefinitionsModalComponent {

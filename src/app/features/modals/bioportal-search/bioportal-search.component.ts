@@ -24,7 +24,7 @@ export type BioPortalResult = TerminologyHit;
   selector: 'app-bioportal-search-modal',
   standalone: true,
   imports: [FormsModule, IconComponent],
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './bioportal-search.component.html',
 })
 export class BioPortalSearchModalComponent implements OnInit, OnDestroy {

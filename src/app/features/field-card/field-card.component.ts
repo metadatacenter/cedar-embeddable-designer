@@ -11,7 +11,7 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
   selector: 'app-field-card',
   standalone: true,
   imports: [CommonModule, FormsModule, IconComponent, ControlledTermConfigComponent, DragDropModule],
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './field-card.component.html',
 })
 export class FieldCardComponent {

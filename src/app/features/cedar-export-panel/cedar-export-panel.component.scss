@@ -1,3 +1,5 @@
+@use '../../shared/code-highlight' as code-highlight;
+
 /* ─── Panel Shell ─────────────────────────────────────────────────────────── */
 :host {
   display: flex;
@@ -174,31 +176,7 @@
   }
 }
 
-/* ─── Syntax Highlighting ─────────────────────────────────────────────────── */
-:host ::ng-deep {
-  .hl-key {
-    color: #79c0ff;
-  } /* JSON keys / YAML keys    — blue    */
-  .hl-string {
-    color: #a5d6ff;
-  } /* string values            — light blue */
-  .hl-number {
-    color: #f2cc60;
-  } /* numbers                  — yellow  */
-  .hl-bool {
-    color: #ff7b72;
-  } /* true / false             — red     */
-  .hl-null {
-    color: #8b949e;
-  } /* null                     — gray    */
-  .hl-comment {
-    color: #8b949e;
-    font-style: italic;
-  }
-  .hl-punct {
-    color: #8b949e;
-  } /* list bullets, colons     — gray    */
-}
+@include code-highlight.code-highlight-tokens;
 
 /* ─── Spec Badge ──────────────────────────────────────────────────────────── */
 .spec-badge {
