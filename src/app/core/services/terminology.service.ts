@@ -43,9 +43,20 @@ export class TerminologyService {
   /** Whether controlled-term search can run at all, for the panel to say so. */
   readonly configured = signal(false);
 
+  /**
+   * The terminology server a host named, for handing on to `<cedar-term-picker>`.
+   *
+   * The picker addresses the same server by a different path — its own
+   * version-aware `/search` rather than `bioportal/search` — so what it needs is
+   * the base rather than the URL built from it.
+   */
+  readonly baseUrl = signal<string | null>(null);
+
   configure(config: CedConfig): void {
     const base = config.terminologyBaseUrl;
-    this.searchUrl = base ? `${base.endsWith('/') ? base : `${base}/`}${SEARCH_PATH}` : null;
+    const normalized = base ? (base.endsWith('/') ? base : `${base}/`) : null;
+    this.baseUrl.set(normalized);
+    this.searchUrl = normalized === null ? null : `${normalized}${SEARCH_PATH}`;
     this.configured.set(this.searchUrl !== null);
   }
 

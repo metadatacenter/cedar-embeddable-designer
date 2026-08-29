@@ -33,9 +33,7 @@ from the other is the same artifact.
 
 Controlled-term search asks the CEDAR terminology server a host names through
 `terminologyBaseUrl`, and reports a failure as a failure. There is no default
-endpoint: unset, search is off and the panel says so. The search UI will be
-replaced by [`<cedar-term-picker>`](https://github.com/metadatacenter/cedar-term-picker),
-the component built for choosing what constrains a field.
+endpoint: unset, search is off and the panel says so.
 
 ## Requirements
 
@@ -76,6 +74,38 @@ is not in place yet.
 
 `npm run build:app` compiles `src/main.dev.ts` and the host page around it, which
 is what `npm start` serves.
+
+## Choosing What Constrains a Field
+
+A field's constraint is chosen with
+[`<cedar-term-picker>`](https://github.com/metadatacenter/cedar-term-picker),
+which the embedding page loads alongside the designer. The two are sibling web
+components: neither bundles the other, and a host that loads both gets term
+search in the designer's controlled-term panel.
+
+```html
+<script src="cedar-term-picker.js"></script>
+<script src="cedar-embeddable-designer.js"></script>
+```
+
+Without the picker the panel says so and the constraint fields are filled by
+hand, which is what the designer did for every constraint until now — an author
+typed an ontology acronym, a branch IRI and a label from memory, into a panel
+whose one search box was permanently disabled.
+
+The picker reads the terminology server's version-aware `/search`, which
+**production does not serve yet**: `POST https://terminology.metadatacenter.org/search`
+answers 404. Point `terminologyBaseUrl` at a local terminology server to use it.
+
+To try both together from source:
+
+```bash
+npm --prefix ../cedar-term-picker run dist
+npm run dist
+cp ../cedar-term-picker/dist-bundle/cedar-term-picker.js dist-bundle/
+```
+
+Then serve `dist-bundle/` and load a page that pulls in both scripts.
 
 ## Packaging
 

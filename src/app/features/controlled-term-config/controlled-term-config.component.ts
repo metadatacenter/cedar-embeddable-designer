@@ -1,9 +1,11 @@
-import { Component, Input, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, Input, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { TemplateService } from '../../core/services/template.service';
 import { Field, ControlledTermConfig as TermConfig } from '../../core/models/types';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { TerminologyService } from '../../core/services/terminology.service';
+import { PickedConstraint, termPickerAvailable, toControlledTermConfig } from '../../core/model/term-picker';
 
 @Component({
   selector: 'app-controlled-term-config',
@@ -11,9 +13,52 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
   imports: [FormsModule, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './controlled-term-config.component.html',
+  /*
+   * `<cedar-term-picker>` is a sibling web component the host page loads, not a
+   * dependency this bundle carries, so Angular is told the tag is legitimate
+   * rather than given a component to match it against.
+   */
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class ControlledTermConfigComponent {
   readonly service = inject(TemplateService);
+  private readonly terminology = inject(TerminologyService);
+
+  /** The terminology server the picker should ask, or null if a host named none. */
+  readonly terminologyBaseUrl = this.terminology.baseUrl;
+
+  /**
+   * Whether the picker can be offered.
+   *
+   * Read once, when the panel is built. A host loads the picker's script before
+   * or alongside the designer's; one that has not is not going to have done so by
+   * the time an author opens a field.
+   */
+  readonly pickerAvailable = termPickerAvailable();
+
+  readonly pickerOpen = signal(false);
+
+  openPicker(): void {
+    this.pickerOpen.set(true);
+  }
+
+  closePicker(): void {
+    this.pickerOpen.set(false);
+  }
+
+  /**
+   * The author chose a constraint, so the field takes it.
+   *
+   * Everything the four source types need arrives in the one event, which is the
+   * difference the picker makes: the acronym, the IRI and the label used to be
+   * three things an author typed from memory into free-text boxes, and nothing
+   * checked any of them.
+   */
+  applyPicked(event: Event): void {
+    const picked = (event as CustomEvent<PickedConstraint>).detail;
+    this.service.updateControlledTermConfig(this.field.id, toControlledTermConfig(picked));
+    this.pickerOpen.set(false);
+  }
 
   @Input() field!: Field;
 
