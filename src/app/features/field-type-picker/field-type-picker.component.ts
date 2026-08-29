@@ -74,10 +74,15 @@ export class FieldTypePickerComponent {
 
   @HostListener('document:mousedown', ['$event'])
   handleClickOutside(event: MouseEvent) {
-    // Close library dropdown when clicking outside of it
-    if (this.showDropdown() && !event.target) return;
-    const target = event.target as HTMLElement;
-    if (this.showDropdown() && !target.closest('.library-dropdown-container')) {
+    if (!this.showDropdown()) {
+      return;
+    }
+    // The composed path, not `event.target`: an event leaving a shadow root is
+    // retargeted at its host, so the dropdown would close on its own opening click.
+    const insideDropdown = event
+      .composedPath()
+      .some((node) => node instanceof Element && node.matches('.library-dropdown-container'));
+    if (!insideDropdown) {
       this.showDropdown.set(false);
       this.searchText = '';
     }

@@ -34,7 +34,6 @@
                   <app-icon key="filePlus" className="w-4 h-4 text-gray-500"></app-icon>
                   New Template
                 </span>
-                <kbd class="text-[10px] text-gray-400 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded">⌘N</kbd>
               </button>
               <button
                 (click)="openTemplateFile(); showFileMenu.set(false)"
@@ -44,28 +43,25 @@
                   <app-icon key="folder" className="w-4 h-4 text-gray-500"></app-icon>
                   Open Template...
                 </span>
-                <kbd class="text-[10px] text-gray-400 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded">⌘O</kbd>
               </button>
               <div class="my-1 border-t border-gray-100"></div>
               <button
-                (click)="saveTemplate(); showFileMenu.set(false)"
+                (click)="saveTemplateAsJson(); showFileMenu.set(false)"
                 class="w-full px-3.5 py-2 text-left text-xs font-medium text-gray-700 hover:bg-gray-100 flex items-center justify-between"
               >
                 <span class="flex items-center gap-2">
                   <app-icon key="save" className="w-4 h-4 text-[#2D6F5F]"></app-icon>
-                  Save Template
+                  Download as JSON
                 </span>
-                <kbd class="text-[10px] text-gray-400 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded">⌘S</kbd>
               </button>
               <button
-                (click)="saveTemplateAs(); showFileMenu.set(false)"
+                (click)="saveTemplateAsYaml(); showFileMenu.set(false)"
                 class="w-full px-3.5 py-2 text-left text-xs font-medium text-gray-700 hover:bg-gray-100 flex items-center justify-between"
               >
                 <span class="flex items-center gap-2">
                   <app-icon key="save" className="w-4 h-4 text-gray-500"></app-icon>
-                  Save Template As...
+                  Download as YAML
                 </span>
-                <kbd class="text-[10px] text-gray-400 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded">⇧⌘S</kbd>
               </button>
             </div>
           }
@@ -332,13 +328,13 @@
   <div class="floating-save">
     <div class="floating-save__wrapper">
       <button
-        (click)="saveTemplate()"
+        (click)="saveTemplateAsJson()"
         class="btn-save flex items-center justify-center"
         [style.backgroundColor]="service.COLORS.primary"
       >
         <app-icon key="save" className="w-5 h-5 text-white"></app-icon>
       </button>
-      <div class="floating-save__tooltip">Save Template</div>
+      <div class="floating-save__tooltip">Download as JSON</div>
     </div>
   </div>
 

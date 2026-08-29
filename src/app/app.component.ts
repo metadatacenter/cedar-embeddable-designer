@@ -1,9 +1,8 @@
-import { Component, inject, signal, OnInit, OnDestroy, HostListener, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ElementRef, HostListener, ChangeDetectionStrategy, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService, FIELD_TYPES } from './core/services/template.service';
-import { ElectronService } from './core/services/electron.service';
 import { toCedarJson, toCedarYaml } from './core/cedar-shim';
 import { Field } from './core/models/types';
 
@@ -41,49 +40,40 @@ import { CedarExportAccordionsComponent } from './features/cedar-export-accordio
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./app.component.scss'],
 })
-export class AppComponent implements OnInit, OnDestroy {
+export class AppComponent {
   readonly service = inject(TemplateService);
-  readonly electronService = inject(ElectronService);
-
-  private menuUnsubscribe: (() => void) | null = null;
+  private readonly host = inject(ElementRef<HTMLElement>);
 
   // Layout & UI states
   readonly showFieldsOverview = signal(true);
   readonly showFileMenu = signal(false);
 
-  ngOnInit() {
-    this.menuUnsubscribe = this.electronService.onMenuAction((action) => {
-      if (action === 'new') this.newTemplate();
-      else if (action === 'open') this.openTemplateFile();
-      else if (action === 'save') this.saveTemplate();
-      else if (action === 'save-as') this.saveTemplateAs();
+  constructor() {
+    // A newly added field asks to be scrolled to; the component owns the DOM, so
+    // it is the component that finds the card. `afterNextRender` is not enough on
+    // its own here — the request outlives the render that satisfies it — so the
+    // request is cleared once served.
+    effect(() => {
+      const fieldId = this.service.scrollRequest();
+      if (fieldId === null) {
+        return;
+      }
+      this.service.scrollRequest.set(null);
+      requestAnimationFrame(() => this.scrollToCard(fieldId));
     });
   }
 
-  ngOnDestroy() {
-    if (this.menuUnsubscribe) {
-      this.menuUnsubscribe();
-    }
-  }
-
-  // Keyboard Shortcuts (Cmd/Ctrl+S, Cmd/Ctrl+Shift+S, Cmd/Ctrl+O, Cmd/Ctrl+N)
-  @HostListener('window:keydown', ['$event'])
-  handleKeyboardShortcuts(event: KeyboardEvent) {
-    const isCmdOrCtrl = event.metaKey || event.ctrlKey;
-    if (isCmdOrCtrl && event.key.toLowerCase() === 's') {
-      event.preventDefault();
-      if (event.shiftKey) {
-        this.saveTemplateAs();
-      } else {
-        this.saveTemplate();
-      }
-    } else if (isCmdOrCtrl && event.key.toLowerCase() === 'o') {
-      event.preventDefault();
-      this.openTemplateFile();
-    } else if (isCmdOrCtrl && event.key.toLowerCase() === 'n') {
-      event.preventDefault();
-      this.newTemplate();
-    }
+  /**
+   * The card for a field, looked up in this component's own root.
+   *
+   * `getRootNode()` rather than `document`, because the editor renders inside the
+   * element's shadow root when it is embedded, and a document-wide lookup finds
+   * nothing there.
+   */
+  private scrollToCard(fieldId: number): void {
+    const root = this.host.nativeElement.getRootNode() as Document | ShadowRoot;
+    const card = root.querySelector(`#field-card-${fieldId}`);
+    card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   getEditorClasses(): Record<string, boolean> {
@@ -146,15 +136,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
   onFieldDrop(event: CdkDragDrop<Field[]>) {
     this.service.moveField(event.previousIndex, event.currentIndex);
-    this.electronService.isDirty.set(true);
   }
 
   scrollToField(fieldId: number) {
     this.service.selectedField.set(fieldId);
-    const el = document.getElementById(`field-card-${fieldId}`);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    this.scrollToCard(fieldId);
 
     setTimeout(() => {
       if (this.service.selectedField() === fieldId) {
@@ -165,157 +151,111 @@ export class AppComponent implements OnInit, OnDestroy {
 
   @HostListener('document:mousedown', ['$event'])
   handleClickOutside(event: MouseEvent) {
-    const target = event.target as HTMLElement;
+    /*
+     * `composedPath()` rather than `event.target`. A mousedown inside the shadow
+     * root is retargeted at the host element by the time it reaches the document,
+     * so every `closest()` below would miss and each of these menus would close on
+     * its own opening click. The composed path is the route the event actually
+     * took, shadow tree included.
+     */
+    const path = event.composedPath();
+    const within = (selector: string) => path.some((node) => node instanceof Element && node.matches(selector));
 
-    if (this.service.fieldTypeDropdown() !== null && !target.closest('.field-type-dropdown-container')) {
+    if (this.service.fieldTypeDropdown() !== null && !within('.field-type-dropdown-container')) {
       this.service.fieldTypeDropdown.set(null);
     }
 
-    if (this.service.showUserMenu() && !target.closest('.user-menu-container')) {
+    if (this.service.showUserMenu() && !within('.user-menu-container')) {
       this.service.showUserMenu.set(false);
     }
 
-    if (this.showFileMenu() && !target.closest('.file-menu-container')) {
+    if (this.showFileMenu() && !within('.file-menu-container')) {
       this.showFileMenu.set(false);
     }
   }
 
   // File Operations
-  newTemplate() {
-    if (this.electronService.isDirty()) {
-      const confirmDiscard = confirm('You have unsaved changes. Create new template without saving?');
-      if (!confirmDiscard) return;
-    }
-    this.service.resetTemplate();
-    this.electronService.currentFilePath.set(null);
-    this.electronService.isDirty.set(false);
-  }
 
-  async openTemplateFile() {
-    if (this.electronService.isDirty()) {
-      const confirmDiscard = confirm('You have unsaved changes. Open another template file without saving?');
-      if (!confirmDiscard) return;
-    }
-
-    if (this.electronService.isElectron) {
-      const result = await this.electronService.showOpenDialog([
-        { name: 'CEDAR Template Files (*.json, *.yaml)', extensions: ['json', 'yaml', 'yml'] },
-        { name: 'JSON Files (*.json)', extensions: ['json'] },
-        { name: 'YAML Files (*.yaml)', extensions: ['yaml', 'yml'] },
-      ]);
-
-      if (result && !result.canceled && result.filePaths && result.filePaths.length > 0) {
-        const filePath = result.filePaths[0];
-        const res = await this.electronService.readFile(filePath);
-        if (res.success && res.content) {
-          try {
-            this.service.loadTemplate(res.content);
-            this.electronService.currentFilePath.set(filePath);
-            this.electronService.isDirty.set(false);
-          } catch {
-            alert('Failed to parse selected template file.');
-          }
-        } else {
-          alert('Could not read selected file: ' + (res.error || 'Unknown error'));
-        }
-      }
-    } else {
-      // Browser fallback file prompt
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json,.yaml,.yml';
-      input.onchange = (e: any) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (evt) => {
-            if (evt.target?.result) {
-              this.service.loadTemplate(evt.target.result as string);
-              this.electronService.isDirty.set(false);
-            }
-          };
-          reader.readAsText(file);
-        }
-      };
-      input.click();
-    }
-  }
-
-  async saveTemplate() {
-    const currentPath = this.electronService.currentFilePath();
-    if (!currentPath) {
-      await this.saveTemplateAs();
+  newTemplate(): void {
+    if (!this.confirmDiscard('Create a new template without saving?')) {
       return;
     }
-    await this.writeToFile(currentPath);
+    this.service.resetTemplate();
   }
 
-  async saveTemplateAs() {
-    if (this.electronService.isElectron) {
-      try {
-        const suggestedName =
-          (this.service.templateName() || 'template').toLowerCase().replace(/[^a-z0-9_-]/g, '_') + '.json';
+  /**
+   * Open a template file the user picks.
+   *
+   * A file input rather than a native dialog. The Electron shell that owned the
+   * native one is gone: an embedded component reads and writes through its host,
+   * and the standalone application is a web page like any other.
+   */
+  openTemplateFile(): void {
+    if (!this.confirmDiscard('Open another template without saving?')) {
+      return;
+    }
 
-        const result = await this.electronService.showSaveDialog(suggestedName, [
-          { name: 'CEDAR JSON Model (*.json)', extensions: ['json'] },
-          { name: 'CEDAR YAML Model (*.yaml)', extensions: ['yaml', 'yml'] },
-        ]);
-
-        if (result && !result.canceled && result.filePath) {
-          await this.writeToFile(result.filePath);
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,.yaml,.yml';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) {
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          this.service.loadTemplate(reader.result as string);
+        } catch {
+          alert('Failed to parse the selected template file.');
         }
-      } catch (err: any) {
-        console.error('Error in saveTemplateAs:', err);
-        alert('Failed to save file: ' + (err?.message || err));
-      }
-    } else {
-      // Web fallback download
-      try {
-        const cedarJson = toCedarJson(
-          this.service.templateName(),
-          this.service.templateDesc(),
-          this.service.fields(),
-          this.service.templateIdentifier(),
-          this.service.templateVersion(),
-        );
-        const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(cedarJson, null, 2));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute('href', dataStr);
-        downloadAnchor.setAttribute('download', `${this.service.templateName() || 'template'}.json`);
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-        this.electronService.isDirty.set(false);
-      } catch (err: any) {
-        console.error('Error generating web template download:', err);
-        alert('Failed to generate template download: ' + (err?.message || err));
-      }
-    }
+      };
+      reader.onerror = () => alert('Could not read the selected file.');
+      reader.readAsText(file);
+    };
+    input.click();
   }
 
-  private async writeToFile(filePath: string) {
-    try {
-      const isYaml = filePath.endsWith('.yaml') || filePath.endsWith('.yml');
-      const cedarJson = toCedarJson(
-        this.service.templateName(),
-        this.service.templateDesc(),
-        this.service.fields(),
-        this.service.templateIdentifier(),
-        this.service.templateVersion(),
-      );
+  saveTemplateAsJson(): void {
+    this.download(JSON.stringify(this.cedarTemplate(), null, 2), 'application/json', 'json');
+  }
 
-      const fileContent = isYaml ? toCedarYaml(cedarJson) : JSON.stringify(cedarJson, null, 2);
+  saveTemplateAsYaml(): void {
+    this.download(toCedarYaml(this.cedarTemplate()), 'application/yaml', 'yaml');
+  }
 
-      const res = await this.electronService.writeFile(filePath, fileContent);
-      if (res.success) {
-        this.electronService.currentFilePath.set(filePath);
-        this.electronService.isDirty.set(false);
-      } else {
-        alert('Failed to save file: ' + (res.error || 'Unknown error'));
-      }
-    } catch (err: any) {
-      console.error('Error writing file:', err);
-      alert('Failed to write file: ' + (err?.message || err));
-    }
+  private cedarTemplate() {
+    return toCedarJson(
+      this.service.templateName(),
+      this.service.templateDesc(),
+      this.service.fields(),
+      this.service.templateIdentifier(),
+      this.service.templateVersion(),
+    );
+  }
+
+  /** The template name, reduced to something a filesystem will take. */
+  private fileName(extension: string): string {
+    const stem = (this.service.templateName() || 'template').toLowerCase().replace(/[^a-z0-9_-]+/g, '_');
+    return `${stem || 'template'}.${extension}`;
+  }
+
+  private download(contents: string, mimeType: string, extension: string): void {
+    const url = URL.createObjectURL(new Blob([contents], { type: mimeType }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = this.fileName(extension);
+    // Appended to the document rather than to this component: the anchor is never
+    // rendered, and a shadow root is not a place a synthetic click needs to happen.
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+    this.service.markSaved();
+  }
+
+  private confirmDiscard(question: string): boolean {
+    return !this.service.isDirty() || confirm(`You have unsaved changes. ${question}`);
   }
 }

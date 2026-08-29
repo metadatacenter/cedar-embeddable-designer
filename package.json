@@ -3,7 +3,6 @@
   "description": "A reusable Web Component for designing CEDAR metadata templates.",
   "license": "BSD-2-Clause",
   "version": "0.1.0",
-  "main": "electron/main.js",
   "engines": {
     "node": "^24.15.0"
   },
@@ -19,51 +18,15 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "build:element": "ng build --configuration production",
-    "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "electron:start": "electron .",
-    "electron:dev": "concurrently \"npm run start\" \"wait-on http-get://localhost:4200 && cross-env ELECTRON_START_URL=http://localhost:4200 electron .\"",
-    "electron:build": "ng build --base-href ./",
-    "electron:dist": "npm run electron:build && electron-builder",
     "lint": "ng lint",
     "typecheck": "tsc -p tsconfig.eslint.json --noEmit",
     "test:watch": "ng test --watch",
     "test:unit:coverage": "ng test --coverage",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "audit:prod": "npm audit --omit=dev --audit-level=high"
-  },
-  "build": {
-    "appId": "org.cedar.cedar-embeddable-designer",
-    "productName": "CEDAR Embeddable Designer",
-    "directories": {
-      "output": "dist-electron"
-    },
-    "files": [
-      "dist/cedar-embeddable-designer/**/*",
-      "electron/**/*",
-      "package.json"
-    ],
-    "mac": {
-      "category": "public.app-category.developer-tools",
-      "target": [
-        "dmg",
-        "zip"
-      ]
-    },
-    "win": {
-      "target": [
-        "nsis",
-        "portable"
-      ]
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ]
-    }
+    "audit:prod": "npm audit --omit=dev --audit-level=high",
+    "build:app": "ng run cedar-embeddable-designer:build-app"
   },
   "private": true,
   "dependencies": {
@@ -88,10 +51,6 @@
     "@types/node": "^24.13.3",
     "@vitest/coverage-v8": "^4.1.11",
     "angular-eslint": "^22.1.0",
-    "concurrently": "^10.0.4",
-    "cross-env": "^10.1.0",
-    "electron": "^43.3.0",
-    "electron-builder": "^26.15.3",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
@@ -100,7 +59,6 @@
     "prettier": "^3.9.6",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.68.0",
-    "vitest": "^4.0.8",
-    "wait-on": "^9.1.0"
+    "vitest": "^4.0.8"
   }
 }

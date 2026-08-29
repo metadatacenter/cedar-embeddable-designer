@@ -1,4 +1,4 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { Field, Library, CustomField, ControlledTermConfig, UserPreferences, FIELD_TYPES } from '../models/types';
 import { PreferencesService } from './preferences.service';
 import { fromCedarYaml } from '../cedar-shim';
@@ -48,6 +48,32 @@ export class TemplateService {
     },
   ]);
 
+  /**
+   * The editor state as it was when the template was last saved, opened or reset.
+   *
+   * Compared against the live state rather than set by each mutation, because a
+   * flag set by hand is a flag someone forgets: this used to be one boolean that
+   * only field reordering ever raised, so every other edit left the unsaved-changes
+   * guard believing there was nothing to lose.
+   *
+   * The editor's own state, not the serialization: `toCedarJson` stamps a fresh
+   * timestamp and fresh identifiers on every call, so a template compared through
+   * it would read as changed the moment it was written.
+   */
+  private readonly savedState = signal<string>('');
+
+  readonly isDirty = computed(() => this.stateKey() !== this.savedState());
+
+  /**
+   * The field a newly added card should be scrolled to, or null.
+   *
+   * The service holds the request and the component performs it. Looking the card
+   * up from here meant `document.getElementById`, which finds nothing once the
+   * editor renders inside a shadow root — the element is in the tree, just not in
+   * the document's.
+   */
+  readonly scrollRequest = signal<number | null>(null);
+
   readonly libraries = signal<Library[]>([]);
   readonly customFields = signal<CustomField[]>([]);
   readonly selectedLibraryId = signal<number | null>(null);
@@ -85,7 +111,25 @@ export class TemplateService {
     return this.preferencesService.showApiKeyModal;
   }
 
-  constructor() {}
+  constructor() {
+    this.markSaved();
+  }
+
+  /** Everything a save would write, and nothing that changes on its own. */
+  private stateKey(): string {
+    return JSON.stringify({
+      name: this.templateName(),
+      description: this.templateDesc(),
+      identifier: this.templateIdentifier(),
+      version: this.templateVersion(),
+      fields: this.fields(),
+    });
+  }
+
+  /** Take the current state as the baseline, after a save, an open or a reset. */
+  markSaved(): void {
+    this.savedState.set(this.stateKey());
+  }
 
   // Field manipulation methods
   addField(type: string, position: number) {
@@ -108,13 +152,7 @@ export class TemplateService {
     this.showPicker.set(null);
     this.selectedField.set(newField.id);
 
-    // Scroll to the new field (handled by components subscribing or looking at this state)
-    setTimeout(() => {
-      const el = document.getElementById(`field-card-${newField.id}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
+    this.scrollRequest.set(newField.id);
   }
 
   addCustomFieldToTemplate(customField: CustomField, position: number) {
@@ -140,12 +178,7 @@ export class TemplateService {
     this.showPicker.set(null);
     this.selectedField.set(newField.id);
 
-    setTimeout(() => {
-      const el = document.getElementById(`field-card-${newField.id}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
+    this.scrollRequest.set(newField.id);
   }
 
   deleteField(id: number) {
@@ -352,6 +385,7 @@ export class TemplateService {
         allowMultiple: false,
       },
     ]);
+    this.markSaved();
   }
 
   loadTemplate(templateData: any) {
@@ -420,5 +454,7 @@ export class TemplateService {
       // Internal editor state format
       this.fields.set(templateData.fields);
     }
+
+    this.markSaved();
   }
 }

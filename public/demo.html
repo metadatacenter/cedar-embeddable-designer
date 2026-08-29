@@ -1,81 +1,103 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>CEDAR Embeddable Designer - Web Component Demo</title>
-  <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background-color: #f8fafc;
-    }
-    .demo-bar {
-      background-color: #0f172a;
-      color: #ffffff;
-      padding: 12px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .demo-title {
-      font-size: 16px;
-      font-weight: 600;
-    }
-    .demo-container {
-      padding: 20px;
-    }
-    .log-box {
-      margin-top: 20px;
-      background-color: #1e293b;
-      color: #38bdf8;
-      padding: 16px;
-      border-radius: 8px;
-      font-family: monospace;
-      font-size: 12px;
-      max-height: 200px;
-      overflow-y: auto;
-    }
-  </style>
-</head>
-<body>
-
-  <div class="demo-bar">
-    <div class="demo-title">External Host Website (Embedding &lt;cedar-embeddable-designer&gt;)</div>
-    <div style="font-size: 12px; color: #94a3b8;">Web Component Integration Test</div>
-  </div>
-
-  <div class="demo-container">
-    <!-- Web Component Element -->
-    <cedar-embeddable-designer
-      id="cedar-editor"
-      bioportal-api-key="demo-key"
-    ></cedar-embeddable-designer>
-
-    <div class="log-box">
-      <strong>Host Console Log (Listening to 'templateChange' events):</strong>
-      <pre id="event-log">Waiting for template changes...</pre>
-    </div>
-  </div>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const editor = document.getElementById('cedar-editor');
-      const logEl = document.getElementById('event-log');
-
-      if (editor) {
-        editor.addEventListener('templateChange', (e) => {
-          logEl.textContent = JSON.stringify(e.detail, null, 2);
-        });
-
-        editor.addEventListener('saveTemplate', (e) => {
-          alert('Save event caught by host application!');
-        });
+  <head>
+    <meta charset="utf-8" />
+    <title>CEDAR Embeddable Designer — embedding demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      /*
+        Deliberately opinionated, and deliberately hostile to the component.
+        Everything here is a style a real host page might carry, and none of it
+        should reach inside the designer's shadow root. If the editor starts
+        rendering in Comic Sans on a pink background, the encapsulation is gone.
+      */
+      * {
+        box-sizing: border-box;
       }
-    });
-  </script>
+      body {
+        margin: 0;
+        font-family: Georgia, 'Times New Roman', serif;
+        background: #fdf2f8;
+        color: #831843;
+      }
+      button {
+        font-size: 24px;
+        background: #db2777;
+        color: white;
+      }
+      .demo-bar {
+        background: #0f172a;
+        color: #fff;
+        padding: 12px 24px;
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .demo-bar strong {
+        font-size: 14px;
+      }
+      .demo-bar span {
+        font-size: 12px;
+        color: #94a3b8;
+      }
+      .demo-frame {
+        height: 78vh;
+        margin: 16px;
+        border: 2px dashed #db2777;
+      }
+      cedar-embeddable-designer {
+        height: 100%;
+      }
+      .log {
+        margin: 0 16px 16px;
+        padding: 12px;
+        background: #1e293b;
+        color: #38bdf8;
+        border-radius: 8px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        max-height: 160px;
+        overflow: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-bar">
+      <strong>Host page</strong>
+      <span>embedding &lt;cedar-embeddable-designer&gt; — the dashed border is the host's, everything inside is the element's</span>
+    </div>
 
-</body>
+    <div class="demo-frame">
+      <cedar-embeddable-designer id="designer"></cedar-embeddable-designer>
+    </div>
+
+    <pre class="log" id="log">Waiting for a templateChange event…</pre>
+
+    <!--
+      The bundle, loaded as a plain script. This page carried no script tag at all
+      until now, which is why it could never have worked: it named the element and
+      never loaded the code that defines it.
+    -->
+    <script src="polyfills.js" type="module"></script>
+    <script src="main.js" type="module"></script>
+
+    <script>
+      const log = document.getElementById('log');
+      let count = 0;
+
+      document.getElementById('designer').addEventListener('templateChange', (event) => {
+        count += 1;
+        const template = event.detail;
+        log.textContent =
+          `templateChange #${count}\n` +
+          `name:     ${template.name}\n` +
+          `children: ${template.children.map((child) => child.key).join(', ')}`;
+      });
+
+      customElements.whenDefined('cedar-embeddable-designer').then(() => {
+        log.textContent = 'Element defined. Edit a field to see templateChange events.';
+      });
+    </script>
+  </body>
 </html>

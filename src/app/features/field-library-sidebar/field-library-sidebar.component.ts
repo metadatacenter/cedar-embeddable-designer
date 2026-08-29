@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ElementRef, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService, FIELD_TYPES } from '../../core/services/template.service';
@@ -15,6 +15,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 })
 export class FieldLibrarySidebarComponent {
   readonly service = inject(TemplateService);
+  private readonly host = inject(ElementRef<HTMLElement>);
 
   fieldListHeight = 33.33; // percentage
   readonly isResizing = signal(false);
@@ -64,7 +65,7 @@ export class FieldLibrarySidebarComponent {
     this.isResizing.set(true);
 
     const onMouseMove = (moveEvent: MouseEvent) => {
-      const container = document.querySelector('.border-r');
+      const container = this.host.nativeElement.closest('.border-r');
       if (!container) return;
 
       const containerRect = container.getBoundingClientRect();

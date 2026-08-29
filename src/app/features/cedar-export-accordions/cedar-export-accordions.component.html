@@ -98,7 +98,7 @@
         </div>
         <div class="code-wrapper">
           <div class="line-numbers" aria-hidden="true">
-            @for (line of [].constructor(jsonLineCount()); track line; let i = $index) {
+            @for (line of [].constructor(jsonLineCount()); track i; let i = $index) {
               <span>{{ i + 1 }}</span>
             }
           </div>
@@ -210,7 +210,7 @@
         </div>
         <div class="code-wrapper">
           <div class="line-numbers" aria-hidden="true">
-            @for (line of [].constructor(yamlLineCount()); track line; let i = $index) {
+            @for (line of [].constructor(yamlLineCount()); track i; let i = $index) {
               <span>{{ i + 1 }}</span>
             }
           </div>

@@ -67,7 +67,7 @@
   <div class="code-wrapper">
     <!-- Line numbers -->
     <div class="line-numbers" aria-hidden="true">
-      @for (line of [].constructor(lineCount()); track line; let i = $index) {
+      @for (line of [].constructor(lineCount()); track i; let i = $index) {
         <span>{{ i + 1 }}</span>
       }
     </div>

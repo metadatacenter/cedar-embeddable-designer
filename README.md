@@ -12,19 +12,28 @@ templates CEE renders.
 
 ## Status
 
-Early, and under active reconstruction on `develop`. The application runs and
-exports a template, but the pieces an embedding page depends on are still being
-built: the component registers itself only as a side effect of bootstrapping the
-standalone application, styles are global rather than scoped to a shadow root,
-and there is no packaged bundle to depend on. Treat the element contract as
-unsettled until this section says otherwise.
+Early, and under active reconstruction on `develop`.
 
-Serialization currently goes through a hand-written shim under
-`src/app/core/cedar-shim/` rather than through
+The element works. `<cedar-embeddable-designer>` registers itself without
+bootstrapping anything onto the page, renders in shadow DOM so neither its styles
+nor a host page's cross the boundary, takes a template and an API key as
+properties, and publishes a `templateChange` event. What is not settled is the
+contract's shape: the input and output names may still change, and there is no
+declared type for them yet.
+
+There is no packaged bundle. `npm run build` produces the element as two files
+rather than the single script an embedder should be able to load, and nothing is
+published.
+
+Serialization goes through a hand-written shim under `src/app/core/cedar-shim/`
+rather than through
 [`@org.metadatacenter/cedar-model-typescript-library`](https://github.com/metadatacenter/cedar-model-typescript-library),
-which is where it belongs and where it is going. Controlled-term search reaches
-a hardcoded terminology endpoint and will move to
-[`<cedar-term-picker>`](https://github.com/metadatacenter/cedar-term-picker),
+which is where it belongs and where it is going. Until it moves, exported
+templates carry fresh identifiers and timestamps on every read, and drop the
+recommended status, the multiple-values flag, default values and every
+controlled-term constraint. Controlled-term search reaches a hardcoded
+terminology endpoint, invents results when that endpoint is unreachable, and will
+move to [`<cedar-term-picker>`](https://github.com/metadatacenter/cedar-term-picker),
 the component built for choosing what constrains a field.
 
 ## Requirements
@@ -38,8 +47,10 @@ npm install
 
 ## Running
 
-Start the development server and open `http://localhost:4200/`. The application
-rebuilds as source files change.
+Start the development server and open `http://localhost:4200/`. The page it
+serves is a host page: it embeds `<cedar-embeddable-designer>` rather than
+rendering the editor directly, so development exercises the same contract an
+embedder uses.
 
 ```bash
 npm start
@@ -47,14 +58,27 @@ npm start
 
 ## Building
 
+There are two builds, because there are two things to produce.
+
 ```bash
-npm run build
+npm run build       # the element
+npm run build:app   # the standalone application
 ```
 
-Build artifacts land in `dist/`. The production configuration optimizes the
-output and hashes filenames, so the result is an application rather than a
-distributable component. Packaging the element as one embeddable file follows
-CEE's approach and is not in place yet.
+`npm run build` compiles `src/main.ts`, which registers the custom element and
+bootstraps nothing. It emits no `index.html` and no global stylesheet: the
+element carries its own styles into its shadow root, which is why they are listed
+on the element component rather than in `angular.json`. The output is
+`main.js` and `polyfills.js` under `dist/cedar-embeddable-designer/`, unhashed.
+Flattening those into the one script an embedder loads follows CEE's approach and
+is not in place yet.
+
+`npm run build:app` compiles `src/main.dev.ts` and the host page around it, which
+is what `npm start` serves.
+
+`public/demo.html` is an embedding fixture, copied into both outputs. Serve the
+element build's directory and open it to see the component inside a host page
+whose own styles are chosen to be as intrusive as possible.
 
 ## Testing
 
