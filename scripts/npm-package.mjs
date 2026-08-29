@@ -44,6 +44,7 @@ export function packageMetadata(rootPackage = readJson(join(ROOT, 'package.json'
       'cedar-embeddable-designer.d.ts',
       'bundle-manifest.json',
       'README.md',
+      'CHANGELOG.md',
       'license.txt',
     ],
     // A release carries no publishConfig, so it goes to registry.npmjs.org under
@@ -83,6 +84,7 @@ export function expectedFiles() {
     'cedar-embeddable-designer.d.ts': readFileSync(TYPES),
     'bundle-manifest.json': Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`),
     'README.md': readFileSync(join(ROOT, 'README.md')),
+    'CHANGELOG.md': readFileSync(join(ROOT, 'CHANGELOG.md')),
     'license.txt': readFileSync(join(ROOT, 'license.txt')),
     'package.json': Buffer.from(`${JSON.stringify(packageMetadata(), null, 2)}\n`),
   };
