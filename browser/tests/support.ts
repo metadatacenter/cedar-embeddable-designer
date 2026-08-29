@@ -115,3 +115,11 @@ export async function clickCentred(target: Locator): Promise<void> {
   await target.dispatchEvent('click');
 }
 
+/** Open the user menu and apply a preset, which is how field types are made visible. */
+export async function applyPreset(page: Page, preset: 'basic' | 'semantic' | 'modular'): Promise<void> {
+  const designer = page.locator(DESIGNER);
+  await designer.locator('.user-menu-container button').first().click();
+  await designer.getByRole('button', { name: 'Preferences' }).click();
+  await designer.getByRole('button', { name: preset, exact: true }).click();
+  await designer.getByRole('button', { name: 'Done' }).click();
+}

@@ -7,8 +7,12 @@ import { Field } from './core/models/types';
 
 // Custom components
 import { IconComponent } from './shared/components/icon/icon.component';
+import { FieldLibrarySidebarComponent } from './features/field-library-sidebar/field-library-sidebar.component';
+import { PreferencesModalComponent } from './features/modals/preferences/preferences.component';
+import { PresetDefinitionsModalComponent } from './features/modals/preset-definitions/preset-definitions.component';
 import { PreviewPanelComponent } from './features/preview-panel/preview-panel.component';
 import { FieldTypePickerComponent } from './features/field-type-picker/field-type-picker.component';
+import { FieldDesignerComponent } from './features/field-designer/field-designer.component';
 import { FieldCardComponent } from './features/field-card/field-card.component';
 import { CedarExportAccordionsComponent } from './features/cedar-export-accordions/cedar-export-accordions.component';
 
@@ -20,8 +24,12 @@ import { CedarExportAccordionsComponent } from './features/cedar-export-accordio
     FormsModule,
     DragDropModule,
     IconComponent,
+    FieldLibrarySidebarComponent,
+    PreferencesModalComponent,
+    PresetDefinitionsModalComponent,
     PreviewPanelComponent,
     FieldTypePickerComponent,
+    FieldDesignerComponent,
     FieldCardComponent,
     CedarExportAccordionsComponent,
   ],
@@ -67,6 +75,8 @@ export class AppComponent {
 
   getEditorClasses(): Record<string, boolean> {
     const preview = this.service.showPreview();
+    const selectionStyle = this.service.preferences().fieldSelectionStyle;
+    const collapsed = this.service.sidebarCollapsed();
     return {
       'transition-all': true,
       'duration-300': true,
@@ -75,6 +85,8 @@ export class AppComponent {
       'flex-1': true,
       'w-full': !preview,
       'w-2/3': preview,
+      'pl-72': selectionStyle === 'sidebar' && !collapsed,
+      'pl-12': selectionStyle === 'sidebar' && collapsed,
     };
   }
 
@@ -89,6 +101,11 @@ export class AppComponent {
   }
 
   getOverviewButtonLeft(): string {
+    const selectionStyle = this.service.preferences().fieldSelectionStyle;
+    const collapsed = this.service.sidebarCollapsed();
+    if (selectionStyle === 'sidebar') {
+      return collapsed ? '4.5rem' : '19.5rem';
+    }
     return '1.5rem';
   }
 
@@ -97,10 +114,20 @@ export class AppComponent {
   }
 
   getFieldIcon(field: Field): string {
+    if (field.customFieldId) {
+      const customField = this.service.customFields().find((cf) => cf.id === field.customFieldId);
+      if (customField) {
+        return customField.baseType;
+      }
+    }
     return field.type;
   }
 
   getFieldTypeName(field: Field): string {
+    if (field.customFieldId) {
+      const customField = this.service.customFields().find((cf) => cf.id === field.customFieldId);
+      if (customField) return customField.name;
+    }
     return FIELD_TYPES[field.type]?.label || field.type;
   }
 
@@ -133,6 +160,10 @@ export class AppComponent {
 
     if (this.service.fieldTypeDropdown() !== null && !within('.field-type-dropdown-container')) {
       this.service.fieldTypeDropdown.set(null);
+    }
+
+    if (this.service.showUserMenu() && !within('.user-menu-container')) {
+      this.service.showUserMenu.set(false);
     }
 
     if (this.showFileMenu() && !within('.file-menu-container')) {

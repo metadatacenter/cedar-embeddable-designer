@@ -109,12 +109,6 @@ drives it in a browser.
 
 ### Removed
 
-- The features the Figma Make export invented, which have no CEDAR counterpart:
-  the Field Designer and the custom fields and libraries it created, the
-  preferences modal, and the presets that decided which field types an author
-  could see. CEDAR reuses structure through template elements, and which types a
-  designer offers is a question for its host rather than a user setting. Some
-  1,700 lines, and 76 kB off what an embedder downloads.
 - The Electron shell, its IPC bridge — which accepted any filesystem path the
   renderer offered — the service behind it, the menu wiring and five
   devDependencies. Open and save are a file input and a download.

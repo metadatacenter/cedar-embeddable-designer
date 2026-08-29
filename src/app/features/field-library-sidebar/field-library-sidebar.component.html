@@ -1,0 +1,156 @@
+<div
+  class="sidebar-container"
+  [style.width]="service.sidebarCollapsed() ? '48px' : '288px'"
+  style="top: 57px; height: calc(100vh - 57px); max-height: calc(100vh - 57px)"
+>
+  @if (!service.sidebarCollapsed()) {
+    <!-- Field List Section -->
+    <div class="sidebar-section" [style.height.%]="fieldListHeight">
+      <!-- Field List Header -->
+      <div class="sidebar-header">
+        <div class="sidebar-header-left">
+          <app-icon key="list" className="w-4 h-4 text-gray-600"></app-icon>
+          <h3 class="sidebar-title">Fields ({{ service.fields().length }})</h3>
+        </div>
+        <button (click)="service.sidebarCollapsed.set(true)" class="btn-collapse" title="Collapse sidebar">
+          <span class="text-xs">◀</span>
+        </button>
+      </div>
+      <!-- Field List - Drag & Drop Scrollable -->
+      <div class="sidebar-scrollable custom-scrollbar" cdkDropList (cdkDropListDropped)="onFieldDrop($event)">
+        @if (service.fields().length === 0) {
+          <div class="field-empty-state">No fields yet</div>
+        }
+        @for (field of service.fields(); track field; let idx = $index) {
+          <div
+            cdkDrag
+            (click)="service.selectedField.set(field.id)"
+            class="draggable-field-item group"
+            [class.active]="service.selectedField() === field.id"
+            [style.borderLeftColor]="service.selectedField() === field.id ? service.COLORS.primary : 'transparent'"
+          >
+            <span class="draggable-icon">
+              <app-icon [key]="getFieldIconKey(field)" className="w-5 h-5"></app-icon>
+            </span>
+            <div class="draggable-name-container">
+              <div class="draggable-name">{{ field.name }}</div>
+            </div>
+            <div
+              class="draggable-indicator"
+              [style.backgroundColor]="service.selectedField() === field.id ? service.COLORS.primary : '#94A3B8'"
+            ></div>
+            <div class="draggable-handle" cdkDragHandle>
+              <app-icon key="list" className="w-3 h-3"></app-icon>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+    <!-- Draggable Divider -->
+    <div
+      (mousedown)="onResizeStart($event)"
+      class="resizable-divider"
+      [style.backgroundColor]="isResizing() ? '#d1d5db' : ''"
+    >
+      <div class="divider-handle"></div>
+    </div>
+    <!-- Add Fields Section -->
+    <div class="sidebar-section" [style.height.%]="100 - fieldListHeight">
+      <!-- Add Fields Header -->
+      <div class="add-fields-header">
+        <h3 class="add-fields-title">Libraries & Fields</h3>
+      </div>
+      <!-- Scrollable Content -->
+      <div class="sidebar-scrollable custom-scrollbar">
+        <!-- Built-in Field Types -->
+        <div class="library-group">
+          <button (click)="expandedBuiltIn.set(!expandedBuiltIn())" class="btn-library-toggle">
+            <span class="library-toggle-text">Built-in Fields</span>
+            <span class="library-toggle-icon" [class.rotated]="!expandedBuiltIn()">▼</span>
+          </button>
+          @if (expandedBuiltIn()) {
+            <div class="library-content animate-fade-in">
+              @for (item of visibleFieldTypesList(); track item) {
+                <button (click)="service.addField(item.key, service.fields().length)" class="btn-add-item group">
+                  <span class="add-item-icon">
+                    <app-icon [key]="item.key" className="w-5 h-5"></app-icon>
+                  </span>
+                  <span class="add-item-text">{{ item.value.label }}</span>
+                  <span class="add-item-plus">＋</span>
+                </button>
+              }
+            </div>
+          }
+        </div>
+        <!-- Library Fields -->
+        @for (library of service.libraries(); track library) {
+          <div class="library-group">
+            <button (click)="toggleLibrary(library.id)" class="btn-library-toggle">
+              <span class="library-toggle-text">{{ library.name }}</span>
+              <span class="library-toggle-icon" [class.rotated]="!expandedLibraries().has(library.id)">▼</span>
+            </button>
+            @if (expandedLibraries().has(library.id)) {
+              <div class="library-content animate-fade-in">
+                @if (getFieldsForLibrary(library.id).length === 0) {
+                  <div class="library-empty-state">No fields in this library</div>
+                }
+                @for (field of getFieldsForLibrary(library.id); track field) {
+                  <button
+                    (click)="service.addCustomFieldToTemplate(field, service.fields().length)"
+                    class="btn-add-item group"
+                  >
+                    <span class="add-item-icon">
+                      <app-icon [key]="field.baseType" className="w-5 h-5"></app-icon>
+                    </span>
+                    <div class="add-item-details">
+                      <div class="add-item-text">{{ field.name }}</div>
+                      @if (field.description) {
+                        <div class="add-item-desc">{{ field.description }}</div>
+                      }
+                    </div>
+                    <span class="add-item-plus">＋</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  } @else {
+    <div class="collapsed-view-container">
+      <!-- Expand Button -->
+      <div class="collapsed-header">
+        <button (click)="service.sidebarCollapsed.set(false)" class="btn-expand" title="Expand sidebar">
+          <span class="text-xs">▶</span>
+        </button>
+      </div>
+      <!-- Collapsed Icons -->
+      <div class="collapsed-icons-list custom-scrollbar">
+        <!-- Field count indicator -->
+        <div class="collapsed-indicator">
+          <div class="relative">
+            <app-icon key="list" className="w-5 h-5 text-gray-600"></app-icon>
+            @if (service.fields().length > 0) {
+              <div class="badge-count-indicator" [style.backgroundColor]="service.COLORS.primary">
+                {{ service.fields().length }}
+              </div>
+            }
+          </div>
+        </div>
+        <!-- Built-in indicator -->
+        <div class="collapsed-indicator">
+          <span class="plus-indicator">＋</span>
+        </div>
+        <!-- Library indicators -->
+        @for (library of service.libraries(); track library; let last = $last) {
+          <div class="collapsed-indicator" [class.no-border]="last">
+            <app-icon key="library" className="w-5 h-5 text-gray-600"></app-icon>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Collapsed View -->
+</div>

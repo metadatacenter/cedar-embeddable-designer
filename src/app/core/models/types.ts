@@ -1,3 +1,28 @@
+export interface ValidationRule {
+  id: number;
+  type: string;
+  pattern: string;
+  errorMessage: string;
+}
+
+export interface CustomField {
+  id: number;
+  name: string;
+  icon: string;
+  baseType: string;
+  libraryId: number;
+  description: string;
+  placeholder: string;
+  validationRules: ValidationRule[];
+}
+
+export interface Library {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+}
+
 /**
  * The vocabulary snapshot a constraint names.
  *
@@ -50,7 +75,36 @@ export interface Field {
    * address of an image, the id of a video. Absent on every other type.
    */
   content?: string;
+  customFieldId?: number;
+  libraryId?: number;
   controlledTermConfig?: ControlledTermConfig;
+}
+
+export interface UserPreferences {
+  showRequired: boolean;
+  showAllowMultiple: boolean;
+  showHelpText: boolean;
+  showDefaultValue: boolean;
+  showFieldDesigner: boolean;
+  showElements: boolean;
+  fieldSelectionStyle: 'modal' | 'sidebar';
+  visibleFieldTypes: Record<string, boolean>;
+}
+
+export interface PresetDefinition {
+  showRequired: boolean;
+  showAllowMultiple: boolean;
+  showHelpText: boolean;
+  showDefaultValue: boolean;
+  showFieldDesigner: boolean;
+  showElements: boolean;
+  hiddenFieldTypes: string[];
+}
+
+export interface PresetDefinitions {
+  basic: PresetDefinition;
+  semantic: PresetDefinition;
+  modular: PresetDefinition;
 }
 
 export const FIELD_TYPES: Record<string, { label: string; preview: string }> = {

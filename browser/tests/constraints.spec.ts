@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { child, clickCentred, currentTemplate, openDesigner } from './support';
+import { applyPreset, child, clickCentred, currentTemplate, openDesigner } from './support';
 
 /**
  * Choosing what constrains a field, which is the designer's reason to exist.
@@ -14,6 +14,7 @@ import { child, clickCentred, currentTemplate, openDesigner } from './support';
 /** Add a controlled-term field and open its constraint panel. */
 async function openConstraintPanel(page: import('@playwright/test').Page) {
   const designer = await openDesigner(page, '?picker=stub');
+  await applyPreset(page, 'semantic');
   await designer.getByRole('button', { name: /Add Field/ }).click();
   await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
   return designer.locator('app-controlled-term-config');
@@ -27,6 +28,7 @@ test('offers term search when the host has loaded the picker', async ({ page }) 
 
 test('says what is missing when the host has not loaded the picker', async ({ page }) => {
   const designer = await openDesigner(page);
+  await applyPreset(page, 'semantic');
   await designer.getByRole('button', { name: /Add Field/ }).click();
   await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
 
@@ -39,6 +41,7 @@ test('says what is missing when the host has not loaded the picker', async ({ pa
 
 test('says what is missing when no terminology server is configured', async ({ page }) => {
   const designer = await openDesigner(page, '?picker=stub&terminology=none');
+  await applyPreset(page, 'semantic');
   await designer.getByRole('button', { name: /Add Field/ }).click();
   await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
 
