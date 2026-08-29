@@ -2,6 +2,9 @@
 
 # Compiled output
 /dist
+/dist-bundle
+/dist-npm
+/dist-types
 /tmp
 /out-tsc
 /bazel-out

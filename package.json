@@ -26,7 +26,14 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "audit:prod": "npm audit --omit=dev --audit-level=high",
-    "build:app": "ng run cedar-embeddable-designer:build-app"
+    "build:app": "ng run cedar-embeddable-designer:build-app",
+    "types:public": "tsc -p tsconfig.public-api.json",
+    "bundle": "node scripts/make-bundle.mjs",
+    "check:size": "node scripts/check-bundle-size.mjs",
+    "package:npm": "npm run types:public && node scripts/stage-npm-package.mjs && npm run check:npm-package",
+    "check:npm-package": "node scripts/check-npm-package.mjs",
+    "dist": "npm run build && npm run bundle && npm run check:size && npm run package:npm",
+    "test:packaging": "node --test scripts/npm-package.test.mjs"
   },
   "private": true,
   "dependencies": {
@@ -52,6 +59,7 @@
     "@types/node": "^24.13.3",
     "@vitest/coverage-v8": "^4.1.11",
     "angular-eslint": "^22.1.0",
+    "esbuild": "^0.25.12",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",

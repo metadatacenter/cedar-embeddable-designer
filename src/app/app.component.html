@@ -4,9 +4,34 @@
     <div class="app-header__inner">
       <div class="app-header__brand flex items-center gap-3">
         <div class="flex flex-col items-center justify-center text-center cursor-default group">
-          <div class="w-7 h-7 rounded-full bg-[#0c4335] flex items-center justify-center p-1 shadow-xs">
-            <img src="cedar-logo.png" alt="CEDAR Logo" class="w-full h-full object-contain" />
-          </div>
+          <!--
+            Inline, not <img src="cedar-logo.png">. The element ships as one
+            script with no asset directory beside it, so a relative image is a
+            request the embedder's server answers with a 404 and the author sees
+            a broken mark. Everything the element draws has to travel inside it.
+          -->
+          <svg
+            class="w-7 h-7 shadow-xs rounded-full"
+            viewBox="0 0 120 120"
+            role="img"
+            aria-label="CEDAR"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle cx="60" cy="60" r="56" fill="#0b4739" />
+            <g fill="#c3cfd6">
+              <rect x="71" y="70" width="4" height="12" rx="1" />
+              <path
+                d="M 73 34 L 77 42 L 74.5 42 L 79 50 L 76 50 L 82 59 L 78.5 59 L 85 70 L 61 70 L 67.5 59 L 64 59 L 70 50 L 67 50 L 71.5 42 L 69 42 Z"
+              />
+            </g>
+            <g fill="#ffffff">
+              <rect x="49" y="68" width="5" height="15" rx="1" />
+              <path
+                d="M 51.5 24 L 57 34 L 53.5 34 L 60 44 L 56 44 L 63 55 L 58.5 55 L 66 69 L 37 69 L 44.5 55 L 40 55 L 47 44 L 43 44 L 49.5 34 L 46 34 Z"
+              />
+            </g>
+            <path d="M 24 78 C 24 90 96 90 96 78 C 96 85.5 24 85.5 24 78 Z" fill="#ffffff" />
+          </svg>
           <span class="font-bold text-[10px] text-gray-900 tracking-wider leading-none mt-0.5">CETD</span>
           <span class="text-[9px] font-medium text-gray-500 leading-none scale-90">0.1.0</span>
         </div>

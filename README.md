@@ -21,9 +21,9 @@ properties, and publishes a `templateChange` event. What is not settled is the
 contract's shape: the input and output names may still change, and there is no
 declared type for them yet.
 
-There is no packaged bundle. `npm run build` produces the element as two files
-rather than the single script an embedder should be able to load, and nothing is
-published.
+`npm run dist` produces the distribution: one script an embedder loads with a
+plain `<script>` tag, its type declaration, and a staged npm directory. Nothing
+is published yet, and the package has not been released on either channel.
 
 Serialization is the
 [CEDAR model library's](https://github.com/metadatacenter/cedar-model-typescript-library).
@@ -76,6 +76,27 @@ is not in place yet.
 
 `npm run build:app` compiles `src/main.dev.ts` and the host page around it, which
 is what `npm start` serves.
+
+## Packaging
+
+```bash
+npm run dist
+```
+
+Builds the element, flattens Angular's module output into one classic script with
+esbuild, holds it to its size ceiling, and stages `dist-npm/cedar-embeddable-designer/`
+from those exact bytes. The staging step builds nothing of its own: it copies the
+file the size gate measured, and verifies the result byte for byte afterwards.
+
+The registry a package belongs to is derived from its version rather than passed
+at publish time. A version carrying `-dev.` is a snapshot and names the CEDAR
+Nexus under `@org.metadatacenter`; anything else is a release for public npmjs,
+unscoped. That way a snapshot cannot reach npmjs by forgetting a flag.
+
+The published declaration is emitted from `src/app/ced-public-api.ts` alone, which
+is written without imports so its declarations stand alone. Adding an import to
+that file breaks the declaration build rather than shipping a `.d.ts` that names
+paths only this repository has.
 
 `public/demo.html` is an embedding fixture, copied into both outputs. Serve the
 element build's directory and open it to see the component inside a host page

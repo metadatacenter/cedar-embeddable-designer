@@ -45,8 +45,25 @@ jobs:
       - name: Unit tests
         run: npm test
 
-      - name: Build the production application
+      - name: Packaging tests
+        run: npm run test:packaging
+
+      - name: Build the element
         run: npm run build
+
+      - name: Build the standalone application
+        run: npm run build:app
+
+      # The distribution, from the bytes the build just produced: flatten to one
+      # script, hold it to its size ceiling, and stage the package from that exact
+      # file. Verified byte for byte afterwards, because the failure this guards
+      # against is a staged directory left over from an earlier build — it looks
+      # complete and publishes something nobody tested.
+      - name: Bundle, measure and stage the distribution
+        run: |
+          npm run bundle
+          npm run check:size
+          npm run package:npm
 
       # Deliberately its own step rather than part of the gate above: this is the
       # one check that can start failing without anyone having changed anything,
