@@ -1,7 +1,20 @@
 {
-  "name": "metadata-template-designer",
+  "name": "cedar-embeddable-designer",
+  "description": "A reusable Web Component for designing CEDAR metadata templates.",
+  "license": "BSD-2-Clause",
   "version": "0.1.0",
   "main": "electron/main.js",
+  "engines": {
+    "node": "^24.15.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/metadatacenter/cedar-embeddable-designer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/metadatacenter/cedar-embeddable-designer/issues"
+  },
+  "homepage": "https://github.com/metadatacenter/cedar-embeddable-designer#readme",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",

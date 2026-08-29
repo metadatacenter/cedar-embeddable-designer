@@ -1,59 +1,72 @@
-# MetadataTemplateDesigner
+# CEDAR Embeddable Designer (CED)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.27.
+The CEDAR Embeddable Designer is a Web Component for authoring CEDAR metadata
+templates. An author assembles a template field by field, constrains fields to
+ontologies, branches, terms and value sets, and the component produces a CEDAR
+template that any CEDAR service can store, validate and render.
 
-## Development server
+CED is the authoring half of a pair. The [CEDAR Embeddable Editor
+(CEE)](https://github.com/metadatacenter/cedar-embeddable-editor) renders a
+template as a form and produces metadata instances from it; CED produces the
+templates CEE renders.
 
-To start a local development server, run:
+## Status
+
+Early, and under active reconstruction on `develop`. The application runs and
+exports a template, but the pieces an embedding page depends on are still being
+built: the component registers itself only as a side effect of bootstrapping the
+standalone application, styles are global rather than scoped to a shadow root,
+and there is no packaged bundle to depend on. Treat the element contract as
+unsettled until this section says otherwise.
+
+Serialization currently goes through a hand-written shim under
+`src/app/core/cedar-shim/` rather than through
+[`@org.metadatacenter/cedar-model-typescript-library`](https://github.com/metadatacenter/cedar-model-typescript-library),
+which is where it belongs and where it is going. Controlled-term search reaches
+a hardcoded terminology endpoint and will move to
+[`<cedar-term-picker>`](https://github.com/metadatacenter/cedar-term-picker),
+the component built for choosing what constrains a field.
+
+## Requirements
+
+Node 24.19.0, as named by `.nvmrc` and matching CEE and the term picker.
 
 ```bash
-ng serve
+nvm use
+npm install
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Running
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Start the development server and open `http://localhost:4200/`. The application
+rebuilds as source files change.
 
 ```bash
-ng generate --help
+npm start
 ```
 
 ## Building
 
-To build the project run:
-
 ```bash
-ng build
+npm run build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Build artifacts land in `dist/`. The production configuration optimizes the
+output and hashes filenames, so the result is an application rather than a
+distributable component. Packaging the element as one embeddable file follows
+CEE's approach and is not in place yet.
 
-## Running unit tests
+## Testing
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+There are no tests. Vitest and a Playwright suite arrive with the web-component
+work, on the configuration CEE uses.
 
-```bash
-ng test
-```
+## Related Repositories
 
-## Running end-to-end tests
+- [cedar-embeddable-editor](https://github.com/metadatacenter/cedar-embeddable-editor) — renders a template as a form and produces instances
+- [cedar-term-picker](https://github.com/metadatacenter/cedar-term-picker) — chooses the ontology, branch, term or value set that constrains a field
+- [cedar-model-typescript-library](https://github.com/metadatacenter/cedar-model-typescript-library) — the CEDAR model, and the readers and writers for its serializations
 
-For end-to-end (e2e) testing, run:
+## Licence
 
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+BSD 2-Clause. See [license.txt](license.txt).
