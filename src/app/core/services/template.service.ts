@@ -373,6 +373,11 @@ export class TemplateService {
     this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, allowMultiple: !f.allowMultiple } : f)));
   }
 
+  /** The one value a static field shows. */
+  updateContent(id: number, content: string) {
+    this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, content } : f)));
+  }
+
   updateHelpText(id: number, helpText: string) {
     this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, helpText } : f)));
   }

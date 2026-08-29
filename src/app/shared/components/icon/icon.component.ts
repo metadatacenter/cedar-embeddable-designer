@@ -45,6 +45,29 @@ export class IconComponent {
     controlledTerms:
       '<path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />',
 
+    singleChoiceList:
+      '<path d="M8 6h13M8 12h13M8 18h13" /><circle cx="4" cy="6" r="1.5" fill="currentColor" /><circle cx="4" cy="12" r="1.5" /><circle cx="4" cy="18" r="1.5" />',
+    multipleChoiceList:
+      '<path d="M8 6h13M8 12h13M8 18h13" /><rect x="2.5" y="4.5" width="3" height="3" rx="0.5" fill="currentColor" /><rect x="2.5" y="10.5" width="3" height="3" rx="0.5" fill="currentColor" /><rect x="2.5" y="16.5" width="3" height="3" rx="0.5" />',
+    attributeValue: '<path d="M4 7h6M4 12h6M4 17h6M14 7h6M14 12h6M14 17h6" /><path d="M12 4v16" />',
+
+    // External authorities: an identifier resolved against a register. Drawn
+    // rather than reproduced, because these organisations' marks are theirs.
+    ror: '<circle cx="12" cy="12" r="9" /><path d="M8 15V9h3a2 2 0 010 4H8m4 0l3 2" />',
+    pfas: '<path d="M4 20V4h9m-9 8h7" /><circle cx="17" cy="17" r="3" /><path d="M17 14v-2m0 10v-2m3-3h2m-10 0h2" />',
+    rrid: '<rect x="3" y="5" width="18" height="14" rx="2" /><path d="M7 9v6h3a2 2 0 000-4H7m4 0l3 4" />',
+    pubmed: '<path d="M4 19V5h5a3 3 0 010 6H4" /><path d="M13 19V5l4 7 4-7v14" />',
+    nihGrantId: '<path d="M12 3l9 5v3H3V8l9-5z" /><path d="M6 11v6m4-6v6m4-6v6m4-6v6M3 20h18" />',
+    doi: '<circle cx="12" cy="12" r="9" /><path d="M8 15V9h1.5a3 3 0 010 6H8" /><path d="M14.5 9v6" />',
+
+    // Static types, which show something rather than collect it.
+    richText: '<path d="M4 6h16M4 10h10M4 14h16M4 18h7" /><path d="M17 13l3 3-3 3" />',
+    youtube:
+      '<rect x="2.5" y="6" width="19" height="12" rx="3" /><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor" />',
+    sectionBreak: '<path d="M3 12h18" stroke-dasharray="3 3" /><path d="M6 7h12M6 17h12" opacity="0.45" />',
+    pageBreak:
+      '<path d="M3 12h18" stroke-dasharray="3 3" /><path d="M7 8V4h10v4" opacity="0.6" /><path d="M7 16v4h10v-4" opacity="0.6" />',
+
     // Library / Designer icons
     building:
       '<path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />',

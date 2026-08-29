@@ -52,6 +52,11 @@ export interface Field {
   defaultValue: string;
   allowMultiple: boolean;
   helpText?: string;
+  /**
+   * The one value a static field shows: the markup of a rich text block, the
+   * address of an image, the id of a video. Absent on every other type.
+   */
+  content?: string;
   customFieldId?: number;
   libraryId?: number;
   controlledTermConfig?: ControlledTermConfig;
@@ -89,13 +94,30 @@ export const FIELD_TYPES: Record<string, { label: string; preview: string }> = {
   paragraph: { label: 'Paragraph', preview: 'Long answer text' },
   multipleChoice: { label: 'Multiple Choice', preview: 'Radio buttons' },
   checkboxes: { label: 'Checkboxes', preview: 'Multiple selection' },
+  singleChoiceList: { label: 'List', preview: 'Choose one from a list' },
+  multipleChoiceList: { label: 'Multi-select List', preview: 'Choose several from a list' },
   date: { label: 'Date', preview: 'Date picker' },
   time: { label: 'Time', preview: 'Time picker' },
   email: { label: 'Email', preview: 'Email address' },
   link: { label: 'Link', preview: 'URL' },
   phone: { label: 'Phone', preview: 'Phone number' },
   number: { label: 'Number', preview: 'Numeric value' },
-  image: { label: 'Image', preview: 'File upload' },
-  orcid: { label: 'ORCID', preview: 'Research identifier' },
   controlledTerms: { label: 'Controlled Terms', preview: 'Controlled vocabulary' },
+  attributeValue: { label: 'Attribute Value', preview: 'Names the author supplies' },
+
+  // External authorities: an identifier resolved against a register.
+  orcid: { label: 'ORCID', preview: 'Researcher identifier' },
+  ror: { label: 'ROR', preview: 'Research organization identifier' },
+  pfas: { label: 'PFAS', preview: 'PFAS substance identifier' },
+  rrid: { label: 'RRID', preview: 'Research resource identifier' },
+  pubmed: { label: 'PubMed', preview: 'PubMed identifier' },
+  nihGrantId: { label: 'NIH Grant ID', preview: 'NIH grant identifier' },
+  doi: { label: 'DOI', preview: 'Digital object identifier' },
+
+  // Static types, which show something rather than collect it.
+  image: { label: 'Image', preview: 'An image at a URL' },
+  richText: { label: 'Rich Text', preview: 'Formatted text' },
+  youtube: { label: 'YouTube', preview: 'An embedded video' },
+  sectionBreak: { label: 'Section Break', preview: 'A divider between sections' },
+  pageBreak: { label: 'Page Break', preview: 'A break between pages' },
 };

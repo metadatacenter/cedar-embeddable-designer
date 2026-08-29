@@ -18,6 +18,7 @@ import {
   AbstractDynamicChildDeploymentInfo,
   AbstractDynamicChildDeploymentInfoBuilder,
   BiboStatus,
+  CedarArtifactType,
   BioportalTermType,
   CedarBuilders,
   CedarFieldType,
@@ -114,42 +115,160 @@ export function newTemplateIdentifier(): string {
 }
 
 /**
- * The editor's field types, as CEDAR's.
+ * Every field type the editor offers, and what CEDAR makes of it.
  *
- * `image` is the loosest of these. The editor offers it as a file upload and
- * CEDAR has no such field, so it maps to the static image field, which displays
- * one. Worth revisiting when the editor's own field list is next examined.
+ * One descriptor per type, rather than a builder map beside a reverse map that
+ * had to be kept in step by hand. `deployment` is the part that is not
+ * decoration: a field's deployment builder differs by type, and a static field's
+ * does not extend the dynamic one at all, so asking a page break to be required
+ * is not a setting that gets ignored — it is a call to a method that is not
+ * there. Building an image field threw for exactly that reason.
+ *
+ * `content` names the one extra value a static field carries: the markup of a
+ * rich text block, the URL of an image, the id of a video.
  */
-const FIELD_BUILDERS: Record<string, () => FieldBuilder> = {
-  text: () => CedarBuilders.textFieldBuilder(),
-  paragraph: () => CedarBuilders.textAreaBuilder(),
-  multipleChoice: () => CedarBuilders.radioFieldBuilder(),
-  checkboxes: () => CedarBuilders.checkboxFieldBuilder(),
-  date: () => CedarBuilders.temporalFieldBuilder(),
-  time: () => CedarBuilders.temporalFieldBuilder(),
-  email: () => CedarBuilders.emailFieldBuilder(),
-  link: () => CedarBuilders.linkFieldBuilder(),
-  phone: () => CedarBuilders.phoneNumberFieldBuilder(),
-  number: () => CedarBuilders.numericFieldBuilder(),
-  image: () => CedarBuilders.imageFieldBuilder(),
-  orcid: () => CedarBuilders.extOrcidFieldBuilder(),
-  controlledTerms: () => CedarBuilders.controlledTermFieldBuilder(),
+type DeploymentKind = 'plain' | 'alwaysSingle' | 'alwaysMultiple' | 'static';
+
+interface FieldDescriptor {
+  readonly cedarType: CedarFieldType;
+  readonly build: () => FieldBuilder;
+  readonly deployment: DeploymentKind;
+  /** Whether the type takes the author's list of options. */
+  readonly options?: boolean;
+  /** What the type's single static value is for, where it has one. */
+  readonly content?: 'markup' | 'url' | 'videoId';
+}
+
+const FIELD_DESCRIPTORS: Record<string, FieldDescriptor> = {
+  text: { cedarType: CedarFieldType.TEXT, build: () => CedarBuilders.textFieldBuilder(), deployment: 'plain' },
+  paragraph: { cedarType: CedarFieldType.TEXTAREA, build: () => CedarBuilders.textAreaBuilder(), deployment: 'plain' },
+  multipleChoice: {
+    cedarType: CedarFieldType.RADIO,
+    build: () => CedarBuilders.radioFieldBuilder(),
+    deployment: 'alwaysSingle',
+    options: true,
+  },
+  checkboxes: {
+    cedarType: CedarFieldType.CHECKBOX,
+    build: () => CedarBuilders.checkboxFieldBuilder(),
+    deployment: 'alwaysMultiple',
+    options: true,
+  },
+  singleChoiceList: {
+    cedarType: CedarFieldType.SINGLE_SELECT_LIST,
+    build: () => CedarBuilders.singleChoiceListFieldBuilder(),
+    deployment: 'plain',
+    options: true,
+  },
+  multipleChoiceList: {
+    cedarType: CedarFieldType.MULTIPLE_SELECT_LIST,
+    build: () => CedarBuilders.multipleChoiceListFieldBuilder(),
+    deployment: 'alwaysMultiple',
+    options: true,
+  },
+  date: { cedarType: CedarFieldType.TEMPORAL, build: () => CedarBuilders.temporalFieldBuilder(), deployment: 'plain' },
+  time: { cedarType: CedarFieldType.TEMPORAL, build: () => CedarBuilders.temporalFieldBuilder(), deployment: 'plain' },
+  email: { cedarType: CedarFieldType.EMAIL, build: () => CedarBuilders.emailFieldBuilder(), deployment: 'plain' },
+  link: { cedarType: CedarFieldType.LINK, build: () => CedarBuilders.linkFieldBuilder(), deployment: 'plain' },
+  phone: {
+    cedarType: CedarFieldType.PHONE_NUMBER,
+    build: () => CedarBuilders.phoneNumberFieldBuilder(),
+    deployment: 'plain',
+  },
+  number: { cedarType: CedarFieldType.NUMERIC, build: () => CedarBuilders.numericFieldBuilder(), deployment: 'plain' },
+  controlledTerms: {
+    cedarType: CedarFieldType.CONTROLLED_TERM,
+    build: () => CedarBuilders.controlledTermFieldBuilder(),
+    deployment: 'plain',
+  },
+  attributeValue: {
+    cedarType: CedarFieldType.ATTRIBUTE_VALUE,
+    build: () => CedarBuilders.attributeValueFieldBuilder(),
+    deployment: 'alwaysMultiple',
+  },
+
+  // The external authorities, which differ from one another only in which
+  // register they resolve an identifier against.
+  orcid: {
+    cedarType: CedarFieldType.EXT_ORCID,
+    build: () => CedarBuilders.extOrcidFieldBuilder(),
+    deployment: 'plain',
+  },
+  ror: { cedarType: CedarFieldType.EXT_ROR, build: () => CedarBuilders.extRorFieldBuilder(), deployment: 'plain' },
+  pfas: { cedarType: CedarFieldType.EXT_PFAS, build: () => CedarBuilders.extPfasFieldBuilder(), deployment: 'plain' },
+  rrid: { cedarType: CedarFieldType.EXT_RRID, build: () => CedarBuilders.extRridFieldBuilder(), deployment: 'plain' },
+  pubmed: {
+    cedarType: CedarFieldType.EXT_PUBMED,
+    build: () => CedarBuilders.extPubmedFieldBuilder(),
+    deployment: 'plain',
+  },
+  nihGrantId: {
+    cedarType: CedarFieldType.EXT_NIH_GRANT_ID,
+    build: () => CedarBuilders.extNihGrantIdFieldBuilder(),
+    deployment: 'plain',
+  },
+  doi: { cedarType: CedarFieldType.EXT_DOI, build: () => CedarBuilders.extDoiFieldBuilder(), deployment: 'plain' },
+
+  // The static types, which show something rather than collect it.
+  image: {
+    cedarType: CedarFieldType.STATIC_IMAGE,
+    build: () => CedarBuilders.imageFieldBuilder(),
+    deployment: 'static',
+    content: 'url',
+  },
+  richText: {
+    cedarType: CedarFieldType.STATIC_RICH_TEXT,
+    build: () => CedarBuilders.richTextFieldBuilder(),
+    deployment: 'static',
+    content: 'markup',
+  },
+  youtube: {
+    cedarType: CedarFieldType.STATIC_YOUTUBE,
+    build: () => CedarBuilders.youtubeFieldBuilder(),
+    deployment: 'static',
+    content: 'videoId',
+  },
+  sectionBreak: {
+    cedarType: CedarFieldType.STATIC_SECTION_BREAK,
+    build: () => CedarBuilders.sectionBreakFieldBuilder(),
+    deployment: 'static',
+  },
+  pageBreak: {
+    cedarType: CedarFieldType.STATIC_PAGE_BREAK,
+    build: () => CedarBuilders.pageBreakFieldBuilder(),
+    deployment: 'static',
+  },
 };
 
-/** The reverse, for reading a template back into editor state. */
-const EDITOR_TYPES: Array<[CedarFieldType, string]> = [
-  [CedarFieldType.TEXT, 'text'],
-  [CedarFieldType.TEXTAREA, 'paragraph'],
-  [CedarFieldType.RADIO, 'multipleChoice'],
-  [CedarFieldType.CHECKBOX, 'checkboxes'],
-  [CedarFieldType.EMAIL, 'email'],
-  [CedarFieldType.LINK, 'link'],
-  [CedarFieldType.PHONE_NUMBER, 'phone'],
-  [CedarFieldType.NUMERIC, 'number'],
-  [CedarFieldType.STATIC_IMAGE, 'image'],
-  [CedarFieldType.EXT_ORCID, 'orcid'],
-  [CedarFieldType.CONTROLLED_TERM, 'controlledTerms'],
-];
+/** The descriptor for an editor type, falling back to text for one we do not know. */
+export function descriptorOf(editorType: string): FieldDescriptor {
+  return FIELD_DESCRIPTORS[editorType] ?? FIELD_DESCRIPTORS['text'];
+}
+
+/** Whether a type's author can mark it required or recommended. */
+export function allowsStatus(editorType: string): boolean {
+  return descriptorOf(editorType).deployment !== 'static';
+}
+
+/**
+ * Whether a type's author chooses how many values it takes.
+ *
+ * A radio is single by its type and a checkbox multiple by its, so for those the
+ * question is already answered and the control would be a lie.
+ */
+export function allowsMultiple(editorType: string): boolean {
+  return descriptorOf(editorType).deployment === 'plain';
+}
+
+/** Whether a type carries a list of options its author writes. */
+export function allowsOptions(editorType: string): boolean {
+  return descriptorOf(editorType).options === true;
+}
+
+/** What a type's static content is, where it has any. */
+export function contentKindOf(editorType: string): 'markup' | 'url' | 'videoId' | undefined {
+  return descriptorOf(editorType).content;
+}
 
 /**
  * The key a field is deployed under, which must be unique within the template.
@@ -273,8 +392,30 @@ function buildControlledTerm(builder: FieldBuilder, config: ControlledTermConfig
   }
 }
 
+/**
+ * The one value a static field carries.
+ *
+ * Three different setters for what is, to an author, the same box: the markup of
+ * a rich text block, the address of an image, the id of a video.
+ */
+function buildStaticContent(builder: FieldBuilder, kind: 'markup' | 'url' | 'videoId', content: string): void {
+  if (!content) {
+    return;
+  }
+  const staticBuilder = builder as unknown as {
+    withContent?(content: string): unknown;
+    withVideoId?(videoId: string): unknown;
+  };
+  if (kind === 'videoId') {
+    staticBuilder.withVideoId?.(content);
+  } else {
+    staticBuilder.withContent?.(content);
+  }
+}
+
 function buildField(field: Field): TemplateField {
-  const builder = (FIELD_BUILDERS[field.type] ?? FIELD_BUILDERS['text'])();
+  const descriptor = descriptorOf(field.type);
+  const builder = descriptor.build();
 
   builder
     .withTitle(derivedTitle(field.name, 'field'))
@@ -298,13 +439,20 @@ function buildField(field: Field): TemplateField {
   if (field.type === 'date' || field.type === 'time') {
     buildTemporal(builder, field.type);
   }
-  if (field.type === 'multipleChoice' || field.type === 'checkboxes') {
+  if (descriptor.options) {
     buildOptions(builder, field);
   }
   if (field.type === 'controlledTerms') {
     buildControlledTerm(builder, field.controlledTermConfig);
   }
-  if (field.defaultValue) {
+  if (descriptor.content) {
+    buildStaticContent(builder, descriptor.content, field.content ?? '');
+  }
+  /*
+   * A static field shows something rather than collecting one, so it has no
+   * default to carry — and no `withDefaultValue` to call.
+   */
+  if (field.defaultValue && descriptor.deployment !== 'static') {
     const withDefault = builder as unknown as { withDefaultValue?(value: string): unknown };
     withDefault.withDefaultValue?.(field.defaultValue);
   }
@@ -327,16 +475,27 @@ export function buildTemplate(state: EditorTemplate): Template {
   const keys = deploymentKeys(state.fields);
   state.fields.forEach((field, index) => {
     const built = buildField(field);
-    const deployment = built.createDeploymentBuilder(keys[index]) as AbstractDynamicChildDeploymentInfoBuilder;
-    deployment.withRequiredValue(field.status === 'required').withRecommendedValue(field.status === 'recommended');
-    if (field.propertyIri) {
-      deployment.withIri(field.propertyIri);
-    }
+    const deployment = built.createDeploymentBuilder(keys[index]);
+
     /*
-     * Only where the type leaves the choice open. A checkbox and a multiple-choice
-     * list are multiple by their type and a radio is single by its, so their
-     * deployment builders have no flag to set — the library models that by giving
-     * them a different builder rather than by ignoring the call.
+     * A static field's deployment builder does not extend the dynamic one, so it
+     * has no required value, no recommended value and no property IRI — those are
+     * not settings it ignores, they are methods it does not have. Building an
+     * image field threw here until this branch existed.
+     */
+    if (deployment instanceof AbstractDynamicChildDeploymentInfoBuilder) {
+      deployment.withRequiredValue(field.status === 'required').withRecommendedValue(field.status === 'recommended');
+      if (field.propertyIri) {
+        deployment.withIri(field.propertyIri);
+      }
+    }
+
+    /*
+     * Only where the type leaves the choice open. A checkbox, an attribute-value
+     * field and a multiple-choice list are multiple by their type and a radio is
+     * single by its, so their deployment builders have no flag to set — the
+     * library models that by giving them a different builder rather than by
+     * ignoring the call.
      */
     if (deployment instanceof ChildDeploymentInfoBuilder) {
       deployment.withMultiInstance(field.allowMultiple);
@@ -397,14 +556,25 @@ export function readTemplate(source: string | object): Template {
 }
 
 function editorTypeOf(field: TemplateField): string {
-  const match = EDITOR_TYPES.find(([cedarType]) => cedarType === field.cedarFieldType);
-  if (match) {
-    return match[1];
-  }
+  /*
+   * Temporal first, because two editor types share one CEDAR type and only the
+   * value constraints tell them apart. Reading the table would give whichever of
+   * the two it lists, which is how a time field came back as a date.
+   */
   if (field.cedarFieldType === CedarFieldType.TEMPORAL) {
     return (field as TemporalField).valueConstraints.temporalType === TemporalType.TIME ? 'time' : 'date';
   }
-  return 'text';
+  const match = Object.entries(FIELD_DESCRIPTORS).find(
+    ([, descriptor]) => descriptor.cedarType === field.cedarFieldType,
+  );
+  return match ? match[0] : 'text';
+}
+
+/** The static content a field carries, for reading one back into editor state. */
+function contentOf(field: TemplateField): string | undefined {
+  const staticField = field as unknown as { content?: unknown; videoId?: unknown; value?: unknown };
+  const value = staticField.videoId ?? staticField.content ?? staticField.value;
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
 }
 
 function optionsOf(field: TemplateField): string[] {
@@ -465,10 +635,17 @@ export function toEditorTemplate(template: Template): EditorTemplate {
   const fields: Field[] = [];
 
   template.getChildrenInfo().children.forEach((info, index) => {
-    const field = template.getField(info.name);
-    if (field === null) {
+    /*
+     * `getChild`, not `getField`. A static field's artifact type is
+     * `StaticTemplateField` rather than `TemplateField`, and `getField` narrows
+     * on that — so it answered null for every page break, section break, rich
+     * text block, image and video, and reading a template silently dropped them.
+     */
+    const child = template.getChild(info.name);
+    if (child === null || child.cedarArtifactType === CedarArtifactType.TEMPLATE_ELEMENT) {
       return;
     }
+    const field = child as TemplateField;
     const dynamic = info as AbstractDynamicChildDeploymentInfo;
     const defaultValue = (field as unknown as { valueConstraints?: { defaultValue?: unknown } }).valueConstraints
       ?.defaultValue;
@@ -482,6 +659,7 @@ export function toEditorTemplate(template: Template): EditorTemplate {
       defaultValue: typeof defaultValue === 'string' ? defaultValue : '',
       allowMultiple: info instanceof ChildDeploymentInfo ? info.multiInstance : info.isMultiInAnyWay(),
       helpText: field.schema_description ?? '',
+      content: contentOf(field),
       atId: field.at_id?.getValue() ?? undefined,
       propertyIri: dynamic.iri ?? undefined,
       controlledTermConfig: controlledTermConfigOf(field),

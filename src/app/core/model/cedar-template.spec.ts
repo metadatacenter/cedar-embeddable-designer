@@ -14,11 +14,17 @@
  * the same model, which is the claim that adopting the library buys and the one
  * that fails loudest if anything here still thinks in terms of JSON keys.
  */
-import { CedarFieldType, ControlledTermField, TemporalField, Template } from 'cedar-model-typescript-library';
+import { ControlledTermField, TemporalField, Template } from 'cedar-model-typescript-library';
 import { Field } from '../models/types';
+import { FIELD_TYPES } from '../models/types';
 import {
   EditorTemplate,
+  allowsMultiple,
+  allowsOptions,
+  allowsStatus,
   buildTemplate,
+  contentKindOf,
+  descriptorOf,
   fieldDeployment,
   newFieldIdentity,
   readTemplate,
@@ -100,26 +106,39 @@ describe('building a CEDAR template', () => {
 });
 
 describe('field types', () => {
-  const cases: Array<[string, string | null]> = [
-    ['text', CedarFieldType.TEXT.getUiInputType().getValue()],
-    ['paragraph', CedarFieldType.TEXTAREA.getUiInputType().getValue()],
-    ['multipleChoice', CedarFieldType.RADIO.getUiInputType().getValue()],
-    ['checkboxes', CedarFieldType.CHECKBOX.getUiInputType().getValue()],
-    ['date', CedarFieldType.TEMPORAL.getUiInputType().getValue()],
-    ['time', CedarFieldType.TEMPORAL.getUiInputType().getValue()],
-    ['email', CedarFieldType.EMAIL.getUiInputType().getValue()],
-    ['link', CedarFieldType.LINK.getUiInputType().getValue()],
-    ['phone', CedarFieldType.PHONE_NUMBER.getUiInputType().getValue()],
-    ['number', CedarFieldType.NUMERIC.getUiInputType().getValue()],
-    ['orcid', CedarFieldType.EXT_ORCID.getUiInputType().getValue()],
-    ['controlledTerms', CedarFieldType.CONTROLLED_TERM.getUiInputType().getValue()],
-  ];
+  /**
+   * Every type the palette offers builds, and builds as the CEDAR type it claims.
+   *
+   * Driven from `FIELD_TYPES` rather than from a list written here, so a type
+   * added to the palette without a descriptor behind it fails rather than going
+   * unnoticed — which is how `image` sat in the palette while building one threw.
+   */
+  const paletteTypes = Object.keys(FIELD_TYPES);
 
-  it.each(cases)('writes %s as a %s field', (editorType, inputType) => {
+  it('has a descriptor of its own for every type in the palette', () => {
+    // `descriptorOf` falls back to text for a type it does not know, so a palette
+    // entry with nothing behind it would build a text field and look fine.
+    const fallback = descriptorOf('no-such-type');
+    const unbacked = paletteTypes.filter((type) => type !== 'text' && descriptorOf(type) === fallback);
+
+    expect(unbacked).toEqual([]);
+  });
+
+  it.each(paletteTypes)('builds a %s field', (editorType) => {
+    expect(() => buildTemplate(templateOf(field({ type: editorType, name: 'F' })))).not.toThrow();
+  });
+
+  it.each(paletteTypes)('writes %s as the CEDAR type its descriptor names', (editorType) => {
     const built = child(templateOf(field({ type: editorType, name: 'F' })), 'F');
     const ui = built['_ui'] as Record<string, unknown>;
 
-    expect(ui['inputType']).toBe(inputType);
+    expect(ui['inputType']).toBe(descriptorOf(editorType).cedarType.getUiInputType().getValue());
+  });
+
+  it.each(paletteTypes)('reads a %s field back as the type it was', (editorType) => {
+    const state = templateOf(field({ type: editorType, name: 'F' }));
+
+    expect(toEditorTemplate(buildTemplate(state)).fields[0].type).toBe(editorType);
   });
 
   it('distinguishes a date from a time', () => {
@@ -130,6 +149,90 @@ describe('field types', () => {
     // came back as a date and degraded on every open-and-save cycle.
     expect(dateField.valueConstraints.temporalType.getValue()).toBe('xsd:date');
     expect(timeField.valueConstraints.temporalType.getValue()).toBe('xsd:time');
+  });
+});
+
+describe('what a type will accept', () => {
+  it('lets a plain field be required, multiple, and neither by default', () => {
+    expect(allowsStatus('text')).toBe(true);
+    expect(allowsMultiple('text')).toBe(true);
+    expect(allowsOptions('text')).toBe(false);
+  });
+
+  it.each(['image', 'richText', 'youtube', 'sectionBreak', 'pageBreak'])(
+    'does not let %s be required or multiple, because it shows rather than collects',
+    (staticType) => {
+      expect(allowsStatus(staticType)).toBe(false);
+      expect(allowsMultiple(staticType)).toBe(false);
+    },
+  );
+
+  it.each([
+    ['multipleChoice', 'single by its type'],
+    ['checkboxes', 'multiple by its type'],
+    ['multipleChoiceList', 'multiple by its type'],
+    ['attributeValue', 'multiple by its type'],
+  ])('does not offer cardinality on %s, which is %s', (editorType) => {
+    expect(allowsMultiple(editorType)).toBe(false);
+    expect(allowsStatus(editorType)).toBe(true);
+  });
+
+  it.each(['multipleChoice', 'checkboxes', 'singleChoiceList', 'multipleChoiceList'])(
+    '%s takes a list of options',
+    (editorType) => {
+      expect(allowsOptions(editorType)).toBe(true);
+    },
+  );
+
+  it.each([
+    ['richText', 'markup'],
+    ['image', 'url'],
+    ['youtube', 'videoId'],
+  ])('%s carries its content as %s', (editorType, kind) => {
+    expect(contentKindOf(editorType)).toBe(kind);
+  });
+
+  it.each(['text', 'sectionBreak', 'pageBreak'])('%s carries no content of its own', (editorType) => {
+    expect(contentKindOf(editorType)).toBeUndefined();
+  });
+});
+
+describe('static fields', () => {
+  it('carries the markup of a rich text block', () => {
+    const built = child(templateOf(field({ type: 'richText', name: 'Note', content: '<p>Read this</p>' })), 'Note');
+
+    // Under `_ui`, beside the input type, which is where the writer puts it.
+    expect((built['_ui'] as Record<string, unknown>)['_content']).toBe('<p>Read this</p>');
+  });
+
+  it('carries the address of an image', () => {
+    const built = child(
+      templateOf(field({ type: 'image', name: 'Logo', content: 'https://example.org/l.png' })),
+      'Logo',
+    );
+
+    expect((built['_ui'] as Record<string, unknown>)['_content']).toBe('https://example.org/l.png');
+  });
+
+  it('reads its content back into the editor', () => {
+    const state = templateOf(field({ type: 'richText', name: 'Note', content: '<p>Read this</p>' }));
+
+    expect(toEditorTemplate(buildTemplate(state)).fields[0].content).toBe('<p>Read this</p>');
+  });
+
+  it('takes no required value, because its deployment has none to take', () => {
+    const built = buildTemplate(templateOf(field({ type: 'pageBreak', name: 'Break', status: 'required' })));
+
+    /*
+     * A static field's deployment builder does not extend the dynamic one, so
+     * `withRequiredValue` is a method it does not have rather than a setting it
+     * ignores. Building any static type threw here until that was branched on.
+     *
+     * `getChild`, because `getField` narrows on the artifact type and a static
+     * field's is `StaticTemplateField`.
+     */
+    expect(built.getChild('Break')).not.toBeNull();
+    expect(fieldDeployment(built, 'Break')?.requiredValue).toBeUndefined();
   });
 });
 

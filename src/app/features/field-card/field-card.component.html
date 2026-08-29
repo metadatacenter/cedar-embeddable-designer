@@ -127,7 +127,7 @@
 
   <!-- Field Preview / Options Editing Inside Card -->
   <!-- Option Editing for Multiple Choice / Checkboxes -->
-  @if (field.type === 'multipleChoice' || field.type === 'checkboxes') {
+  @if (allowsOptions(field.type)) {
     <div class="space-y-1.5 mb-4 px-1">
       @for (option of field.options; track option; let optIdx = $index) {
         <div class="flex items-center gap-3 group/option px-1 py-0.5">
@@ -169,8 +169,27 @@
     </div>
   }
 
+  <!--
+    The one value a static field carries: the markup of a rich text block, the
+    address of an image, the id of a video. Editable, where the preview below is
+    only a placeholder, because this is content the author writes rather than a
+    hint about what a form-filler will type.
+  -->
+  @if (contentLabel(field.type); as label) {
+    <div class="mb-4 px-1">
+      <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">{{ label }}</label>
+      <input
+        type="text"
+        [ngModel]="field.content || ''"
+        (ngModelChange)="service.updateContent(field.id, $event)"
+        [placeholder]="FIELD_TYPES_LIST[field.type]?.preview || ''"
+        class="text-sm w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-teal-600"
+      />
+    </div>
+  }
+
   <!-- Static placeholder text preview for standard types -->
-  @if (field.type !== 'multipleChoice' && field.type !== 'checkboxes' && field.type !== 'controlledTerms') {
+  @if (!allowsOptions(field.type) && field.type !== 'controlledTerms' && !contentLabel(field.type)) {
     <div class="mb-4 px-1">
       <input
         type="text"
@@ -182,7 +201,7 @@
   }
 
   <!-- Help Text and Default Value editing (Only if configured in preferences) -->
-  @if (service.preferences().showHelpText || service.preferences().showDefaultValue) {
+  @if (service.preferences().showHelpText || (service.preferences().showDefaultValue && allowsStatus(field.type))) {
     <div class="space-y-3 mb-4 px-1 border-t border-gray-100 pt-3">
       @if (service.preferences().showHelpText) {
         <div>
@@ -197,7 +216,9 @@
           />
         </div>
       }
-      @if (service.preferences().showDefaultValue) {
+      <!-- A static field shows something rather than collecting one, so it has
+           no default for a form-filler to start from. -->
+      @if (service.preferences().showDefaultValue && allowsStatus(field.type)) {
         <div>
           <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block"
             >Default Value</label
@@ -218,7 +239,7 @@
   <!-- Field Action Controls footer -->
   <div class="flex items-center justify-end gap-6 pt-2 border-t border-gray-100 px-1">
     <!-- Required Toggle -->
-    @if (service.preferences().showRequired) {
+    @if (service.preferences().showRequired && allowsStatus(field.type)) {
       <label class="flex items-center gap-1.5 cursor-pointer group">
         <input
           type="checkbox"
@@ -231,7 +252,7 @@
     }
 
     <!-- Allow Multiple Toggle -->
-    @if (service.preferences().showAllowMultiple) {
+    @if (service.preferences().showAllowMultiple && allowsMultiple(field.type)) {
       <label class="flex items-center gap-1.5 cursor-pointer group">
         <input
           type="checkbox"
