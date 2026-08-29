@@ -6,17 +6,26 @@
  * gzip figure, because a CDN serves the compressed one and a file: URL serves the
  * raw one, and the two do not move together.
  *
- * Baseline on 2026-08-29: 901,852 raw and 225,140 gzip-9 bytes, at Angular 22
- * with the CEDAR model library. The limits leave headroom deliberately. Raising
- * one is a decision to be taken on evidence and recorded here, not a step in
- * making a build pass.
+ * Baseline on 2026-08-29: 1,160,981 raw and 378,266 gzip-9 bytes, at Angular 22
+ * with the CEDAR model library and CEDAR's embedded typeface.
+ *
+ * The ceilings were 1,100,000 and 270,000, and both were raised on the same
+ * evidence: adopting CEDAR's design values means adopting its font, and Roboto at
+ * three weights is 259,129 bytes of base64 in the bundle. Fetching it instead was
+ * the alternative and is not one — a host page is not obliged to load anything
+ * for the designer, and a component that renders in a different typeface
+ * depending on whether a font request succeeded is not one typeface. CEE embeds
+ * the same three weights, and `cedar-term-picker` copied them for the same reason.
+ *
+ * The limits leave headroom deliberately. Raising one is a decision to be taken
+ * on evidence and recorded here, not a step in making a build pass.
  */
 import { gzipSync } from 'node:zlib';
 import { readFileSync } from 'node:fs';
 import { OUT, readManifest } from './make-bundle.mjs';
 
-const RAW_LIMIT = 1_100_000;
-const GZIP_LIMIT = 270_000;
+const RAW_LIMIT = 1_250_000;
+const GZIP_LIMIT = 420_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
 

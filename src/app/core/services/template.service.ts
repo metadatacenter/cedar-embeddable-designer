@@ -73,10 +73,10 @@ export class TemplateService {
    * from TypeScript rather than from a class.
    */
   readonly COLORS = {
-    primary: '#2D6F5F', // Cedar green
-    primaryHover: '#245A4D',
-    primaryLight: '#E8F3F0',
-    border: '#3B7A5D',
+    primary: '#0f7686',
+    primaryHover: '#0d6e7e',
+    primaryLight: '#e2eff0',
+    border: '#b7d6db',
   };
 
   // State Signals

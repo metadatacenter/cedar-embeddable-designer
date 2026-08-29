@@ -2,6 +2,39 @@
 @source "./app/**/*.{html,ts}";
 
 @theme inline {
+  /*
+    The font and the type scale, so `text-sm` and friends emit CEDAR's px values
+    rather than Tailwind's rem defaults. `CEE Roboto` is the namespaced family the
+    embedded faces declare; the fallbacks are CEE's.
+  */
+  --font-sans: 'CEE Roboto', 'Helvetica Neue', sans-serif;
+  --text-xs: var(--text-xs);
+  --text-sm: var(--text-sm);
+  --text-base: var(--text-base);
+  --text-lg: var(--text-lg);
+  --text-xl: var(--text-xl);
+  --text-2xl: var(--text-2xl);
+
+  /*
+    The teal in this application is CEDAR's, not Tailwind's.
+
+    Roughly thirty markup sites reach for `text-teal-600`, `bg-teal-50` and their
+    neighbours, and Tailwind's teal is a different hue from the brand's. Rather
+    than rewrite each to an arbitrary-value class, the scale itself is redefined:
+    a `teal-*` utility anywhere in this application emits CEDAR's palette, and one
+    written tomorrow is on brand without anyone remembering to check.
+  */
+  --color-teal-50: var(--cedar-primary-50);
+  --color-teal-100: var(--cedar-primary-100);
+  --color-teal-200: var(--cedar-primary-200);
+  --color-teal-300: var(--cedar-primary-300);
+  --color-teal-400: var(--cedar-primary-400);
+  --color-teal-500: var(--cedar-primary-500);
+  --color-teal-600: var(--cedar-primary-600);
+  --color-teal-700: var(--cedar-primary-700);
+  --color-teal-800: var(--cedar-primary-800);
+  --color-teal-900: var(--cedar-primary-900);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -43,6 +76,18 @@
 }
 
 /*
+  CEDAR's design values.
+
+  Copied from `cedar-term-picker/src/_cee-tokens.scss` and `_cedar-neutrals.scss`,
+  which took them from the CEDAR Embeddable Editor at commit c4ae049 and recorded
+  where each was read from. The designer takes the same values so the three look
+  like one platform rather than three products. When one has to change in all of
+  them, that is the moment to consider a shared package rather than a third copy.
+
+  What was here before was shadcn's default theme, shipped by the Figma Make
+  export: a near-black `--primary`, a lavender-grey scale, and five chart colours
+  for charts this application does not draw.
+
   `:host` as well as `:root`, because the designer renders inside a shadow root
   when it is embedded and `:root` matches the document element, which is outside
   it. Without the first selector every token below resolves to nothing and the
@@ -50,81 +95,103 @@
 */
 :host,
 :root {
-  --font-size: 16px;
-  --background: #ffffff;
-  --foreground: oklch(0.145 0 0);
-  --card: #ffffff;
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: #030213;
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.95 0.0058 264.53);
-  --secondary-foreground: #030213;
-  --muted: #ececf0;
-  --muted-foreground: #717182;
-  --accent: #e9ebef;
-  --accent-foreground: #030213;
-  --destructive: #d4183d;
-  --destructive-foreground: #ffffff;
-  --border: rgba(0, 0, 0, 0.1);
-  --input: transparent;
-  --input-background: #f3f3f5;
-  --switch-background: #cbced4;
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #030213;
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
+  /*
+    The type scale, in px, and px is the point of it.
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --font-weight-medium: 500;
+    The designer is a web component in someone else's page, and `rem` resolves
+    against that page's root element — which the designer neither sets nor can
+    see. A host with `html { font-size: 62.5% }`, a common reset idiom, would
+    render every rem-sized thing here at 62.5% of the size it was drawn at. Type
+    stated in rem is not the designer's type; it is a ratio applied to a number
+    the embedder chose, possibly by accident.
+
+    Tailwind's own scale is in rem, so these override it through the `@theme`
+    block below rather than sitting beside it.
+  */
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 14px;
+  --text-lg: 15px;
+  --text-xl: 18px;
+  --text-2xl: 20px;
+
+  --font-size: 14px;
   --font-weight-normal: 400;
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --font-weight-medium: 500;
+
+  /*
+    Declared here as well as in the `@theme` block, because `@theme inline`
+    inlines its values into the utilities it generates rather than emitting the
+    custom property — so `var(--font-sans)`, which the component stylesheets use
+    directly, would fall through to Tailwind's default stack and render the
+    designer in the system font.
+
+    `CEE Roboto` is the namespaced family the embedded faces declare; the
+    fallbacks are CEE's.
+  */
+  --font-sans: 'CEE Roboto', 'Helvetica Neue', sans-serif;
+
+  /* CEDAR's teal, at the hues CEE publishes: 500 is the default. */
+  --cedar-primary-50: #e2eff0;
+  --cedar-primary-100: #b7d6db;
+  --cedar-primary-200: #87bbc3;
+  --cedar-primary-300: #579faa;
+  --cedar-primary-400: #338b98;
+  --cedar-primary-500: #0f7686;
+  --cedar-primary-600: #0d6e7e;
+  --cedar-primary-700: #0b6373;
+  --cedar-primary-800: #085969;
+  --cedar-primary-900: #044656;
+
+  /* CEDAR's rust, whose default hue is A200 rather than 500. */
+  --cedar-accent-100: #dbbcb7;
+  --cedar-accent-500: #861f0f;
+  --cedar-accent-a200: #ff5c55;
+
+  /* The title colour CEE uses for a component heading. */
+  --cedar-heading: #0b3938;
+
+  /*
+    Neutrals, which CEE has no palette for: its greys are literals written where
+    each is used, so the picker gathered them one value at a time and this takes
+    them from there.
+  */
+  --cedar-border-control: #777;
+  --cedar-border-rule: #d7e0df;
+  --cedar-border-rule-light: #e5ebea;
+  --cedar-surface-panel: #f5f5f5;
+  --cedar-surface-tinted: #e4f1f1;
+  --cedar-text-primary: rgba(0, 0, 0, 0.87);
+  --cedar-text-muted: #555;
+
+  /* Material's red 500, which is what CEE renders for a danger state. */
+  --cedar-warn: #f44336;
+  /* Advisory rather than an error, and deliberately unlike the colour that is one. */
+  --cedar-warning: #856404;
+
+  /* The names the utility layer below is built from, resolved to the values above. */
+  --background: #ffffff;
+  --foreground: var(--cedar-text-primary);
+  --card: #ffffff;
+  --card-foreground: var(--cedar-text-primary);
+  --popover: #ffffff;
+  --popover-foreground: var(--cedar-text-primary);
+  --primary: var(--cedar-primary-500);
+  --primary-foreground: #ffffff;
+  --secondary: var(--cedar-surface-tinted);
+  --secondary-foreground: var(--cedar-heading);
+  --muted: var(--cedar-surface-panel);
+  --muted-foreground: var(--cedar-text-muted);
+  --accent: var(--cedar-surface-tinted);
+  --accent-foreground: var(--cedar-heading);
+  --destructive: var(--cedar-warn);
+  --destructive-foreground: #ffffff;
+  --border: var(--cedar-border-rule);
+  --input: transparent;
+  --input-background: var(--cedar-surface-panel);
+  --switch-background: #cbced4;
+  --ring: var(--cedar-primary-300);
+  --radius: 4px;
 }
 
 @layer base {
@@ -139,7 +206,6 @@
   }
 
   html {
-    font-size: var(--font-size);
     height: 100%;
   }
 

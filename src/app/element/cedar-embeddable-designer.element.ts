@@ -12,6 +12,7 @@ import { TemplateService } from '../core/services/template.service';
 import { TerminologyService } from '../core/services/terminology.service';
 import { CedConfig } from '../ced-public-api';
 import { AppComponent } from '../app.component';
+import { FontRegistrar } from '../shared/font-registrar/font-registrar';
 
 /**
  * The element an embedding page programs against.
@@ -28,8 +29,10 @@ import { AppComponent } from '../app.component';
  */
 @Component({
   selector: 'app-cedar-embeddable-designer-element',
-  imports: [AppComponent],
-  template: `<app-root></app-root>`,
+  imports: [AppComponent, FontRegistrar],
+  // The registrar renders nothing; it exists so its unencapsulated stylesheet,
+  // which is only `@font-face` declarations, reaches the document.
+  template: `<ced-font-registrar /><app-root></app-root>`,
   styleUrls: ['../../styles.css', './cedar-embeddable-designer.element.scss'],
   encapsulation: ViewEncapsulation.ShadowDom,
 })
