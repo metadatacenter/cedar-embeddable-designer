@@ -29,6 +29,7 @@ import {
   ControlledTermField,
   ControlledTermOntologyBuilder,
   ControlledTermValueSetBuilder,
+  ControlledTermVersion,
   ChildDeploymentInfo,
   ChildDeploymentInfoBuilder,
   Iri,
@@ -333,6 +334,18 @@ function buildControlledTerm(builder: FieldBuilder, config: ControlledTermConfig
   if (!config) {
     return;
   }
+  /*
+   * The snapshot the author pinned, given to whichever entry is being built. An
+   * entry with no version resolves against the latest snapshot the terminology
+   * server serves, which is what a null means here rather than an omission.
+   */
+  const version = config.version
+    ? new ControlledTermVersion(
+        config.version.id,
+        config.version.effectiveDate ?? null,
+        config.version.declaredVersion ?? null,
+      )
+    : null;
   const controlled = builder as unknown as {
     addOntology(o: unknown): unknown;
     addBranch(b: unknown): unknown;
@@ -345,6 +358,7 @@ function buildControlledTerm(builder: FieldBuilder, config: ControlledTermConfig
       if (config.ontologyId) {
         controlled.addOntology(
           new ControlledTermOntologyBuilder()
+            .withVersion(version)
             .withUri(new Iri(config.ontologyId))
             .withAcronym(config.sourceId ?? '')
             .withName(config.ontologyName ?? '')
@@ -356,6 +370,7 @@ function buildControlledTerm(builder: FieldBuilder, config: ControlledTermConfig
       if (config.branchRootId) {
         controlled.addBranch(
           new ControlledTermBranchBuilder()
+            .withVersion(version)
             .withUri(new Iri(config.branchRootId))
             .withSource(config.sourceId ?? '')
             .withAcronym(config.sourceId ?? '')
@@ -369,6 +384,7 @@ function buildControlledTerm(builder: FieldBuilder, config: ControlledTermConfig
       if (config.sourceId) {
         controlled.addClass(
           new ControlledTermClassBuilder()
+            .withVersion(version)
             .withUri(new Iri(config.sourceId))
             .withSource(config.ontologyId ?? '')
             .withType(BioportalTermType.ONTOLOGY_CLASS)
@@ -382,6 +398,7 @@ function buildControlledTerm(builder: FieldBuilder, config: ControlledTermConfig
       if (config.sourceId) {
         controlled.addValueSet(
           new ControlledTermValueSetBuilder()
+            .withVersion(version)
             .withUri(new Iri(config.sourceId))
             .withVsCollection(config.ontologyId ?? '')
             .withName(config.sourceName ?? '')
@@ -467,7 +484,14 @@ export function buildTemplate(state: EditorTemplate): Template {
     .withTitle(derivedTitle(state.name, 'template'))
     .withDescription(derivedDescription(state.name, 'template'))
     .withSchemaName(state.name)
-    .withSchemaDescription(state.description)
+    /*
+     * Null rather than an empty string, for the reason the field description is:
+     * the YAML writer omits an empty description and the YAML reader returns null
+     * for a missing one, so a template with no description read back differently
+     * depending on which format it had been written in. Fields were fixed when the
+     * library took over serialization; the template's own description was not.
+     */
+    .withSchemaDescription(state.description || null)
     .withSchemaVersion(SchemaVersion.CURRENT)
     .withVersion(state.version || '0.0.1')
     .withStatus(BiboStatus.DRAFT);
@@ -583,6 +607,21 @@ function optionsOf(field: TemplateField): string[] {
   return literals ? literals.map((literal) => literal.label) : [];
 }
 
+/** The snapshot an entry names, as the editor records one. */
+function versionRefOf(entry: {
+  version?: { id: string; effectiveDate: string | null; declaredVersion: string | null } | null;
+}) {
+  const version = entry.version;
+  if (!version) {
+    return undefined;
+  }
+  return {
+    id: version.id,
+    effectiveDate: version.effectiveDate ?? undefined,
+    declaredVersion: version.declaredVersion ?? undefined,
+  };
+}
+
 function controlledTermConfigOf(field: TemplateField): ControlledTermConfig | undefined {
   if (field.cedarFieldType !== CedarFieldType.CONTROLLED_TERM) {
     return undefined;
@@ -598,6 +637,7 @@ function controlledTermConfigOf(field: TemplateField): ControlledTermConfig | un
       branchRootId: branch.uri.getValue() ?? '',
       branchRootName: branch.name,
       searchDepth: branch.maxDepth,
+      version: versionRefOf(branch),
     };
   }
   const ontology = constraints.ontologies[0];
@@ -607,6 +647,7 @@ function controlledTermConfigOf(field: TemplateField): ControlledTermConfig | un
       sourceId: ontology.acronym,
       ontologyId: ontology.uri.getValue() ?? '',
       ontologyName: ontology.name,
+      version: versionRefOf(ontology),
     };
   }
   const cls = constraints.classes[0];
@@ -616,6 +657,7 @@ function controlledTermConfigOf(field: TemplateField): ControlledTermConfig | un
       sourceId: cls.uri.getValue() ?? '',
       sourceName: cls.prefLabel,
       ontologyId: cls.source,
+      version: versionRefOf(cls),
     };
   }
   const valueSet = constraints.valueSets[0];
@@ -625,6 +667,7 @@ function controlledTermConfigOf(field: TemplateField): ControlledTermConfig | un
       sourceId: valueSet.uri.getValue() ?? '',
       sourceName: valueSet.name,
       ontologyId: valueSet.vsCollection,
+      version: versionRefOf(valueSet),
     };
   }
   return undefined;

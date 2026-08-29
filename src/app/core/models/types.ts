@@ -23,6 +23,19 @@ export interface Library {
   icon: string;
 }
 
+/**
+ * The vocabulary snapshot a constraint names.
+ *
+ * `id` is the snapshot's content hash and the only part resolution reads. The
+ * other two are labels: when the snapshot entered circulation, and whatever
+ * version string the source declared for itself.
+ */
+export interface ControlledTermVersionRef {
+  id: string;
+  effectiveDate?: string;
+  declaredVersion?: string;
+}
+
 export interface ControlledTermConfig {
   sourceType: 'ontology-term' | 'ontology' | 'value-set' | 'ontology-branch';
   sourceId?: string;
@@ -34,6 +47,11 @@ export interface ControlledTermConfig {
   allowMultipleOntologies?: boolean;
   searchDepth?: number;
   restrictedOntologies?: string[];
+  /**
+   * The snapshot the author pinned, where they pinned one. Absent means the
+   * latest the terminology server serves, resolved when the template is read.
+   */
+  version?: ControlledTermVersionRef;
 }
 
 export interface Field {

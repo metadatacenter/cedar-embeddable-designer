@@ -14,10 +14,27 @@
 /** The tag the host is expected to have registered. */
 export const TERM_PICKER_TAG = 'cedar-term-picker';
 
+/**
+ * The snapshot an author pinned, where they pinned one.
+ *
+ * `id` is the snapshot's content hash and the only part resolution reads; the
+ * other two are labels for people. The picker also reports whether a later
+ * extraction of the same source bytes exists, which is a thing to say while
+ * choosing rather than a thing to store — a pin written before one was superseded
+ * still resolves, because a published template has to keep meaning what it meant.
+ */
+export interface PickedVersion {
+  readonly id?: string;
+  readonly effectiveDate?: string;
+  readonly declaredVersion?: string;
+  readonly superseded?: boolean;
+}
+
 interface HitBase {
   readonly type: string;
   readonly sourceAcronym: string;
   readonly sourceName?: string;
+  readonly version?: PickedVersion;
 }
 
 export interface PickedClass extends HitBase {
@@ -56,6 +73,29 @@ import { ControlledTermConfig } from '../models/types';
  * nothing checked either.
  */
 export function toControlledTermConfig(picked: PickedConstraint): ControlledTermConfig {
+  /*
+   * A version with no `id` names nothing: the hash is what resolution reads, and
+   * the other two members are labels. Absent, the constraint resolves against the
+   * latest snapshot the terminology server serves — a different statement from
+   * naming one, and not a default to invent.
+   */
+  const version =
+    picked.version?.id === undefined
+      ? undefined
+      : {
+          id: picked.version.id,
+          effectiveDate: picked.version.effectiveDate,
+          declaredVersion: picked.version.declaredVersion,
+        };
+
+  /*
+   * A name, always. The picker's `sourceName` is optional — a source block can
+   * arrive with an acronym and nothing else — and the model library refuses an
+   * ontology constraint without one, so building a template from such a pick
+   * threw. The acronym is what an author recognises anyway.
+   */
+  const sourceName = picked.sourceName || picked.sourceAcronym;
+
   switch (picked.type) {
     case 'class':
       return {
@@ -63,23 +103,26 @@ export function toControlledTermConfig(picked: PickedConstraint): ControlledTerm
         sourceId: picked.termIri,
         sourceName: picked.termLabel,
         ontologyId: picked.sourceAcronym,
-        ontologyName: picked.sourceName,
+        ontologyName: sourceName,
+        version,
       };
     case 'branch':
       return {
         sourceType: 'ontology-branch',
         sourceId: picked.sourceAcronym,
-        ontologyName: picked.sourceName,
+        ontologyName: sourceName,
         branchRootId: picked.termBaseIri,
         branchRootName: picked.termBaseLabel,
         searchDepth: 1,
+        version,
       };
     case 'ontology':
       return {
         sourceType: 'ontology',
         sourceId: picked.sourceAcronym,
         ontologyId: picked.sourceAcronym,
-        ontologyName: picked.sourceName,
+        ontologyName: sourceName,
+        version,
       };
     case 'valueSet':
       return {
@@ -87,7 +130,8 @@ export function toControlledTermConfig(picked: PickedConstraint): ControlledTerm
         sourceId: picked.termBaseIri,
         sourceName: picked.termBaseLabel,
         ontologyId: picked.sourceAcronym,
-        ontologyName: picked.sourceName,
+        ontologyName: sourceName,
+        version,
       };
   }
 }

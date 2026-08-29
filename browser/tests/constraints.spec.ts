@@ -64,6 +64,23 @@ test('a chosen term becomes a constraint on the field', async ({ page }) => {
   expect(constraints.classes[0]['source']).toBe('DOID');
 });
 
+test('a chosen term keeps the version the author pinned', async ({ page }) => {
+  const panel = await openConstraintPanel(page);
+  await clickCentred(panel.getByRole('button', { name: /Search the terminology server/ }));
+  await page.locator('#stub-pick').click();
+
+  const constraints = child(await currentTemplate(page), 'Controlled Terms')['_valueConstraints'] as {
+    classes: Array<Record<string, unknown>>;
+  };
+  // Without this the constraint resolves against whatever the terminology server
+  // serves on the day it is read, which is not what the author chose.
+  expect(constraints.classes[0]['version']).toEqual({
+    id: 'sha256:8f0c1e',
+    effectiveDate: '2026-06-30',
+    declaredVersion: 'DOID 2026-06-30',
+  });
+});
+
 test('choosing a term closes the picker', async ({ page }) => {
   const panel = await openConstraintPanel(page);
   await clickCentred(panel.getByRole('button', { name: /Search the terminology server/ }));
