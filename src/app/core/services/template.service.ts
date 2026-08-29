@@ -159,9 +159,6 @@ export class TemplateService {
   get presetDefinitions() {
     return this.preferencesService.presetDefinitions;
   }
-  get bioportalApiKey() {
-    return this.preferencesService.bioportalApiKey;
-  }
   get showPreferencesModal() {
     return this.preferencesService.showPreferencesModal;
   }
@@ -170,9 +167,6 @@ export class TemplateService {
   }
   get showUserMenu() {
     return this.preferencesService.showUserMenu;
-  }
-  get showApiKeyModal() {
-    return this.preferencesService.showApiKeyModal;
   }
 
   constructor() {
@@ -416,13 +410,6 @@ export class TemplateService {
 
   getActivePreset(): 'basic' | 'semantic' | 'modular' | null {
     return this.preferencesService.getActivePreset();
-  }
-
-  // Programmatic Web Component Methods
-  setBioPortalApiKey(key: string) {
-    if (key) {
-      this.preferencesService.bioportalApiKey.set(key);
-    }
   }
 
   resetTemplate() {

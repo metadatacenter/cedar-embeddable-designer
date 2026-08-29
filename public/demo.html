@@ -96,6 +96,11 @@
       });
 
       customElements.whenDefined('cedar-embeddable-designer').then(() => {
+        // The host names the CEDAR terminology server. The designer has no
+        // address of its own, so controlled-term search is off until it is told.
+        document.getElementById('designer').config = {
+          terminologyBaseUrl: 'https://terminology.metadatacenter.org/',
+        };
         log.textContent = 'Element defined. Edit a field to see templateChange events.';
       });
     </script>

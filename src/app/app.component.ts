@@ -10,7 +10,6 @@ import { IconComponent } from './shared/components/icon/icon.component';
 import { FieldLibrarySidebarComponent } from './features/field-library-sidebar/field-library-sidebar.component';
 import { PreferencesModalComponent } from './features/modals/preferences/preferences.component';
 import { PresetDefinitionsModalComponent } from './features/modals/preset-definitions/preset-definitions.component';
-import { ApiKeyModalComponent } from './features/modals/api-key/api-key.component';
 import { PreviewPanelComponent } from './features/preview-panel/preview-panel.component';
 import { FieldTypePickerComponent } from './features/field-type-picker/field-type-picker.component';
 import { FieldDesignerComponent } from './features/field-designer/field-designer.component';
@@ -28,7 +27,6 @@ import { CedarExportAccordionsComponent } from './features/cedar-export-accordio
     FieldLibrarySidebarComponent,
     PreferencesModalComponent,
     PresetDefinitionsModalComponent,
-    ApiKeyModalComponent,
     PreviewPanelComponent,
     FieldTypePickerComponent,
     FieldDesignerComponent,

@@ -121,16 +121,6 @@
                 <app-icon key="library" className="w-4 h-4"></app-icon>
                 <span class="font-medium">Define Presets</span>
               </button>
-              <button
-                (click)="service.showApiKeyModal.set(true); service.showUserMenu.set(false)"
-                class="user-menu-item"
-              >
-                <app-icon key="settings" className="w-4 h-4"></app-icon>
-                <span class="font-medium">BioPortal API Key</span>
-                @if (service.bioportalApiKey()) {
-                  <app-icon key="star" className="w-3.5 h-3.5 ml-auto text-green-600"></app-icon>
-                }
-              </button>
             </div>
           }
         </div>
@@ -341,7 +331,6 @@
   <!-- Modals -->
   <app-preferences-modal></app-preferences-modal>
   <app-preset-definitions-modal></app-preset-definitions-modal>
-  <app-api-key-modal></app-api-key-modal>
 </div>
 
 <!-- Field Designer Overlay -->

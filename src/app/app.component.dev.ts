@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, signal } from '@angular/core';
+import { CedConfig } from './ced-public-api';
 
 /**
  * The standalone application, which is a host page like any other.
@@ -11,7 +12,10 @@ import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, signal } fr
 @Component({
   selector: 'app-dev-host',
   template: `
-    <cedar-embeddable-designer (templateChange)="onTemplateChange($event)"></cedar-embeddable-designer>
+    <cedar-embeddable-designer
+      [config]="config"
+      (templateChange)="onTemplateChange($event)"
+    ></cedar-embeddable-designer>
     <p class="dev-host__status">Last templateChange: {{ changeCount() }} event(s)</p>
   `,
   styles: [
@@ -42,6 +46,15 @@ import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, signal } fr
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DevHostComponent {
+  /**
+   * The configuration a host supplies, with the public CEDAR terminology server.
+   *
+   * Named here rather than defaulted inside the designer: an embedder should
+   * reach a CEDAR service because it asked to, not because a component it loaded
+   * had an address compiled into it.
+   */
+  readonly config: CedConfig = { terminologyBaseUrl: 'https://terminology.metadatacenter.org/' };
+
   readonly changeCount = signal(0);
 
   onTemplateChange(_event: Event): void {

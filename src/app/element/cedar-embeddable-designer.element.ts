@@ -9,6 +9,8 @@ import {
   inject,
 } from '@angular/core';
 import { TemplateService } from '../core/services/template.service';
+import { TerminologyService } from '../core/services/terminology.service';
+import { CedConfig } from '../ced-public-api';
 import { AppComponent } from '../app.component';
 
 /**
@@ -33,12 +35,29 @@ import { AppComponent } from '../app.component';
 })
 export class CedarEmbeddableDesignerElementComponent {
   readonly service = inject(TemplateService);
+  private readonly terminology = inject(TerminologyService);
+  private configured = false;
 
+  /**
+   * The designer's configuration, which takes one assignment and keeps it.
+   *
+   * A host wanting different settings creates a new element, which is CEE's rule
+   * and for its reason: a second assignment that patched some keys and replaced
+   * others is a contract no host could reason about.
+   *
+   * This replaces a `bioportalApiKey` input. The key gated controlled-term search
+   * and was then sent to an endpoint that builds an anonymous request context and
+   * never read it, so the gate turned a working search off in exchange for
+   * nothing. What was actually missing was the address of the terminology server,
+   * which was hardcoded to production.
+   */
   @Input()
-  set bioportalApiKey(key: string) {
-    if (key) {
-      this.service.setBioPortalApiKey(key);
+  set config(value: CedConfig | null) {
+    if (value === null || this.configured) {
+      return;
     }
+    this.configured = true;
+    this.terminology.configure(value);
   }
 
   /**

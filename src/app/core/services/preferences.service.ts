@@ -1,18 +1,14 @@
-import { Injectable, signal, effect } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { UserPreferences, PresetDefinitions, FIELD_TYPES } from '../models/types';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PreferencesService {
-  // State Signals
-  readonly bioportalApiKey = signal<string>(localStorage.getItem('bioportalApiKey') || '');
-
   // Modal Display States
   readonly showPreferencesModal = signal<boolean>(false);
   readonly showPresetDefinitionsModal = signal<boolean>(false);
   readonly showUserMenu = signal<boolean>(false);
-  readonly showApiKeyModal = signal<boolean>(false);
 
   // Preset Definitions
   readonly presetDefinitions = signal<PresetDefinitions>({
@@ -64,16 +60,6 @@ export class PreferencesService {
   });
 
   constructor() {
-    // Save API key to localStorage when it changes
-    effect(() => {
-      const key = this.bioportalApiKey();
-      if (key) {
-        localStorage.setItem('bioportalApiKey', key);
-      } else {
-        localStorage.removeItem('bioportalApiKey');
-      }
-    });
-
     // Sync all field types into preferences to ensure nothing is missing
     const currentFieldTypes = Object.keys(FIELD_TYPES);
     this.preferences.update((prev) => {

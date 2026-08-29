@@ -49,15 +49,4 @@ describe('PreferencesService', () => {
     service.updateFieldTypeVisibility('email', false);
     expect(service.getActivePreset()).toBeNull();
   });
-
-  it('persists an API key and clears the stored value when it is emptied', () => {
-    // The effect that writes the key runs on the next tick, not on assignment.
-    service.bioportalApiKey.set('a-key');
-    TestBed.tick();
-    expect(localStorage.getItem('bioportalApiKey')).toBe('a-key');
-
-    service.bioportalApiKey.set('');
-    TestBed.tick();
-    expect(localStorage.getItem('bioportalApiKey')).toBeNull();
-  });
 });
