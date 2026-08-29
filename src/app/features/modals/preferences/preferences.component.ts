@@ -2,6 +2,7 @@ import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { TemplateService, FIELD_TYPES } from '../../../core/services/template.service';
+import { UserPreferences } from '../../../core/models/types';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 @Component({
@@ -21,8 +22,16 @@ export class PreferencesModalComponent {
     return Object.entries(FIELD_TYPES).map(([key, value]) => ({ key, value }));
   }
 
-  updatePref(key: string, value: any) {
-    this.service.updatePreference(key as any, value);
+  /**
+   * One preference, typed by the key that names it.
+   *
+   * Generic rather than `(key: string, value: any)` with a cast at the call. The
+   * cast is what let a typo compile into a preference nobody has, and what let
+   * `fieldSelectionStyle` — the one key here that is not a boolean — be set to
+   * one. Angular infers the parameter from the literal each template call passes.
+   */
+  updatePref<K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) {
+    this.service.updatePreference(key, value);
   }
 
   updateFieldVisibility(key: string, visible: boolean) {

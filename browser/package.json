@@ -1,0 +1,17 @@
+{
+  "name": "ced-browser",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Behaviour tests that drive the built designer in a real browser",
+  "engines": {
+    "node": "^24.15.0"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0"
+  }
+}

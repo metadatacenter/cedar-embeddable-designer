@@ -32,9 +32,17 @@ jobs:
         with:
           node-version: 24.19.0
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            browser/package-lock.json
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Install the browser test dependencies
+        run: |
+          npm --prefix browser ci
+          ./browser/node_modules/.bin/playwright install --with-deps chromium
 
       - name: Lint
         run: npm run lint
@@ -64,6 +72,14 @@ jobs:
           npm run bundle
           npm run check:size
           npm run package:npm
+
+      # Against the file an embedder downloads, in a host page that is not the
+      # development server. Everything this suite covers was found by hand in a
+      # browser and by nothing else: an element that never registered, a lookup
+      # that searched the wrong tree, a menu that closed on its own opening click,
+      # an asset the package does not carry.
+      - name: Browser tests, against the distribution
+        run: npm run test:browser:prebuilt
 
       # Deliberately its own step rather than part of the gate above: this is the
       # one check that can start failing without anyone having changed anything,

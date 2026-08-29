@@ -1,13 +1,4 @@
-import {
-  Component,
-  Input,
-  inject,
-  signal,
-  ElementRef,
-  HostListener,
-  computed,
-  ChangeDetectionStrategy,
-} from '@angular/core';
+import { Component, Input, inject, signal, HostListener, computed, ChangeDetectionStrategy } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { TemplateService, FIELD_TYPES } from '../../core/services/template.service';
@@ -24,7 +15,6 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 })
 export class FieldTypePickerComponent {
   readonly service = inject(TemplateService);
-  private readonly elementRef = inject(ElementRef);
 
   @Input() insertPosition = 0;
 

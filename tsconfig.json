@@ -9,10 +9,30 @@
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "skipLibCheck": true,
+    /*
+     * On, matching cedar-term-picker. A binding nothing reads is either a mistake
+     * or a leftover, and both are cheaper to remove when the compiler names them
+     * than when someone wonders later whether they matter.
+     */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    /*
+     * No `skipLibCheck`, which CEE also declines. The declarations in node_modules
+     * are checked rather than trusted — including the CEDAR model library's, which
+     * is the one dependency whose types this codebase actually programs against.
+     */
     "isolatedModules": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
+    /*
+     * Angular requires this false, and TypeScript defaults it to true whenever the
+     * target is ES2022 or higher. With it true a class field declaration is emitted
+     * as a constructor-time `Object.defineProperty`, which overwrites what Angular
+     * has already assigned to an `@Input` — so a bound input silently reverts to
+     * whatever the field declares. The element's `config` and `template` inputs are
+     * exactly that shape.
+     */
+    "useDefineForClassFields": false,
     "moduleResolution": "bundler",
     "importHelpers": true,
     "target": "ES2022",

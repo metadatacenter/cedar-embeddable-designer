@@ -56,25 +56,17 @@ export default tseslint.config(
       ],
 
       /*
-       * `prefer-inject` and `prefer-standalone` stay on, where CEE switches both off.
-       * CEE has 118 constructor injections and 47 non-standalone components; this
-       * codebase has none of either, so the rules cost nothing and keep it that way.
+       * `prefer-inject`, `prefer-standalone` and `prefer-on-push` all stay on, where
+       * CEE switches all three off. CEE has 118 constructor injections, 47
+       * non-standalone components and a rendering model that mutates in place; this
+       * codebase has none of those, so the rules cost nothing and keep it that way.
        *
-       * The two below are off, and each is off for a stated reason rather than
-       * because it was noisy.
+       * `no-explicit-any` is on too, as its own note said it would be once the model
+       * library owned serialization and the element had a declared contract. Of the
+       * 26 sites it first reported, 22 were in the YAML shim, the element wrapper and
+       * the Electron service, all since deleted; the last four were one untyped
+       * preference update, now generic in the key that names it.
        */
-
-      /*
-       * 26 sites, 22 of which are in code that is being deleted or rewritten: the
-       * hand-written YAML parser, `TemplateService.loadTemplate`, the element wrapper
-       * and the Electron service. Typing them where they stand would be work thrown
-       * away, and typing them properly is what replacing that code amounts to.
-       *
-       * The rule goes back on when the model library owns serialization and the
-       * element has a declared contract, at which point the remaining four are a
-       * morning's work.
-       */
-      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
   {

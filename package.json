@@ -33,7 +33,10 @@
     "package:npm": "npm run types:public && node scripts/stage-npm-package.mjs && npm run check:npm-package",
     "check:npm-package": "node scripts/check-npm-package.mjs",
     "dist": "npm run build && npm run bundle && npm run check:size && npm run package:npm",
-    "test:packaging": "node --test scripts/npm-package.test.mjs"
+    "test:packaging": "node --test scripts/npm-package.test.mjs",
+    "test:browser": "npm run dist && npm --prefix browser test",
+    "test:browser:prebuilt": "npm --prefix browser test",
+    "test:ci": "npm run lint && npm run typecheck && npm test && npm run test:packaging && npm run dist && npm run test:browser:prebuilt"
   },
   "private": true,
   "dependencies": {

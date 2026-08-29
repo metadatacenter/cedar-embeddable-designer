@@ -392,7 +392,7 @@ export class TemplateService {
   }
 
   // Proxies for PreferencesService Methods
-  updatePreference(key: keyof UserPreferences, value: any) {
+  updatePreference<K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) {
     this.preferencesService.updatePreference(key, value);
   }
 

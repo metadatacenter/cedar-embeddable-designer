@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Designer host</title>
+    <style>
+      /*
+        Deliberately hostile, and every rule here is one a real host page might
+        carry. None of it should cross into the designer's shadow root. If the
+        editor starts rendering in Comic Sans on pink, the encapsulation is gone.
+      */
+      * { box-sizing: content-box; }
+      body { margin: 0; font-family: Georgia, serif; background: #fdf2f8; color: #831843; }
+      button { font-size: 29px; background: #db2777; color: #fff; border-radius: 0; }
+      input { font-size: 31px; border: 4px dashed #db2777; }
+      svg { opacity: 0.25; }
+      cedar-embeddable-designer { display: block; height: 92vh; }
+    </style>
+  </head>
+  <body>
+    <h1 id="host-heading">Host page</h1>
+    <cedar-embeddable-designer id="designer"></cedar-embeddable-designer>
+
+    <script>
+      /*
+        Recorded before the bundle loads, so a test can assert on events the
+        element publishes during its own first render.
+      */
+      window.__events = [];
+      const designer = document.getElementById('designer');
+      designer.addEventListener('templateChange', (event) => window.__events.push(event.detail));
+
+      const params = new URLSearchParams(location.search);
+      if (params.get('picker') === 'stub') {
+        /*
+          A stand-in for <cedar-term-picker>, so this suite tests the designer's
+          half of that contract without depending on another component's build.
+          It emits the one event shape the designer reads.
+        */
+        class StubPicker extends HTMLElement {
+          connectedCallback() {
+            this.innerHTML = '<button type="button" id="stub-pick">pick a term</button>';
+            this.querySelector('#stub-pick').addEventListener('click', () => {
+              this.dispatchEvent(
+                new CustomEvent('selected', {
+                  bubbles: true,
+                  composed: true,
+                  detail: {
+                    type: 'class',
+                    termIri: 'http://purl.obolibrary.org/obo/DOID_162',
+                    termLabel: 'cancer',
+                    sourceAcronym: 'DOID',
+                    sourceName: 'Human Disease Ontology',
+                  },
+                }),
+              );
+            });
+          }
+        }
+        customElements.define('cedar-term-picker', StubPicker);
+      }
+    </script>
+
+    <script src="cedar-embeddable-designer.js"></script>
+
+    <script>
+      customElements.whenDefined('cedar-embeddable-designer').then(() => {
+        const params = new URLSearchParams(location.search);
+        if (params.get('terminology') !== 'none') {
+          document.getElementById('designer').config = { terminologyBaseUrl: 'http://localhost:4598/fake-terminology/' };
+        }
+        window.__ready = true;
+      });
+    </script>
+  </body>
+</html>

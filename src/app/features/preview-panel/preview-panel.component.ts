@@ -21,7 +21,14 @@ export class PreviewPanelComponent {
   readonly service = inject(TemplateService);
 
   readonly activeTab = signal<PreviewTab>('preview');
-  readonly selectedTerms = signal<Record<number, any>>({});
+  /**
+   * The term an author picked while trying the form out, by field.
+   *
+   * Preview state, and nothing the template carries: this is what a form-filler
+   * would choose, where the field's `controlledTermConfig` is what constrains
+   * them. Keyed by field id because a preview holds one value per field.
+   */
+  readonly selectedTerms = signal<Record<number, BioPortalResult>>({});
   readonly showBioPortalModal = signal(false);
   readonly selectedFieldForSearch = signal<Field | null>(null);
 

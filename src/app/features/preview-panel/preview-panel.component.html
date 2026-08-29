@@ -232,9 +232,9 @@
                           <div class="term-label">
                             {{ selectedTerms()[field.id].prefLabel }}
                           </div>
-                          @if (selectedTerms()[field.id].ontologyAcronym) {
+                          @if (selectedTerms()[field.id].sourceAcronym) {
                             <div class="term-ontology">
-                              {{ selectedTerms()[field.id].ontologyAcronym }}
+                              {{ selectedTerms()[field.id].sourceAcronym }}
                             </div>
                           }
                         </div>

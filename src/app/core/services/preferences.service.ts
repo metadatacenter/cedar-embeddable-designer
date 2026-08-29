@@ -83,8 +83,15 @@ export class PreferencesService {
     });
   }
 
-  // Preferences manipulation methods
-  updatePreference(key: keyof UserPreferences, value: any) {
+  /**
+   * One preference, typed by the key that names it.
+   *
+   * Generic rather than `(key: keyof UserPreferences, value: any)`, which let
+   * `fieldSelectionStyle` be set to a boolean and `showHelpText` to a string with
+   * nothing to say so — the signal's own type could not help, because the value
+   * had already been widened by the time it reached the update.
+   */
+  updatePreference<K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) {
     this.preferences.update((prev) => ({
       ...prev,
       [key]: value,

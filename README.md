@@ -134,8 +134,24 @@ whose own styles are chosen to be as intrusive as possible.
 
 ## Testing
 
-There are no tests. Vitest and a Playwright suite arrive with the web-component
-work, on the configuration CEE uses.
+| Command                  | What it does                                                         |
+| ------------------------ | -------------------------------------------------------------------- |
+| `npm test`               | unit tests, through the Angular CLI's Vitest builder                 |
+| `npm run test:packaging` | the publish-channel rule, under `node --test`                        |
+| `npm run test:browser`   | builds the distribution, then drives it in a real browser            |
+| `npm run test:ci`        | the gate, in the order a cheaper check should report a failure first |
+
+The browser suite is the one that matters most, because it is the only one that
+can see the failures this component has actually had: an element that never
+registered on a page without `<app-root>`, a lookup that searched the document
+instead of the shadow tree, menus that closed on their own opening click, a view
+that silently stopped updating under OnPush, an image the package does not carry.
+None of those are visible to a unit test.
+
+It drives the built single-file bundle in a host page whose own CSS is chosen to
+be as intrusive as possible, and it is hermetic: no test reaches a terminology
+server, and the one covering `<cedar-term-picker>` registers a stub in the page,
+so what is under test is this component's half of that contract.
 
 ## Related Repositories
 
