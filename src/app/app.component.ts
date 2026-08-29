@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService, FIELD_TYPES } from './core/services/template.service';
-import { toCedarJson, toCedarYaml } from './core/cedar-shim';
 import { Field } from './core/models/types';
 
 // Custom components
@@ -218,21 +217,11 @@ export class AppComponent {
   }
 
   saveTemplateAsJson(): void {
-    this.download(JSON.stringify(this.cedarTemplate(), null, 2), 'application/json', 'json');
+    this.download(JSON.stringify(this.service.templateJson(), null, 2), 'application/json', 'json');
   }
 
   saveTemplateAsYaml(): void {
-    this.download(toCedarYaml(this.cedarTemplate()), 'application/yaml', 'yaml');
-  }
-
-  private cedarTemplate() {
-    return toCedarJson(
-      this.service.templateName(),
-      this.service.templateDesc(),
-      this.service.fields(),
-      this.service.templateIdentifier(),
-      this.service.templateVersion(),
-    );
+    this.download(this.service.templateYaml(), 'application/yaml', 'yaml');
   }
 
   /** The template name, reduced to something a filesystem will take. */

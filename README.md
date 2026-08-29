@@ -25,16 +25,18 @@ There is no packaged bundle. `npm run build` produces the element as two files
 rather than the single script an embedder should be able to load, and nothing is
 published.
 
-Serialization goes through a hand-written shim under `src/app/core/cedar-shim/`
-rather than through
-[`@org.metadatacenter/cedar-model-typescript-library`](https://github.com/metadatacenter/cedar-model-typescript-library),
-which is where it belongs and where it is going. Until it moves, exported
-templates carry fresh identifiers and timestamps on every read, and drop the
-recommended status, the multiple-values flag, default values and every
-controlled-term constraint. Controlled-term search reaches a hardcoded
-terminology endpoint, invents results when that endpoint is unreachable, and will
-move to [`<cedar-term-picker>`](https://github.com/metadatacenter/cedar-term-picker),
-the component built for choosing what constrains a field.
+Serialization is the
+[CEDAR model library's](https://github.com/metadatacenter/cedar-model-typescript-library).
+The designer builds a `Template` and the library writes it as CEDAR JSON-LD or
+CEDAR YAML and reads either back, so a template written in one form and reopened
+from the other is the same artifact.
+
+Controlled-term search is not yet honest. It reaches a hardcoded terminology
+endpoint, and when that endpoint is unreachable it substitutes hard-coded results
+carrying real-looking ontology IRIs — an author offline for a moment can attach a
+term that does not exist. It will move to
+[`<cedar-term-picker>`](https://github.com/metadatacenter/cedar-term-picker), the
+component built for choosing what constrains a field.
 
 ## Requirements
 

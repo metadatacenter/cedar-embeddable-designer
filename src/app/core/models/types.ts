@@ -38,6 +38,13 @@ export interface ControlledTermConfig {
 
 export interface Field {
   id: number;
+  /**
+   * The field's CEDAR identifier and its property IRI, minted when the author
+   * adds the field and kept for as long as it exists. Optional because a field
+   * read from a template that did not carry them has none.
+   */
+  atId?: string;
+  propertyIri?: string;
   type: string;
   name: string;
   status: string; // 'required' | 'optional' | 'recommended'

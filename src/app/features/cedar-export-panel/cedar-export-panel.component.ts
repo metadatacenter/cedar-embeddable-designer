@@ -1,7 +1,6 @@
 import { Component, inject, computed, signal, ChangeDetectionStrategy } from '@angular/core';
 
 import { TemplateService } from '../../core/services/template.service';
-import { toCedarJson, toCedarYaml } from '../../core/cedar-shim';
 
 export type ExportFormat = 'json' | 'yaml';
 
@@ -18,22 +17,11 @@ export class CedarExportPanelComponent {
   readonly activeFormat = signal<ExportFormat>('json');
   readonly copied = signal(false);
 
-  /** Reactive CEDAR JSON-LD object — recomputes whenever template state changes */
-  readonly cedarJson = computed(() =>
-    toCedarJson(
-      this.service.templateName(),
-      this.service.templateDesc(),
-      this.service.fields(),
-      this.service.templateIdentifier(),
-      this.service.templateVersion(),
-    ),
-  );
-
   /** Formatted JSON string */
-  readonly cedarJsonString = computed(() => JSON.stringify(this.cedarJson(), null, 2));
+  readonly cedarJsonString = computed(() => JSON.stringify(this.service.templateJson(), null, 2));
 
   /** YAML string derived from JSON object */
-  readonly cedarYamlString = computed(() => toCedarYaml(this.cedarJson()));
+  readonly cedarYamlString = computed(() => this.service.templateYaml());
 
   /** Currently displayed code */
   readonly activeCode = computed(() =>
@@ -123,12 +111,21 @@ function highlightYaml(code: string): string {
     .join('\n');
 }
 
+/**
+ * A YAML value, highlighted.
+ *
+ * `value` arrives with the space that followed the colon still attached, so the
+ * span is built around the trimmed text and the space is re-emitted before it.
+ * Prepending one to the untrimmed value put two after every key in the panel,
+ * which made the library's output look like something it had not written.
+ */
 function highlightYamlValue(value: string): string {
   const trimmed = value.trim();
-  if (trimmed === 'null' || trimmed === '~') return ` <span class="hl-null">${value}</span>`;
-  if (trimmed === 'true' || trimmed === 'false') return ` <span class="hl-bool">${value}</span>`;
-  if (/^-?\d/.test(trimmed)) return ` <span class="hl-number">${value}</span>`;
-  if (trimmed.startsWith('"') || trimmed.startsWith("'")) return ` <span class="hl-string">${value}</span>`;
+  const lead = value.startsWith(' ') ? ' ' : '';
+  if (trimmed === 'null' || trimmed === '~') return `${lead}<span class="hl-null">${trimmed}</span>`;
+  if (trimmed === 'true' || trimmed === 'false') return `${lead}<span class="hl-bool">${trimmed}</span>`;
+  if (/^-?\d/.test(trimmed)) return `${lead}<span class="hl-number">${trimmed}</span>`;
+  if (trimmed.startsWith('"') || trimmed.startsWith("'")) return `${lead}<span class="hl-string">${trimmed}</span>`;
   if (trimmed === '') return value;
-  return ` <span class="hl-string">${value}</span>`;
+  return `${lead}<span class="hl-string">${trimmed}</span>`;
 }

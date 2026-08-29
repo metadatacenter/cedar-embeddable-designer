@@ -9,7 +9,6 @@ import {
   inject,
 } from '@angular/core';
 import { TemplateService } from '../core/services/template.service';
-import { toCedarJson } from '../core/cedar-shim';
 import { AppComponent } from '../app.component';
 
 /**
@@ -42,10 +41,23 @@ export class CedarEmbeddableDesignerElementComponent {
     }
   }
 
+  /**
+   * A template for the designer to open, as CEDAR JSON or CEDAR YAML.
+   *
+   * A source the model library cannot read is reported to the host's console
+   * rather than thrown: this runs inside a property setter the host wrote, and an
+   * exception there would surface as a failure in the host's own code rather than
+   * as something the designer said about the value it was given.
+   */
   @Input()
   set template(data: unknown) {
-    if (data) {
+    if (!data) {
+      return;
+    }
+    try {
       this.service.loadTemplate(data);
+    } catch (error: unknown) {
+      console.error('<cedar-embeddable-designer> could not read the template it was given', error);
     }
   }
 
@@ -74,12 +86,6 @@ export class CedarEmbeddableDesignerElementComponent {
   }
 
   private cedarTemplate(): object {
-    return toCedarJson(
-      this.service.templateName(),
-      this.service.templateDesc(),
-      this.service.fields(),
-      this.service.templateIdentifier(),
-      this.service.templateVersion(),
-    );
+    return this.service.templateJson();
   }
 }
