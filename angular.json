@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "metadata-template-designer": {
+    "cedar-embeddable-designer": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -39,7 +39,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "outputPath": "dist/metadata-template-designer",
+            "outputPath": "dist/cedar-embeddable-designer",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": ["zone.js"],
@@ -88,10 +88,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "metadata-template-designer:build:production"
+              "buildTarget": "cedar-embeddable-designer:build:production"
             },
             "development": {
-              "buildTarget": "metadata-template-designer:build:development"
+              "buildTarget": "cedar-embeddable-designer:build:development"
             }
           },
           "defaultConfiguration": "development"

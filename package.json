@@ -35,13 +35,13 @@
     "audit:prod": "npm audit --omit=dev --audit-level=high"
   },
   "build": {
-    "appId": "org.cedar.metadata-template-designer",
-    "productName": "Cedar Embeddable Template Designer",
+    "appId": "org.cedar.cedar-embeddable-designer",
+    "productName": "CEDAR Embeddable Designer",
     "directories": {
       "output": "dist-electron"
     },
     "files": [
-      "dist/metadata-template-designer/**/*",
+      "dist/cedar-embeddable-designer/**/*",
       "electron/**/*",
       "package.json"
     ],

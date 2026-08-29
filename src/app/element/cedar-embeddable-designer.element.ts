@@ -14,7 +14,7 @@ import { toCedarJson } from '../core/cedar-shim';
 import { AppComponent } from '../app.component';
 
 @Component({
-  selector: 'app-cedar-embeddable-template-editor-element',
+  selector: 'app-cedar-embeddable-designer-element',
   standalone: true,
   imports: [AppComponent],
   template: `<app-root></app-root>`,
@@ -31,7 +31,7 @@ import { AppComponent } from '../app.component';
   changeDetection: ChangeDetectionStrategy.Eager,
   encapsulation: ViewEncapsulation.None,
 })
-export class CedarEmbeddableTemplateEditorElementComponent {
+export class CedarEmbeddableDesignerElementComponent {
   readonly service = inject(TemplateService);
 
   @Input()

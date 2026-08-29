@@ -104,7 +104,7 @@ function createWindow() {
     height: 850,
     minWidth: 900,
     minHeight: 600,
-    title: 'Cedar Embeddable Template Designer',
+    title: 'CEDAR Embeddable Designer',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -114,7 +114,7 @@ function createWindow() {
   });
 
   const startUrl = process.env.ELECTRON_START_URL || url.format({
-    pathname: path.join(__dirname, '../dist/metadata-template-designer/browser/index.html'),
+    pathname: path.join(__dirname, '../dist/cedar-embeddable-designer/browser/index.html'),
     protocol: 'file:',
     slashes: true
   });

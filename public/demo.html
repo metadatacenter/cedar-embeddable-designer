@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>CEDAR Embeddable Template Editor - Web Component Demo</title>
+  <title>CEDAR Embeddable Designer - Web Component Demo</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
@@ -43,16 +43,16 @@
 <body>
 
   <div class="demo-bar">
-    <div class="demo-title">External Host Website (Embedding &lt;cedar-embeddable-template-editor&gt;)</div>
+    <div class="demo-title">External Host Website (Embedding &lt;cedar-embeddable-designer&gt;)</div>
     <div style="font-size: 12px; color: #94a3b8;">Web Component Integration Test</div>
   </div>
 
   <div class="demo-container">
     <!-- Web Component Element -->
-    <cedar-embeddable-template-editor
+    <cedar-embeddable-designer
       id="cedar-editor"
       bioportal-api-key="demo-key"
-    ></cedar-embeddable-template-editor>
+    ></cedar-embeddable-designer>
 
     <div class="log-box">
       <strong>Host Console Log (Listening to 'templateChange' events):</strong>
