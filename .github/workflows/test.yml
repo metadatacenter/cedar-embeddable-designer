@@ -1,0 +1,62 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out CED
+        uses: actions/checkout@v4
+
+      # One Node for the whole job, and the one `.nvmrc` names, so the build that
+      # ships is produced by the toolchain that exercised it. 24 rather than 22 of
+      # the versions Angular 22 accepts: 24 is the active LTS where 22 is in
+      # maintenance. CEE and cedar-term-picker are on the same version.
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build the production application
+        run: npm run build
+
+      # Deliberately its own step rather than part of the gate above: this is the
+      # one check that can start failing without anyone having changed anything,
+      # because it fails on a disclosure rather than on a commit. Kept separate so
+      # the reason is legible from the job summary, and placed after the tests so a
+      # genuine regression is reported first.
+      #
+      # `--omit=dev` because only runtime dependencies reach what an embedder
+      # downloads. `--audit-level=high` because moderate advisories against build
+      # tooling are not worth stopping a merge for, and the value of this step is
+      # that a failure means something.
+      - name: Audit what ships
+        run: npm run audit:prod

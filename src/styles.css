@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @source "./app/**/*.{html,ts}";
 
 @theme inline {
@@ -179,7 +179,7 @@
   }
 
   /* Custom checkbox styling for white background */
-  input[type="checkbox"].checkbox-white {
+  input[type='checkbox'].checkbox-white {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -190,12 +190,12 @@
     position: relative;
   }
 
-  input[type="checkbox"].checkbox-white:checked {
-    background-color: #2D6F5F;
-    border-color: #2D6F5F;
+  input[type='checkbox'].checkbox-white:checked {
+    background-color: #2d6f5f;
+    border-color: #2d6f5f;
   }
 
-  input[type="checkbox"].checkbox-white:checked::after {
+  input[type='checkbox'].checkbox-white:checked::after {
     content: '';
     position: absolute;
     left: 50%;
@@ -207,12 +207,12 @@
     transform: translate(-50%, -60%) rotate(45deg);
   }
 
-  input[type="checkbox"].checkbox-white:hover {
-    border-color: #2D6F5F;
+  input[type='checkbox'].checkbox-white:hover {
+    border-color: #2d6f5f;
   }
 
   /* Radio button white styling */
-  input[type="radio"].radio-white {
+  input[type='radio'].radio-white {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -223,13 +223,13 @@
     position: relative;
   }
 
-  input[type="radio"].radio-white:checked {
+  input[type='radio'].radio-white:checked {
     background-color: #ffffff;
-    border-color: #2D6F5F;
+    border-color: #2d6f5f;
     border-width: 2px;
   }
 
-  input[type="radio"].radio-white:checked::after {
+  input[type='radio'].radio-white:checked::after {
     content: '';
     position: absolute;
     left: 50%;
@@ -237,12 +237,12 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background-color: #2D6F5F;
+    background-color: #2d6f5f;
     transform: translate(-50%, -50%);
   }
 
-  input[type="radio"].radio-white:hover {
-    border-color: #2D6F5F;
+  input[type='radio'].radio-white:hover {
+    border-color: #2d6f5f;
   }
 }
 
@@ -262,8 +262,12 @@
 }
 
 @keyframes backdrop-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .animate-backdrop-fade-in {
@@ -303,4 +307,3 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #d1d5db;
 }
-

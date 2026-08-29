@@ -1,16 +1,17 @@
-import { Component, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+
+import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService, FIELD_TYPES } from '../../core/services/template.service';
-import { Field, Library, CustomField } from '../../core/models/types';
+import { Field, CustomField } from '../../core/models/types';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-field-library-sidebar',
   standalone: true,
-  imports: [CommonModule, DragDropModule, IconComponent],
+  imports: [DragDropModule, IconComponent],
   templateUrl: './field-library-sidebar.component.html',
-  styleUrls: ['./field-library-sidebar.component.scss']
+  changeDetection: ChangeDetectionStrategy.Eager,
+  styleUrls: ['./field-library-sidebar.component.scss'],
 })
 export class FieldLibrarySidebarComponent {
   readonly service = inject(TemplateService);
@@ -29,7 +30,7 @@ export class FieldLibrarySidebarComponent {
 
   getFieldIconKey(field: Field): string {
     if (field.customFieldId) {
-      const customField = this.service.customFields().find(cf => cf.id === field.customFieldId);
+      const customField = this.service.customFields().find((cf) => cf.id === field.customFieldId);
       if (customField) {
         return customField.baseType;
       }
@@ -38,11 +39,11 @@ export class FieldLibrarySidebarComponent {
   }
 
   getFieldsForLibrary(libraryId: number): CustomField[] {
-    return this.service.customFields().filter(cf => cf.libraryId === libraryId);
+    return this.service.customFields().filter((cf) => cf.libraryId === libraryId);
   }
 
   toggleLibrary(libraryId: number) {
-    this.expandedLibraries.update(prev => {
+    this.expandedLibraries.update((prev) => {
       const next = new Set(prev);
       if (next.has(libraryId)) {
         next.delete(libraryId);
@@ -65,10 +66,10 @@ export class FieldLibrarySidebarComponent {
     const onMouseMove = (moveEvent: MouseEvent) => {
       const container = document.querySelector('.border-r');
       if (!container) return;
-      
+
       const containerRect = container.getBoundingClientRect();
       const newHeight = ((moveEvent.clientY - containerRect.top) / containerRect.height) * 100;
-      
+
       // Constrain between 10% and 75%
       this.fieldListHeight = Math.min(Math.max(newHeight, 10), 75);
     };

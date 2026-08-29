@@ -1,22 +1,13 @@
 <div class="export-panel">
-
   <!-- Toolbar -->
   <div class="export-toolbar">
     <!-- Format tabs -->
     <div class="format-tabs">
-      <button
-        class="format-tab"
-        [class.active]="activeFormat() === 'json'"
-        (click)="setFormat('json')"
-      >
+      <button class="format-tab" [class.active]="activeFormat() === 'json'" (click)="setFormat('json')">
         <span class="tab-dot json-dot"></span>
         JSON
       </button>
-      <button
-        class="format-tab"
-        [class.active]="activeFormat() === 'yaml'"
-        (click)="setFormat('yaml')"
-      >
+      <button class="format-tab" [class.active]="activeFormat() === 'yaml'" (click)="setFormat('yaml')">
         <span class="tab-dot yaml-dot"></span>
         YAML
       </button>
@@ -31,19 +22,43 @@
         (click)="copyToClipboard()"
         [title]="copied() ? 'Copied!' : 'Copy to clipboard'"
       >
-        <span *ngIf="!copied()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-          </svg>
-          Copy
-        </span>
-        <span *ngIf="copied()" class="copied-text">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-          Copied!
-        </span>
+        @if (!copied()) {
+          <span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copy
+          </span>
+        }
+        @if (copied()) {
+          <span class="copied-text">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Copied!
+          </span>
+        }
       </button>
     </div>
   </div>
@@ -52,7 +67,9 @@
   <div class="code-wrapper">
     <!-- Line numbers -->
     <div class="line-numbers" aria-hidden="true">
-      <span *ngFor="let line of [].constructor(lineCount()); let i = index">{{ i + 1 }}</span>
+      @for (line of [].constructor(lineCount()); track line; let i = $index) {
+        <span>{{ i + 1 }}</span>
+      }
     </div>
 
     <!-- Code content -->
@@ -61,15 +78,26 @@
 
   <!-- CEDAR Spec badge -->
   <div class="spec-badge">
-    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="11"
+      height="11"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
       <circle cx="12" cy="12" r="10"></circle>
       <line x1="12" y1="8" x2="12" y2="12"></line>
       <line x1="12" y1="16" x2="12.01" y2="16"></line>
     </svg>
     CEDAR 1.6.0 JSON-LD &nbsp;·&nbsp;
-    <a href="https://metadatacenter.github.io/cedar-structural-spec/grammar.html" target="_blank" rel="noopener">spec</a>
+    <a href="https://metadatacenter.github.io/cedar-structural-spec/grammar.html" target="_blank" rel="noopener"
+      >spec</a
+    >
     &nbsp;·&nbsp;
     <span class="shim-note">serializer shim</span>
   </div>
-
 </div>

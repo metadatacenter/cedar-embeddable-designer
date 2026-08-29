@@ -1,14 +1,19 @@
 <div class="preview-panel-container">
-
   <!-- Tab Bar -->
   <div class="tab-bar">
     <!-- Preview Tab -->
-    <button
-      (click)="setTab('preview')"
-      class="tab-btn"
-      [class.active]="activeTab() === 'preview'"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <button (click)="setTab('preview')" class="tab-btn" [class.active]="activeTab() === 'preview'">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
         <circle cx="12" cy="12" r="3"></circle>
       </svg>
@@ -16,33 +21,31 @@
     </button>
 
     <!-- JSON Tab -->
-    <button
-      (click)="setTab('json')"
-      class="tab-btn"
-      [class.active]="activeTab() === 'json'"
-    >
+    <button (click)="setTab('json')" class="tab-btn" [class.active]="activeTab() === 'json'">
       <span class="tab-dot orange"></span>
       JSON
     </button>
 
     <!-- YAML Tab -->
-    <button
-      (click)="setTab('yaml')"
-      class="tab-btn"
-      [class.active]="activeTab() === 'yaml'"
-    >
+    <button (click)="setTab('yaml')" class="tab-btn" [class.active]="activeTab() === 'yaml'">
       <span class="tab-dot green"></span>
       YAML
     </button>
 
     <!-- Close button (right-aligned) -->
     <div class="close-btn-container">
-      <button
-        (click)="service.showPreview.set(false)"
-        class="btn-close-panel"
-        title="Close panel"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <button (click)="service.showPreview.set(false)" class="btn-close-panel" title="Close panel">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
@@ -51,229 +54,214 @@
   </div>
 
   <!-- CEDAR Export Panel (JSON / YAML tabs) -->
-  <app-cedar-export-panel
-    *ngIf="activeTab() === 'json' || activeTab() === 'yaml'"
-    class="flex-1 min-h-0 block"
-    [style.display]="'flex'"
-    [style.flexDirection]="'column'"
-  ></app-cedar-export-panel>
+  @if (activeTab() === 'json' || activeTab() === 'yaml') {
+    <app-cedar-export-panel
+      class="flex-1 min-h-0 block"
+      [style.display]="'flex'"
+      [style.flexDirection]="'column'"
+    ></app-cedar-export-panel>
+  }
 
   <!-- Preview Content -->
-  <div *ngIf="activeTab() === 'preview'" class="preview-content custom-scrollbar">
-    <div class="preview-inner">
-      <!-- Form Title and Description -->
-      <div class="preview-header">
-        <h1 class="preview-title">{{ service.templateName() }}</h1>
-        <p *ngIf="service.templateDesc()" class="preview-desc">{{ service.templateDesc() }}</p>
-      </div>
-
-      <!-- Form Fields -->
-      <div class="fields-container">
-        <div *ngFor="let field of service.fields()" class="field-preview-card">
-          <!-- Field Label -->
-          <label class="field-preview-label">
-            <div class="field-label-header">
-              <div class="field-label-row">
-                <span class="field-label-text">{{ field.name }}</span>
-                <span 
-                  *ngIf="field.status === 'required'" 
-                  class="badge required"
-                >
-                  Required
-                </span>
-                <span 
-                  *ngIf="field.status === 'recommended'" 
-                  class="badge recommended"
-                >
-                  Recommended
-                </span>
-              </div>
-              <p *ngIf="field.helpText" class="field-help-text">{{ field.helpText }}</p>
-            </div>
-
-            <!-- Field Input Based on Type -->
-            <!-- Text -->
-            <ng-container *ngIf="field.type === 'text'">
-              <input 
-                type="text" 
-                [placeholder]="field.defaultValue || getFieldPreviewLabel(field.type)"
-                class="preview-input"
-                [style.--tw-ring-color]="service.COLORS.primary"
-                (focus)="onInputFocus($any($event.target))"
-                (blur)="onInputBlur($any($event.target))"
-              />
-            </ng-container>
-
-            <!-- Paragraph -->
-            <ng-container *ngIf="field.type === 'paragraph'">
-              <textarea 
-                rows="4"
-                [placeholder]="field.defaultValue || getFieldPreviewLabel(field.type)"
-                class="preview-textarea"
-                [style.--tw-ring-color]="service.COLORS.primary"
-                (focus)="onInputFocus($any($event.target))"
-                (blur)="onInputBlur($any($event.target))"
-              ></textarea>
-            </ng-container>
-
-            <!-- Multiple Choice -->
-            <ng-container *ngIf="field.type === 'multipleChoice'">
-              <div class="options-list">
-                <label *ngFor="let option of field.options; let idx = index" class="option-item">
-                  <input 
-                    type="radio" 
-                    [name]="'field-' + field.id"
-                    class="radio-white"
-                  />
-                  <span class="option-text">{{ option }}</span>
-                </label>
-              </div>
-            </ng-container>
-
-            <!-- Checkboxes -->
-            <ng-container *ngIf="field.type === 'checkboxes'">
-              <div class="options-list">
-                <label *ngFor="let option of field.options; let idx = index" class="option-item">
-                  <input 
-                    type="checkbox"
-                    class="checkbox-white"
-                  />
-                  <span class="option-text">{{ option }}</span>
-                </label>
-              </div>
-            </ng-container>
-
-            <!-- Date -->
-            <ng-container *ngIf="field.type === 'date'">
-              <input 
-                type="date"
-                [value]="field.defaultValue"
-                class="preview-input"
-                [style.--tw-ring-color]="service.COLORS.primary"
-                (focus)="onInputFocus($any($event.target))"
-                (blur)="onInputBlur($any($event.target))"
-              />
-            </ng-container>
-
-            <!-- Time -->
-            <ng-container *ngIf="field.type === 'time'">
-              <input 
-                type="time"
-                [value]="field.defaultValue"
-                class="preview-input"
-                [style.--tw-ring-color]="service.COLORS.primary"
-                (focus)="onInputFocus($any($event.target))"
-                (blur)="onInputBlur($any($event.target))"
-              />
-            </ng-container>
-
-            <!-- Email -->
-            <ng-container *ngIf="field.type === 'email'">
-              <input 
-                type="email" 
-                [placeholder]="field.defaultValue || 'email@example.com'"
-                class="preview-input"
-                [style.--tw-ring-color]="service.COLORS.primary"
-                (focus)="onInputFocus($any($event.target))"
-                (blur)="onInputBlur($any($event.target))"
-              />
-            </ng-container>
-
-            <!-- Link -->
-            <ng-container *ngIf="field.type === 'link'">
-              <input 
-                type="url"
-                [placeholder]="field.defaultValue || 'https://example.com'"
-                class="preview-input"
-                [style.--tw-ring-color]="service.COLORS.primary"
-                (focus)="onInputFocus($any($event.target))"
-                (blur)="onInputBlur($any($event.target))"
-              />
-            </ng-container>
-
-            <!-- Phone -->
-            <ng-container *ngIf="field.type === 'phone'">
-              <input 
-                type="tel"
-                [placeholder]="field.defaultValue || '+1 (555) 000-0000'"
-                class="preview-input"
-                [style.--tw-ring-color]="service.COLORS.primary"
-                (focus)="onInputFocus($any($event.target))"
-                (blur)="onInputBlur($any($event.target))"
-              />
-            </ng-container>
-
-            <!-- Number -->
-            <ng-container *ngIf="field.type === 'number'">
-              <input 
-                type="number"
-                [placeholder]="field.defaultValue || '0'"
-                class="preview-input"
-                [style.--tw-ring-color]="service.COLORS.primary"
-                (focus)="onInputFocus($any($event.target))"
-                (blur)="onInputBlur($any($event.target))"
-              />
-            </ng-container>
-
-            <!-- Image -->
-            <ng-container *ngIf="field.type === 'image'">
-              <div class="image-upload-placeholder">
-                <app-icon key="beaker" className="upload-icon"></app-icon>
-                <p class="upload-main-text">Click to upload or drag and drop</p>
-                <p class="upload-sub-text">PNG, JPG, GIF up to 10MB</p>
-              </div>
-            </ng-container>
-
-            <!-- ORCID -->
-            <ng-container *ngIf="field.type === 'orcid'">
-              <input 
-                type="text"
-                [placeholder]="field.defaultValue || '0000-0000-0000-0000'"
-                class="preview-input monospace"
-                [style.--tw-ring-color]="service.COLORS.primary"
-                (focus)="onInputFocus($any($event.target))"
-                (blur)="onInputBlur($any($event.target))"
-              />
-            </ng-container>
-
-            <!-- Controlled Terms -->
-            <ng-container *ngIf="field.type === 'controlledTerms'">
-              <div>
-                <button
-                  type="button"
-                  (click)="handleOpenBioPortal(field)"
-                  class="bioportal-search-btn group"
-                >
-                  <div *ngIf="selectedTerms()[field.id]; else noTerm" class="term-selected-container">
-                    <div class="term-label">
-                      {{ selectedTerms()[field.id].prefLabel }}
-                    </div>
-                    <div *ngIf="selectedTerms()[field.id].ontologyAcronym" class="term-ontology">
-                      {{ selectedTerms()[field.id].ontologyAcronym }}
-                    </div>
+  @if (activeTab() === 'preview') {
+    <div class="preview-content custom-scrollbar">
+      <div class="preview-inner">
+        <!-- Form Title and Description -->
+        <div class="preview-header">
+          <h1 class="preview-title">{{ service.templateName() }}</h1>
+          @if (service.templateDesc()) {
+            <p class="preview-desc">{{ service.templateDesc() }}</p>
+          }
+        </div>
+        <!-- Form Fields -->
+        <div class="fields-container">
+          @for (field of service.fields(); track field) {
+            <div class="field-preview-card">
+              <!-- Field Label -->
+              <label class="field-preview-label">
+                <div class="field-label-header">
+                  <div class="field-label-row">
+                    <span class="field-label-text">{{ field.name }}</span>
+                    @if (field.status === 'required') {
+                      <span class="badge required"> Required </span>
+                    }
+                    @if (field.status === 'recommended') {
+                      <span class="badge recommended"> Recommended </span>
+                    }
                   </div>
-                  <ng-template #noTerm>
-                    <div class="no-term-placeholder">
-                      <app-icon key="settings" className="w-5 h-5"></app-icon>
-                      <span class="search-placeholder-text">Search BioPortal...</span>
-                    </div>
-                  </ng-template>
-                  <span class="btn-arrow-indicator group-hover:text-gray-600 transition-colors">▶</span>
-                </button>
-              </div>
-            </ng-container>
-          </label>
+                  @if (field.helpText) {
+                    <p class="field-help-text">{{ field.helpText }}</p>
+                  }
+                </div>
+                <!-- Field Input Based on Type -->
+                <!-- Text -->
+                @if (field.type === 'text') {
+                  <input
+                    type="text"
+                    [placeholder]="field.defaultValue || getFieldPreviewLabel(field.type)"
+                    class="preview-input"
+                    [style.--tw-ring-color]="service.COLORS.primary"
+                    (focus)="onInputFocus($any($event.target))"
+                    (blur)="onInputBlur($any($event.target))"
+                  />
+                }
+                <!-- Paragraph -->
+                @if (field.type === 'paragraph') {
+                  <textarea
+                    rows="4"
+                    [placeholder]="field.defaultValue || getFieldPreviewLabel(field.type)"
+                    class="preview-textarea"
+                    [style.--tw-ring-color]="service.COLORS.primary"
+                    (focus)="onInputFocus($any($event.target))"
+                    (blur)="onInputBlur($any($event.target))"
+                  ></textarea>
+                }
+                <!-- Multiple Choice -->
+                @if (field.type === 'multipleChoice') {
+                  <div class="options-list">
+                    @for (option of field.options; track option; let idx = $index) {
+                      <label class="option-item">
+                        <input type="radio" [name]="'field-' + field.id" class="radio-white" />
+                        <span class="option-text">{{ option }}</span>
+                      </label>
+                    }
+                  </div>
+                }
+                <!-- Checkboxes -->
+                @if (field.type === 'checkboxes') {
+                  <div class="options-list">
+                    @for (option of field.options; track option; let idx = $index) {
+                      <label class="option-item">
+                        <input type="checkbox" class="checkbox-white" />
+                        <span class="option-text">{{ option }}</span>
+                      </label>
+                    }
+                  </div>
+                }
+                <!-- Date -->
+                @if (field.type === 'date') {
+                  <input
+                    type="date"
+                    [value]="field.defaultValue"
+                    class="preview-input"
+                    [style.--tw-ring-color]="service.COLORS.primary"
+                    (focus)="onInputFocus($any($event.target))"
+                    (blur)="onInputBlur($any($event.target))"
+                  />
+                }
+                <!-- Time -->
+                @if (field.type === 'time') {
+                  <input
+                    type="time"
+                    [value]="field.defaultValue"
+                    class="preview-input"
+                    [style.--tw-ring-color]="service.COLORS.primary"
+                    (focus)="onInputFocus($any($event.target))"
+                    (blur)="onInputBlur($any($event.target))"
+                  />
+                }
+                <!-- Email -->
+                @if (field.type === 'email') {
+                  <input
+                    type="email"
+                    [placeholder]="field.defaultValue || 'email@example.com'"
+                    class="preview-input"
+                    [style.--tw-ring-color]="service.COLORS.primary"
+                    (focus)="onInputFocus($any($event.target))"
+                    (blur)="onInputBlur($any($event.target))"
+                  />
+                }
+                <!-- Link -->
+                @if (field.type === 'link') {
+                  <input
+                    type="url"
+                    [placeholder]="field.defaultValue || 'https://example.com'"
+                    class="preview-input"
+                    [style.--tw-ring-color]="service.COLORS.primary"
+                    (focus)="onInputFocus($any($event.target))"
+                    (blur)="onInputBlur($any($event.target))"
+                  />
+                }
+                <!-- Phone -->
+                @if (field.type === 'phone') {
+                  <input
+                    type="tel"
+                    [placeholder]="field.defaultValue || '+1 (555) 000-0000'"
+                    class="preview-input"
+                    [style.--tw-ring-color]="service.COLORS.primary"
+                    (focus)="onInputFocus($any($event.target))"
+                    (blur)="onInputBlur($any($event.target))"
+                  />
+                }
+                <!-- Number -->
+                @if (field.type === 'number') {
+                  <input
+                    type="number"
+                    [placeholder]="field.defaultValue || '0'"
+                    class="preview-input"
+                    [style.--tw-ring-color]="service.COLORS.primary"
+                    (focus)="onInputFocus($any($event.target))"
+                    (blur)="onInputBlur($any($event.target))"
+                  />
+                }
+                <!-- Image -->
+                @if (field.type === 'image') {
+                  <div class="image-upload-placeholder">
+                    <app-icon key="beaker" className="upload-icon"></app-icon>
+                    <p class="upload-main-text">Click to upload or drag and drop</p>
+                    <p class="upload-sub-text">PNG, JPG, GIF up to 10MB</p>
+                  </div>
+                }
+                <!-- ORCID -->
+                @if (field.type === 'orcid') {
+                  <input
+                    type="text"
+                    [placeholder]="field.defaultValue || '0000-0000-0000-0000'"
+                    class="preview-input monospace"
+                    [style.--tw-ring-color]="service.COLORS.primary"
+                    (focus)="onInputFocus($any($event.target))"
+                    (blur)="onInputBlur($any($event.target))"
+                  />
+                }
+                <!-- Controlled Terms -->
+                @if (field.type === 'controlledTerms') {
+                  <div>
+                    <button type="button" (click)="handleOpenBioPortal(field)" class="bioportal-search-btn group">
+                      @if (selectedTerms()[field.id]) {
+                        <div class="term-selected-container">
+                          <div class="term-label">
+                            {{ selectedTerms()[field.id].prefLabel }}
+                          </div>
+                          @if (selectedTerms()[field.id].ontologyAcronym) {
+                            <div class="term-ontology">
+                              {{ selectedTerms()[field.id].ontologyAcronym }}
+                            </div>
+                          }
+                        </div>
+                      } @else {
+                        <div class="no-term-placeholder">
+                          <app-icon key="settings" className="w-5 h-5"></app-icon>
+                          <span class="search-placeholder-text">Search BioPortal...</span>
+                        </div>
+                      }
+                      <span class="btn-arrow-indicator group-hover:text-gray-600 transition-colors">▶</span>
+                    </button>
+                  </div>
+                }
+              </label>
+            </div>
+          }
         </div>
       </div>
     </div>
-  </div>
+  }
 </div>
 
 <!-- BioPortal Search Modal Wrapper -->
 <app-bioportal-search-modal
   [isOpen]="showBioPortalModal()"
   [fieldName]="selectedFieldForSearch()?.name || ''"
-  [config]="selectedFieldForSearch()?.controlledTermConfig"
-  (close)="showBioPortalModal.set(false); selectedFieldForSearch.set(null)"
-  (select)="handleSelectTerm($event)"
+  [config]="$safeNavigationMigration(selectedFieldForSearch()?.controlledTermConfig)"
+  (cancelled)="showBioPortalModal.set(false); selectedFieldForSearch.set(null)"
+  (selected)="handleSelectTerm($event)"
 ></app-bioportal-search-modal>

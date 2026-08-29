@@ -36,7 +36,6 @@ export interface ControlledTermConfig {
   restrictedOntologies?: string[];
 }
 
-
 export interface Field {
   id: number;
   type: string;
@@ -91,6 +90,5 @@ export const FIELD_TYPES: Record<string, { label: string; preview: string }> = {
   number: { label: 'Number', preview: 'Numeric value' },
   image: { label: 'Image', preview: 'File upload' },
   orcid: { label: 'ORCID', preview: 'Research identifier' },
-  controlledTerms: { label: 'Controlled Terms', preview: 'Controlled vocabulary' }
+  controlledTerms: { label: 'Controlled Terms', preview: 'Controlled vocabulary' },
 };
-

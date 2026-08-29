@@ -17,7 +17,7 @@ declare global {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ElectronService {
   readonly currentFilePath = signal<string | null>(null);
@@ -44,7 +44,7 @@ export class ElectronService {
     }
     return await window.electronAPI.showSaveDialog({
       defaultPath: defaultFileName,
-      filters
+      filters,
     });
   }
 
@@ -54,7 +54,7 @@ export class ElectronService {
     }
     return await window.electronAPI.showOpenDialog({
       properties: ['openFile'],
-      filters
+      filters,
     });
   }
 

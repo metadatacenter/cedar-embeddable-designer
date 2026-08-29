@@ -1,5 +1,14 @@
-import { Component, Input, Output, EventEmitter, inject, effect, ViewEncapsulation } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  inject,
+  effect,
+  ViewEncapsulation,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
 import { TemplateService } from '../core/services/template.service';
 import { toCedarJson } from '../core/cedar-shim';
 import { AppComponent } from '../app.component';
@@ -7,17 +16,20 @@ import { AppComponent } from '../app.component';
 @Component({
   selector: 'app-cedar-embeddable-template-editor-element',
   standalone: true,
-  imports: [CommonModule, AppComponent],
+  imports: [AppComponent],
   template: `<app-root></app-root>`,
-  styles: [`
-    :host {
-      display: block;
-      width: 100%;
-      height: 100%;
-      min-height: 500px;
-    }
-  `],
-  encapsulation: ViewEncapsulation.None
+  styles: [
+    `
+      :host {
+        display: block;
+        width: 100%;
+        height: 100%;
+        min-height: 500px;
+      }
+    `,
+  ],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  encapsulation: ViewEncapsulation.None,
 })
 export class CedarEmbeddableTemplateEditorElementComponent {
   readonly service = inject(TemplateService);
@@ -61,7 +73,7 @@ export class CedarEmbeddableTemplateEditorElementComponent {
         this.service.templateDesc(),
         this.service.fields(),
         this.service.templateIdentifier(),
-        this.service.templateVersion()
+        this.service.templateVersion(),
       );
       this.templateChange.emit(cedarJson);
     });

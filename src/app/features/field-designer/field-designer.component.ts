@@ -1,16 +1,17 @@
-import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
-import { TemplateService, FIELD_TYPES } from '../../core/services/template.service';
+import { TemplateService } from '../../core/services/template.service';
 import { Library, CustomField, ValidationRule } from '../../core/models/types';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-field-designer',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent],
+  imports: [FormsModule, IconComponent],
   templateUrl: './field-designer.component.html',
-  styleUrls: ['./field-designer.component.scss']
+  changeDetection: ChangeDetectionStrategy.Eager,
+  styleUrls: ['./field-designer.component.scss'],
 })
 export class FieldDesignerComponent {
   readonly service = inject(TemplateService);
@@ -40,7 +41,7 @@ export class FieldDesignerComponent {
     { value: 'date', label: 'Date' },
     { value: 'time', label: 'Time' },
     { value: 'link', label: 'Link' },
-    { value: 'phone', label: 'Phone' }
+    { value: 'phone', label: 'Phone' },
   ];
 
   readonly VALIDATION_TYPES = [
@@ -48,11 +49,11 @@ export class FieldDesignerComponent {
     { value: 'minLength', label: 'Minimum Length' },
     { value: 'maxLength', label: 'Maximum Length' },
     { value: 'range', label: 'Number Range' },
-    { value: 'custom', label: 'Custom Validation' }
+    { value: 'custom', label: 'Custom Validation' },
   ];
 
   getBaseTypeLabel(val: string): string {
-    return this.BASE_FIELD_TYPES.find(t => t.value === val)?.label || val;
+    return this.BASE_FIELD_TYPES.find((t) => t.value === val)?.label || val;
   }
 
   openCreateForm() {
@@ -78,18 +79,18 @@ export class FieldDesignerComponent {
       id: Date.now(),
       type: 'regex',
       pattern: '',
-      errorMessage: ''
+      errorMessage: '',
     };
     this.validationRules = [...this.validationRules, newRule];
   }
 
   deleteValidationRule(id: number) {
-    this.validationRules = this.validationRules.filter(r => r.id !== id);
+    this.validationRules = this.validationRules.filter((r) => r.id !== id);
   }
 
   handleCreateField() {
     if (!this.fieldName.trim()) return;
-    
+
     const editingId = this.editingCustomFieldId();
     if (editingId !== null) {
       const updatedField: CustomField = {
@@ -100,7 +101,7 @@ export class FieldDesignerComponent {
         libraryId: Number(this.selectedLibraryId),
         description: this.description,
         placeholder: this.placeholder,
-        validationRules: this.validationRules
+        validationRules: this.validationRules,
       };
       this.service.updateCustomField(updatedField);
     } else {
@@ -112,9 +113,9 @@ export class FieldDesignerComponent {
         libraryId: Number(this.selectedLibraryId),
         description: this.description,
         placeholder: this.placeholder,
-        validationRules: this.validationRules
+        validationRules: this.validationRules,
       };
-      this.service.customFields.update(prev => [...prev, newField]);
+      this.service.customFields.update((prev) => [...prev, newField]);
     }
 
     this.resetForm();
@@ -138,10 +139,10 @@ export class FieldDesignerComponent {
       id: Date.now(),
       name: this.libraryName,
       description: this.libraryDescription,
-      icon: 'library'
+      icon: 'library',
     };
 
-    this.service.libraries.update(prev => [...prev, newLibrary]);
+    this.service.libraries.update((prev) => [...prev, newLibrary]);
     this.resetLibraryForm();
   }
 

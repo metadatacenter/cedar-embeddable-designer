@@ -1,9 +1,9 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService, FIELD_TYPES } from '../../core/services/template.service';
-import { Field, CustomField } from '../../core/models/types';
+import { Field } from '../../core/models/types';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { ControlledTermConfigComponent } from '../controlled-term-config/controlled-term-config.component';
 
@@ -11,7 +11,8 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
   selector: 'app-field-card',
   standalone: true,
   imports: [CommonModule, FormsModule, IconComponent, ControlledTermConfigComponent, DragDropModule],
-  templateUrl: './field-card.component.html'
+  changeDetection: ChangeDetectionStrategy.Eager,
+  templateUrl: './field-card.component.html',
 })
 export class FieldCardComponent {
   @Input() field!: Field;
@@ -24,7 +25,7 @@ export class FieldCardComponent {
 
   getFieldIcon(field: Field): string {
     if (field.customFieldId) {
-      const customField = this.service.customFields().find(cf => cf.id === field.customFieldId);
+      const customField = this.service.customFields().find((cf) => cf.id === field.customFieldId);
       if (customField) {
         return customField.baseType;
       }
@@ -34,7 +35,7 @@ export class FieldCardComponent {
 
   getFieldTypeName(field: Field): string {
     if (field.customFieldId) {
-      const customField = this.service.customFields().find(cf => cf.id === field.customFieldId);
+      const customField = this.service.customFields().find((cf) => cf.id === field.customFieldId);
       if (customField) return customField.name;
     }
     return FIELD_TYPES[field.type]?.label || field.type;

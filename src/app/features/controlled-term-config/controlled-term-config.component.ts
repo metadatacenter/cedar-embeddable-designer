@@ -1,5 +1,5 @@
-import { Component, Input, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Input, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { TemplateService } from '../../core/services/template.service';
 import { Field, ControlledTermConfig as TermConfig } from '../../core/models/types';
@@ -8,8 +8,9 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 @Component({
   selector: 'app-controlled-term-config',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent],
-  templateUrl: './controlled-term-config.component.html'
+  imports: [FormsModule, IconComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  templateUrl: './controlled-term-config.component.html',
 })
 export class ControlledTermConfigComponent {
   readonly service = inject(TemplateService);
@@ -27,7 +28,7 @@ export class ControlledTermConfigComponent {
       icon: 'star',
       color: '#0D9488',
       example: 'e.g., "cardiac arrest", "melanoma"',
-      searchLabel: 'Search for a term in BioPortal (e.g. \'microarray analysis\')'
+      searchLabel: "Search for a term in BioPortal (e.g. 'microarray analysis')",
     },
     {
       id: 'ontology' as const,
@@ -36,7 +37,7 @@ export class ControlledTermConfigComponent {
       icon: 'library',
       color: '#7C3AED',
       example: 'e.g., NCIT, SNOMED CT, Disease Ontology',
-      searchLabel: 'Search for an ontology in BioPortal (e.g. OBI) and explore it'
+      searchLabel: 'Search for an ontology in BioPortal (e.g. OBI) and explore it',
     },
     {
       id: 'value-set' as const,
@@ -44,8 +45,8 @@ export class ControlledTermConfigComponent {
       description: 'Users select from predefined collections',
       icon: 'list',
       color: '#DC2626',
-      example: 'e.g., \'Delivery Procedures\'',
-      searchLabel: 'Search for a value set in BioPortal (e.g. \'Delivery Procedures\') and explore it'
+      example: "e.g., 'Delivery Procedures'",
+      searchLabel: "Search for a value set in BioPortal (e.g. 'Delivery Procedures') and explore it",
     },
     {
       id: 'ontology-branch' as const,
@@ -54,31 +55,33 @@ export class ControlledTermConfigComponent {
       icon: 'beaker',
       color: '#059669',
       example: 'e.g., All types of "Carcinoma"',
-      searchLabel: 'Search within a specific branch of an ontology'
-    }
+      searchLabel: 'Search within a specific branch of an ontology',
+    },
   ];
 
   get config(): TermConfig {
-    return this.field.controlledTermConfig || {
-      sourceType: 'ontology-term',
-      sourceId: '',
-      sourceName: '',
-      ontologyId: '',
-      ontologyName: '',
-      allowMultipleOntologies: false,
-      searchDepth: 1,
-      restrictedOntologies: []
-    };
+    return (
+      this.field.controlledTermConfig || {
+        sourceType: 'ontology-term',
+        sourceId: '',
+        sourceName: '',
+        ontologyId: '',
+        ontologyName: '',
+        allowMultipleOntologies: false,
+        searchDepth: 1,
+        restrictedOntologies: [],
+      }
+    );
   }
 
   get currentSourceType() {
-    return this.sourceTypes.find(t => t.id === this.config.sourceType) || this.sourceTypes[0];
+    return this.sourceTypes.find((t) => t.id === this.config.sourceType) || this.sourceTypes[0];
   }
 
   updateConfig(updates: Partial<TermConfig>) {
     const updatedConfig = {
       ...this.config,
-      ...updates
+      ...updates,
     };
     this.service.updateControlledTermConfig(this.field.id, updatedConfig);
   }
@@ -88,7 +91,10 @@ export class ControlledTermConfigComponent {
   }
 
   updateRestrictedOntologies(value: string) {
-    const list = value.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+    const list = value
+      .split(',')
+      .map((s) => s.trim().toUpperCase())
+      .filter(Boolean);
     this.updateConfig({ restrictedOntologies: list });
   }
 }

@@ -9,7 +9,7 @@ bootstrapApplication(AppComponent, appConfig)
     // Define the custom element <cedar-embeddable-template-editor> for external use
     if (!customElements.get('cedar-embeddable-template-editor')) {
       const element = createCustomElement(CedarEmbeddableTemplateEditorElementComponent, {
-        injector: appRef.injector
+        injector: appRef.injector,
       });
       customElements.define('cedar-embeddable-template-editor', element);
     }

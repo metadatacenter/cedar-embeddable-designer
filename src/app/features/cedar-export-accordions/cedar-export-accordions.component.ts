@@ -1,15 +1,14 @@
-import { Component, inject, computed, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, computed, signal, ChangeDetectionStrategy } from '@angular/core';
+
 import { TemplateService } from '../../core/services/template.service';
 import { toCedarJson, toCedarYaml } from '../../core/cedar-shim';
-import { IconComponent } from '../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-cedar-export-accordions',
   standalone: true,
-  imports: [CommonModule, IconComponent],
   templateUrl: './cedar-export-accordions.component.html',
-  styleUrls: ['./cedar-export-accordions.component.scss']
+  changeDetection: ChangeDetectionStrategy.Eager,
+  styleUrls: ['./cedar-export-accordions.component.scss'],
 })
 export class CedarExportAccordionsComponent {
   readonly service = inject(TemplateService);
@@ -27,19 +26,15 @@ export class CedarExportAccordionsComponent {
       this.service.templateDesc(),
       this.service.fields(),
       this.service.templateIdentifier(),
-      this.service.templateVersion()
-    )
+      this.service.templateVersion(),
+    ),
   );
 
   /** Formatted JSON string */
-  readonly jsonString = computed(() =>
-    JSON.stringify(this.cedarJson(), null, 2)
-  );
+  readonly jsonString = computed(() => JSON.stringify(this.cedarJson(), null, 2));
 
   /** Formatted YAML string */
-  readonly yamlString = computed(() =>
-    toCedarYaml(this.cedarJson())
-  );
+  readonly yamlString = computed(() => toCedarYaml(this.cedarJson()));
 
   readonly jsonLineCount = computed(() => this.jsonString().split('\n').length);
   readonly yamlLineCount = computed(() => this.yamlString().split('\n').length);
@@ -91,7 +86,7 @@ function highlightJson(code: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(
-      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
       (match) => {
         if (/^"/.test(match)) {
           if (/:$/.test(match)) {
@@ -102,7 +97,7 @@ function highlightJson(code: string): string {
         if (/true|false/.test(match)) return `<span class="hl-bool">${match}</span>`;
         if (/null/.test(match)) return `<span class="hl-null">${match}</span>`;
         return `<span class="hl-number">${match}</span>`;
-      }
+      },
     );
 }
 

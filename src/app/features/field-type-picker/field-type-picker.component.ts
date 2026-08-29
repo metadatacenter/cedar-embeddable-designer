@@ -1,5 +1,14 @@
-import { Component, Input, inject, signal, ElementRef, HostListener, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  Input,
+  inject,
+  signal,
+  ElementRef,
+  HostListener,
+  computed,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { TemplateService, FIELD_TYPES } from '../../core/services/template.service';
 import { CustomField } from '../../core/models/types';
@@ -8,9 +17,10 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 @Component({
   selector: 'app-field-type-picker',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent],
+  imports: [FormsModule, IconComponent],
   templateUrl: './field-type-picker.component.html',
-  styleUrls: ['./field-type-picker.component.scss']
+  changeDetection: ChangeDetectionStrategy.Eager,
+  styleUrls: ['./field-type-picker.component.scss'],
 })
 export class FieldTypePickerComponent {
   readonly service = inject(TemplateService);
@@ -24,21 +34,17 @@ export class FieldTypePickerComponent {
   get selectedLibraryName(): string {
     const libId = this.service.fieldTypeDropdownLibrary();
     if (libId === null) return 'Standard';
-    const lib = this.service.libraries().find(l => l.id === libId);
+    const lib = this.service.libraries().find((l) => l.id === libId);
     return lib ? lib.name : 'Standard';
   }
 
   get filteredLibraries() {
-    return this.service.libraries().filter(lib => 
-      lib.name.toLowerCase().includes(this.searchText.toLowerCase())
-    );
+    return this.service.libraries().filter((lib) => lib.name.toLowerCase().includes(this.searchText.toLowerCase()));
   }
 
   get libraryCustomFields(): CustomField[] {
     const libId = this.service.fieldTypeDropdownLibrary();
-    return libId !== null
-      ? this.service.customFields().filter(f => f.libraryId === libId)
-      : [];
+    return libId !== null ? this.service.customFields().filter((f) => f.libraryId === libId) : [];
   }
 
   readonly visibleFieldTypesList = computed(() => {

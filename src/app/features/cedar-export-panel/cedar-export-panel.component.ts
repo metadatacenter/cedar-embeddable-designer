@@ -1,17 +1,16 @@
-import { Component, inject, computed, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, computed, signal, ChangeDetectionStrategy } from '@angular/core';
+
 import { TemplateService } from '../../core/services/template.service';
 import { toCedarJson, toCedarYaml } from '../../core/cedar-shim';
-import { IconComponent } from '../../shared/components/icon/icon.component';
 
 export type ExportFormat = 'json' | 'yaml';
 
 @Component({
   selector: 'app-cedar-export-panel',
   standalone: true,
-  imports: [CommonModule, IconComponent],
   templateUrl: './cedar-export-panel.component.html',
-  styleUrls: ['./cedar-export-panel.component.scss']
+  changeDetection: ChangeDetectionStrategy.Eager,
+  styleUrls: ['./cedar-export-panel.component.scss'],
 })
 export class CedarExportPanelComponent {
   readonly service = inject(TemplateService);
@@ -26,25 +25,19 @@ export class CedarExportPanelComponent {
       this.service.templateDesc(),
       this.service.fields(),
       this.service.templateIdentifier(),
-      this.service.templateVersion()
-    )
+      this.service.templateVersion(),
+    ),
   );
 
   /** Formatted JSON string */
-  readonly cedarJsonString = computed(() =>
-    JSON.stringify(this.cedarJson(), null, 2)
-  );
+  readonly cedarJsonString = computed(() => JSON.stringify(this.cedarJson(), null, 2));
 
   /** YAML string derived from JSON object */
-  readonly cedarYamlString = computed(() =>
-    toCedarYaml(this.cedarJson())
-  );
+  readonly cedarYamlString = computed(() => toCedarYaml(this.cedarJson()));
 
   /** Currently displayed code */
   readonly activeCode = computed(() =>
-    this.activeFormat() === 'json'
-      ? this.cedarJsonString()
-      : this.cedarYamlString()
+    this.activeFormat() === 'json' ? this.cedarJsonString() : this.cedarYamlString(),
   );
 
   setFormat(format: ExportFormat): void {
@@ -70,9 +63,7 @@ export class CedarExportPanelComponent {
   }
 
   /** Line count for display */
-  readonly lineCount = computed(() =>
-    this.activeCode().split('\n').length
-  );
+  readonly lineCount = computed(() => this.activeCode().split('\n').length);
 
   /** Syntax-highlighted HTML for code display */
   readonly highlightedCode = computed(() => {
@@ -90,7 +81,7 @@ function highlightJson(code: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(
-      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
       (match) => {
         if (/^"/.test(match)) {
           if (/:$/.test(match)) {
@@ -101,7 +92,7 @@ function highlightJson(code: string): string {
         if (/true|false/.test(match)) return `<span class="hl-bool">${match}</span>`;
         if (/null/.test(match)) return `<span class="hl-null">${match}</span>`;
         return `<span class="hl-number">${match}</span>`;
-      }
+      },
     );
 }
 

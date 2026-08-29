@@ -1,5 +1,5 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { TemplateService, FIELD_TYPES } from '../../../core/services/template.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
@@ -7,15 +7,16 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
 @Component({
   selector: 'app-preferences-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent],
+  imports: [FormsModule, IconComponent],
   templateUrl: './preferences.component.html',
-  styleUrls: ['./preferences.component.scss']
+  changeDetection: ChangeDetectionStrategy.Eager,
+  styleUrls: ['./preferences.component.scss'],
 })
 export class PreferencesModalComponent {
   readonly service = inject(TemplateService);
-  
+
   readonly presets: Array<'basic' | 'semantic' | 'modular'> = ['basic', 'semantic', 'modular'];
-  
+
   get fieldTypesList() {
     return Object.entries(FIELD_TYPES).map(([key, value]) => ({ key, value }));
   }

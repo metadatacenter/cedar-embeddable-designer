@@ -1,7 +1,9 @@
 .picker-container {
   background-color: #ffffff;
   border-radius: 0.5rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
   padding: 1.5rem;
 }
 
@@ -171,8 +173,8 @@
   transition: all 150ms;
 
   &:hover {
-    background-color: #E8F3F0 !important;
-    border-color: #3B7A5D !important;
+    background-color: #e8f3f0 !important;
+    border-color: #3b7a5d !important;
   }
 }
 

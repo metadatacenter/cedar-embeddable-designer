@@ -1,5 +1,5 @@
-import { Component, inject, signal, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal, effect, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { TemplateService, FIELD_TYPES } from '../../core/services/template.service';
 import { Field } from '../../core/models/types';
@@ -12,9 +12,10 @@ export type PreviewTab = 'preview' | 'json' | 'yaml';
 @Component({
   selector: 'app-preview-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent, BioPortalSearchModalComponent, CedarExportPanelComponent],
+  imports: [FormsModule, IconComponent, BioPortalSearchModalComponent, CedarExportPanelComponent],
   templateUrl: './preview-panel.component.html',
-  styleUrls: ['./preview-panel.component.scss']
+  changeDetection: ChangeDetectionStrategy.Eager,
+  styleUrls: ['./preview-panel.component.scss'],
 })
 export class PreviewPanelComponent {
   readonly service = inject(TemplateService);
@@ -56,9 +57,9 @@ export class PreviewPanelComponent {
   handleSelectTerm(term: BioPortalResult) {
     const activeField = this.selectedFieldForSearch();
     if (activeField) {
-      this.selectedTerms.update(prev => ({
+      this.selectedTerms.update((prev) => ({
         ...prev,
-        [activeField.id]: term
+        [activeField.id]: term,
       }));
     }
     this.showBioPortalModal.set(false);

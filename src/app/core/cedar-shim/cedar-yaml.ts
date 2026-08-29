@@ -98,7 +98,7 @@ export function fromCedarYaml(yamlStr: string): any {
 
   const root: any = {};
   const stack: { indent: number; container: any; parentObj?: any; keyInParent?: string }[] = [
-    { indent: -1, container: root }
+    { indent: -1, container: root },
   ];
 
   for (let i = 0; i < lines.length; i++) {
@@ -167,7 +167,7 @@ export function fromCedarYaml(yamlStr: string): any {
           indent,
           container: newContainer,
           parentObj: targetObj,
-          keyInParent: key
+          keyInParent: key,
         });
       }
     }

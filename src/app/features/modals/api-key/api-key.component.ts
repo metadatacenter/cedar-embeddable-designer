@@ -1,5 +1,5 @@
-import { Component, inject, signal, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal, effect, ChangeDetectionStrategy } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { TemplateService } from '../../../core/services/template.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
@@ -7,12 +7,13 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
 @Component({
   selector: 'app-api-key-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent],
-  templateUrl: './api-key.component.html'
+  imports: [FormsModule, IconComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  templateUrl: './api-key.component.html',
 })
 export class ApiKeyModalComponent {
   readonly service = inject(TemplateService);
-  
+
   localKey = '';
   readonly showKey = signal(false);
   readonly isSaved = signal(false);

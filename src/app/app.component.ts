@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
@@ -35,10 +35,11 @@ import { CedarExportAccordionsComponent } from './features/cedar-export-accordio
     FieldTypePickerComponent,
     FieldDesignerComponent,
     FieldCardComponent,
-    CedarExportAccordionsComponent
+    CedarExportAccordionsComponent,
   ],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  changeDetection: ChangeDetectionStrategy.Eager,
+  styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit, OnDestroy {
   readonly service = inject(TemplateService);
@@ -93,12 +94,12 @@ export class AppComponent implements OnInit, OnDestroy {
       'transition-all': true,
       'duration-300': true,
       'overflow-y-auto': true,
-      'relative': true,
+      relative: true,
       'flex-1': true,
       'w-full': !preview,
       'w-2/3': preview,
       'pl-72': selectionStyle === 'sidebar' && !collapsed,
-      'pl-12': selectionStyle === 'sidebar' && collapsed
+      'pl-12': selectionStyle === 'sidebar' && collapsed,
     };
   }
 
@@ -127,7 +128,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   getFieldIcon(field: Field): string {
     if (field.customFieldId) {
-      const customField = this.service.customFields().find(cf => cf.id === field.customFieldId);
+      const customField = this.service.customFields().find((cf) => cf.id === field.customFieldId);
       if (customField) {
         return customField.baseType;
       }
@@ -137,7 +138,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   getFieldTypeName(field: Field): string {
     if (field.customFieldId) {
-      const customField = this.service.customFields().find(cf => cf.id === field.customFieldId);
+      const customField = this.service.customFields().find((cf) => cf.id === field.customFieldId);
       if (customField) return customField.name;
     }
     return FIELD_TYPES[field.type]?.label || field.type;
@@ -200,7 +201,7 @@ export class AppComponent implements OnInit, OnDestroy {
       const result = await this.electronService.showOpenDialog([
         { name: 'CEDAR Template Files (*.json, *.yaml)', extensions: ['json', 'yaml', 'yml'] },
         { name: 'JSON Files (*.json)', extensions: ['json'] },
-        { name: 'YAML Files (*.yaml)', extensions: ['yaml', 'yml'] }
+        { name: 'YAML Files (*.yaml)', extensions: ['yaml', 'yml'] },
       ]);
 
       if (result && !result.canceled && result.filePaths && result.filePaths.length > 0) {
@@ -211,7 +212,7 @@ export class AppComponent implements OnInit, OnDestroy {
             this.service.loadTemplate(res.content);
             this.electronService.currentFilePath.set(filePath);
             this.electronService.isDirty.set(false);
-          } catch (err) {
+          } catch {
             alert('Failed to parse selected template file.');
           }
         } else {
@@ -252,13 +253,12 @@ export class AppComponent implements OnInit, OnDestroy {
   async saveTemplateAs() {
     if (this.electronService.isElectron) {
       try {
-        const suggestedName = (this.service.templateName() || 'template')
-          .toLowerCase()
-          .replace(/[^a-z0-9_-]/g, '_') + '.json';
+        const suggestedName =
+          (this.service.templateName() || 'template').toLowerCase().replace(/[^a-z0-9_-]/g, '_') + '.json';
 
         const result = await this.electronService.showSaveDialog(suggestedName, [
           { name: 'CEDAR JSON Model (*.json)', extensions: ['json'] },
-          { name: 'CEDAR YAML Model (*.yaml)', extensions: ['yaml', 'yml'] }
+          { name: 'CEDAR YAML Model (*.yaml)', extensions: ['yaml', 'yml'] },
         ]);
 
         if (result && !result.canceled && result.filePath) {
@@ -276,7 +276,7 @@ export class AppComponent implements OnInit, OnDestroy {
           this.service.templateDesc(),
           this.service.fields(),
           this.service.templateIdentifier(),
-          this.service.templateVersion()
+          this.service.templateVersion(),
         );
         const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(cedarJson, null, 2));
         const downloadAnchor = document.createElement('a');
@@ -301,12 +301,10 @@ export class AppComponent implements OnInit, OnDestroy {
         this.service.templateDesc(),
         this.service.fields(),
         this.service.templateIdentifier(),
-        this.service.templateVersion()
+        this.service.templateVersion(),
       );
 
-      const fileContent = isYaml
-        ? toCedarYaml(cedarJson)
-        : JSON.stringify(cedarJson, null, 2);
+      const fileContent = isYaml ? toCedarYaml(cedarJson) : JSON.stringify(cedarJson, null, 2);
 
       const res = await this.electronService.writeFile(filePath, fileContent);
       if (res.success) {

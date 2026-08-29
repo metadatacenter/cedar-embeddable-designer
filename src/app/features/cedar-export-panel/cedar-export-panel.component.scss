@@ -70,8 +70,12 @@
   flex-shrink: 0;
 }
 
-.json-dot { background: #f0883e; }
-.yaml-dot { background: #3fb950; }
+.json-dot {
+  background: #f0883e;
+}
+.yaml-dot {
+  background: #3fb950;
+}
 
 /* ─── Toolbar Actions ─────────────────────────────────────────────────────── */
 .toolbar-actions {
@@ -172,13 +176,28 @@
 
 /* ─── Syntax Highlighting ─────────────────────────────────────────────────── */
 :host ::ng-deep {
-  .hl-key    { color: #79c0ff; }      /* JSON keys / YAML keys    — blue    */
-  .hl-string { color: #a5d6ff; }      /* string values            — light blue */
-  .hl-number { color: #f2cc60; }      /* numbers                  — yellow  */
-  .hl-bool   { color: #ff7b72; }      /* true / false             — red     */
-  .hl-null   { color: #8b949e; }      /* null                     — gray    */
-  .hl-comment{ color: #8b949e; font-style: italic; }
-  .hl-punct  { color: #8b949e; }      /* list bullets, colons     — gray    */
+  .hl-key {
+    color: #79c0ff;
+  } /* JSON keys / YAML keys    — blue    */
+  .hl-string {
+    color: #a5d6ff;
+  } /* string values            — light blue */
+  .hl-number {
+    color: #f2cc60;
+  } /* numbers                  — yellow  */
+  .hl-bool {
+    color: #ff7b72;
+  } /* true / false             — red     */
+  .hl-null {
+    color: #8b949e;
+  } /* null                     — gray    */
+  .hl-comment {
+    color: #8b949e;
+    font-style: italic;
+  }
+  .hl-punct {
+    color: #8b949e;
+  } /* list bullets, colons     — gray    */
 }
 
 /* ─── Spec Badge ──────────────────────────────────────────────────────────── */
@@ -193,12 +212,16 @@
   border-top: 1px solid #21262d;
   flex-shrink: 0;
 
-  svg { flex-shrink: 0; }
+  svg {
+    flex-shrink: 0;
+  }
 
   a {
     color: #58a6ff;
     text-decoration: none;
-    &:hover { text-decoration: underline; }
+    &:hover {
+      text-decoration: underline;
+    }
   }
 
   .shim-note {

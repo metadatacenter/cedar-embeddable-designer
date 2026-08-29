@@ -14,18 +14,18 @@ const CEDAR_SCHEMA_PROP = 'https://schema.metadatacenter.org/properties/';
 
 /** Maps editor field types to CEDAR structural model field types */
 const EDITOR_TO_CEDAR_MODEL_TYPE: Record<string, string> = {
-  text:            'text-field',
-  paragraph:       'textarea-field',
-  multipleChoice:  'radio-field',
-  checkboxes:      'checkbox-field',
-  date:            'temporal-field',
-  time:            'temporal-field',
-  email:           'email-field',
-  link:            'link-field',
-  phone:           'phone-number-field',
-  number:          'numeric-field',
-  image:           'image-field',
-  orcid:           'orcid-field',
+  text: 'text-field',
+  paragraph: 'textarea-field',
+  multipleChoice: 'radio-field',
+  checkboxes: 'checkbox-field',
+  date: 'temporal-field',
+  time: 'temporal-field',
+  email: 'email-field',
+  link: 'link-field',
+  phone: 'phone-number-field',
+  number: 'numeric-field',
+  image: 'image-field',
+  orcid: 'orcid-field',
   controlledTerms: 'controlled-term-field',
 };
 
@@ -72,8 +72,8 @@ export interface CedarModelTemplate {
 /** Generates a pseudo-UUID for shim use */
 function shimUuid(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 }
@@ -89,11 +89,13 @@ export function toCedarJson(
   description: string,
   fields: Field[],
   identifier?: string,
-  version?: string
+  version?: string,
 ): CedarModelTemplate {
   const now = new Date().toISOString();
   const templateId = identifier
-    ? (identifier.startsWith('http') ? identifier : `${CEDAR_REPO_TEMPLATE}${identifier}`)
+    ? identifier.startsWith('http')
+      ? identifier
+      : `${CEDAR_REPO_TEMPLATE}${identifier}`
     : `${CEDAR_REPO_TEMPLATE}${shimUuid()}`;
 
   const children: CedarModelField[] = fields.map((f) => {

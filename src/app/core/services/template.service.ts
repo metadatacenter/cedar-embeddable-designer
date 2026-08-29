@@ -6,7 +6,7 @@ import { fromCedarYaml } from '../cedar-shim';
 export { FIELD_TYPES } from '../models/types';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class TemplateService {
   // Inject PreferencesService
@@ -14,10 +14,10 @@ export class TemplateService {
 
   // Cedar green color palette
   readonly COLORS = {
-    primary: '#2D6F5F',      // Cedar green
+    primary: '#2D6F5F', // Cedar green
     primaryHover: '#245A4D',
     primaryLight: '#E8F3F0',
-    border: '#3B7A5D'
+    border: '#3B7A5D',
   };
 
   // State Signals
@@ -25,11 +25,27 @@ export class TemplateService {
   readonly templateDesc = signal<string>('');
   readonly templateIdentifier = signal<string>('');
   readonly templateVersion = signal<string>('0.0.1');
-  
+
   readonly fields = signal<Field[]>([
     { id: 1, type: 'text', name: 'Title', status: 'required', options: [], defaultValue: '', allowMultiple: false },
-    { id: 2, type: 'multipleChoice', name: 'Category', status: 'optional', options: ['Option 1', 'Option 2'], defaultValue: '', allowMultiple: false },
-    { id: 3, type: 'date', name: 'Publication Date', status: 'optional', options: [], defaultValue: '', allowMultiple: false }
+    {
+      id: 2,
+      type: 'multipleChoice',
+      name: 'Category',
+      status: 'optional',
+      options: ['Option 1', 'Option 2'],
+      defaultValue: '',
+      allowMultiple: false,
+    },
+    {
+      id: 3,
+      type: 'date',
+      name: 'Publication Date',
+      status: 'optional',
+      options: [],
+      defaultValue: '',
+      allowMultiple: false,
+    },
   ]);
 
   readonly libraries = signal<Library[]>([]);
@@ -47,16 +63,29 @@ export class TemplateService {
   readonly fieldTypeDropdownLibrary = signal<number | null>(null);
 
   // Proxies for PreferencesService State
-  get preferences() { return this.preferencesService.preferences; }
-  get presetDefinitions() { return this.preferencesService.presetDefinitions; }
-  get bioportalApiKey() { return this.preferencesService.bioportalApiKey; }
-  get showPreferencesModal() { return this.preferencesService.showPreferencesModal; }
-  get showPresetDefinitionsModal() { return this.preferencesService.showPresetDefinitionsModal; }
-  get showUserMenu() { return this.preferencesService.showUserMenu; }
-  get showApiKeyModal() { return this.preferencesService.showApiKeyModal; }
+  get preferences() {
+    return this.preferencesService.preferences;
+  }
+  get presetDefinitions() {
+    return this.preferencesService.presetDefinitions;
+  }
+  get bioportalApiKey() {
+    return this.preferencesService.bioportalApiKey;
+  }
+  get showPreferencesModal() {
+    return this.preferencesService.showPreferencesModal;
+  }
+  get showPresetDefinitionsModal() {
+    return this.preferencesService.showPresetDefinitionsModal;
+  }
+  get showUserMenu() {
+    return this.preferencesService.showUserMenu;
+  }
+  get showApiKeyModal() {
+    return this.preferencesService.showApiKeyModal;
+  }
 
   constructor() {}
-
 
   // Field manipulation methods
   addField(type: string, position: number) {
@@ -67,10 +96,10 @@ export class TemplateService {
       status: 'optional',
       options: type === 'multipleChoice' || type === 'checkboxes' ? ['Option 1'] : [],
       defaultValue: '',
-      allowMultiple: false
+      allowMultiple: false,
     };
 
-    this.fields.update(prev => {
+    this.fields.update((prev) => {
       const updated = [...prev];
       updated.splice(position, 0, newField);
       return updated;
@@ -99,10 +128,10 @@ export class TemplateService {
       options: customField.baseType === 'multipleChoice' || customField.baseType === 'checkboxes' ? ['Option 1'] : [],
       allowMultiple: false,
       customFieldId: customField.id,
-      libraryId: customField.libraryId
+      libraryId: customField.libraryId,
     };
 
-    this.fields.update(prev => {
+    this.fields.update((prev) => {
       const updated = [...prev];
       updated.splice(position, 0, newField);
       return updated;
@@ -120,121 +149,147 @@ export class TemplateService {
   }
 
   deleteField(id: number) {
-    this.fields.update(prev => prev.filter(f => f.id !== id));
+    this.fields.update((prev) => prev.filter((f) => f.id !== id));
     if (this.selectedField() === id) {
       this.selectedField.set(null);
     }
   }
 
   updateFieldName(id: number, name: string) {
-    this.fields.update(prev => prev.map(f => f.id === id ? { ...f, name } : f));
+    this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, name } : f)));
   }
 
   updateFieldType(id: number, type: string) {
-    this.fields.update(prev => prev.map(f => f.id === id ? {
-      ...f,
-      type,
-      options: type === 'multipleChoice' || type === 'checkboxes' ? (f.options.length > 0 ? f.options : ['Option 1']) : [],
-      defaultValue: '',
-      allowMultiple: false,
-      customFieldId: undefined,
-      libraryId: undefined
-    } : f));
+    this.fields.update((prev) =>
+      prev.map((f) =>
+        f.id === id
+          ? {
+              ...f,
+              type,
+              options:
+                type === 'multipleChoice' || type === 'checkboxes'
+                  ? f.options.length > 0
+                    ? f.options
+                    : ['Option 1']
+                  : [],
+              defaultValue: '',
+              allowMultiple: false,
+              customFieldId: undefined,
+              libraryId: undefined,
+            }
+          : f,
+      ),
+    );
   }
 
   convertFieldToCustomField(fieldId: number, customField: CustomField) {
-    this.fields.update(prev => prev.map(f => f.id === fieldId ? {
-      ...f,
-      type: customField.baseType,
-      name: customField.name,
-      helpText: customField.description || f.helpText,
-      defaultValue: customField.placeholder || f.defaultValue,
-      options: customField.baseType === 'multipleChoice' || customField.baseType === 'checkboxes' ? (f.options.length > 0 ? f.options : ['Option 1']) : [],
-      allowMultiple: false,
-      customFieldId: customField.id,
-      libraryId: customField.libraryId
-    } : f));
+    this.fields.update((prev) =>
+      prev.map((f) =>
+        f.id === fieldId
+          ? {
+              ...f,
+              type: customField.baseType,
+              name: customField.name,
+              helpText: customField.description || f.helpText,
+              defaultValue: customField.placeholder || f.defaultValue,
+              options:
+                customField.baseType === 'multipleChoice' || customField.baseType === 'checkboxes'
+                  ? f.options.length > 0
+                    ? f.options
+                    : ['Option 1']
+                  : [],
+              allowMultiple: false,
+              customFieldId: customField.id,
+              libraryId: customField.libraryId,
+            }
+          : f,
+      ),
+    );
   }
 
   updateCustomField(updatedCustomField: CustomField) {
     // 1. Update customFields signal
-    this.customFields.update(prev =>
-      prev.map(cf => cf.id === updatedCustomField.id ? updatedCustomField : cf)
-    );
+    this.customFields.update((prev) => prev.map((cf) => (cf.id === updatedCustomField.id ? updatedCustomField : cf)));
 
     // 2. Sync changes automatically to all fields in the template created from this custom field
-    this.fields.update(prev =>
-      prev.map(f => {
+    this.fields.update((prev) =>
+      prev.map((f) => {
         if (f.customFieldId === updatedCustomField.id) {
           return {
             ...f,
             name: updatedCustomField.name,
             type: updatedCustomField.baseType,
             helpText: updatedCustomField.description || f.helpText,
-            defaultValue: updatedCustomField.placeholder || f.defaultValue
+            defaultValue: updatedCustomField.placeholder || f.defaultValue,
           };
         }
         return f;
-      })
+      }),
     );
   }
 
   deleteCustomField(id: number) {
-    this.customFields.update(prev => prev.filter(cf => cf.id !== id));
+    this.customFields.update((prev) => prev.filter((cf) => cf.id !== id));
   }
 
   updateFieldStatus(id: number, status: string) {
-    this.fields.update(prev => prev.map(f => f.id === id ? { ...f, status } : f));
+    this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, status } : f)));
   }
 
   updateOption(fieldId: number, optionIndex: number, value: string) {
-    this.fields.update(prev => prev.map(f => {
-      if (f.id === fieldId) {
-        const newOptions = [...f.options];
-        newOptions[optionIndex] = value;
-        return { ...f, options: newOptions };
-      }
-      return f;
-    }));
+    this.fields.update((prev) =>
+      prev.map((f) => {
+        if (f.id === fieldId) {
+          const newOptions = [...f.options];
+          newOptions[optionIndex] = value;
+          return { ...f, options: newOptions };
+        }
+        return f;
+      }),
+    );
   }
 
   addOption(fieldId: number) {
-    this.fields.update(prev => prev.map(f => {
-      if (f.id === fieldId) {
-        return { ...f, options: [...f.options, `Option ${f.options.length + 1}`] };
-      }
-      return f;
-    }));
+    this.fields.update((prev) =>
+      prev.map((f) => {
+        if (f.id === fieldId) {
+          return { ...f, options: [...f.options, `Option ${f.options.length + 1}`] };
+        }
+        return f;
+      }),
+    );
   }
 
   deleteOption(fieldId: number, optionIndex: number) {
-    this.fields.update(prev => prev.map(f => {
-      if (f.id === fieldId) {
-        const newOptions = f.options.filter((_, index) => index !== optionIndex);
-        return { ...f, options: newOptions.length > 0 ? newOptions : ['Option 1'] };
-      }
-      return f;
-    }));
+    this.fields.update((prev) =>
+      prev.map((f) => {
+        if (f.id === fieldId) {
+          const newOptions = f.options.filter((_, index) => index !== optionIndex);
+          return { ...f, options: newOptions.length > 0 ? newOptions : ['Option 1'] };
+        }
+        return f;
+      }),
+    );
   }
 
   updateDefaultValue(id: number, value: string) {
-    this.fields.update(prev => prev.map(f => f.id === id ? { ...f, defaultValue: value } : f));
+    this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, defaultValue: value } : f)));
   }
 
   toggleAllowMultiple(id: number) {
-    this.fields.update(prev => prev.map(f => f.id === id ? { ...f, allowMultiple: !f.allowMultiple } : f));
+    this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, allowMultiple: !f.allowMultiple } : f)));
   }
 
   updateHelpText(id: number, helpText: string) {
-    this.fields.update(prev => prev.map(f => f.id === id ? { ...f, helpText } : f));
+    this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, helpText } : f)));
   }
 
   updateControlledTermConfig(id: number, config: ControlledTermConfig) {
-    this.fields.update(prev => prev.map(f => f.id === id ? { ...f, controlledTermConfig: config } : f));
+    this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, controlledTermConfig: config } : f)));
   }
 
   moveField(dragIndex: number, hoverIndex: number) {
-    this.fields.update(prev => {
+    this.fields.update((prev) => {
       const updated = [...prev];
       const dragField = updated[dragIndex];
       updated.splice(dragIndex, 1);
@@ -278,8 +333,24 @@ export class TemplateService {
     this.templateVersion.set('0.0.1');
     this.fields.set([
       { id: 1, type: 'text', name: 'Title', status: 'required', options: [], defaultValue: '', allowMultiple: false },
-      { id: 2, type: 'multipleChoice', name: 'Category', status: 'optional', options: ['Option 1', 'Option 2'], defaultValue: '', allowMultiple: false },
-      { id: 3, type: 'date', name: 'Publication Date', status: 'optional', options: [], defaultValue: '', allowMultiple: false }
+      {
+        id: 2,
+        type: 'multipleChoice',
+        name: 'Category',
+        status: 'optional',
+        options: ['Option 1', 'Option 2'],
+        defaultValue: '',
+        allowMultiple: false,
+      },
+      {
+        id: 3,
+        type: 'date',
+        name: 'Publication Date',
+        status: 'optional',
+        options: [],
+        defaultValue: '',
+        allowMultiple: false,
+      },
     ]);
   }
 
@@ -324,14 +395,12 @@ export class TemplateService {
         'numeric-field': 'number',
         'image-field': 'image',
         'orcid-field': 'orcid',
-        'controlled-term-field': 'controlledTerms'
+        'controlled-term-field': 'controlledTerms',
       };
 
       const parsedFields: Field[] = templateData.children.map((child: any, idx: number) => {
         const type = cedarTypeToEditorType[child.type] || 'text';
-        const options = Array.isArray(child.values)
-          ? child.values.map((v: any) => v.label || v)
-          : [];
+        const options = Array.isArray(child.values) ? child.values.map((v: any) => v.label || v) : [];
         const isRequired = child.configuration?.required === true;
 
         return {
@@ -342,7 +411,7 @@ export class TemplateService {
           status: isRequired ? 'required' : 'optional',
           options,
           defaultValue: '',
-          allowMultiple: false
+          allowMultiple: false,
         };
       });
 
