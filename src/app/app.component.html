@@ -36,6 +36,57 @@
           <span class="text-[9px] font-medium text-gray-500 leading-none scale-90">0.1.0</span>
         </div>
 
+        <!--
+          The profile picker.
+
+          The three profiles decide which field types and which per-field controls
+          an author is offered, and until now the only way to one was the user menu
+          then the preferences modal — two clicks behind an unlabelled avatar, with
+          nothing on screen saying which profile was in force. An author who wanted
+          controlled terms had to know that Basic hides them and that a profile
+          existed to change.
+        -->
+        <div class="relative profile-menu-container ml-2">
+          <button
+            (click)="showProfileMenu.set(!showProfileMenu())"
+            class="px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100/80 rounded flex items-center gap-1 transition-colors"
+            title="The field types and controls this profile offers"
+          >
+            <span>{{ activeProfileLabel() }}</span>
+            <app-icon key="chevronDown" className="w-3.5 h-3.5 text-gray-500"></app-icon>
+          </button>
+
+          @if (showProfileMenu()) {
+            <div
+              class="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50 animate-in fade-in zoom-in-95 duration-100"
+            >
+              @for (profile of profiles; track profile.key) {
+                <button
+                  (click)="service.applyPreset(profile.key); showProfileMenu.set(false)"
+                  class="w-full px-3.5 py-2 text-left hover:bg-gray-100 flex items-start gap-2"
+                >
+                  <span class="w-3.5 pt-0.5 shrink-0">
+                    @if (activeProfileLabel() === profile.label) {
+                      <app-icon key="check" className="w-3.5 h-3.5 text-teal-600"></app-icon>
+                    }
+                  </span>
+                  <span class="min-w-0">
+                    <span class="block text-xs font-medium text-gray-700">{{ profile.label }}</span>
+                    <span class="block text-[11px] text-gray-500">{{ profile.summary }}</span>
+                  </span>
+                </button>
+              }
+              <div class="my-1 border-t border-gray-200"></div>
+              <button
+                (click)="service.showPreferencesModal.set(true); showProfileMenu.set(false)"
+                class="w-full px-3.5 py-2 text-left text-xs font-medium text-gray-700 hover:bg-gray-100"
+              >
+                <span class="pl-5">Customize…</span>
+              </button>
+            </div>
+          }
+        </div>
+
         <!-- Dropdown "File" menu next to logo -->
         <div class="relative file-menu-container ml-2">
           <button
@@ -108,10 +159,7 @@
 
         <!-- Preview Toggle -->
         @if (!service.showPreview()) {
-          <button
-            (click)="service.showPreview.set(true)"
-            class="btn-header btn-header--secondary"
-          >
+          <button (click)="service.showPreview.set(true)" class="btn-header btn-header--secondary">
             <app-icon key="eye" className="w-4 h-4"></app-icon>
             Preview
           </button>
@@ -326,7 +374,6 @@
               }
             </div>
           }
-
         </div>
       </div>
     </div>

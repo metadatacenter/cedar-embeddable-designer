@@ -1,4 +1,13 @@
-import { Component, ElementRef, HostListener, ChangeDetectionStrategy, effect, inject, signal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  HostListener,
+  ChangeDetectionStrategy,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
@@ -42,6 +51,32 @@ export class AppComponent {
   // Layout & UI states
   readonly showFieldsOverview = signal(true);
   readonly showFileMenu = signal(false);
+  readonly showProfileMenu = signal(false);
+
+  /**
+   * The profiles, and what each one is for.
+   *
+   * Named here rather than in the picker's markup so the three names, their
+   * order and their one-line descriptions are one list. The service decides what
+   * each profile *does*; this decides how it is described.
+   */
+  readonly profiles = [
+    { key: 'basic' as const, label: 'Basic', summary: 'Plain fields, no vocabularies' },
+    { key: 'semantic' as const, label: 'Semantic', summary: 'Adds controlled terms and help text' },
+    { key: 'modular' as const, label: 'Modular', summary: 'Adds template elements' },
+  ];
+
+  /**
+   * The profile on screen, or nothing once its settings have been edited by hand.
+   *
+   * A label rather than a key, and `Custom` where no profile matches — which is a
+   * real state an author reaches by changing one switch, and one they could not
+   * see at all while the only way to a profile was two clicks inside a modal.
+   */
+  readonly activeProfileLabel = computed(() => {
+    const active = this.service.getActivePreset();
+    return this.profiles.find((profile) => profile.key === active)?.label ?? 'Custom';
+  });
 
   constructor() {
     // A newly added field asks to be scrolled to; the component owns the DOM, so
@@ -166,6 +201,10 @@ export class AppComponent {
 
     if (this.showFileMenu() && !within('.file-menu-container')) {
       this.showFileMenu.set(false);
+    }
+
+    if (this.showProfileMenu() && !within('.profile-menu-container')) {
+      this.showProfileMenu.set(false);
     }
   }
 
