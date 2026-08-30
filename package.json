@@ -16,6 +16,7 @@
   "homepage": "https://github.com/metadatacenter/cedar-embeddable-designer#readme",
   "scripts": {
     "ng": "ng",
+    "prestart": "node scripts/stage-siblings.mjs",
     "start": "ng serve",
     "build": "ng build",
     "test": "ng test",

@@ -9,5 +9,14 @@
   </head>
   <body>
     <app-dev-host></app-dev-host>
+    <!--
+      The two sibling web components, loaded the way an embedding page loads
+      them: term search is `<cedar-term-picker>` and the preview is
+      `<cedar-embeddable-editor>`, and this bundle carries neither. `npm start`
+      copies them into `public/` from the neighbouring repositories; where one is
+      absent the designer says so in the panel that would have used it.
+    -->
+    <script src="cedar-term-picker.js"></script>
+    <script src="cedar-embeddable-editor.js"></script>
   </body>
 </html>

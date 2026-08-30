@@ -47,13 +47,18 @@ import { CedConfig } from './ced-public-api';
 })
 export class DevHostComponent {
   /**
-   * The configuration a host supplies, with the public CEDAR terminology server.
+   * The configuration a host supplies, naming a local terminology server.
    *
    * Named here rather than defaulted inside the designer: an embedder should
    * reach a CEDAR service because it asked to, not because a component it loaded
    * had an address compiled into it.
+   *
+   * Local rather than production because the picker reads the version-aware
+   * `/search`, which production answers with a 404. Bringing a local store up is
+   * in the versioning runbook; without one, search reports the failure rather
+   * than inventing a result.
    */
-  readonly config: CedConfig = { terminologyBaseUrl: 'https://terminology.metadatacenter.org/' };
+  readonly config: CedConfig = { terminologyBaseUrl: 'http://localhost:9004/' };
 
   readonly changeCount = signal(0);
 
