@@ -80,18 +80,6 @@ export function fieldName(page: Page, index = 0): Locator {
   return page.locator(DESIGNER).getByPlaceholder('Enter field name').nth(index);
 }
 
-/**
- * Open one of the export accordions and return it.
- *
- * Each accordion renders its code only once opened, so a test that does not open
- * one finds nothing to assert on.
- */
-export async function openExport(page: Page, format: 'JSON Schema' | 'YAML'): Promise<Locator> {
-  const accordions = page.locator(DESIGNER).locator('app-cedar-export-accordions');
-  await accordions.locator('.accordion-header', { hasText: format }).click();
-  return accordions.locator('.accordion-card', { hasText: format });
-}
-
 /** Open the preview panel, which renders the template with CEE. */
 export async function openPreview(page: Page): Promise<Locator> {
   const designer = page.locator(DESIGNER);

@@ -14,7 +14,6 @@ import { CeePreviewComponent } from './features/cee-preview/cee-preview.componen
 import { FieldTypePickerComponent } from './features/field-type-picker/field-type-picker.component';
 import { FieldDesignerComponent } from './features/field-designer/field-designer.component';
 import { FieldCardComponent } from './features/field-card/field-card.component';
-import { CedarExportAccordionsComponent } from './features/cedar-export-accordions/cedar-export-accordions.component';
 
 @Component({
   selector: 'app-root',
@@ -31,7 +30,6 @@ import { CedarExportAccordionsComponent } from './features/cedar-export-accordio
     FieldTypePickerComponent,
     FieldDesignerComponent,
     FieldCardComponent,
-    CedarExportAccordionsComponent,
   ],
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

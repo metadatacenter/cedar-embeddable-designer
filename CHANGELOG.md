@@ -63,8 +63,6 @@ drives it in a browser.
   `noUnusedLocals`, `noUnusedParameters`, `useDefineForClassFields: false`, and
   no `skipLibCheck`, so the model library's declarations are checked rather than
   trusted. `no-explicit-any` is on.
-- One copy of the JSON and YAML highlighting, and one palette. The two export
-  panels each carried their own, and the two had drifted to different colours.
 - The component is the CEDAR Embeddable Designer throughout — the window title,
   the package, the Angular project, the build output and the element's tag.
 - Preview renders the template with
@@ -117,12 +115,13 @@ drives it in a browser.
 
 ### Removed
 
-- The preview panel's own drawing of a form, the JSON and YAML tabs above it, the
-  second copy of the export panel behind those, and a term-search modal for
-  filling the preview in. An author previewing a template was shown this
-  component's idea of CEDAR rather than the renderer that will show the form, and
-  the two had drifted. The accordions under the editor still show both
-  serializations.
+- Every rendering of the artifact as code. The preview panel drew its own form
+  from the field list, with JSON and YAML tabs above it, a second copy of the
+  export panel behind those, and a term-search modal for filling the preview in;
+  under the editor sat two accordions showing the same two serializations again,
+  and a syntax highlighter served both. An author was shown this component's idea
+  of CEDAR rather than the renderer that will show the form, three times over.
+  Preview is CEE now, and the File menu writes both serializations as files.
 - The Electron shell, its IPC bridge — which accepted any filesystem path the
   renderer offered — the service behind it, the menu wiring and five
   devDependencies. Open and save are a file input and a download.
