@@ -53,6 +53,9 @@ jobs:
       - name: Unit tests
         run: npm test
 
+      - name: Source boundaries
+        run: npm run test:boundaries
+
       - name: Packaging tests
         run: npm run test:packaging
 

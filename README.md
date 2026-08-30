@@ -75,37 +75,50 @@ is not in place yet.
 `npm run build:app` compiles `src/main.dev.ts` and the host page around it, which
 is what `npm start` serves.
 
-## Choosing What Constrains a Field
+## The Two Components It Works With
 
-A field's constraint is chosen with
-[`<cedar-term-picker>`](https://github.com/metadatacenter/cedar-term-picker),
-which the embedding page loads alongside the designer. The two are sibling web
-components: neither bundles the other, and a host that loads both gets term
-search in the designer's controlled-term panel.
+Two of the designer's surfaces are other web components the embedding page loads,
+and this bundle carries neither. They are siblings rather than dependencies, so a
+host loads three scripts and each component stays its own size:
 
 ```html
 <script src="cedar-term-picker.js"></script>
+<script src="cedar-embeddable-editor.js"></script>
 <script src="cedar-embeddable-designer.js"></script>
 ```
 
-Without the picker the panel says so and the constraint fields are filled by
-hand, which is what the designer did for every constraint until now — an author
-typed an ontology acronym, a branch IRI and a label from memory, into a panel
-whose one search box was permanently disabled.
+A field's constraint is chosen with
+[`<cedar-term-picker>`](https://github.com/metadatacenter/cedar-term-picker).
+Without it the panel says so and the constraint fields are filled by hand, which
+is what the designer did for every constraint until now — an author typed an
+ontology acronym, a branch IRI and a label from memory, into a panel whose one
+search box was permanently disabled.
 
 The picker reads the terminology server's version-aware `/search`, which
 **production does not serve yet**: `POST https://terminology.metadatacenter.org/search`
 answers 404. Point `terminologyBaseUrl` at a local terminology server to use it.
 
-To try both together from source:
+Preview renders the template with
+[`<cedar-embeddable-editor>`](https://github.com/metadatacenter/cedar-embeddable-editor),
+the renderer that will show the form to whoever fills it in, rather than with a
+drawing of a form of the designer's own. It is asked for a read-only form with no
+instance behind it, which is how CEE reads a template as a statement of what each
+field will accept. Without it the preview panel says so.
+
+To try all three together from source:
 
 ```bash
 npm --prefix ../cedar-term-picker run dist
+npm --prefix ../cedar-embeddable-editor run build:production
+npm --prefix ../cedar-embeddable-editor/visual run bundle
 npm run dist
 cp ../cedar-term-picker/dist-bundle/cedar-term-picker.js dist-bundle/
+cp ../cedar-embeddable-editor/visual/public/cedar-embeddable-editor.js dist-bundle/
 ```
 
-Then serve `dist-bundle/` and load a page that pulls in both scripts.
+Then serve `dist-bundle/` and load a page that pulls in all three scripts.
+`npm start` does the staging itself for the development host, so working on the
+designer needs none of the above.
 
 ## Packaging
 

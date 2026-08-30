@@ -37,9 +37,26 @@ drives it in a browser.
   publish-channel rule, and 38 browser tests driving the built bundle in a host
   page whose own CSS is chosen to be as intrusive as possible. The browser suite
   is hermetic — no test reaches a terminology server, and the picker is stubbed.
-- A CI workflow running lint, typecheck, unit tests, packaging tests, both
-  builds, the distribution and the browser suite, with the production audit as
-  its own step.
+- A CI workflow running lint, typecheck, unit tests, source-boundary tests,
+  packaging tests, both builds, the distribution and the browser suite, with the
+  production audit as its own step.
+- A freshness guard on the browser suite. It serves `dist-bundle/`, and a bundle
+  older than the build beside it would run, pass, and report green against code
+  nobody was testing. `check:fresh` compares the two by timestamp, by the files
+  the bundle was made from, and by hash. A checkout that never built is not what
+  it refuses — testing a distribution someone handed you is legitimate — only a
+  bundle a build contradicts.
+- Two source-boundary tests, for properties no type can express: the published
+  contract stays import-free, or the declaration the package ships names paths
+  that are not in it, and the CEDAR model library is reached through one file,
+  which is what keeps its vocabulary out of the components. A third holds the
+  sibling components out of the bundle.
+- `check:readme`, which compiles the README's TypeScript examples against the
+  staged declaration and checks that every `npm run` a reader is told to type is
+  a script this project has. Documentation here had already named one that did
+  not exist.
+- `test:browser:flake-hunt`, which runs the browser suite twenty times, or
+  `RUNS=n`.
 - `license.txt` (BSD 2-Clause), a README describing the component rather than the
   Angular CLI, and `.nvmrc` pinning Node 24.19.0.
 
