@@ -118,10 +118,10 @@ describe('field types', () => {
   /**
    * A field of the given type, complete enough to be one.
    *
-   * A controlled-term field is a text field with a vocabulary attached, so one
-   * with no vocabulary chosen is not yet of that type and is written as the text
-   * field it is. Every case below is about a type that has been finished, which
-   * is what the palette entry promises.
+   * A controlled-term field with no vocabulary chosen describes nothing, and is
+   * written as a text field rather than as a controlled-term field the reader
+   * cannot put back. Every case below is about a type that has been finished,
+   * which is what the palette entry promises.
    */
   const fieldOfType = (editorType: string): Field =>
     field({
@@ -454,12 +454,12 @@ describe('controlled-term constraints', () => {
   /**
    * A controlled-term field with nothing to be constrained to is a text field.
    *
-   * That is what the production designer models — controlled terms are a
-   * capability of a text field, and both write `_ui.inputType: "textfield"` — and
-   * it is the only shape that survives being saved and reopened. Written as a
-   * controlled-term field it went out IRI-shaped with four empty constraint
-   * lists and came back a text field, so the values it would collect changed from
-   * `@id` to `@value` on an open-and-save that touched nothing.
+   * Not because controlled terms are a switch on a text field — in this designer
+   * they are a type of their own — but because a field constrained to nothing is
+   * the one shape that does not survive being saved and reopened. It went out
+   * IRI-shaped with four empty constraint lists and came back a text field, so
+   * the values it would collect changed from `@id` to `@value` on an
+   * open-and-save that touched nothing.
    */
   it('writes a controlled-term field with no vocabulary as the text field it is', () => {
     const state = templateOf(field({ type: 'controlledTerms', name: 'F' }));

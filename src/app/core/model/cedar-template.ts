@@ -452,16 +452,18 @@ function buildStaticContent(builder: FieldBuilder, kind: 'markup' | 'url' | 'vid
 /**
  * Whether a controlled-term field has been given anything to be constrained to.
  *
- * A controlled-term field is a text field with a vocabulary attached — that is
- * what the production designer models, and both write `_ui.inputType: "textfield"`.
- * Until an author picks a term there is no vocabulary, so there is nothing to
- * write but a text field.
+ * A controlled-term field with no vocabulary is not a description of anything: it
+ * says its values are IRIs drawn from nowhere. Written as one it went out
+ * IRI-shaped with four empty constraint lists and came back a text field, because
+ * that is all the artifact still said, so opening a saved template and saving it
+ * again turned the field's values from `@id` to `@value` — the same open-and-save
+ * decay a time field suffered when it was written as `xsd:dateTime`.
  *
- * Writing one anyway produced a field the round trip could not preserve: it went
- * out IRI-shaped, with four empty constraint lists, and came back a text field,
- * so opening a saved template and saving it again silently turned the field's
- * values from `@id` to `@value` — the same open-and-save decay a time field
- * suffered when it was written as `xsd:dateTime`.
+ * Writing the text field instead is what stops the decay, and it is a stopgap
+ * rather than a statement about what controlled terms are: in this designer they
+ * are a type of their own, not a switch on a text field. What an unfinished one
+ * should do — refuse to save, or save as something the reader can put back — is
+ * still open.
  */
 function hasVocabulary(field: Field): boolean {
   return field.type !== 'controlledTerms' || field.controlledTermConfig !== undefined;

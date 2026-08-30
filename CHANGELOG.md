@@ -118,10 +118,10 @@ drives it in a browser.
 - A controlled-term field with no vocabulary chosen was written as one anyway: it
   went out IRI-shaped with four empty constraint lists and came back a text field,
   so opening a saved template and saving it again turned the field's values from
-  `@id` to `@value` without anyone touching it. Controlled terms are a capability
-  of a text field — which is what the production designer models, and both write
-  `_ui.inputType: "textfield"` — so until an author picks a term there is a text
-  field to write and nothing else.
+  `@id` to `@value` without anyone touching it. A field constrained to nothing is
+  written as the text field it is until a vocabulary is chosen — a stopgap that
+  stops the decay, not a statement that controlled terms are a switch on a text
+  field. In this designer they are a type of their own.
 - An ontology constraint named its ontology by acronym where a URI belongs. JSON
   said `"uri": "DOID"`; the YAML path derives the URI from the acronym and said
   `https://data.bioontology.org/ontologies/DOID`, so one template written in the
