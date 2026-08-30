@@ -28,6 +28,7 @@ export interface CeeTemplateObject {
 export interface CeePreviewConfig {
   readonly readOnlyMode: true;
   readonly showTemplateDescription: boolean;
+  readonly showExpandCollapseAll: false;
 }
 
 /**
@@ -56,6 +57,11 @@ export function ceePreviewAvailable(registry: Pick<CustomElementRegistry, 'get'>
  * keeps. With no instance behind it CEE reads a read-only form as a statement of
  * what each field will accept, which is what an author is asking to see.
  *
+ * Expand All and Collapse All are off for the same reason. The designer has its
+ * own controls over the same template beside the preview, and a second set acting
+ * on a copy of it is two answers to one question. Each section still opens and
+ * closes on its own header.
+ *
  * The template is assigned by the caller once the element is in the document,
  * which is the order CEE's own hosts use.
  */
@@ -64,6 +70,6 @@ export function createCeePreview(
   factory: Pick<Document, 'createElement'> = document,
 ): CeePreviewElement {
   const editor = factory.createElement(CEE_PREVIEW_TAG) as CeePreviewElement;
-  editor.config = { readOnlyMode: true, showTemplateDescription };
+  editor.config = { readOnlyMode: true, showTemplateDescription, showExpandCollapseAll: false };
   return editor;
 }

@@ -45,6 +45,13 @@ describe('the editor the preview builds', () => {
     expect(editor.config.readOnlyMode).toBe(true);
   });
 
+  it("turns off the editor's own expand and collapse controls", () => {
+    // The designer has its own controls over the same template beside the
+    // preview, and a second set acting on a copy of it is two answers to one
+    // question.
+    expect(createCeePreview(false, factory).config.showExpandCollapseAll).toBe(false);
+  });
+
   it('shows the description only when the template has one', () => {
     expect(createCeePreview(true, factory).config.showTemplateDescription).toBe(true);
     expect(createCeePreview(false, factory).config.showTemplateDescription).toBe(false);

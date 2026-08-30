@@ -24,8 +24,9 @@ const siblings = [
   },
   {
     name: 'cedar-embeddable-editor',
-    from: resolve(root, '../cedar-embeddable-editor/dist-npm/cedar-embeddable-editor/cedar-embeddable-editor.js'),
-    built: 'npm --prefix ../cedar-embeddable-editor run dist',
+    from: resolve(root, '../cedar-embeddable-editor/visual/public/cedar-embeddable-editor.js'),
+    built:
+      'npm --prefix ../cedar-embeddable-editor run build:production && npm --prefix ../cedar-embeddable-editor/visual run bundle',
   },
 ];
 
