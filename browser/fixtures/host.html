@@ -9,12 +9,32 @@
         carry. None of it should cross into the designer's shadow root. If the
         editor starts rendering in Comic Sans on pink, the encapsulation is gone.
       */
-      * { box-sizing: content-box; }
-      body { margin: 0; font-family: Georgia, serif; background: #fdf2f8; color: #831843; }
-      button { font-size: 29px; background: #db2777; color: #fff; border-radius: 0; }
-      input { font-size: 31px; border: 4px dashed #db2777; }
-      svg { opacity: 0.25; }
-      cedar-embeddable-designer { display: block; height: 92vh; }
+      * {
+        box-sizing: content-box;
+      }
+      body {
+        margin: 0;
+        font-family: Georgia, serif;
+        background: #fdf2f8;
+        color: #831843;
+      }
+      button {
+        font-size: 29px;
+        background: #db2777;
+        color: #fff;
+        border-radius: 0;
+      }
+      input {
+        font-size: 31px;
+        border: 4px dashed #db2777;
+      }
+      svg {
+        opacity: 0.25;
+      }
+      cedar-embeddable-designer {
+        display: block;
+        height: 92vh;
+      }
     </style>
   </head>
   <body>
@@ -66,6 +86,44 @@
         }
         customElements.define('cedar-term-picker', StubPicker);
       }
+
+      if (params.get('cee') === 'stub') {
+        /*
+          A stand-in for <cedar-embeddable-editor>. CEE is a sibling component the
+          host loads, and a two-megabyte form renderer: this suite tests the
+          designer's half of that contract without building another repository.
+
+          It records every assignment, so a test can see that the preview hands
+          over a read-only configuration and the template the designer holds --
+          and that it replaces the element rather than reassigning a template CEE
+          would refuse.
+        */
+        window.__ceeMounts = [];
+        class StubEditor extends HTMLElement {
+          set config(value) {
+            this._config = value;
+            this._recordWhenComplete();
+          }
+          get config() {
+            return this._config;
+          }
+          set templateObject(value) {
+            this._template = value;
+            this._recordWhenComplete();
+          }
+          get templateObject() {
+            return this._template;
+          }
+          _recordWhenComplete() {
+            if (!this._config || !this._template) {
+              return;
+            }
+            window.__ceeMounts.push({ config: this._config, template: this._template });
+            this.textContent = 'stub editor: ' + (this._template['schema:name'] || '');
+          }
+        }
+        customElements.define('cedar-embeddable-editor', StubEditor);
+      }
     </script>
 
     <script src="cedar-embeddable-designer.js"></script>
@@ -74,7 +132,9 @@
       customElements.whenDefined('cedar-embeddable-designer').then(() => {
         const params = new URLSearchParams(location.search);
         if (params.get('terminology') !== 'none') {
-          document.getElementById('designer').config = { terminologyBaseUrl: 'http://localhost:4598/fake-terminology/' };
+          document.getElementById('designer').config = {
+            terminologyBaseUrl: 'http://localhost:4598/fake-terminology/',
+          };
         }
         window.__ready = true;
       });

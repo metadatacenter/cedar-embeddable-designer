@@ -109,7 +109,7 @@
         <!-- Preview Toggle -->
         @if (!service.showPreview()) {
           <button
-            (click)="service.showPreview.set(true); service.previewInitialTab.set('preview')"
+            (click)="service.showPreview.set(true)"
             class="btn-header btn-header--secondary"
           >
             <app-icon key="eye" className="w-4 h-4"></app-icon>
@@ -333,9 +333,9 @@
       </div>
     </div>
 
-    <!-- Preview / Export Panel -->
+    <!-- Preview: the template as CEE renders it -->
     @if (service.showPreview()) {
-      <app-preview-panel class="w-[35%] bg-white border-l border-gray-300"></app-preview-panel>
+      <app-cee-preview class="w-[35%] bg-white border-l border-gray-300"></app-cee-preview>
     }
   </div>
 

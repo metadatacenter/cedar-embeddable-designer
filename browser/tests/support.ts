@@ -81,18 +81,22 @@ export function fieldName(page: Page, index = 0): Locator {
 }
 
 /**
- * Open the preview panel on one of its tabs.
+ * Open one of the export accordions and return it.
  *
- * The export panel is not rendered until a code tab is chosen, so a test that
- * only opens the preview finds nothing to assert on.
+ * Each accordion renders its code only once opened, so a test that does not open
+ * one finds nothing to assert on.
  */
-export async function openExport(page: Page, format: 'JSON' | 'YAML'): Promise<Locator> {
+export async function openExport(page: Page, format: 'JSON Schema' | 'YAML'): Promise<Locator> {
+  const accordions = page.locator(DESIGNER).locator('app-cedar-export-accordions');
+  await accordions.locator('.accordion-header', { hasText: format }).click();
+  return accordions.locator('.accordion-card', { hasText: format });
+}
+
+/** Open the preview panel, which renders the template with CEE. */
+export async function openPreview(page: Page): Promise<Locator> {
   const designer = page.locator(DESIGNER);
   await designer.getByRole('button', { name: /Preview/ }).first().click();
-  await designer.locator('.tab-bar .tab-btn', { hasText: format }).click();
-  const panel = designer.locator('app-cedar-export-panel');
-  await panel.locator('.format-tab', { hasText: format }).click();
-  return panel;
+  return designer.locator('app-cee-preview');
 }
 
 /**

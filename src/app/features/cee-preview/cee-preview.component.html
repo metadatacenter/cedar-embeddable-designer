@@ -1,0 +1,30 @@
+<div class="cee-preview">
+  <div class="cee-preview__bar">
+    <span class="cee-preview__title">Preview</span>
+    <button (click)="service.showPreview.set(false)" class="cee-preview__close" title="Close preview" type="button">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M18 6 6 18M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+
+  @if (editorAvailable) {
+    <div class="cee-preview__mount" #mount></div>
+  } @else {
+    <p class="cee-preview__missing">
+      Preview renders the template with <code>&lt;cedar-embeddable-editor&gt;</code>, which the page embedding this
+      designer has not loaded. The two are sibling web components: load CEE's script alongside this one.
+    </p>
+  }
+</div>

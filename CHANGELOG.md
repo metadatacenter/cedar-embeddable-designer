@@ -67,6 +67,14 @@ drives it in a browser.
   panels each carried their own, and the two had drifted to different colours.
 - The component is the CEDAR Embeddable Designer throughout — the window title,
   the package, the Angular project, the build output and the element's tag.
+- Preview renders the template with
+  [`<cedar-embeddable-editor>`](https://github.com/metadatacenter/cedar-embeddable-editor),
+  a third sibling web component the host loads. It is the renderer that will show
+  the form to whoever fills it in, read-only and with no instance behind it,
+  which is how CEE reads a template as a statement of what each field accepts.
+  CEE takes one assignment to its template, so following an author's edits
+  replaces the element once typing stops rather than reassigning a template it
+  would refuse.
 
 ### Fixed
 
@@ -109,6 +117,12 @@ drives it in a browser.
 
 ### Removed
 
+- The preview panel's own drawing of a form, the JSON and YAML tabs above it, the
+  second copy of the export panel behind those, and a term-search modal for
+  filling the preview in. An author previewing a template was shown this
+  component's idea of CEDAR rather than the renderer that will show the form, and
+  the two had drifted. The accordions under the editor still show both
+  serializations.
 - The Electron shell, its IPC bridge — which accepted any filesystem path the
   renderer offered — the service behind it, the menu wiring and five
   devDependencies. Open and save are a file input and a download.
