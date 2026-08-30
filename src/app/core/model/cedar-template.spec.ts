@@ -115,6 +115,30 @@ describe('field types', () => {
    */
   const paletteTypes = Object.keys(FIELD_TYPES);
 
+  /**
+   * A field of the given type, complete enough to be one.
+   *
+   * A controlled-term field is a text field with a vocabulary attached, so one
+   * with no vocabulary chosen is not yet of that type and is written as the text
+   * field it is. Every case below is about a type that has been finished, which
+   * is what the palette entry promises.
+   */
+  const fieldOfType = (editorType: string): Field =>
+    field({
+      type: editorType,
+      name: 'F',
+      ...(editorType === 'controlledTerms'
+        ? {
+            controlledTermConfig: {
+              sourceType: 'ontology' as const,
+              sourceId: 'DOID',
+              ontologyId: 'DOID',
+              ontologyName: 'Human Disease Ontology',
+            },
+          }
+        : {}),
+    });
+
   it('has a descriptor of its own for every type in the palette', () => {
     // `descriptorOf` falls back to text for a type it does not know, so a palette
     // entry with nothing behind it would build a text field and look fine.
@@ -125,20 +149,65 @@ describe('field types', () => {
   });
 
   it.each(paletteTypes)('builds a %s field', (editorType) => {
-    expect(() => buildTemplate(templateOf(field({ type: editorType, name: 'F' })))).not.toThrow();
+    expect(() => buildTemplate(templateOf(fieldOfType(editorType)))).not.toThrow();
   });
 
   it.each(paletteTypes)('writes %s as the CEDAR type its descriptor names', (editorType) => {
-    const built = child(templateOf(field({ type: editorType, name: 'F' })), 'F');
+    const built = child(templateOf(fieldOfType(editorType)), 'F');
     const ui = built['_ui'] as Record<string, unknown>;
 
     expect(ui['inputType']).toBe(descriptorOf(editorType).cedarType.getUiInputType().getValue());
   });
 
   it.each(paletteTypes)('reads a %s field back as the type it was', (editorType) => {
-    const state = templateOf(field({ type: editorType, name: 'F' }));
+    const state = templateOf(fieldOfType(editorType));
 
     expect(toEditorTemplate(buildTemplate(state)).fields[0].type).toBe(editorType);
+  });
+
+  /**
+   * Every type survives being written and read back, in both serializations.
+   *
+   * The round trips below this cover one small template thoroughly. These cover
+   * every type shallowly, which is the other axis: a type can build correctly and
+   * still lose something on the way out and back, and it is the way out and back
+   * that an author meets — open a saved template, change one field, save it again.
+   *
+   * Driven from the palette rather than a list here, so a type added without a
+   * round trip behind it fails rather than going unnoticed.
+   */
+  it.each(paletteTypes)('writes and reads %s back unchanged as JSON', (editorType) => {
+    const state = templateOf(fieldOfType(editorType));
+    const written = templateToJson(buildTemplate(state));
+
+    expect(templateToJson(buildTemplate(toEditorTemplate(readTemplate(written))))).toEqual(written);
+  });
+
+  it.each(paletteTypes)('writes and reads %s back unchanged as YAML', (editorType) => {
+    const state = templateOf(fieldOfType(editorType));
+    const written = templateToJson(buildTemplate(state));
+    const viaYaml = readTemplate(templateToYaml(buildTemplate(state)));
+
+    expect(templateToJson(viaYaml)).toEqual(written);
+  });
+
+  /**
+   * The editor state a type settles on, and that it stays there.
+   *
+   * Not equality with what the editor was handed: a type whose author does not
+   * choose the cardinality carries whatever its deployment mandates, so a
+   * checkbox list comes back saying it takes several values however it was
+   * created. What must hold is that the second pass changes nothing — a template
+   * that keeps shifting under repeated opening and saving is the failure this
+   * guards, and it is how a time field became a date.
+   */
+  it.each(paletteTypes)('settles %s after one write and stays there', (editorType) => {
+    const first = toEditorTemplate(buildTemplate(templateOf(fieldOfType(editorType)))).fields[0];
+    const second = toEditorTemplate(buildTemplate(templateOf(first))).fields[0];
+
+    expect(first.type).toBe(editorType);
+    expect(first.name).toBe('F');
+    expect(second).toEqual(first);
   });
 
   it('distinguishes a date from a time', () => {
@@ -303,7 +372,7 @@ describe('controlled-term constraints', () => {
           name: 'F',
           controlledTermConfig: {
             sourceType: 'ontology',
-            ontologyId: 'https://data.bioontology.org/ontologies/DOID',
+            ontologyId: 'DOID',
             ontologyName: 'Human Disease Ontology',
             sourceId: 'DOID',
           },
@@ -313,6 +382,10 @@ describe('controlled-term constraints', () => {
 
     expect(built.valueConstraints.ontologies).toHaveLength(1);
     expect(built.valueConstraints.ontologies[0].acronym).toBe('DOID');
+    // An acronym is not a URI, and this used to write one into the URI slot: the
+    // JSON said `"uri": "DOID"` while the YAML path derived the real one, so the
+    // same template in the two formats named different things.
+    expect(built.valueConstraints.ontologies[0].uri.getValue()).toBe('https://data.bioontology.org/ontologies/DOID');
   });
 
   it('carries a branch constraint', () => {
@@ -378,15 +451,43 @@ describe('controlled-term constraints', () => {
     expect(built.valueConstraints.valueSets[0].name).toBe('Delivery Procedures');
   });
 
-  it('writes no constraints for a controlled-term field that has none configured', () => {
-    const built = buildTemplate(templateOf(field({ type: 'controlledTerms', name: 'F' }))).getField(
-      'F',
-    ) as ControlledTermField;
+  /**
+   * A controlled-term field with nothing to be constrained to is a text field.
+   *
+   * That is what the production designer models — controlled terms are a
+   * capability of a text field, and both write `_ui.inputType: "textfield"` — and
+   * it is the only shape that survives being saved and reopened. Written as a
+   * controlled-term field it went out IRI-shaped with four empty constraint
+   * lists and came back a text field, so the values it would collect changed from
+   * `@id` to `@value` on an open-and-save that touched nothing.
+   */
+  it('writes a controlled-term field with no vocabulary as the text field it is', () => {
+    const state = templateOf(field({ type: 'controlledTerms', name: 'F' }));
+    const built = child(state, 'F');
+    const properties = built['properties'] as Record<string, unknown>;
 
-    expect(built.valueConstraints.ontologies).toHaveLength(0);
-    expect(built.valueConstraints.branches).toHaveLength(0);
-    expect(built.valueConstraints.classes).toHaveLength(0);
-    expect(built.valueConstraints.valueSets).toHaveLength(0);
+    expect(built['_valueConstraints']).not.toHaveProperty('ontologies');
+    expect(properties).not.toHaveProperty('@id');
+    expect(toEditorTemplate(readTemplate(json(state))).fields[0].type).toBe('text');
+  });
+
+  it('writes the vocabulary as constraints once an author has chosen one', () => {
+    const built = buildTemplate(
+      templateOf(
+        field({
+          type: 'controlledTerms',
+          name: 'F',
+          controlledTermConfig: {
+            sourceType: 'ontology',
+            sourceId: 'DOID',
+            ontologyId: 'DOID',
+            ontologyName: 'Human Disease Ontology',
+          },
+        }),
+      ),
+    ).getField('F') as ControlledTermField;
+
+    expect(built.valueConstraints.ontologies).toHaveLength(1);
   });
 });
 

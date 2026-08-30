@@ -15,6 +15,17 @@ drives it in a browser.
 
 ### Added
 
+- A profile picker in the header. Three profiles — Basic, Semantic, Modular —
+  decide which field types and which per-field controls an author is offered, and
+  the only way to one was the user menu and then the preferences modal, two clicks
+  behind an unlabelled avatar with nothing on screen saying which was in force. An
+  author who wanted controlled terms had to know that Basic hides them and that a
+  profile existed to change. It reads `Custom` once the settings no longer match
+  any profile, which is a state one switch reaches.
+- Every field type is checked through both serializations and for settling: 26
+  types, each written and read back as JSON and as YAML, and each proved to reach
+  a state a second write does not change. Two defects came out of it, below.
+
 - `<cedar-embeddable-designer>`, registered as a custom element that bootstraps
   nothing onto the page. A host decides where and when one appears.
 - Shadow DOM. Neither the designer's styles nor a host page's cross the boundary.
@@ -104,6 +115,19 @@ drives it in a browser.
   break in the chain: a component element is inline by default, so the height
   declared on the element never reached the shell.
 
+- A controlled-term field with no vocabulary chosen was written as one anyway: it
+  went out IRI-shaped with four empty constraint lists and came back a text field,
+  so opening a saved template and saving it again turned the field's values from
+  `@id` to `@value` without anyone touching it. Controlled terms are a capability
+  of a text field — which is what the production designer models, and both write
+  `_ui.inputType: "textfield"` — so until an author picks a term there is a text
+  field to write and nothing else.
+- An ontology constraint named its ontology by acronym where a URI belongs. JSON
+  said `"uri": "DOID"`; the YAML path derives the URI from the acronym and said
+  `https://data.bioontology.org/ontologies/DOID`, so one template written in the
+  two formats was two different artifacts and only one named an ontology. Reading
+  one back put the URI where the next write expected an acronym, so a template
+  grew a URI segment on every open-and-save.
 - Controlled-term search substituted hard-coded results carrying real-looking
   SNOMEDCT and DOID identifiers when a request failed, and invented a term at
   `http://example.org/term/<query>` for anything it had no canned answer to. They

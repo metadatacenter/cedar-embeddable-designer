@@ -330,6 +330,25 @@ function buildOptions(builder: FieldBuilder, field: Field): void {
  * kind on one field, which is what the picker will offer when it replaces the
  * panel.
  */
+/**
+ * The URI CEDAR gives an ontology, from its acronym.
+ *
+ * An acronym is not a URI, and this was writing one into the URI slot: JSON came
+ * out saying `"uri": "DOID"` while the YAML path — which derives the URI from the
+ * acronym itself — said `https://data.bioontology.org/ontologies/DOID`. The same
+ * template written in the two formats was two different artifacts, and only one
+ * of them named an ontology.
+ *
+ * The base is stated here because the model library derives it internally and
+ * exports no constant for it. Anything already absolute is left alone, so a
+ * source that arrives with a real URI keeps it.
+ */
+const BIOPORTAL_ONTOLOGY_BASE = 'https://data.bioontology.org/ontologies/';
+
+function ontologyUri(acronym: string): string {
+  return /^https?:\/\//.test(acronym) ? acronym : `${BIOPORTAL_ONTOLOGY_BASE}${acronym}`;
+}
+
 function buildControlledTerm(builder: FieldBuilder, config: ControlledTermConfig | undefined): void {
   if (!config) {
     return;
@@ -359,8 +378,8 @@ function buildControlledTerm(builder: FieldBuilder, config: ControlledTermConfig
         controlled.addOntology(
           new ControlledTermOntologyBuilder()
             .withVersion(version)
-            .withUri(new Iri(config.ontologyId))
-            .withAcronym(config.sourceId ?? '')
+            .withUri(new Iri(ontologyUri(config.ontologyId)))
+            .withAcronym(config.ontologyId)
             .withName(config.ontologyName ?? '')
             .build(),
         );
@@ -430,9 +449,27 @@ function buildStaticContent(builder: FieldBuilder, kind: 'markup' | 'url' | 'vid
   }
 }
 
+/**
+ * Whether a controlled-term field has been given anything to be constrained to.
+ *
+ * A controlled-term field is a text field with a vocabulary attached — that is
+ * what the production designer models, and both write `_ui.inputType: "textfield"`.
+ * Until an author picks a term there is no vocabulary, so there is nothing to
+ * write but a text field.
+ *
+ * Writing one anyway produced a field the round trip could not preserve: it went
+ * out IRI-shaped, with four empty constraint lists, and came back a text field,
+ * so opening a saved template and saving it again silently turned the field's
+ * values from `@id` to `@value` — the same open-and-save decay a time field
+ * suffered when it was written as `xsd:dateTime`.
+ */
+function hasVocabulary(field: Field): boolean {
+  return field.type !== 'controlledTerms' || field.controlledTermConfig !== undefined;
+}
+
 function buildField(field: Field): TemplateField {
   const descriptor = descriptorOf(field.type);
-  const builder = descriptor.build();
+  const builder = hasVocabulary(field) ? descriptor.build() : descriptorOf('text').build();
 
   builder
     .withTitle(derivedTitle(field.name, 'field'))
@@ -459,7 +496,7 @@ function buildField(field: Field): TemplateField {
   if (descriptor.options) {
     buildOptions(builder, field);
   }
-  if (field.type === 'controlledTerms') {
+  if (field.type === 'controlledTerms' && hasVocabulary(field)) {
     buildControlledTerm(builder, field.controlledTermConfig);
   }
   if (descriptor.content) {
@@ -644,8 +681,15 @@ function controlledTermConfigOf(field: TemplateField): ControlledTermConfig | un
   if (ontology) {
     return {
       sourceType: 'ontology',
+      /*
+       * Both carry the acronym, which is what the editor's panel and the picker
+       * both work in. The URI is derived from it on the way out; reading it back
+       * into either of these put a URI where the next write expected an acronym,
+       * so a template grew `https://data.bioontology.org/ontologies/` a segment at
+       * a time on each open-and-save.
+       */
       sourceId: ontology.acronym,
-      ontologyId: ontology.uri.getValue() ?? '',
+      ontologyId: ontology.acronym,
       ontologyName: ontology.name,
       version: versionRefOf(ontology),
     };
