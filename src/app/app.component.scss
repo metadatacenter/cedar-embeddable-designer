@@ -1,8 +1,14 @@
 @reference "tailwindcss";
 
 /* ─── App Shell ───────────────────────────────────────────────────────────── */
+/*
+  A bounded box, not a growing one. `min-h-screen` measured the viewport, which an
+  embedded component has no business doing — it is given a height by whoever
+  embeds it — and being a minimum it let the shell grow with its content, so the
+  columns below could never scroll within it however much their own rules said so.
+*/
 .app-shell {
-  @apply min-h-screen bg-gray-100 relative flex flex-col font-sans;
+  @apply h-full min-h-0 bg-gray-100 relative flex flex-col font-sans;
 }
 
 /* ─── Header ──────────────────────────────────────────────────────────────── */
@@ -63,8 +69,13 @@
 }
 
 /* ─── Main Content ────────────────────────────────────────────────────────── */
+/*
+  `min-h-0` is what lets this shrink. A flex child's automatic minimum size is its
+  content, so the row grew to the taller of its two columns and took the shell
+  with it, and `overflow-hidden` here clipped nothing.
+*/
 .main-content {
-  @apply flex-1 flex overflow-hidden;
+  @apply flex-1 flex min-h-0 overflow-hidden;
 }
 
 .editor-area {

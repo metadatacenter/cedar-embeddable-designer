@@ -1,15 +1,13 @@
 /*
-  The panel scrolls with the page rather than beside it, because the shell it sits
-  in has a minimum height and no maximum: `.app-shell` is `min-h-screen`, so a tall
-  template makes the whole designer tall and the host page scrolls. Clipping here
-  changes nothing while the height above is content-driven, which is why there is
-  no `overflow: hidden` on this box.
+  `overflow: hidden` keeps the panel a panel: the form inside is as tall as the
+  template, and without it that height escapes upward through the flex row.
 */
 .cee-preview {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  overflow: hidden;
 }
 
 .cee-preview__bar {

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { DESIGNER, currentTemplate, openDesigner, publishedTemplates } from './support';
+import { DESIGNER, currentTemplate, openDesigner, openPreview, publishedTemplates } from './support';
 
 /**
  * Being embeddable, which is a claim about a host page rather than about the
@@ -71,6 +71,34 @@ test.describe('style encapsulation', () => {
 
     await expect(page.locator('#host-heading')).toHaveCSS('font-family', /Georgia/);
   });
+});
+
+/**
+ * The element keeps to the box its host gave it.
+ *
+ * `host.html` pins it at 92vh. Its shell used to be `min-h-screen` with no
+ * maximum, so it grew to whatever it held and the embedding page grew with it —
+ * eleven thousand pixels on a forty-field template — and neither column could
+ * scroll within it however much their own rules said so.
+ */
+test('keeps to the height its host gave it', async ({ page }) => {
+  await openDesigner(page);
+  await openPreview(page);
+
+  const box = await page.evaluate((tag) => {
+    const element = document.querySelector(tag) as HTMLElement;
+    const shell = element.shadowRoot?.querySelector('.app-shell') as HTMLElement;
+    return {
+      element: element.getBoundingClientRect().height,
+      shell: shell.getBoundingClientRect().height,
+      allowed: window.innerHeight * 0.92,
+    };
+  }, DESIGNER);
+
+  expect(box.element).toBeLessThanOrEqual(box.allowed + 1);
+  // And the shell fills it rather than falling short, which is the other way the
+  // chain from `:host` down to the columns can break.
+  expect(box.shell).toBeCloseTo(box.element, 0);
 });
 
 test.describe('the host contract', () => {

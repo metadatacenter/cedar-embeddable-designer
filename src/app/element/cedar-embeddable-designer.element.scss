@@ -11,3 +11,18 @@
   height: 100%;
   min-height: 500px;
 }
+
+/*
+  The application's own box, which is the link between the two.
+
+  `:host` claims the height an embedder gives it and `.app-shell` fills its
+  parent, but `app-root` sits between them and a component element is inline by
+  default, so the chain broke here: the shell fell back to growing with its
+  content, a long template made the whole designer as tall as itself, and the
+  embedding page scrolled instead of the panels.
+*/
+app-root {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}

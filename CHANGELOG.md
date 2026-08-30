@@ -78,6 +78,15 @@ drives it in a browser.
 
 ### Fixed
 
+- The designer grew to whatever it held instead of keeping to the box its host
+  gave it. Its shell asked for `min-h-screen` — the viewport, which an embedded
+  component has no business measuring — and being a minimum it grew with its
+  content, so a forty-field template made the element eleven thousand pixels tall
+  and the embedding page scrolled. Neither the fields nor the preview could scroll
+  within it, though both had said `overflow-y: auto` all along. `app-root` was the
+  break in the chain: a component element is inline by default, so the height
+  declared on the element never reached the shell.
+
 - Controlled-term search substituted hard-coded results carrying real-looking
   SNOMEDCT and DOID identifiers when a request failed, and invented a term at
   `http://example.org/term/<query>` for anything it had no canned answer to. They
