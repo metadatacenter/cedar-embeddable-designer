@@ -24,20 +24,38 @@ export interface CeeTemplateObject {
   readonly [key: string]: string | number | boolean | object | null | undefined;
 }
 
-/** The configuration a preview asks for. */
+/**
+ * The configuration a preview asks for.
+ *
+ * Constant, and no part of it derived from the template: CEE applies a
+ * configuration once, so a preview whose configuration changed with its content
+ * would be back to replacing the element. `showTemplateDescription` is always on
+ * because CEE renders a description only where the template carries one, so
+ * asking for it costs nothing on a template with none.
+ */
 export interface CeePreviewConfig {
   readonly readOnlyMode: true;
-  readonly showTemplateDescription: boolean;
+  readonly showTemplateDescription: true;
   readonly showExpandCollapseAll: false;
 }
+
+export const CEE_PREVIEW_CONFIG: CeePreviewConfig = {
+  readOnlyMode: true,
+  showTemplateDescription: true,
+  showExpandCollapseAll: false,
+};
 
 /**
  * The element, as the designer uses it.
  *
- * `config` and `templateObject` are set-once: CEE accepts the first assignment to
- * each, and reports and ignores any later one. A preview that follows an author's
- * edits therefore replaces the element rather than reassigning its template,
- * which is what CEE's contract says a host wanting a different artifact should do.
+ * `config` is set-once: CEE accepts the first assignment and reports and ignores
+ * any later one. `templateObject` is not, while no instance has been supplied —
+ * each assignment builds the form afresh, which is what lets a preview follow an
+ * author's edits without discarding the editor.
+ *
+ * It was set-once for every host until this preview asked otherwise. Replacing the
+ * element per edit cost about a second of Angular bootstrapping whatever the size
+ * of the template, and took the reader's scroll position and page with it.
  */
 export interface CeePreviewElement extends HTMLElement {
   config: CeePreviewConfig;
@@ -52,6 +70,9 @@ export function ceePreviewAvailable(registry: Pick<CustomElementRegistry, 'get'>
 /**
  * A configured editor, with no template in it yet.
  *
+ * One of these lasts as long as the panel: the caller keeps it and assigns each
+ * new template to it.
+ *
  * Read-only always, and not a setting: the designer is where a template is
  * changed, so a preview that accepted input would be collecting answers nothing
  * keeps. With no instance behind it CEE reads a read-only form as a statement of
@@ -63,13 +84,10 @@ export function ceePreviewAvailable(registry: Pick<CustomElementRegistry, 'get'>
  * closes on its own header.
  *
  * The template is assigned by the caller once the element is in the document,
- * which is the order CEE's own hosts use.
+ * which is the order CEE's own hosts use, and again whenever it changes.
  */
-export function createCeePreview(
-  showTemplateDescription: boolean,
-  factory: Pick<Document, 'createElement'> = document,
-): CeePreviewElement {
+export function createCeePreview(factory: Pick<Document, 'createElement'> = document): CeePreviewElement {
   const editor = factory.createElement(CEE_PREVIEW_TAG) as CeePreviewElement;
-  editor.config = { readOnlyMode: true, showTemplateDescription, showExpandCollapseAll: false };
+  editor.config = CEE_PREVIEW_CONFIG;
   return editor;
 }

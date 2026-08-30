@@ -70,9 +70,11 @@ drives it in a browser.
   a third sibling web component the host loads. It is the renderer that will show
   the form to whoever fills it in, read-only and with no instance behind it,
   which is how CEE reads a template as a statement of what each field accepts.
-  CEE takes one assignment to its template, so following an author's edits
-  replaces the element once typing stops rather than reassigning a template it
-  would refuse.
+  The preview keeps one editor and hands it each new template. CEE fixes a
+  template only once an instance is loaded against it, and a preview supplies
+  none — a rule it gained for this. Replacing the element per edit cost about a
+  second of Angular bootstrapping, flat in the size of the template, and took the
+  reader's scroll position and page with it.
 
 ### Fixed
 

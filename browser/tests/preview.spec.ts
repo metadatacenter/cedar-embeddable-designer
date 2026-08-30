@@ -43,21 +43,37 @@ test('hands CEE a read-only configuration', async ({ page }) => {
   expect(first.config.readOnlyMode).toBe(true);
 });
 
-test('replaces the editor when the template changes', async ({ page }) => {
+test('keeps the editor and hands it the new template', async ({ page }) => {
   await openDesigner(page, '?cee=stub');
   const panel = await openPreview(page);
   await expect.poll(async () => (await mounts(page)).length).toBeGreaterThan(0);
 
   await templateName(page).fill('Renamed');
 
-  // CEE takes one assignment to `templateObject` and reports and ignores a
-  // second, so following an edit means a new element rather than a new template
-  // on the old one.
   await expect.poll(async () => (await mounts(page)).at(-1)?.template['schema:name']).toBe('Renamed');
+  // CEE fixes a template only once an instance is loaded against it, and a preview
+  // supplies none. Discarding the element per edit cost a second of bootstrapping
+  // and the reader's scroll position with it.
   await expect(panel.locator('cedar-embeddable-editor')).toHaveCount(1);
+  expect(await page.evaluate(() => (window as unknown as { __ceeElements: number }).__ceeElements)).toBe(1);
 });
 
-test('rebuilds once for a burst of typing, not once per keystroke', async ({ page }) => {
+test('configures the editor once, however much the template changes', async ({ page }) => {
+  await openDesigner(page, '?cee=stub');
+  await openPreview(page);
+  await expect.poll(async () => (await mounts(page)).length).toBeGreaterThan(0);
+
+  await templateName(page).fill('Renamed');
+  await expect.poll(async () => (await mounts(page)).at(-1)?.template['schema:name']).toBe('Renamed');
+
+  // CEE applies a configuration once and reports a second, so nothing in the
+  // preview's configuration may depend on the template it is showing.
+  const configs = (await mounts(page)).map((mount) => JSON.stringify(mount.config));
+  expect(new Set(configs).size).toBe(1);
+  expect(await page.evaluate(() => (window as unknown as { __ceeConfigs: number }).__ceeConfigs)).toBe(1);
+});
+
+test('renders once for a burst of typing, not once per keystroke', async ({ page }) => {
   await openDesigner(page, '?cee=stub');
   await openPreview(page);
   await expect.poll(async () => (await mounts(page)).length).toBeGreaterThan(0);
@@ -66,8 +82,8 @@ test('rebuilds once for a burst of typing, not once per keystroke', async ({ pag
   await templateName(page).pressSequentially('Study', { delay: 30 });
   await expect.poll(async () => (await mounts(page)).at(-1)?.template['schema:name']).toContain('Study');
 
-  // Booting a form renderer per character is what the quiet period exists to
-  // prevent: five keystrokes must not mean five editors.
+  // Building the form per character is what the quiet period exists to prevent:
+  // five keystrokes must not mean five renders.
   expect((await mounts(page)).length - before).toBeLessThan(5);
 });
 

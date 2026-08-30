@@ -32,7 +32,7 @@ describe('the editor the preview builds', () => {
   beforeEach(() => (created.length = 0));
 
   it('asks for CEE by its registered tag', () => {
-    createCeePreview(false, factory);
+    createCeePreview(factory);
 
     expect(created).toEqual([CEE_PREVIEW_TAG]);
   });
@@ -40,7 +40,7 @@ describe('the editor the preview builds', () => {
   it('is read-only, always', () => {
     // Not a setting: the designer is where a template is changed, so a preview
     // that accepted input would be collecting answers nothing keeps.
-    const editor: CeePreviewElement = createCeePreview(false, factory);
+    const editor: CeePreviewElement = createCeePreview(factory);
 
     expect(editor.config.readOnlyMode).toBe(true);
   });
@@ -49,17 +49,19 @@ describe('the editor the preview builds', () => {
     // The designer has its own controls over the same template beside the
     // preview, and a second set acting on a copy of it is two answers to one
     // question.
-    expect(createCeePreview(false, factory).config.showExpandCollapseAll).toBe(false);
+    expect(createCeePreview(factory).config.showExpandCollapseAll).toBe(false);
   });
 
-  it('shows the description only when the template has one', () => {
-    expect(createCeePreview(true, factory).config.showTemplateDescription).toBe(true);
-    expect(createCeePreview(false, factory).config.showTemplateDescription).toBe(false);
+  it('asks for the description unconditionally', () => {
+    // CEE renders one only where the template carries one, so asking costs nothing
+    // on a template with none — and it keeps the configuration free of the template,
+    // which matters because CEE applies a configuration once.
+    expect(createCeePreview(factory).config.showTemplateDescription).toBe(true);
   });
 
   it('carries no template until the caller assigns one', () => {
     // CEE takes one assignment, and the element has to be in the document first.
-    const editor: CeePreviewElement = createCeePreview(false, factory);
+    const editor: CeePreviewElement = createCeePreview(factory);
 
     expect(editor.templateObject).toBeUndefined();
   });

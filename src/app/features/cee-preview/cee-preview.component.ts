@@ -9,13 +9,13 @@ import {
 } from '../../core/model/cee-preview';
 
 /**
- * How long the template must stop changing before the preview is rebuilt.
+ * How long the template must stop changing before the preview is handed a new one.
  *
- * CEE's template input is set-once, so following an author's edits means
- * replacing the element, and replacing it boots a form renderer. Once per
- * keystroke would be one boot per character; this rebuilds when typing stops.
+ * Rebuilding the form is cheaper than it was — the editor is kept and reassigned
+ * rather than replaced — but it is still a form being built, and an author holding
+ * a key down has no use for the twenty renders in between.
  */
-const REBUILD_QUIET_MS = 400;
+const REBUILD_QUIET_MS = 200;
 
 /**
  * The template as CEE renders it.
@@ -46,6 +46,8 @@ export class CeePreviewComponent {
 
   private readonly mount = viewChild<ElementRef<HTMLDivElement>>('mount');
 
+  private editor: CeePreviewElement | null = null;
+
   constructor() {
     effect((onCleanup) => {
       const host = this.mount()?.nativeElement;
@@ -54,21 +56,28 @@ export class CeePreviewComponent {
         return;
       }
 
-      const timer = setTimeout(() => this.remount(host, template), REBUILD_QUIET_MS);
+      const timer = setTimeout(() => this.show(host, template), REBUILD_QUIET_MS);
       onCleanup(() => clearTimeout(timer));
     });
   }
 
   /**
-   * Replace the editor with one rendering this template.
+   * Show this template, in the editor already on screen where there is one.
    *
-   * The old element is discarded rather than reassigned, because CEE reports and
-   * ignores a second `templateObject`. The template is assigned after the element
-   * is in the document, which is the order CEE's own hosts use.
+   * CEE fixes a template only once an instance is loaded against it, and a preview
+   * supplies none, so the same element renders each new template. Replacing the
+   * element instead cost about a second of bootstrapping per edit — flat in the
+   * size of the template, because almost all of it was starting an application —
+   * and threw away the reader's scroll position and page along with it.
+   *
+   * The first template is assigned after the element is in the document, which is
+   * the order CEE's own hosts use.
    */
-  private remount(host: HTMLDivElement, template: CeeTemplateObject): void {
-    const editor: CeePreviewElement = createCeePreview(this.service.templateDesc().length > 0);
-    host.replaceChildren(editor);
-    editor.templateObject = template;
+  private show(host: HTMLDivElement, template: CeeTemplateObject): void {
+    if (this.editor === null) {
+      this.editor = createCeePreview();
+      host.replaceChildren(this.editor);
+    }
+    this.editor.templateObject = template;
   }
 }

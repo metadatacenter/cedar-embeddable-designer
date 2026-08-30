@@ -99,14 +99,26 @@
           would refuse.
         */
         window.__ceeMounts = [];
+        window.__ceeElements = 0;
+        window.__ceeConfigs = 0;
         class StubEditor extends HTMLElement {
+          constructor() {
+            super();
+            window.__ceeElements += 1;
+          }
           set config(value) {
             this._config = value;
+            window.__ceeConfigs += 1;
             this._recordWhenComplete();
           }
           get config() {
             return this._config;
           }
+          /*
+            Assignable more than once, as CEE's is while no instance has been
+            supplied. A stub that refused the second would pass a designer that
+            never sent one.
+          */
           set templateObject(value) {
             this._template = value;
             this._recordWhenComplete();
