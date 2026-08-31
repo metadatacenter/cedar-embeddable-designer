@@ -40,7 +40,7 @@ function starterFields(): Field[] {
       type: 'multipleChoice',
       name: 'Category',
       status: 'optional',
-      options: ['Option 1', 'Option 2'],
+      options: ['', ''],
       defaultValue: '',
       allowMultiple: false,
     },
@@ -203,7 +203,7 @@ export class TemplateService {
       type,
       name: FIELD_TYPES[type].label,
       status: 'optional',
-      options: type === 'multipleChoice' || type === 'checkboxes' ? ['Option 1'] : [],
+      options: type === 'multipleChoice' || type === 'checkboxes' ? [''] : [],
       defaultValue: '',
       allowMultiple: false,
     };
@@ -229,7 +229,7 @@ export class TemplateService {
       helpText: customField.description || '',
       defaultValue: customField.placeholder || '',
       status: 'optional',
-      options: customField.baseType === 'multipleChoice' || customField.baseType === 'checkboxes' ? ['Option 1'] : [],
+      options: customField.baseType === 'multipleChoice' || customField.baseType === 'checkboxes' ? [''] : [],
       allowMultiple: false,
       customFieldId: customField.id,
       libraryId: customField.libraryId,
@@ -269,7 +269,7 @@ export class TemplateService {
                 type === 'multipleChoice' || type === 'checkboxes'
                   ? f.options.length > 0
                     ? f.options
-                    : ['Option 1']
+                    : ['']
                   : [],
               defaultValue: '',
               allowMultiple: false,
@@ -295,7 +295,7 @@ export class TemplateService {
                 customField.baseType === 'multipleChoice' || customField.baseType === 'checkboxes'
                   ? f.options.length > 0
                     ? f.options
-                    : ['Option 1']
+                    : ['']
                   : [],
               allowMultiple: false,
               customFieldId: customField.id,
@@ -352,7 +352,13 @@ export class TemplateService {
     this.fields.update((prev) =>
       prev.map((f) => {
         if (f.id === fieldId) {
-          return { ...f, options: [...f.options, `Option ${f.options.length + 1}`] };
+          /*
+           * Empty, so the input's placeholder shows the author a hint rather than
+           * a value. Seeding the label meant clicking an option put the caret in
+           * the middle of the words "Option 2" and the author had to clear them,
+           * and an option nobody renamed went into the artifact called that.
+           */
+          return { ...f, options: [...f.options, ''] };
         }
         return f;
       }),
@@ -364,7 +370,7 @@ export class TemplateService {
       prev.map((f) => {
         if (f.id === fieldId) {
           const newOptions = f.options.filter((_, index) => index !== optionIndex);
-          return { ...f, options: newOptions.length > 0 ? newOptions : ['Option 1'] };
+          return { ...f, options: newOptions.length > 0 ? newOptions : [''] };
         }
         return f;
       }),

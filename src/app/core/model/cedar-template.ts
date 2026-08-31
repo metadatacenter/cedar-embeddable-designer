@@ -314,6 +314,14 @@ function buildOptions(builder: FieldBuilder, field: Field): void {
     addOption?(label: string): unknown;
   };
   for (const option of field.options) {
+    /*
+     * An option the author has not named yet is not an option. Its label is
+     * empty because the card seeds a blank and lets the placeholder show the
+     * hint, so writing it would put `{"label": ""}` in the artifact.
+     */
+    if (option.trim() === '') {
+      continue;
+    }
     if (withOptions.addRadioOption) {
       withOptions.addRadioOption(option);
     } else if (withOptions.addOption) {
