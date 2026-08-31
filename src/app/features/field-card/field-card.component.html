@@ -1,4 +1,4 @@
-<div class="px-5 py-4">
+<div class="px-4 py-3">
   <!-- Drag Handle Row -->
   @if (service.selectedField() === field.id) {
     <div
@@ -10,7 +10,7 @@
   }
 
   <!-- Header Row: Icon, Name editing, Type select -->
-  <div class="flex items-center gap-3 mb-4 mt-1">
+  <div class="flex items-center gap-2 flex-wrap">
     <!-- Icon dropdown type switch -->
     <div class="relative flex-shrink-0">
       <button
@@ -113,7 +113,7 @@
       type="text"
       [ngModel]="field.name"
       (ngModelChange)="service.updateFieldName(field.id, $event)"
-      class="text-sm font-semibold text-gray-900 border-none outline-none pb-0.5 flex-1 min-w-0 bg-transparent border-b-2"
+      class="text-sm font-semibold text-gray-900 border-none outline-none pb-0.5 flex-1 min-w-32 bg-transparent border-b-2"
       [style.borderBottomColor]="service.selectedField() === field.id ? service.COLORS.primary : '#d1d5db'"
       (focus)="service.selectedField.set(field.id)"
       placeholder="Enter field name"
@@ -123,15 +123,50 @@
     <div class="text-[10px] bg-gray-100 border text-gray-600 font-medium px-2 py-0.5 rounded-full capitalize">
       {{ getFieldTypeName(field) }}
     </div>
+
+    <!--
+      Required, Allow multiple and delete sit on the title row rather than in a
+      footer bar of their own. They are one line of controls either way, and a
+      bar cost every card its own rule, its padding and 36px of height.
+    -->
+    @if (service.preferences().showRequired && allowsStatus(field.type)) {
+      <label class="flex items-center gap-1 cursor-pointer group shrink-0">
+        <input
+          type="checkbox"
+          [checked]="field.status === 'required'"
+          (change)="service.updateFieldStatus(field.id, field.status === 'required' ? 'optional' : 'required')"
+          class="w-3.5 h-3.5 checkbox-white"
+        />
+        <span class="text-[11px] text-gray-600 group-hover:text-gray-900 whitespace-nowrap">Required</span>
+      </label>
+    }
+    @if (service.preferences().showAllowMultiple && allowsMultiple(field.type)) {
+      <label class="flex items-center gap-1 cursor-pointer group shrink-0">
+        <input
+          type="checkbox"
+          [checked]="field.allowMultiple"
+          (change)="service.toggleAllowMultiple(field.id)"
+          class="w-3.5 h-3.5 checkbox-white"
+        />
+        <span class="text-[11px] text-gray-600 group-hover:text-gray-900 whitespace-nowrap">Allow multiple</span>
+      </label>
+    }
+    <button
+      (click)="service.deleteField(field.id)"
+      class="text-gray-400 hover:text-red-600 p-0.5 transition-colors border-none bg-transparent cursor-pointer shrink-0"
+      title="Delete field"
+    >
+      <app-icon key="trash" className="w-4 h-4 text-gray-400 hover:text-red-600"></app-icon>
+    </button>
   </div>
 
   <!-- Field Preview / Options Editing Inside Card -->
   <!-- Option Editing for Multiple Choice / Checkboxes -->
   @if (allowsOptions(field.type)) {
-    <div class="space-y-1.5 mb-4 px-1">
+    <div class="space-y-0.5 mt-2 px-1">
       @for (option of field.options; track option; let optIdx = $index) {
-        <div class="flex items-center gap-3 group/option px-1 py-0.5">
-          <app-icon [key]="field.type" className="w-5 h-5 text-gray-400"></app-icon>
+        <div class="flex items-center gap-3 group/option px-1">
+          <app-icon [key]="field.type" className="w-4 h-4 text-gray-400"></app-icon>
           <input
             type="text"
             [ngModel]="option"
@@ -144,7 +179,7 @@
           @if (field.options.length > 1) {
             <button
               (click)="service.deleteOption(field.id, optIdx)"
-              class="text-gray-400 hover:text-red-600 transition-colors cursor-pointer border-none bg-transparent flex items-center justify-center p-1"
+              class="text-gray-400 hover:text-red-600 transition-colors cursor-pointer border-none bg-transparent flex items-center justify-center p-0.5"
               title="Delete option"
             >
               <app-icon key="trash" className="w-3.5 h-3.5 text-gray-400 hover:text-red-600"></app-icon>
@@ -155,10 +190,22 @@
       <!-- Add Option Button -->
       <button
         (click)="service.addOption(field.id); service.selectedField.set(field.id)"
-        class="flex items-center gap-1.5 ml-8 text-xs text-gray-500 hover:text-teal-600 transition-colors border-none bg-transparent cursor-pointer font-medium mt-1"
+        class="flex items-center gap-1.5 ml-7 text-xs text-gray-500 hover:text-teal-600 transition-colors border-none bg-transparent cursor-pointer font-medium mt-0.5"
       >
         <span class="text-sm font-bold">＋</span> Add option
       </button>
+    </div>
+  }
+
+  <!-- Static placeholder text preview for standard types -->
+  @if (!allowsOptions(field.type) && field.type !== 'controlledTerms' && !contentLabel(field.type)) {
+    <div class="mt-2.5 px-1">
+      <input
+        type="text"
+        disabled
+        [placeholder]="FIELD_TYPES_LIST[field.type]?.preview || ''"
+        class="text-sm text-gray-500 w-full bg-gray-50 border border-gray-200 rounded-md px-3 py-1.5 cursor-not-allowed"
+      />
     </div>
   }
 
@@ -176,36 +223,24 @@
     hint about what a form-filler will type.
   -->
   @if (contentLabel(field.type); as label) {
-    <div class="mb-4 px-1">
-      <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">{{ label }}</label>
+    <div class="mt-2.5 px-1">
+      <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5 block">{{ label }}</label>
       <input
         type="text"
         [ngModel]="field.content || ''"
         (ngModelChange)="service.updateContent(field.id, $event)"
         [placeholder]="FIELD_TYPES_LIST[field.type]?.preview || ''"
-        class="text-sm w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-teal-600"
-      />
-    </div>
-  }
-
-  <!-- Static placeholder text preview for standard types -->
-  @if (!allowsOptions(field.type) && field.type !== 'controlledTerms' && !contentLabel(field.type)) {
-    <div class="mb-4 px-1">
-      <input
-        type="text"
-        disabled
-        [placeholder]="FIELD_TYPES_LIST[field.type]?.preview || ''"
-        class="text-sm text-gray-500 w-full bg-gray-50 border border-gray-200 rounded-md px-3 py-2 cursor-not-allowed"
+        class="text-sm w-full border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:border-teal-600"
       />
     </div>
   }
 
   <!-- Help Text and Default Value editing (Only if configured in preferences) -->
   @if (service.preferences().showHelpText || (service.preferences().showDefaultValue && allowsStatus(field.type))) {
-    <div class="space-y-3 mb-4 px-1 border-t border-gray-100 pt-3">
+    <div class="space-y-2 mt-2.5 px-1 border-t border-gray-100 pt-2.5">
       @if (service.preferences().showHelpText) {
         <div>
-          <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Help Text</label>
+          <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5 block">Help Text</label>
           <input
             type="text"
             [ngModel]="field.helpText || ''"
@@ -220,7 +255,7 @@
            no default for a form-filler to start from. -->
       @if (service.preferences().showDefaultValue && allowsStatus(field.type)) {
         <div>
-          <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block"
+          <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5 block"
             >Default Value</label
           >
           <input
@@ -235,42 +270,4 @@
       }
     </div>
   }
-
-  <!-- Field Action Controls footer -->
-  <div class="flex items-center justify-end gap-6 pt-2 border-t border-gray-100 px-1">
-    <!-- Required Toggle -->
-    @if (service.preferences().showRequired && allowsStatus(field.type)) {
-      <label class="flex items-center gap-1.5 cursor-pointer group">
-        <input
-          type="checkbox"
-          [checked]="field.status === 'required'"
-          (change)="service.updateFieldStatus(field.id, field.status === 'required' ? 'optional' : 'required')"
-          class="w-3.5 h-3.5 checkbox-white"
-        />
-        <span class="text-xs text-gray-700 group-hover:text-gray-900">Required</span>
-      </label>
-    }
-
-    <!-- Allow Multiple Toggle -->
-    @if (service.preferences().showAllowMultiple && allowsMultiple(field.type)) {
-      <label class="flex items-center gap-1.5 cursor-pointer group">
-        <input
-          type="checkbox"
-          [checked]="field.allowMultiple"
-          (change)="service.toggleAllowMultiple(field.id)"
-          class="w-3.5 h-3.5 checkbox-white"
-        />
-        <span class="text-xs text-gray-700 group-hover:text-gray-900">Allow multiple</span>
-      </label>
-    }
-
-    <!-- Delete Field Button -->
-    <button
-      (click)="service.deleteField(field.id)"
-      class="text-gray-400 hover:text-red-600 p-1 transition-colors border-none bg-transparent cursor-pointer ml-2"
-      title="Delete field"
-    >
-      <app-icon key="trash" className="w-4 h-4 text-gray-400 hover:text-red-600"></app-icon>
-    </button>
-  </div>
 </div>

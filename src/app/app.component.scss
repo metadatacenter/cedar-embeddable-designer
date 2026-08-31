@@ -88,7 +88,7 @@
 
 /* ─── Fields Overview Sidebar ─────────────────────────────────────────────── */
 .overview-panel {
-  @apply p-4 hidden md:block;
+  @apply p-3 hidden md:block;
 }
 
 .overview-panel__card {
@@ -100,7 +100,7 @@
 }
 
 .overview-panel__header {
-  @apply px-4 py-3 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10;
+  @apply px-3 py-2 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10;
 }
 
 .overview-panel__header-left {
@@ -120,7 +120,7 @@
 }
 
 .overview-panel__item {
-  @apply w-full flex items-center gap-2 px-3 py-2.5 hover:bg-gray-50 transition-colors text-left cursor-pointer border-none bg-transparent;
+  @apply w-full flex items-center gap-2 px-3 py-1.5 hover:bg-gray-50 transition-colors text-left cursor-pointer border-none bg-transparent;
 
   &.active {
     @apply bg-emerald-50;
@@ -136,8 +136,7 @@
 }
 
 .overview-panel__badge-required {
-  font-size: 9px;
-  @apply px-1 bg-red-100 text-red-800 rounded font-semibold;
+  @apply text-sm leading-none text-gray-900 font-semibold;
 }
 
 /* ─── Overview Toggle Button ──────────────────────────────────────────────── */
@@ -147,12 +146,12 @@
 
 /* ─── Editor Workspace ────────────────────────────────────────────────────── */
 .editor-workspace {
-  @apply relative py-8 px-6 max-w-4xl mx-auto w-full;
+  @apply relative py-5 px-6 max-w-4xl mx-auto w-full;
 }
 
 /* ─── Template Header Card ────────────────────────────────────────────────── */
 .template-header-card {
-  @apply bg-white rounded-lg border border-gray-300 mb-4 overflow-hidden shadow-sm relative;
+  @apply bg-white rounded-lg border border-gray-300 mb-3 overflow-hidden shadow-sm relative;
 }
 
 .template-header-card__gradient {
@@ -160,11 +159,11 @@
 }
 
 .template-header-card__body {
-  @apply p-6 flex items-start gap-4;
+  @apply p-4 flex items-start gap-4;
 }
 
 .template-header-card__icon {
-  @apply flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center mt-1;
+  @apply flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center mt-0.5;
 }
 
 .template-header-card__inputs {
@@ -189,7 +188,7 @@
 
 /* ─── Fields Drop List ────────────────────────────────────────────────────── */
 .fields-drop-list {
-  @apply space-y-3;
+  @apply space-y-2.5;
 }
 
 .field-drop-item {

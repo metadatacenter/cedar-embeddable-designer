@@ -236,7 +236,7 @@
                     </span>
                     <span class="overview-panel__item-name">{{ field.name }}</span>
                     @if (field.status === 'required') {
-                      <span class="overview-panel__badge-required">Req</span>
+                      <span class="overview-panel__badge-required" title="Required">*</span>
                     }
                   </button>
                 }
@@ -309,7 +309,7 @@
                 </div>
 
                 <!-- Bottom Row: Description -->
-                <div class="template-field-group mt-3">
+                <div class="template-field-group mt-2">
                   <label class="template-field-label">Description</label>
                   <input
                     type="text"
