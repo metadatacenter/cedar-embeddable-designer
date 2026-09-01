@@ -266,11 +266,7 @@ export class TemplateService {
               ...f,
               type,
               options:
-                type === 'multipleChoice' || type === 'checkboxes'
-                  ? f.options.length > 0
-                    ? f.options
-                    : ['']
-                  : [],
+                type === 'multipleChoice' || type === 'checkboxes' ? (f.options.length > 0 ? f.options : ['']) : [],
               defaultValue: '',
               allowMultiple: false,
               customFieldId: undefined,
