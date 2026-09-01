@@ -225,7 +225,7 @@
                 </button>
               </div>
               <div class="overview-panel__list">
-                @for (field of service.fields(); track field) {
+                @for (field of service.fields(); track field.id) {
                   <button
                     (click)="scrollToField(field.id)"
                     class="overview-panel__item"
@@ -325,7 +325,7 @@
 
           <!-- Fields Drop List -->
           <div cdkDropList (cdkDropListDropped)="onFieldDrop($event)" class="fields-drop-list">
-            @for (field of service.fields(); track field; let idx = $index) {
+            @for (field of service.fields(); track field.id; let idx = $index) {
               <div class="field-drop-item" [id]="'field-card-' + field.id">
                 <!-- Insert Zone (modal style) -->
                 @if (service.preferences().fieldSelectionStyle === 'modal') {

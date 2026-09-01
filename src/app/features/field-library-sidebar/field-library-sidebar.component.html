@@ -21,7 +21,7 @@
         @if (service.fields().length === 0) {
           <div class="field-empty-state">No fields yet</div>
         }
-        @for (field of service.fields(); track field; let idx = $index) {
+        @for (field of service.fields(); track field.id; let idx = $index) {
           <div
             cdkDrag
             (click)="service.selectedField.set(field.id)"

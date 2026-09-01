@@ -35,7 +35,7 @@
             <!-- Standard Fields -->
             <div class="mb-2">
               <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide px-2 py-1">Standard Fields</p>
-              @for (item of FIELD_TYPES_LIST | keyvalue; track item) {
+              @for (item of FIELD_TYPES_LIST | keyvalue; track item.key) {
                 <button
                   (click)="
                     $event.stopPropagation();
@@ -59,7 +59,7 @@
                 <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide px-2 py-1">Custom Fields</p>
                 <!-- Library Selection -->
                 @if (service.fieldTypeDropdownLibrary() === null) {
-                  @for (lib of service.libraries(); track lib) {
+                  @for (lib of service.libraries(); track lib.id) {
                     <button
                       (click)="$event.stopPropagation(); service.fieldTypeDropdownLibrary.set(lib.id)"
                       class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left border-none bg-transparent cursor-pointer"
@@ -78,7 +78,7 @@
                   >
                     <span class="text-xs">◀ Back</span>
                   </button>
-                  @for (cf of service.customFields(); track cf) {
+                  @for (cf of service.customFields(); track cf.id) {
                     <button
                       [style.display]="cf.libraryId === service.fieldTypeDropdownLibrary() ? 'flex' : 'none'"
                       (click)="
@@ -164,7 +164,7 @@
   <!-- Option Editing for Multiple Choice / Checkboxes -->
   @if (allowsOptions(field.type)) {
     <div class="space-y-0.5 mt-2 px-1">
-      @for (option of field.options; track option; let optIdx = $index) {
+      @for (option of field.options; track $index; let optIdx = $index) {
         <div class="flex items-center gap-3 group/option px-1">
           <app-icon [key]="field.type" className="w-4 h-4 text-gray-400"></app-icon>
           <input
