@@ -37,6 +37,7 @@ describe('TemplateService', () => {
     service.updateDefaultValue(id, { kind: 'literal', value: 'Changed' });
     service.updateHelpText(id, 'Changed');
     service.updateContent(id, 'Changed');
+    service.updateControlledTermConstraints(id, { constraints: [], actions: [] });
     service.toggleAllowMultiple(id);
     service.addOption(id);
     service.deleteField(id);

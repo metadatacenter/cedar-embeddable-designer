@@ -29,7 +29,7 @@
         <p role="status" class="p-3">Checking the existing default…</p>
       }
       @if (error()) {
-        <p role="alert" class="p-3 text-red-700">{{ error() }}</p>
+        <p role="alert" class="p-3 ced-field-error">{{ error() }}</p>
       }
       @if (invalidDefault()) {
         <button type="button" class="p-3 underline" (click)="clearDefaultAndApply()">
