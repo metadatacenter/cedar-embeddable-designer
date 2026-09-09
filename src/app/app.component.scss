@@ -78,10 +78,6 @@
   @apply flex-1 flex min-h-0 overflow-hidden;
 }
 
-.designer-area {
-  @apply transition-all duration-300 overflow-y-auto relative flex-1;
-}
-
 .designer-grid {
   @apply grid h-full;
 }
