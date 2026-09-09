@@ -43,11 +43,23 @@ test('adding an option redraws the field and republishes', async ({ page }) => {
   await clickCentred(designer.getByRole('button', { name: /Add option/ }).first());
 
   await expect(designer.getByPlaceholder('Option 3')).toBeVisible();
+
+  // Named, because a blank option is deliberately not written: the row seeds an
+  // empty label so its placeholder can show the hint, and `buildOptions` skips
+  // it rather than sending out `{"label": ""}`. So adding a row changes what the
+  // author sees and nothing in the artifact, and the republish this test is
+  // about is the one the label produces.
+  await designer.getByPlaceholder('Option 3').fill('Gamma');
+
   await waitForPublished(page, (template) => {
     const properties = template['properties'] as Record<string, Record<string, unknown>>;
     const category = (properties['Category']['items'] as Record<string, unknown>) ?? properties['Category'];
-    const constraints = category['_valueConstraints'] as { literals: unknown[] };
-    return constraints.literals.length === 3;
+    const constraints = category['_valueConstraints'] as { literals?: Array<{ label: string }> };
+    // Optional, and matched by label rather than counted. Every template
+    // published before the label was typed carries no `literals` key at all, and
+    // reading `length` of that threw inside the predicate — which fails the wait
+    // outright instead of leaving it to match a later event.
+    return (constraints.literals ?? []).some((literal) => literal.label === 'Gamma');
   });
 });
 
