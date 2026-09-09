@@ -14,6 +14,12 @@ import { TemplateService } from '../../core/services/template.service';
 export class FieldSettingsComponent implements OnChanges {
   @Input({ required: true }) field!: Field;
   readonly service = inject(TemplateService);
+  preferredLabel = '';
+  alternateLabels = '';
+  schemaIdentifier = '';
+  language = '';
+  propertyIri = '';
+  annotations: NonNullable<Field['annotations']> = [];
   displayLabel = '';
   displayDescription = '';
   hidden = false;
@@ -53,6 +59,12 @@ export class FieldSettingsComponent implements OnChanges {
     return descriptorOf(this.field.type).deployment === 'alwaysMultiple' || this.field.allowMultiple;
   }
   ngOnChanges(): void {
+    this.preferredLabel = this.field.preferredLabel ?? '';
+    this.alternateLabels = this.field.alternateLabels?.join('\n') ?? '';
+    this.schemaIdentifier = this.field.schemaIdentifier ?? '';
+    this.language = this.field.language ?? '';
+    this.propertyIri = this.field.propertyIri ?? '';
+    this.annotations = this.field.annotations?.map((annotation) => ({ ...annotation })) ?? [];
     this.displayLabel = this.field.displayLabel ?? '';
     this.displayDescription = this.field.displayDescription ?? '';
     this.hidden = this.field.hidden ?? false;
@@ -74,6 +86,29 @@ export class FieldSettingsComponent implements OnChanges {
     this.min = this.field.minItems ?? null;
     this.max = this.field.maxItems ?? null;
     this.error = null;
+  }
+  saveMetadata(): void {
+    if (this.propertyIri && !/^[a-z][a-z0-9+.-]*:\S+$/i.test(this.propertyIri)) {
+      this.error = 'The property IRI must be an absolute identifier.';
+      return;
+    }
+    this.error = this.service.updateFieldSettings(this.field.id, {
+      preferredLabel: this.preferredLabel || undefined,
+      alternateLabels: this.alternateLabels
+        .split('\n')
+        .map((label) => label.trim())
+        .filter(Boolean),
+      schemaIdentifier: this.schemaIdentifier || undefined,
+      language: this.language || undefined,
+      propertyIri: this.propertyIri || undefined,
+      annotations: this.annotations.map((annotation) => ({ ...annotation })),
+    });
+  }
+  addAnnotation(): void {
+    this.annotations = [...this.annotations, { name: '', kind: 'literal', value: '' }];
+  }
+  removeAnnotation(index: number): void {
+    this.annotations = this.annotations.filter((_, i) => i !== index);
   }
   saveMedia(): void {
     this.error = this.service.updateFieldSettings(this.field.id, { width: this.width, height: this.height });

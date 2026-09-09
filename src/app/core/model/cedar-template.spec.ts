@@ -784,3 +784,26 @@ for (const type of ['multipleChoice', 'singleChoiceList', 'checkboxes', 'multipl
     }
   });
 }
+
+it('preserves authored labels language identifiers and typed annotations', () => {
+  const metadata = {
+    preferredLabel: 'Colour',
+    alternateLabels: ['Color', 'Hue'],
+    schemaIdentifier: 'colour-field',
+    language: 'en',
+    propertyIri: 'https://example.org/colour',
+    annotations: [
+      { name: 'note', kind: 'literal' as const, value: 'Reviewed' },
+      { name: 'source', kind: 'iri' as const, value: 'https://example.org/source' },
+    ],
+  };
+  const original = buildTemplate(templateOf(field(metadata)));
+  for (const source of [templateToJson(original), templateToYaml(original)]) {
+    const state = toDesignerTemplate(readTemplate(source));
+    expect(state.fields[0]).toMatchObject(metadata);
+    expect(templateToJson(buildTemplate(state))).toEqual(templateToJson(original));
+  }
+  expect(() =>
+    buildTemplate(templateOf(field({ annotations: [metadata.annotations[0], metadata.annotations[0]] }))),
+  ).toThrow(/unique/);
+});

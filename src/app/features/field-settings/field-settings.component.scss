@@ -71,3 +71,40 @@ p[role='alert'] {
   width: 230px;
   max-width: 100%;
 }
+
+.annotations {
+  width: 100%;
+  margin-top: 8px;
+  border-collapse: collapse;
+  font-size: 11px;
+  text-align: left;
+  caption {
+    text-align: left;
+    color: #666;
+    font-style: italic;
+    padding-bottom: 3px;
+  }
+  th {
+    background: #e9eeee;
+    color: #586866;
+    font-weight: 500;
+  }
+  th,
+  td {
+    padding: 4px 6px;
+    border-bottom: 1px solid #e1e6e5;
+  }
+  tbody tr {
+    background: white;
+  }
+  tbody tr:nth-child(even) {
+    background: #f7f9f9;
+  }
+  input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  select {
+    width: 65px;
+  }
+}

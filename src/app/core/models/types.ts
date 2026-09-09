@@ -87,6 +87,11 @@ export interface Field {
    */
   atId?: string;
   propertyIri?: string;
+  preferredLabel?: string;
+  alternateLabels?: string[];
+  schemaIdentifier?: string;
+  language?: string;
+  annotations?: { name: string; kind: 'literal' | 'iri'; value: string }[];
   type: string;
   name: string;
   status: string; // 'required' | 'optional' | 'recommended'

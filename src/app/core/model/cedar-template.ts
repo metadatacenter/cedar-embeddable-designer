@@ -15,6 +15,10 @@
  * call, and could not read anything it had not written.
  */
 import {
+  Annotations,
+  AnnotationAtId,
+  AnnotationAtValue,
+  Language,
   AbstractDynamicChildDeploymentInfo,
   AbstractDynamicChildDeploymentInfoBuilder,
   BiboStatus,
@@ -71,6 +75,9 @@ import { ControlledTermConfig, Field, FieldDefaultValue } from '../models/types'
  * because a text field genuinely has no `addRadioOption`.
  */
 type FieldBuilder = {
+  withPreferredLabel(label: string | null): FieldBuilder;
+  withAlternateLabels(labels: string[] | null): FieldBuilder;
+  withSchemaIdentifier(identifier: string | null): FieldBuilder;
   withTitle(title: string | null): FieldBuilder;
   withDescription(description: string | null): FieldBuilder;
   withSchemaName(name: string | null): FieldBuilder;
@@ -598,6 +605,9 @@ function buildField(field: Field): TemplateField {
   builder
     .withTitle(derivedTitle(field.name, 'field'))
     .withDescription(derivedDescription(field.name, 'field'))
+    .withPreferredLabel(field.preferredLabel || null)
+    .withAlternateLabels(field.alternateLabels?.length ? field.alternateLabels : null)
+    .withSchemaIdentifier(field.schemaIdentifier || null)
     .withSchemaName(field.name)
     /*
      * Null rather than an empty string when there is no help text. The two mean
@@ -705,7 +715,24 @@ function buildField(field: Field): TemplateField {
     }
   }
 
-  return builder.build();
+  const built = builder.build();
+  built.language = Language.forValue(field.language || null);
+  if (field.annotations?.length) {
+    const annotations = new Annotations();
+    for (const annotation of field.annotations) {
+      if (!annotation.name.trim()) throw new Error('Each annotation needs a name.');
+      if (annotations.get(annotation.name)) throw new Error('Annotation names must be unique.');
+      if (annotation.kind === 'iri' && !/^[a-z][a-z0-9+.-]*:\S+$/i.test(annotation.value))
+        throw new Error('An annotation IRI must be an absolute identifier.');
+      annotations.add(
+        annotation.kind === 'iri'
+          ? new AnnotationAtId(annotation.name, annotation.value)
+          : new AnnotationAtValue(annotation.name, annotation.value),
+      );
+    }
+    built.annotations = annotations;
+  }
+  return built;
 }
 
 /** Validate before changing state; model builders may reject intermediate defaults. */
@@ -1003,6 +1030,16 @@ export function toDesignerTemplate(template: Template): DesignerTemplate {
       name: field.schema_name ?? info.name,
       status: dynamic.requiredValue ? 'required' : dynamic.recommendedValue ? 'recommended' : 'optional',
       options: optionsOf(field),
+      preferredLabel: field.skos_prefLabel ?? undefined,
+      alternateLabels: field.skos_altLabel ?? undefined,
+      schemaIdentifier: field.schema_identifier ?? undefined,
+      language: field.language.getValue() ?? undefined,
+      annotations: field.annotations?.getAnnotationNames().map((name) => {
+        const annotation = field.annotations!.get(name)!;
+        return annotation instanceof AnnotationAtId
+          ? { name, kind: 'iri' as const, value: annotation.getAtId() }
+          : { name, kind: 'literal' as const, value: (annotation as AnnotationAtValue).getAtValue() };
+      }),
       defaultValue: defaultOf(field),
       importedChoiceDefault: allowsOptions(paletteTypeOf(field))
         ? ((field as unknown as { valueConstraints: { defaultValue: string | null } }).valueConstraints.defaultValue ??

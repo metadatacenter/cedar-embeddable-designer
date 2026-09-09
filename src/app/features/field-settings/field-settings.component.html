@@ -141,3 +141,64 @@
     }
   </details>
 }
+
+<details class="settings">
+  <summary>Field metadata <span>labels, identifiers and annotations</span></summary>
+  <form (ngSubmit)="saveMetadata()">
+    <div class="row">
+      <label>Preferred label<input name="preferredLabel" [(ngModel)]="preferredLabel" /></label>
+      <label>Identifier<input name="schemaIdentifier" [(ngModel)]="schemaIdentifier" /></label>
+      <label>Language<input name="language" [(ngModel)]="language" placeholder="e.g. en" /></label>
+      <label>Property IRI<input class="wide" name="propertyIri" [(ngModel)]="propertyIri" /></label>
+      <label
+        >Alternate labels<textarea
+          rows="2"
+          name="alternateLabels"
+          [(ngModel)]="alternateLabels"
+          placeholder="One label per line"
+        ></textarea>
+      </label>
+    </div>
+    @if (annotations.length) {
+      <table class="annotations">
+        <caption>
+          Annotations
+        </caption>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Value</th>
+            <th><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (annotation of annotations; track $index; let i = $index) {
+            <tr>
+              <td>
+                <input [name]="'annotationName' + i" aria-label="Annotation name" [(ngModel)]="annotation.name" />
+              </td>
+              <td>
+                <select [name]="'annotationKind' + i" aria-label="Annotation type" [(ngModel)]="annotation.kind">
+                  <option value="literal">Text</option>
+                  <option value="iri">IRI</option>
+                </select>
+              </td>
+              <td>
+                <input [name]="'annotationValue' + i" aria-label="Annotation value" [(ngModel)]="annotation.value" />
+              </td>
+              <td><button type="button" aria-label="Remove annotation" (click)="removeAnnotation(i)">×</button></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+    <div class="row">
+      <button type="button" (click)="addAnnotation()">Add annotation</button>
+      <button type="submit">Apply</button>
+    </div>
+  </form>
+  @if (error) {
+    <p role="alert">{{ error }}</p>
+  }
+</details>
