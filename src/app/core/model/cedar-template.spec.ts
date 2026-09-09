@@ -705,3 +705,19 @@ it('preserves hidden images through JSON and YAML', () => {
     expect(toDesignerTemplate(readTemplate(source)).fields[0].hidden).toBe(true);
   }
 });
+
+it('rejects text constraint changes that invalidate a saved default', () => {
+  expect(() =>
+    buildTemplate(
+      templateOf(
+        field({
+          defaultValue: { kind: 'literal', value: 'ABC' },
+          textConstraints: { minLength: 1, maxLength: 2, regex: null },
+        }),
+      ),
+    ),
+  ).toThrow(/existing default/);
+  expect(() =>
+    buildTemplate(templateOf(field({ textConstraints: { minLength: 1, maxLength: 2, regex: '[' } }))),
+  ).toThrow();
+});

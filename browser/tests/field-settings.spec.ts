@@ -50,3 +50,21 @@ test('authors recommended fields without marking them required', async ({ page }
     .toMatchObject({ requiredValue: true });
   expect(((await currentTemplate(page)).properties as any).Title._valueConstraints.recommendedValue).toBeUndefined();
 });
+
+test('authors text constraints and rejects invalid patterns', async ({ page }) => {
+  await openDesigner(page);
+  const section = page
+    .locator('#field-card-1 details')
+    .filter({ has: page.locator('summary').filter({ hasText: 'Text constraints' }) });
+  await section.locator('summary').click();
+  await section.getByLabel('Minimum length').fill('2');
+  await section.getByLabel('Maximum length').fill('8');
+  await section.getByLabel('Regular expression').fill('^[A-Z]+$');
+  await section.getByRole('button', { name: 'Apply' }).click();
+  await expect
+    .poll(async () => ((await currentTemplate(page)).properties as any).Title._valueConstraints)
+    .toMatchObject({ minLength: 2, maxLength: 8, regex: '^[A-Z]+$' });
+  await section.getByLabel('Regular expression').fill('[');
+  await section.getByRole('button', { name: 'Apply' }).click();
+  await expect(section.getByRole('alert')).toBeVisible();
+});

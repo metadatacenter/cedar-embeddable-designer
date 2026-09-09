@@ -593,6 +593,23 @@ function buildField(field: Field): TemplateField {
     buildTemporal(builder, field);
   }
   if (field.type === 'text' && field.textConstraints) {
+    const { minLength, maxLength, regex } = field.textConstraints;
+    if (
+      [minLength, maxLength].some((n) => n !== null && (!Number.isInteger(n) || n < 0)) ||
+      (minLength !== null && maxLength !== null && minLength > maxLength)
+    ) {
+      throw new Error('Text lengths must be nonnegative whole numbers, with minimum no greater than maximum.');
+    }
+    const pattern = regex ? new RegExp(regex) : null;
+    if (field.defaultValue.kind === 'literal') {
+      const value = field.defaultValue.value;
+      if (
+        (minLength !== null && value.length < minLength) ||
+        (maxLength !== null && value.length > maxLength) ||
+        (pattern && !pattern.test(value))
+      )
+        throw new Error('The existing default does not satisfy these text constraints. Edit or clear it first.');
+    }
     (builder as TextFieldBuilder)
       .withMinLength(field.textConstraints.minLength)
       .withMaxLength(field.textConstraints.maxLength)

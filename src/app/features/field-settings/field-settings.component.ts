@@ -21,6 +21,7 @@ export class FieldSettingsComponent implements OnChanges {
   get dynamic(): boolean {
     return descriptorOf(this.field.type).deployment !== 'static';
   }
+  text: NonNullable<Field['textConstraints']> = { minLength: null, maxLength: null, regex: null };
   min: number | null = null;
   max: number | null = null;
   error: string | null = null;
@@ -32,9 +33,15 @@ export class FieldSettingsComponent implements OnChanges {
     this.displayDescription = this.field.displayDescription ?? '';
     this.hidden = this.field.hidden ?? false;
     this.continuePreviousLine = this.field.continuePreviousLine ?? false;
+    this.text = { ...(this.field.textConstraints ?? { minLength: null, maxLength: null, regex: null }) };
     this.min = this.field.minItems ?? null;
     this.max = this.field.maxItems ?? null;
     this.error = null;
+  }
+  saveText(): void {
+    this.error = this.service.updateFieldSettings(this.field.id, {
+      textConstraints: { ...this.text, regex: this.text.regex || null },
+    });
   }
   saveLayout(): void {
     this.error = this.service.updateFieldSettings(this.field.id, {

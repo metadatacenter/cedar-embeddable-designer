@@ -35,3 +35,24 @@
     <p role="alert">{{ error }}</p>
   }
 </details>
+
+@if (field.type === 'text') {
+  <details class="settings">
+    <summary>Text constraints <span>length and pattern</span></summary>
+    <form (ngSubmit)="saveText()" class="row">
+      <label
+        >Minimum length<input name="minLength" type="number" min="0" step="1" [(ngModel)]="text.minLength"
+      /></label>
+      <label
+        >Maximum length<input name="maxLength" type="number" min="0" step="1" [(ngModel)]="text.maxLength"
+      /></label>
+      <label
+        >Regular expression<input class="wide" name="regex" [(ngModel)]="text.regex" placeholder="e.g. ^[A-Z]+$"
+      /></label>
+      <button type="submit">Apply</button>
+    </form>
+    @if (error) {
+      <p role="alert">{{ error }}</p>
+    }
+  </details>
+}
