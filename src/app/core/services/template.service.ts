@@ -4,7 +4,7 @@ import {
   FieldDefaultValue,
   Library,
   CustomField,
-  ControlledTermConfig,
+  ControlledTermSet,
   UserPreferences,
   FIELD_TYPES,
 } from '../models/types';
@@ -473,20 +473,9 @@ export class TemplateService {
     this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, helpText } : f)));
   }
 
-  updateControlledTermConfig(id: number, config: ControlledTermConfig) {
+  updateControlledTermConstraints(id: number, constraints: ControlledTermSet) {
     if (this.isPublished(id)) return;
-    this.fields.update((prev) =>
-      prev.map((f) =>
-        f.id === id
-          ? {
-              ...f,
-              controlledTermConfig: config,
-              defaultValue:
-                JSON.stringify(config) === JSON.stringify(f.controlledTermConfig) ? f.defaultValue : { kind: 'none' },
-            }
-          : f,
-      ),
-    );
+    this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, controlledTermConstraints: constraints } : f)));
   }
 
   moveField(dragIndex: number, hoverIndex: number) {

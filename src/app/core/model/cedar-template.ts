@@ -28,6 +28,7 @@ import {
   CedarFieldType,
   CedarReaders,
   CedarWriters,
+  ControlledTermActionBuilder,
   ControlledTermBranchBuilder,
   ControlledTermClassBuilder,
   ControlledTermField,
@@ -63,7 +64,7 @@ import {
   SingleChoiceListFieldBuilder,
   MultipleChoiceListFieldBuilder,
 } from 'cedar-model-typescript-library';
-import { ControlledTermConfig, Field, FieldDefaultValue } from '../models/types';
+import { ControlledTermSet, ControlledTermConfig, Field, FieldDefaultValue } from '../models/types';
 
 /**
  * What a field builder is, for our purposes.
@@ -476,6 +477,23 @@ function ontologyUri(acronym: string): string {
   return /^https?:\/\//.test(acronym) ? acronym : `${BIOPORTAL_ONTOLOGY_BASE}${acronym}`;
 }
 
+function buildControlledTermSet(builder: FieldBuilder, set: ControlledTermSet | undefined): void {
+  if (!set) return;
+  for (const config of set.constraints) buildControlledTerm(builder, config);
+  for (const action of set.actions) {
+    (builder as ControlledTermFieldBuilder).addAction(
+      new ControlledTermActionBuilder()
+        .withAction(action.action)
+        .withTo(action.to ?? null)
+        .withTermUri(new Iri(action.termUri))
+        .withSourceUri(new Iri(action.sourceUri))
+        .withSource(action.source)
+        .withType(BioportalTermType.forJsonValue(action.type))
+        .build(),
+    );
+  }
+}
+
 function buildControlledTerm(builder: FieldBuilder, config: ControlledTermConfig | undefined): void {
   if (!config) {
     return;
@@ -505,7 +523,10 @@ function buildControlledTerm(builder: FieldBuilder, config: ControlledTermConfig
         controlled.addOntology(
           new ControlledTermOntologyBuilder()
             .withVersion(version)
-            .withUri(new Iri(ontologyUri(config.ontologyId)))
+            .withIri(config.iri ? new Iri(config.iri) : null)
+            .withSourceSystem(config.sourceSystem ?? null)
+            .withUri(new Iri(config.uri ?? ontologyUri(config.ontologyId)))
+            .withNumTerms(config.numTerms ?? null)
             .withAcronym(config.ontologyId)
             .withName(config.ontologyName ?? '')
             .build(),
@@ -517,8 +538,10 @@ function buildControlledTerm(builder: FieldBuilder, config: ControlledTermConfig
         controlled.addBranch(
           new ControlledTermBranchBuilder()
             .withVersion(version)
+            .withIri(config.iri ? new Iri(config.iri) : null)
+            .withSourceSystem(config.sourceSystem ?? null)
             .withUri(new Iri(config.branchRootId))
-            .withSource(config.sourceId ?? '')
+            .withSource(config.source ?? config.sourceId ?? '')
             .withAcronym(config.sourceId ?? '')
             .withName(config.branchRootName ?? '')
             .withMaxDepth(config.searchDepth ?? 1)
@@ -531,10 +554,12 @@ function buildControlledTerm(builder: FieldBuilder, config: ControlledTermConfig
         controlled.addClass(
           new ControlledTermClassBuilder()
             .withVersion(version)
+            .withIri(config.iri ? new Iri(config.iri) : null)
+            .withSourceSystem(config.sourceSystem ?? null)
             .withUri(new Iri(config.sourceId))
-            .withSource(config.ontologyId ?? '')
-            .withType(BioportalTermType.ONTOLOGY_CLASS)
-            .withLabel(config.sourceName ?? '')
+            .withSource(config.source ?? config.ontologyId ?? '')
+            .withType(BioportalTermType.forJsonValue(config.termType ?? 'OntologyClass'))
+            .withLabel(config.label ?? config.sourceName ?? '')
             .withPrefLabel(config.sourceName ?? '')
             .build(),
         );
@@ -545,7 +570,10 @@ function buildControlledTerm(builder: FieldBuilder, config: ControlledTermConfig
         controlled.addValueSet(
           new ControlledTermValueSetBuilder()
             .withVersion(version)
+            .withIri(config.iri ? new Iri(config.iri) : null)
+            .withSourceSystem(config.sourceSystem ?? null)
             .withUri(new Iri(config.sourceId))
+            .withNumTerms(config.numTerms ?? null)
             .withVsCollection(config.ontologyId ?? '')
             .withName(config.sourceName ?? '')
             .build(),
@@ -594,7 +622,11 @@ function buildStaticContent(builder: FieldBuilder, kind: 'markup' | 'url' | 'vid
  */
 function hasVocabulary(field: Field): boolean {
   return (
-    field.type !== 'controlledTerms' || field.controlledTermConfig !== undefined || field.defaultValue.kind === 'iri'
+    field.type !== 'controlledTerms' ||
+    (field.controlledTermConstraints?.constraints.length ?? 0) +
+      (field.controlledTermConstraints?.actions.length ?? 0) >
+      0 ||
+    field.defaultValue.kind === 'iri'
   );
 }
 
@@ -670,7 +702,7 @@ function buildField(field: Field): TemplateField {
     buildOptions(builder, field);
   }
   if (field.type === 'controlledTerms' && hasVocabulary(field)) {
-    buildControlledTerm(builder, field.controlledTermConfig);
+    buildControlledTermSet(builder, field.controlledTermConstraints);
   }
   if (descriptor.content) {
     buildStaticContent(builder, descriptor.content, field.content ?? '');
@@ -921,62 +953,68 @@ function versionRefOf(entry: {
   };
 }
 
-function controlledTermConfigOf(field: TemplateField): ControlledTermConfig | undefined {
-  if (field.cedarFieldType !== CedarFieldType.CONTROLLED_TERM) {
-    return undefined;
-  }
-  const constraints = (field as ControlledTermField).valueConstraints;
-
-  const branch = constraints.branches[0];
-  if (branch) {
-    return {
-      sourceType: 'ontology-branch',
-      sourceId: branch.acronym,
-      ontologyName: branch.name,
-      branchRootId: branch.uri.getValue() ?? '',
-      branchRootName: branch.name,
-      searchDepth: branch.maxDepth,
-      version: versionRefOf(branch),
-    };
-  }
-  const ontology = constraints.ontologies[0];
-  if (ontology) {
-    return {
-      sourceType: 'ontology',
-      /*
-       * Both carry the acronym, which is what the designer's panel and the picker
-       * both work in. The URI is derived from it on the way out; reading it back
-       * into either of these put a URI where the next write expected an acronym,
-       * so a template grew `https://data.bioontology.org/ontologies/` a segment at
-       * a time on each open-and-save.
-       */
-      sourceId: ontology.acronym,
-      ontologyId: ontology.acronym,
-      ontologyName: ontology.name,
-      version: versionRefOf(ontology),
-    };
-  }
-  const cls = constraints.classes[0];
-  if (cls) {
-    return {
-      sourceType: 'ontology-term',
-      sourceId: cls.uri.getValue() ?? '',
-      sourceName: cls.prefLabel,
-      ontologyId: cls.source,
-      version: versionRefOf(cls),
-    };
-  }
-  const valueSet = constraints.valueSets[0];
-  if (valueSet) {
-    return {
-      sourceType: 'value-set',
-      sourceId: valueSet.uri.getValue() ?? '',
-      sourceName: valueSet.name,
-      ontologyId: valueSet.vsCollection,
-      version: versionRefOf(valueSet),
-    };
-  }
-  return undefined;
+function controlledTermConstraintsOf(field: TemplateField): ControlledTermSet | undefined {
+  if (field.cedarFieldType !== CedarFieldType.CONTROLLED_TERM) return undefined;
+  const c = (field as ControlledTermField).valueConstraints;
+  const common = (
+    entry:
+      | (typeof c.ontologies)[number]
+      | (typeof c.branches)[number]
+      | (typeof c.classes)[number]
+      | (typeof c.valueSets)[number],
+  ) => ({
+    iri: entry.iri?.getValue() ?? undefined,
+    sourceSystem: entry.sourceSystem ?? undefined,
+    version: versionRefOf(entry),
+  });
+  return {
+    constraints: [
+      ...c.ontologies.map((o): ControlledTermConfig => ({
+        ...common(o),
+        sourceType: 'ontology',
+        uri: o.uri.getValue() ?? '',
+        sourceId: o.acronym,
+        ontologyId: o.acronym,
+        ontologyName: o.name,
+        numTerms: o.numTerms,
+      })),
+      ...c.branches.map((b): ControlledTermConfig => ({
+        ...common(b),
+        sourceType: 'ontology-branch',
+        sourceId: b.acronym,
+        source: b.source,
+        branchRootId: b.uri.getValue() ?? '',
+        branchRootName: b.name,
+        searchDepth: b.maxDepth,
+      })),
+      ...c.classes.map((t): ControlledTermConfig => ({
+        ...common(t),
+        sourceType: 'ontology-term',
+        sourceId: t.uri.getValue() ?? '',
+        ontologyId: t.source,
+        source: t.source,
+        label: t.label,
+        sourceName: t.prefLabel,
+        termType: t.type.getJsonValue() as 'OntologyClass' | 'Value',
+      })),
+      ...c.valueSets.map((v): ControlledTermConfig => ({
+        ...common(v),
+        sourceType: 'value-set',
+        sourceId: v.uri.getValue() ?? '',
+        ontologyId: v.vsCollection,
+        sourceName: v.name,
+        numTerms: v.numTerms,
+      })),
+    ],
+    actions: c.actions.map((a) => ({
+      action: a.action,
+      termUri: a.termUri.getValue() ?? '',
+      sourceUri: a.sourceUri.getValue() ?? '',
+      source: a.source,
+      type: a.type.getJsonValue() as 'OntologyClass' | 'Value',
+      ...(a.to === null ? {} : { to: a.to }),
+    })),
+  };
 }
 
 function defaultOf(field: TemplateField): FieldDefaultValue {
@@ -1095,7 +1133,7 @@ export function toDesignerTemplate(template: Template): DesignerTemplate {
         : {}),
       atId: field.at_id?.getValue() ?? undefined,
       propertyIri: dynamic.iri ?? undefined,
-      controlledTermConfig: controlledTermConfigOf(field),
+      controlledTermConstraints: controlledTermConstraintsOf(field),
     });
   });
 

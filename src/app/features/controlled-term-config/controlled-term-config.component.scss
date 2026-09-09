@@ -1,0 +1,22 @@
+// CEF owns the read-only specification's layout; CED adds only the editing affordance.
+.constraint-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+cedar-embeddable-field {
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+button {
+  flex: 0 0 auto;
+  border: 0;
+  background: none;
+  color: #317c85;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

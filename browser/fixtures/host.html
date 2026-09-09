@@ -62,23 +62,42 @@
             this.innerHTML = '<button type="button" id="stub-pick">pick a term</button>';
             this.querySelector('#stub-pick').addEventListener('click', () => {
               this.dispatchEvent(
-                new CustomEvent('selected', {
+                new CustomEvent(this.selectionMode === 'constraints' ? 'constraintsSelected' : 'selected', {
                   bubbles: true,
                   composed: true,
-                  detail: {
-                    type: 'class',
-                    termIri: 'http://purl.obolibrary.org/obo/DOID_162',
-                    termLabel: 'cancer',
-                    sourceAcronym: 'DOID',
-                    sourceName: 'Human Disease Ontology',
-                    // The snapshot an author pinned, which is the reason the
-                    // picker exists and the thing the designer used to drop.
-                    version: {
-                      id: 'sha256:8f0c1e',
-                      effectiveDate: '2026-06-30',
-                      declaredVersion: 'DOID 2026-06-30',
-                    },
-                  },
+                  detail:
+                    this.selectionMode === 'constraints'
+                      ? {
+                          constraints: [
+                            ...(this.constraintSet?.constraints || []),
+                            {
+                              sourceType: 'ontology-term',
+                              sourceId: 'http://purl.obolibrary.org/obo/DOID_162',
+                              sourceName: 'cancer',
+                              ontologyId: 'DOID',
+                              version: {
+                                id: 'sha256:8f0c1e',
+                                effectiveDate: '2026-06-30',
+                                declaredVersion: 'DOID 2026-06-30',
+                              },
+                            },
+                          ],
+                          actions: this.constraintSet?.actions || [],
+                        }
+                      : {
+                          type: 'class',
+                          termIri: 'http://purl.obolibrary.org/obo/DOID_162',
+                          termLabel: 'cancer',
+                          sourceAcronym: 'DOID',
+                          sourceName: 'Human Disease Ontology',
+                          // The snapshot an author pinned, which is the reason the
+                          // picker exists and the thing the designer used to drop.
+                          version: {
+                            id: 'sha256:8f0c1e',
+                            effectiveDate: '2026-06-30',
+                            declaredVersion: 'DOID 2026-06-30',
+                          },
+                        },
                 }),
               );
             });

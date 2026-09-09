@@ -129,11 +129,16 @@ describe('field types', () => {
       name: 'F',
       ...(paletteType === 'controlledTerms'
         ? {
-            controlledTermConfig: {
-              sourceType: 'ontology' as const,
-              sourceId: 'DOID',
-              ontologyId: 'DOID',
-              ontologyName: 'Human Disease Ontology',
+            controlledTermConstraints: {
+              constraints: [
+                {
+                  sourceType: 'ontology' as const,
+                  sourceId: 'DOID',
+                  ontologyId: 'DOID',
+                  ontologyName: 'Human Disease Ontology',
+                },
+              ],
+              actions: [],
             },
           }
         : {}),
@@ -373,11 +378,16 @@ describe('controlled-term constraints', () => {
         field({
           type: 'controlledTerms',
           name: 'F',
-          controlledTermConfig: {
-            sourceType: 'ontology',
-            ontologyId: 'DOID',
-            ontologyName: 'Human Disease Ontology',
-            sourceId: 'DOID',
+          controlledTermConstraints: {
+            constraints: [
+              {
+                sourceType: 'ontology',
+                ontologyId: 'DOID',
+                ontologyName: 'Human Disease Ontology',
+                sourceId: 'DOID',
+              },
+            ],
+            actions: [],
           },
         }),
       ),
@@ -397,13 +407,18 @@ describe('controlled-term constraints', () => {
         field({
           type: 'controlledTerms',
           name: 'F',
-          controlledTermConfig: {
-            sourceType: 'ontology-branch',
-            sourceId: 'DOID',
-            ontologyName: 'Human Disease Ontology',
-            branchRootId: 'http://purl.obolibrary.org/obo/DOID_4',
-            branchRootName: 'disease',
-            searchDepth: 3,
+          controlledTermConstraints: {
+            constraints: [
+              {
+                sourceType: 'ontology-branch',
+                sourceId: 'DOID',
+                ontologyName: 'Human Disease Ontology',
+                branchRootId: 'http://purl.obolibrary.org/obo/DOID_4',
+                branchRootName: 'disease',
+                searchDepth: 3,
+              },
+            ],
+            actions: [],
           },
         }),
       ),
@@ -420,11 +435,16 @@ describe('controlled-term constraints', () => {
         field({
           type: 'controlledTerms',
           name: 'F',
-          controlledTermConfig: {
-            sourceType: 'ontology-term',
-            sourceId: 'http://purl.obolibrary.org/obo/DOID_162',
-            sourceName: 'cancer',
-            ontologyId: 'DOID',
+          controlledTermConstraints: {
+            constraints: [
+              {
+                sourceType: 'ontology-term',
+                sourceId: 'http://purl.obolibrary.org/obo/DOID_162',
+                sourceName: 'cancer',
+                ontologyId: 'DOID',
+              },
+            ],
+            actions: [],
           },
         }),
       ),
@@ -440,11 +460,16 @@ describe('controlled-term constraints', () => {
         field({
           type: 'controlledTerms',
           name: 'F',
-          controlledTermConfig: {
-            sourceType: 'value-set',
-            sourceId: 'https://cadsr.nci.nih.gov/metadata/CADSR-VS/Delivery',
-            sourceName: 'Delivery Procedures',
-            ontologyId: 'CADSR-VS',
+          controlledTermConstraints: {
+            constraints: [
+              {
+                sourceType: 'value-set',
+                sourceId: 'https://cadsr.nci.nih.gov/metadata/CADSR-VS/Delivery',
+                sourceName: 'Delivery Procedures',
+                ontologyId: 'CADSR-VS',
+              },
+            ],
+            actions: [],
           },
         }),
       ),
@@ -480,11 +505,16 @@ describe('controlled-term constraints', () => {
         field({
           type: 'controlledTerms',
           name: 'F',
-          controlledTermConfig: {
-            sourceType: 'ontology',
-            sourceId: 'DOID',
-            ontologyId: 'DOID',
-            ontologyName: 'Human Disease Ontology',
+          controlledTermConstraints: {
+            constraints: [
+              {
+                sourceType: 'ontology',
+                sourceId: 'DOID',
+                ontologyId: 'DOID',
+                ontologyName: 'Human Disease Ontology',
+              },
+            ],
+            actions: [],
           },
         }),
       ),
@@ -615,9 +645,12 @@ describe('typed field defaults', () => {
       type,
       options: ['A', 'B'],
       defaultValue,
-      controlledTermConfig:
+      controlledTermConstraints:
         type === 'controlledTerms'
-          ? { sourceType: 'ontology', ontologyId: 'DOID', ontologyName: 'Disease Ontology' }
+          ? {
+              constraints: [{ sourceType: 'ontology', ontologyId: 'DOID', ontologyName: 'Disease Ontology' }],
+              actions: [],
+            }
           : undefined,
     });
     const model = buildTemplate(templateOf(f));
@@ -821,4 +854,90 @@ it('retains published field status version and provenance through JSON and YAML'
     expect(state.fields[0].publishedDefinition).toBeTruthy();
     expect(templateToJson(buildTemplate(state))).toEqual(templateToJson(original));
   }
+});
+
+describe('complete controlled-term constraints', () => {
+  it('preserves every mixed entry, identity, parameter, pin and action through JSON and YAML', () => {
+    const initial = templateToJson(
+      buildTemplate(
+        templateOf(
+          field({
+            type: 'controlledTerms',
+            name: 'Terms',
+            defaultValue: { kind: 'iri', iri: 'urn:term', label: 'Term' },
+          }),
+        ),
+      ),
+    ) as unknown as { properties: { Terms: { _valueConstraints: unknown } } };
+    const pin = { id: 'sha256:original', effectiveDate: '2026-01-01', declaredVersion: 'v1' };
+    const common = { iri: 'https://canonical.example/source', sourceSystem: 'agroportal', version: pin };
+    const constraints = {
+      requiredValue: false,
+      ontologies: [0, 1].map((i) => ({
+        ...common,
+        uri: `https://custom.example/ontology/${i}`,
+        acronym: `O${i}`,
+        name: `Ontology ${i}`,
+        numTerms: i,
+      })),
+      branches: [0, 1].map((i) => ({
+        ...common,
+        source: `Source label ${i}`,
+        acronym: `B${i}`,
+        uri: `urn:branch:${i}`,
+        name: `Branch ${i}`,
+        maxDepth: i,
+      })),
+      classes: [0, 1].map((i) => ({
+        ...common,
+        source: `C${i}`,
+        uri: `urn:term:${i}`,
+        label: `Label ${i}`,
+        prefLabel: `Preferred ${i}`,
+        type: i ? 'Value' : 'OntologyClass',
+      })),
+      valueSets: [0, 1].map((i) => ({
+        ...common,
+        uri: `urn:set:${i}`,
+        vsCollection: `VS${i}`,
+        name: `Set ${i}`,
+        numTerms: i + 5,
+      })),
+      actions: [
+        { action: 'delete', termUri: 'urn:term:0', sourceUri: 'urn:branch:0', source: 'B0', type: 'OntologyClass' },
+        { action: 'move', termUri: 'urn:term:1', sourceUri: 'urn:set:1', source: 'VS1', type: 'Value', to: 0 },
+      ],
+    };
+    initial.properties.Terms._valueConstraints = constraints;
+    const imported = readTemplate(JSON.stringify(initial));
+    for (const source of [templateToJson(imported), templateToYaml(imported)]) {
+      const opened = toDesignerTemplate(readTemplate(source));
+      expect(opened.fields[0].controlledTermConstraints?.constraints).toHaveLength(8);
+      const saved = templateToJson(buildTemplate(opened)) as unknown as typeof initial;
+      expect(saved.properties.Terms._valueConstraints).toEqual(constraints);
+      const again = toDesignerTemplate(readTemplate(templateToYaml(buildTemplate(opened))));
+      expect(
+        (templateToJson(buildTemplate(again)) as unknown as typeof initial).properties.Terms._valueConstraints,
+      ).toEqual(constraints);
+    }
+  });
+  it('retains unrelated actions after removing the last vocabulary entry', () => {
+    const actions = [
+      {
+        action: 'delete',
+        termUri: 'urn:term',
+        sourceUri: 'urn:source',
+        source: 'DOID',
+        type: 'OntologyClass' as const,
+      },
+    ];
+    const model = buildTemplate(
+      templateOf(field({ type: 'controlledTerms', controlledTermConstraints: { constraints: [], actions } })),
+    );
+    for (const source of [templateToJson(model), templateToYaml(model)]) {
+      const opened = toDesignerTemplate(readTemplate(source));
+      expect(opened.fields[0].type).toBe('controlledTerms');
+      expect(opened.fields[0].controlledTermConstraints).toEqual({ constraints: [], actions });
+    }
+  });
 });

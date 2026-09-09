@@ -140,7 +140,10 @@ test('controlled default uses the term picker and verifies field membership', as
     page,
     'controlledTerms',
     {
-      controlledTermConfig: { sourceType: 'ontology', ontologyId: 'DOID', ontologyName: 'Disease Ontology' },
+      controlledTermConstraints: {
+        constraints: [{ sourceType: 'ontology', ontologyId: 'DOID', ontologyName: 'Disease Ontology' }],
+        actions: [],
+      },
     },
     '?picker=stub',
   );
@@ -217,11 +220,16 @@ test('the real picker selects a default within the field vocabulary', async ({ p
     route.fulfill({ json: { collection: [{ '@id': iri }] } }),
   );
   const control = await openField(page, 'controlledTerms', {
-    controlledTermConfig: {
-      sourceType: 'ontology',
-      ontologyId: 'DOID',
-      ontologyName: 'Disease Ontology',
-      version: { id: 'pinned-release' },
+    controlledTermConstraints: {
+      constraints: [
+        {
+          sourceType: 'ontology',
+          ontologyId: 'DOID',
+          ontologyName: 'Disease Ontology',
+          version: { id: 'pinned-release' },
+        },
+      ],
+      actions: [],
     },
   });
   await page.addScriptTag({ path: process.env.PICKER_BUNDLE! });
