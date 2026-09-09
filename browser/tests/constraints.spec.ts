@@ -234,7 +234,7 @@ test('the real picker preserves saved actions and explicitly clears an invalid d
   const picker = panel.locator('cedar-term-picker');
   await expect(picker.locator('.constraint-table').first().locator('tbody tr')).toHaveCount(2);
   await picker.getByRole('button', { name: 'Remove constraint 1', exact: true }).click();
-  await picker.getByRole('button', { name: 'Close without choosing', exact: true }).click();
+  await picker.getByRole('button', { name: 'Cancel', exact: true }).click();
   await expect(picker).toHaveCount(0);
   const cancelled = child(await currentTemplate(page), 'Disease')['_valueConstraints'] as { ontologies: unknown[] };
   expect(cancelled.ontologies).toHaveLength(2);

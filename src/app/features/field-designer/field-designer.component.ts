@@ -1,158 +1,132 @@
 import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
-
 import { FormsModule } from '@angular/forms';
 import { TemplateService } from '../../core/services/template.service';
-import { Library, CustomField, ValidationRule } from '../../core/models/types';
-import { IconComponent } from '../../shared/components/icon/icon.component';
+import { CustomField, Field } from '../../core/models/types';
+import {
+  fieldArtifactMetadata,
+  validateFieldSpecification,
+  newFieldIdentity,
+  readField,
+} from '../../core/model/cedar-template';
+import { FieldSpecificationEditorComponent } from '../field-specification-editor/field-specification-editor.component';
 
 @Component({
   selector: 'app-field-designer',
-  standalone: true,
-  imports: [FormsModule, IconComponent],
+  imports: [FormsModule, FieldSpecificationEditorComponent],
   templateUrl: './field-designer.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./field-designer.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FieldDesignerComponent {
   readonly service = inject(TemplateService);
-
-  readonly activeTab = signal<'custom' | 'libraries'>('libraries');
-  readonly showCreateForm = signal(false);
-  readonly showCreateLibrary = signal(false);
-  readonly editingCustomFieldId = signal<number | null>(null);
-
-  // Form state for custom fields
-  fieldName = '';
-  baseType = 'text';
-  description = '';
-  placeholder = '';
-  validationRules: ValidationRule[] = [];
+  readonly metadata = fieldArtifactMetadata;
+  readonly draft = signal<Field | null>(null);
+  edited: Field | null = null;
+  editingId: number | null = null;
   selectedLibraryId = 0;
-
-  // Form state for libraries
   libraryName = '';
   libraryDescription = '';
-
-  readonly BASE_FIELD_TYPES = [
-    { value: 'text', label: 'Text' },
-    { value: 'paragraph', label: 'Paragraph' },
-    { value: 'number', label: 'Number' },
-    { value: 'email', label: 'Email' },
-    { value: 'date', label: 'Date' },
-    { value: 'time', label: 'Time' },
-    { value: 'link', label: 'Link' },
-    { value: 'phone', label: 'Phone' },
-  ];
-
-  readonly VALIDATION_TYPES = [
-    { value: 'regex', label: 'Regex Pattern' },
-    { value: 'minLength', label: 'Minimum Length' },
-    { value: 'maxLength', label: 'Maximum Length' },
-    { value: 'range', label: 'Number Range' },
-    { value: 'custom', label: 'Custom Validation' },
-  ];
-
-  getBaseTypeLabel(val: string): string {
-    return this.BASE_FIELD_TYPES.find((t) => t.value === val)?.label || val;
-  }
-
-  openCreateForm() {
-    if (this.service.libraries().length > 0) {
-      this.resetForm();
-      this.showCreateForm.set(true);
+  error: string | null = null;
+  constructor() {
+    const pending = this.service.libraryDraft();
+    if (pending) {
+      this.service.libraryDraft.set(null);
+      this.openDraft(pending);
     }
   }
-
-  editCustomField(cf: CustomField) {
-    this.editingCustomFieldId.set(cf.id);
-    this.fieldName = cf.name;
-    this.baseType = cf.baseType;
-    this.description = cf.description || '';
-    this.placeholder = cf.placeholder || '';
-    this.validationRules = [...cf.validationRules];
-    this.selectedLibraryId = cf.libraryId;
-    this.showCreateForm.set(true);
+  openDraft(field: Field, id: number | null = null): void {
+    this.editingId = id;
+    this.edited = structuredClone(field);
+    this.draft.set(structuredClone(field));
+    this.error = null;
+    this.selectedLibraryId = this.service.libraries()[0]?.id ?? 0;
   }
-
-  addValidationRule() {
-    const newRule: ValidationRule = {
+  createField(): void {
+    this.openDraft({
       id: Date.now(),
-      type: 'regex',
-      pattern: '',
-      errorMessage: '',
-    };
-    this.validationRules = [...this.validationRules, newRule];
+      ...newFieldIdentity(),
+      type: 'text',
+      name: '',
+      status: 'optional',
+      options: [],
+      defaultValue: { kind: 'none' },
+      allowMultiple: false,
+    });
   }
-
-  deleteValidationRule(id: number) {
-    this.validationRules = this.validationRules.filter((r) => r.id !== id);
+  editField(field: CustomField): void {
+    this.openDraft(field.definition, field.id);
+    this.selectedLibraryId = field.libraryId;
   }
-
-  handleCreateField() {
-    if (!this.fieldName.trim()) return;
-
-    const editingId = this.editingCustomFieldId();
-    if (editingId !== null) {
-      const updatedField: CustomField = {
-        id: editingId,
-        name: this.fieldName,
-        icon: 'text',
-        baseType: this.baseType,
-        libraryId: Number(this.selectedLibraryId),
-        description: this.description,
-        placeholder: this.placeholder,
-        validationRules: this.validationRules,
-      };
-      this.service.updateCustomField(updatedField);
-    } else {
-      const newField: CustomField = {
-        id: Date.now(),
-        name: this.fieldName,
-        icon: 'text',
-        baseType: this.baseType,
-        libraryId: Number(this.selectedLibraryId),
-        description: this.description,
-        placeholder: this.placeholder,
-        validationRules: this.validationRules,
-      };
-      this.service.customFields.update((prev) => [...prev, newField]);
-    }
-
-    this.resetForm();
-  }
-
-  resetForm() {
-    this.fieldName = '';
-    this.baseType = 'text';
-    this.description = '';
-    this.placeholder = '';
-    this.validationRules = [];
-    this.showCreateForm.set(false);
-    this.editingCustomFieldId.set(null);
-    this.selectedLibraryId = 0;
-  }
-
-  handleCreateLibrary() {
+  createLibrary(): void {
     if (!this.libraryName.trim()) return;
-
-    const newLibrary: Library = {
-      id: Date.now(),
-      name: this.libraryName,
-      description: this.libraryDescription,
-      icon: 'library',
-    };
-
-    this.service.libraries.update((prev) => [...prev, newLibrary]);
-    this.resetLibraryForm();
-  }
-
-  resetLibraryForm() {
+    const id = Date.now();
+    this.service.libraries.update((libraries) => [
+      ...libraries,
+      { id, name: this.libraryName.trim(), description: this.libraryDescription, icon: 'library' },
+    ]);
+    this.selectedLibraryId = id;
     this.libraryName = '';
     this.libraryDescription = '';
-    this.showCreateLibrary.set(false);
   }
-
-  backToBuilder() {
+  saveField(): void {
+    if (!this.edited?.name.trim()) {
+      this.error = 'Give the field a name.';
+      return;
+    }
+    if (!this.service.libraries().some((library) => library.id === Number(this.selectedLibraryId))) {
+      this.error = 'Choose a library, or create one first.';
+      return;
+    }
+    try {
+      validateFieldSpecification(this.edited);
+      const field: CustomField = {
+        id: this.editingId ?? Date.now(),
+        libraryId: Number(this.selectedLibraryId),
+        definition: structuredClone(this.edited),
+      };
+      if (this.editingId !== null) this.service.updateCustomField(field);
+      else this.service.customFields.update((fields) => [...fields, field]);
+      this.cancel();
+    } catch (error) {
+      this.error = error instanceof Error ? error.message : String(error);
+    }
+  }
+  cancel(): void {
+    this.draft.set(null);
+    this.edited = null;
+    this.editingId = null;
+    this.error = null;
+  }
+  async importField(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
+      const source = await file.text();
+      const document = source.trim().startsWith('{') ? JSON.parse(source) : null;
+      if (document?.format === 'ced-field-specification-v1') {
+        validateFieldSpecification(document.definition);
+        this.openDraft(document.definition);
+      } else this.openDraft(readField(source));
+    } catch (error) {
+      this.error = error instanceof Error ? error.message : 'Could not read this field.';
+    }
+    input.value = '';
+  }
+  exportField(field: Field): void {
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify({ format: 'ced-field-specification-v1', definition: field }, null, 2)], {
+        type: 'application/json',
+      }),
+    );
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${field.name || 'field'}.ced-field.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+  addToTemplate(field: CustomField): void {
+    this.service.addCustomFieldToTemplate(field, this.service.fields().length);
     this.service.showFieldDesigner.set(false);
   }
 }

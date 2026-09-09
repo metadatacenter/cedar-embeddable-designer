@@ -1,8 +1,8 @@
+import { FieldLibraryService } from './field-library.service';
 import { Injectable, signal, computed, inject } from '@angular/core';
 import {
   Field,
   FieldDefaultValue,
-  Library,
   CustomField,
   ControlledTermSet,
   UserPreferences,
@@ -170,8 +170,9 @@ export class TemplateService {
   readonly templateJson = computed(() => templateToJson(this.template()));
   readonly templateYaml = computed(() => templateToYaml(this.template()));
 
-  readonly libraries = signal<Library[]>([]);
-  readonly customFields = signal<CustomField[]>([]);
+  readonly fieldLibrary = inject(FieldLibraryService);
+  readonly libraries = this.fieldLibrary.libraries;
+  readonly customFields = this.fieldLibrary.fields;
   readonly selectedLibraryId = signal<number | null>(null);
   readonly sidebarCollapsed = signal<boolean>(false);
 
@@ -179,6 +180,14 @@ export class TemplateService {
   readonly showPicker = signal<number | null>(null);
   readonly showPreview = signal<boolean>(false);
   readonly showFieldDesigner = signal<boolean>(false);
+  readonly libraryDraft = signal<Field | null>(null);
+  saveFieldToLibrary(id: number): void {
+    const field = this.fields().find((field) => field.id === id);
+    if (field) {
+      this.libraryDraft.set(structuredClone(field));
+      this.showFieldDesigner.set(true);
+    }
+  }
   readonly selectedField = signal<number | null>(null);
   readonly fieldTypeDropdown = signal<number | null>(null);
   readonly fieldTypeDropdownLibrary = signal<number | null>(null);
@@ -247,15 +256,8 @@ export class TemplateService {
 
   addCustomFieldToTemplate(customField: CustomField, position: number) {
     const newField: Field = {
+      ...structuredClone(customField.definition),
       id: Date.now(),
-      ...newFieldIdentity(),
-      type: customField.baseType,
-      name: customField.name,
-      helpText: customField.description || '',
-      defaultValue: { kind: 'none' },
-      status: 'optional',
-      options: customField.baseType === 'multipleChoice' || customField.baseType === 'checkboxes' ? [''] : [],
-      allowMultiple: false,
       customFieldId: customField.id,
       libraryId: customField.libraryId,
     };
@@ -310,52 +312,26 @@ export class TemplateService {
 
   convertFieldToCustomField(fieldId: number, customField: CustomField) {
     if (this.isPublished(fieldId)) return;
-    this.fields.update((prev) =>
-      prev.map((f) =>
-        f.id === fieldId
+    this.fields.update((fields) =>
+      fields.map((field) =>
+        field.id === fieldId
           ? {
-              ...f,
-              type: customField.baseType,
-              name: customField.name,
-              helpText: customField.description || f.helpText,
-              defaultValue: { kind: 'none' },
-              temporal: undefined,
-              numeric: undefined,
-              textConstraints: undefined,
-              options:
-                customField.baseType === 'multipleChoice' || customField.baseType === 'checkboxes'
-                  ? f.options.length > 0
-                    ? f.options
-                    : ['']
-                  : [],
-              allowMultiple: false,
+              ...structuredClone(customField.definition),
+              id: fieldId,
               customFieldId: customField.id,
               libraryId: customField.libraryId,
             }
-          : f,
+          : field,
       ),
     );
   }
 
-  updateCustomField(updatedCustomField: CustomField) {
-    // 1. Update customFields signal
-    this.customFields.update((prev) => prev.map((cf) => (cf.id === updatedCustomField.id ? updatedCustomField : cf)));
-
-    // 2. Sync changes automatically to all fields in the template created from this custom field
-    this.fields.update((prev) =>
-      prev.map((f) => {
-        if (!f.publishedDefinition && f.customFieldId === updatedCustomField.id) {
-          return {
-            ...f,
-            name: updatedCustomField.name,
-            type: updatedCustomField.baseType,
-            helpText: updatedCustomField.description || f.helpText,
-            defaultValue: updatedCustomField.baseType === f.type ? f.defaultValue : { kind: 'none' },
-          };
-        }
-        return f;
-      }),
+  updateCustomField(updated: CustomField) {
+    this.customFields.update((fields) =>
+      fields.map((field) => (field.id === updated.id ? structuredClone(updated) : field)),
     );
+    // Existing template deployments are independent copies. Editing a library field
+    // must not silently overwrite changes made in a template that already uses it.
   }
 
   deleteCustomField(id: number) {

@@ -1,4 +1,7 @@
 <div class="app-shell">
+  @if (exportError) {
+    <p class="ced-field-error" role="alert">{{ exportError }}</p>
+  }
   <!-- Header -->
   <header class="app-header">
     <div class="app-header__inner">

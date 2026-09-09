@@ -26,6 +26,8 @@ import {
   contentKindOf,
   descriptorOf,
   fieldDeployment,
+  fieldToJson,
+  readField,
   newFieldIdentity,
   readTemplate,
   templateToJson,
@@ -922,4 +924,52 @@ describe('complete controlled-term constraints', () => {
       expect(opened.fields[0].controlledTermConstraints).toEqual({ constraints: [], actions });
     }
   });
+});
+
+describe('complete field specification transfer', () => {
+  for (const type of Object.keys(FIELD_TYPES)) {
+    it(`preserves ${type} draft identity, metadata and deployment through JSON`, () => {
+      const original = json(
+        templateOf(
+          field({
+            type,
+            name: 'Original',
+            deploymentName: 'property-key',
+            helpText: 'Help',
+            preferredLabel: 'Preferred',
+            alternateLabels: ['Alternative'],
+            schemaIdentifier: 'Identifier',
+            language: 'fr',
+            annotations: [{ name: 'note', kind: 'literal', value: 'Keep me' }],
+            hidden: true,
+            displayLabel: 'Display',
+            displayDescription: 'Display help',
+            valueRecommendationEnabled: true,
+          }),
+        ),
+      );
+      const property = (original['properties'] as Record<string, Record<string, unknown>>)['property-key'];
+      const definition = (property['items'] ?? property) as Record<string, unknown>;
+      Object.assign(definition, {
+        title: 'Custom schema title',
+        description: 'Custom schema description',
+        'pav:version': '2.3.4',
+        'bibo:status': 'bibo:draft',
+        'pav:createdOn': '2026-01-01T00:00:00Z',
+        'pav:lastUpdatedOn': '2026-02-01T00:00:00Z',
+        'pav:createdBy': 'https://example.org/users/one',
+        'oslc:modifiedBy': 'https://example.org/users/two',
+        'pav:derivedFrom': 'https://example.org/fields/source',
+        'pav:previousVersion': 'https://example.org/fields/previous',
+      });
+      const imported = toDesignerTemplate(readTemplate(JSON.stringify(original)));
+      expect(json(imported)).toEqual(original);
+      expect(imported.fields[0].artifact?.version).toBe('2.3.4');
+      expect(() => templateToYaml(buildTemplate(imported))).toThrow(/Export JSON/);
+    });
+    it(`imports the complete standalone ${type} definition`, () => {
+      const original = fieldToJson(field({ type, name: 'Standalone', preferredLabel: 'Preferred' }));
+      expect(fieldToJson(readField(JSON.stringify(original)))).toEqual(original);
+    });
+  }
 });

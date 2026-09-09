@@ -100,12 +100,12 @@
                     class="btn-add-item group"
                   >
                     <span class="add-item-icon">
-                      <app-icon [key]="field.baseType" className="w-5 h-5"></app-icon>
+                      <app-icon [key]="field.definition.type" className="w-5 h-5"></app-icon>
                     </span>
                     <div class="add-item-details">
-                      <div class="add-item-text">{{ field.name }}</div>
-                      @if (field.description) {
-                        <div class="add-item-desc">{{ field.description }}</div>
+                      <div class="add-item-text">{{ field.definition.name }}</div>
+                      @if (field.definition.helpText) {
+                        <div class="add-item-desc">{{ field.definition.helpText }}</div>
                       }
                     </div>
                     <span class="add-item-plus">＋</span>

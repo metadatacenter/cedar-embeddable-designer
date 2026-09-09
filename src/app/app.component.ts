@@ -147,20 +147,10 @@ export class AppComponent {
   }
 
   getFieldIcon(field: Field): string {
-    if (field.customFieldId) {
-      const customField = this.service.customFields().find((cf) => cf.id === field.customFieldId);
-      if (customField) {
-        return customField.baseType;
-      }
-    }
     return field.type;
   }
 
   getFieldTypeName(field: Field): string {
-    if (field.customFieldId) {
-      const customField = this.service.customFields().find((cf) => cf.id === field.customFieldId);
-      if (customField) return customField.name;
-    }
     return FIELD_TYPES[field.type]?.label || field.type;
   }
 
@@ -255,8 +245,14 @@ export class AppComponent {
     this.download(JSON.stringify(this.service.templateJson(), null, 2), 'application/json', 'json');
   }
 
+  exportError: string | null = null;
   saveTemplateAsYaml(): void {
-    this.download(this.service.templateYaml(), 'application/yaml', 'yaml');
+    this.exportError = null;
+    try {
+      this.download(this.service.templateYaml(), 'application/yaml', 'yaml');
+    } catch (error) {
+      this.exportError = error instanceof Error ? error.message : String(error);
+    }
   }
 
   /** The template name, reduced to something a filesystem will take. */

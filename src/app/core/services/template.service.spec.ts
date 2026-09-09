@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { TemplateService } from './template.service';
+import { Field } from '../models/types';
 import { templateToJson } from '../model/cedar-template';
 
 /**
@@ -20,6 +21,40 @@ describe('TemplateService', () => {
     localStorage.clear();
     TestBed.configureTestingModule({});
     service = TestBed.inject(TemplateService);
+  });
+
+  it('copies every field setting from a library without linking deployed copies', () => {
+    const definition: Field = {
+      ...service.fields()[0],
+      options: ['one'],
+      defaultValue: { kind: 'literal', value: 'one' },
+      textConstraints: { minLength: 1, maxLength: 12, regex: null },
+      annotations: [{ name: 'note', kind: 'literal', value: 'original' }],
+    };
+    const custom = { id: 73, libraryId: 9, definition };
+    service.customFields.set([custom]);
+    service.addCustomFieldToTemplate(custom, 0);
+    const copy = service.fields()[0];
+    expect({ ...copy, id: definition.id, customFieldId: undefined, libraryId: undefined }).toEqual({
+      ...definition,
+      customFieldId: undefined,
+      libraryId: undefined,
+    });
+    copy.annotations![0].value = 'copy only';
+    expect(definition.annotations![0].value).toBe('original');
+    service.updateCustomField({ ...custom, definition: { ...definition, name: 'Library revision' } });
+    expect(service.fields()[0].name).toBe(definition.name);
+  });
+
+  it('persists full field definitions and libraries across service recreation', () => {
+    service.libraries.set([{ id: 9, name: 'Study', description: 'Reusable', icon: 'library' }]);
+    service.customFields.set([{ id: 73, libraryId: 9, definition: structuredClone(service.fields()[0]) }]);
+    TestBed.tick();
+    const fields = service.customFields();
+    TestBed.resetTestingModule();
+    service = TestBed.inject(TemplateService);
+    expect(service.customFields()).toEqual(fields);
+    expect(service.libraries()[0].name).toBe('Study');
   });
 
   it('blocks published field mutations and preserves the published definition', () => {

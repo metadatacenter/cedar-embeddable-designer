@@ -6,6 +6,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService, FIELD_TYPES } from '../../core/services/template.service';
 import { Field } from '../../core/models/types';
 import {
+  fieldArtifactMetadata,
   choiceDefaultConflict,
   allowsDefault,
   allowsMultiple,
@@ -35,6 +36,7 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
 })
 export class FieldCardComponent {
   @Input() field!: Field;
+  @Input() standalone = false;
 
   readonly service = inject(TemplateService);
 
@@ -48,6 +50,7 @@ export class FieldCardComponent {
    * lies: a page break has no required value, and a radio's cardinality is
    * decided by its type rather than by its author.
    */
+  fieldArtifactMetadata = fieldArtifactMetadata;
   choiceDefaultConflict = choiceDefaultConflict;
   allowsDefault = allowsDefault;
 
@@ -78,21 +81,11 @@ export class FieldCardComponent {
   }
 
   getFieldIcon(field: Field): string {
-    if (field.customFieldId) {
-      const customField = this.service.customFields().find((cf) => cf.id === field.customFieldId);
-      if (customField) {
-        return customField.baseType;
-      }
-    }
     return field.type;
   }
 
   getFieldTypeName(field: Field): string {
     if (field.temporal?.type === 'xsd:dateTime') return 'Date and time';
-    if (field.customFieldId) {
-      const customField = this.service.customFields().find((cf) => cf.id === field.customFieldId);
-      if (customField) return customField.name;
-    }
     return FIELD_TYPES[field.type]?.label || field.type;
   }
 }

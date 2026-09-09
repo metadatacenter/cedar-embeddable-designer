@@ -1,7 +1,12 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Field } from '../../core/models/types';
-import { descriptorOf, NUMERIC_TYPES, temporalGranularities } from '../../core/model/cedar-template';
+import {
+  descriptorOf,
+  fieldArtifactMetadata,
+  NUMERIC_TYPES,
+  temporalGranularities,
+} from '../../core/model/cedar-template';
 import { TemplateService } from '../../core/services/template.service';
 
 @Component({
@@ -14,11 +19,17 @@ import { TemplateService } from '../../core/services/template.service';
 export class FieldSettingsComponent implements OnChanges {
   @Input({ required: true }) field!: Field;
   readonly service = inject(TemplateService);
+  schemaTitle = '';
+  schemaDescription = '';
+  get artifact() {
+    return fieldArtifactMetadata(this.field);
+  }
   preferredLabel = '';
   alternateLabels = '';
   schemaIdentifier = '';
   language = '';
   propertyIri = '';
+  deploymentName = '';
   annotations: NonNullable<Field['annotations']> = [];
   displayLabel = '';
   displayDescription = '';
@@ -59,11 +70,14 @@ export class FieldSettingsComponent implements OnChanges {
     return descriptorOf(this.field.type).deployment === 'alwaysMultiple' || this.field.allowMultiple;
   }
   ngOnChanges(): void {
+    this.schemaTitle = this.artifact.title ?? '';
+    this.schemaDescription = this.artifact.description ?? '';
     this.preferredLabel = this.field.preferredLabel ?? '';
     this.alternateLabels = this.field.alternateLabels?.join('\n') ?? '';
     this.schemaIdentifier = this.field.schemaIdentifier ?? '';
     this.language = this.field.language ?? '';
     this.propertyIri = this.field.propertyIri ?? '';
+    this.deploymentName = this.field.deploymentName ?? this.field.name;
     this.annotations = this.field.annotations?.map((annotation) => ({ ...annotation })) ?? [];
     this.displayLabel = this.field.displayLabel ?? '';
     this.displayDescription = this.field.displayDescription ?? '';
@@ -93,6 +107,7 @@ export class FieldSettingsComponent implements OnChanges {
       return;
     }
     this.error = this.service.updateFieldSettings(this.field.id, {
+      artifact: { ...this.artifact, title: this.schemaTitle || null, description: this.schemaDescription || null },
       preferredLabel: this.preferredLabel || undefined,
       alternateLabels: this.alternateLabels
         .split('\n')
@@ -101,6 +116,7 @@ export class FieldSettingsComponent implements OnChanges {
       schemaIdentifier: this.schemaIdentifier || undefined,
       language: this.language || undefined,
       propertyIri: this.propertyIri || undefined,
+      deploymentName: this.deploymentName || undefined,
       annotations: this.annotations.map((annotation) => ({ ...annotation })),
     });
   }

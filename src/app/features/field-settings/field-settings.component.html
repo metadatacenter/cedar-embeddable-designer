@@ -146,6 +146,11 @@
   <summary>Field metadata <span>labels, identifiers and annotations</span></summary>
   <form (ngSubmit)="saveMetadata()">
     <div class="row">
+      <label>Property name<input name="deploymentName" [(ngModel)]="deploymentName" /></label>
+      <label>Schema title<input name="schemaTitle" [(ngModel)]="schemaTitle" /></label>
+      <label
+        >Schema description<textarea name="schemaDescription" [(ngModel)]="schemaDescription" rows="2"></textarea>
+      </label>
       <label>Preferred label<input name="preferredLabel" [(ngModel)]="preferredLabel" /></label>
       <label>Identifier<input name="schemaIdentifier" [(ngModel)]="schemaIdentifier" /></label>
       <label>Language<input name="language" [(ngModel)]="language" placeholder="e.g. en" /></label>
@@ -201,4 +206,26 @@
   @if (error) {
     <p role="alert">{{ error }}</p>
   }
+</details>
+
+<details class="settings">
+  <summary>Field identity <span>version, publication and provenance</span></summary>
+  <dl class="identity">
+    <dt>Field IRI</dt>
+    <dd>{{ field.atId || 'Not assigned' }}</dd>
+    <dt>Version</dt>
+    <dd>{{ artifact.version || 'Not specified' }}</dd>
+    <dt>Publication status</dt>
+    <dd>{{ artifact.publicationStatus || 'Not specified' }}</dd>
+    <dt>Model version</dt>
+    <dd>{{ artifact.schemaVersion || 'Not specified' }}</dd>
+    <dt>Created</dt>
+    <dd>{{ artifact.createdOn || 'Not recorded' }} {{ artifact.createdBy }}</dd>
+    <dt>Modified</dt>
+    <dd>{{ artifact.modifiedOn || 'Not recorded' }} {{ artifact.modifiedBy }}</dd>
+    <dt>Derived from</dt>
+    <dd>{{ artifact.derivedFrom || 'Not recorded' }}</dd>
+    <dt>Previous version</dt>
+    <dd>{{ artifact.previousVersion || 'Not recorded' }}</dd>
+  </dl>
 </details>

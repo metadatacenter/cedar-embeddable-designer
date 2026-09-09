@@ -67,7 +67,7 @@ test('deleting a field removes its card and its child', async ({ page }) => {
   const designer = await openDesigner(page);
   const before = fieldOrder(await currentTemplate(page));
 
-  await clickCentred(designer.locator('[id^=field-card-]').last().getByRole('button').last());
+  await clickCentred(designer.locator('[id^=field-card-]').last().getByTitle('Delete field', { exact: true }));
 
   await expect(designer.locator('[id^=field-card-]')).toHaveCount(before.length - 1);
   await waitForPublished(page, (template) => (template['_ui'] as { order: string[] }).order.length === 2);

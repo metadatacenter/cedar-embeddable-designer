@@ -96,11 +96,11 @@
                         class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left border-none bg-transparent cursor-pointer"
                         [class.bg-teal-50]="field.customFieldId === cf.id"
                       >
-                        <app-icon [key]="cf.baseType" className="w-5 h-5 text-gray-500"></app-icon>
+                        <app-icon [key]="cf.definition.type" className="w-5 h-5 text-gray-500"></app-icon>
                         <div class="flex-1 min-w-0">
-                          <span class="text-sm font-medium text-gray-900 block">{{ cf.name }}</span>
-                          @if (cf.description) {
-                            <span class="text-xs text-gray-500 truncate block">{{ cf.description }}</span>
+                          <span class="text-sm font-medium text-gray-900 block">{{ cf.definition.name }}</span>
+                          @if (cf.definition.helpText) {
+                            <span class="text-xs text-gray-500 truncate block">{{ cf.definition.helpText }}</span>
                           }
                         </div>
                       </button>
@@ -125,6 +125,18 @@
         placeholder="Enter field name"
       />
 
+      @if (field.atId) {
+        <span class="text-[10px] text-gray-500" [title]="field.atId" aria-label="Field version and publication status">
+          {{ fieldArtifactMetadata(field).version || 'Unversioned' }} ·
+          {{
+            fieldArtifactMetadata(field).publicationStatus === 'bibo:published'
+              ? 'Published'
+              : fieldArtifactMetadata(field).publicationStatus === 'bibo:draft'
+                ? 'Draft'
+                : 'No publication status'
+          }}
+        </span>
+      }
       <!-- Label Badge details -->
       <div class="text-[10px] bg-gray-100 border text-gray-600 font-medium px-2 py-0.5 rounded-full capitalize">
         {{ getFieldTypeName(field) }}
@@ -158,13 +170,15 @@
           <span class="text-[11px] text-gray-600 group-hover:text-gray-900 whitespace-nowrap">Allow multiple</span>
         </label>
       }
-      <button
-        (click)="service.deleteField(field.id)"
-        class="text-gray-400 hover:text-red-600 p-0.5 transition-colors border-none bg-transparent cursor-pointer shrink-0"
-        title="Delete field"
-      >
-        <app-icon key="trash" className="w-4 h-4 text-gray-400 hover:text-red-600"></app-icon>
-      </button>
+      @if (!standalone) {
+        <button
+          (click)="service.deleteField(field.id)"
+          class="text-gray-400 hover:text-red-600 p-0.5 transition-colors border-none bg-transparent cursor-pointer shrink-0"
+          title="Delete field"
+        >
+          <app-icon key="trash" className="w-4 h-4 text-gray-400 hover:text-red-600"></app-icon>
+        </button>
+      }
     </div>
 
     <!-- Field Preview / Options Editing Inside Card -->
@@ -300,3 +314,11 @@
     </div>
   }
 </fieldset>
+
+@if (!standalone) {
+  <div class="px-4 pb-2 text-xs">
+    <button type="button" class="text-teal-700 underline" (click)="service.saveFieldToLibrary(field.id)">
+      Save field to library
+    </button>
+  </div>
+}

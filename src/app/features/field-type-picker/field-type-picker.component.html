@@ -63,12 +63,16 @@
     <div class="fields-section">
       <div class="fields-grid">
         @for (customField of libraryCustomFields; track customField) {
-          <button (click)="onCustomFieldClick(customField)" class="btn-field-item" [title]="customField.description">
+          <button
+            (click)="onCustomFieldClick(customField)"
+            class="btn-field-item"
+            [title]="customField.definition.helpText"
+          >
             <div class="field-item-icon">
-              <app-icon [key]="customField.baseType" className="w-5 h-5"></app-icon>
+              <app-icon [key]="customField.definition.type" className="w-5 h-5"></app-icon>
             </div>
             <span class="field-item-label">
-              {{ customField.name }}
+              {{ customField.definition.name }}
             </span>
           </button>
         }

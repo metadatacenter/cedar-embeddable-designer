@@ -30,12 +30,6 @@ export class FieldLibrarySidebarComponent {
   });
 
   getFieldIconKey(field: Field): string {
-    if (field.customFieldId) {
-      const customField = this.service.customFields().find((cf) => cf.id === field.customFieldId);
-      if (customField) {
-        return customField.baseType;
-      }
-    }
     return field.type;
   }
 

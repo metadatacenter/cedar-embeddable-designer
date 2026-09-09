@@ -1,4 +1,110 @@
-button:disabled {
-  cursor: not-allowed !important;
-  opacity: 0.5 !important;
+@use '../../shared/field-error';
+:host {
+  display: block;
+  background: #f5f7f7;
+  overflow-y: auto;
+}
+.library-page {
+  max-width: 1050px;
+  margin: 0 auto;
+  padding: 16px;
+  font-size: 12px;
+  color: #444;
+}
+header,
+.row {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+header {
+  justify-content: space-between;
+  align-items: center;
+}
+h1 {
+  font-size: 16px;
+  font-weight: 500;
+}
+h2 {
+  font-size: 13px;
+  margin: 16px 0 2px;
+  font-weight: 500;
+}
+.hint,
+small {
+  color: #777;
+  font-size: 11px;
+  font-style: italic;
+}
+small {
+  display: block;
+}
+.library-create {
+  margin: 10px 0;
+  background: #f4f6f6;
+  padding: 8px;
+}
+summary {
+  cursor: pointer;
+}
+.row {
+  margin: 8px 0;
+}
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11px;
+}
+input,
+select {
+  border: 1px solid #ccd5d4;
+  background: white;
+  border-radius: 3px;
+  padding: 4px 6px;
+  font: inherit;
+}
+button {
+  color: #0b6570;
+  background: white;
+  border: 1px solid #b8cdcf;
+  border-radius: 3px;
+  padding: 4px 7px;
+  cursor: pointer;
+  font: inherit;
+}
+.editor {
+  background: white;
+  border: 1px solid #d5dede;
+  border-radius: 4px;
+  margin: 10px 0;
+  padding-bottom: 8px;
+}
+.editor > .row {
+  padding: 0 16px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+th,
+td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #e1e6e5;
+}
+th {
+  background: #e9eeee;
+  font-weight: 500;
+  font-size: 11px;
+}
+tbody tr {
+  background: white;
+}
+tbody tr:nth-child(even) {
+  background: #f7f9f9;
+}
+.actions button {
+  margin: 2px;
 }

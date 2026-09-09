@@ -1,19 +1,8 @@
-export interface ValidationRule {
-  id: number;
-  type: string;
-  pattern: string;
-  errorMessage: string;
-}
-
+/** A reusable field carries the same complete specification as a template field. */
 export interface CustomField {
   id: number;
-  name: string;
-  icon: string;
-  baseType: string;
   libraryId: number;
-  description: string;
-  placeholder: string;
-  validationRules: ValidationRule[];
+  definition: Field;
 }
 
 export interface Library {
@@ -98,6 +87,20 @@ export interface NumericSettings {
   unit: string | null;
 }
 
+export interface ArtifactMetadata {
+  title: string | null;
+  description: string | null;
+  schemaVersion: string | null;
+  version: string | null;
+  publicationStatus: 'bibo:draft' | 'bibo:published' | null;
+  createdOn: string | null;
+  createdBy: string | null;
+  modifiedOn: string | null;
+  modifiedBy: string | null;
+  derivedFrom: string | null;
+  previousVersion: string | null;
+}
+
 export interface Field {
   id: number;
   /**
@@ -108,6 +111,10 @@ export interface Field {
   atId?: string;
   /** Model-written definition retained intact while published fields are read-only. */
   publishedDefinition?: string;
+  artifact?: ArtifactMetadata;
+  /** Retained for legacy artifacts; value recommendation is retired. */
+  valueRecommendationEnabled?: boolean;
+  deploymentName?: string;
   propertyIri?: string;
   preferredLabel?: string;
   alternateLabels?: string[];
