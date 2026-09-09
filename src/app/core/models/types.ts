@@ -95,6 +95,8 @@ export interface Field {
   temporal?: TemporalSettings;
   numeric?: NumericSettings;
   textConstraints?: { minLength: number | null; maxLength: number | null; regex: string | null };
+  minItems?: number | null;
+  maxItems?: number | null;
   allowMultiple: boolean;
   helpText?: string;
   /**

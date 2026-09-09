@@ -14,6 +14,8 @@ import { defineConfig, devices } from '@playwright/test';
  * picker registers a stub element in the page, so what is under test is the
  * designer's half of that contract rather than another component's behaviour.
  */
+const port = Number(process.env.PORT ?? 4598);
+
 export default defineConfig({
   testDir: './tests',
   testIgnore: process.env.CEF_BUNDLE ? [] : ['**/cef-defaults.spec.ts'],
@@ -22,13 +24,13 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'line' : 'list',
   use: {
-    baseURL: 'http://localhost:4598',
+    baseURL: `http://localhost:${port}`,
     trace: 'on-first-retry',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
     command: 'node serve.mjs',
-    url: 'http://localhost:4598',
+    url: `http://localhost:${port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 30_000,
   },

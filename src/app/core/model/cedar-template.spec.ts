@@ -657,3 +657,24 @@ describe('typed field defaults', () => {
     }
   });
 });
+
+for (const type of ['text', 'checkboxes', 'multipleChoiceList', 'attributeValue']) {
+  it(`preserves ${type} occurrence limits in JSON and YAML`, () => {
+    const original = buildTemplate(
+      templateOf(field({ type, allowMultiple: true, minItems: 2, maxItems: 5, options: ['A', 'B'] })),
+    );
+    for (const source of [templateToJson(original), templateToYaml(original)]) {
+      const state = toDesignerTemplate(readTemplate(source));
+      expect(state.fields[0].minItems).toBe(2);
+      expect(state.fields[0].maxItems).toBe(5);
+      const rebuilt = buildTemplate(state);
+      expect(fieldDeployment(rebuilt, 'Title')?.minItems).toBe(2);
+      expect(fieldDeployment(rebuilt, 'Title')?.maxItems).toBe(5);
+    }
+  });
+}
+it('refuses inverted occurrence limits before writing', () => {
+  expect(() => buildTemplate(templateOf(field({ allowMultiple: true, minItems: 5, maxItems: 2 })))).toThrow(
+    /Occurrence/,
+  );
+});

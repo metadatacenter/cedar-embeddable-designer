@@ -412,6 +412,23 @@ export class TemplateService {
     );
   }
 
+  updateFieldSettings(id: number, changes: Partial<Field>): string | null {
+    const fields = this.fields().map((field) => (field.id === id ? { ...field, ...changes } : field));
+    try {
+      buildTemplate({
+        name: this.templateName(),
+        description: this.templateDesc(),
+        identifier: '',
+        version: '0.0.1',
+        fields,
+      });
+      this.fields.set(fields);
+      return null;
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+  }
+
   updateDefaultValue(id: number, value: FieldDefaultValue) {
     this.fields.update((prev) =>
       prev.map((f) => (f.id === id && defaultValueError(f, value) === null ? { ...f, defaultValue: value } : f)),

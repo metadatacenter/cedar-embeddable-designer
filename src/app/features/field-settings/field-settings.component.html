@@ -1,0 +1,17 @@
+@if (multiple) {
+  <details class="settings">
+    <summary>Occurrences <span>minimum and maximum values</span></summary>
+    <form (ngSubmit)="saveBounds()" class="row">
+      <label
+        >Minimum<input type="number" name="min" min="0" step="1" [(ngModel)]="min" placeholder="Automatic"
+      /></label>
+      <label
+        >Maximum<input type="number" name="max" min="0" step="1" [(ngModel)]="max" placeholder="Unlimited"
+      /></label>
+      <button type="submit">Apply</button>
+    </form>
+    @if (error) {
+      <p role="alert">{{ error }}</p>
+    }
+  </details>
+}

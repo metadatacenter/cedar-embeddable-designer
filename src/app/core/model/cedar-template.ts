@@ -32,6 +32,7 @@ import {
   ControlledTermVersion,
   ChildDeploymentInfo,
   ChildDeploymentInfoBuilder,
+  ChildDeploymentInfoAlwaysMultipleBuilder,
   Iri,
   JsonNode,
   SchemaVersion,
@@ -714,6 +715,20 @@ export function buildTemplate(state: DesignerTemplate): Template {
     if (deployment instanceof ChildDeploymentInfoBuilder) {
       deployment.withMultiInstance(field.allowMultiple);
     }
+    if (
+      deployment instanceof ChildDeploymentInfoAlwaysMultipleBuilder ||
+      (deployment instanceof ChildDeploymentInfoBuilder && field.allowMultiple)
+    ) {
+      const min = field.minItems ?? null;
+      const max = field.maxItems ?? null;
+      if (
+        [min, max].some((value) => value !== null && (!Number.isInteger(value) || value < 0)) ||
+        (min !== null && max !== null && min > max)
+      ) {
+        throw new Error('Occurrence limits must be nonnegative whole numbers, with minimum no greater than maximum.');
+      }
+      deployment.withMinItems(min).withMaxItems(max);
+    }
     builder.addChild(built, deployment.build() as ChildDeploymentInfo);
   });
 
@@ -952,6 +967,8 @@ export function toDesignerTemplate(template: Template): DesignerTemplate {
             }
           : undefined,
       allowMultiple: info instanceof ChildDeploymentInfo ? info.multiInstance : info.isMultiInAnyWay(),
+      minItems: info.isMultiInAnyWay() ? dynamic.minItems : null,
+      maxItems: info.isMultiInAnyWay() ? dynamic.maxItems : null,
       helpText: field.schema_description ?? '',
       content: contentOf(field),
       atId: field.at_id?.getValue() ?? undefined,

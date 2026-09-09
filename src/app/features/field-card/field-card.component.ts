@@ -1,3 +1,4 @@
+import { FieldSettingsComponent } from '../field-settings/field-settings.component';
 import { Component, Input, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -20,6 +21,7 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
   standalone: true,
   imports: [
     CommonModule,
+    FieldSettingsComponent,
     FormsModule,
     IconComponent,
     ControlledTermConfigComponent,
