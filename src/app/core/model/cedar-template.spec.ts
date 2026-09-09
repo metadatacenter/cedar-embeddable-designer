@@ -721,3 +721,19 @@ it('rejects text constraint changes that invalidate a saved default', () => {
     buildTemplate(templateOf(field({ textConstraints: { minLength: 1, maxLength: 2, regex: '[' } }))),
   ).toThrow();
 });
+
+it('preserves authored numeric constraints and refuses a conflicting default', () => {
+  const numeric = { type: 'xsd:int', min: 1, max: 12, decimalPlaces: 0, unit: 'mg' };
+  const original = buildTemplate(
+    templateOf(field({ type: 'number', numeric, defaultValue: { kind: 'number', value: 3 } })),
+  );
+  for (const source of [templateToJson(original), templateToYaml(original)]) {
+    expect(toDesignerTemplate(readTemplate(source)).fields[0].numeric).toEqual(numeric);
+  }
+  expect(() =>
+    buildTemplate(templateOf(field({ type: 'number', numeric, defaultValue: { kind: 'number', value: 2.5 } }))),
+  ).toThrow();
+  expect(() => buildTemplate(templateOf(field({ type: 'number', numeric: { ...numeric, min: 20 } })))).toThrow(
+    /bounds/,
+  );
+});

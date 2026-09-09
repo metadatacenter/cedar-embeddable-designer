@@ -330,6 +330,8 @@ export function allowsDefault(paletteType: string): boolean {
   return descriptorOf(paletteType).defaultKind !== undefined;
 }
 
+export const NUMERIC_TYPES = NumberType.values().map((type) => type.getValue()!);
+
 /** Whether a type's author can mark it required or recommended. */
 export function allowsStatus(paletteType: string): boolean {
   return descriptorOf(paletteType).deployment !== 'static';
@@ -616,6 +618,11 @@ function buildField(field: Field): TemplateField {
       .withRegex(field.textConstraints.regex);
   }
   if (field.type === 'number' && field.numeric) {
+    const { min, max, decimalPlaces } = field.numeric;
+    if ([min, max].some((n) => n !== null && !Number.isFinite(n)) || (min !== null && max !== null && min > max))
+      throw new Error('Numeric bounds must be finite, with minimum no greater than maximum.');
+    if (decimalPlaces !== null && (!Number.isInteger(decimalPlaces) || decimalPlaces < 0))
+      throw new Error('Decimal places must be a nonnegative whole number.');
     const numeric = builder as NumericFieldBuilder;
     numeric
       .withNumberType(NumberType.forValue(field.numeric.type))

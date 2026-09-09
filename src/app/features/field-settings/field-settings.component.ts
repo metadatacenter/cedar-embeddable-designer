@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Field } from '../../core/models/types';
-import { descriptorOf } from '../../core/model/cedar-template';
+import { descriptorOf, NUMERIC_TYPES } from '../../core/model/cedar-template';
 import { TemplateService } from '../../core/services/template.service';
 
 @Component({
@@ -22,6 +22,14 @@ export class FieldSettingsComponent implements OnChanges {
     return descriptorOf(this.field.type).deployment !== 'static';
   }
   text: NonNullable<Field['textConstraints']> = { minLength: null, maxLength: null, regex: null };
+  readonly numericTypes = NUMERIC_TYPES;
+  numeric: NonNullable<Field['numeric']> = {
+    type: 'xsd:decimal',
+    min: null,
+    max: null,
+    decimalPlaces: null,
+    unit: null,
+  };
   min: number | null = null;
   max: number | null = null;
   error: string | null = null;
@@ -34,9 +42,17 @@ export class FieldSettingsComponent implements OnChanges {
     this.hidden = this.field.hidden ?? false;
     this.continuePreviousLine = this.field.continuePreviousLine ?? false;
     this.text = { ...(this.field.textConstraints ?? { minLength: null, maxLength: null, regex: null }) };
+    this.numeric = {
+      ...(this.field.numeric ?? { type: 'xsd:decimal', min: null, max: null, decimalPlaces: null, unit: null }),
+    };
     this.min = this.field.minItems ?? null;
     this.max = this.field.maxItems ?? null;
     this.error = null;
+  }
+  saveNumeric(): void {
+    this.error = this.service.updateFieldSettings(this.field.id, {
+      numeric: { ...this.numeric, unit: this.numeric.unit || null },
+    });
   }
   saveText(): void {
     this.error = this.service.updateFieldSettings(this.field.id, {

@@ -56,3 +56,28 @@
     }
   </details>
 }
+
+@if (field.type === 'number') {
+  <details class="settings">
+    <summary>Numeric constraints <span>datatype, range and units</span></summary>
+    <form (ngSubmit)="saveNumeric()" class="row">
+      <label
+        >Datatype<select name="numericType" [(ngModel)]="numeric.type">
+          @for (type of numericTypes; track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+        </select></label
+      >
+      <label>Minimum value<input name="numericMin" type="number" step="any" [(ngModel)]="numeric.min" /></label>
+      <label>Maximum value<input name="numericMax" type="number" step="any" [(ngModel)]="numeric.max" /></label>
+      <label
+        >Decimal places<input name="decimalPlaces" type="number" min="0" step="1" [(ngModel)]="numeric.decimalPlaces"
+      /></label>
+      <label>Unit of measure<input name="unit" [(ngModel)]="numeric.unit" placeholder="e.g. mg" /></label>
+      <button type="submit">Apply</button>
+    </form>
+    @if (error) {
+      <p role="alert">{{ error }}</p>
+    }
+  </details>
+}

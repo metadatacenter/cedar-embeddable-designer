@@ -68,3 +68,26 @@ test('authors text constraints and rejects invalid patterns', async ({ page }) =
   await section.getByRole('button', { name: 'Apply' }).click();
   await expect(section.getByRole('alert')).toBeVisible();
 });
+
+test('authors numeric datatype bounds precision and units', async ({ page }) => {
+  await openDesigner(page);
+  const card = page.locator('#field-card-1');
+  await card.locator('app-field-card button').first().click();
+  await card
+    .locator('.field-type-dropdown-container button')
+    .filter({ has: page.getByText('Number', { exact: true }) })
+    .click();
+  const section = card
+    .locator('details')
+    .filter({ has: page.locator('summary').filter({ hasText: 'Numeric constraints' }) });
+  await section.locator('summary').click();
+  await section.getByLabel('Datatype').selectOption('xsd:int');
+  await section.getByLabel('Minimum value').fill('1');
+  await section.getByLabel('Maximum value').fill('12');
+  await section.getByLabel('Decimal places').fill('0');
+  await section.getByLabel('Unit of measure').fill('mg');
+  await section.getByRole('button', { name: 'Apply' }).click();
+  await expect
+    .poll(async () => ((await currentTemplate(page)).properties as any).Title._valueConstraints)
+    .toMatchObject({ numberType: 'xsd:int', minValue: 1, maxValue: 12, decimalPlace: 0, unitOfMeasure: 'mg' });
+});
