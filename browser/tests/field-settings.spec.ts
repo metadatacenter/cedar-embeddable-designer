@@ -18,3 +18,21 @@ test('authors occurrence limits and rejects an inverted range', async ({ page })
   expect(((await currentTemplate(page)).properties as any).Title.minItems).toBe(2);
   await page.screenshot({ path: '/tmp/ced-occurrences.png' });
 });
+
+test('writes display labels and layout settings', async ({ page }) => {
+  await openDesigner(page);
+  const settings = page.locator('#field-card-1 app-field-settings');
+  const section = settings.locator('details').filter({ has: page.locator('summary').filter({ hasText: 'Display' }) });
+  await section.locator('summary').click();
+  await section.getByLabel('Display label', { exact: true }).fill('Shown title');
+  await section.getByLabel('Display description', { exact: true }).fill('Shown help');
+  await section.getByLabel('Hidden', { exact: true }).check();
+  await section.getByLabel('Continue previous line', { exact: true }).check();
+  await section.getByRole('button', { name: 'Apply' }).click();
+  await expect
+    .poll(async () => (await currentTemplate(page))._ui)
+    .toMatchObject({ propertyLabels: { Title: 'Shown title' }, propertyDescriptions: { Title: 'Shown help' } });
+  await expect
+    .poll(async () => ((await currentTemplate(page)).properties as any).Title._ui)
+    .toMatchObject({ hidden: true, continuePreviousLine: true });
+});

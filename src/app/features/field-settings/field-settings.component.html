@@ -15,3 +15,23 @@
     }
   </details>
 }
+
+<details class="settings">
+  <summary>Display <span>labels and layout</span></summary>
+  <form (ngSubmit)="saveLayout()" class="row">
+    <label>Display label<input name="displayLabel" [(ngModel)]="displayLabel" placeholder="Field name" /></label>
+    <label
+      >Display description<input name="displayDescription" [(ngModel)]="displayDescription" placeholder="Field help"
+    /></label>
+    <label class="check"><input type="checkbox" name="hidden" [(ngModel)]="hidden" />Hidden</label>
+    @if (dynamic) {
+      <label class="check"
+        ><input type="checkbox" name="continue" [(ngModel)]="continuePreviousLine" />Continue previous line</label
+      >
+    }
+    <button type="submit">Apply</button>
+  </form>
+  @if (error) {
+    <p role="alert">{{ error }}</p>
+  }
+</details>

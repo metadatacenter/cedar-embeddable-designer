@@ -678,3 +678,30 @@ it('refuses inverted occurrence limits before writing', () => {
     /Occurrence/,
   );
 });
+
+it('retains field deployment display settings in both formats', () => {
+  const original = buildTemplate(
+    templateOf(
+      field({ displayLabel: 'Display', displayDescription: 'Help', hidden: true, continuePreviousLine: true }),
+    ),
+  );
+  for (const source of [templateToJson(original), templateToYaml(original)]) {
+    const state = toDesignerTemplate(readTemplate(source));
+    expect(state.fields[0]).toMatchObject({
+      displayLabel: 'Display',
+      displayDescription: 'Help',
+      hidden: true,
+      continuePreviousLine: true,
+    });
+    expect(templateToJson(buildTemplate(state))).toEqual(templateToJson(original));
+  }
+});
+
+it('preserves hidden images through JSON and YAML', () => {
+  const original = buildTemplate(
+    templateOf(field({ type: 'image', hidden: true, content: 'https://example.org/a.png' })),
+  );
+  for (const source of [templateToJson(original), templateToYaml(original)]) {
+    expect(toDesignerTemplate(readTemplate(source)).fields[0].hidden).toBe(true);
+  }
+});

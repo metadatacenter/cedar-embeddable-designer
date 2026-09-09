@@ -57,3 +57,11 @@ p[role='alert'] {
   color: #a32222;
   font-size: 11px;
 }
+
+.check {
+  flex-direction: row;
+  align-items: center;
+}
+.check input {
+  width: auto;
+}

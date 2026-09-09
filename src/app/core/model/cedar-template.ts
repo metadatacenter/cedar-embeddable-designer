@@ -690,7 +690,11 @@ export function buildTemplate(state: DesignerTemplate): Template {
   const keys = deploymentKeys(state.fields);
   state.fields.forEach((field, index) => {
     const built = buildField(field);
-    const deployment = built.createDeploymentBuilder(keys[index]);
+    const deployment = built
+      .createDeploymentBuilder(keys[index])
+      .withLabel(field.displayLabel ?? null)
+      .withDescription(field.displayDescription ?? null)
+      .withHidden(field.hidden ?? false);
 
     /*
      * A static field's deployment builder does not extend the dynamic one, so it
@@ -699,6 +703,7 @@ export function buildTemplate(state: DesignerTemplate): Template {
      * image field threw here until this branch existed.
      */
     if (deployment instanceof AbstractDynamicChildDeploymentInfoBuilder) {
+      deployment.withContinuePreviousLine(field.continuePreviousLine ?? false);
       deployment.withRequiredValue(field.status === 'required').withRecommendedValue(field.status === 'recommended');
       if (field.propertyIri) {
         deployment.withIri(field.propertyIri);
@@ -967,6 +972,10 @@ export function toDesignerTemplate(template: Template): DesignerTemplate {
             }
           : undefined,
       allowMultiple: info instanceof ChildDeploymentInfo ? info.multiInstance : info.isMultiInAnyWay(),
+      displayLabel: info.label ?? undefined,
+      displayDescription: info.description ?? undefined,
+      hidden: info.hidden,
+      continuePreviousLine: dynamic.continuePreviousLine ?? false,
       minItems: info.isMultiInAnyWay() ? dynamic.minItems : null,
       maxItems: info.isMultiInAnyWay() ? dynamic.maxItems : null,
       helpText: field.schema_description ?? '',
