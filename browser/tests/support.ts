@@ -19,7 +19,7 @@ export async function openDesigner(page: Page, query = ''): Promise<Locator> {
   await page.goto(`/host.html${query}`);
   await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true);
   const designer = page.locator(DESIGNER);
-  // The first field card is the earliest sign the editor inside has rendered.
+  // The first field card is the earliest sign the designer inside has rendered.
   await expect(designer.locator('[id^=field-card-]').first()).toBeVisible();
   return designer;
 }

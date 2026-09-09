@@ -46,8 +46,8 @@ test('the published contract is written without imports', () => {
 /*
  * One file speaks to the CEDAR model library: `core/model/cedar-template.ts`.
  * Everything this designer builds, writes and reads goes through there, which is
- * what keeps the editor's own state a separate thing from the CEDAR artifact and
- * stops the library's vocabulary from spreading into components.
+ * what keeps the designer's own state a separate thing from the CEDAR artifact
+ * and stops the library's vocabulary from spreading into components.
  *
  * Losing it is not a compile error but a slow one: a component reaching for a
  * builder writes a second, divergent path to the same artifact, and the two come

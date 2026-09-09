@@ -8,7 +8,7 @@
  * identifier and timestamp on each call, and wrote a time field as `xsd:dateTime`.
  * Those are the tests that say what the swap is for.
  *
- * The template is the artifact under test, not an instance — the editor authors
+ * The template is the artifact under test, not an instance — the designer authors
  * templates and fields. The one test borrowed wholesale from CEE's harness is
  * format independence: a template written as JSON and as YAML must read back as
  * the same model, which is the claim that adopting the library buys and the one
@@ -18,7 +18,7 @@ import { ControlledTermField, TemporalField, Template } from 'cedar-model-typesc
 import { Field } from '../models/types';
 import { FIELD_TYPES } from '../models/types';
 import {
-  EditorTemplate,
+  DesignerTemplate,
   allowsMultiple,
   allowsOptions,
   allowsStatus,
@@ -30,10 +30,10 @@ import {
   readTemplate,
   templateToJson,
   templateToYaml,
-  toEditorTemplate,
+  toDesignerTemplate,
 } from './cedar-template';
 
-/** A field with the identity the editor mints when the author adds one. */
+/** A field with the identity the designer mints when the author adds one. */
 function field(overrides: Partial<Field> = {}): Field {
   return {
     id: 1,
@@ -48,7 +48,7 @@ function field(overrides: Partial<Field> = {}): Field {
   };
 }
 
-function templateOf(...fields: Field[]): EditorTemplate {
+function templateOf(...fields: Field[]): DesignerTemplate {
   return {
     name: 'Study',
     description: 'A study',
@@ -59,7 +59,7 @@ function templateOf(...fields: Field[]): EditorTemplate {
 }
 
 /** The JSON a host would receive, as a plain record for indexing. */
-function json(state: EditorTemplate): Record<string, unknown> {
+function json(state: DesignerTemplate): Record<string, unknown> {
   return templateToJson(buildTemplate(state)) as Record<string, unknown>;
 }
 
@@ -70,14 +70,14 @@ function json(state: EditorTemplate): Record<string, unknown> {
  * field, so the unwrapping happens here rather than in every assertion. A
  * checkbox is one of those by its type alone.
  */
-function child(state: EditorTemplate, key: string): Record<string, unknown> {
+function child(state: DesignerTemplate, key: string): Record<string, unknown> {
   const properties = json(state)['properties'] as Record<string, Record<string, unknown>>;
   const property = properties[key];
   return (property['items'] as Record<string, unknown>) ?? property;
 }
 
 describe('building a CEDAR template', () => {
-  it('carries the template metadata the editor holds', () => {
+  it('carries the template metadata the designer holds', () => {
     const result = json(templateOf(field()));
 
     expect(result['@type']).toBe('https://schema.metadatacenter.org/core/Template');
@@ -89,7 +89,7 @@ describe('building a CEDAR template', () => {
     expect(result['schema:schemaVersion']).toBe('1.6.0');
   });
 
-  it('orders the children as the editor orders the fields', () => {
+  it('orders the children as the designer orders the fields', () => {
     const state = templateOf(field({ id: 1, name: 'First' }), field({ id: 2, name: 'Second' }));
     const ui = json(state)['_ui'] as Record<string, unknown>;
 
@@ -123,11 +123,11 @@ describe('field types', () => {
    * cannot put back. Every case below is about a type that has been finished,
    * which is what the palette entry promises.
    */
-  const fieldOfType = (editorType: string): Field =>
+  const fieldOfType = (paletteType: string): Field =>
     field({
-      type: editorType,
+      type: paletteType,
       name: 'F',
-      ...(editorType === 'controlledTerms'
+      ...(paletteType === 'controlledTerms'
         ? {
             controlledTermConfig: {
               sourceType: 'ontology' as const,
@@ -148,21 +148,21 @@ describe('field types', () => {
     expect(unbacked).toEqual([]);
   });
 
-  it.each(paletteTypes)('builds a %s field', (editorType) => {
-    expect(() => buildTemplate(templateOf(fieldOfType(editorType)))).not.toThrow();
+  it.each(paletteTypes)('builds a %s field', (paletteType) => {
+    expect(() => buildTemplate(templateOf(fieldOfType(paletteType)))).not.toThrow();
   });
 
-  it.each(paletteTypes)('writes %s as the CEDAR type its descriptor names', (editorType) => {
-    const built = child(templateOf(fieldOfType(editorType)), 'F');
+  it.each(paletteTypes)('writes %s as the CEDAR type its descriptor names', (paletteType) => {
+    const built = child(templateOf(fieldOfType(paletteType)), 'F');
     const ui = built['_ui'] as Record<string, unknown>;
 
-    expect(ui['inputType']).toBe(descriptorOf(editorType).cedarType.getUiInputType().getValue());
+    expect(ui['inputType']).toBe(descriptorOf(paletteType).cedarType.getUiInputType().getValue());
   });
 
-  it.each(paletteTypes)('reads a %s field back as the type it was', (editorType) => {
-    const state = templateOf(fieldOfType(editorType));
+  it.each(paletteTypes)('reads a %s field back as the type it was', (paletteType) => {
+    const state = templateOf(fieldOfType(paletteType));
 
-    expect(toEditorTemplate(buildTemplate(state)).fields[0].type).toBe(editorType);
+    expect(toDesignerTemplate(buildTemplate(state)).fields[0].type).toBe(paletteType);
   });
 
   /**
@@ -176,15 +176,15 @@ describe('field types', () => {
    * Driven from the palette rather than a list here, so a type added without a
    * round trip behind it fails rather than going unnoticed.
    */
-  it.each(paletteTypes)('writes and reads %s back unchanged as JSON', (editorType) => {
-    const state = templateOf(fieldOfType(editorType));
+  it.each(paletteTypes)('writes and reads %s back unchanged as JSON', (paletteType) => {
+    const state = templateOf(fieldOfType(paletteType));
     const written = templateToJson(buildTemplate(state));
 
-    expect(templateToJson(buildTemplate(toEditorTemplate(readTemplate(written))))).toEqual(written);
+    expect(templateToJson(buildTemplate(toDesignerTemplate(readTemplate(written))))).toEqual(written);
   });
 
-  it.each(paletteTypes)('writes and reads %s back unchanged as YAML', (editorType) => {
-    const state = templateOf(fieldOfType(editorType));
+  it.each(paletteTypes)('writes and reads %s back unchanged as YAML', (paletteType) => {
+    const state = templateOf(fieldOfType(paletteType));
     const written = templateToJson(buildTemplate(state));
     const viaYaml = readTemplate(templateToYaml(buildTemplate(state)));
 
@@ -192,20 +192,20 @@ describe('field types', () => {
   });
 
   /**
-   * The editor state a type settles on, and that it stays there.
+   * The designer's state a type settles on, and that it stays there.
    *
-   * Not equality with what the editor was handed: a type whose author does not
+   * Not equality with what the designer was handed: a type whose author does not
    * choose the cardinality carries whatever its deployment mandates, so a
    * checkbox list comes back saying it takes several values however it was
    * created. What must hold is that the second pass changes nothing — a template
    * that keeps shifting under repeated opening and saving is the failure this
    * guards, and it is how a time field became a date.
    */
-  it.each(paletteTypes)('settles %s after one write and stays there', (editorType) => {
-    const first = toEditorTemplate(buildTemplate(templateOf(fieldOfType(editorType)))).fields[0];
-    const second = toEditorTemplate(buildTemplate(templateOf(first))).fields[0];
+  it.each(paletteTypes)('settles %s after one write and stays there', (paletteType) => {
+    const first = toDesignerTemplate(buildTemplate(templateOf(fieldOfType(paletteType)))).fields[0];
+    const second = toDesignerTemplate(buildTemplate(templateOf(first))).fields[0];
 
-    expect(first.type).toBe(editorType);
+    expect(first.type).toBe(paletteType);
     expect(first.name).toBe('F');
     expect(second).toEqual(first);
   });
@@ -241,15 +241,15 @@ describe('what a type will accept', () => {
     ['checkboxes', 'multiple by its type'],
     ['multipleChoiceList', 'multiple by its type'],
     ['attributeValue', 'multiple by its type'],
-  ])('does not offer cardinality on %s, which is %s', (editorType) => {
-    expect(allowsMultiple(editorType)).toBe(false);
-    expect(allowsStatus(editorType)).toBe(true);
+  ])('does not offer cardinality on %s, which is %s', (paletteType) => {
+    expect(allowsMultiple(paletteType)).toBe(false);
+    expect(allowsStatus(paletteType)).toBe(true);
   });
 
   it.each(['multipleChoice', 'checkboxes', 'singleChoiceList', 'multipleChoiceList'])(
     '%s takes a list of options',
-    (editorType) => {
-      expect(allowsOptions(editorType)).toBe(true);
+    (paletteType) => {
+      expect(allowsOptions(paletteType)).toBe(true);
     },
   );
 
@@ -257,12 +257,12 @@ describe('what a type will accept', () => {
     ['richText', 'markup'],
     ['image', 'url'],
     ['youtube', 'videoId'],
-  ])('%s carries its content as %s', (editorType, kind) => {
-    expect(contentKindOf(editorType)).toBe(kind);
+  ])('%s carries its content as %s', (paletteType, kind) => {
+    expect(contentKindOf(paletteType)).toBe(kind);
   });
 
-  it.each(['text', 'sectionBreak', 'pageBreak'])('%s carries no content of its own', (editorType) => {
-    expect(contentKindOf(editorType)).toBeUndefined();
+  it.each(['text', 'sectionBreak', 'pageBreak'])('%s carries no content of its own', (paletteType) => {
+    expect(contentKindOf(paletteType)).toBeUndefined();
   });
 });
 
@@ -283,10 +283,10 @@ describe('static fields', () => {
     expect((built['_ui'] as Record<string, unknown>)['_content']).toBe('https://example.org/l.png');
   });
 
-  it('reads its content back into the editor', () => {
+  it('reads its content back into the designer', () => {
     const state = templateOf(field({ type: 'richText', name: 'Note', content: '<p>Read this</p>' }));
 
-    expect(toEditorTemplate(buildTemplate(state)).fields[0].content).toBe('<p>Read this</p>');
+    expect(toDesignerTemplate(buildTemplate(state)).fields[0].content).toBe('<p>Read this</p>');
   });
 
   it('takes no required value, because its deployment has none to take', () => {
@@ -305,7 +305,7 @@ describe('static fields', () => {
   });
 });
 
-describe('what the editor collects reaches the template', () => {
+describe('what the designer collects reaches the template', () => {
   it('marks a required field required', () => {
     const built = buildTemplate(templateOf(field({ name: 'F', status: 'required' })));
 
@@ -468,7 +468,7 @@ describe('controlled-term constraints', () => {
 
     expect(built['_valueConstraints']).not.toHaveProperty('ontologies');
     expect(properties).not.toHaveProperty('@id');
-    expect(toEditorTemplate(readTemplate(json(state))).fields[0].type).toBe('text');
+    expect(toDesignerTemplate(readTemplate(json(state))).fields[0].type).toBe('text');
   });
 
   it('writes the vocabulary as constraints once an author has chosen one', () => {
@@ -554,8 +554,8 @@ describe('round trips', () => {
     expect(templateToJson(fromYaml)).toEqual(templateToJson(fromJson));
   });
 
-  it('returns to the editor state it came from', () => {
-    const restored = toEditorTemplate(buildTemplate(state));
+  it('returns to the state the designer came from', () => {
+    const restored = toDesignerTemplate(buildTemplate(state));
 
     expect(restored.name).toBe(state.name);
     expect(restored.description).toBe(state.description);
@@ -567,19 +567,19 @@ describe('round trips', () => {
     expect(restored.fields.map((f) => f.options)).toEqual(state.fields.map((f) => f.options));
   });
 
-  it('survives a full pass through JSON back into the editor', () => {
-    const restored = toEditorTemplate(readTemplate(templateToJson(buildTemplate(state))));
+  it('survives a full pass through JSON back into the designer', () => {
+    const restored = toDesignerTemplate(readTemplate(templateToJson(buildTemplate(state))));
 
     expect(templateToJson(buildTemplate(restored))).toEqual(templateToJson(buildTemplate(state)));
   });
 });
 
-describe('reading a template the editor did not write', () => {
+describe('reading a template the designer did not write', () => {
   it('reads a template whose fields carry no identity of ours', () => {
     const source = templateToJson(buildTemplate(templateOf(field({ name: 'Given' }))));
     const parsed: Template = readTemplate(source);
 
-    expect(toEditorTemplate(parsed).fields.map((f) => f.name)).toEqual(['Given']);
+    expect(toDesignerTemplate(parsed).fields.map((f) => f.name)).toEqual(['Given']);
   });
 
   it('reports a source it cannot read rather than returning an empty template', () => {

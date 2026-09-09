@@ -208,9 +208,9 @@
       <app-field-library-sidebar></app-field-library-sidebar>
     }
 
-    <!-- Editor Side -->
-    <div [ngClass]="getEditorClasses()">
-      <div class="editor-grid" [style.gridTemplateColumns]="getGridTemplateColumns()">
+    <!-- Designer Side -->
+    <div [ngClass]="getDesignerClasses()">
+      <div class="designer-grid" [style.gridTemplateColumns]="getGridTemplateColumns()">
         <!-- Fields Overview Panel -->
         @if (service.fields().length > 0 && showFieldsOverview()) {
           <div class="overview-panel">
@@ -245,8 +245,8 @@
           </div>
         }
 
-        <!-- Editor Workspace -->
-        <div class="editor-workspace">
+        <!-- Designer Workspace -->
+        <div class="designer-workspace">
           <!-- Overview Toggle -->
           @if (service.fields().length > 0 && !showFieldsOverview()) {
             <button

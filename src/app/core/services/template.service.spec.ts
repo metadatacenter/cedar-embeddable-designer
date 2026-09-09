@@ -8,7 +8,7 @@ import { templateToJson } from '../model/cedar-template';
  *
  * Both were defects rather than gaps. Four places built the template separately
  * through a serializer that minted fresh identifiers, so the two export panels
- * and the custom element each showed a different artifact for the same editor
+ * and the custom element each showed a different artifact for the same designer
  * state. The dirty flag was set in exactly one place — field reordering — so
  * every other edit left the unsaved-changes guard believing there was nothing to
  * lose.

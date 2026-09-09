@@ -78,11 +78,11 @@
   @apply flex-1 flex min-h-0 overflow-hidden;
 }
 
-.editor-area {
+.designer-area {
   @apply transition-all duration-300 overflow-y-auto relative flex-1;
 }
 
-.editor-grid {
+.designer-grid {
   @apply grid h-full;
 }
 
@@ -144,8 +144,8 @@
   @apply fixed top-24 px-3 py-2 bg-white rounded-lg border border-gray-300 shadow-md hover:shadow-lg transition-all z-20 flex items-center gap-2 cursor-pointer;
 }
 
-/* ─── Editor Workspace ────────────────────────────────────────────────────── */
-.editor-workspace {
+/* ─── Designer Workspace ──────────────────────────────────────────────────── */
+.designer-workspace {
   @apply relative py-5 px-6 max-w-4xl mx-auto w-full;
 }
 

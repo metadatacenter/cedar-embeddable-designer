@@ -48,7 +48,7 @@ npm install
 
 Start the development server and open `http://localhost:4200/`. The page it
 serves is a host page: it embeds `<cedar-embeddable-designer>` rather than
-rendering the editor directly, so development exercises the same contract an
+rendering the designer directly, so development exercises the same contract an
 embedder uses.
 
 ```bash

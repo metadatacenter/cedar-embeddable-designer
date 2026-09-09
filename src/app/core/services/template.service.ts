@@ -2,14 +2,14 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { Field, Library, CustomField, ControlledTermConfig, UserPreferences, FIELD_TYPES } from '../models/types';
 import { PreferencesService } from './preferences.service';
 import {
-  EditorTemplate,
+  DesignerTemplate,
   buildTemplate,
   newFieldIdentity,
   newTemplateIdentifier,
   readTemplate,
   templateToJson,
   templateToYaml,
-  toEditorTemplate,
+  toDesignerTemplate,
 } from '../model/cedar-template';
 
 export { FIELD_TYPES } from '../models/types';
@@ -88,14 +88,15 @@ export class TemplateService {
   readonly fields = signal<Field[]>(starterFields());
 
   /**
-   * The editor state as it was when the template was last saved, opened or reset.
+   * The designer's state as it was when the template was last saved, opened or
+   * reset.
    *
    * Compared against the live state rather than set by each mutation, because a
    * flag set by hand is a flag someone forgets: this used to be one boolean that
    * only field reordering ever raised, so every other edit left the unsaved-changes
    * guard believing there was nothing to lose.
    *
-   * The editor's own state rather than the written template, because the two are
+   * The designer's own state rather than the written template, because the two are
    * not the same question: a template can be rewritten byte-identically and still
    * be unsaved.
    */
@@ -108,13 +109,13 @@ export class TemplateService {
    *
    * The service holds the request and the component performs it. Looking the card
    * up from here meant `document.getElementById`, which finds nothing once the
-   * editor renders inside a shadow root — the element is in the tree, just not in
-   * the document's.
+   * designer renders inside a shadow root — the element is in the tree, just not
+   * in the document's.
    */
   readonly scrollRequest = signal<number | null>(null);
 
   /**
-   * The editor's state as one value, and that value as a CEDAR template.
+   * The designer's state as one value, and that value as a CEDAR template.
    *
    * Four places used to build the template themselves from the five signals
    * below — both export panels, the file menu and the custom element — each
@@ -133,7 +134,7 @@ export class TemplateService {
    */
   private readonly mintedIdentifier = signal<string>(newTemplateIdentifier());
 
-  readonly editorTemplate = computed<EditorTemplate>(() => ({
+  readonly designerTemplate = computed<DesignerTemplate>(() => ({
     name: this.templateName(),
     description: this.templateDesc(),
     identifier: this.templateIdentifier() || this.mintedIdentifier(),
@@ -141,7 +142,7 @@ export class TemplateService {
     fields: this.fields(),
   }));
 
-  readonly template = computed(() => buildTemplate(this.editorTemplate()));
+  readonly template = computed(() => buildTemplate(this.designerTemplate()));
   readonly templateJson = computed(() => templateToJson(this.template()));
   readonly templateYaml = computed(() => templateToYaml(this.template()));
 
@@ -439,7 +440,7 @@ export class TemplateService {
    * Load a template a host or a file supplied, in either serialization.
    *
    * Reading is the model library's, so JSON and YAML arrive as the same
-   * `Template` and the editor's state is derived from the model rather than from
+   * `Template` and the designer's state is derived from the model rather than from
    * whichever set of keys the file happened to use. This used to try `JSON.parse`,
    * fall back to a hand-written YAML parser, and on failure log to the console and
    * return — leaving the author looking at their previous template with nothing to
@@ -450,7 +451,7 @@ export class TemplateService {
       return;
     }
 
-    const state = toEditorTemplate(readTemplate(source as string | object));
+    const state = toDesignerTemplate(readTemplate(source as string | object));
 
     this.templateName.set(state.name || 'Untitled Template');
     this.templateDesc.set(state.description);

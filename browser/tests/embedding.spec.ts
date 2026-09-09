@@ -17,7 +17,7 @@ test('registers itself on a page that bootstraps nothing', async ({ page }) => {
   await openDesigner(page);
 
   // Asked of the document rather than through a locator: Playwright pierces open
-  // shadow roots, and the editor's own `app-root` is inside this element's.
+  // shadow roots, and the designer's own `app-root` is inside this element's.
   expect(await page.evaluate(() => document.querySelectorAll('app-root').length)).toBe(0);
   expect(await page.evaluate((tag) => customElements.get(tag) !== undefined, DESIGNER)).toBe(true);
 });

@@ -114,7 +114,7 @@ export class TerminologyService {
   /**
    * Say once that controlled-term search is off, and why.
    *
-   * Once per editor, not once per keystroke: a panel left open would otherwise
+   * Once per designer, not once per keystroke: a panel left open would otherwise
    * report this on every character typed.
    */
   private reportUnconfigured(): void {

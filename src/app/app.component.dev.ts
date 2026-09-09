@@ -4,7 +4,7 @@ import { CedConfig } from './ced-public-api';
 /**
  * The standalone application, which is a host page like any other.
  *
- * It embeds `<cedar-embeddable-designer>` rather than rendering the editor
+ * It embeds `<cedar-embeddable-designer>` rather than rendering the designer
  * directly, so running `ng serve` exercises the element contract instead of a
  * private path into the same components. A regression in the element shows up
  * here, during development, rather than in someone else's page.

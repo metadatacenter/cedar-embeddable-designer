@@ -131,7 +131,7 @@ describe('CedarEmbeddableDesignerElementComponent', () => {
       expect(fixture.componentInstance.currentTemplate).toEqual(templateToJson(service.template()));
     });
 
-    it('publishes a template when the editor changes', async () => {
+    it('publishes a template when the designer changes', async () => {
       const fixture = create();
       const published: object[] = [];
       fixture.componentInstance.templateChange.subscribe((template) => published.push(template));
@@ -143,7 +143,7 @@ describe('CedarEmbeddableDesignerElementComponent', () => {
       expect((published[published.length - 1] as Record<string, unknown>)['schema:name']).toBe('Published');
     });
 
-    it('publishes CEDAR JSON-LD rather than the editor state', () => {
+    it('publishes CEDAR JSON-LD rather than the state the designer holds', () => {
       const fixture = create();
       const template = fixture.componentInstance.currentTemplate as Record<string, unknown>;
 

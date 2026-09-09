@@ -96,7 +96,7 @@ export class AppComponent {
   /**
    * The card for a field, looked up in this component's own root.
    *
-   * `getRootNode()` rather than `document`, because the editor renders inside the
+   * `getRootNode()` rather than `document`, because the designer renders inside the
    * element's shadow root when it is embedded, and a document-wide lookup finds
    * nothing there.
    */
@@ -106,7 +106,7 @@ export class AppComponent {
     card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
-  getEditorClasses(): Record<string, boolean> {
+  getDesignerClasses(): Record<string, boolean> {
     const preview = this.service.showPreview();
     const selectionStyle = this.service.preferences().fieldSelectionStyle;
     const collapsed = this.service.sidebarCollapsed();

@@ -1,5 +1,5 @@
 import { PickedConstraint, termPickerAvailable, toControlledTermConfig } from './term-picker';
-import { buildTemplate, readTemplate, templateToJson, templateToYaml, toEditorTemplate } from './cedar-template';
+import { buildTemplate, readTemplate, templateToJson, templateToYaml, toDesignerTemplate } from './cedar-template';
 import { Field } from '../models/types';
 import { ControlledTermField } from 'cedar-model-typescript-library';
 
@@ -7,7 +7,7 @@ import { ControlledTermField } from 'cedar-model-typescript-library';
  * The picker's choice, as a constraint the template can carry.
  *
  * Each case ends where it matters — in the built CEDAR template — rather than at
- * the editor's own config object, because the config is a staging post and the
+ * the designer's own config object, because the config is a staging post and the
  * `_valueConstraints` it produces is the thing a form will be rendered from.
  *
  * The fixtures are the shapes `<cedar-term-picker>` emits, abbreviated to the
@@ -89,7 +89,7 @@ describe('a term chosen in the picker', () => {
     expect(constraints.valueSets[0].name).toBe('Delivery Procedures');
   });
 
-  it('reaches the written template rather than stopping at the editor', () => {
+  it('reaches the written template rather than stopping at the designer', () => {
     const template = buildTemplate({
       name: 'S',
       description: '',
@@ -242,7 +242,7 @@ describe('the version an author pinned', () => {
     };
     const written = templateToJson(buildTemplate(state));
 
-    expect(templateToJson(buildTemplate(toEditorTemplate(readTemplate(written))))).toEqual(written);
+    expect(templateToJson(buildTemplate(toDesignerTemplate(readTemplate(written))))).toEqual(written);
     expect(templateToJson(readTemplate(templateToYaml(buildTemplate(state))))).toEqual(written);
   });
 });
