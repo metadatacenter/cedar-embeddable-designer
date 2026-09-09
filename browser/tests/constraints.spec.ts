@@ -242,7 +242,7 @@ test('the real picker preserves saved actions and explicitly clears an invalid d
   await expect(picker.locator('.constraint-table').first().locator('tbody tr')).toHaveCount(2);
 
   await picker.getByRole('button', { name: 'Remove constraint 1', exact: true }).click();
-  await picker.getByRole('button', { name: 'Apply constraints', exact: true }).click();
+  await picker.getByRole('button', { name: 'Done', exact: true }).click();
   await expect(panel.getByRole('alert')).toContainText('existing default is not permitted');
   expect(checked).toBe(true);
   const before = child(await currentTemplate(page), 'Disease')['_valueConstraints'] as Record<string, unknown>;
