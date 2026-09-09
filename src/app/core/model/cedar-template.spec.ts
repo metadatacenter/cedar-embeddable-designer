@@ -807,3 +807,18 @@ it('preserves authored labels language identifiers and typed annotations', () =>
     buildTemplate(templateOf(field({ annotations: [metadata.annotations[0], metadata.annotations[0]] }))),
   ).toThrow(/unique/);
 });
+
+it('retains published field status version and provenance through JSON and YAML', () => {
+  const source = JSON.parse(JSON.stringify(templateToJson(buildTemplate(templateOf(field())))));
+  const child = source.properties[Object.keys(source.properties).find((key) => source.properties[key]['schema:name'])!];
+  child['bibo:status'] = 'bibo:published';
+  child['pav:version'] = '1.2.0';
+  child['pav:createdOn'] = '2026-01-01T00:00:00Z';
+  child['pav:createdBy'] = 'https://example.org/users/author';
+  const original = readTemplate(source);
+  for (const serialized of [templateToJson(original), templateToYaml(original)]) {
+    const state = toDesignerTemplate(readTemplate(serialized));
+    expect(state.fields[0].publishedDefinition).toBeTruthy();
+    expect(templateToJson(buildTemplate(state))).toEqual(templateToJson(original));
+  }
+});

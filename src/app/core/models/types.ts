@@ -86,6 +86,8 @@ export interface Field {
    * read from a template that did not carry them has none.
    */
   atId?: string;
+  /** Model-written definition retained intact while published fields are read-only. */
+  publishedDefinition?: string;
   propertyIri?: string;
   preferredLabel?: string;
   alternateLabels?: string[];

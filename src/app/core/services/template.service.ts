@@ -273,6 +273,7 @@ export class TemplateService {
   }
 
   deleteField(id: number) {
+    if (this.isPublished(id)) return;
     this.fields.update((prev) => prev.filter((f) => f.id !== id));
     if (this.selectedField() === id) {
       this.selectedField.set(null);
@@ -280,10 +281,12 @@ export class TemplateService {
   }
 
   updateFieldName(id: number, name: string) {
+    if (this.isPublished(id)) return;
     this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, name } : f)));
   }
 
   updateFieldType(id: number, type: string) {
+    if (this.isPublished(id)) return;
     this.fields.update((prev) =>
       prev.map((f) =>
         f.id === id
@@ -306,6 +309,7 @@ export class TemplateService {
   }
 
   convertFieldToCustomField(fieldId: number, customField: CustomField) {
+    if (this.isPublished(fieldId)) return;
     this.fields.update((prev) =>
       prev.map((f) =>
         f.id === fieldId
@@ -340,7 +344,7 @@ export class TemplateService {
     // 2. Sync changes automatically to all fields in the template created from this custom field
     this.fields.update((prev) =>
       prev.map((f) => {
-        if (f.customFieldId === updatedCustomField.id) {
+        if (!f.publishedDefinition && f.customFieldId === updatedCustomField.id) {
           return {
             ...f,
             name: updatedCustomField.name,
@@ -359,10 +363,12 @@ export class TemplateService {
   }
 
   updateFieldStatus(id: number, status: string) {
+    if (this.isPublished(id)) return;
     this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, status } : f)));
   }
 
   updateOption(fieldId: number, optionIndex: number, value: string) {
+    if (this.isPublished(fieldId)) return;
     this.fields.update((prev) =>
       prev.map((f) => {
         if (f.id === fieldId) {
@@ -382,6 +388,7 @@ export class TemplateService {
   }
 
   addOption(fieldId: number) {
+    if (this.isPublished(fieldId)) return;
     this.fields.update((prev) =>
       prev.map((f) => {
         if (f.id === fieldId) {
@@ -399,6 +406,7 @@ export class TemplateService {
   }
 
   deleteOption(fieldId: number, optionIndex: number) {
+    if (this.isPublished(fieldId)) return;
     this.fields.update((prev) =>
       prev.map((f) => {
         if (f.id === fieldId) {
@@ -416,7 +424,12 @@ export class TemplateService {
     );
   }
 
+  isPublished(id: number): boolean {
+    return !!this.fields().find((field) => field.id === id)?.publishedDefinition;
+  }
+
   updateFieldSettings(id: number, changes: Partial<Field>): string | null {
+    if (this.isPublished(id)) return 'Published fields are read-only. Editing a draft version is not available yet.';
     const fields = this.fields().map((field) => (field.id === id ? { ...field, ...changes } : field));
     try {
       buildTemplate({
@@ -434,6 +447,7 @@ export class TemplateService {
   }
 
   updateDefaultValue(id: number, value: FieldDefaultValue) {
+    if (this.isPublished(id)) return;
     this.fields.update((prev) =>
       prev.map((f) =>
         f.id === id && defaultValueError(f, value) === null
@@ -444,19 +458,23 @@ export class TemplateService {
   }
 
   toggleAllowMultiple(id: number) {
+    if (this.isPublished(id)) return;
     this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, allowMultiple: !f.allowMultiple } : f)));
   }
 
   /** The one value a static field shows. */
   updateContent(id: number, content: string) {
+    if (this.isPublished(id)) return;
     this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, content } : f)));
   }
 
   updateHelpText(id: number, helpText: string) {
+    if (this.isPublished(id)) return;
     this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, helpText } : f)));
   }
 
   updateControlledTermConfig(id: number, config: ControlledTermConfig) {
+    if (this.isPublished(id)) return;
     this.fields.update((prev) =>
       prev.map((f) =>
         f.id === id

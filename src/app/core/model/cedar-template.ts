@@ -599,6 +599,8 @@ function hasVocabulary(field: Field): boolean {
 }
 
 function buildField(field: Field): TemplateField {
+  if (field.publishedDefinition)
+    return CedarReaders.json().getStrict().getTemplateFieldReader().readFromString(field.publishedDefinition).field;
   const descriptor = descriptorOf(field.type);
   const builder = hasVocabulary(field) ? descriptor.build() : descriptorOf('text').build();
 
@@ -1026,6 +1028,10 @@ export function toDesignerTemplate(template: Template): DesignerTemplate {
 
     fields.push({
       id: index + 1,
+      publishedDefinition:
+        field.bibo_status === BiboStatus.PUBLISHED
+          ? JSON.stringify(CedarWriters.json().getStrict().getFieldWriterForField(field).getAsJsonNode(field))
+          : undefined,
       type: paletteTypeOf(field),
       name: field.schema_name ?? info.name,
       status: dynamic.requiredValue ? 'required' : dynamic.recommendedValue ? 'recommended' : 'optional',

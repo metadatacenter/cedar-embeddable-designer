@@ -1,293 +1,302 @@
-<div class="px-4 py-3">
-  <!-- Drag Handle Row -->
-  @if (service.selectedField() === field.id) {
-    <div
-      class="flex justify-center items-center absolute left-0 right-0 top-1.5 cursor-grab text-gray-400 hover:text-gray-600"
-      cdkDragHandle
-    >
-      <app-icon key="list" className="w-5 h-4"></app-icon>
-    </div>
-  }
-
-  <!-- Header Row: Icon, Name editing, Type select -->
-  <div class="flex items-center gap-2 flex-wrap">
-    <!-- Icon dropdown type switch -->
-    <div class="relative flex-shrink-0">
-      <button
-        (click)="
-          $event.stopPropagation();
-          service.fieldTypeDropdown.set(service.fieldTypeDropdown() === field.id ? null : field.id);
-          service.selectedField.set(field.id)
-        "
-        class="cursor-pointer hover:bg-gray-100 rounded px-2 py-1 -ml-2 transition-colors flex items-center gap-1.5 text-left border-none bg-transparent"
-        [style.color]="service.COLORS.primary"
+@if (field.publishedDefinition) {
+  <p role="status" class="published-warning">
+    Published field — read-only. Editing a draft version is not available yet.
+  </p>
+}
+<fieldset [disabled]="!!field.publishedDefinition" class="border-0 m-0 p-0 min-w-0">
+  <div class="px-4 py-3">
+    <!-- Drag Handle Row -->
+    @if (service.selectedField() === field.id) {
+      <div
+        class="flex justify-center items-center absolute left-0 right-0 top-1.5 cursor-grab text-gray-400 hover:text-gray-600"
+        cdkDragHandle
       >
-        <app-icon [key]="getFieldIcon(field)" className="w-5 h-5"></app-icon>
-        <span class="text-[10px] text-gray-500 font-semibold uppercase">▼</span>
-      </button>
+        <app-icon key="list" className="w-5 h-4"></app-icon>
+      </div>
+    }
 
-      <!-- Field Type Switch Panel -->
-      @if (service.fieldTypeDropdown() === field.id) {
-        <div
-          class="absolute left-0 top-full mt-1 bg-white rounded-lg shadow-xl border border-gray-200 z-50 w-64 animate-fade-in field-type-dropdown-container"
+    <!-- Header Row: Icon, Name editing, Type select -->
+    <div class="flex items-center gap-2 flex-wrap">
+      <!-- Icon dropdown type switch -->
+      <div class="relative flex-shrink-0">
+        <button
+          (click)="
+            $event.stopPropagation();
+            service.fieldTypeDropdown.set(service.fieldTypeDropdown() === field.id ? null : field.id);
+            service.selectedField.set(field.id)
+          "
+          class="cursor-pointer hover:bg-gray-100 rounded px-2 py-1 -ml-2 transition-colors flex items-center gap-1.5 text-left border-none bg-transparent"
+          [style.color]="service.COLORS.primary"
         >
-          <div class="p-2 max-h-80 overflow-y-auto custom-scrollbar">
-            <!-- Standard Fields -->
-            <div class="mb-2">
-              <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide px-2 py-1">Standard Fields</p>
-              @for (item of FIELD_TYPES_LIST | keyvalue; track item.key) {
-                <button
-                  (click)="
-                    $event.stopPropagation();
-                    service.updateFieldType(field.id, item.key);
-                    service.fieldTypeDropdown.set(null)
-                  "
-                  class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left border-none bg-transparent cursor-pointer"
-                  [class.bg-teal-50]="field.type === item.key && !field.customFieldId"
-                >
-                  <app-icon [key]="item.key" className="w-5 h-5 text-gray-500"></app-icon>
-                  <div class="flex-1 min-w-0">
-                    <span class="text-sm font-medium text-gray-900 block">{{ item.value.label }}</span>
-                    <span class="text-xs text-gray-500 truncate block">{{ item.value.preview }}</span>
-                  </div>
-                </button>
+          <app-icon [key]="getFieldIcon(field)" className="w-5 h-5"></app-icon>
+          <span class="text-[10px] text-gray-500 font-semibold uppercase">▼</span>
+        </button>
+
+        <!-- Field Type Switch Panel -->
+        @if (service.fieldTypeDropdown() === field.id) {
+          <div
+            class="absolute left-0 top-full mt-1 bg-white rounded-lg shadow-xl border border-gray-200 z-50 w-64 animate-fade-in field-type-dropdown-container"
+          >
+            <div class="p-2 max-h-80 overflow-y-auto custom-scrollbar">
+              <!-- Standard Fields -->
+              <div class="mb-2">
+                <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide px-2 py-1">Standard Fields</p>
+                @for (item of FIELD_TYPES_LIST | keyvalue; track item.key) {
+                  <button
+                    (click)="
+                      $event.stopPropagation();
+                      service.updateFieldType(field.id, item.key);
+                      service.fieldTypeDropdown.set(null)
+                    "
+                    class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left border-none bg-transparent cursor-pointer"
+                    [class.bg-teal-50]="field.type === item.key && !field.customFieldId"
+                  >
+                    <app-icon [key]="item.key" className="w-5 h-5 text-gray-500"></app-icon>
+                    <div class="flex-1 min-w-0">
+                      <span class="text-sm font-medium text-gray-900 block">{{ item.value.label }}</span>
+                      <span class="text-xs text-gray-500 truncate block">{{ item.value.preview }}</span>
+                    </div>
+                  </button>
+                }
+              </div>
+              <!-- Custom fields from libraries -->
+              @if (service.libraries().length > 0) {
+                <div class="border-t border-gray-200 pt-2">
+                  <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide px-2 py-1">Custom Fields</p>
+                  <!-- Library Selection -->
+                  @if (service.fieldTypeDropdownLibrary() === null) {
+                    @for (lib of service.libraries(); track lib.id) {
+                      <button
+                        (click)="$event.stopPropagation(); service.fieldTypeDropdownLibrary.set(lib.id)"
+                        class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left border-none bg-transparent cursor-pointer"
+                      >
+                        <app-icon key="library" className="w-5 h-5 text-gray-500"></app-icon>
+                        <div class="flex-1 min-w-0">
+                          <span class="text-sm font-medium text-gray-900 block">{{ lib.name }}</span>
+                        </div>
+                        <span class="text-gray-400 text-xs">▶</span>
+                      </button>
+                    }
+                  } @else {
+                    <button
+                      (click)="$event.stopPropagation(); service.fieldTypeDropdownLibrary.set(null)"
+                      class="w-full flex items-center gap-2 p-2 hover:bg-gray-50 text-left border-none bg-transparent cursor-pointer text-gray-600 mb-1"
+                    >
+                      <span class="text-xs">◀ Back</span>
+                    </button>
+                    @for (cf of service.customFields(); track cf.id) {
+                      <button
+                        [style.display]="cf.libraryId === service.fieldTypeDropdownLibrary() ? 'flex' : 'none'"
+                        (click)="
+                          $event.stopPropagation();
+                          service.convertFieldToCustomField(field.id, cf);
+                          service.fieldTypeDropdown.set(null);
+                          service.fieldTypeDropdownLibrary.set(null)
+                        "
+                        class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left border-none bg-transparent cursor-pointer"
+                        [class.bg-teal-50]="field.customFieldId === cf.id"
+                      >
+                        <app-icon [key]="cf.baseType" className="w-5 h-5 text-gray-500"></app-icon>
+                        <div class="flex-1 min-w-0">
+                          <span class="text-sm font-medium text-gray-900 block">{{ cf.name }}</span>
+                          @if (cf.description) {
+                            <span class="text-xs text-gray-500 truncate block">{{ cf.description }}</span>
+                          }
+                        </div>
+                      </button>
+                    }
+                  }
+                  <!-- Custom Fields under library list -->
+                </div>
               }
             </div>
-            <!-- Custom fields from libraries -->
-            @if (service.libraries().length > 0) {
-              <div class="border-t border-gray-200 pt-2">
-                <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide px-2 py-1">Custom Fields</p>
-                <!-- Library Selection -->
-                @if (service.fieldTypeDropdownLibrary() === null) {
-                  @for (lib of service.libraries(); track lib.id) {
-                    <button
-                      (click)="$event.stopPropagation(); service.fieldTypeDropdownLibrary.set(lib.id)"
-                      class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left border-none bg-transparent cursor-pointer"
-                    >
-                      <app-icon key="library" className="w-5 h-5 text-gray-500"></app-icon>
-                      <div class="flex-1 min-w-0">
-                        <span class="text-sm font-medium text-gray-900 block">{{ lib.name }}</span>
-                      </div>
-                      <span class="text-gray-400 text-xs">▶</span>
-                    </button>
-                  }
-                } @else {
-                  <button
-                    (click)="$event.stopPropagation(); service.fieldTypeDropdownLibrary.set(null)"
-                    class="w-full flex items-center gap-2 p-2 hover:bg-gray-50 text-left border-none bg-transparent cursor-pointer text-gray-600 mb-1"
-                  >
-                    <span class="text-xs">◀ Back</span>
-                  </button>
-                  @for (cf of service.customFields(); track cf.id) {
-                    <button
-                      [style.display]="cf.libraryId === service.fieldTypeDropdownLibrary() ? 'flex' : 'none'"
-                      (click)="
-                        $event.stopPropagation();
-                        service.convertFieldToCustomField(field.id, cf);
-                        service.fieldTypeDropdown.set(null);
-                        service.fieldTypeDropdownLibrary.set(null)
-                      "
-                      class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left border-none bg-transparent cursor-pointer"
-                      [class.bg-teal-50]="field.customFieldId === cf.id"
-                    >
-                      <app-icon [key]="cf.baseType" className="w-5 h-5 text-gray-500"></app-icon>
-                      <div class="flex-1 min-w-0">
-                        <span class="text-sm font-medium text-gray-900 block">{{ cf.name }}</span>
-                        @if (cf.description) {
-                          <span class="text-xs text-gray-500 truncate block">{{ cf.description }}</span>
-                        }
-                      </div>
-                    </button>
-                  }
-                }
-                <!-- Custom Fields under library list -->
-              </div>
-            }
           </div>
-        </div>
-      }
-    </div>
+        }
+      </div>
 
-    <!-- Field Title Name editing -->
-    <input
-      type="text"
-      [ngModel]="field.name"
-      (ngModelChange)="service.updateFieldName(field.id, $event)"
-      class="text-sm font-semibold text-gray-900 border-none outline-none pb-0.5 flex-1 min-w-32 bg-transparent border-b-2"
-      [style.borderBottomColor]="service.selectedField() === field.id ? service.COLORS.primary : '#d1d5db'"
-      (focus)="service.selectedField.set(field.id)"
-      placeholder="Enter field name"
-    />
+      <!-- Field Title Name editing -->
+      <input
+        type="text"
+        [ngModel]="field.name"
+        (ngModelChange)="service.updateFieldName(field.id, $event)"
+        class="text-sm font-semibold text-gray-900 border-none outline-none pb-0.5 flex-1 min-w-32 bg-transparent border-b-2"
+        [style.borderBottomColor]="service.selectedField() === field.id ? service.COLORS.primary : '#d1d5db'"
+        (focus)="service.selectedField.set(field.id)"
+        placeholder="Enter field name"
+      />
 
-    <!-- Label Badge details -->
-    <div class="text-[10px] bg-gray-100 border text-gray-600 font-medium px-2 py-0.5 rounded-full capitalize">
-      {{ getFieldTypeName(field) }}
-    </div>
+      <!-- Label Badge details -->
+      <div class="text-[10px] bg-gray-100 border text-gray-600 font-medium px-2 py-0.5 rounded-full capitalize">
+        {{ getFieldTypeName(field) }}
+      </div>
 
-    <!--
+      <!--
       Required, Allow multiple and delete sit on the title row rather than in a
       footer bar of their own. They are one line of controls either way, and a
       bar cost every card its own rule, its padding and 36px of height.
     -->
-    @if (service.preferences().showRequired && allowsStatus(field.type)) {
-      <select
-        aria-label="Requirement"
-        [ngModel]="field.status"
-        (ngModelChange)="service.updateFieldStatus(field.id, $event)"
-        class="text-[11px] text-gray-600 bg-gray-50 border border-gray-200 rounded px-1 py-0.5"
-      >
-        <option value="optional">Optional</option>
-        <option value="recommended">Recommended</option>
-        <option value="required">Required</option>
-      </select>
-    }
-    @if (service.preferences().showAllowMultiple && allowsMultiple(field.type)) {
-      <label class="flex items-center gap-1 cursor-pointer group shrink-0">
-        <input
-          type="checkbox"
-          [checked]="field.allowMultiple"
-          (change)="service.toggleAllowMultiple(field.id)"
-          class="w-3.5 h-3.5 checkbox-white"
-        />
-        <span class="text-[11px] text-gray-600 group-hover:text-gray-900 whitespace-nowrap">Allow multiple</span>
-      </label>
-    }
-    <button
-      (click)="service.deleteField(field.id)"
-      class="text-gray-400 hover:text-red-600 p-0.5 transition-colors border-none bg-transparent cursor-pointer shrink-0"
-      title="Delete field"
-    >
-      <app-icon key="trash" className="w-4 h-4 text-gray-400 hover:text-red-600"></app-icon>
-    </button>
-  </div>
-
-  <!-- Field Preview / Options Editing Inside Card -->
-  <!-- Option Editing for Multiple Choice / Checkboxes -->
-  @if (allowsOptions(field.type)) {
-    <div class="space-y-0.5 mt-2 px-1">
-      @for (option of field.options; track $index; let optIdx = $index) {
-        <div class="flex items-center gap-3 group/option px-1">
-          <app-icon [key]="field.type" className="w-4 h-4 text-gray-400"></app-icon>
-          <input
-            type="text"
-            [ngModel]="option"
-            (ngModelChange)="service.updateOption(field.id, optIdx, $event)"
-            class="text-sm text-gray-700 border-none outline-none bg-transparent flex-1 border-b border-gray-200 focus:border-teal-500 pb-0.5"
-            (focus)="service.selectedField.set(field.id)"
-            [placeholder]="'Option ' + (optIdx + 1)"
-          />
-          <!-- Delete option button -->
-          @if (field.options.length > 1) {
-            <button
-              (click)="service.deleteOption(field.id, optIdx)"
-              class="text-gray-400 hover:text-red-600 transition-colors cursor-pointer border-none bg-transparent flex items-center justify-center p-0.5"
-              title="Delete option"
-            >
-              <app-icon key="trash" className="w-3.5 h-3.5 text-gray-400 hover:text-red-600"></app-icon>
-            </button>
-          }
-        </div>
+      @if (service.preferences().showRequired && allowsStatus(field.type)) {
+        <select
+          aria-label="Requirement"
+          [ngModel]="field.status"
+          (ngModelChange)="service.updateFieldStatus(field.id, $event)"
+          class="text-[11px] text-gray-600 bg-gray-50 border border-gray-200 rounded px-1 py-0.5"
+        >
+          <option value="optional">Optional</option>
+          <option value="recommended">Recommended</option>
+          <option value="required">Required</option>
+        </select>
       }
-      <!-- Add Option Button -->
+      @if (service.preferences().showAllowMultiple && allowsMultiple(field.type)) {
+        <label class="flex items-center gap-1 cursor-pointer group shrink-0">
+          <input
+            type="checkbox"
+            [checked]="field.allowMultiple"
+            (change)="service.toggleAllowMultiple(field.id)"
+            class="w-3.5 h-3.5 checkbox-white"
+          />
+          <span class="text-[11px] text-gray-600 group-hover:text-gray-900 whitespace-nowrap">Allow multiple</span>
+        </label>
+      }
       <button
-        (click)="service.addOption(field.id); service.selectedField.set(field.id)"
-        class="flex items-center gap-1.5 ml-7 text-xs text-gray-500 hover:text-teal-600 transition-colors border-none bg-transparent cursor-pointer font-medium mt-0.5"
+        (click)="service.deleteField(field.id)"
+        class="text-gray-400 hover:text-red-600 p-0.5 transition-colors border-none bg-transparent cursor-pointer shrink-0"
+        title="Delete field"
       >
-        <span class="text-sm font-bold">＋</span> Add option
+        <app-icon key="trash" className="w-4 h-4 text-gray-400 hover:text-red-600"></app-icon>
       </button>
     </div>
-  }
 
-  <!-- Static placeholder text preview for standard types -->
-  @if (!allowsOptions(field.type) && field.type !== 'controlledTerms' && !contentLabel(field.type)) {
-    <div class="mt-2.5 px-1">
-      <input
-        type="text"
-        disabled
-        [placeholder]="
-          field.temporal?.type === 'xsd:dateTime' ? 'Date and time' : FIELD_TYPES_LIST[field.type]?.preview || ''
-        "
-        class="text-sm text-gray-500 w-full bg-gray-50 border border-gray-200 rounded-md px-3 py-1.5 cursor-not-allowed"
-      />
-    </div>
-  }
+    <!-- Field Preview / Options Editing Inside Card -->
+    <!-- Option Editing for Multiple Choice / Checkboxes -->
+    @if (allowsOptions(field.type)) {
+      <div class="space-y-0.5 mt-2 px-1">
+        @for (option of field.options; track $index; let optIdx = $index) {
+          <div class="flex items-center gap-3 group/option px-1">
+            <app-icon [key]="field.type" className="w-4 h-4 text-gray-400"></app-icon>
+            <input
+              type="text"
+              [ngModel]="option"
+              (ngModelChange)="service.updateOption(field.id, optIdx, $event)"
+              class="text-sm text-gray-700 border-none outline-none bg-transparent flex-1 border-b border-gray-200 focus:border-teal-500 pb-0.5"
+              (focus)="service.selectedField.set(field.id)"
+              [placeholder]="'Option ' + (optIdx + 1)"
+            />
+            <!-- Delete option button -->
+            @if (field.options.length > 1) {
+              <button
+                (click)="service.deleteOption(field.id, optIdx)"
+                class="text-gray-400 hover:text-red-600 transition-colors cursor-pointer border-none bg-transparent flex items-center justify-center p-0.5"
+                title="Delete option"
+              >
+                <app-icon key="trash" className="w-3.5 h-3.5 text-gray-400 hover:text-red-600"></app-icon>
+              </button>
+            }
+          </div>
+        }
+        <!-- Add Option Button -->
+        <button
+          (click)="service.addOption(field.id); service.selectedField.set(field.id)"
+          class="flex items-center gap-1.5 ml-7 text-xs text-gray-500 hover:text-teal-600 transition-colors border-none bg-transparent cursor-pointer font-medium mt-0.5"
+        >
+          <span class="text-sm font-bold">＋</span> Add option
+        </button>
+      </div>
+    }
 
-  <!-- Controlled Vocabulary configuration -->
-  @if (field.type === 'controlledTerms') {
-    <div>
-      <app-controlled-term-config [field]="field"></app-controlled-term-config>
-    </div>
-  }
+    <!-- Static placeholder text preview for standard types -->
+    @if (!allowsOptions(field.type) && field.type !== 'controlledTerms' && !contentLabel(field.type)) {
+      <div class="mt-2.5 px-1">
+        <input
+          type="text"
+          disabled
+          [placeholder]="
+            field.temporal?.type === 'xsd:dateTime' ? 'Date and time' : FIELD_TYPES_LIST[field.type]?.preview || ''
+          "
+          class="text-sm text-gray-500 w-full bg-gray-50 border border-gray-200 rounded-md px-3 py-1.5 cursor-not-allowed"
+        />
+      </div>
+    }
 
-  <!--
+    <!-- Controlled Vocabulary configuration -->
+    @if (field.type === 'controlledTerms') {
+      <div>
+        <app-controlled-term-config [field]="field"></app-controlled-term-config>
+      </div>
+    }
+
+    <!--
     The one value a static field carries: the markup of a rich text block, the
     address of an image, the id of a video. Editable, where the preview below is
     only a placeholder, because this is content the author writes rather than a
     hint about what a form-filler will type.
   -->
-  @if (contentLabel(field.type); as label) {
-    <div class="mt-2.5 px-1">
-      <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5 block">{{ label }}</label>
-      @if (field.type === 'richText') {
-        <textarea
-          rows="4"
-          aria-label="Rich text markup"
-          [ngModel]="field.content || ''"
-          (ngModelChange)="service.updateContent(field.id, $event)"
-          class="text-sm w-full border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:border-teal-600"
-        ></textarea>
-      } @else {
-        <input
-          type="text"
-          [ngModel]="field.content || ''"
-          (ngModelChange)="service.updateContent(field.id, $event)"
-          [placeholder]="FIELD_TYPES_LIST[field.type]?.preview || ''"
-          class="text-sm w-full border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:border-teal-600"
-        />
-      }
-    </div>
-  }
-
-  <!-- Help Text and Default Value editing (Only if configured in preferences) -->
-  @if (service.preferences().showHelpText || (service.preferences().showDefaultValue && allowsDefault(field.type))) {
-    <div class="space-y-2 mt-2.5 px-1 border-t border-gray-100 pt-2.5">
-      @if (service.preferences().showHelpText) {
-        <div>
-          <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5 block">Help Text</label>
+    @if (contentLabel(field.type); as label) {
+      <div class="mt-2.5 px-1">
+        <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5 block">{{ label }}</label>
+        @if (field.type === 'richText') {
+          <textarea
+            rows="4"
+            aria-label="Rich text markup"
+            [ngModel]="field.content || ''"
+            (ngModelChange)="service.updateContent(field.id, $event)"
+            class="text-sm w-full border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:border-teal-600"
+          ></textarea>
+        } @else {
           <input
             type="text"
-            [ngModel]="field.helpText || ''"
-            (ngModelChange)="service.updateHelpText(field.id, $event)"
-            placeholder="Add helper instructions for users..."
-            class="text-sm text-gray-700 w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-teal-500"
-            (focus)="service.selectedField.set(field.id)"
+            [ngModel]="field.content || ''"
+            (ngModelChange)="service.updateContent(field.id, $event)"
+            [placeholder]="FIELD_TYPES_LIST[field.type]?.preview || ''"
+            class="text-sm w-full border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:border-teal-600"
           />
-        </div>
-      }
-      <!-- A static field shows something rather than collecting one, so it has
+        }
+      </div>
+    }
+
+    <!-- Help Text and Default Value editing (Only if configured in preferences) -->
+    @if (service.preferences().showHelpText || (service.preferences().showDefaultValue && allowsDefault(field.type))) {
+      <div class="space-y-2 mt-2.5 px-1 border-t border-gray-100 pt-2.5">
+        @if (service.preferences().showHelpText) {
+          <div>
+            <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5 block"
+              >Help Text</label
+            >
+            <input
+              type="text"
+              [ngModel]="field.helpText || ''"
+              (ngModelChange)="service.updateHelpText(field.id, $event)"
+              placeholder="Add helper instructions for users..."
+              class="text-sm text-gray-700 w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-teal-500"
+              (focus)="service.selectedField.set(field.id)"
+            />
+          </div>
+        }
+        <!-- A static field shows something rather than collecting one, so it has
            no default for a form-filler to start from. -->
-      @if (service.preferences().showDefaultValue && allowsDefault(field.type)) {
-        <div>
-          <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5 block"
-            >Default Value</label
-          >
-          <app-field-default-value [field]="field"></app-field-default-value>
-        </div>
-      }
+        @if (service.preferences().showDefaultValue && allowsDefault(field.type)) {
+          <div>
+            <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5 block"
+              >Default Value</label
+            >
+            <app-field-default-value [field]="field"></app-field-default-value>
+          </div>
+        }
+      </div>
+    }
+    <app-field-settings [field]="field"></app-field-settings>
+  </div>
+
+  @if (choiceDefaultConflict(field); as conflict) {
+    <div class="mt-1 px-1">
+      <p role="alert" class="ced-field-error">{{ conflict }}</p>
+      <button
+        type="button"
+        class="text-xs text-teal-700 underline"
+        (click)="service.updateDefaultValue(field.id, { kind: 'none' })"
+      >
+        Clear conflicting default
+      </button>
     </div>
   }
-  <app-field-settings [field]="field"></app-field-settings>
-</div>
-
-@if (choiceDefaultConflict(field); as conflict) {
-  <div class="mt-1 px-1">
-    <p role="alert" class="ced-field-error">{{ conflict }}</p>
-    <button
-      type="button"
-      class="text-xs text-teal-700 underline"
-      (click)="service.updateDefaultValue(field.id, { kind: 'none' })"
-    >
-      Clear conflicting default
-    </button>
-  </div>
-}
+</fieldset>

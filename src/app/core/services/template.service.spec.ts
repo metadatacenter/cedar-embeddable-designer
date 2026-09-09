@@ -22,6 +22,29 @@ describe('TemplateService', () => {
     service = TestBed.inject(TemplateService);
   });
 
+  it('blocks published field mutations and preserves the published definition', () => {
+    const source = JSON.parse(JSON.stringify(service.templateJson()));
+    source.properties.Title['bibo:status'] = 'bibo:published';
+    source.properties.Title['pav:version'] = '1.2.0';
+    source.properties.Title['pav:createdOn'] = '2026-01-01T00:00:00Z';
+    service.loadTemplate(source);
+    const before = service.templateJson();
+    const id = service.fields()[0].id;
+    expect(service.isPublished(id)).toBe(true);
+    service.updateFieldName(id, 'Changed');
+    service.updateFieldType(id, 'number');
+    service.updateFieldStatus(id, 'optional');
+    service.updateDefaultValue(id, { kind: 'literal', value: 'Changed' });
+    service.updateHelpText(id, 'Changed');
+    service.updateContent(id, 'Changed');
+    service.toggleAllowMultiple(id);
+    service.addOption(id);
+    service.deleteField(id);
+    expect(service.updateFieldSettings(id, { preferredLabel: 'Changed' })).toContain('read-only');
+    expect(service.templateJson()).toEqual(before);
+    expect(service.isDirty()).toBe(false);
+  });
+
   describe('the template it builds', () => {
     it('is the same artifact on every read', () => {
       expect(JSON.stringify(service.templateJson())).toBe(JSON.stringify(service.templateJson()));

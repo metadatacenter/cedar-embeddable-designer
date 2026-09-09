@@ -74,7 +74,10 @@ export class FieldDefaultValueComponent {
     effect(() => {
       const host = this.mount()?.nativeElement;
       const field = this.field();
-      const config = { ...this.service.fieldEditorConfig(), readOnlyMode: field.type === 'controlledTerms' };
+      const config = {
+        ...this.service.fieldEditorConfig(),
+        readOnlyMode: !!field.publishedDefinition || field.type === 'controlledTerms',
+      };
       if (!host) return;
       if (!this.editor || this.configKey !== JSON.stringify(config)) {
         this.editor?.removeEventListener('valueChange', this.acceptValue);

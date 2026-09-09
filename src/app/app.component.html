@@ -343,6 +343,7 @@
                 <!-- Drag Container -->
                 <div
                   cdkDrag
+                  [cdkDragDisabled]="!!field.publishedDefinition"
                   (click)="service.selectedField.set(field.id)"
                   class="field-drag-container"
                   [class.selected]="service.selectedField() === field.id"
