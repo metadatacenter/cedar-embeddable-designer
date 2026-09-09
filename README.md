@@ -75,10 +75,10 @@ is not in place yet.
 `npm run build:app` compiles `src/main.dev.ts` and the host page around it, which
 is what `npm start` serves.
 
-## The Two Components It Works With
+## The Sibling Components It Works With
 
-Two of the designer's surfaces are other web components the embedding page loads,
-and this bundle carries neither. They are siblings rather than dependencies, so a
+The designer uses sibling web components the embedding page loads,
+and this bundle carries none of them. They are siblings rather than dependencies, so a
 host loads three scripts and each component stays its own size:
 
 ```html
@@ -105,7 +105,15 @@ drawing of a form of the designer's own. It is asked for a read-only form with n
 instance behind it, which is how CEE reads a template as a statement of what each
 field will accept. Without it the preview panel says so.
 
-To try all three together from source:
+Text fields edit their default through `<cedar-embeddable-field>` (CEF), registered by
+that same CEE script. Choose the **semantic** preset in Preferences to show Default
+Value, then type in the text field's control. The default is saved in the template;
+clearing the control removes it. Opening a saved template restores the default.
+Editing text defaults requires a CEE bundle that registers CEF (the source builds
+below do). Until CEF loads, the default editor is unavailable and saved defaults are
+preserved. Other field types retain their existing controls for now.
+
+To try all three scripts together from source:
 
 ```bash
 npm --prefix ../cedar-term-picker run dist

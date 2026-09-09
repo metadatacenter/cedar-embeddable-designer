@@ -258,14 +258,18 @@
           <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5 block"
             >Default Value</label
           >
-          <input
-            type="text"
-            [ngModel]="field.defaultValue || ''"
-            (ngModelChange)="service.updateDefaultValue(field.id, $event)"
-            placeholder="Define default value..."
-            class="text-sm text-gray-700 w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-teal-500"
-            (focus)="service.selectedField.set(field.id)"
-          />
+          @if (field.type === 'text') {
+            <app-text-default-value [field]="field"></app-text-default-value>
+          } @else {
+            <input
+              type="text"
+              [ngModel]="field.defaultValue || ''"
+              (ngModelChange)="service.updateDefaultValue(field.id, $event)"
+              placeholder="Define default value..."
+              class="text-sm text-gray-700 w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-teal-500"
+              (focus)="service.selectedField.set(field.id)"
+            />
+          }
         </div>
       }
     </div>

@@ -5,13 +5,21 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService, FIELD_TYPES } from '../../core/services/template.service';
 import { Field } from '../../core/models/types';
 import { allowsMultiple, allowsOptions, allowsStatus, contentKindOf } from '../../core/model/cedar-template';
+import { TextDefaultValueComponent } from '../text-default-value/text-default-value.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { ControlledTermConfigComponent } from '../controlled-term-config/controlled-term-config.component';
 
 @Component({
   selector: 'app-field-card',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent, ControlledTermConfigComponent, DragDropModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    IconComponent,
+    ControlledTermConfigComponent,
+    DragDropModule,
+    TextDefaultValueComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './field-card.component.html',
 })

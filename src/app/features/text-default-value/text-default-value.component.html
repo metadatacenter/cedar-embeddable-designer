@@ -1,0 +1,5 @@
+@if (available()) {
+  <div #mount (focusin)="service.selectedField.set(field().id)"></div>
+} @else {
+  <p role="status" class="text-sm text-gray-500">Default value editor is unavailable.</p>
+}

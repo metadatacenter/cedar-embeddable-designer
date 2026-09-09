@@ -524,6 +524,12 @@ function buildField(field: Field): TemplateField {
   return builder.build();
 }
 
+/** A standalone field artifact, written by the same path used for template children. */
+export function fieldToJson(field: Field): JsonNode {
+  const built = buildField(field);
+  return CedarWriters.json().getStrict().getFieldWriterForField(built).getAsJsonNode(built);
+}
+
 /** The designer's state, as a CEDAR template. */
 export function buildTemplate(state: DesignerTemplate): Template {
   const builder = CedarBuilders.templateBuilder()
