@@ -216,9 +216,12 @@ test('the real picker selects a default within the field vocabulary', async ({ p
       },
     });
   });
-  await page.route('**/fake-terminology/bioportal/integrated-search', (route) =>
-    route.fulfill({ json: { collection: [{ '@id': iri }] } }),
-  );
+  await page.route('**/fake-terminology/bioportal/integrated-search', (route) => {
+    const constraints = route.request().postDataJSON().parameterObject.valueConstraints;
+    expect(constraints.ontologies).toHaveLength(3);
+    expect(constraints.actions).toHaveLength(1);
+    return route.fulfill({ json: { collection: [{ '@id': iri }] } });
+  });
   const control = await openField(page, 'controlledTerms', {
     controlledTermConstraints: {
       constraints: [
@@ -228,20 +231,48 @@ test('the real picker selects a default within the field vocabulary', async ({ p
           ontologyName: 'Disease Ontology',
           version: { id: 'pinned-release' },
         },
+        {
+          sourceType: 'ontology',
+          ontologyId: 'DOID',
+          ontologyName: 'Disease Ontology',
+          version: { id: 'pinned-release' },
+        },
+        {
+          sourceType: 'ontology',
+          ontologyId: 'DOID',
+          ontologyName: 'Disease Ontology',
+          version: { id: 'another-release' },
+        },
       ],
-      actions: [],
+      actions: [
+        { action: 'delete', termUri: 'urn:excluded', sourceUri: 'urn:doid', source: 'DOID', type: 'OntologyClass' },
+      ],
     },
   });
   await page.addScriptTag({ path: process.env.PICKER_BUNDLE! });
   await control.getByRole('button', { name: 'Choose default term' }).click();
   const picker = control.locator('cedar-term-picker');
+  await expect(control.getByRole('dialog', { name: 'Choose default term' })).toBeVisible();
+  await expect(picker.getByLabel('Search vocabulary and release').locator('option')).toHaveCount(2);
   await picker.locator('input[type=search]').fill('cancer');
   await expect(picker.locator('.tab')).toHaveCount(1);
   await picker.locator('.rowhead').first().click();
   await picker.locator('.child.pick').first().click();
   await expect.poll(() => browsedPinnedRelease).toBe(true);
+  await page.screenshot({ path: '/tmp/ced-controlled-default-dialog.png' });
   await picker.locator('.child.pick').first().dblclick();
   await expect
     .poll(async () => (await constraints(page))['defaultValue'])
     .toEqual({ termUri: iri, 'rdfs:label': 'cancer' });
+});
+
+test('an unfinished controlled-term field stays controlled when reopened', async ({ page }) => {
+  const control = await openField(page, 'controlledTerms');
+  await expect(control.getByRole('status')).toContainText('Choose a vocabulary constraint');
+  const before = await currentTemplate(page);
+  expect(child(before, 'Value').properties).toHaveProperty('@id');
+  await page.evaluate((template) => {
+    (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
+  }, before);
+  await expect(page.locator('app-controlled-term-config')).toBeVisible();
 });

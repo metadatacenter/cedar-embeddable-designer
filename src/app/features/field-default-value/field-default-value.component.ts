@@ -33,7 +33,7 @@ interface FieldElement extends HTMLElement {
   selector: 'app-field-default-value',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './field-default-value.component.html',
-  styleUrl: '../../shared/_field-error.scss',
+  styleUrl: './field-default-value.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FieldDefaultValueComponent {
@@ -44,8 +44,8 @@ export class FieldDefaultValueComponent {
   readonly terminologyBaseUrl = this.terminology.baseUrl;
   readonly checking = signal(false);
   readonly pickerSources = computed(() => {
-    return (this.field().controlledTermConstraints?.constraints ?? []).flatMap((config) => {
-      const source = config.sourceType === 'ontology-branch' ? config.sourceId : config.ontologyId;
+    const sources = (this.field().controlledTermConstraints?.constraints ?? []).flatMap((config) => {
+      const source = config.sourceType === 'ontology-branch' ? config.sourceId : (config.ontologyId ?? config.sourceId);
       const acronym = source?.split('/').filter(Boolean).at(-1);
       return acronym
         ? [
@@ -57,12 +57,14 @@ export class FieldDefaultValueComponent {
           ]
         : [];
     });
+    return [...new Map(sources.map((source) => [JSON.stringify(source), source])).values()];
   });
   readonly available = signal(customElements.get(FIELD_TAG) !== undefined);
   readonly pickerAvailable = signal(customElements.get('cedar-term-picker') !== undefined);
   readonly pickerOpen = signal(false);
   readonly error = signal<string | null>(null);
   private readonly mount = viewChild<ElementRef<HTMLDivElement>>('mount');
+  private pending: object | null = null;
   private editor: FieldElement | null = null;
   private artifactKey: string | null = null;
   private configKey: string | null = null;
@@ -114,6 +116,7 @@ export class FieldDefaultValueComponent {
 
   private readonly acceptValue = (event: Event): void => {
     const detail = (event as CustomEvent<{ value: FieldDefaultValue; valid: boolean }>).detail;
+    if (this.field().type === 'controlledTerms' || this.field().publishedDefinition) return;
     if (detail?.valid === true) this.save(defaultFromCef(this.field(), detail.value));
   };
 
@@ -123,7 +126,21 @@ export class FieldDefaultValueComponent {
     if (error === null) this.service.updateDefaultValue(this.field().id, value);
   }
 
+  openPicker(): void {
+    if (this.field().publishedDefinition) return;
+    this.cancelPicker();
+    this.pickerOpen.set(true);
+  }
+
+  cancelPicker(): void {
+    this.pending = null;
+    this.pickerOpen.set(false);
+    this.checking.set(false);
+    this.error.set(null);
+  }
+
   clear(): void {
+    this.cancelPicker();
     this.save({ kind: 'none' });
   }
 
@@ -135,6 +152,9 @@ export class FieldDefaultValueComponent {
     }
     if (this.checking()) return;
     const field = this.field();
+    if (field.publishedDefinition || !this.pickerOpen()) return;
+    const attempt = {};
+    this.pending = attempt;
     this.checking.set(true);
     this.error.set(null);
     try {
@@ -144,7 +164,7 @@ export class FieldDefaultValueComponent {
         picked.termLabel,
       );
       // A response for a field the author has since changed cannot set its default.
-      if (this.destroyRef.destroyed || JSON.stringify(this.field()) !== JSON.stringify(field)) return;
+      if (this.destroyRef.destroyed || this.pending !== attempt || this.field() !== field) return;
       if (!allowed) {
         this.error.set('This term is not permitted by the field constraints.');
         return;
@@ -152,11 +172,15 @@ export class FieldDefaultValueComponent {
       this.save({ kind: 'iri', iri: picked.termIri, label: picked.termLabel });
       if (this.error() === null) this.pickerOpen.set(false);
     } catch (error) {
+      if (this.destroyRef.destroyed || this.pending !== attempt || this.field() !== field) return;
       this.error.set(
         error instanceof Error ? error.message : 'Could not check the term against the field constraints.',
       );
     } finally {
-      this.checking.set(false);
+      if (this.pending === attempt) {
+        this.pending = null;
+        this.checking.set(false);
+      }
     }
   }
 }

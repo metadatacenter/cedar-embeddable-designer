@@ -8,27 +8,41 @@
     } @else if (!pickerAvailable() || !terminologyBaseUrl()) {
       <p role="status" class="text-sm text-gray-500">Term picker is unavailable.</p>
     } @else {
-      <button type="button" class="text-sm text-teal-700 underline" (click)="pickerOpen.set(true)">
-        Choose default term
-      </button>
+      <button type="button" class="text-sm text-teal-700 underline" (click)="openPicker()">Choose default term</button>
       @if (pickerOpen()) {
-        <cedar-term-picker
-          [terminologyBaseUrl]="terminologyBaseUrl()"
-          [selectionMode]="'term'"
-          [sources]="pickerSources()"
-          (selected)="selectTerm($event)"
-          (cancelled)="pickerOpen.set(false)"
-        ></cedar-term-picker>
+        <div class="default-dialog-overlay">
+          <section role="dialog" aria-modal="true" aria-label="Choose default term" class="default-dialog">
+            <header>
+              <span
+                >Default value <i>{{ field().name }}</i></span
+              >
+              <button type="button" aria-label="Cancel default selection" (click)="cancelPicker()">×</button>
+            </header>
+            @if (checking()) {
+              <p role="status">Checking default term…</p>
+            }
+            @if (error()) {
+              <p role="alert" class="ced-field-error">{{ error() }}</p>
+            }
+            <cedar-term-picker
+              [terminologyBaseUrl]="terminologyBaseUrl()"
+              [selectionMode]="'term'"
+              [sources]="pickerSources()"
+              (selected)="selectTerm($event)"
+              (cancelled)="cancelPicker()"
+            ></cedar-term-picker>
+          </section>
+        </div>
       }
     }
     @if (field().defaultValue.kind !== 'none') {
       <button type="button" class="ml-3 text-sm text-gray-600 underline" (click)="clear()">Clear default</button>
     }
   }
-  @if (checking()) {
+  @if (checking() && !pickerOpen()) {
     <p role="status" class="text-sm text-gray-500">Checking default term…</p>
   }
-  @if (error()) {
+  @if (error() && !pickerOpen()) {
     <p role="alert" class="ced-field-error">{{ error() }}</p>
   }
 } @else {

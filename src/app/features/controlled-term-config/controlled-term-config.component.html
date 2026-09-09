@@ -1,3 +1,6 @@
+@if (!field.controlledTermConstraints?.constraints?.length) {
+  <p role="status" class="text-xs text-gray-500 mb-1">Choose vocabulary constraints for this field.</p>
+}
 <div class="constraint-summary" aria-label="Controlled-term constraints">
   @if (summaryAvailable) {
     <cedar-embeddable-field

@@ -115,14 +115,7 @@ describe('field types', () => {
    */
   const paletteTypes = Object.keys(FIELD_TYPES);
 
-  /**
-   * A field of the given type, complete enough to be one.
-   *
-   * A controlled-term field with no vocabulary chosen describes nothing, and is
-   * written as a text field rather than as a controlled-term field the reader
-   * cannot put back. Every case below is about a type that has been finished,
-   * which is what the palette entry promises.
-   */
+  /** Exercise each palette type with its normal authoring parameters. */
   const fieldOfType = (paletteType: string): Field =>
     field({
       type: paletteType,
@@ -479,24 +472,13 @@ describe('controlled-term constraints', () => {
     expect(built.valueConstraints.valueSets[0].name).toBe('Delivery Procedures');
   });
 
-  /**
-   * A controlled-term field with nothing to be constrained to is a text field.
-   *
-   * Not because controlled terms are a switch on a text field — in this designer
-   * they are a type of their own — but because a field constrained to nothing is
-   * the one shape that does not survive being saved and reopened. It went out
-   * IRI-shaped with four empty constraint lists and came back a text field, so
-   * the values it would collect changed from `@id` to `@value` on an
-   * open-and-save that touched nothing.
-   */
-  it('writes a controlled-term field with no vocabulary as the text field it is', () => {
+  it('keeps an empty controlled-term field IRI-valued through JSON and YAML', () => {
     const state = templateOf(field({ type: 'controlledTerms', name: 'F' }));
     const built = child(state, 'F');
-    const properties = built['properties'] as Record<string, unknown>;
-
-    expect(built['_valueConstraints']).not.toHaveProperty('ontologies');
-    expect(properties).not.toHaveProperty('@id');
-    expect(toDesignerTemplate(readTemplate(json(state))).fields[0].type).toBe('text');
+    expect(built['properties']).toHaveProperty('@id');
+    for (const source of [json(state), templateToYaml(buildTemplate(state))]) {
+      expect(toDesignerTemplate(readTemplate(source)).fields[0].type).toBe('controlledTerms');
+    }
   });
 
   it('writes the vocabulary as constraints once an author has chosen one', () => {
