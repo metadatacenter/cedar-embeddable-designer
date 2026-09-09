@@ -61,6 +61,10 @@ export class CedarEmbeddableDesignerElementComponent {
     }
     this.configured = true;
     this.terminology.configure(value);
+    this.service.fieldEditorConfig.set({
+      bridgeBaseUrl: value.bridgeBaseUrl,
+      terminologyBaseUrl: value.terminologyBaseUrl,
+    });
   }
 
   /**

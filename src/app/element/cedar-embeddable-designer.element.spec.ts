@@ -76,12 +76,16 @@ describe('CedarEmbeddableDesignerElementComponent', () => {
      * is where a declared option that nothing consumes normally appears.
      */
     it('reads every key its contract declares', () => {
-      const config: Required<CedConfig> = { terminologyBaseUrl: 'https://declared.example.org/' };
+      const config: Required<CedConfig> = {
+        terminologyBaseUrl: 'https://declared.example.org/',
+        bridgeBaseUrl: 'https://bridge.example.org/',
+      };
       const fixture = create();
 
       fixture.componentRef.setInput('config', config);
 
       expect(terminology.baseUrl()).toBe(config.terminologyBaseUrl);
+      expect(fixture.componentInstance.service.fieldEditorConfig().bridgeBaseUrl).toBe(config.bridgeBaseUrl);
     });
   });
 

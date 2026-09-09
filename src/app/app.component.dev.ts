@@ -58,7 +58,10 @@ export class DevHostComponent {
    * in the versioning runbook; without one, search reports the failure rather
    * than inventing a result.
    */
-  readonly config: CedConfig = { terminologyBaseUrl: 'http://localhost:9004/' };
+  readonly config: CedConfig = {
+    terminologyBaseUrl: 'http://localhost:9004/',
+    bridgeBaseUrl: 'https://bridge.metadatacenter.orgx/',
+  };
 
   readonly changeCount = signal(0);
 

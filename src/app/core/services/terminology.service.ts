@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import { CeeTemplateObject } from '../model/cee-preview';
 import { CedConfig } from '../../ced-public-api';
 
 /**
@@ -58,6 +59,29 @@ export class TerminologyService {
     this.baseUrl.set(normalized);
     this.searchUrl = normalized === null ? null : `${normalized}${SEARCH_PATH}`;
     this.configured.set(this.searchUrl !== null);
+  }
+
+  /** Check membership with the same constrained endpoint that supplies CEE's values. */
+  async allowsDefault(field: CeeTemplateObject, iri: string, label: string): Promise<boolean> {
+    const base = this.baseUrl();
+    if (!base) throw new Error('Terminology server is not configured.');
+    for (let page = 1; page <= 100; page++) {
+      const response = await fetch(`${base}bioportal/integrated-search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          parameterObject: { inputText: label, valueConstraints: field['_valueConstraints'] },
+          page,
+          pageSize: 50,
+        }),
+      });
+      if (!response.ok) throw new Error(`Could not check the default term (${response.status}).`);
+      const result = (await response.json()) as { collection?: Array<{ '@id': string }> };
+      if (!Array.isArray(result.collection)) throw new Error('The terminology server returned no result collection.');
+      if (result.collection.some((term) => term['@id'] === iri)) return true;
+      if (result.collection.length < 50) return false;
+    }
+    throw new Error('The term could not be verified in the returned results.');
   }
 
   /**

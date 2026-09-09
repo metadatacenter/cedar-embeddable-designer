@@ -1,0 +1,36 @@
+@if (available()) {
+  @if (field().type !== 'controlledTerms' || field().controlledTermConfig) {
+    <div #mount (focusin)="service.selectedField.set(field().id)"></div>
+  }
+  @if (field().type === 'controlledTerms') {
+    @if (!field().controlledTermConfig) {
+      <p role="status" class="text-sm text-gray-500">Choose a vocabulary constraint before setting a default.</p>
+    } @else if (!pickerAvailable() || !terminologyBaseUrl()) {
+      <p role="status" class="text-sm text-gray-500">Term picker is unavailable.</p>
+    } @else {
+      <button type="button" class="text-sm text-teal-700 underline" (click)="pickerOpen.set(true)">
+        Choose default term
+      </button>
+      @if (pickerOpen()) {
+        <cedar-term-picker
+          [terminologyBaseUrl]="terminologyBaseUrl()"
+          [selectionMode]="'term'"
+          [sources]="pickerSources()"
+          (selected)="selectTerm($event)"
+          (cancelled)="pickerOpen.set(false)"
+        ></cedar-term-picker>
+      }
+    }
+    @if (field().defaultValue.kind !== 'none') {
+      <button type="button" class="ml-3 text-sm text-gray-600 underline" (click)="clear()">Clear default</button>
+    }
+  }
+  @if (checking()) {
+    <p role="status" class="text-sm text-gray-500">Checking default term…</p>
+  }
+  @if (error()) {
+    <p role="alert" class="text-sm text-red-700">{{ error() }}</p>
+  }
+} @else {
+  <p role="status" class="text-sm text-gray-500">Default value editor is unavailable.</p>
+}

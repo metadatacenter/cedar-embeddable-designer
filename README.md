@@ -105,13 +105,26 @@ drawing of a form of the designer's own. It is asked for a read-only form with n
 instance behind it, which is how CEE reads a template as a statement of what each
 field will accept. Without it the preview panel says so.
 
-Text fields edit their default through `<cedar-embeddable-field>` (CEF), registered by
+All default-capable fields use `<cedar-embeddable-field>` (CEF), registered by
 that same CEE script. Choose the **semantic** preset in Preferences to show Default
-Value, then type in the text field's control. The default is saved in the template;
-clearing the control removes it. Opening a saved template restores the default.
-Editing text defaults requires a CEE bundle that registers CEF (the source builds
-below do). Until CEF loads, the default editor is unavailable and saved defaults are
-preserved. Other field types retain their existing controls for now.
+Value. Defaults are written through the TypeScript model library and restored on
+open; clearing the control removes them. Numeric bounds and temporal precision
+from imported fields are preserved. Choice defaults use `selectedByDefault` on
+the field's options.
+
+Controlled-term defaults use `<cedar-term-picker>` in `selectionMode="term"` and
+are checked against the field's vocabulary constraints before saving. The host
+sets `terminologyBaseUrl` for that check and `bridgeBaseUrl` for external authority
+lookups. Load current sibling bundles: without CEF or the required term picker,
+the control reports that it is unavailable and preserves saved defaults.
+
+To run the browser integration tests against real sibling bundles after building:
+
+```bash
+CEF_BUNDLE="$PWD/../cedar-embeddable-editor/visual/public/cedar-embeddable-editor.js" \
+PICKER_BUNDLE="$PWD/../cedar-term-picker/dist-bundle/cedar-term-picker.js" \
+npm --prefix browser test
+```
 
 To try all three scripts together from source:
 

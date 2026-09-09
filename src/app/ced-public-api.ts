@@ -32,6 +32,8 @@ export interface CedConfig {
    * reaches without asking and without knowing.
    */
   terminologyBaseUrl?: string;
+  /** Base URL for external-authority default lookups through CEF (ORCID, DOI, and others). */
+  bridgeBaseUrl?: string;
 }
 
 /** A JSON-serialisable value, as it appears in a CEDAR artifact. */

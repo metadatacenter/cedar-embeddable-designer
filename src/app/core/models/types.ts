@@ -54,6 +54,30 @@ export interface ControlledTermConfig {
   version?: ControlledTermVersionRef;
 }
 
+/** Values shared with CEF; absence is explicit and zero is a real default. */
+export type FieldDefaultValue =
+  | { kind: 'none' }
+  | { kind: 'literal'; value: string }
+  | { kind: 'number'; value: number }
+  | { kind: 'temporal'; value: string }
+  | { kind: 'iri'; iri: string; label: string | null }
+  | { kind: 'literals'; values: string[] };
+
+export interface TemporalSettings {
+  type: 'xsd:date' | 'xsd:time' | 'xsd:dateTime';
+  granularity: 'year' | 'month' | 'day' | 'hour' | 'minute' | 'second' | 'decimalSecond';
+  timezoneEnabled: boolean;
+  inputTimeFormat: '12h' | '24h' | null;
+}
+
+export interface NumericSettings {
+  type: string;
+  min: number | null;
+  max: number | null;
+  decimalPlaces: number | null;
+  unit: string | null;
+}
+
 export interface Field {
   id: number;
   /**
@@ -67,7 +91,10 @@ export interface Field {
   name: string;
   status: string; // 'required' | 'optional' | 'recommended'
   options: string[];
-  defaultValue: string;
+  defaultValue: FieldDefaultValue;
+  temporal?: TemporalSettings;
+  numeric?: NumericSettings;
+  textConstraints?: { minLength: number | null; maxLength: number | null; regex: string | null };
   allowMultiple: boolean;
   helpText?: string;
   /**

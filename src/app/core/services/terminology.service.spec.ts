@@ -170,4 +170,37 @@ describe('TerminologyService', () => {
       await expect(service.search('cancer', 'classes,values')).rejects.toThrow(/no results collection/);
     });
   });
+
+  describe('default term membership', () => {
+    const field = { _valueConstraints: { ontologies: [{ acronym: 'DOID', version: { id: 'release' } }] } };
+
+    beforeEach(() => service.configure({ terminologyBaseUrl: 'https://terminology.example.org/' }));
+
+    it('checks every result page with the full field constraints', async () => {
+      const bodies: Record<string, unknown>[] = [];
+      globalThis.fetch = (async (_input, init) => {
+        bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+        const collection =
+          bodies.length === 1
+            ? Array.from({ length: 50 }, (_, i) => ({ '@id': `urn:other:${i}` }))
+            : [{ '@id': 'urn:chosen' }];
+        return new Response(JSON.stringify({ collection }));
+      }) as typeof fetch;
+      await expect(service.allowsDefault(field, 'urn:chosen', 'cancer')).resolves.toBe(true);
+      expect(bodies.map((body) => body['page'])).toEqual([1, 2]);
+      expect(bodies[1]['parameterObject']).toEqual({ inputText: 'cancer', valueConstraints: field._valueConstraints });
+    });
+
+    it('refuses a term outside the returned constraint results', async () => {
+      respondWith({ collection: [{ '@id': 'urn:other' }] });
+      await expect(service.allowsDefault(field, 'urn:chosen', 'cancer')).resolves.toBe(false);
+    });
+
+    it('reports server failure and malformed results rather than admitting the term', async () => {
+      respondWith({}, false, 503);
+      await expect(service.allowsDefault(field, 'urn:chosen', 'cancer')).rejects.toThrow(/503/);
+      respondWith({});
+      await expect(service.allowsDefault(field, 'urn:chosen', 'cancer')).rejects.toThrow(/no result collection/);
+    });
+  });
 });

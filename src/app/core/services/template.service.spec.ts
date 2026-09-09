@@ -130,3 +130,34 @@ describe('TemplateService', () => {
     });
   });
 });
+
+describe('default editing', () => {
+  let service: TemplateService;
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(TemplateService);
+  });
+
+  it('rejects an invalid numeric default before the template signal can throw', () => {
+    service.updateFieldType(1, 'number');
+    service.updateDefaultValue(1, { kind: 'number', value: 0 });
+    service.updateDefaultValue(1, { kind: 'number', value: Number.NaN });
+    expect(service.fields()[0].defaultValue).toEqual({ kind: 'number', value: 0 });
+    expect(() => service.templateJson()).not.toThrow();
+  });
+
+  it('renames selected defaults and removes them when their options are deleted', () => {
+    service.updateFieldType(1, 'checkboxes');
+    service.updateOption(1, 0, 'A');
+    service.addOption(1);
+    service.updateOption(1, 1, 'B');
+    service.updateDefaultValue(1, { kind: 'literals', values: ['A', 'B'] });
+    service.updateOption(1, 0, 'Renamed');
+    expect(service.fields()[0].defaultValue).toEqual({ kind: 'literals', values: ['Renamed', 'B'] });
+    service.deleteOption(1, 0);
+    expect(service.fields()[0].defaultValue).toEqual({ kind: 'literals', values: ['B'] });
+    service.deleteOption(1, 0);
+    expect(service.fields()[0].defaultValue).toEqual({ kind: 'none' });
+    expect(() => service.templateJson()).not.toThrow();
+  });
+});

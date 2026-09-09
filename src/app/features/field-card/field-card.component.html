@@ -236,7 +236,7 @@
   }
 
   <!-- Help Text and Default Value editing (Only if configured in preferences) -->
-  @if (service.preferences().showHelpText || (service.preferences().showDefaultValue && allowsStatus(field.type))) {
+  @if (service.preferences().showHelpText || (service.preferences().showDefaultValue && allowsDefault(field.type))) {
     <div class="space-y-2 mt-2.5 px-1 border-t border-gray-100 pt-2.5">
       @if (service.preferences().showHelpText) {
         <div>
@@ -253,23 +253,12 @@
       }
       <!-- A static field shows something rather than collecting one, so it has
            no default for a form-filler to start from. -->
-      @if (service.preferences().showDefaultValue && allowsStatus(field.type)) {
+      @if (service.preferences().showDefaultValue && allowsDefault(field.type)) {
         <div>
           <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5 block"
             >Default Value</label
           >
-          @if (field.type === 'text') {
-            <app-text-default-value [field]="field"></app-text-default-value>
-          } @else {
-            <input
-              type="text"
-              [ngModel]="field.defaultValue || ''"
-              (ngModelChange)="service.updateDefaultValue(field.id, $event)"
-              placeholder="Define default value..."
-              class="text-sm text-gray-700 w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-teal-500"
-              (focus)="service.selectedField.set(field.id)"
-            />
-          }
+          <app-field-default-value [field]="field"></app-field-default-value>
         </div>
       }
     </div>

@@ -4,8 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService, FIELD_TYPES } from '../../core/services/template.service';
 import { Field } from '../../core/models/types';
-import { allowsMultiple, allowsOptions, allowsStatus, contentKindOf } from '../../core/model/cedar-template';
-import { TextDefaultValueComponent } from '../text-default-value/text-default-value.component';
+import {
+  allowsDefault,
+  allowsMultiple,
+  allowsOptions,
+  allowsStatus,
+  contentKindOf,
+} from '../../core/model/cedar-template';
+import { FieldDefaultValueComponent } from '../field-default-value/field-default-value.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { ControlledTermConfigComponent } from '../controlled-term-config/controlled-term-config.component';
 
@@ -18,7 +24,7 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
     IconComponent,
     ControlledTermConfigComponent,
     DragDropModule,
-    TextDefaultValueComponent,
+    FieldDefaultValueComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './field-card.component.html',
@@ -38,6 +44,8 @@ export class FieldCardComponent {
    * lies: a page break has no required value, and a radio's cardinality is
    * decided by its type rather than by its author.
    */
+  allowsDefault = allowsDefault;
+
   allowsStatus(type: string): boolean {
     return allowsStatus(type);
   }

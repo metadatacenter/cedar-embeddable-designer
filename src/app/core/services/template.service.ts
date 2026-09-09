@@ -1,5 +1,13 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { Field, Library, CustomField, ControlledTermConfig, UserPreferences, FIELD_TYPES } from '../models/types';
+import {
+  Field,
+  FieldDefaultValue,
+  Library,
+  CustomField,
+  ControlledTermConfig,
+  UserPreferences,
+  FIELD_TYPES,
+} from '../models/types';
 import { PreferencesService } from './preferences.service';
 import {
   DesignerTemplate,
@@ -10,6 +18,7 @@ import {
   templateToJson,
   templateToYaml,
   toDesignerTemplate,
+  defaultValueError,
 } from '../model/cedar-template';
 
 export { FIELD_TYPES } from '../models/types';
@@ -31,7 +40,7 @@ function starterFields(): Field[] {
       name: 'Title',
       status: 'required',
       options: [],
-      defaultValue: '',
+      defaultValue: { kind: 'none' },
       allowMultiple: false,
     },
     {
@@ -41,7 +50,7 @@ function starterFields(): Field[] {
       name: 'Category',
       status: 'optional',
       options: ['', ''],
-      defaultValue: '',
+      defaultValue: { kind: 'none' },
       allowMultiple: false,
     },
     {
@@ -51,10 +60,23 @@ function starterFields(): Field[] {
       name: 'Publication Date',
       status: 'optional',
       options: [],
-      defaultValue: '',
+      defaultValue: { kind: 'none' },
       allowMultiple: false,
     },
   ];
+}
+
+/** Keep selected options tied to their labels as the author edits the option list. */
+function choiceDefault(field: Field, options: string[], renamed?: { from: string; to: string }): FieldDefaultValue {
+  const value = field.defaultValue;
+  if (value.kind !== 'literal' && value.kind !== 'literals') return value;
+  const selected = (value.kind === 'literal' ? [value.value] : value.values)
+    .map((label) => (renamed && label === renamed.from ? renamed.to : label))
+    .filter((label) => label.trim() !== '' && options.includes(label));
+  if (!selected.length) return { kind: 'none' };
+  return value.kind === 'literal'
+    ? { kind: 'literal', value: selected[0] }
+    : { kind: 'literals', values: [...new Set(selected)] };
 }
 
 @Injectable({
@@ -78,6 +100,8 @@ export class TemplateService {
     primaryLight: '#e2eff0',
     border: '#b7d6db',
   };
+
+  readonly fieldEditorConfig = signal<{ bridgeBaseUrl?: string; terminologyBaseUrl?: string }>({});
 
   // State Signals
   readonly templateName = signal<string>('Untitled Template');
@@ -205,7 +229,7 @@ export class TemplateService {
       name: FIELD_TYPES[type].label,
       status: 'optional',
       options: type === 'multipleChoice' || type === 'checkboxes' ? [''] : [],
-      defaultValue: '',
+      defaultValue: { kind: 'none' },
       allowMultiple: false,
     };
 
@@ -228,7 +252,7 @@ export class TemplateService {
       type: customField.baseType,
       name: customField.name,
       helpText: customField.description || '',
-      defaultValue: customField.placeholder || '',
+      defaultValue: { kind: 'none' },
       status: 'optional',
       options: customField.baseType === 'multipleChoice' || customField.baseType === 'checkboxes' ? [''] : [],
       allowMultiple: false,
@@ -268,7 +292,10 @@ export class TemplateService {
               type,
               options:
                 type === 'multipleChoice' || type === 'checkboxes' ? (f.options.length > 0 ? f.options : ['']) : [],
-              defaultValue: '',
+              defaultValue: { kind: 'none' },
+              temporal: undefined,
+              numeric: undefined,
+              textConstraints: undefined,
               allowMultiple: false,
               customFieldId: undefined,
               libraryId: undefined,
@@ -287,7 +314,10 @@ export class TemplateService {
               type: customField.baseType,
               name: customField.name,
               helpText: customField.description || f.helpText,
-              defaultValue: customField.placeholder || f.defaultValue,
+              defaultValue: { kind: 'none' },
+              temporal: undefined,
+              numeric: undefined,
+              textConstraints: undefined,
               options:
                 customField.baseType === 'multipleChoice' || customField.baseType === 'checkboxes'
                   ? f.options.length > 0
@@ -316,7 +346,7 @@ export class TemplateService {
             name: updatedCustomField.name,
             type: updatedCustomField.baseType,
             helpText: updatedCustomField.description || f.helpText,
-            defaultValue: updatedCustomField.placeholder || f.defaultValue,
+            defaultValue: updatedCustomField.baseType === f.type ? f.defaultValue : { kind: 'none' },
           };
         }
         return f;
@@ -338,7 +368,11 @@ export class TemplateService {
         if (f.id === fieldId) {
           const newOptions = [...f.options];
           newOptions[optionIndex] = value;
-          return { ...f, options: newOptions };
+          return {
+            ...f,
+            options: newOptions,
+            defaultValue: choiceDefault(f, newOptions, { from: f.options[optionIndex], to: value }),
+          };
         }
         return f;
       }),
@@ -367,15 +401,21 @@ export class TemplateService {
       prev.map((f) => {
         if (f.id === fieldId) {
           const newOptions = f.options.filter((_, index) => index !== optionIndex);
-          return { ...f, options: newOptions.length > 0 ? newOptions : [''] };
+          return {
+            ...f,
+            options: newOptions.length > 0 ? newOptions : [''],
+            defaultValue: choiceDefault(f, newOptions),
+          };
         }
         return f;
       }),
     );
   }
 
-  updateDefaultValue(id: number, value: string) {
-    this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, defaultValue: value } : f)));
+  updateDefaultValue(id: number, value: FieldDefaultValue) {
+    this.fields.update((prev) =>
+      prev.map((f) => (f.id === id && defaultValueError(f, value) === null ? { ...f, defaultValue: value } : f)),
+    );
   }
 
   toggleAllowMultiple(id: number) {
@@ -392,7 +432,18 @@ export class TemplateService {
   }
 
   updateControlledTermConfig(id: number, config: ControlledTermConfig) {
-    this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, controlledTermConfig: config } : f)));
+    this.fields.update((prev) =>
+      prev.map((f) =>
+        f.id === id
+          ? {
+              ...f,
+              controlledTermConfig: config,
+              defaultValue:
+                JSON.stringify(config) === JSON.stringify(f.controlledTermConfig) ? f.defaultValue : { kind: 'none' },
+            }
+          : f,
+      ),
+    );
   }
 
   moveField(dragIndex: number, hoverIndex: number) {

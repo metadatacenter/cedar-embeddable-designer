@@ -41,7 +41,7 @@ function field(overrides: Partial<Field> = {}): Field {
     name: 'Title',
     status: 'optional',
     options: [],
-    defaultValue: '',
+    defaultValue: { kind: 'none' },
     allowMultiple: false,
     ...newFieldIdentity(),
     ...overrides,
@@ -334,7 +334,10 @@ describe('what the designer collects reaches the template', () => {
   });
 
   it('carries a default value', () => {
-    const built = child(templateOf(field({ name: 'F', defaultValue: 'Untitled study' })), 'F');
+    const built = child(
+      templateOf(field({ name: 'F', defaultValue: { kind: 'literal', value: 'Untitled study' } })),
+      'F',
+    );
     const constraints = built['_valueConstraints'] as Record<string, unknown>;
 
     expect(constraints['defaultValue']).toBe('Untitled study');
@@ -584,5 +587,73 @@ describe('reading a template the designer did not write', () => {
 
   it('reports a source it cannot read rather than returning an empty template', () => {
     expect(() => readTemplate('not a template')).toThrow();
+  });
+});
+
+describe('typed field defaults', () => {
+  const cases: Array<[string, Field['defaultValue']]> = [
+    ['text', { kind: 'literal', value: 'Title' }],
+    ['paragraph', { kind: 'literal', value: 'Long text\nwith another line' }],
+    ['email', { kind: 'literal', value: 'a@example.org' }],
+    ['phone', { kind: 'literal', value: '+1 555 123 4567' }],
+    ['number', { kind: 'number', value: 0 }],
+    ['date', { kind: 'temporal', value: '2026-09-09' }],
+    ['time', { kind: 'temporal', value: '14:30' }],
+    ['link', { kind: 'iri', iri: 'https://example.org/', label: null }],
+    ...['orcid', 'ror', 'pfas', 'rrid', 'pubmed', 'nihGrantId', 'doi'].map(
+      (type) =>
+        [type, { kind: 'iri', iri: 'https://example.org/record', label: null }] as [string, Field['defaultValue']],
+    ),
+    ['multipleChoice', { kind: 'literal', value: 'A' }],
+    ['singleChoiceList', { kind: 'literal', value: 'B' }],
+    ['checkboxes', { kind: 'literals', values: ['A', 'B'] }],
+    ['multipleChoiceList', { kind: 'literals', values: ['A', 'B'] }],
+    ['controlledTerms', { kind: 'iri', iri: 'http://purl.obolibrary.org/obo/DOID_162', label: 'cancer' }],
+  ];
+  it.each(cases)('round-trips %s defaults through JSON and YAML', (type, defaultValue) => {
+    const f = field({
+      type,
+      options: ['A', 'B'],
+      defaultValue,
+      controlledTermConfig:
+        type === 'controlledTerms'
+          ? { sourceType: 'ontology', ontologyId: 'DOID', ontologyName: 'Disease Ontology' }
+          : undefined,
+    });
+    const model = buildTemplate(templateOf(f));
+    for (const source of [templateToJson(model), templateToYaml(model)]) {
+      expect(toDesignerTemplate(readTemplate(source)).fields[0].defaultValue).toEqual(defaultValue);
+    }
+  });
+
+  it.each([
+    ['xsd:date', 'year', '2026'],
+    ['xsd:date', 'month', '2026-09'],
+    ['xsd:date', 'day', '2026-09-09'],
+    ['xsd:time', 'hour', '14'],
+    ['xsd:time', 'minute', '14:30'],
+    ['xsd:time', 'second', '14:30:10Z'],
+    ['xsd:time', 'decimalSecond', '14:30:10.25+05:30'],
+    ['xsd:dateTime', 'minute', '2026-09-09T14:30'],
+    ['xsd:dateTime', 'second', '2026-09-09T14:30:10Z'],
+    ['xsd:dateTime', 'decimalSecond', '2026-09-09T14:30:10.25-07:00'],
+  ] as const)('preserves %s / %s settings and default on reopen', (type, granularity, value) => {
+    const f = field({
+      type: type === 'xsd:time' ? 'time' : 'date',
+      temporal: {
+        type,
+        granularity,
+        timezoneEnabled: type !== 'xsd:date',
+        inputTimeFormat: type === 'xsd:date' ? null : '12h',
+      },
+      defaultValue: { kind: 'temporal', value },
+    });
+    const model = buildTemplate(templateOf(f));
+    for (const source of [templateToJson(model), templateToYaml(model)]) {
+      const opened = toDesignerTemplate(readTemplate(source));
+      expect(opened.fields[0].temporal).toEqual(f.temporal);
+      expect(opened.fields[0].defaultValue).toEqual(f.defaultValue);
+      expect(templateToJson(buildTemplate(opened))).toEqual(templateToJson(model));
+    }
   });
 });

@@ -40,8 +40,21 @@ import {
   TemporalField,
   TemporalGranularity,
   TemporalType,
+  TimeFormat,
+  NumberType,
+  NumericField,
+  TextField,
+  TextFieldBuilder,
+  NumericFieldBuilder,
+  TemporalFieldBuilder,
+  ControlledTermDefaultValueBuilder,
+  ControlledTermFieldBuilder,
+  RadioFieldBuilder,
+  CheckboxFieldBuilder,
+  SingleChoiceListFieldBuilder,
+  MultipleChoiceListFieldBuilder,
 } from 'cedar-model-typescript-library';
-import { ControlledTermConfig, Field } from '../models/types';
+import { ControlledTermConfig, Field, FieldDefaultValue } from '../models/types';
 
 /**
  * What a field builder is, for our purposes.
@@ -135,49 +148,91 @@ interface FieldDescriptor {
   readonly build: () => FieldBuilder;
   readonly deployment: DeploymentKind;
   /** Whether the type takes the author's list of options. */
-  readonly options?: boolean;
+  readonly options?: (builder: FieldBuilder, label: string, selected: boolean) => unknown;
+  readonly defaultKind?: FieldDefaultValue['kind'];
   /** What the type's single static value is for, where it has one. */
   readonly content?: 'markup' | 'url' | 'videoId';
 }
 
 const FIELD_DESCRIPTORS: Record<string, FieldDescriptor> = {
-  text: { cedarType: CedarFieldType.TEXT, build: () => CedarBuilders.textFieldBuilder(), deployment: 'plain' },
-  paragraph: { cedarType: CedarFieldType.TEXTAREA, build: () => CedarBuilders.textAreaBuilder(), deployment: 'plain' },
+  text: {
+    defaultKind: 'literal',
+    cedarType: CedarFieldType.TEXT,
+    build: () => CedarBuilders.textFieldBuilder(),
+    deployment: 'plain',
+  },
+  paragraph: {
+    defaultKind: 'literal',
+    cedarType: CedarFieldType.TEXTAREA,
+    build: () => CedarBuilders.textAreaBuilder(),
+    deployment: 'plain',
+  },
   multipleChoice: {
+    defaultKind: 'literal',
     cedarType: CedarFieldType.RADIO,
     build: () => CedarBuilders.radioFieldBuilder(),
     deployment: 'alwaysSingle',
-    options: true,
+    options: (builder, label, selected) => (builder as RadioFieldBuilder).addRadioOption(label, selected),
   },
   checkboxes: {
+    defaultKind: 'literals',
     cedarType: CedarFieldType.CHECKBOX,
     build: () => CedarBuilders.checkboxFieldBuilder(),
     deployment: 'alwaysMultiple',
-    options: true,
+    options: (builder, label, selected) => (builder as CheckboxFieldBuilder).addCheckboxOption(label, selected),
   },
   singleChoiceList: {
+    defaultKind: 'literal',
     cedarType: CedarFieldType.SINGLE_SELECT_LIST,
     build: () => CedarBuilders.singleChoiceListFieldBuilder(),
     deployment: 'plain',
-    options: true,
+    options: (builder, label, selected) => (builder as SingleChoiceListFieldBuilder).addListOption(label, selected),
   },
   multipleChoiceList: {
+    defaultKind: 'literals',
     cedarType: CedarFieldType.MULTIPLE_SELECT_LIST,
     build: () => CedarBuilders.multipleChoiceListFieldBuilder(),
     deployment: 'alwaysMultiple',
-    options: true,
+    options: (builder, label, selected) => (builder as MultipleChoiceListFieldBuilder).addListOption(label, selected),
   },
-  date: { cedarType: CedarFieldType.TEMPORAL, build: () => CedarBuilders.temporalFieldBuilder(), deployment: 'plain' },
-  time: { cedarType: CedarFieldType.TEMPORAL, build: () => CedarBuilders.temporalFieldBuilder(), deployment: 'plain' },
-  email: { cedarType: CedarFieldType.EMAIL, build: () => CedarBuilders.emailFieldBuilder(), deployment: 'plain' },
-  link: { cedarType: CedarFieldType.LINK, build: () => CedarBuilders.linkFieldBuilder(), deployment: 'plain' },
+  date: {
+    defaultKind: 'temporal',
+    cedarType: CedarFieldType.TEMPORAL,
+    build: () => CedarBuilders.temporalFieldBuilder(),
+    deployment: 'plain',
+  },
+  time: {
+    defaultKind: 'temporal',
+    cedarType: CedarFieldType.TEMPORAL,
+    build: () => CedarBuilders.temporalFieldBuilder(),
+    deployment: 'plain',
+  },
+  email: {
+    defaultKind: 'literal',
+    cedarType: CedarFieldType.EMAIL,
+    build: () => CedarBuilders.emailFieldBuilder(),
+    deployment: 'plain',
+  },
+  link: {
+    defaultKind: 'iri',
+    cedarType: CedarFieldType.LINK,
+    build: () => CedarBuilders.linkFieldBuilder(),
+    deployment: 'plain',
+  },
   phone: {
+    defaultKind: 'literal',
     cedarType: CedarFieldType.PHONE_NUMBER,
     build: () => CedarBuilders.phoneNumberFieldBuilder(),
     deployment: 'plain',
   },
-  number: { cedarType: CedarFieldType.NUMERIC, build: () => CedarBuilders.numericFieldBuilder(), deployment: 'plain' },
+  number: {
+    defaultKind: 'number',
+    cedarType: CedarFieldType.NUMERIC,
+    build: () => CedarBuilders.numericFieldBuilder(),
+    deployment: 'plain',
+  },
   controlledTerms: {
+    defaultKind: 'iri',
     cedarType: CedarFieldType.CONTROLLED_TERM,
     build: () => CedarBuilders.controlledTermFieldBuilder(),
     deployment: 'plain',
@@ -191,24 +246,47 @@ const FIELD_DESCRIPTORS: Record<string, FieldDescriptor> = {
   // The external authorities, which differ from one another only in which
   // register they resolve an identifier against.
   orcid: {
+    defaultKind: 'iri',
     cedarType: CedarFieldType.EXT_ORCID,
     build: () => CedarBuilders.extOrcidFieldBuilder(),
     deployment: 'plain',
   },
-  ror: { cedarType: CedarFieldType.EXT_ROR, build: () => CedarBuilders.extRorFieldBuilder(), deployment: 'plain' },
-  pfas: { cedarType: CedarFieldType.EXT_PFAS, build: () => CedarBuilders.extPfasFieldBuilder(), deployment: 'plain' },
-  rrid: { cedarType: CedarFieldType.EXT_RRID, build: () => CedarBuilders.extRridFieldBuilder(), deployment: 'plain' },
+  ror: {
+    defaultKind: 'iri',
+    cedarType: CedarFieldType.EXT_ROR,
+    build: () => CedarBuilders.extRorFieldBuilder(),
+    deployment: 'plain',
+  },
+  pfas: {
+    defaultKind: 'iri',
+    cedarType: CedarFieldType.EXT_PFAS,
+    build: () => CedarBuilders.extPfasFieldBuilder(),
+    deployment: 'plain',
+  },
+  rrid: {
+    defaultKind: 'iri',
+    cedarType: CedarFieldType.EXT_RRID,
+    build: () => CedarBuilders.extRridFieldBuilder(),
+    deployment: 'plain',
+  },
   pubmed: {
+    defaultKind: 'iri',
     cedarType: CedarFieldType.EXT_PUBMED,
     build: () => CedarBuilders.extPubmedFieldBuilder(),
     deployment: 'plain',
   },
   nihGrantId: {
+    defaultKind: 'iri',
     cedarType: CedarFieldType.EXT_NIH_GRANT_ID,
     build: () => CedarBuilders.extNihGrantIdFieldBuilder(),
     deployment: 'plain',
   },
-  doi: { cedarType: CedarFieldType.EXT_DOI, build: () => CedarBuilders.extDoiFieldBuilder(), deployment: 'plain' },
+  doi: {
+    defaultKind: 'iri',
+    cedarType: CedarFieldType.EXT_DOI,
+    build: () => CedarBuilders.extDoiFieldBuilder(),
+    deployment: 'plain',
+  },
 
   // The static types, which show something rather than collect it.
   image: {
@@ -246,6 +324,11 @@ export function descriptorOf(paletteType: string): FieldDescriptor {
   return FIELD_DESCRIPTORS[paletteType] ?? FIELD_DESCRIPTORS['text'];
 }
 
+/** Static blocks and attribute-value fields have no default in the model. */
+export function allowsDefault(paletteType: string): boolean {
+  return descriptorOf(paletteType).defaultKind !== undefined;
+}
+
 /** Whether a type's author can mark it required or recommended. */
 export function allowsStatus(paletteType: string): boolean {
   return descriptorOf(paletteType).deployment !== 'static';
@@ -263,7 +346,7 @@ export function allowsMultiple(paletteType: string): boolean {
 
 /** Whether a type carries a list of options its author writes. */
 export function allowsOptions(paletteType: string): boolean {
-  return descriptorOf(paletteType).options === true;
+  return descriptorOf(paletteType).options !== undefined;
 }
 
 /** What a type's static content is, where it has any. */
@@ -294,11 +377,16 @@ function deploymentKeys(fields: Field[]): string[] {
   });
 }
 
-function buildTemporal(builder: FieldBuilder, paletteType: string): void {
-  const temporal = builder as unknown as {
-    withTemporalType(type: TemporalType): unknown;
-    withTemporalGranularity(granularity: TemporalGranularity): unknown;
-  };
+function buildTemporal(builder: FieldBuilder, field: Field): void {
+  const paletteType = field.type;
+  const temporal = builder as TemporalFieldBuilder;
+  if (field.temporal) {
+    temporal.withTemporalType(TemporalType.forValue(field.temporal.type));
+    temporal.withTemporalGranularity(TemporalGranularity.forValue(field.temporal.granularity));
+    temporal.withTimezoneEnabled(field.temporal.timezoneEnabled);
+    temporal.withInputTimeFormat(TimeFormat.forValue(field.temporal.inputTimeFormat));
+    return;
+  }
   if (paletteType === 'time') {
     temporal.withTemporalType(TemporalType.TIME);
     temporal.withTemporalGranularity(TemporalGranularity.MINUTE);
@@ -309,10 +397,12 @@ function buildTemporal(builder: FieldBuilder, paletteType: string): void {
 }
 
 function buildOptions(builder: FieldBuilder, field: Field): void {
-  const withOptions = builder as unknown as {
-    addRadioOption?(label: string): unknown;
-    addOption?(label: string): unknown;
-  };
+  const selected =
+    field.defaultValue.kind === 'literals'
+      ? field.defaultValue.values
+      : field.defaultValue.kind === 'literal'
+        ? [field.defaultValue.value]
+        : [];
   for (const option of field.options) {
     /*
      * An option the author has not named yet is not an option. Its label is
@@ -322,11 +412,7 @@ function buildOptions(builder: FieldBuilder, field: Field): void {
     if (option.trim() === '') {
       continue;
     }
-    if (withOptions.addRadioOption) {
-      withOptions.addRadioOption(option);
-    } else if (withOptions.addOption) {
-      withOptions.addOption(option);
-    }
+    descriptorOf(field.type).options!(builder, option, selected.includes(option));
   }
 }
 
@@ -474,7 +560,9 @@ function buildStaticContent(builder: FieldBuilder, kind: 'markup' | 'url' | 'vid
  * still open.
  */
 function hasVocabulary(field: Field): boolean {
-  return field.type !== 'controlledTerms' || field.controlledTermConfig !== undefined;
+  return (
+    field.type !== 'controlledTerms' || field.controlledTermConfig !== undefined || field.defaultValue.kind === 'iri'
+  );
 }
 
 function buildField(field: Field): TemplateField {
@@ -501,7 +589,22 @@ function buildField(field: Field): TemplateField {
   }
 
   if (field.type === 'date' || field.type === 'time') {
-    buildTemporal(builder, field.type);
+    buildTemporal(builder, field);
+  }
+  if (field.type === 'text' && field.textConstraints) {
+    (builder as TextFieldBuilder)
+      .withMinLength(field.textConstraints.minLength)
+      .withMaxLength(field.textConstraints.maxLength)
+      .withRegex(field.textConstraints.regex);
+  }
+  if (field.type === 'number' && field.numeric) {
+    const numeric = builder as NumericFieldBuilder;
+    numeric
+      .withNumberType(NumberType.forValue(field.numeric.type))
+      .withMinValue(field.numeric.min)
+      .withMaxValue(field.numeric.max)
+      .withDecimalPlaces(field.numeric.decimalPlaces)
+      .withUnitOfMeasure(field.numeric.unit);
   }
   if (descriptor.options) {
     buildOptions(builder, field);
@@ -512,16 +615,50 @@ function buildField(field: Field): TemplateField {
   if (descriptor.content) {
     buildStaticContent(builder, descriptor.content, field.content ?? '');
   }
-  /*
-   * A static field shows something rather than collecting one, so it has no
-   * default to carry — and no `withDefaultValue` to call.
-   */
-  if (field.defaultValue && descriptor.deployment !== 'static') {
-    const withDefault = builder as unknown as { withDefaultValue?(value: string): unknown };
-    withDefault.withDefaultValue?.(field.defaultValue);
+  const value = field.defaultValue;
+  if (value.kind !== 'none') {
+    if (value.kind !== descriptor.defaultKind)
+      throw new Error(`A ${field.type} field cannot hold a ${value.kind} default.`);
+    if (descriptor.options) {
+      const values = value.kind === 'literals' ? value.values : value.kind === 'literal' ? [value.value] : [];
+      if (values.some((option) => !field.options.includes(option)))
+        throw new Error('Choose a default from the field options.');
+    } else {
+      switch (value.kind) {
+        case 'literal':
+        case 'temporal':
+          (builder as FieldBuilder & { withDefaultValue(value: string): unknown }).withDefaultValue(value.value);
+          break;
+        case 'number':
+          (builder as NumericFieldBuilder).withDefaultValue(value.value);
+          break;
+        case 'iri':
+          if (field.type === 'controlledTerms') {
+            (builder as ControlledTermFieldBuilder).withDefaultValue(
+              new ControlledTermDefaultValueBuilder()
+                .withTermUri(new Iri(value.iri))
+                .withRdfsLabel(value.label ?? '')
+                .build(),
+            );
+          } else {
+            (builder as FieldBuilder & { withDefaultValue(value: Iri): unknown }).withDefaultValue(new Iri(value.iri));
+          }
+          break;
+      }
+    }
   }
 
   return builder.build();
+}
+
+/** Validate before changing state; model builders may reject intermediate defaults. */
+export function defaultValueError(field: Field, value: FieldDefaultValue): string | null {
+  try {
+    buildField({ ...field, defaultValue: value });
+    return null;
+  } catch (error) {
+    return error instanceof Error ? error.message : String(error);
+  }
 }
 
 /** A standalone field artifact, written by the same path used for template children. */
@@ -733,6 +870,35 @@ function controlledTermConfigOf(field: TemplateField): ControlledTermConfig | un
   return undefined;
 }
 
+function defaultOf(field: TemplateField): FieldDefaultValue {
+  const descriptor = descriptorOf(paletteTypeOf(field));
+  const constraints = (
+    field as TemplateField & {
+      valueConstraints?: { defaultValue?: unknown; literals?: { label: string; selectedByDefault: boolean }[] };
+    }
+  ).valueConstraints;
+  const value = constraints?.defaultValue;
+  if (descriptor.options) {
+    const selected =
+      constraints?.literals?.filter((option) => option.selectedByDefault).map((option) => option.label) ?? [];
+    if (selected.length === 0 && typeof value === 'string' && value !== '') selected.push(value);
+    if (selected.length === 0) return { kind: 'none' };
+    return descriptor.defaultKind === 'literals'
+      ? { kind: 'literals', values: selected }
+      : { kind: 'literal', value: selected[0] };
+  }
+  if (value === null || value === undefined || value === '') return { kind: 'none' };
+  if (field.cedarFieldType === CedarFieldType.CONTROLLED_TERM) {
+    const term = (field as ControlledTermField).valueConstraints.defaultValue;
+    if (term) return { kind: 'iri', iri: term.termUri.getValue() ?? '', label: term.rdfsLabel };
+  }
+  if (value instanceof Iri) return { kind: 'iri', iri: value.getValue() ?? '', label: null };
+  if (typeof value === 'number') return { kind: 'number', value };
+  if (typeof value === 'string')
+    return descriptor.defaultKind === 'temporal' ? { kind: 'temporal', value } : { kind: 'literal', value };
+  return { kind: 'none' };
+}
+
 /** A parsed template, as the flat state the designer works in. */
 export function toDesignerTemplate(template: Template): DesignerTemplate {
   const fields: Field[] = [];
@@ -750,8 +916,6 @@ export function toDesignerTemplate(template: Template): DesignerTemplate {
     }
     const field = child as TemplateField;
     const dynamic = info as AbstractDynamicChildDeploymentInfo;
-    const defaultValue = (field as unknown as { valueConstraints?: { defaultValue?: unknown } }).valueConstraints
-      ?.defaultValue;
 
     fields.push({
       id: index + 1,
@@ -759,7 +923,34 @@ export function toDesignerTemplate(template: Template): DesignerTemplate {
       name: field.schema_name ?? info.name,
       status: dynamic.requiredValue ? 'required' : dynamic.recommendedValue ? 'recommended' : 'optional',
       options: optionsOf(field),
-      defaultValue: typeof defaultValue === 'string' ? defaultValue : '',
+      defaultValue: defaultOf(field),
+      temporal:
+        field.cedarFieldType === CedarFieldType.TEMPORAL
+          ? {
+              type: (field as TemporalField).valueConstraints.temporalType.getValue() ?? 'xsd:date',
+              granularity: (field as TemporalField).temporalGranularity.getValue() ?? 'day',
+              timezoneEnabled: (field as TemporalField).timezoneEnabled,
+              inputTimeFormat: (field as TemporalField).inputTimeFormat.getValue(),
+            }
+          : undefined,
+      textConstraints:
+        field.cedarFieldType === CedarFieldType.TEXT
+          ? {
+              minLength: (field as TextField).valueConstraints.minLength,
+              maxLength: (field as TextField).valueConstraints.maxLength,
+              regex: (field as TextField).valueConstraints.regex,
+            }
+          : undefined,
+      numeric:
+        field.cedarFieldType === CedarFieldType.NUMERIC
+          ? {
+              type: (field as NumericField).valueConstraints.numberType.getValue() ?? 'xsd:decimal',
+              min: (field as NumericField).valueConstraints.minValue,
+              max: (field as NumericField).valueConstraints.maxValue,
+              decimalPlaces: (field as NumericField).valueConstraints.decimalPlaces,
+              unit: (field as NumericField).valueConstraints.unitOfMeasure,
+            }
+          : undefined,
       allowMultiple: info instanceof ChildDeploymentInfo ? info.multiInstance : info.isMultiInAnyWay(),
       helpText: field.schema_description ?? '',
       content: contentOf(field),

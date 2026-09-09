@@ -20,7 +20,7 @@ function fieldWith(picked: PickedConstraint): ControlledTermField {
     name: 'Disease',
     status: 'optional',
     options: [],
-    defaultValue: '',
+    defaultValue: { kind: 'none' },
     allowMultiple: false,
     controlledTermConfig: toControlledTermConfig(picked),
   };
@@ -102,7 +102,7 @@ describe('a term chosen in the picker', () => {
           name: 'Disease',
           status: 'optional',
           options: [],
-          defaultValue: '',
+          defaultValue: { kind: 'none' },
           allowMultiple: false,
           controlledTermConfig: toControlledTermConfig({
             type: 'branch',
@@ -228,7 +228,7 @@ describe('the version an author pinned', () => {
           name: 'Disease',
           status: 'optional',
           options: [],
-          defaultValue: '',
+          defaultValue: { kind: 'none' },
           allowMultiple: false,
           controlledTermConfig: toControlledTermConfig({
             type: 'branch',

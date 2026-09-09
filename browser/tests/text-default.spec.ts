@@ -61,7 +61,7 @@ test('a text default is edited through CEF, published, and cleared without rebui
   page,
 }) => {
   await withFieldElement(page);
-  const input = page.locator('app-text-default-value cedar-embeddable-field input');
+  const input = page.locator('#field-card-1 app-field-default-value cedar-embeddable-field input');
   await expect(input).toBeVisible();
   await input.evaluate((node) => node.setAttribute('data-kept', 'yes'));
   await input.pressSequentially('Untitled study', { delay: 25 });
@@ -80,7 +80,7 @@ test('opening a saved template supplies its text default to CEF', async ({ page 
   await page.evaluate((template) => {
     (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
   }, template);
-  const input = page.locator('app-text-default-value cedar-embeddable-field input');
+  const input = page.locator('#field-card-1 app-field-default-value cedar-embeddable-field input');
   await expect(input).toHaveValue('Saved title');
   await expect.poll(async () => defaultOf(await currentTemplate(page))).toBe('Saved title');
 });
@@ -93,7 +93,7 @@ test('a missing CEF leaves saved defaults intact and offers no substitute input'
     (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
   }, template);
   await applyPreset(page, 'semantic');
-  const control = designer.locator('app-text-default-value');
+  const control = designer.locator('#field-card-1 app-field-default-value');
   await expect(control.getByRole('status')).toHaveText('Default value editor is unavailable.');
   await expect(control.locator('input')).toHaveCount(0);
   expect(defaultOf(await currentTemplate(page))).toBe('Saved title');
