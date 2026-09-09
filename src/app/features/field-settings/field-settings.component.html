@@ -81,3 +81,45 @@
     }
   </details>
 }
+
+@if (field.type === 'date' || field.type === 'time') {
+  <details class="settings">
+    <summary>Temporal settings <span>datatype, precision and time display</span></summary>
+    <form (ngSubmit)="saveTemporal()" class="row">
+      <label
+        >Temporal datatype<select
+          name="temporalType"
+          [ngModel]="temporal.type"
+          (ngModelChange)="changeTemporalType($event)"
+        >
+          <option value="xsd:date">Date</option>
+          <option value="xsd:time">Time</option>
+          <option value="xsd:dateTime">Date and time</option>
+        </select></label
+      >
+      <label
+        >Precision<select name="granularity" [(ngModel)]="temporal.granularity">
+          @for (value of granularities; track value) {
+            <option [value]="value">{{ value === 'decimalSecond' ? 'Fractional second' : value }}</option>
+          }
+        </select></label
+      >
+      @if (temporal.type !== 'xsd:date') {
+        <label
+          >Time format<select name="timeFormat" [(ngModel)]="temporal.inputTimeFormat">
+            <option [ngValue]="null">Automatic</option>
+            <option value="12h">12 hour</option>
+            <option value="24h">24 hour</option>
+          </select></label
+        >
+        <label class="check"
+          ><input type="checkbox" name="timezone" [(ngModel)]="temporal.timezoneEnabled" />Show timezone</label
+        >
+      }
+      <button type="submit">Apply</button>
+    </form>
+    @if (error) {
+      <p role="alert">{{ error }}</p>
+    }
+  </details>
+}

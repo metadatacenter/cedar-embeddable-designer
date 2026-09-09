@@ -737,3 +737,16 @@ it('preserves authored numeric constraints and refuses a conflicting default', (
     /bounds/,
   );
 });
+
+it('rejects incompatible temporal precision even without a default', () => {
+  expect(() =>
+    buildTemplate(
+      templateOf(
+        field({
+          type: 'time',
+          temporal: { type: 'xsd:time', granularity: 'year', timezoneEnabled: false, inputTimeFormat: '24h' },
+        }),
+      ),
+    ),
+  ).toThrow(/incompatible/);
+});

@@ -85,6 +85,7 @@ export class FieldCardComponent {
   }
 
   getFieldTypeName(field: Field): string {
+    if (field.temporal?.type === 'xsd:dateTime') return 'Date and time';
     if (field.customFieldId) {
       const customField = this.service.customFields().find((cf) => cf.id === field.customFieldId);
       if (customField) return customField.name;

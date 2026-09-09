@@ -330,6 +330,17 @@ export function allowsDefault(paletteType: string): boolean {
   return descriptorOf(paletteType).defaultKind !== undefined;
 }
 
+export function temporalGranularities(type: string) {
+  const time = TemporalGranularity.valuesWithTimes();
+  const choices =
+    type === 'xsd:date'
+      ? [TemporalGranularity.YEAR, TemporalGranularity.MONTH, TemporalGranularity.DAY]
+      : type === 'xsd:time'
+        ? time
+        : [TemporalGranularity.DAY, ...time];
+  return choices.map((choice) => choice.getValue()!);
+}
+
 export const NUMERIC_TYPES = NumberType.values().map((type) => type.getValue()!);
 
 /** Whether a type's author can mark it required or recommended. */
@@ -384,6 +395,8 @@ function buildTemporal(builder: FieldBuilder, field: Field): void {
   const paletteType = field.type;
   const temporal = builder as TemporalFieldBuilder;
   if (field.temporal) {
+    if (!temporalGranularities(field.temporal.type).includes(field.temporal.granularity))
+      throw new Error('The selected precision is incompatible with the temporal datatype.');
     temporal.withTemporalType(TemporalType.forValue(field.temporal.type));
     temporal.withTemporalGranularity(TemporalGranularity.forValue(field.temporal.granularity));
     temporal.withTimezoneEnabled(field.temporal.timezoneEnabled);

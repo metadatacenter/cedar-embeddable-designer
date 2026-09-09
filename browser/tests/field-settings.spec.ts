@@ -91,3 +91,34 @@ test('authors numeric datatype bounds precision and units', async ({ page }) => 
     .poll(async () => ((await currentTemplate(page)).properties as any).Title._valueConstraints)
     .toMatchObject({ numberType: 'xsd:int', minValue: 1, maxValue: 12, decimalPlace: 0, unitOfMeasure: 'mg' });
 });
+
+test('authors datetime precision timezone and time format', async ({ page }) => {
+  await openDesigner(page);
+  const card = page.locator('#field-card-3');
+  const section = card
+    .locator('details')
+    .filter({ has: page.locator('summary').filter({ hasText: 'Temporal settings' }) });
+  await section.locator('summary').click();
+  await section.getByLabel('Temporal datatype').selectOption('xsd:dateTime');
+  await section.getByLabel('Precision').selectOption('second');
+  await section.getByLabel('Time format').selectOption('12h');
+  await section.getByLabel('Show timezone').check();
+  await section.getByRole('button', { name: 'Apply' }).click();
+  await expect
+    .poll(
+      async () => ((await currentTemplate(page)).properties as any)['Publication Date']._valueConstraints.temporalType,
+    )
+    .toBe('xsd:dateTime');
+  await expect
+    .poll(async () => ((await currentTemplate(page)).properties as any)['Publication Date']._ui)
+    .toMatchObject({ temporalGranularity: 'second', timezoneEnabled: true, inputTimeFormat: '12h' });
+  await expect(card.locator('div.rounded-full').filter({ hasText: 'Date and time' })).toBeVisible();
+  await page.screenshot({ path: '/tmp/ced-temporal-settings.png' });
+  await section.getByLabel('Temporal datatype').selectOption('xsd:time');
+  await expect(section.getByLabel('Precision').locator('option')).toHaveText([
+    'hour',
+    'minute',
+    'second',
+    'Fractional second',
+  ]);
+});
