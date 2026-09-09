@@ -22,7 +22,7 @@ function fieldWith(picked: PickedConstraint): ControlledTermField {
     options: [],
     defaultValue: { kind: 'none' },
     allowMultiple: false,
-    controlledTermConfig: toControlledTermConfig(picked),
+    controlledTermConstraints: { constraints: [toControlledTermConfig(picked)], actions: [] },
   };
   return buildTemplate({
     name: 'S',
@@ -104,12 +104,17 @@ describe('a term chosen in the picker', () => {
           options: [],
           defaultValue: { kind: 'none' },
           allowMultiple: false,
-          controlledTermConfig: toControlledTermConfig({
-            type: 'branch',
-            termBaseIri: 'http://purl.obolibrary.org/obo/DOID_4',
-            termBaseLabel: 'disease',
-            sourceAcronym: 'DOID',
-          }),
+          controlledTermConstraints: {
+            constraints: [
+              toControlledTermConfig({
+                type: 'branch',
+                termBaseIri: 'http://purl.obolibrary.org/obo/DOID_4',
+                termBaseLabel: 'disease',
+                sourceAcronym: 'DOID',
+              }),
+            ],
+            actions: [],
+          },
         },
       ],
     });
@@ -230,13 +235,18 @@ describe('the version an author pinned', () => {
           options: [],
           defaultValue: { kind: 'none' },
           allowMultiple: false,
-          controlledTermConfig: toControlledTermConfig({
-            type: 'branch',
-            termBaseIri: 'http://purl.obolibrary.org/obo/DOID_4',
-            termBaseLabel: 'disease',
-            sourceAcronym: 'DOID',
-            version: pinned,
-          }),
+          controlledTermConstraints: {
+            constraints: [
+              toControlledTermConfig({
+                type: 'branch',
+                termBaseIri: 'http://purl.obolibrary.org/obo/DOID_4',
+                termBaseLabel: 'disease',
+                sourceAcronym: 'DOID',
+                version: pinned,
+              }),
+            ],
+            actions: [],
+          },
         } as Field,
       ],
     };

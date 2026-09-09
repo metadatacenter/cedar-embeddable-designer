@@ -33,12 +33,15 @@ export interface PickedVersion {
 interface HitBase {
   readonly type: string;
   readonly sourceAcronym: string;
+  readonly sourceSystem?: string;
+  readonly sourceIri?: string;
   readonly sourceName?: string;
   readonly version?: PickedVersion;
 }
 
 export interface PickedClass extends HitBase {
   readonly type: 'class';
+  readonly termType?: string;
   readonly termIri: string;
   readonly termLabel: string;
 }
@@ -100,10 +103,13 @@ export function toControlledTermConfig(picked: PickedConstraint): ControlledTerm
     case 'class':
       return {
         sourceType: 'ontology-term',
+        termType: picked.termType === 'value' ? 'Value' : 'OntologyClass',
         sourceId: picked.termIri,
         sourceName: picked.termLabel,
         ontologyId: picked.sourceAcronym,
         ontologyName: sourceName,
+        sourceSystem: picked.sourceSystem,
+        iri: picked.sourceIri,
         version,
       };
     case 'branch':
@@ -114,14 +120,19 @@ export function toControlledTermConfig(picked: PickedConstraint): ControlledTerm
         branchRootId: picked.termBaseIri,
         branchRootName: picked.termBaseLabel,
         searchDepth: 1,
+        sourceSystem: picked.sourceSystem,
+        iri: picked.sourceIri,
         version,
       };
     case 'ontology':
       return {
         sourceType: 'ontology',
+        uri: picked.sourceIri ?? `https://data.bioontology.org/ontologies/${picked.sourceAcronym}`,
         sourceId: picked.sourceAcronym,
         ontologyId: picked.sourceAcronym,
         ontologyName: sourceName,
+        sourceSystem: picked.sourceSystem,
+        iri: picked.sourceIri,
         version,
       };
     case 'valueSet':
@@ -131,6 +142,8 @@ export function toControlledTermConfig(picked: PickedConstraint): ControlledTerm
         sourceName: picked.termBaseLabel,
         ontologyId: picked.sourceAcronym,
         ontologyName: sourceName,
+        sourceSystem: picked.sourceSystem,
+        iri: picked.sourceIri,
         version,
       };
   }

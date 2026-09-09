@@ -23,7 +23,7 @@ async function openConstraintPanel(page: import('@playwright/test').Page) {
 test('offers term search when the host has loaded the picker', async ({ page }) => {
   const panel = await openConstraintPanel(page);
 
-  await expect(panel.getByRole('button', { name: /Search the terminology server/ })).toBeVisible();
+  await expect(panel.getByRole('button', { name: /Edit controlled-term constraints/ })).toBeVisible();
 });
 
 test('says what is missing when the host has not loaded the picker', async ({ page }) => {
@@ -36,7 +36,7 @@ test('says what is missing when the host has not loaded the picker', async ({ pa
   // A host that has not loaded the picker is a normal state rather than a fault,
   // so the panel names what it needs instead of offering a search that cannot run.
   await expect(panel).toContainText('cedar-term-picker');
-  await expect(panel.getByRole('button', { name: /Search the terminology server/ })).toBeHidden();
+  await expect(panel.getByRole('button', { name: /Edit controlled-term constraints/ })).toBeHidden();
 });
 
 test('says what is missing when no terminology server is configured', async ({ page }) => {
@@ -50,7 +50,7 @@ test('says what is missing when no terminology server is configured', async ({ p
 
 test('a chosen term becomes a constraint on the field', async ({ page }) => {
   const panel = await openConstraintPanel(page);
-  await clickCentred(panel.getByRole('button', { name: /Search the terminology server/ }));
+  await clickCentred(panel.getByRole('button', { name: /Edit controlled-term constraints/ }));
 
   await expect(page.locator('cedar-term-picker')).toBeVisible();
   await page.locator('#stub-pick').click();
@@ -66,7 +66,7 @@ test('a chosen term becomes a constraint on the field', async ({ page }) => {
 
 test('a chosen term keeps the version the author pinned', async ({ page }) => {
   const panel = await openConstraintPanel(page);
-  await clickCentred(panel.getByRole('button', { name: /Search the terminology server/ }));
+  await clickCentred(panel.getByRole('button', { name: /Edit controlled-term constraints/ }));
   await page.locator('#stub-pick').click();
 
   const constraints = child(await currentTemplate(page), 'Controlled Terms')['_valueConstraints'] as {
@@ -83,7 +83,7 @@ test('a chosen term keeps the version the author pinned', async ({ page }) => {
 
 test('choosing a term closes the picker', async ({ page }) => {
   const panel = await openConstraintPanel(page);
-  await clickCentred(panel.getByRole('button', { name: /Search the terminology server/ }));
+  await clickCentred(panel.getByRole('button', { name: /Edit controlled-term constraints/ }));
   await page.locator('#stub-pick').click();
 
   await expect(page.locator('cedar-term-picker')).toHaveCount(0);
@@ -91,11 +91,82 @@ test('choosing a term closes the picker', async ({ page }) => {
 
 test('the picker is told which field it is choosing for, and which server to ask', async ({ page }) => {
   const panel = await openConstraintPanel(page);
-  await clickCentred(panel.getByRole('button', { name: /Search the terminology server/ }));
+  await clickCentred(panel.getByRole('button', { name: /Edit controlled-term constraints/ }));
 
   const picker = page.locator('cedar-term-picker');
   expect(await picker.evaluate((node) => (node as unknown as { query: string }).query)).toBe('Controlled Terms');
   expect(await picker.evaluate((node) => (node as unknown as { terminologyBaseUrl: string }).terminologyBaseUrl)).toBe(
     'http://localhost:4598/fake-terminology/',
   );
+});
+
+test('reopening passes the existing set and additions preserve it', async ({ page }) => {
+  const panel = await openConstraintPanel(page);
+  for (let i = 0; i < 2; i++) {
+    await clickCentred(panel.getByRole('button', { name: 'Edit controlled-term constraints' }));
+    await page.locator('#stub-pick').click();
+  }
+  const constraints = child(await currentTemplate(page), 'Controlled Terms')['_valueConstraints'] as {
+    classes: unknown[];
+  };
+  expect(constraints.classes).toHaveLength(2);
+});
+
+test('the real picker preserves a set and explicitly clears an excluded default', async ({ page }) => {
+  test.skip(!process.env.PICKER_BUNDLE, 'PICKER_BUNDLE names the actual picker bundle.');
+  const designer = await openDesigner(page);
+  await page.addScriptTag({ path: process.env.PICKER_BUNDLE! });
+  const { buildTemplate, templateToJson } = await import('../../src/app/core/model/cedar-template');
+  const template = templateToJson(buildTemplate({
+    name: 'Constraints', description: '', identifier: 'urn:template', version: '0.0.1',
+    fields: [{ id: 1, name: 'Disease', type: 'controlledTerms', options: [], status: 'optional', allowMultiple: false,
+      defaultValue: { kind: 'iri', iri: 'urn:cancer', label: 'Cancer' },
+      controlledTermConstraints: { constraints: [
+        { sourceType: 'ontology', ontologyId: 'DOID', ontologyName: 'Disease Ontology', uri: 'urn:doid', version: { id: 'original' } },
+        { sourceType: 'ontology', ontologyId: 'NCIT', ontologyName: 'Cancer Thesaurus', uri: 'urn:ncit', version: { id: 'other' } },
+      ], actions: [] },
+    }],
+  }));
+  await page.evaluate((value) => { (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = value; }, template);
+  await applyPreset(page, 'semantic');
+  await page.route('**/fake-terminology/search', (route) => route.fulfill({ json: {
+    query: 'Cancer', sources: [{ sourceSystem: 'bioportal', sourceAcronym: 'DOID', sourceName: 'Disease Ontology', served: 'local', pinnable: true, version: { id: 'original' } }],
+    results: { class: { totalCount: 1, page: 1, pageSize: 25, countCapped: false, collection: [{ type: 'class', sourceSystem: 'bioportal', sourceAcronym: 'DOID', termIri: 'urn:cancer', termLabel: 'Cancer', termType: 'class', obsolete: false, hasChildren: false, descendantCount: 0 }] } },
+  } }));
+  await page.route('**/fake-terminology/search/hierarchy*', (route) => route.fulfill({ json: { sourceAcronym: 'DOID', termIri: 'urn:cancer', termLabel: 'Cancer', path: [], children: [], childCount: 0, descendantCount: 0 } }));
+  let checked = false;
+  await page.route('**/fake-terminology/bioportal/integrated-search', (route) => {
+    const vc = route.request().postDataJSON().parameterObject.valueConstraints;
+    expect(vc.ontologies.map((o: { version: { id: string } }) => o.version.id)).toEqual(['original', 'other']);
+    expect(vc.actions).toEqual([{ action: 'delete', termUri: 'urn:cancer', sourceUri: 'urn:doid', source: 'DOID', type: 'OntologyClass' }]);
+    checked = true;
+    return route.fulfill({ json: { collection: [] } });
+  });
+  const panel = designer.locator('app-controlled-term-config');
+  await panel.getByRole('button', { name: 'Edit controlled-term constraints' }).click();
+  const picker = panel.locator('cedar-term-picker');
+  await expect(picker.locator('.constraint-table').first().locator('tbody tr')).toHaveCount(2);
+  await picker.getByRole('button', { name: 'Exclude a term', exact: true }).click();
+  await picker.locator('input[type=search]').fill('Cancer');
+  await picker.locator('.rowhead').first().click();
+  await picker.locator('.child.pick').first().dblclick();
+  await picker.getByRole('button', { name: 'Apply constraints', exact: true }).click();
+  await expect(panel.getByRole('alert')).toContainText('existing default is not permitted');
+  expect(checked).toBe(true);
+  const before = child(await currentTemplate(page), 'Disease')['_valueConstraints'] as Record<string, unknown>;
+  expect(before['defaultValue']).toEqual({ termUri: 'urn:cancer', 'rdfs:label': 'Cancer' });
+  await picker.locator('.constraint-set').evaluate((node) => { node.scrollTop = 0; });
+  await page.screenshot({ path: '/tmp/ced-real-constraints.png', fullPage: true });
+  await panel.getByRole('button', { name: 'Clear default and apply constraints' }).click();
+  await expect(picker).toHaveCount(0);
+  const saved = child(await currentTemplate(page), 'Disease')['_valueConstraints'] as Record<string, unknown>;
+  expect(saved['defaultValue']).toBeUndefined();
+  expect(saved['actions']).toHaveLength(1);
+  await panel.getByRole('button', { name: 'Edit controlled-term constraints' }).click();
+  await picker.getByRole('button', { name: 'Remove constraint 1', exact: true }).click();
+  await picker.getByRole('button', { name: 'Apply constraints', exact: true }).click();
+  await expect(picker).toHaveCount(0);
+  const final = child(await currentTemplate(page), 'Disease')['_valueConstraints'] as { ontologies: Array<{ acronym: string; version: { id: string } }>; actions: unknown[] };
+  expect(final.ontologies.map((o) => [o.acronym, o.version.id])).toEqual([['NCIT', 'other']]);
+  expect(final.actions).toEqual(saved['actions']);
 });

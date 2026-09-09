@@ -43,11 +43,19 @@ export class FieldDefaultValueComponent {
   readonly terminologyBaseUrl = this.terminology.baseUrl;
   readonly checking = signal(false);
   readonly pickerSources = computed(() => {
-    const config = this.field().controlledTermConfig;
-    const acronym = config?.sourceType === 'ontology-branch' ? config.sourceId : config?.ontologyId;
-    return acronym
-      ? [{ sourceAcronym: acronym, ...(config?.version ? { version: { id: config.version.id } } : {}) }]
-      : [];
+    return (this.field().controlledTermConstraints?.constraints ?? []).flatMap((config) => {
+      const source = config.sourceType === 'ontology-branch' ? config.sourceId : config.ontologyId;
+      const acronym = source?.split('/').filter(Boolean).at(-1);
+      return acronym
+        ? [
+            {
+              sourceAcronym: acronym,
+              sourceSystem: config.sourceSystem,
+              ...(config.version ? { version: { id: config.version.id } } : {}),
+            },
+          ]
+        : [];
+    });
   });
   readonly available = signal(customElements.get(FIELD_TAG) !== undefined);
   readonly pickerAvailable = signal(customElements.get('cedar-term-picker') !== undefined);

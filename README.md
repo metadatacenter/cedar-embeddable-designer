@@ -87,12 +87,18 @@ host loads three scripts and each component stays its own size:
 <script src="cedar-embeddable-designer.js"></script>
 ```
 
-A field's constraint is chosen with
-[`<cedar-term-picker>`](https://github.com/metadatacenter/cedar-term-picker).
-Without it the panel says so and the constraint fields are filled by hand, which
-is what the designer did for every constraint until now — an author typed an
-ontology acronym, a branch IRI and a label from memory, into a panel whose one
-search box was permanently disabled.
+A field's complete controlled-term constraint set is assembled with
+[`<cedar-term-picker>`](https://github.com/metadatacenter/cedar-term-picker) in its
+`constraints` mode. Load a bundle supporting `constraintSet` and
+`constraintsSelected`. Authors can add, inspect, replace and remove constraints,
+set branch depth, and author term exclusions and result positions. JSON and YAML
+are read and written by the TypeScript model library. Without the picker the
+panel reports editing as unavailable and retains saved constraints.
+
+Constraint changes are checked against an existing default using the complete
+set, including actions. A permitted default survives; an invalid one requires
+**Clear default and apply constraints**, while cancellation and lookup failure
+preserve the saved field.
 
 The picker reads the terminology server's version-aware `/search`, which
 **production does not serve yet**: `POST https://terminology.metadatacenter.org/search`
