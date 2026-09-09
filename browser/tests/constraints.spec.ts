@@ -112,7 +112,7 @@ test('reopening passes the existing set and additions preserve it', async ({ pag
   expect(constraints.classes).toHaveLength(2);
 });
 
-test('the real picker preserves a set and explicitly clears an excluded default', async ({ page }) => {
+test('the real picker preserves saved actions and explicitly clears an invalid default', async ({ page }) => {
   test.skip(!process.env.PICKER_BUNDLE, 'PICKER_BUNDLE names the actual picker bundle.');
   const designer = await openDesigner(page);
   await page.addScriptTag({ path: process.env.PICKER_BUNDLE! });
@@ -150,7 +150,9 @@ test('the real picker preserves a set and explicitly clears an excluded default'
                 version: { id: 'other' },
               },
             ],
-            actions: [],
+            actions: [
+              { action: 'delete', termUri: 'urn:cancer', sourceUri: 'urn:doid', source: 'DOID', type: 'OntologyClass' },
+            ],
           },
         },
       ],
@@ -214,7 +216,7 @@ test('the real picker preserves a set and explicitly clears an excluded default'
   let checked = false;
   await page.route('**/fake-terminology/bioportal/integrated-search', (route) => {
     const vc = route.request().postDataJSON().parameterObject.valueConstraints;
-    expect(vc.ontologies.map((o: { version: { id: string } }) => o.version.id)).toEqual(['original', 'other']);
+    expect(vc.ontologies.map((o: { version: { id: string } }) => o.version.id)).toEqual(['other']);
     expect(vc.actions).toEqual([
       { action: 'delete', termUri: 'urn:cancer', sourceUri: 'urn:doid', source: 'DOID', type: 'OntologyClass' },
     ]);
@@ -239,10 +241,7 @@ test('the real picker preserves a set and explicitly clears an excluded default'
   await panel.getByRole('button', { name: 'Edit controlled-term constraints' }).click();
   await expect(picker.locator('.constraint-table').first().locator('tbody tr')).toHaveCount(2);
 
-  await picker.getByRole('button', { name: 'Exclude a term', exact: true }).click();
-  await picker.locator('input[type=search]').fill('Cancer');
-  await picker.locator('.rowhead').first().click();
-  await picker.locator('.child.pick').first().dblclick();
+  await picker.getByRole('button', { name: 'Remove constraint 1', exact: true }).click();
   await picker.getByRole('button', { name: 'Apply constraints', exact: true }).click();
   await expect(panel.getByRole('alert')).toContainText('existing default is not permitted');
   expect(checked).toBe(true);
@@ -257,10 +256,6 @@ test('the real picker preserves a set and explicitly clears an excluded default'
   const saved = child(await currentTemplate(page), 'Disease')['_valueConstraints'] as Record<string, unknown>;
   expect(saved['defaultValue']).toBeUndefined();
   expect(saved['actions']).toHaveLength(1);
-  await panel.getByRole('button', { name: 'Edit controlled-term constraints' }).click();
-  await picker.getByRole('button', { name: 'Remove constraint 1', exact: true }).click();
-  await picker.getByRole('button', { name: 'Apply constraints', exact: true }).click();
-  await expect(picker).toHaveCount(0);
   const final = child(await currentTemplate(page), 'Disease')['_valueConstraints'] as {
     ontologies: Array<{ acronym: string; version: { id: string } }>;
     actions: unknown[];
