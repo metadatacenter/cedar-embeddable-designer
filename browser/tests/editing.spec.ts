@@ -73,13 +73,13 @@ test('deleting a field removes its card and its child', async ({ page }) => {
   await waitForPublished(page, (template) => (template['_ui'] as { order: string[] }).order.length === 2);
 });
 
-test('the required checkbox reaches the template', async ({ page }) => {
+test('the requirement selector reaches the template', async ({ page }) => {
   const designer = await openDesigner(page);
   const requiredOf = (template: Record<string, unknown>) =>
     (child(template, 'Title')['_valueConstraints'] as { requiredValue: boolean }).requiredValue;
 
   expect(requiredOf(await currentTemplate(page))).toBe(true);
-  await clickCentred(designer.locator('input[type=checkbox]').first());
+  await designer.locator('#field-card-1').getByLabel('Requirement', { exact: true }).selectOption('optional');
 
   /*
    * `_valueConstraints.requiredValue`, not the template's top-level `required`.

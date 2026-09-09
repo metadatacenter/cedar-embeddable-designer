@@ -36,3 +36,17 @@ test('writes display labels and layout settings', async ({ page }) => {
     .poll(async () => ((await currentTemplate(page)).properties as any).Title._ui)
     .toMatchObject({ hidden: true, continuePreviousLine: true });
 });
+
+test('authors recommended fields without marking them required', async ({ page }) => {
+  await openDesigner(page);
+  const requirement = page.locator('#field-card-1').getByLabel('Requirement', { exact: true });
+  await requirement.selectOption('recommended');
+  await expect
+    .poll(async () => ((await currentTemplate(page)).properties as any).Title._valueConstraints)
+    .toMatchObject({ recommendedValue: true, requiredValue: false });
+  await requirement.selectOption('required');
+  await expect
+    .poll(async () => ((await currentTemplate(page)).properties as any).Title._valueConstraints)
+    .toMatchObject({ requiredValue: true });
+  expect(((await currentTemplate(page)).properties as any).Title._valueConstraints.recommendedValue).toBeUndefined();
+});

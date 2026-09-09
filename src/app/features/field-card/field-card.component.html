@@ -130,15 +130,16 @@
       bar cost every card its own rule, its padding and 36px of height.
     -->
     @if (service.preferences().showRequired && allowsStatus(field.type)) {
-      <label class="flex items-center gap-1 cursor-pointer group shrink-0">
-        <input
-          type="checkbox"
-          [checked]="field.status === 'required'"
-          (change)="service.updateFieldStatus(field.id, field.status === 'required' ? 'optional' : 'required')"
-          class="w-3.5 h-3.5 checkbox-white"
-        />
-        <span class="text-[11px] text-gray-600 group-hover:text-gray-900 whitespace-nowrap">Required</span>
-      </label>
+      <select
+        aria-label="Requirement"
+        [ngModel]="field.status"
+        (ngModelChange)="service.updateFieldStatus(field.id, $event)"
+        class="text-[11px] text-gray-600 bg-gray-50 border border-gray-200 rounded px-1 py-0.5"
+      >
+        <option value="optional">Optional</option>
+        <option value="recommended">Recommended</option>
+        <option value="required">Required</option>
+      </select>
     }
     @if (service.preferences().showAllowMultiple && allowsMultiple(field.type)) {
       <label class="flex items-center gap-1 cursor-pointer group shrink-0">
