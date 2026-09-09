@@ -116,6 +116,7 @@ test('the real picker preserves a set and explicitly clears an excluded default'
   test.skip(!process.env.PICKER_BUNDLE, 'PICKER_BUNDLE names the actual picker bundle.');
   const designer = await openDesigner(page);
   await page.addScriptTag({ path: process.env.PICKER_BUNDLE! });
+  if (process.env.CEF_BUNDLE) await page.addScriptTag({ path: process.env.CEF_BUNDLE });
   const { buildTemplate, templateToJson } = await import('../../src/app/core/model/cedar-template');
   const template = templateToJson(buildTemplate({
     name: 'Constraints', description: '', identifier: 'urn:template', version: '0.0.1',
@@ -143,6 +144,12 @@ test('the real picker preserves a set and explicitly clears an excluded default'
     return route.fulfill({ json: { collection: [] } });
   });
   const panel = designer.locator('app-controlled-term-config');
+  if (process.env.CEF_BUNDLE) {
+    const summary = panel.locator('cedar-embeddable-field');
+    await expect(summary.getByText(/Disease Ontology/)).toBeVisible();
+    await expect(summary.getByText(/Cancer Thesaurus/)).toBeVisible();
+    await expect(summary.locator('input')).toHaveCount(0);
+  }
   await panel.getByRole('button', { name: 'Edit controlled-term constraints' }).click();
   const picker = panel.locator('cedar-term-picker');
   await expect(picker.locator('.constraint-table').first().locator('tbody tr')).toHaveCount(2);

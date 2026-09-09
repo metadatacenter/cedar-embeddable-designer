@@ -1,4 +1,12 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, Input, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  CUSTOM_ELEMENTS_SCHEMA,
+  Input,
+  inject,
+  signal,
+  ChangeDetectionStrategy,
+  OnChanges,
+} from '@angular/core';
 import { TemplateService } from '../../core/services/template.service';
 import { Field, ControlledTermSet } from '../../core/models/types';
 import { TerminologyService } from '../../core/services/terminology.service';
@@ -10,9 +18,10 @@ import { fieldToJson } from '../../core/model/cedar-template';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './controlled-term-config.component.html',
+  styleUrl: './controlled-term-config.component.scss',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class ControlledTermConfigComponent {
+export class ControlledTermConfigComponent implements OnChanges {
   readonly service = inject(TemplateService);
   private readonly terminology = inject(TerminologyService);
   readonly terminologyBaseUrl = this.terminology.baseUrl;
@@ -24,6 +33,15 @@ export class ControlledTermConfigComponent {
   private pending: { field: Field; set: ControlledTermSet } | null = null;
   @Input() field!: Field;
   readonly empty: ControlledTermSet = { constraints: [], actions: [] };
+
+  readonly summaryAvailable = customElements.get('cedar-embeddable-field') !== undefined;
+  readonly summaryConfig = { ...this.service.fieldEditorConfig(), readOnlyMode: true };
+  readonly summaryValue = { kind: 'none' };
+  summaryArtifact: ReturnType<typeof fieldToJson> | null = null;
+
+  ngOnChanges(): void {
+    this.summaryArtifact = fieldToJson({ ...this.field, defaultValue: { kind: 'none' } });
+  }
 
   openPicker(): void {
     this.error.set(null);

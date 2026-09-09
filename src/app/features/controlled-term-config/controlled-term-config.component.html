@@ -1,24 +1,23 @@
-<div class="space-y-3 px-1 mb-3">
-  <h3 class="text-xs font-semibold text-gray-800 uppercase tracking-wide">Controlled-term constraints</h3>
-  <p class="text-sm text-gray-600">
-    {{ field.controlledTermConstraints?.constraints?.length || 0 }} constraints,
-    {{ field.controlledTermConstraints?.actions?.length || 0 }} term actions
-  </p>
-  @if (pickerAvailable && terminologyBaseUrl()) {
-    <button
-      type="button"
-      (click)="openPicker()"
-      class="w-full text-xs font-medium border border-teal-600 text-teal-700 rounded px-2 py-2"
-    >
-      Edit controlled-term constraints
-    </button>
+<div class="constraint-summary" aria-label="Controlled-term constraints">
+  @if (summaryAvailable) {
+    <cedar-embeddable-field
+      [config]="summaryConfig"
+      [fieldObject]="summaryArtifact"
+      [value]="summaryValue"
+    ></cedar-embeddable-field>
   } @else {
-    <p role="status" class="text-sm text-amber-800">
-      Constraint editing needs <code>&lt;cedar-term-picker&gt;</code> and a configured <code>terminologyBaseUrl</code>.
-      Saved constraints remain intact.
-    </p>
+    <span role="status">Constraint preview needs the field editor.</span>
+  }
+  @if (pickerAvailable && terminologyBaseUrl()) {
+    <button type="button" (click)="openPicker()" aria-label="Edit controlled-term constraints">Edit</button>
   }
 </div>
+@if (!pickerAvailable || !terminologyBaseUrl()) {
+  <p role="status" class="text-xs text-amber-800 mb-3">
+    Constraint editing needs <code>&lt;cedar-term-picker&gt;</code> and a configured <code>terminologyBaseUrl</code>.
+    Saved constraints remain intact.
+  </p>
+}
 @if (pickerOpen()) {
   <div class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-6">
     <div
