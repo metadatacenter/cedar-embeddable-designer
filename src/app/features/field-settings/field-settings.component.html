@@ -123,3 +123,21 @@
     }
   </details>
 }
+
+@if (field.type === 'image' || field.type === 'youtube') {
+  <details class="settings">
+    <summary>Media size <span>dimensions in pixels</span></summary>
+    <form (ngSubmit)="saveMedia()" class="row">
+      <label
+        >Width<input type="number" name="width" min="1" step="1" [(ngModel)]="width" placeholder="Automatic"
+      /></label>
+      <label
+        >Height<input type="number" name="height" min="1" step="1" [(ngModel)]="height" placeholder="Automatic"
+      /></label>
+      <button type="submit">Apply</button>
+    </form>
+    @if (error) {
+      <p role="alert">{{ error }}</p>
+    }
+  </details>
+}

@@ -750,3 +750,13 @@ it('rejects incompatible temporal precision even without a default', () => {
     ),
   ).toThrow(/incompatible/);
 });
+
+for (const type of ['image', 'youtube']) {
+  it(`preserves ${type} dimensions through JSON and YAML`, () => {
+    const original = buildTemplate(templateOf(field({ type, width: 640, height: 360 })));
+    for (const source of [templateToJson(original), templateToYaml(original)]) {
+      expect(toDesignerTemplate(readTemplate(source)).fields[0]).toMatchObject({ width: 640, height: 360 });
+    }
+    expect(() => buildTemplate(templateOf(field({ type, width: -1 })))).toThrow(/dimensions/);
+  });
+}

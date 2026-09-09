@@ -50,6 +50,10 @@ import {
   TemporalFieldBuilder,
   ControlledTermDefaultValueBuilder,
   ControlledTermFieldBuilder,
+  StaticImageFieldBuilder,
+  StaticYoutubeFieldBuilder,
+  StaticImageField,
+  StaticYoutubeField,
   RadioFieldBuilder,
   CheckboxFieldBuilder,
   SingleChoiceListFieldBuilder,
@@ -653,6 +657,15 @@ function buildField(field: Field): TemplateField {
   if (descriptor.content) {
     buildStaticContent(builder, descriptor.content, field.content ?? '');
   }
+  if (field.type === 'image' || field.type === 'youtube') {
+    for (const dimension of [field.width, field.height]) {
+      if (dimension != null && (!Number.isInteger(dimension) || dimension <= 0))
+        throw new Error('Media dimensions must be positive whole numbers.');
+    }
+    (builder as StaticImageFieldBuilder | StaticYoutubeFieldBuilder)
+      .withWidth(field.width ?? null)
+      .withHeight(field.height ?? null);
+  }
   const value = field.defaultValue;
   if (value.kind !== 'none') {
     if (value.kind !== descriptor.defaultKind)
@@ -1017,6 +1030,12 @@ export function toDesignerTemplate(template: Template): DesignerTemplate {
       maxItems: info.isMultiInAnyWay() ? dynamic.maxItems : null,
       helpText: field.schema_description ?? '',
       content: contentOf(field),
+      ...(paletteTypeOf(field) === 'image' || paletteTypeOf(field) === 'youtube'
+        ? {
+            width: (field as StaticImageField | StaticYoutubeField).width,
+            height: (field as StaticImageField | StaticYoutubeField).height,
+          }
+        : {}),
       atId: field.at_id?.getValue() ?? undefined,
       propertyIri: dynamic.iri ?? undefined,
       controlledTermConfig: controlledTermConfigOf(field),

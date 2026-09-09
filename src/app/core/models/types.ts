@@ -108,6 +108,8 @@ export interface Field {
    * address of an image, the id of a video. Absent on every other type.
    */
   content?: string;
+  width?: number | null;
+  height?: number | null;
   customFieldId?: number;
   libraryId?: number;
   controlledTermConfig?: ControlledTermConfig;

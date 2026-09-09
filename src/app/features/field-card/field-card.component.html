@@ -228,13 +228,23 @@
   @if (contentLabel(field.type); as label) {
     <div class="mt-2.5 px-1">
       <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5 block">{{ label }}</label>
-      <input
-        type="text"
-        [ngModel]="field.content || ''"
-        (ngModelChange)="service.updateContent(field.id, $event)"
-        [placeholder]="FIELD_TYPES_LIST[field.type]?.preview || ''"
-        class="text-sm w-full border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:border-teal-600"
-      />
+      @if (field.type === 'richText') {
+        <textarea
+          rows="4"
+          aria-label="Rich text markup"
+          [ngModel]="field.content || ''"
+          (ngModelChange)="service.updateContent(field.id, $event)"
+          class="text-sm w-full border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:border-teal-600"
+        ></textarea>
+      } @else {
+        <input
+          type="text"
+          [ngModel]="field.content || ''"
+          (ngModelChange)="service.updateContent(field.id, $event)"
+          [placeholder]="FIELD_TYPES_LIST[field.type]?.preview || ''"
+          class="text-sm w-full border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:border-teal-600"
+        />
+      }
     </div>
   }
 

@@ -122,3 +122,30 @@ test('authors datetime precision timezone and time format', async ({ page }) => 
     'Fractional second',
   ]);
 });
+
+test('authors media dimensions and multiline rich text', async ({ page }) => {
+  await openDesigner(page);
+  const card = page.locator('#field-card-1');
+  await card.locator('app-field-card button').first().click();
+  await card
+    .locator('.field-type-dropdown-container button')
+    .filter({ has: page.getByText('Image', { exact: true }) })
+    .click();
+  const section = card.locator('details').filter({ has: page.getByText('Media size', { exact: false }) });
+  await section.locator('summary').click();
+  await section.getByLabel('Width').fill('640');
+  await section.getByLabel('Height').fill('360');
+  await section.getByRole('button', { name: 'Apply' }).click();
+  await expect
+    .poll(async () => ((await currentTemplate(page)).properties as any).Title._ui._size)
+    .toEqual({ width: 640, height: 360 });
+  await card.locator('app-field-card button').first().click();
+  await card
+    .locator('.field-type-dropdown-container button')
+    .filter({ has: page.getByText('Rich Text', { exact: true }) })
+    .click();
+  await card.getByLabel('Rich text markup').fill('<p>First</p>\n<p>Second</p>');
+  await expect
+    .poll(async () => ((await currentTemplate(page)).properties as any).Title._ui._content)
+    .toBe('<p>First</p>\n<p>Second</p>');
+});

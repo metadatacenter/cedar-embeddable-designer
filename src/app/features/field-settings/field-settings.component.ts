@@ -44,6 +44,8 @@ export class FieldSettingsComponent implements OnChanges {
     if (!this.granularities.includes(this.temporal.granularity))
       this.temporal.granularity = type === 'xsd:time' ? 'minute' : 'day';
   }
+  width: number | null = null;
+  height: number | null = null;
   min: number | null = null;
   max: number | null = null;
   error: string | null = null;
@@ -67,9 +69,14 @@ export class FieldSettingsComponent implements OnChanges {
         inputTimeFormat: null,
       }),
     };
+    this.width = this.field.width ?? null;
+    this.height = this.field.height ?? null;
     this.min = this.field.minItems ?? null;
     this.max = this.field.maxItems ?? null;
     this.error = null;
+  }
+  saveMedia(): void {
+    this.error = this.service.updateFieldSettings(this.field.id, { width: this.width, height: this.height });
   }
   saveTemporal(): void {
     this.error = this.service.updateFieldSettings(this.field.id, {
