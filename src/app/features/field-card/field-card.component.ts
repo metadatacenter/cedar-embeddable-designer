@@ -6,6 +6,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService, FIELD_TYPES } from '../../core/services/template.service';
 import { Field } from '../../core/models/types';
 import {
+  choiceDefaultConflict,
   allowsDefault,
   allowsMultiple,
   allowsOptions,
@@ -30,6 +31,7 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './field-card.component.html',
+  styleUrl: '../../shared/_field-error.scss',
 })
 export class FieldCardComponent {
   @Input() field!: Field;
@@ -46,6 +48,7 @@ export class FieldCardComponent {
    * lies: a page break has no required value, and a radio's cardinality is
    * decided by its type rather than by its author.
    */
+  choiceDefaultConflict = choiceDefaultConflict;
   allowsDefault = allowsDefault;
 
   allowsStatus(type: string): boolean {

@@ -423,6 +423,12 @@ function buildOptions(builder: FieldBuilder, field: Field): void {
       : field.defaultValue.kind === 'literal'
         ? [field.defaultValue.value]
         : [];
+  const scalar = field.importedChoiceDefault ?? selected.find((value) => !field.options.includes(value));
+  if (scalar !== undefined)
+    (
+      builder as
+        RadioFieldBuilder | CheckboxFieldBuilder | SingleChoiceListFieldBuilder | MultipleChoiceListFieldBuilder
+    ).withDefaultValue(scalar);
   for (const option of field.options) {
     /*
      * An option the author has not named yet is not an option. Its label is
@@ -672,8 +678,8 @@ function buildField(field: Field): TemplateField {
       throw new Error(`A ${field.type} field cannot hold a ${value.kind} default.`);
     if (descriptor.options) {
       const values = value.kind === 'literals' ? value.values : value.kind === 'literal' ? [value.value] : [];
-      if (values.some((option) => !field.options.includes(option)))
-        throw new Error('Choose a default from the field options.');
+      if (values.filter((option) => !field.options.includes(option)).length > 1)
+        throw new Error('Only one scalar choice default can be preserved.');
     } else {
       switch (value.kind) {
         case 'literal':
@@ -705,7 +711,11 @@ function buildField(field: Field): TemplateField {
 /** Validate before changing state; model builders may reject intermediate defaults. */
 export function defaultValueError(field: Field, value: FieldDefaultValue): string | null {
   try {
-    buildField({ ...field, defaultValue: value });
+    if (allowsOptions(field.type)) {
+      const values = value.kind === 'literal' ? [value.value] : value.kind === 'literals' ? value.values : [];
+      if (values.some((option) => !field.options.includes(option))) return 'Choose a default from the field options.';
+    }
+    buildField({ ...field, defaultValue: value, importedChoiceDefault: undefined });
     return null;
   } catch (error) {
     return error instanceof Error ? error.message : String(error);
@@ -994,6 +1004,10 @@ export function toDesignerTemplate(template: Template): DesignerTemplate {
       status: dynamic.requiredValue ? 'required' : dynamic.recommendedValue ? 'recommended' : 'optional',
       options: optionsOf(field),
       defaultValue: defaultOf(field),
+      importedChoiceDefault: allowsOptions(paletteTypeOf(field))
+        ? ((field as unknown as { valueConstraints: { defaultValue: string | null } }).valueConstraints.defaultValue ??
+          undefined)
+        : undefined,
       temporal:
         field.cedarFieldType === CedarFieldType.TEMPORAL
           ? {
@@ -1049,4 +1063,24 @@ export function toDesignerTemplate(template: Template): DesignerTemplate {
     version: template.pav_version?.getValue() ?? '0.0.1',
     fields,
   };
+}
+
+/** Imported conflicts stay visible even when default editing is hidden in preferences. */
+export function choiceDefaultConflict(field: Field): string | null {
+  if (!allowsOptions(field.type)) return null;
+  const values =
+    field.defaultValue.kind === 'literal'
+      ? [field.defaultValue.value]
+      : field.defaultValue.kind === 'literals'
+        ? field.defaultValue.values
+        : [];
+  const all = [
+    ...new Set([...values, ...(field.importedChoiceDefault === undefined ? [] : [field.importedChoiceDefault])]),
+  ];
+  const missing = all.filter((value) => !field.options.includes(value));
+  if (missing.length)
+    return `The default ${missing.map((value) => '“' + value + '”').join(', ')} is not among the allowed options. Change or clear the default, or add it to the options.`;
+  if (field.importedChoiceDefault !== undefined && values.length && !values.includes(field.importedChoiceDefault))
+    return `The imported default “${field.importedChoiceDefault}” conflicts with the selected default. Choose a default or clear it to resolve this.`;
+  return null;
 }

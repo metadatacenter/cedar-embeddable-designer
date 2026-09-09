@@ -72,7 +72,7 @@ function choiceDefault(field: Field, options: string[], renamed?: { from: string
   if (value.kind !== 'literal' && value.kind !== 'literals') return value;
   const selected = (value.kind === 'literal' ? [value.value] : value.values)
     .map((label) => (renamed && label === renamed.from ? renamed.to : label))
-    .filter((label) => label.trim() !== '' && options.includes(label));
+    .filter((label) => label.trim() !== '' && (options.includes(label) || !field.options.includes(label)));
   if (!selected.length) return { kind: 'none' };
   return value.kind === 'literal'
     ? { kind: 'literal', value: selected[0] }
@@ -372,6 +372,8 @@ export class TemplateService {
             ...f,
             options: newOptions,
             defaultValue: choiceDefault(f, newOptions, { from: f.options[optionIndex], to: value }),
+            importedChoiceDefault:
+              f.importedChoiceDefault === f.options[optionIndex] ? value || undefined : f.importedChoiceDefault,
           };
         }
         return f;
@@ -405,6 +407,8 @@ export class TemplateService {
             ...f,
             options: newOptions.length > 0 ? newOptions : [''],
             defaultValue: choiceDefault(f, newOptions),
+            importedChoiceDefault:
+              f.importedChoiceDefault === f.options[optionIndex] ? undefined : f.importedChoiceDefault,
           };
         }
         return f;
@@ -431,7 +435,11 @@ export class TemplateService {
 
   updateDefaultValue(id: number, value: FieldDefaultValue) {
     this.fields.update((prev) =>
-      prev.map((f) => (f.id === id && defaultValueError(f, value) === null ? { ...f, defaultValue: value } : f)),
+      prev.map((f) =>
+        f.id === id && defaultValueError(f, value) === null
+          ? { ...f, defaultValue: value, importedChoiceDefault: undefined }
+          : f,
+      ),
     );
   }
 

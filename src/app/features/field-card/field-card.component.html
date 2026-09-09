@@ -278,3 +278,16 @@
   }
   <app-field-settings [field]="field"></app-field-settings>
 </div>
+
+@if (choiceDefaultConflict(field); as conflict) {
+  <div class="mt-1 px-1">
+    <p role="alert" class="ced-field-error">{{ conflict }}</p>
+    <button
+      type="button"
+      class="text-xs text-teal-700 underline"
+      (click)="service.updateDefaultValue(field.id, { kind: 'none' })"
+    >
+      Clear conflicting default
+    </button>
+  </div>
+}

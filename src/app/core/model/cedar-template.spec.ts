@@ -760,3 +760,27 @@ for (const type of ['image', 'youtube']) {
     expect(() => buildTemplate(templateOf(field({ type, width: -1 })))).toThrow(/dimensions/);
   });
 }
+
+for (const type of ['multipleChoice', 'singleChoiceList', 'checkboxes', 'multipleChoiceList']) {
+  it(`preserves an out-of-options ${type} default without adding an option`, () => {
+    const original = buildTemplate(
+      templateOf(
+        field({
+          type,
+          options: ['Red', 'Green', 'Blue'],
+          defaultValue:
+            type === 'checkboxes' || type === 'multipleChoiceList'
+              ? { kind: 'literals', values: ['Yellow'] }
+              : { kind: 'literal', value: 'Yellow' },
+          importedChoiceDefault: 'Yellow',
+        }),
+      ),
+    );
+    for (const source of [templateToJson(original), templateToYaml(original)]) {
+      const state = toDesignerTemplate(readTemplate(source));
+      expect(state.fields[0].options).toEqual(['Red', 'Green', 'Blue']);
+      expect(state.fields[0].importedChoiceDefault).toBe('Yellow');
+      expect(templateToJson(buildTemplate(state))).toEqual(templateToJson(original));
+    }
+  });
+}

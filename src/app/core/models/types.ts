@@ -92,6 +92,8 @@ export interface Field {
   status: string; // 'required' | 'optional' | 'recommended'
   options: string[];
   defaultValue: FieldDefaultValue;
+  /** Preserve the scalar form of an imported choice default until explicitly changed. */
+  importedChoiceDefault?: string;
   temporal?: TemporalSettings;
   numeric?: NumericSettings;
   textConstraints?: { minLength: number | null; maxLength: number | null; regex: string | null };

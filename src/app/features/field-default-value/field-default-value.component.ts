@@ -33,6 +33,7 @@ interface FieldElement extends HTMLElement {
   selector: 'app-field-default-value',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './field-default-value.component.html',
+  styleUrl: '../../shared/_field-error.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FieldDefaultValueComponent {
@@ -86,7 +87,7 @@ export class FieldDefaultValueComponent {
       }
       if (this.editor.parentNode !== host) host.replaceChildren(this.editor);
       // The default is the value being edited, not a reason to rebuild its control.
-      const artifact = fieldToJson({ ...field, defaultValue: { kind: 'none' } });
+      const artifact = fieldToJson({ ...field, defaultValue: { kind: 'none' }, importedChoiceDefault: undefined });
       const key = JSON.stringify(artifact);
       if (key !== this.artifactKey) {
         this.editor.fieldObject = artifact;
@@ -127,7 +128,7 @@ export class FieldDefaultValueComponent {
     this.error.set(null);
     try {
       const allowed = await this.terminology.allowsDefault(
-        fieldToJson({ ...field, defaultValue: { kind: 'none' } }),
+        fieldToJson({ ...field, defaultValue: { kind: 'none' }, importedChoiceDefault: undefined }),
         picked.termIri,
         picked.termLabel,
       );
