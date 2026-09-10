@@ -25,29 +25,92 @@ export interface ControlledTermVersionRef {
   declaredVersion?: string;
 }
 
-export interface ControlledTermConfig {
-  sourceType: 'ontology-term' | 'ontology' | 'value-set' | 'ontology-branch';
-  /** Model identities are independent of the display acronym. */
-  uri?: string;
+/**
+ * A vocabulary constraint, as one of the four things it can actually be.
+ *
+ * The field names are not ours to choose: this shape crosses to
+ * `<cedar-term-picker>` through its `constraintSet` input, and the picker publishes it
+ * as `ControlledTermConfig` in its own contract. What was ours to fix is that the
+ * contract is one interface with fifteen optional fields, so every field appeared to
+ * be readable on every kind of constraint and the compiler had nothing to say about
+ * it. Splitting it into four variants over `sourceType` keeps the wire shape exactly
+ * and makes reading a branch's depth off a term a compile error.
+ *
+ * The names being shared is why this matters more than it looks. `sourceId` is the
+ * term's IRI on a term, the value set's IRI on a value set, and the *ontology's
+ * acronym* on a branch — three meanings on one key, and nothing distinguished them.
+ * That cost real time: a branch fixture built with the branch IRI in `sourceId` looked
+ * like a round trip losing the ontology, when it was the fixture that was wrong.
+ *
+ * Required means the writer cannot build the entry without it. The writers still check
+ * those fields for emptiness, because a required `string` can be `''` and the model
+ * library refuses that.
+ */
+interface ControlledTermCommon {
+  /** The source's own IRI, as distinct from the acronym an author recognises. */
   iri?: string;
   sourceSystem?: string;
-  source?: string;
-  label?: string;
-  termType?: 'OntologyClass' | 'Value';
-  numTerms?: number | null;
-  sourceId?: string;
-  sourceName?: string;
-  ontologyId?: string;
-  ontologyName?: string;
-  branchRootId?: string;
-  branchRootName?: string;
-  searchDepth?: number;
   /**
-   * The snapshot the author pinned, where they pinned one. Absent means the
-   * latest the terminology server serves, resolved when the template is read.
+   * The snapshot the author pinned, where they pinned one. Absent means the latest the
+   * terminology server serves, resolved when the template is read.
    */
   version?: ControlledTermVersionRef;
 }
+
+/** Every term in one ontology. */
+export interface OntologyConstraint extends ControlledTermCommon {
+  sourceType: 'ontology';
+  /** The ontology's acronym, which is its identity here. */
+  ontologyId: string;
+  ontologyName?: string;
+  /** The ontology's URI, derived from the acronym when a source does not give one. */
+  uri?: string;
+  /** The acronym again, as the picker's own hits carry it. */
+  sourceId?: string;
+  numTerms?: number | null;
+}
+
+/** Every term under one root, to a chosen depth. */
+export interface BranchConstraint extends ControlledTermCommon {
+  sourceType: 'ontology-branch';
+  /** The branch root's IRI. The branch is this term and its descendants. */
+  branchRootId: string;
+  branchRootName?: string;
+  /** The acronym of the ontology the branch is drawn from — not the branch's own IRI. */
+  sourceId?: string;
+  source?: string;
+  ontologyName?: string;
+  searchDepth?: number;
+}
+
+/** One term, named exactly. */
+export interface ClassConstraint extends ControlledTermCommon {
+  sourceType: 'ontology-term';
+  /** The term's IRI. */
+  sourceId: string;
+  /** The term's label, and the preferred label the source gives it. */
+  label?: string;
+  sourceName?: string;
+  /** The ontology the term is drawn from. */
+  ontologyId?: string;
+  ontologyName?: string;
+  source?: string;
+  termType?: 'OntologyClass' | 'Value';
+}
+
+/** A curated list of values, which CEDAR treats as its own kind of source. */
+export interface ValueSetConstraint extends ControlledTermCommon {
+  sourceType: 'value-set';
+  /** The value set's IRI. */
+  sourceId: string;
+  sourceName?: string;
+  /** The collection the value set belongs to. */
+  ontologyId?: string;
+  ontologyName?: string;
+  numTerms?: number | null;
+}
+
+export type ControlledTermConfig = OntologyConstraint | BranchConstraint | ClassConstraint | ValueSetConstraint;
 
 export interface ControlledTermAction {
   action: string;

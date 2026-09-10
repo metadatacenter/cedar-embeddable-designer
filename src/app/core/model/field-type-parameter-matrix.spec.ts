@@ -196,16 +196,27 @@ const CASES: Record<Parameter, ParameterCase> = {
      * name does not come back, and cannot — `_valueConstraints.branches[]` has a slot
      * for the source's identifier and none for its label, so a reopened template has to
      * resolve the name again from the terminology server. Asserting the identity is
-     * therefore the real contract; asserting the object would be asserting the bag.
+     * therefore the real contract; asserting the whole object would assert the shape
+     * rather than the meaning.
+     *
+     * Narrowed on `sourceType` rather than reaching for the fields, which the union now
+     * requires: a branch's root and depth do not exist on the other three kinds, and
+     * before the union that was a thing the compiler let this file pretend.
      */
     read: (field) =>
-      (field.controlledTermConstraints?.constraints ?? []).map((constraint) => ({
-        sourceType: constraint.sourceType,
-        sourceId: constraint.sourceId,
-        branchRootId: constraint.branchRootId,
-        branchRootName: constraint.branchRootName,
-        searchDepth: constraint.searchDepth,
-      })),
+      (field.controlledTermConstraints?.constraints ?? []).flatMap((constraint) =>
+        constraint.sourceType === 'ontology-branch'
+          ? [
+              {
+                sourceType: constraint.sourceType,
+                sourceId: constraint.sourceId,
+                branchRootId: constraint.branchRootId,
+                branchRootName: constraint.branchRootName,
+                searchDepth: constraint.searchDepth,
+              },
+            ]
+          : [],
+      ),
   },
   options: {
     set: () => ({ options: ['Alpha', 'Beta', 'Gamma'] }),

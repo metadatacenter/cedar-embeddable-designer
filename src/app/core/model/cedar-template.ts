@@ -654,12 +654,10 @@ function buildControlledTerm(builder: FieldBuilder, config: ControlledTermConfig
         config.version.declaredVersion ?? null,
       )
     : null;
-  const controlled = builder as unknown as {
-    addOntology(o: unknown): unknown;
-    addBranch(b: unknown): unknown;
-    addClass(c: unknown): unknown;
-    addValueSet(v: unknown): unknown;
-  };
+  // The real builder, rather than a hand-written shape reached through `as unknown`:
+  // `ControlledTermFieldBuilder` declares all four adders, and only a controlled-term
+  // field gets here.
+  const controlled = builder as ControlledTermFieldBuilder;
 
   switch (config.sourceType) {
     case 'ontology':
