@@ -266,9 +266,25 @@ const constraints = (template: Record<string, unknown>, key: string): Record<str
 
 const open = (page: Page, heading: string) => disclosure(page, heading).locator('summary').click();
 
-/** Fill a control and wait for it to hold the value, for controls that save as you type. */
-const fillAndCheck = async (control: ReturnType<Page['locator']>, value: string) => {
-  await control.fill(value);
+/**
+ * Put a value in a box, or take it out, and wait for the box to show it.
+ *
+ * Emptying is done from the keyboard rather than with `fill('')`, and that is not
+ * fastidiousness: on `input[type=number]`, `fill('')` sets the DOM value without
+ * Angular's model reliably following, and the two then cannot be resynchronised —
+ * the box already reads empty, so there is no change left to dispatch and every
+ * later Apply saves the old number. It wedged about one run in three, and the
+ * product was never at fault: clicking in, selecting, and pressing Delete works
+ * six times out of six, which is also what a person does.
+ */
+const putValue = async (control: ReturnType<Page['locator']>, value: string) => {
+  if (value === '') {
+    await control.click();
+    await control.selectText();
+    await control.press('Delete');
+  } else {
+    await control.fill(value);
+  }
   await expect(control).toHaveValue(value);
 };
 const apply = (page: Page, heading: string) =>
@@ -290,9 +306,7 @@ const fillAndApply = (page: Page, heading: string, label: string, value: string)
  * runs of the same suite disagreed by a dozen tests.
  */
 const setIn = async (page: Page, heading: string, label: string, value: string) => {
-  const control = disclosure(page, heading).getByLabel(label, { exact: true });
-  await control.fill(value);
-  await expect(control).toHaveValue(value);
+  await putValue(disclosure(page, heading).getByLabel(label, { exact: true }), value);
   await apply(page, heading);
 };
 
@@ -337,8 +351,8 @@ const LIFECYCLES: readonly Lifecycle[] = [
   {
     control: 'help text',
     paletteType: 'text',
-    set: async (page) => fillAndCheck(card(page).getByLabel('Help Text', { exact: true }), 'Some help'),
-    restore: async (page) => fillAndCheck(card(page).getByLabel('Help Text', { exact: true }), ''),
+    set: async (page) => putValue(card(page).getByLabel('Help Text', { exact: true }), 'Some help'),
+    restore: async (page) => putValue(card(page).getByLabel('Help Text', { exact: true }), ''),
     read: (template) => property(template, 'Text')['schema:description'],
     whenSet: 'Some help',
   },
@@ -709,15 +723,7 @@ for (const width of WIDTHS) {
         await expectLaidOut(page, `${lifecycle.control} set`);
 
         await lifecycle.restore(page);
-        await expect
-          .poll(
-            async () => {
-              if (lifecycle.savedVia) await apply(page, lifecycle.savedVia);
-              return await currentTemplate(page);
-            },
-            { timeout: SETTLE },
-          )
-          .toEqual(before);
+        await expect.poll(async () => await currentTemplate(page), { timeout: SETTLE }).toEqual(before);
         await expectLaidOut(page, `${lifecycle.control} restored`);
       });
     }
