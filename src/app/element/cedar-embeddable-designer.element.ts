@@ -1,5 +1,6 @@
 import {
   Component,
+  DestroyRef,
   EnvironmentInjector,
   EventEmitter,
   Input,
@@ -10,6 +11,7 @@ import {
 } from '@angular/core';
 import { TemplateService } from '../core/services/template.service';
 import { TerminologyService } from '../core/services/terminology.service';
+import { PreferencesService } from '../core/services/preferences.service';
 import { CedConfig } from '../ced-public-api';
 import { AppComponent } from '../app.component';
 import { FontRegistrar } from '../shared/font-registrar/font-registrar';
@@ -30,6 +32,7 @@ import { FontRegistrar } from '../shared/font-registrar/font-registrar';
 @Component({
   selector: 'app-cedar-embeddable-designer-element',
   imports: [AppComponent, FontRegistrar],
+  providers: [TemplateService, TerminologyService, PreferencesService],
   // The registrar renders nothing; it exists so its unencapsulated stylesheet,
   // which is only `@font-face` declarations, reaches the document.
   template: `<ced-font-registrar /><app-root></app-root>`,
@@ -106,9 +109,10 @@ export class CedarEmbeddableDesignerElementComponent {
      * root effect, scheduled on state changes rather than on this view's refresh,
      * so what the host receives no longer depends on the wrapper's change detection.
      */
-    effect(() => this.templateChange.emit(this.cedarTemplate()), {
+    const changes = effect(() => this.templateChange.emit(this.cedarTemplate()), {
       injector: inject(EnvironmentInjector),
     });
+    inject(DestroyRef).onDestroy(() => changes.destroy());
   }
 
   private cedarTemplate(): object {

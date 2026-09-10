@@ -19,6 +19,8 @@ describe('CedarEmbeddableDesignerElementComponent', () => {
 
   function create() {
     const fixture = TestBed.createComponent(CedarEmbeddableDesignerElementComponent);
+    service = fixture.debugElement.injector.get(TemplateService);
+    terminology = fixture.debugElement.injector.get(TerminologyService);
     fixture.detectChanges();
     return fixture;
   }
@@ -26,8 +28,25 @@ describe('CedarEmbeddableDesignerElementComponent', () => {
   beforeEach(() => {
     localStorage.clear();
     TestBed.configureTestingModule({});
-    service = TestBed.inject(TemplateService);
-    terminology = TestBed.inject(TerminologyService);
+  });
+
+  it('isolates documents, configuration and preferences between elements', () => {
+    const first = create();
+    const second = create();
+    const a = first.componentInstance.service;
+    const b = second.componentInstance.service;
+    a.templateName.set('First');
+    b.templateName.set('Second');
+    first.componentRef.setInput('config', { terminologyBaseUrl: 'https://first.example/' });
+    second.componentRef.setInput('config', { terminologyBaseUrl: 'https://second.example/' });
+    a.applyPreset('semantic');
+    b.applyPreset('basic');
+    expect(a.templateName()).toBe('First');
+    expect(b.templateName()).toBe('Second');
+    expect(first.debugElement.injector.get(TerminologyService).baseUrl()).toBe('https://first.example/');
+    expect(second.debugElement.injector.get(TerminologyService).baseUrl()).toBe('https://second.example/');
+    expect(a.getActivePreset()).toBe('semantic');
+    expect(b.getActivePreset()).toBe('basic');
   });
 
   describe('config', () => {
