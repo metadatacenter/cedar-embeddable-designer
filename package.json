@@ -41,6 +41,8 @@
     "test:browser": "npm run dist && npm --prefix browser test",
     "test:browser:prebuilt": "npm run check:fresh && npm --prefix browser test",
     "test:ci": "npm run lint && npm run typecheck && npm test && npm run test:boundaries && npm run test:packaging && npm run dist && npm run test:browser:prebuilt",
+    "test:visual": "npm run check:fresh && ./browser/run-in-container.sh",
+    "test:visual:update": "npm run check:fresh && ./browser/run-in-container.sh --update-snapshots",
     "test:browser:flake-hunt": "npm run check:fresh && for i in $(seq 1 ${RUNS:-20}); do echo \"--- run $i\"; npm --prefix browser test -- --retries=0 --reporter=line || exit 1; done"
   },
   "private": true,

@@ -18,7 +18,17 @@ const port = Number(process.env.PORT ?? 4598);
 
 export default defineConfig({
   testDir: './tests',
-  testIgnore: process.env.CEF_BUNDLE ? [] : ['**/cef-defaults.spec.ts', '**/cef-parity.spec.ts'],
+  /**
+   * Two opt-in sets. The CEF specs need the real sibling bundle, named by
+   * `CEF_BUNDLE`. The visual baselines need the container that makes them mean
+   * anything, and `browser/run-in-container.sh` is what sets `CED_VISUAL` — so a
+   * developer running the behaviour suite never meets a pixel failure they have no
+   * way to act on.
+   */
+  testIgnore: [
+    ...(process.env.CEF_BUNDLE ? [] : ['**/cef-defaults.spec.ts', '**/cef-parity.spec.ts']),
+    ...(process.env.CED_VISUAL ? [] : ['**/visual.spec.ts']),
+  ],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

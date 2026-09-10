@@ -84,6 +84,15 @@ jobs:
       - name: Browser tests, against the distribution
         run: npm run test:browser:prebuilt
 
+      # The screenshot baselines, inside Playwright's own image rather than on the
+      # runner. A baseline records a machine's glyph rasterisation as much as the
+      # application's rendering, and the runner and a developer's laptop were never
+      # going to agree on that — so both sides use the one container, and the budget
+      # for a difference is zero pixels rather than a tolerance wide enough to hide a
+      # real change. The runner is arm64 so it does not emulate the image.
+      - name: Visual baselines, in the container that defines them
+        run: npm run test:visual
+
       # Deliberately its own step rather than part of the gate above: this is the
       # one check that can start failing without anyone having changed anything,
       # because it fails on a disclosure rather than on a commit. Kept separate so

@@ -179,6 +179,7 @@ possible, loading the distribution and nothing else.
 | `npm test`               | unit tests, through the Angular CLI's Vitest builder                 |
 | `npm run test:packaging` | the publish-channel rule, under `node --test`                        |
 | `npm run test:browser`   | builds the distribution, then drives it in a real browser            |
+| `npm run test:visual`    | the screenshot baselines, in the container they are taken in         |
 | `npm run test:ci`        | the gate, in the order a cheaper check should report a failure first |
 
 The browser suite is the one that matters most, because it is the only one that
