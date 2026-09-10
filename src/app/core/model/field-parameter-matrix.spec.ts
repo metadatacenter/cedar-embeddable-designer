@@ -258,9 +258,9 @@ const fieldFor = (paletteType: string, parameter: SharedParameter): Field =>
   field({ type: paletteType, ...withTypeEssentials(paletteType), ...parameter.set(paletteType) });
 
 /** The designer's state after writing the template and reading it back. */
-function afterRoundTrip(state: DesignerTemplate, form: 'json' | 'yaml' | 'compactYaml'): DesignerTemplate {
+function afterRoundTrip(state: DesignerTemplate, form: 'json' | 'yaml'): DesignerTemplate {
   const template = buildTemplate(state);
-  const written = form === 'json' ? templateToJson(template) : templateToYaml(template, form === 'compactYaml');
+  const written = form === 'json' ? templateToJson(template) : templateToYaml(template);
   return toDesignerTemplate(readTemplate(written));
 }
 

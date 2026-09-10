@@ -1000,9 +1000,23 @@ export function templateToJson(template: Template): JsonNode {
   return CedarWriters.json().getStrict().getTemplateWriter().getAsJsonNode(template);
 }
 
-export function templateToYaml(template: Template, isCompact = false): string {
-  const yaml = CedarWriters.yaml().getStrict().getTemplateWriter().getAsYamlString(template, isCompact);
-  if (!isCompact) {
+/**
+ * The template as YAML, or a refusal.
+ *
+ * The written YAML is read back and compared with the JSON, and a difference throws
+ * rather than returning the string. An export that quietly drops a field's version or
+ * its provenance is worse than one that fails: the file looks complete.
+ *
+ * The model library also writes a compact form, and this does not offer it. Nothing in
+ * the designer asked for one, `readTemplate` cannot read what it produces — a compact
+ * document has no `modelVersion` and the reader rejects it — and the check below could
+ * not have verified it, so the parameter that used to select it was a way to obtain a
+ * file CED could not reopen, with the guard silently not applying. Compact export needs
+ * a reader before it needs a writer.
+ */
+export function templateToYaml(template: Template): string {
+  const yaml = CedarWriters.yaml().getStrict().getTemplateWriter().getAsYamlString(template, false);
+  {
     const restored = CedarReaders.yaml().getStrict().getTemplateReader().readFromString(yaml).template;
     const canonical = (value: unknown): string => {
       if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
