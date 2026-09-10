@@ -145,7 +145,11 @@ describe.each(corpus.map((template) => [template.id, template] as const))('%s', 
     const state = toDesignerTemplate(readTemplate(template.source));
 
     if (defaultContradictsConstraints(template.source)) {
+      // And it says which field, which is the difference between a refusal an author
+      // can act on and one that only says the template is wrong somewhere.
+      const offender = state.fields.find((field) => field.textConstraints)?.name;
       expect(() => buildTemplate(state)).toThrow(/does not satisfy these text constraints/);
+      expect(() => buildTemplate(state)).toThrow(new RegExp(`^${offender}: `));
       return;
     }
     expect(() => buildTemplate(state)).not.toThrow();

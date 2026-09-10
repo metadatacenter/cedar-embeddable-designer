@@ -904,6 +904,29 @@ export function defaultValueError(field: Field, value: FieldDefaultValue): strin
   }
 }
 
+/**
+ * A field, or a failure that says which field.
+ *
+ * Every validation message `buildField` throws is written for an author looking at
+ * one card, where the field is the one in front of them. Saving a whole template
+ * raises the same message with nothing to attach it to: "The existing default does
+ * not satisfy these text constraints. Edit or clear it first." names no field, and a
+ * template holding nineteen of them gives an author nowhere to start. One real
+ * artifact in the corpus fails exactly this way.
+ *
+ * Only the whole-template path wraps. `defaultValueError` deliberately does not, since
+ * it reports inline on the card being edited and the name would be noise there.
+ */
+function buildFieldNaming(field: Field): TemplateField {
+  try {
+    return buildField(field);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const name = field.name.trim() || 'an unnamed field';
+    throw new Error(`${name}: ${message}`);
+  }
+}
+
 /** A standalone field artifact, written by the same path used for template children. */
 export function fieldToJson(field: Field): JsonNode {
   const built = buildField(field);
@@ -931,7 +954,7 @@ export function buildTemplate(state: DesignerTemplate): Template {
 
   const keys = deploymentKeys(state.fields);
   state.fields.forEach((field, index) => {
-    const built = buildField(field);
+    const built = buildFieldNaming(field);
     const deployment = built
       .createDeploymentBuilder(keys[index])
       .withLabel(field.displayLabel ?? null)

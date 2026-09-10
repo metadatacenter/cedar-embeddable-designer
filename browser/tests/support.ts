@@ -60,14 +60,11 @@ export async function waitForPublished(
   page: Page,
   predicate: (template: Record<string, unknown>) => boolean,
 ): Promise<void> {
-  await page.waitForFunction(
-    (source) => {
-      const test = new Function(`return (${source})`)() as (t: Record<string, unknown>) => boolean;
-      const events = (window as unknown as { __events: Array<Record<string, unknown>> }).__events;
-      return events.some(test);
-    },
-    predicate.toString(),
-  );
+  await page.waitForFunction((source) => {
+    const test = new Function(`return (${source})`)() as (t: Record<string, unknown>) => boolean;
+    const events = (window as unknown as { __events: Array<Record<string, unknown>> }).__events;
+    return events.some(test);
+  }, predicate.toString());
 }
 
 /** The template's name box, which Angular fills as a property rather than an attribute. */
@@ -83,7 +80,10 @@ export function fieldName(page: Page, index = 0): Locator {
 /** Open the preview panel, which renders the template with CEE. */
 export async function openPreview(page: Page): Promise<Locator> {
   const designer = page.locator(DESIGNER);
-  await designer.getByRole('button', { name: /Preview/ }).first().click();
+  await designer
+    .getByRole('button', { name: /Preview/ })
+    .first()
+    .click();
   return designer.locator('app-cee-preview');
 }
 
