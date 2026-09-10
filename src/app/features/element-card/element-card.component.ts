@@ -11,13 +11,16 @@ import { TemplateService } from '../../core/services/template.service';
     <header>
       <strong>{{ node().definition.name }}</strong
       ><span
-        >Element · {{ node().definition.children.length }} children ·
-        {{
+        >Element · {{ node().definition.children.length }} children
+        @if (
           publicationStatusLabel(
             node().definition.metadata ? node().definition.metadata?.artifact?.publicationStatus : 'bibo:draft'
-          )
-        }}</span
-      >
+          );
+          as status
+        ) {
+          · {{ status }}
+        }
+      </span>
     </header>
     @if (node().definition.description) {
       <p>{{ node().definition.description }}</p>
@@ -29,31 +32,41 @@ import { TemplateService } from '../../core/services/template.service';
     </div>
     <details>
       <summary>Placement</summary>
-      <label>Property name <input [(ngModel)]="draft().deploymentName" /></label>
-      <label>Display label <input [(ngModel)]="draft().displayLabel" /></label>
-      <label>Display description <input [(ngModel)]="draft().displayDescription" /></label>
-      <label>Property IRI <input [(ngModel)]="draft().propertyIri" /></label>
+      <label>Property name <input [(ngModel)]="draft().deploymentName" (ngModelChange)="apply()" /></label>
+      <label>Display label <input [(ngModel)]="draft().displayLabel" (ngModelChange)="apply()" /></label>
+      <label>Display description <input [(ngModel)]="draft().displayDescription" (ngModelChange)="apply()" /></label>
+      <label>Property IRI <input [(ngModel)]="draft().propertyIri" (ngModelChange)="apply()" /></label>
       <label
         >Status
-        <select [(ngModel)]="draft().status">
+        <select [(ngModel)]="draft().status" (ngModelChange)="apply()">
           <option value="optional">Optional</option>
           <option value="required">Required</option>
           <option value="recommended">Recommended</option>
         </select></label
       >
-      <label class="check"><input type="checkbox" [(ngModel)]="draft().allowMultiple" /> Allow multiple</label>
-      @if (draft().allowMultiple) {
-        <label>Minimum occurrences <input type="number" min="0" step="1" [(ngModel)]="draft().minItems" /></label>
-        <label>Maximum occurrences <input type="number" min="0" step="1" [(ngModel)]="draft().maxItems" /></label>
-      }
-      <label class="check"><input type="checkbox" [(ngModel)]="draft().hidden" /> Hidden</label>
       <label class="check"
-        ><input type="checkbox" [(ngModel)]="draft().continuePreviousLine" /> Continue previous line</label
+        ><input type="checkbox" [(ngModel)]="draft().allowMultiple" (ngModelChange)="apply()" /> Allow multiple</label
+      >
+      @if (draft().allowMultiple) {
+        <label
+          >Minimum occurrences
+          <input type="number" min="0" step="1" [(ngModel)]="draft().minItems" (ngModelChange)="apply()"
+        /></label>
+        <label
+          >Maximum occurrences
+          <input type="number" min="0" step="1" [(ngModel)]="draft().maxItems" (ngModelChange)="apply()"
+        /></label>
+      }
+      <label class="check"
+        ><input type="checkbox" [(ngModel)]="draft().hidden" (ngModelChange)="apply()" /> Hidden</label
+      >
+      <label class="check"
+        ><input type="checkbox" [(ngModel)]="draft().continuePreviousLine" (ngModelChange)="apply()" /> Continue
+        previous line</label
       >
       @if (error()) {
         <p role="alert">{{ error() }}</p>
       }
-      <button type="button" (click)="apply()">Apply placement</button>
     </details>
   </section>`,
   styles: [

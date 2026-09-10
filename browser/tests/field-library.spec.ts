@@ -73,6 +73,6 @@ test('published first-class fields show lifecycle information while their defini
   await expect(designer.getByLabel('Field version and publication status').first()).toContainText('1.2.0');
   await expect(designer.getByLabel('Field version and publication status').first()).toContainText('Published');
   await expect(designer.getByPlaceholder('Enter field name').first()).toBeDisabled();
-  await openSettings(designer.locator('app-field-card').first(), 'Field identity');
+  await openSettings(designer.locator('app-field-card').first(), 'Field metadata');
   await expect(designer.locator('app-field-settings').first()).toContainText('1.2.0');
 });

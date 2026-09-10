@@ -77,3 +77,46 @@
   line-height: 18px;
   text-align: right;
 }
+
+/* Keep the version/status stack independent of the description's vertical position. */
+:host {
+  container-type: inline-size;
+}
+.template-field-label {
+  margin-bottom: 0;
+  line-height: 16px;
+}
+.template-input {
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 20px;
+}
+.publication-status {
+  line-height: 16px;
+}
+.template-description {
+  margin-top: 2px;
+}
+@container (min-width: 680px) {
+  .template-header-card__inputs {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 11rem 6rem;
+    gap: 4px 16px;
+  }
+  .template-header-row {
+    display: contents;
+  }
+  .template-header-row > .template-field-group {
+    min-width: 0;
+    width: auto;
+  }
+  .template-header-row > .template-field-group.w-24 {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    margin-left: 0;
+  }
+  .template-description {
+    grid-column: 1 / span 2;
+    margin-top: 0;
+  }
+}

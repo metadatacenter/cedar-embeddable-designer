@@ -158,15 +158,15 @@ test.describe('the designer', () => {
   test('shows a text field with metadata settings expanded', async ({ page }) => {
     const designer = await designerShowing(page, ['Text']);
     const card = designer.locator('[id^=field-card-]').first();
-    await openSettings(card, 'Field metadata');
+    await openSettings(card, 'Field details');
 
     await expect(card).toHaveScreenshot('card-expanded.png', {
       ...SHOT,
       /*
-       * Two kinds of value no baseline can hold. `Field identity` shows the field's
+       * Two kinds of value no baseline can hold. `Field metadata` shows the field's
        * IRI, minted fresh with `crypto.randomUUID()` every time a field is added, and
        * the created and modified stamps beside it are a clock. The property IRI in
-       * `Field metadata` is a second UUID, in an input rather than the list.
+       * `Field details` is a second UUID, in an input rather than the list.
        *
        * Masked rather than hidden, so the rows still occupy the space they occupy for
        * an author — which is the whole point of photographing this state.

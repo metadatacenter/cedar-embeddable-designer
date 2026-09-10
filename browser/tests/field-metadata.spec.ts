@@ -3,7 +3,7 @@ import { openSettings, openDesigner, currentTemplate } from './support';
 
 test('authors field metadata and rejects duplicate annotation names', async ({ page }) => {
   await openDesigner(page);
-  const section = await openSettings(page.locator('app-field-card').first(), 'Field metadata');
+  const section = await openSettings(page.locator('app-field-card').first(), 'Field details');
   await section.getByLabel('Preferred label', { exact: true }).fill('Heading');
   await section.getByLabel('Identifier', { exact: true }).fill('title-field');
   await section.getByLabel('Language', { exact: true }).fill('en');
@@ -13,7 +13,6 @@ test('authors field metadata and rejects duplicate annotation names', async ({ p
   await section.getByLabel('Annotation name').fill('source');
   await section.getByLabel('Annotation type').selectOption('iri');
   await section.getByLabel('Annotation value').fill('https://example.org/source');
-  await section.getByRole('button', { name: 'Apply', exact: true }).click();
   await expect
     .poll(async () => ((await currentTemplate(page)).properties as any).Title)
     .toMatchObject({
@@ -25,6 +24,5 @@ test('authors field metadata and rejects duplicate annotation names', async ({ p
   await page.screenshot({ path: '/tmp/ced-field-metadata.png' });
   await section.getByRole('button', { name: 'Add annotation' }).click();
   await section.getByLabel('Annotation name').nth(1).fill('source');
-  await section.getByRole('button', { name: 'Apply', exact: true }).click();
   await expect(section.getByRole('alert')).toContainText('unique');
 });

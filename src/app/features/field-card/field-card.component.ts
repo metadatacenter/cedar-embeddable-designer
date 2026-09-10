@@ -37,7 +37,10 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
   styleUrls: ['../../shared/_field-error.scss', './field-card.component.scss'],
 })
 export class FieldCardComponent {
-  readonly publicationStatusLabel = publicationStatusLabel;
+  get identityLabel(): string {
+    const metadata = fieldArtifactMetadata(this.field);
+    return [metadata.version, publicationStatusLabel(metadata.publicationStatus)].filter(Boolean).join(' · ');
+  }
   @Input() field!: Field;
   @Input() standalone = false;
 

@@ -240,25 +240,7 @@
                 </button>
               </div>
               <div class="overview-panel__list">
-                @if (service.hasElements()) {
-                  <app-container-outline [container]="service.session.document()" />
-                } @else {
-                  @for (field of service.fields(); track field.id) {
-                    <button
-                      (click)="scrollToField(field.id)"
-                      class="overview-panel__item"
-                      [class.active]="service.selectedField() === field.id"
-                    >
-                      <span class="overview-panel__item-icon">
-                        <app-icon [key]="getFieldIcon(field)" className="w-4 h-4"></app-icon>
-                      </span>
-                      <span class="overview-panel__item-name">{{ field.name }}</span>
-                      @if (field.status === 'required') {
-                        <span class="overview-panel__badge-required" title="Required">*</span>
-                      }
-                    </button>
-                  }
-                }
+                <app-container-outline [container]="service.session.document()" />
               </div>
             </div>
           </div>

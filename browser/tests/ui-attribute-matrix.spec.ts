@@ -138,12 +138,12 @@ const CONTROLS: readonly Control[] = [
   },
   {
     name: 'field metadata',
-    find: (page) => disclosure(page, 'Field metadata'),
+    find: (page) => disclosure(page, 'Field details'),
     expected: () => true,
   },
   {
     name: 'field identity',
-    find: (page) => disclosure(page, 'Field identity'),
+    find: (page) => disclosure(page, 'Field metadata'),
     expected: () => true,
   },
 ];
@@ -212,6 +212,23 @@ for (const width of WIDTHS) {
           for (let index = 0; index < (await tabs.count()); index++) {
             await tabs.nth(index).click();
             await expectLaidOut(page, `${paletteType} ${await tabs.nth(index).textContent()}`);
+            const leadingGap = await settings(page).evaluate((el) => {
+              const panel = el.querySelector<HTMLElement>('[role="tabpanel"]:not([hidden])')!;
+              const first = [
+                ...panel.querySelectorAll<HTMLElement>(
+                  'label, dt, app-controlled-term-config, [field-values] input, [field-values] textarea',
+                ),
+              ]
+                .filter((node) => node.getClientRects().length > 0)
+                .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)[0];
+              return first
+                ? first.getBoundingClientRect().top -
+                    el.querySelector('[role="tablist"]')!.getBoundingClientRect().bottom
+                : 0;
+            });
+            expect
+              .soft(leadingGap, `${paletteType} ${await tabs.nth(index).textContent()} leading gap`)
+              .toBeLessThanOrEqual(8);
           }
         });
       }
@@ -272,17 +289,7 @@ const open = async (page: Page, heading: string) => {
   await settings(page).getByRole('tab', { name: heading, exact: true }).click();
 };
 
-/**
- * Put a value in a box, or take it out, and wait for the box to show it.
- *
- * Emptying is done from the keyboard rather than with `fill('')`, and that is not
- * fastidiousness: on `input[type=number]`, `fill('')` sets the DOM value without
- * Angular's model reliably following, and the two then cannot be resynchronised —
- * the box already reads empty, so there is no change left to dispatch and every
- * later Apply saves the old number. It wedged about one run in three, and the
- * product was never at fault: clicking in, selecting, and pressing Delete works
- * six times out of six, which is also what a person does.
- */
+/** Use real keyboard input when clearing numeric controls, then verify the DOM value. */
 const putValue = async (control: ReturnType<Page['locator']>, value: string) => {
   if (value === '') {
     await control.click();
@@ -293,34 +300,20 @@ const putValue = async (control: ReturnType<Page['locator']>, value: string) => 
   }
   await expect(control).toHaveValue(value);
 };
-const apply = (page: Page, heading: string) =>
-  disclosure(page, heading).getByRole('button', { name: 'Apply', exact: true }).click();
 
-/** Fill a field in one disclosure and apply it, which is how most settings are saved. */
-const fillAndApply = (page: Page, heading: string, label: string, value: string) => async () => {
+/** Editing a control updates the artifact without a separate submission. */
+const fillSetting = (page: Page, heading: string, label: string, value: string) => async () => {
   await disclosure(page, heading).getByLabel(label, { exact: true }).fill(value);
-  await apply(page, heading);
 };
 
-/*
- * Filling and applying, with the control checked before the button is pressed.
- *
- * Apply reads the component's own state, which `ngModel` updates from the control's
- * input event — so pressing it in the same breath as the fill can save the previous
- * value, and the template then never changes and the test times out waiting for it.
- * Invisible on a fast machine and frequent in a container, which is where it showed up:
- * runs of the same suite disagreed by a dozen tests.
- */
 const setIn = async (page: Page, heading: string, label: string, value: string) => {
   await putValue(disclosure(page, heading).getByLabel(label, { exact: true }), value);
-  await apply(page, heading);
 };
 
 const chooseIn = async (page: Page, heading: string, label: string, value: string) => {
   const control = disclosure(page, heading).getByLabel(label, { exact: true });
   await control.selectOption(value);
   await expect(control).toHaveValue(value);
-  await apply(page, heading);
 };
 
 const tickIn = async (page: Page, heading: string, label: string, on: boolean) => {
@@ -328,7 +321,6 @@ const tickIn = async (page: Page, heading: string, label: string, on: boolean) =
   if (on) await box.check();
   else await box.uncheck();
   await expect(box).toBeChecked({ checked: on });
-  await apply(page, heading);
 };
 
 const LIFECYCLES: readonly Lifecycle[] = [
@@ -540,7 +532,6 @@ const LIFECYCLES: readonly Lifecycle[] = [
       await disclosure(page, 'Temporal settings')
         .getByLabel('Time format', { exact: true })
         .selectOption({ label: 'Automatic' });
-      await apply(page, 'Temporal settings');
     },
   },
 
@@ -582,58 +573,58 @@ const LIFECYCLES: readonly Lifecycle[] = [
     restore: async (page) => setIn(page, 'Occurrences', 'Maximum', ''),
   },
 
-  // ── Field metadata ──────────────────────────────────────────────────────────
+  // ── Field details ──────────────────────────────────────────────────────────
   {
     control: 'property name',
     paletteType: 'text',
-    prepare: (page) => open(page, 'Field metadata'),
-    set: async (page) => setIn(page, 'Field metadata', 'Property name', 'renamed_key'),
-    restore: async (page) => setIn(page, 'Field metadata', 'Property name', 'Text'),
+    prepare: (page) => open(page, 'Field details'),
+    set: async (page) => setIn(page, 'Field details', 'Property name', 'renamed_key'),
+    restore: async (page) => setIn(page, 'Field details', 'Property name', 'Text'),
   },
   {
     control: 'schema title',
     paletteType: 'text',
-    prepare: (page) => open(page, 'Field metadata'),
-    set: async (page) => setIn(page, 'Field metadata', 'Schema title', 'A title'),
-    restore: async (page) => setIn(page, 'Field metadata', 'Schema title', 'Text field schema'),
+    prepare: (page) => open(page, 'Field details'),
+    set: async (page) => setIn(page, 'Field details', 'Schema title', 'A title'),
+    restore: async (page) => setIn(page, 'Field details', 'Schema title', 'Text field schema'),
   },
   {
     control: 'schema description',
     paletteType: 'text',
-    prepare: (page) => open(page, 'Field metadata'),
-    set: async (page) => setIn(page, 'Field metadata', 'Schema description', 'A description'),
+    prepare: (page) => open(page, 'Field details'),
+    set: async (page) => setIn(page, 'Field details', 'Schema description', 'A description'),
     restore: async (page) =>
-      setIn(page, 'Field metadata', 'Schema description', 'Text field schema generated by the CEDAR Artifact Library'),
+      setIn(page, 'Field details', 'Schema description', 'Text field schema generated by the CEDAR Artifact Library'),
   },
   {
     control: 'preferred label',
     paletteType: 'text',
-    prepare: (page) => open(page, 'Field metadata'),
-    set: async (page) => setIn(page, 'Field metadata', 'Preferred label', 'Preferred'),
-    restore: async (page) => setIn(page, 'Field metadata', 'Preferred label', ''),
+    prepare: (page) => open(page, 'Field details'),
+    set: async (page) => setIn(page, 'Field details', 'Preferred label', 'Preferred'),
+    restore: async (page) => setIn(page, 'Field details', 'Preferred label', ''),
     read: (template) => property(template, 'Text')['skos:prefLabel'],
     whenSet: 'Preferred',
   },
   {
     control: 'identifier',
     paletteType: 'text',
-    prepare: (page) => open(page, 'Field metadata'),
-    set: async (page) => setIn(page, 'Field metadata', 'Identifier', 'ID-42'),
-    restore: async (page) => setIn(page, 'Field metadata', 'Identifier', ''),
+    prepare: (page) => open(page, 'Field details'),
+    set: async (page) => setIn(page, 'Field details', 'Identifier', 'ID-42'),
+    restore: async (page) => setIn(page, 'Field details', 'Identifier', ''),
   },
   {
     control: 'language',
     paletteType: 'text',
-    prepare: (page) => open(page, 'Field metadata'),
-    set: async (page) => setIn(page, 'Field metadata', 'Language', 'fr'),
-    restore: async (page) => setIn(page, 'Field metadata', 'Language', ''),
+    prepare: (page) => open(page, 'Field details'),
+    set: async (page) => setIn(page, 'Field details', 'Language', 'fr'),
+    restore: async (page) => setIn(page, 'Field details', 'Language', ''),
   },
   {
     control: 'alternate labels',
     paletteType: 'text',
-    prepare: (page) => open(page, 'Field metadata'),
-    set: async (page) => setIn(page, 'Field metadata', 'Alternate labels', 'Alternate\nAutre'),
-    restore: async (page) => setIn(page, 'Field metadata', 'Alternate labels', ''),
+    prepare: (page) => open(page, 'Field details'),
+    set: async (page) => setIn(page, 'Field details', 'Alternate labels', 'Alternate\nAutre'),
+    restore: async (page) => setIn(page, 'Field details', 'Alternate labels', ''),
   },
   /*
    * The two controls a sibling component provides, and only CED's half of them.
@@ -662,16 +653,14 @@ const LIFECYCLES: readonly Lifecycle[] = [
   {
     control: 'an annotation',
     paletteType: 'text',
-    prepare: (page) => open(page, 'Field metadata'),
+    prepare: (page) => open(page, 'Field details'),
     set: async (page) => {
-      await disclosure(page, 'Field metadata').getByRole('button', { name: 'Add annotation' }).click();
-      await disclosure(page, 'Field metadata').getByLabel('Annotation name', { exact: true }).fill('note');
-      await disclosure(page, 'Field metadata').getByLabel('Annotation value', { exact: true }).fill('A note');
-      await apply(page, 'Field metadata');
+      await disclosure(page, 'Field details').getByRole('button', { name: 'Add annotation' }).click();
+      await disclosure(page, 'Field details').getByLabel('Annotation name', { exact: true }).fill('note');
+      await disclosure(page, 'Field details').getByLabel('Annotation value', { exact: true }).fill('A note');
     },
     restore: async (page) => {
-      await disclosure(page, 'Field metadata').getByRole('button', { name: 'Remove annotation' }).click();
-      await apply(page, 'Field metadata');
+      await disclosure(page, 'Field details').getByRole('button', { name: 'Remove annotation' }).click();
     },
   },
 ];

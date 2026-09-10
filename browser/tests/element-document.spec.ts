@@ -36,7 +36,6 @@ for (const width of [1280, 375]) {
     await child.getByLabel('Allow multiple', { exact: true }).check();
     await child.getByLabel('Minimum occurrences', { exact: true }).fill('2');
     await child.getByLabel('Maximum occurrences', { exact: true }).fill('4');
-    await child.getByRole('button', { name: 'Apply placement', exact: true }).click();
     await child.getByRole('button', { name: 'Edit Element', exact: true }).click();
     await page.getByPlaceholder('Element name').fill('Sample');
     const path = page.getByRole('navigation', { name: 'Container path' });
@@ -48,7 +47,7 @@ for (const width of [1280, 375]) {
       await page.locator('app-element-card').getByRole('button', { name: 'Edit Element', exact: true }).click();
       await page.locator('app-element-card').getByRole('button', { name: 'Edit Element', exact: true }).click();
     } else {
-      await page.locator('app-container-outline').getByRole('button', { name: '▸ sample', exact: true }).click();
+      await page.locator('app-container-outline').getByRole('button', { name: 'sample', exact: true }).click();
     }
     await expect(page.getByRole('textbox', { name: 'Field name', exact: true })).toHaveCount(1);
     await expect(page.getByRole('textbox', { name: 'Field name', exact: true })).toHaveValue('Title');
@@ -67,5 +66,28 @@ for (const width of [1280, 375]) {
       (document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object }).artifact = artifact;
     }, saved);
     expect(await currentTemplate(page)).toEqual(saved);
+  });
+}
+
+for (const kind of ['Template', 'Element']) {
+  test(`${kind} Identifier edits schema:identifier without changing @id`, async ({ page }) => {
+    await openDesigner(page);
+    await page.getByRole('button', { name: 'File', exact: true }).click();
+    await page.getByRole('button', { name: `New ${kind}`, exact: true }).click();
+    const original = await currentTemplate(page);
+    const identifier = page.getByPlaceholder('Identifier', { exact: true });
+    await expect(identifier).toHaveValue('');
+    await identifier.fill('Study protocol ABC-123');
+    const edited = await currentTemplate(page);
+    expect(edited['@id']).toEqual(original['@id']);
+    expect(edited['schema:identifier']).toBe('Study protocol ABC-123');
+    await page.evaluate((artifact) => {
+      (document.querySelector('cedar-embeddable-designer') as any).artifact = artifact;
+    }, edited);
+    await expect(identifier).toHaveValue('Study protocol ABC-123');
+    await identifier.fill('');
+    const cleared = await currentTemplate(page);
+    expect(cleared['@id']).toEqual(original['@id']);
+    expect(cleared['schema:identifier'] ?? null).toBeNull();
   });
 }

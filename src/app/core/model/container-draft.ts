@@ -37,6 +37,7 @@ export interface ElementNode {
 }
 export type ChildNode = FieldNode | ElementNode;
 export interface ContainerDraft {
+  schemaIdentifier?: string | null;
   id: number;
   kind: 'template' | 'element';
   name: string;
@@ -79,6 +80,7 @@ export function flatView(container: ContainerDraft): DesignerTemplate {
     name: container.name,
     description: container.description,
     identifier: container.identifier,
+    schemaIdentifier: container.schemaIdentifier,
     version: container.version,
     metadata: container.metadata,
     fields: container.children.filter((node): node is FieldNode => node.kind === 'field').map(fieldView),

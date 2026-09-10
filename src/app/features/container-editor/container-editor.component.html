@@ -41,8 +41,8 @@
           <label class="template-field-label">Identifier</label>
           <input
             type="text"
-            [ngModel]="service.templateIdentifier()"
-            (ngModelChange)="service.templateIdentifier.set($event)"
+            [ngModel]="service.templateSchemaIdentifier()"
+            (ngModelChange)="service.templateSchemaIdentifier.set($event)"
             class="template-input font-medium text-sm text-gray-800"
             placeholder="Identifier"
           />
@@ -57,18 +57,21 @@
             class="template-input font-medium text-sm text-gray-800 text-right"
             placeholder="0.0.1"
           />
-          <span class="publication-status" aria-label="Publication status">{{
+          @if (
             publicationStatusLabel(
               service.session.active().metadata
                 ? service.session.active().metadata?.artifact?.publicationStatus
                 : 'bibo:draft'
-            )
-          }}</span>
+            );
+            as status
+          ) {
+            <span class="publication-status" aria-label="Publication status">{{ status }}</span>
+          }
         </div>
       </div>
 
       <!-- Bottom Row: Description -->
-      <div class="template-field-group mt-2">
+      <div class="template-field-group template-description">
         <label class="template-field-label">Description</label>
         <input
           type="text"

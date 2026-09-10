@@ -163,6 +163,8 @@ export function fieldArtifactMetadata(field: Field): ArtifactMetadata {
 
 /** The template as the designer holds it, before it is a CEDAR artifact. */
 export interface DesignerTemplate {
+  /** The user-facing schema:identifier, independent of the artifact @id. */
+  schemaIdentifier?: string | null;
   name: string;
   description: string;
   identifier: string;
@@ -174,7 +176,6 @@ export interface DesignerTemplate {
 /** Imported container properties survive even where the designer offers no editor. */
 export interface ContainerMetadata {
   artifact: ArtifactMetadata;
-  schemaIdentifier: string | null;
   language: string | null;
   annotations: Field['annotations'];
   instanceType: string | null;
@@ -1045,7 +1046,6 @@ function buildContainerArtifact(
     if (state.version !== (metadata.artifact.version ?? '0.0.1')) {
       template.pav_version = PavVersion.forValue(state.version);
     }
-    template.schema_identifier = metadata.schemaIdentifier;
     template.language = Language.forValue(metadata.language);
     template.instanceTypeSpecification = metadata.instanceType;
     if (template instanceof Template) {
@@ -1063,6 +1063,7 @@ function buildContainerArtifact(
       }
     }
   }
+  template.schema_identifier = state.schemaIdentifier || null;
   return template;
 }
 
@@ -1437,10 +1438,10 @@ function projectContainerFields(template: Template | TemplateElement): DesignerT
     name: template.schema_name ?? '',
     description: template.schema_description ?? '',
     identifier: template.at_id?.getValue() ?? '',
+    schemaIdentifier: template.schema_identifier,
     version: template.pav_version?.getValue() ?? '0.0.1',
     metadata: {
       artifact: artifactMetadataOf(template),
-      schemaIdentifier: template.schema_identifier,
       language: template.language.getValue(),
       instanceType: template.instanceTypeSpecification,
       header: template instanceof Template ? template.header : null,

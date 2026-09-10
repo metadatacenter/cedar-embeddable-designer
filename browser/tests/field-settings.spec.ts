@@ -9,13 +9,21 @@ test('authors occurrence limits and rejects an inverted range', async ({ page })
   await openSettings(card, 'Occurrences');
   await settings.getByLabel('Minimum', { exact: true }).fill('2');
   await settings.getByLabel('Maximum', { exact: true }).fill('5');
-  await settings.getByRole('button', { name: 'Apply', exact: true }).click();
   await expect.poll(async () => ((await currentTemplate(page)).properties as any).Title.minItems).toBe(2);
   await expect.poll(async () => ((await currentTemplate(page)).properties as any).Title.maxItems).toBe(5);
   await settings.getByLabel('Minimum', { exact: true }).fill('8');
-  await settings.getByRole('button', { name: 'Apply', exact: true }).click();
   await expect(settings.getByRole('alert')).toContainText('minimum no greater');
   expect(((await currentTemplate(page)).properties as any).Title.minItems).toBe(2);
+  const display = await openSettings(card, 'Display');
+  await display.getByLabel('Display label', { exact: true }).fill('Immediate label');
+  await expect(display.getByRole('alert')).toHaveCount(0);
+  await openSettings(card, 'Occurrences');
+  await expect(settings.getByLabel('Minimum', { exact: true })).toHaveValue('8');
+  await expect(settings.getByRole('alert')).toContainText('minimum no greater');
+  await settings.getByLabel('Maximum', { exact: true }).fill('10');
+  await expect(settings.getByRole('alert')).toHaveCount(0);
+  await expect.poll(async () => ((await currentTemplate(page)).properties as any).Title.minItems).toBe(8);
+
   await page.screenshot({ path: '/tmp/ced-occurrences.png' });
 });
 
@@ -27,7 +35,6 @@ test('writes display labels and layout settings', async ({ page }) => {
   await section.getByLabel('Display description', { exact: true }).fill('Shown help');
   await section.getByLabel('Hidden', { exact: true }).check();
   await section.getByLabel('Continue previous line', { exact: true }).check();
-  await section.getByRole('button', { name: 'Apply' }).click();
   await expect
     .poll(async () => (await currentTemplate(page))._ui)
     .toMatchObject({ propertyLabels: { Title: 'Shown title' }, propertyDescriptions: { Title: 'Shown help' } });
@@ -56,12 +63,10 @@ test('authors text constraints and rejects invalid patterns', async ({ page }) =
   await section.getByLabel('Minimum length').fill('2');
   await section.getByLabel('Maximum length').fill('8');
   await section.getByLabel('Regular expression').fill('^[A-Z]+$');
-  await section.getByRole('button', { name: 'Apply' }).click();
   await expect
     .poll(async () => ((await currentTemplate(page)).properties as any).Title._valueConstraints)
     .toMatchObject({ minLength: 2, maxLength: 8, regex: '^[A-Z]+$' });
   await section.getByLabel('Regular expression').fill('[');
-  await section.getByRole('button', { name: 'Apply' }).click();
   await expect(section.getByRole('alert')).toBeVisible();
 });
 
@@ -79,7 +84,6 @@ test('authors numeric datatype bounds precision and units', async ({ page }) => 
   await section.getByLabel('Maximum value').fill('12');
   await section.getByLabel('Decimal places').fill('0');
   await section.getByLabel('Unit of measure').fill('mg');
-  await section.getByRole('button', { name: 'Apply' }).click();
   await expect
     .poll(async () => ((await currentTemplate(page)).properties as any).Title._valueConstraints)
     .toMatchObject({ numberType: 'xsd:int', minValue: 1, maxValue: 12, decimalPlace: 0, unitOfMeasure: 'mg' });
@@ -93,7 +97,6 @@ test('authors datetime precision timezone and time format', async ({ page }) => 
   await section.getByLabel('Precision').selectOption('second');
   await section.getByLabel('Time format').selectOption('12h');
   await section.getByLabel('Show timezone').check();
-  await section.getByRole('button', { name: 'Apply' }).click();
   await expect
     .poll(
       async () => ((await currentTemplate(page)).properties as any)['Publication Date']._valueConstraints.temporalType,
@@ -124,7 +127,6 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
   const section = await openSettings(card, 'Media size');
   await section.getByLabel('Width').fill('640');
   await section.getByLabel('Height').fill('360');
-  await section.getByRole('button', { name: 'Apply' }).click();
   await expect
     .poll(async () => ((await currentTemplate(page)).properties as any).Title._ui._size)
     .toEqual({ width: 640, height: 360 });

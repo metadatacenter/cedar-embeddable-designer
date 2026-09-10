@@ -134,7 +134,7 @@ export class TemplateService {
   );
   readonly templateName = this.session.property('name');
   readonly templateDesc = this.session.property('description');
-  readonly templateIdentifier = this.session.property('identifier');
+  readonly templateSchemaIdentifier = this.session.property('schemaIdentifier');
   readonly templateVersion = this.session.property('version');
   readonly loadError = signal<string | null>(null);
   readonly fields = this.session.fieldBinding();

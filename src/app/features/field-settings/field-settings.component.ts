@@ -34,8 +34,8 @@ export class FieldSettingsComponent implements OnChanges {
       ...(this.accepts('numericBounds') ? ['Numeric constraints'] : []),
       ...(this.accepts('temporalPrecision') ? ['Temporal settings'] : []),
       ...(this.accepts('mediaDimensions') ? ['Media size'] : []),
+      'Field details',
       'Field metadata',
-      'Field identity',
     ];
   }
   get selectedTab(): string {
@@ -108,24 +108,14 @@ export class FieldSettingsComponent implements OnChanges {
   height: number | null = null;
   min: number | null = null;
   max: number | null = null;
-  error: string | null = null;
+  private errors: Record<string, string | null> = {};
+  get error(): string | null {
+    return this.errors[this.selectedTab] ?? null;
+  }
   get multiple(): boolean {
     return descriptorOf(this.field.type).deployment === 'alwaysMultiple' || this.field.allowMultiple;
   }
-  /**
-   * What each box held when it was last read from the field.
-   *
-   * The panel's boxes are a draft: an author types, then presses Apply. `field` is an
-   * input that changes identity on *any* template edit, so reloading every box from it
-   * on every change threw away whatever was half-typed — and it was not only a
-   * theoretical race. It made this suite disagree with itself by a dozen tests a run:
-   * an Apply arriving from the previous step reloaded the box the current step had just
-   * cleared, and Apply then saved the value that had been put back.
-   *
-   * So a box adopts an incoming value only where the author has not touched it, which
-   * is what this records. An untouched box still follows the field, so a change made
-   * elsewhere is still shown.
-   */
+  /** Keep invalid/incomplete input while valid edits update the field immediately. */
   private loaded: Record<string, unknown> = {};
   private loadedFieldId: number | null = null;
 
@@ -185,15 +175,15 @@ export class FieldSettingsComponent implements OnChanges {
     this.height = take('height', this.height, this.field.height ?? null);
     this.min = take('min', this.min, this.field.minItems ?? null);
     this.max = take('max', this.max, this.field.maxItems ?? null);
-    this.error = null;
+    if (first) this.errors = {};
   }
 
   saveMetadata(): void {
     if (this.dynamic && this.propertyIri && !/^[a-z][a-z0-9+.-]*:\S+$/i.test(this.propertyIri)) {
-      this.error = 'The property IRI must be an absolute identifier.';
+      this.errors['Field details'] = 'The property IRI must be an absolute identifier.';
       return;
     }
-    this.error = this.service.updateFieldSettings(this.field.id, {
+    this.errors['Field details'] = this.service.updateFieldSettings(this.field.id, {
       artifact: { ...this.artifact, title: this.schemaTitle || null, description: this.schemaDescription || null },
       preferredLabel: this.preferredLabel || undefined,
       alternateLabels: this.alternateLabels
@@ -212,28 +202,32 @@ export class FieldSettingsComponent implements OnChanges {
   }
   removeAnnotation(index: number): void {
     this.annotations = this.annotations.filter((_, i) => i !== index);
+    this.saveMetadata();
   }
   saveMedia(): void {
-    this.error = this.service.updateFieldSettings(this.field.id, { width: this.width, height: this.height });
+    this.errors['Media size'] = this.service.updateFieldSettings(this.field.id, {
+      width: this.width,
+      height: this.height,
+    });
   }
   saveTemporal(): void {
-    this.error = this.service.updateFieldSettings(this.field.id, {
+    this.errors['Temporal settings'] = this.service.updateFieldSettings(this.field.id, {
       temporal: { ...this.temporal },
       type: this.temporal.type === 'xsd:time' ? 'time' : 'date',
     });
   }
   saveNumeric(): void {
-    this.error = this.service.updateFieldSettings(this.field.id, {
+    this.errors['Numeric constraints'] = this.service.updateFieldSettings(this.field.id, {
       numeric: { ...this.numeric, unit: this.numeric.unit || null },
     });
   }
   saveText(): void {
-    this.error = this.service.updateFieldSettings(this.field.id, {
+    this.errors['Text constraints'] = this.service.updateFieldSettings(this.field.id, {
       textConstraints: { ...this.text, regex: this.text.regex || null },
     });
   }
   saveLayout(): void {
-    this.error = this.service.updateFieldSettings(this.field.id, {
+    this.errors['Display'] = this.service.updateFieldSettings(this.field.id, {
       displayLabel: this.displayLabel || undefined,
       displayDescription: this.displayDescription || undefined,
       hidden: this.hidden,
@@ -241,6 +235,9 @@ export class FieldSettingsComponent implements OnChanges {
     });
   }
   saveBounds(): void {
-    this.error = this.service.updateFieldSettings(this.field.id, { minItems: this.min, maxItems: this.max });
+    this.errors['Occurrences'] = this.service.updateFieldSettings(this.field.id, {
+      minItems: this.min,
+      maxItems: this.max,
+    });
   }
 }

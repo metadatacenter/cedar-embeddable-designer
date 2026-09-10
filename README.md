@@ -237,6 +237,11 @@ authoring features.
 
 Field cards start compact. The grey bottom chevron reveals underline tabs for
 values, display, placement, type-specific constraints, metadata and identity.
-Tabs retain unapplied edits when switched or collapsed. Published fields allow
+Settings update immediately as valid values are entered. Incomplete input stays editable
+when switching tabs or collapsing the panel. Published fields allow
 inspection but keep editing controls disabled. Reusable field work remains in
 Field Designer; cards no longer offer a Save field to library action.
+
+The Overview shows each field's type icon and a right-aligned reorder handle.
+Dragging reorders siblings within the Overview; the document and main editor update
+only when the field is dropped. Focused handles also support Arrow Up/Down.

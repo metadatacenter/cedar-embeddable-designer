@@ -31,3 +31,38 @@ app-icon {
 .field-card-body {
   padding: 6px 16px 0;
 }
+
+.field-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 4px;
+}
+.field-heading,
+.field-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.field-controls {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.field-drag-handle {
+  grid-column: 2;
+  grid-row: 1;
+}
+.field-header.standalone {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+@container (max-width: 680px) {
+  .field-controls {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .field-heading {
+    grid-column: 1;
+  }
+}
