@@ -34,6 +34,7 @@ import {
   allowsOptions,
   allowsStatus,
   contentKindOf,
+  descriptorOf,
 } from '../../src/app/core/model/cedar-template';
 import { FIELD_TYPES } from '../../src/app/core/models/types';
 
@@ -77,6 +78,11 @@ const disclosure = (page: Page, heading: string) =>
     .filter({ has: page.locator('summary', { hasText: heading }) });
 
 const CONTROLS: readonly Control[] = [
+  {
+    name: 'property IRI',
+    find: (page) => card(page).getByLabel('Property IRI', { exact: true }),
+    expected: (type) => descriptorOf(type).deployment !== 'static',
+  },
   {
     name: 'requirement',
     find: (page) => card(page).getByLabel('Requirement', { exact: true }),

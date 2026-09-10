@@ -155,7 +155,9 @@
       <label>Preferred label<input name="preferredLabel" [(ngModel)]="preferredLabel" /></label>
       <label>Identifier<input name="schemaIdentifier" [(ngModel)]="schemaIdentifier" /></label>
       <label>Language<input name="language" [(ngModel)]="language" placeholder="e.g. en" /></label>
-      <label>Property IRI<input class="wide" name="propertyIri" [(ngModel)]="propertyIri" /></label>
+      @if (dynamic) {
+        <label>Property IRI<input class="wide" name="propertyIri" [(ngModel)]="propertyIri" /></label>
+      }
       <label
         >Alternate labels<textarea
           rows="2"

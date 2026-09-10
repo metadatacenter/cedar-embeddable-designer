@@ -152,7 +152,7 @@ export class FieldSettingsComponent implements OnChanges {
   }
 
   saveMetadata(): void {
-    if (this.propertyIri && !/^[a-z][a-z0-9+.-]*:\S+$/i.test(this.propertyIri)) {
+    if (this.dynamic && this.propertyIri && !/^[a-z][a-z0-9+.-]*:\S+$/i.test(this.propertyIri)) {
       this.error = 'The property IRI must be an absolute identifier.';
       return;
     }
