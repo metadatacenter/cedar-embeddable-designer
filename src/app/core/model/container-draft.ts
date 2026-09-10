@@ -58,9 +58,18 @@ export function fieldNode(field: Field): FieldNode {
   }
   return { kind: 'field', id, placement, definition };
 }
+// A field view retains identity while its immutable node is unchanged. Async
+// terminology replies use that identity to reject edits for a replaced field.
+const fieldViews = new WeakMap<FieldNode, Field>();
 export function fieldView(node: FieldNode): Field {
-  return { ...node.definition, ...node.placement, id: node.id };
+  let field = fieldViews.get(node);
+  if (!field) {
+    field = { ...node.definition, ...node.placement, id: node.id };
+    fieldViews.set(node, field);
+  }
+  return field;
 }
+
 export function containerFromFlat(template: DesignerTemplate): ContainerDraft {
   const { fields, ...metadata } = template;
   return { ...metadata, id: newNodeId(), kind: 'template', children: fields.map(fieldNode) };
@@ -101,12 +110,71 @@ export function updateContainer(
 
 /** Replace the active container's field views while keeping element placements. */
 export function replaceFields(container: ContainerDraft, fields: Field[]): ContainerDraft {
-  const remaining = fields.map(fieldNode);
+  const existing = new Map(
+    container.children.filter((node): node is FieldNode => node.kind === 'field').map((node) => [node.id, node]),
+  );
+  const remaining = fields.map((field) => {
+    const previous = existing.get(field.id);
+    return previous && fieldView(previous) === field ? previous : fieldNode(field);
+  });
   const children: ChildNode[] = [];
   for (const node of container.children) {
     if (node.kind === 'element') children.push(node);
-    else if (remaining.length) children.push(remaining.shift()!);
+    else if (fields.some((field) => field.id === node.id) && remaining.length) children.push(remaining.shift()!);
   }
   children.push(...remaining);
   return { ...container, children };
+}
+
+export function containers(
+  root: ContainerDraft,
+  path = root.name,
+): Array<{ id: number; name: string; container: ContainerDraft }> {
+  return [
+    { id: root.id, name: path, container: root },
+    ...root.children.flatMap((node) =>
+      node.kind === 'element'
+        ? containers(node.definition, `${path} / ${node.placement.deploymentName ?? node.definition.name}`)
+        : [],
+    ),
+  ];
+}
+export function parentOf(root: ContainerDraft, childId: number): ContainerDraft | undefined {
+  if (root.children.some((node) => node.id === childId)) return root;
+  for (const node of root.children) {
+    if (node.kind === 'element') {
+      const parent = parentOf(node.definition, childId);
+      if (parent) return parent;
+    }
+  }
+  return undefined;
+}
+export function childName(node: ChildNode): string {
+  return node.placement.deploymentName ?? node.definition.name;
+}
+
+/** Page breaks divide a template form into pages; the production palette excludes them from elements. */
+export function allowedInContainer(type: string, kind: ContainerDraft['kind']): boolean {
+  return kind === 'template' || type !== 'pageBreak';
+}
+export function moveChild(root: ContainerDraft, childId: number, targetId: number, index: number): ContainerDraft {
+  const parent = parentOf(root, childId);
+  const target = findContainer(root, targetId);
+  const node = parent?.children.find((child) => child.id === childId);
+  if (!parent || !target || !node) throw new Error('The child or destination no longer exists.');
+  if (node.kind === 'element' && findContainer(node.definition, targetId))
+    throw new Error('An element cannot be moved into itself or one of its descendants.');
+  if (node.kind === 'field' && !allowedInContainer(node.definition.type, target.kind))
+    throw new Error('Page breaks can only be placed in templates.');
+  if (target.children.some((child) => child.id !== childId && childName(child) === childName(node)))
+    throw new Error('The destination already has a child with that property name. Rename the placement first.');
+  const removed = updateContainer(root, parent.id, (container) => ({
+    ...container,
+    children: container.children.filter((child) => child.id !== childId),
+  }));
+  return updateContainer(removed, targetId, (container) => {
+    const children = [...container.children];
+    children.splice(Math.max(0, Math.min(index, children.length)), 0, node);
+    return { ...container, children };
+  });
 }

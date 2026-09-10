@@ -1,0 +1,30 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+.container-path,
+.element-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+.container-path button {
+  padding: 0.4rem 0.6rem;
+  color: #0f7686;
+  border: 1px solid #b7d6db;
+  border-radius: 0.3rem;
+  background: white;
+}
+.container-path button[aria-current] {
+  font-weight: bold;
+}
+.child-move {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+}
+.child-move select {
+  max-width: 100%;
+  border: 1px solid #b7d6db;
+  margin-left: 0.5rem;
+}

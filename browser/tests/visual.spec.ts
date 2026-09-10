@@ -108,7 +108,12 @@ async function designerShowing(
     await designer.getByRole('button', { name: label, exact: true }).click();
   }
   await expect.poll(async () => starting.count(), { timeout: 15_000 }).toBe(labels.length);
-  await page.evaluate(() => window.scrollTo(0, 0));
+  // Field insertion scrolls the designer's own viewport. Reset that viewport,
+  // after the insertion frame, rather than the unrelated host window.
+  await designer.locator('.designer-grid').evaluate(async (grid) => {
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    grid.parentElement!.scrollTo({ top: 0, behavior: 'instant' });
+  });
   return designer;
 }
 

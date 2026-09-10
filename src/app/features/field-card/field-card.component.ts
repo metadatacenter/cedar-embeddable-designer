@@ -42,7 +42,7 @@ export class FieldCardComponent {
   readonly service = inject(TemplateService);
 
   get FIELD_TYPES_LIST() {
-    return FIELD_TYPES;
+    return Object.fromEntries(Object.entries(FIELD_TYPES).filter(([key]) => this.service.canAddField(key)));
   }
 
   /*

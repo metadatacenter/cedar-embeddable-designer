@@ -10,7 +10,7 @@ test('preserves an imported invalid default and lets the author resolve it', asy
     template.properties.Category._valueConstraints.literals = [{ label: 'Red' }, { label: 'Green' }, { label: 'Blue' }];
     designer.template = template;
   });
-  const card = page.locator('#field-card-2');
+  const card = page.locator('.field-drop-item').nth(1);
   const error = card.getByRole('alert');
   await expect(error).toContainText('“Yellow” is not among the allowed options');
   await expect(error).toHaveCSS('color', 'rgb(244, 67, 54)');

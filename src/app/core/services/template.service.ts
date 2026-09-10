@@ -1,5 +1,19 @@
 import { EditorSession } from './editor-session';
-import { containerFromFlat, flatView, newNodeId, ContainerDraft } from '../model/container-draft';
+import {
+  containerFromFlat,
+  flatView,
+  newNodeId,
+  ContainerDraft,
+  ChildNode,
+  ElementNode,
+  fieldNode,
+  containers,
+  childName,
+  moveChild,
+  parentOf,
+  updateContainer,
+  allowedInContainer,
+} from '../model/container-draft';
 import { FieldLibraryService } from './field-library.service';
 import { Injectable, signal, computed, inject } from '@angular/core';
 import {
@@ -240,6 +254,10 @@ export class TemplateService {
 
   // Field manipulation methods
   addField(type: string, position: number) {
+    if (!this.canAddField(type)) {
+      this.loadError.set('Page breaks can only be placed in templates.');
+      return;
+    }
     const newField: Field = {
       id: newNodeId(),
       ...newFieldIdentity(),
@@ -251,11 +269,7 @@ export class TemplateService {
       allowMultiple: false,
     };
 
-    this.fields.update((prev) => {
-      const updated = [...prev];
-      updated.splice(position, 0, newField);
-      return updated;
-    });
+    this.insertNode(fieldNode(newField), position);
 
     this.showPicker.set(null);
     this.selectedField.set(newField.id);
@@ -264,6 +278,10 @@ export class TemplateService {
   }
 
   addCustomFieldToTemplate(customField: CustomField, position: number) {
+    if (!this.canAddField(customField.definition.type)) {
+      this.loadError.set('Page breaks can only be placed in templates.');
+      return;
+    }
     const newField: Field = {
       ...structuredClone(customField.definition),
       id: newNodeId(),
@@ -271,11 +289,7 @@ export class TemplateService {
       libraryId: customField.libraryId,
     };
 
-    this.fields.update((prev) => {
-      const updated = [...prev];
-      updated.splice(position, 0, newField);
-      return updated;
-    });
+    this.insertNode(fieldNode(newField), position);
 
     this.showPicker.set(null);
     this.selectedField.set(newField.id);
@@ -297,6 +311,10 @@ export class TemplateService {
   }
 
   updateFieldType(id: number, type: string) {
+    if (!this.canAddField(type)) {
+      this.loadError.set('Page breaks can only be placed in templates.');
+      return;
+    }
     if (this.isPublished(id) || this.fields().find((field) => field.id === id)?.type === type) return;
     this.fields.update((prev) =>
       prev.map((f) =>
@@ -523,10 +541,6 @@ export class TemplateService {
     let state: ContainerDraft;
     try {
       state = readContainer(source as string | object);
-      if (state.children.some((child) => child.kind === 'element'))
-        throw new Error(
-          'This document contains elements. Element editing is not supported yet; the document was not opened to avoid losing nested content.',
-        );
     } catch (error) {
       this.loadError.set(error instanceof Error ? error.message : String(error));
       throw error;
@@ -535,5 +549,154 @@ export class TemplateService {
 
     this.session.replace(state);
     this.markSaved();
+  }
+  readonly children = computed(() => this.session.active().children);
+  readonly containerChoices = computed(() => containers(this.session.document()));
+  readonly hasElements = computed(() => this.containerChoices().length > 1);
+  readonly breadcrumbs = computed(() => {
+    const active = this.session.active().id;
+    const path: ContainerDraft[] = [];
+    let current = this.session.active();
+    path.unshift(current);
+    while (current.id !== this.session.document().id) {
+      const parent = parentOf(this.session.document(), current.id);
+      if (!parent) break;
+      path.unshift(parent);
+      current = parent;
+    }
+    return active === this.session.document().id ? [this.session.document()] : path;
+  });
+  canAddField(type: string): boolean {
+    return allowedInContainer(type, this.session.active().kind);
+  }
+  openContainer(id: number): void {
+    if (!this.containerChoices().some((choice) => choice.id === id)) return;
+    this.session.activeId.set(id);
+    this.showPicker.set(null);
+    this.selectedField.set(null);
+    this.fieldTypeDropdown.set(null);
+  }
+  private insertNode(node: ChildNode, position: number): void {
+    this.loadError.set(null);
+    const used = new Set(this.children().map(childName));
+    const base = childName(node).trim() || (node.kind === 'element' ? 'Element' : 'Field');
+    let name = base;
+    for (let suffix = 2; used.has(name); suffix++) name = `${base} ${suffix}`;
+    node =
+      node.kind === 'field' &&
+      node.placement.deploymentName === undefined &&
+      node.definition.customFieldId === undefined
+        ? { ...node, definition: { ...node.definition, name } }
+        : { ...node, placement: { ...node.placement, deploymentName: name } };
+    this.session.update((container) => {
+      const children = [...container.children];
+      children.splice(Math.max(0, Math.min(position, children.length)), 0, node);
+      return { ...container, children };
+    });
+  }
+  addElement(): void {
+    const definition = newContainer('element', 'Element');
+    this.insertNode(
+      {
+        kind: 'element',
+        id: definition.id,
+        definition,
+        placement: { status: 'optional', allowMultiple: false, propertyIri: newFieldIdentity().propertyIri },
+      },
+      this.children().length,
+    );
+  }
+  importElement(source: string | object): void {
+    const definition = readContainer(source);
+    if (definition.kind !== 'element') throw new Error('Choose an element document to insert into this container.');
+    // Import is an independent local copy retaining its source artifact identity.
+    this.insertNode(
+      {
+        kind: 'element',
+        id: definition.id,
+        definition,
+        placement: { status: 'optional', allowMultiple: false, propertyIri: newFieldIdentity().propertyIri },
+      },
+      this.children().length,
+    );
+  }
+  duplicateElement(id: number): void {
+    const node = this.children().find((child): child is ElementNode => child.kind === 'element' && child.id === id);
+    if (!node) return;
+    const clone = (source: ChildNode): ChildNode => {
+      const copy = structuredClone(source);
+      copy.id = newNodeId();
+      copy.placement.propertyIri = newFieldIdentity().propertyIri;
+      const resetMetadata = (metadata: NonNullable<Field['artifact']>, sourceId: string) => ({
+        ...metadata,
+        publicationStatus: 'bibo:draft' as const,
+        version: '0.0.1',
+        createdOn: null,
+        createdBy: null,
+        modifiedOn: null,
+        modifiedBy: null,
+        derivedFrom: sourceId || null,
+        previousVersion: null,
+      });
+      if (copy.kind === 'field') {
+        const previousId = copy.definition.atId ?? '';
+        copy.definition.atId = newFieldIdentity().atId;
+        copy.definition.publishedDefinition = undefined;
+        if (copy.definition.artifact) copy.definition.artifact = resetMetadata(copy.definition.artifact, previousId);
+      } else {
+        const previousId = copy.definition.identifier;
+        copy.definition.id = copy.id;
+        copy.definition.identifier = newContainer('element').identifier;
+        copy.definition.version = '0.0.1';
+        if (copy.definition.metadata)
+          copy.definition.metadata.artifact = resetMetadata(copy.definition.metadata.artifact, previousId);
+        copy.definition.children = copy.definition.children.map(clone);
+      }
+      return copy;
+    };
+    this.insertNode(
+      clone({ ...node, definition: readContainer(templateToJson(buildContainer(node.definition))) }),
+      this.children().findIndex((child) => child.id === id) + 1,
+    );
+  }
+  deleteChild(id: number): void {
+    const parent = parentOf(this.session.document(), id);
+    if (!parent) return;
+    this.session.document.update((root) =>
+      updateContainer(root, parent.id, (container) => ({
+        ...container,
+        children: container.children.filter((node) => node.id !== id),
+      })),
+    );
+    if (!this.containerChoices().some((choice) => choice.id === this.session.activeId())) this.openContainer(parent.id);
+  }
+  moveChild(id: number, targetId: number, index = Number.MAX_SAFE_INTEGER): void {
+    try {
+      this.session.document.update((root) => moveChild(root, id, targetId, index));
+      this.loadError.set(null);
+    } catch (error) {
+      this.loadError.set(error instanceof Error ? error.message : String(error));
+    }
+  }
+  updateElementPlacement(id: number, placement: ElementNode['placement']): string | null {
+    const parent = parentOf(this.session.document(), id);
+    if (!parent) return 'The element no longer exists.';
+    const name = placement.deploymentName?.trim();
+    if (!name) return 'A property name is required.';
+    if (parent.children.some((node) => node.id !== id && childName(node) === name))
+      return 'Another child already uses that property name.';
+    const next = updateContainer(this.session.document(), parent.id, (container) => ({
+      ...container,
+      children: container.children.map((node) =>
+        node.id === id ? { ...node, placement: { ...placement, deploymentName: name } } : node,
+      ),
+    }));
+    try {
+      buildContainer(next);
+      this.session.document.set(next);
+      return null;
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
   }
 }

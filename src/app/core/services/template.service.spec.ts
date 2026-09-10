@@ -67,6 +67,7 @@ describe('TemplateService', () => {
     const copy = service.fields()[0];
     expect({ ...copy, id: definition.id, customFieldId: undefined, libraryId: undefined }).toEqual({
       ...definition,
+      deploymentName: 'Title 2',
       customFieldId: undefined,
       libraryId: undefined,
     });
@@ -204,15 +205,25 @@ describe('TemplateService', () => {
       expect(service.templateJson()['bibo:status']).toBe('bibo:draft');
       expect(service.templateJson()['pav:createdOn']).toBeNull();
     });
-    it('rejects nested content without replacing the open document or its dirty state', () => {
-      service.templateName.set('Keep my edits');
+    it('opens nested content without losing descendants, and keeps navigation out of dirty state', () => {
+      service.loadTemplate(nestedTemplate);
       const before = service.templateJson();
-      expect(() => service.loadTemplate(nestedTemplate)).toThrow(/Element editing is not supported/);
+      const nested = service.children().find((child) => child.kind === 'element')!;
+      expect(nested).toBeDefined();
+      service.openContainer(nested.id);
       expect(service.templateJson()).toEqual(before);
+      expect(service.isDirty()).toBe(false);
+      service.templateName.set('Edited nested element');
       expect(service.isDirty()).toBe(true);
-      expect(service.loadError()).toContain('not opened');
+      expect(service.templateJson()).not.toEqual(before);
       service.loadTemplate(before);
-      expect(service.loadError()).toBeNull();
+      expect(service.templateJson()).toEqual(before);
+    });
+    it('rejects a non-container without replacing the open document', () => {
+      const before = service.templateJson();
+      expect(() => service.loadTemplate({ '@type': 'unknown' })).toThrow();
+      expect(service.templateJson()).toEqual(before);
+      expect(service.loadError()).toBeTruthy();
     });
     it('round-trips its own template', () => {
       service.templateName.set('Study');
@@ -274,5 +285,36 @@ describe('default editing', () => {
     service.deleteOption(1, 0);
     expect(service.fields()[0].defaultValue).toEqual({ kind: 'none' });
     expect(() => service.templateJson()).not.toThrow();
+  });
+  it('duplicates element subtrees with fresh identities and source provenance', () => {
+    service.addElement();
+    const original = service.children().find((node) => node.kind === 'element')!;
+    if (original.kind !== 'element') throw new Error('Expected element');
+    service.openContainer(original.id);
+    service.addField('text', 0);
+    const field = service.fields()[0];
+    service.openContainer(service.session.document().id);
+    service.duplicateElement(original.id);
+    const nodes = service.children().filter((node) => node.kind === 'element');
+    const copy = nodes[1];
+    expect(copy.id).not.toBe(original.id);
+    expect(copy.definition.identifier).not.toBe(original.definition.identifier);
+    expect(copy.definition.metadata?.artifact.derivedFrom).toBe(original.definition.identifier);
+    expect(copy.definition.metadata?.artifact.publicationStatus).toBe('bibo:draft');
+    expect(copy.placement.deploymentName).toBe('Element 2');
+    const copiedField = copy.definition.children[0];
+    if (copiedField.kind !== 'field') throw new Error('Expected field');
+    expect(copiedField.definition.atId).not.toBe(field.atId);
+    expect(copiedField.definition.artifact?.derivedFrom).toBe(field.atId);
+    expect(copiedField.placement.propertyIri).not.toBe(field.propertyIri);
+  });
+  it('rejects invalid element cardinality without modifying the document', () => {
+    service.addElement();
+    const node = service.children().find((child) => child.kind === 'element')!;
+    const before = service.templateJson();
+    expect(
+      service.updateElementPlacement(node.id, { ...node.placement, allowMultiple: true, minItems: 5, maxItems: 2 }),
+    ).toMatch(/minimum/);
+    expect(service.templateJson()).toEqual(before);
   });
 });

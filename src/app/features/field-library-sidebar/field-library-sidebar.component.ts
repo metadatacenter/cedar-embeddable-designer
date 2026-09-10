@@ -25,7 +25,7 @@ export class FieldLibrarySidebarComponent {
   readonly visibleFieldTypesList = computed(() => {
     const visible = this.service.preferences().visibleFieldTypes;
     return Object.entries(FIELD_TYPES)
-      .filter(([key]) => visible[key] !== false)
+      .filter(([key]) => visible[key] !== false && this.service.canAddField(key))
       .map(([key, value]) => ({ key, value }));
   });
 

@@ -21,9 +21,9 @@ import { FieldLibrarySidebarComponent } from './features/field-library-sidebar/f
 import { PreferencesModalComponent } from './features/modals/preferences/preferences.component';
 import { PresetDefinitionsModalComponent } from './features/modals/preset-definitions/preset-definitions.component';
 import { CeePreviewComponent } from './features/cee-preview/cee-preview.component';
-import { FieldTypePickerComponent } from './features/field-type-picker/field-type-picker.component';
 import { FieldDesignerComponent } from './features/field-designer/field-designer.component';
-import { FieldCardComponent } from './features/field-card/field-card.component';
+import { ContainerEditorComponent } from './features/container-editor/container-editor.component';
+import { ContainerOutlineComponent } from './features/container-outline/container-outline.component';
 
 @Component({
   selector: 'app-root',
@@ -37,9 +37,9 @@ import { FieldCardComponent } from './features/field-card/field-card.component';
     PreferencesModalComponent,
     PresetDefinitionsModalComponent,
     CeePreviewComponent,
-    FieldTypePickerComponent,
     FieldDesignerComponent,
-    FieldCardComponent,
+    ContainerEditorComponent,
+    ContainerOutlineComponent,
   ],
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -127,7 +127,7 @@ export class AppComponent {
   }
 
   getGridTemplateColumns(): string {
-    const fieldsCount = this.service.fields().length;
+    const fieldsCount = this.service.session.document().children.length;
     const overview = this.showFieldsOverview();
     const preview = this.service.showPreview();
     if (fieldsCount > 0 && overview) {

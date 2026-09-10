@@ -10,7 +10,7 @@
       <div class="sidebar-header">
         <div class="sidebar-header-left">
           <app-icon key="list" className="w-4 h-4 text-gray-600"></app-icon>
-          <h3 class="sidebar-title">Fields ({{ service.fields().length }})</h3>
+          <h3 class="sidebar-title">Fields ({{ service.children().length }})</h3>
         </div>
         <button (click)="service.sidebarCollapsed.set(true)" class="btn-collapse" title="Collapse sidebar">
           <span class="text-xs">◀</span>
@@ -18,7 +18,7 @@
       </div>
       <!-- Field List - Drag & Drop Scrollable -->
       <div class="sidebar-scrollable custom-scrollbar" cdkDropList (cdkDropListDropped)="onFieldDrop($event)">
-        @if (service.fields().length === 0) {
+        @if (service.children().length === 0) {
           <div class="field-empty-state">No fields yet</div>
         }
         @for (field of service.fields(); track field.id; let idx = $index) {
@@ -71,7 +71,7 @@
           @if (expandedBuiltIn()) {
             <div class="library-content animate-fade-in">
               @for (item of visibleFieldTypesList(); track item) {
-                <button (click)="service.addField(item.key, service.fields().length)" class="btn-add-item group">
+                <button (click)="service.addField(item.key, service.children().length)" class="btn-add-item group">
                   <span class="add-item-icon">
                     <app-icon [key]="item.key" className="w-5 h-5"></app-icon>
                   </span>
@@ -96,7 +96,7 @@
                 }
                 @for (field of getFieldsForLibrary(library.id); track field) {
                   <button
-                    (click)="service.addCustomFieldToTemplate(field, service.fields().length)"
+                    (click)="service.addCustomFieldToTemplate(field, service.children().length)"
                     class="btn-add-item group"
                   >
                     <span class="add-item-icon">
@@ -131,9 +131,9 @@
         <div class="collapsed-indicator">
           <div class="relative">
             <app-icon key="list" className="w-5 h-5 text-gray-600"></app-icon>
-            @if (service.fields().length > 0) {
+            @if (service.children().length > 0) {
               <div class="badge-count-indicator" [style.backgroundColor]="service.COLORS.primary">
-                {{ service.fields().length }}
+                {{ service.children().length }}
               </div>
             }
           </div>

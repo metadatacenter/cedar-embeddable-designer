@@ -11,7 +11,7 @@ test('published fields are visibly read-only while draft fields remain editable'
     template.properties.Title['pav:createdBy'] = 'https://example.org/users/author';
     designer.template = template;
   });
-  const card = page.locator('#field-card-1');
+  const card = page.locator('.field-drop-item').first();
   await expect(card.getByRole('status')).toContainText('Published field — read-only');
   await expect(card.getByPlaceholder('Enter field name')).toBeDisabled();
   await expect(card.getByLabel('Requirement')).toBeDisabled();
@@ -20,7 +20,7 @@ test('published fields are visibly read-only while draft fields remain editable'
   await metadata.locator('summary').click();
   await expect(metadata.getByLabel('Preferred label', { exact: true })).toBeDisabled();
   await expect(metadata.getByRole('button', { name: 'Apply' })).toBeDisabled();
-  await page.locator('#field-card-2').getByPlaceholder('Enter field name').fill('Draft changed');
+  await page.locator('.field-drop-item').nth(1).getByPlaceholder('Enter field name').fill('Draft changed');
   await expect
     .poll(async () => ((await currentTemplate(page)).properties as any).Title)
     .toMatchObject({

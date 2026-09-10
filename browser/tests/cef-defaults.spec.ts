@@ -1,5 +1,6 @@
+import { fieldNode, newNodeId } from '../../src/app/core/model/container-draft';
 import { expect, test, Page } from '@playwright/test';
-import { buildTemplate, templateToJson } from '../../src/app/core/model/cedar-template';
+import { buildTemplate, templateToJson, newContainer, buildContainer } from '../../src/app/core/model/cedar-template';
 import { Field } from '../../src/app/core/models/types';
 import { applyPreset, child, currentTemplate, openDesigner, openPreview } from './support';
 
@@ -316,4 +317,32 @@ test('loads CEF after opening a document without losing its saved default', asyn
   await expect(input).toHaveValue('Saved default');
   await input.fill('After registration');
   await expect.poll(async () => (await constraints(page))['defaultValue']).toBe('After registration');
+});
+
+test('previews an element document through CEE while publishing element artifacts', async ({ page }) => {
+  await openDesigner(page);
+  await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
+  await page.waitForFunction(() => !!customElements.get('cedar-embeddable-editor'));
+  const element = newContainer('element', 'Study element');
+  element.children.push(
+    fieldNode({
+      id: newNodeId(),
+      name: 'Element field',
+      type: 'text',
+      status: 'required',
+      allowMultiple: false,
+      options: [],
+      defaultValue: { kind: 'none' },
+    }),
+  );
+  await page.evaluate(
+    (artifact) => {
+      const designer = document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object };
+      designer.artifact = artifact;
+    },
+    templateToJson(buildContainer(element)),
+  );
+  const preview = await openPreview(page);
+  await expect(preview.locator('.title-label').filter({ hasText: 'Element field' })).toBeVisible();
+  expect((await currentTemplate(page))['@type']).toBe('https://schema.metadatacenter.org/core/TemplateElement');
 });

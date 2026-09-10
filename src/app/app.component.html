@@ -119,7 +119,11 @@
                   New Template
                 </span>
               </button>
-              <button type="button" class="file-menu-item" (click)="newTemplate('element'); showFileMenu.set(false)">
+              <button
+                type="button"
+                class="w-full px-3.5 py-2 text-left text-xs font-medium text-gray-700 hover:bg-gray-100 flex items-center justify-between"
+                (click)="newTemplate('element'); showFileMenu.set(false)"
+              >
                 New Element
               </button>
               <button
@@ -223,33 +227,37 @@
     <div [ngClass]="getDesignerClasses()">
       <div class="designer-grid" [style.gridTemplateColumns]="getGridTemplateColumns()">
         <!-- Fields Overview Panel -->
-        @if (service.fields().length > 0 && showFieldsOverview()) {
+        @if (service.session.document().children.length > 0 && showFieldsOverview()) {
           <div class="overview-panel">
             <div class="overview-panel__card">
               <div class="overview-panel__header">
                 <div class="overview-panel__header-left">
                   <app-icon key="list" className="w-4 h-4 text-gray-600"></app-icon>
-                  <h3 class="overview-panel__title">Overview ({{ service.fields().length }})</h3>
+                  <h3 class="overview-panel__title">Overview ({{ service.session.document().children.length }})</h3>
                 </div>
                 <button class="overview-panel__close" (click)="showFieldsOverview.set(false)">
                   <span class="text-xs">×</span>
                 </button>
               </div>
               <div class="overview-panel__list">
-                @for (field of service.fields(); track field.id) {
-                  <button
-                    (click)="scrollToField(field.id)"
-                    class="overview-panel__item"
-                    [class.active]="service.selectedField() === field.id"
-                  >
-                    <span class="overview-panel__item-icon">
-                      <app-icon [key]="getFieldIcon(field)" className="w-4 h-4"></app-icon>
-                    </span>
-                    <span class="overview-panel__item-name">{{ field.name }}</span>
-                    @if (field.status === 'required') {
-                      <span class="overview-panel__badge-required" title="Required">*</span>
-                    }
-                  </button>
+                @if (service.hasElements()) {
+                  <app-container-outline [container]="service.session.document()" />
+                } @else {
+                  @for (field of service.fields(); track field.id) {
+                    <button
+                      (click)="scrollToField(field.id)"
+                      class="overview-panel__item"
+                      [class.active]="service.selectedField() === field.id"
+                    >
+                      <span class="overview-panel__item-icon">
+                        <app-icon [key]="getFieldIcon(field)" className="w-4 h-4"></app-icon>
+                      </span>
+                      <span class="overview-panel__item-name">{{ field.name }}</span>
+                      @if (field.status === 'required') {
+                        <span class="overview-panel__badge-required" title="Required">*</span>
+                      }
+                    </button>
+                  }
                 }
               </div>
             </div>
@@ -259,133 +267,20 @@
         <!-- Designer Workspace -->
         <div class="designer-workspace">
           <!-- Overview Toggle -->
-          @if (service.fields().length > 0 && !showFieldsOverview()) {
+          @if (service.session.document().children.length > 0 && !showFieldsOverview()) {
             <button
               (click)="showFieldsOverview.set(true)"
               class="btn-overview-toggle"
               [style.left]="getOverviewButtonLeft()"
             >
               <app-icon key="list" className="w-4 h-4 text-gray-700"></app-icon>
-              <span class="text-xs font-semibold text-gray-700">Show Overview ({{ service.fields().length }})</span>
+              <span class="text-xs font-semibold text-gray-700"
+                >Show Overview ({{ service.session.document().children.length }})</span
+              >
             </button>
           }
 
-          <!-- Template Header Card -->
-          <div class="template-header-card">
-            <div
-              class="template-header-card__gradient"
-              [style.background]="
-                'linear-gradient(90deg, ' + service.COLORS.primary + ' 0%, ' + service.COLORS.primaryLight + ' 100%)'
-              "
-            ></div>
-            <div class="template-header-card__body">
-              <div class="template-header-card__icon" [style.backgroundColor]="service.COLORS.primaryLight">
-                <app-icon key="paragraph" className="w-6 h-6" [style.color]="service.COLORS.primary"></app-icon>
-              </div>
-              <div class="template-header-card__inputs">
-                <!-- Top Row: Name, Identifier, Version -->
-                <div class="template-header-row">
-                  <div class="template-field-group flex-1">
-                    <label class="template-field-label">Name</label>
-                    <input
-                      type="text"
-                      [ngModel]="service.templateName()"
-                      (ngModelChange)="service.templateName.set($event)"
-                      class="template-input font-medium text-base text-gray-900"
-                      [placeholder]="service.session.active().kind === 'element' ? 'Element name' : 'Template name'"
-                    />
-                  </div>
-
-                  <div class="template-field-group w-44">
-                    <label class="template-field-label">Identifier</label>
-                    <input
-                      type="text"
-                      [ngModel]="service.templateIdentifier()"
-                      (ngModelChange)="service.templateIdentifier.set($event)"
-                      class="template-input font-medium text-sm text-gray-800"
-                      placeholder="Identifier"
-                    />
-                  </div>
-
-                  <div class="template-field-group w-24">
-                    <label class="template-field-label">Version</label>
-                    <input
-                      type="text"
-                      [ngModel]="service.templateVersion()"
-                      (ngModelChange)="service.templateVersion.set($event)"
-                      class="template-input font-medium text-sm text-gray-800 text-center"
-                      placeholder="0.0.1"
-                    />
-                  </div>
-                </div>
-
-                <!-- Bottom Row: Description -->
-                <div class="template-field-group mt-2">
-                  <label class="template-field-label">Description</label>
-                  <input
-                    type="text"
-                    [ngModel]="service.templateDesc()"
-                    (ngModelChange)="service.templateDesc.set($event)"
-                    class="template-input text-sm text-gray-600"
-                    placeholder="Add description..."
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Fields Drop List -->
-          <div cdkDropList (cdkDropListDropped)="onFieldDrop($event)" class="fields-drop-list">
-            @for (field of service.fields(); track field.id; let idx = $index) {
-              <div class="field-drop-item" [id]="'field-card-' + field.id">
-                <!-- Insert Zone (modal style) -->
-                @if (service.preferences().fieldSelectionStyle === 'modal') {
-                  <div class="insert-zone" (click)="service.showPicker.set(idx)">
-                    <button class="btn-insert-here" [style.backgroundColor]="service.COLORS.primary">
-                      ＋ Add field here
-                    </button>
-                  </div>
-                  @if (service.showPicker() === idx) {
-                    <div class="my-3">
-                      <app-field-type-picker [insertPosition]="idx"></app-field-type-picker>
-                    </div>
-                  }
-                }
-                <!-- Drag Container -->
-                <div
-                  cdkDrag
-                  [cdkDragDisabled]="!!field.publishedDefinition"
-                  (click)="service.selectedField.set(field.id)"
-                  class="field-drag-container"
-                  [class.selected]="service.selectedField() === field.id"
-                >
-                  @if (service.selectedField() === field.id) {
-                    <div class="field-selection-bar"></div>
-                  }
-                  <app-field-card [field]="field"></app-field-card>
-                </div>
-              </div>
-            }
-          </div>
-
-          <!-- Bottom Add Field Section (modal style) -->
-          @if (service.preferences().fieldSelectionStyle === 'modal') {
-            <div class="add-field-section">
-              <button
-                (click)="service.showPicker.set(service.fields().length)"
-                class="btn-add-field"
-                [style.backgroundColor]="service.COLORS.primary"
-              >
-                <span class="text-base font-bold">＋</span>
-                Add Field
-              </button>
-              @if (service.showPicker() === service.fields().length) {
-                <div class="add-field-section__picker">
-                  <app-field-type-picker [insertPosition]="service.fields().length"></app-field-type-picker>
-                </div>
-              }
-            </div>
-          }
+          <app-container-editor />
         </div>
       </div>
     </div>
