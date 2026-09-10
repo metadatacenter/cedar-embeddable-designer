@@ -14,6 +14,25 @@ const corpus = import.meta.glob('./fixtures/corpus/*.json', { eager: true }) as 
   string,
   { default: Record<string, unknown> }
 >;
+function treeShape(node: Record<string, unknown>): object {
+  const properties = node['properties'] as Record<string, Record<string, unknown>> | undefined;
+  const order = (node['_ui'] as { order?: string[] } | undefined)?.order ?? [];
+  return {
+    type: node['@type'],
+    name: node['schema:name'],
+    children: order.map((key) => {
+      const property = properties![key];
+      const child = (property['items'] ?? property) as Record<string, unknown>;
+      return {
+        key,
+        multiple: property['type'] === 'array',
+        min: property['minItems'] ?? null,
+        max: property['maxItems'] ?? null,
+        content: treeShape(child),
+      };
+    }),
+  };
+}
 describe('recursive container codec', () => {
   for (const [path, module] of Object.entries(corpus)) {
     const source = module.default;
@@ -30,6 +49,7 @@ describe('recursive container codec', () => {
         }
       }
       const first = templateToJson(buildContainer(draft));
+      expect(treeShape(first)).toEqual(treeShape(before));
       expect(first['_ui']).toEqual(before['_ui']);
       expect(Object.keys(first['properties'] as object)).toEqual(Object.keys(before['properties'] as object));
       expect(templateToJson(buildContainer(readContainer(first)))).toEqual(first);

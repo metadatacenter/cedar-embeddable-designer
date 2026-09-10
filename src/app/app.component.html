@@ -225,7 +225,7 @@
 
     <!-- Designer Side -->
     <div [ngClass]="getDesignerClasses()">
-      <div class="designer-grid" [style.gridTemplateColumns]="getGridTemplateColumns()">
+      <div class="designer-grid" [style.--designer-columns]="getGridTemplateColumns()">
         <!-- Fields Overview Panel -->
         @if (service.session.document().children.length > 0 && showFieldsOverview()) {
           <div class="overview-panel">

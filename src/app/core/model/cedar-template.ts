@@ -1326,16 +1326,21 @@ function defaultOf(field: TemplateField): FieldDefaultValue {
 }
 
 /** A parsed template, as the flat state the designer works in. */
-export function toDesignerTemplate(template: Template | TemplateElement, fieldsOnly = false): DesignerTemplate {
+export function toDesignerTemplate(template: Template): DesignerTemplate {
   const elements = template
     .getChildrenInfo()
     .children.filter((info) => template.getChild(info.name)?.cedarArtifactType === CedarArtifactType.TEMPLATE_ELEMENT);
-  if (elements.length && !fieldsOnly) {
+  if (elements.length) {
     throw new Error(
       `This template contains elements (${elements.map((info) => info.name).join(', ')}). ` +
         'Element editing is not supported yet; the template was not opened to avoid losing nested content.',
     );
   }
+  return projectContainerFields(template);
+}
+
+/** Internal field projection: the recursive reader assembles element nodes separately. */
+function projectContainerFields(template: Template | TemplateElement): DesignerTemplate {
   const fields: Field[] = [];
 
   template.getChildrenInfo().children.forEach((info, index) => {
@@ -1546,7 +1551,7 @@ export function buildContainer(draft: ContainerDraft): Template | TemplateElemen
 
 /** Preserve every child and its placement in model order, recursively. */
 export function toContainerDraft(container: Template | TemplateElement): ContainerDraft {
-  const flat = toDesignerTemplate(container, true);
+  const flat = projectContainerFields(container);
   const draft = containerFromFlat(flat);
   draft.kind = container instanceof TemplateElement ? 'element' : 'template';
   if (container instanceof TemplateElement) {

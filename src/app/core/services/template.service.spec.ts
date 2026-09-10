@@ -1,3 +1,4 @@
+import { buildContainer } from '../model/cedar-template';
 import { TestBed } from '@angular/core/testing';
 import nestedTemplate from '../model/fixtures/corpus/template-028.json';
 import { TemplateService } from './template.service';
@@ -315,6 +316,35 @@ describe('default editing', () => {
     expect(
       service.updateElementPlacement(node.id, { ...node.placement, allowMultiple: true, minItems: 5, maxItems: 2 }),
     ).toMatch(/minimum/);
+    expect(service.templateJson()).toEqual(before);
+  });
+  it('inserts an imported element into the captured parent even after navigation', () => {
+    service.addElement();
+    const parent = service.children().find((node) => node.kind === 'element')!;
+    if (parent.kind !== 'element') throw new Error('Expected element');
+    const source = templateToJson(buildContainer(parent.definition));
+    service.openContainer(parent.id);
+    const destination = service.session.active().id;
+    service.openContainer(service.session.document().id);
+    service.importElement(source, destination);
+    expect(service.children()).toHaveLength(4);
+    service.openContainer(destination);
+    expect(service.children()).toHaveLength(1);
+    const inserted = service.children()[0];
+    expect(inserted.id).not.toBe(parent.id);
+    if (inserted.kind !== 'element') throw new Error('Expected element');
+    expect(inserted.definition.identifier).toBe(parent.definition.identifier);
+    service.openContainer(service.session.document().id);
+    service.deleteChild(parent.id);
+    const before = service.templateJson();
+    expect(() => service.importElement(source, destination)).toThrow(/no longer exists/);
+    expect(service.templateJson()).toEqual(before);
+  });
+  it('rejects property-name collisions between fields and elements', () => {
+    service.addElement();
+    const before = service.templateJson();
+    const field = service.fields()[0];
+    expect(service.updateFieldSettings(field.id, { deploymentName: 'Element' })).toMatch(/property name/);
     expect(service.templateJson()).toEqual(before);
   });
 });

@@ -9,8 +9,6 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService, FIELD_TYPES } from './core/services/template.service';
 import { Field } from './core/models/types';
 import { CED_VERSION } from './version';
@@ -30,8 +28,6 @@ import { ContainerOutlineComponent } from './features/container-outline/containe
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
-    DragDropModule,
     IconComponent,
     FieldLibrarySidebarComponent,
     PreferencesModalComponent,
@@ -155,10 +151,6 @@ export class AppComponent {
 
   getFieldTypeName(field: Field): string {
     return FIELD_TYPES[field.type]?.label || field.type;
-  }
-
-  onFieldDrop(event: CdkDragDrop<Field[]>) {
-    this.service.moveField(event.previousIndex, event.currentIndex);
   }
 
   scrollToField(fieldId: number) {

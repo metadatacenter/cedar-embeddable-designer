@@ -35,6 +35,7 @@ export class ContainerEditorComponent {
     this.service.moveChild(event.item.data as number, this.service.session.active().id, event.currentIndex);
   }
   importElement(): void {
+    const targetId = this.service.session.active().id;
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json,.yaml,.yml';
@@ -42,7 +43,7 @@ export class ContainerEditorComponent {
       const file = input.files?.[0];
       if (!file) return;
       try {
-        this.service.importElement(await file.text());
+        this.service.importElement(await file.text(), targetId);
       } catch (error) {
         this.service.loadError.set(error instanceof Error ? error.message : String(error));
       }

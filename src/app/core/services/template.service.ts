@@ -13,6 +13,7 @@ import {
   parentOf,
   updateContainer,
   allowedInContainer,
+  findContainer,
 } from '../model/container-draft';
 import { FieldLibraryService } from './field-library.service';
 import { Injectable, signal, computed, inject } from '@angular/core';
@@ -337,6 +338,10 @@ export class TemplateService {
   }
 
   convertFieldToCustomField(fieldId: number, customField: CustomField) {
+    if (!this.canAddField(customField.definition.type)) {
+      this.loadError.set('Page breaks can only be placed in templates.');
+      return;
+    }
     if (this.isPublished(fieldId)) return;
     this.fields.update((fields) =>
       fields.map((field) =>
@@ -432,6 +437,14 @@ export class TemplateService {
 
   updateFieldSettings(id: number, changes: Partial<Field>): string | null {
     if (this.isPublished(id)) return 'Published fields are read-only. Editing a draft version is not available yet.';
+    if (
+      changes.deploymentName !== undefined &&
+      this.children().some((node) => node.id !== id && childName(node) === changes.deploymentName?.trim())
+    )
+      return 'Another child already uses that property name.';
+    const current = this.fields().find((field) => field.id === id);
+    if (current && !this.canAddField(changes.type ?? current.type))
+      return 'Page breaks can only be placed in templates.';
     const fields = this.fields().map((field) => (field.id === id ? { ...field, ...changes } : field));
     try {
       buildTemplate({
@@ -576,9 +589,11 @@ export class TemplateService {
     this.selectedField.set(null);
     this.fieldTypeDropdown.set(null);
   }
-  private insertNode(node: ChildNode, position: number): void {
+  private insertNode(node: ChildNode, position: number, targetId = this.session.active().id): void {
+    const target = findContainer(this.session.document(), targetId);
+    if (!target) throw new Error('The import destination no longer exists.');
     this.loadError.set(null);
-    const used = new Set(this.children().map(childName));
+    const used = new Set(target.children.map(childName));
     const base = childName(node).trim() || (node.kind === 'element' ? 'Element' : 'Field');
     let name = base;
     for (let suffix = 2; used.has(name); suffix++) name = `${base} ${suffix}`;
@@ -588,12 +603,15 @@ export class TemplateService {
       node.definition.customFieldId === undefined
         ? { ...node, definition: { ...node.definition, name } }
         : { ...node, placement: { ...node.placement, deploymentName: name } };
-    this.session.update((container) => {
-      const children = [...container.children];
-      children.splice(Math.max(0, Math.min(position, children.length)), 0, node);
-      return { ...container, children };
-    });
+    this.session.document.update((root) =>
+      updateContainer(root, targetId, (container) => {
+        const children = [...container.children];
+        children.splice(Math.max(0, Math.min(position, children.length)), 0, node);
+        return { ...container, children };
+      }),
+    );
   }
+
   addElement(): void {
     const definition = newContainer('element', 'Element');
     this.insertNode(
@@ -606,7 +624,7 @@ export class TemplateService {
       this.children().length,
     );
   }
-  importElement(source: string | object): void {
+  importElement(source: string | object, targetId = this.session.active().id): void {
     const definition = readContainer(source);
     if (definition.kind !== 'element') throw new Error('Choose an element document to insert into this container.');
     // Import is an independent local copy retaining its source artifact identity.
@@ -617,7 +635,8 @@ export class TemplateService {
         definition,
         placement: { status: 'optional', allowMultiple: false, propertyIri: newFieldIdentity().propertyIri },
       },
-      this.children().length,
+      Number.MAX_SAFE_INTEGER,
+      targetId,
     );
   }
   duplicateElement(id: number): void {
@@ -654,11 +673,16 @@ export class TemplateService {
       }
       return copy;
     };
-    this.insertNode(
-      clone({ ...node, definition: readContainer(templateToJson(buildContainer(node.definition))) }),
-      this.children().findIndex((child) => child.id === id) + 1,
-    );
+    try {
+      this.insertNode(
+        clone({ ...node, definition: readContainer(templateToJson(buildContainer(node.definition))) }),
+        this.children().findIndex((child) => child.id === id) + 1,
+      );
+    } catch (error) {
+      this.loadError.set(error instanceof Error ? error.message : String(error));
+    }
   }
+
   deleteChild(id: number): void {
     const parent = parentOf(this.session.document(), id);
     if (!parent) return;

@@ -20,11 +20,19 @@
   font-weight: bold;
 }
 .child-move {
+  color: #475569;
   padding: 0.5rem 1rem;
   font-size: 0.75rem;
 }
 .child-move select {
+  width: 100%;
   max-width: 100%;
+  display: block;
   border: 1px solid #b7d6db;
-  margin-left: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.container-path button {
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }

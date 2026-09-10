@@ -50,6 +50,7 @@ import { TemplateService } from '../../core/services/template.service';
         display: block;
       }
       .element-card {
+        color: #334155;
         background: white;
         border: 1px solid #b7d6db;
         border-radius: 0.5rem;

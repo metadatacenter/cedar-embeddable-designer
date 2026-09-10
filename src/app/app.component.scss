@@ -86,6 +86,14 @@
 
 .designer-grid {
   @apply grid h-full;
+  grid-template-columns: var(--designer-columns, 1fr);
+}
+
+@media (max-width: 767px) {
+  // The overview is hidden at this width; it must not keep an empty grid column.
+  .designer-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* ─── Fields Overview Sidebar ─────────────────────────────────────────────── */

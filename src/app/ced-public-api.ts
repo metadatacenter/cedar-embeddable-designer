@@ -44,7 +44,7 @@ export interface CedJsonObject {
 }
 
 /**
- * What `templateChange` carries: the template as CEDAR JSON-LD.
+ * What the change events carry: the complete template or element as CEDAR JSON-LD.
  *
  * The same document the CEDAR artifact server accepts, written by the CEDAR
  * model library rather than by the designer.
@@ -54,7 +54,7 @@ export type CedTemplate = CedJsonObject;
 /**
  * The element, as a host sees it.
  *
- * `template` takes CEDAR JSON-LD or CEDAR YAML — an object, or a string in
+ * `artifact` (and its legacy alias `template`) takes CEDAR JSON-LD or CEDAR YAML — an object, or a string in
  * either serialization. A source that cannot be read is reported to the console
  * rather than thrown, because assigning a property should not fail inside the
  * host's own code.

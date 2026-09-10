@@ -1,7 +1,7 @@
 # CEDAR Embeddable Designer (CED)
 
 The CEDAR Embeddable Designer is a Web Component for authoring CEDAR metadata
-templates. An author assembles a template field by field, constrains fields to
+templates and elements. An author assembles a document from fields and nested elements, constrains fields to
 ontologies, branches, terms and value sets, and the component produces a CEDAR
 template that any CEDAR service can store, validate and render.
 
@@ -14,12 +14,11 @@ templates CEE renders.
 
 Early, and under active reconstruction on `develop`.
 
-The element works. `<cedar-embeddable-designer>` registers itself without
-bootstrapping anything onto the page, renders in shadow DOM so neither its styles
-nor a host page's cross the boundary, takes a template and an API key as
-properties, and publishes a `templateChange` event. What is not settled is the
-contract's shape: the input and output names may still change, and there is no
-declared type for them yet.
+`<cedar-embeddable-designer>` registers itself without bootstrapping anything
+onto the page and renders in shadow DOM. It accepts a template or element through
+`artifact`, endpoint configuration through `config`, and publishes `artifactChange`.
+The shipped declaration describes those properties and events. The original
+`template`, `currentTemplate` and `templateChange` names remain compatible aliases.
 
 `npm run dist` produces the distribution: one script an embedder loads with a
 plain `<script>` tag, its type declaration, and a staged npm directory. Nothing
@@ -27,13 +26,36 @@ is published yet, and the package has not been released on either channel.
 
 Serialization is the
 [CEDAR model library's](https://github.com/metadatacenter/cedar-model-typescript-library).
-The designer builds a `Template` and the library writes it as CEDAR JSON-LD or
+The designer builds a `Template` or `TemplateElement` and the library writes it as CEDAR JSON-LD or
 CEDAR YAML and reads either back, so a template written in one form and reopened
 from the other is the same artifact.
 
 Controlled-term search asks the CEDAR terminology server a host names through
 `terminologyBaseUrl`, and reports a failure as a failure. There is no default
 endpoint: unset, search is off and the panel says so.
+
+## Templates and elements
+
+Choose **File → New Element** to author an element document. The **Modular**
+profile enables **Add Element** and **Import Element** within any container.
+Existing nested content stays visible in every profile. Use **Edit Element**, the
+outline, and breadcrumbs to navigate; every view edits the same document session.
+
+An element's **Placement** panel controls its property name, display overrides,
+property IRI, requirement, cardinality and layout. Move controls transfer fields
+or whole element subtrees between containers. Cycles and conflicting property
+names are refused; page breaks are offered only in templates.
+
+**Import Element** makes an independent in-memory copy retaining the imported
+artifact identity. **Duplicate Element** creates new draft identities throughout
+the subtree, with source provenance. Neither operation establishes a live link to
+a server artifact. Server persistence and publishing remain separate host work.
+
+The public `currentArtifact` and change events always contain the complete root
+document, including while a nested element is selected. CEE preview wraps a root
+element in a temporary template; exported documents retain their element type.
+JSON and full YAML can be reopened; YAML export is refused if the model cannot
+preserve all metadata, with JSON available instead.
 
 ## Requirements
 
