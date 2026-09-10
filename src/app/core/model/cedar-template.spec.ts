@@ -243,7 +243,30 @@ describe('what a type will accept', () => {
     ['attributeValue', 'multiple by its type'],
   ])('does not offer cardinality on %s, which is %s', (paletteType) => {
     expect(allowsMultiple(paletteType)).toBe(false);
-    expect(allowsStatus(paletteType)).toBe(true);
+  });
+
+  it('does not let an attribute-value field be required, because it has no value constraints', () => {
+    expect(allowsStatus('attributeValue')).toBe(false);
+    // Not static, so the reason is the type's own and not the one static fields have.
+    expect(descriptorOf('attributeValue').deployment).not.toBe('static');
+  });
+
+  it('has nowhere to write a requirement on an attribute-value field', () => {
+    /*
+     * The reason the control is not offered, stated against the model rather than
+     * restated. CEDAR's meta-schema gives an attribute-value field no
+     * `_valueConstraints` property, and the JSON writer omits the node, so a
+     * requirement has nowhere to go. The YAML writer does record one, which is
+     * how a requirement set in the card used to survive one serialization and not
+     * the other. If the model ever grows a place for it, this fails and the
+     * decision above is worth making again.
+     */
+    const built = json(templateOf(field({ type: 'attributeValue', name: 'Attribute', status: 'required' })));
+    const properties = built['properties'] as Record<string, Record<string, unknown>>;
+    const child = (properties['Attribute']['items'] ?? properties['Attribute']) as Record<string, unknown>;
+
+    expect(child['_valueConstraints']).toBeUndefined();
+    expect(built['required']).not.toContain('Attribute');
   });
 
   it.each(['multipleChoice', 'checkboxes', 'singleChoiceList', 'multipleChoiceList'])(

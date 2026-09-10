@@ -201,6 +201,16 @@ interface FieldDescriptor {
   /** Whether the type takes the author's list of options. */
   readonly options?: (builder: FieldBuilder, label: string, selected: boolean) => unknown;
   readonly defaultKind?: FieldDefaultValue['kind'];
+  /**
+   * Set where the type carries no `_valueConstraints` and `deployment` does not
+   * already say so.
+   *
+   * A static field has none, which `deployment: 'static'` states. An
+   * attribute-value field is the one dynamic type with none: CEDAR's meta-schema
+   * gives `attributeValueTemplateField.json` no `_valueConstraints` property at
+   * all, so the field has nowhere to record a requirement.
+   */
+  readonly valueConstraints?: false;
   /** What the type's single static value is for, where it has one. */
   readonly content?: 'markup' | 'url' | 'videoId';
 }
@@ -292,6 +302,7 @@ const FIELD_DESCRIPTORS: Record<string, FieldDescriptor> = {
     cedarType: CedarFieldType.ATTRIBUTE_VALUE,
     build: () => CedarBuilders.attributeValueFieldBuilder(),
     deployment: 'alwaysMultiple',
+    valueConstraints: false,
   },
 
   // The external authorities, which differ from one another only in which
@@ -393,9 +404,30 @@ export function temporalGranularities(type: string) {
 
 export const NUMERIC_TYPES = NumberType.values().map((type) => type.getValue()!);
 
-/** Whether a type's author can mark it required or recommended. */
+/**
+ * Whether a type's author can mark it required or recommended.
+ *
+ * CEDAR records a requirement in the field's own `_valueConstraints`, so a type
+ * that has none cannot carry one. Static fields are one such kind and an
+ * attribute-value field is the other, which is why this asks the descriptor
+ * rather than asking whether the field is static — the production designer's own
+ * table draws the same two distinctions separately, and declares
+ * `allowsRequired: false` for `attribute-value` while calling it non-static.
+ *
+ * The requirement offered on an attribute-value field was not simply ignored,
+ * which is what made it worth removing rather than leaving. The JSON writer omits
+ * the whole constraints node for that type, so a requirement set in the card
+ * vanished; the YAML writer records `required: true` under the child, so it
+ * survived. The same template therefore said different things depending on which
+ * format it was saved in, and the one the artifact server stores is the one that
+ * dropped it. Both model libraries behave this way.
+ *
+ * This decides what an author may set, not what the designer preserves: a status
+ * read from a template is still written back.
+ */
 export function allowsStatus(paletteType: string): boolean {
-  return descriptorOf(paletteType).deployment !== 'static';
+  const descriptor = descriptorOf(paletteType);
+  return descriptor.deployment !== 'static' && descriptor.valueConstraints !== false;
 }
 
 /**
