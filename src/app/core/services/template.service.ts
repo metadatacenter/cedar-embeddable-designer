@@ -1,3 +1,5 @@
+import { EditorSession } from './editor-session';
+import { containerFromFlat, flatView, newNodeId } from '../model/container-draft';
 import { FieldLibraryService } from './field-library.service';
 import { Injectable, signal, computed, inject } from '@angular/core';
 import {
@@ -11,7 +13,6 @@ import {
 import { PreferencesService } from './preferences.service';
 import {
   DesignerTemplate,
-  ContainerMetadata,
   buildTemplate,
   newFieldIdentity,
   newTemplateIdentifier,
@@ -105,15 +106,22 @@ export class TemplateService {
 
   readonly fieldEditorConfig = signal<{ bridgeBaseUrl?: string; terminologyBaseUrl?: string }>({});
 
-  // State Signals
-  readonly templateName = signal<string>('Untitled Template');
-  readonly templateDesc = signal<string>('');
-  readonly templateIdentifier = signal<string>('');
-  readonly templateVersion = signal<string>('0.0.1');
+  readonly session = new EditorSession(
+    containerFromFlat({
+      name: 'Untitled Template',
+      description: '',
+      identifier: '',
+      version: '0.0.1',
+      fields: starterFields(),
+    }),
+  );
+  readonly templateName = this.session.property('name');
+  readonly templateDesc = this.session.property('description');
+  readonly templateIdentifier = this.session.property('identifier');
+  readonly templateVersion = this.session.property('version');
   readonly loadError = signal<string | null>(null);
-  private readonly containerMetadata = signal<ContainerMetadata | undefined>(undefined);
-
-  readonly fields = signal<Field[]>(starterFields());
+  private readonly containerMetadata = this.session.property('metadata');
+  readonly fields = this.session.fieldBinding();
 
   /**
    * The designer's state as it was when the template was last saved, opened or
@@ -163,12 +171,8 @@ export class TemplateService {
   private readonly mintedIdentifier = signal<string>(newTemplateIdentifier());
 
   readonly designerTemplate = computed<DesignerTemplate>(() => ({
-    name: this.templateName(),
-    description: this.templateDesc(),
-    identifier: this.templateIdentifier() || this.mintedIdentifier(),
-    version: this.templateVersion(),
-    fields: this.fields(),
-    metadata: this.containerMetadata(),
+    ...flatView(this.session.document()),
+    identifier: this.session.document().identifier || this.mintedIdentifier(),
   }));
 
   readonly template = computed(() => buildTemplate(this.designerTemplate()));
@@ -220,14 +224,7 @@ export class TemplateService {
 
   /** Everything a save would write, and nothing that changes on its own. */
   private stateKey(): string {
-    return JSON.stringify({
-      name: this.templateName(),
-      description: this.templateDesc(),
-      identifier: this.templateIdentifier(),
-      version: this.templateVersion(),
-      fields: this.fields(),
-      metadata: this.containerMetadata(),
-    });
+    return JSON.stringify(this.session.document());
   }
 
   /** Take the current state as the baseline, after a save, an open or a reset. */
@@ -238,7 +235,7 @@ export class TemplateService {
   // Field manipulation methods
   addField(type: string, position: number) {
     const newField: Field = {
-      id: Date.now(),
+      id: newNodeId(),
       ...newFieldIdentity(),
       type,
       name: FIELD_TYPES[type].label,
@@ -263,7 +260,7 @@ export class TemplateService {
   addCustomFieldToTemplate(customField: CustomField, position: number) {
     const newField: Field = {
       ...structuredClone(customField.definition),
-      id: Date.now(),
+      id: newNodeId(),
       customFieldId: customField.id,
       libraryId: customField.libraryId,
     };
