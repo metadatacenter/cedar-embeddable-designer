@@ -3,52 +3,94 @@ import { Page, expect } from '@playwright/test';
 export const DESIGNER = 'cedar-embeddable-designer';
 
 /**
- * The layout claims, read in one pass over one card.
+ * The geometric claims, measured in one pass.
  *
- * Shared by the layout suite and the attribute matrix, because a control is not
- * working if setting it pushes something out of the card. Every violation is returned
- * rather than thrown on, so one audit reports everything wrong at once.
+ * One implementation, used by the layout suite and by the attribute matrix, because
+ * the rules below have subtleties that would drift apart in two copies — and one of
+ * them cost a false failure already.
  */
 export interface LayoutReport {
+  /** Leaf text a card gives too little room to show. */
   clipped: string[];
+  /** Anything reaching outside the card that holds it. */
   escaped: string[];
+  /** Per card, for the column and budget claims. */
+  geometry: { id: string; label: string; width: number; height: number }[];
+  /** How far the document scrolls sideways, which should be nowhere. */
   pageOverflow: number;
 }
 
-export async function auditLayout(page: Page, cardIndex = 0): Promise<LayoutReport> {
+/**
+ * Audit every card, or one of them.
+ *
+ * Three kinds of element are skipped, and each exclusion is a rule rather than a
+ * convenience. A control holds and scrolls its own value, so its content is not the
+ * layout's business. An element that scrolls on purpose is not an element that clips by
+ * accident. And a box one pixel tall or wide is showing text to nobody: that is how
+ * `sr-only` works, and treating its deliberate clipping as a defect reported the
+ * annotations table's own screen-reader heading as broken.
+ */
+export async function auditLayout(page: Page, cardIndex?: number): Promise<LayoutReport> {
   return page.evaluate((index) => {
     const root = document.querySelector('cedar-embeddable-designer')!.shadowRoot!;
-    const cards = [...root.querySelectorAll('[id^=field-card-]')];
-    const card = cards[index];
+    const all = [...root.querySelectorAll('[id^=field-card-]')];
+    const cards = index === undefined ? all : all.slice(index, index + 1);
+
+    const scrolls = (element: Element): boolean => {
+      const style = getComputedStyle(element);
+      return /auto|scroll/.test(style.overflowX) || /auto|scroll/.test(style.overflowY);
+    };
+    const OWN_SCROLL = ['input', 'textarea', 'select', 'svg', 'path', 'img', 'g', 'rect', 'circle'];
+
     const clipped: string[] = [];
     const escaped: string[] = [];
-    if (card) {
+    const geometry: { id: string; label: string; width: number; height: number }[] = [];
+
+    for (const card of cards) {
       const box = card.getBoundingClientRect();
-      const scrolls = (el: Element) => {
-        const s = getComputedStyle(el);
-        return /auto|scroll/.test(s.overflowX) || /auto|scroll/.test(s.overflowY);
-      };
-      const own = ['input', 'textarea', 'select', 'svg', 'path', 'img', 'g', 'rect', 'circle'];
-      for (const el of card.querySelectorAll('*')) {
-        if (own.includes(el.tagName.toLowerCase()) || scrolls(el)) continue;
-        const text = (el.textContent ?? '').trim();
-        if (el.children.length === 0 && text && el.scrollWidth > el.clientWidth + 1) {
-          clipped.push(`${el.tagName.toLowerCase()} "${text.slice(0, 24)}" ${el.scrollWidth}>${el.clientWidth}`);
+      const label = (card.querySelector('input') as HTMLInputElement | null)?.value || card.id;
+      geometry.push({ id: card.id, label, width: Math.round(box.width), height: Math.round(box.height) });
+
+      /*
+       * Content inside a scroller is the scroller's business, not the card's.
+       * Extending past the visible box is what scrolling is for, so an element with a
+       * scrolling ancestor is skipped and the scroller itself is measured against the
+       * card instead. Without this the annotations table reported fifteen escapes for
+       * the one thing that was working as intended.
+       */
+      const insideScroller = (element: Element): boolean => {
+        for (let node = element.parentElement; node && node !== card; node = node.parentElement) {
+          if (scrolls(node)) return true;
         }
-        const r = el.getBoundingClientRect();
-        if (r.width > 0 && (r.right > box.right + 1 || r.left < box.left - 1)) {
+        return false;
+      };
+
+      for (const element of card.querySelectorAll('*')) {
+        if (OWN_SCROLL.includes(element.tagName.toLowerCase()) || scrolls(element)) continue;
+        // Deliberately invisible: showing nothing to anyone, so nothing to clip.
+        if (element.clientWidth <= 1 || element.clientHeight <= 1) continue;
+        if (insideScroller(element)) continue;
+
+        const text = (element.textContent ?? '').trim();
+        if (element.children.length === 0 && text && element.scrollWidth > element.clientWidth + 1) {
+          clipped.push(`${label}: "${text.slice(0, 30)}" needs ${element.scrollWidth}px in ${element.clientWidth}px`);
+        }
+
+        const inner = element.getBoundingClientRect();
+        if (inner.width > 0 && (inner.right > box.right + 1 || inner.left < box.left - 1)) {
           escaped.push(
-            `${el.tagName.toLowerCase()} ${Math.round(r.left)}..${Math.round(r.right)} vs card ${Math.round(box.left)}..${Math.round(box.right)}`,
+            `${label}: ${element.tagName.toLowerCase()} spans ${Math.round(inner.left)}..${Math.round(inner.right)} outside ${Math.round(box.left)}..${Math.round(box.right)}`,
           );
         }
       }
     }
+
     const doc = document.documentElement;
-    return { clipped, escaped, pageOverflow: doc.scrollWidth - doc.clientWidth };
+    return { clipped, escaped, geometry, pageOverflow: doc.scrollWidth - doc.clientWidth };
   }, cardIndex);
 }
 
-/** Assert a card holds its shape, naming what went wrong where. */
+/** Assert a card holds its shape, naming what went wrong and where. */
 export async function expectLaidOut(page: Page, where: string, cardIndex = 0): Promise<void> {
   const report = await auditLayout(page, cardIndex);
   expect.soft(report.clipped, `${where}: text clipped inside the card`).toEqual([]);

@@ -62,7 +62,7 @@
     <summary>Numeric constraints <span>datatype, range and units</span></summary>
     <form (ngSubmit)="saveNumeric()" class="row">
       <label
-        >Datatype<select name="numericType" [(ngModel)]="numeric.type">
+        >Datatype<select name="numericType" aria-label="Datatype" [(ngModel)]="numeric.type">
           @for (type of numericTypes; track type) {
             <option [value]="type">{{ type }}</option>
           }
@@ -89,6 +89,7 @@
       <label
         >Temporal datatype<select
           name="temporalType"
+          aria-label="Temporal datatype"
           [ngModel]="temporal.type"
           (ngModelChange)="changeTemporalType($event)"
         >
@@ -98,7 +99,7 @@
         </select></label
       >
       <label
-        >Precision<select name="granularity" [(ngModel)]="temporal.granularity">
+        >Precision<select name="granularity" aria-label="Precision" [(ngModel)]="temporal.granularity">
           @for (value of granularities; track value) {
             <option [value]="value">{{ value === 'decimalSecond' ? 'Fractional second' : value }}</option>
           }
@@ -106,7 +107,7 @@
       >
       @if (temporal.type !== 'xsd:date') {
         <label
-          >Time format<select name="timeFormat" [(ngModel)]="temporal.inputTimeFormat">
+          >Time format<select name="timeFormat" aria-label="Time format" [(ngModel)]="temporal.inputTimeFormat">
             <option [ngValue]="null">Automatic</option>
             <option value="12h">12 hour</option>
             <option value="24h">24 hour</option>
@@ -165,38 +166,45 @@
       </label>
     </div>
     @if (annotations.length) {
-      <table class="annotations">
-        <caption>
-          Annotations
-        </caption>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Value</th>
-            <th><span class="sr-only">Actions</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (annotation of annotations; track $index; let i = $index) {
+      <!--
+        Scrolls sideways rather than being crushed. Three text boxes and a button do
+        not fit a card 208px wide, and shrinking them to fit would leave none of them
+        usable — so the table keeps its width and the container carries the overflow.
+      -->
+      <div class="annotations-scroll">
+        <table class="annotations">
+          <caption>
+            Annotations
+          </caption>
+          <thead>
             <tr>
-              <td>
-                <input [name]="'annotationName' + i" aria-label="Annotation name" [(ngModel)]="annotation.name" />
-              </td>
-              <td>
-                <select [name]="'annotationKind' + i" aria-label="Annotation type" [(ngModel)]="annotation.kind">
-                  <option value="literal">Text</option>
-                  <option value="iri">IRI</option>
-                </select>
-              </td>
-              <td>
-                <input [name]="'annotationValue' + i" aria-label="Annotation value" [(ngModel)]="annotation.value" />
-              </td>
-              <td><button type="button" aria-label="Remove annotation" (click)="removeAnnotation(i)">×</button></td>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Value</th>
+              <th><span class="sr-only">Actions</span></th>
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (annotation of annotations; track $index; let i = $index) {
+              <tr>
+                <td>
+                  <input [name]="'annotationName' + i" aria-label="Annotation name" [(ngModel)]="annotation.name" />
+                </td>
+                <td>
+                  <select [name]="'annotationKind' + i" aria-label="Annotation type" [(ngModel)]="annotation.kind">
+                    <option value="literal">Text</option>
+                    <option value="iri">IRI</option>
+                  </select>
+                </td>
+                <td>
+                  <input [name]="'annotationValue' + i" aria-label="Annotation value" [(ngModel)]="annotation.value" />
+                </td>
+                <td><button type="button" aria-label="Remove annotation" (click)="removeAnnotation(i)">×</button></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     }
     <div class="row">
       <button type="button" (click)="addAnnotation()">Add annotation</button>

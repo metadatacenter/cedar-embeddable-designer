@@ -123,6 +123,7 @@
         [style.borderBottomColor]="service.selectedField() === field.id ? service.COLORS.primary : '#d1d5db'"
         (focus)="service.selectedField.set(field.id)"
         placeholder="Enter field name"
+        aria-label="Field name"
       />
 
       @if (field.atId) {
@@ -196,6 +197,7 @@
               class="text-sm text-gray-700 border-none outline-none bg-transparent flex-1 border-b border-gray-200 focus:border-teal-500 pb-0.5"
               (focus)="service.selectedField.set(field.id)"
               [placeholder]="'Option ' + (optIdx + 1)"
+              [attr.aria-label]="'Option ' + (optIdx + 1)"
             />
             <!-- Delete option button -->
             @if (field.options.length > 1) {

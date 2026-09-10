@@ -83,9 +83,16 @@ p[role='alert'] {
   max-width: 100%;
 }
 
+/* Carries the annotation table's overflow instead of letting it leave the card. */
+.annotations-scroll {
+  margin-top: 8px;
+  overflow-x: auto;
+}
+
 .annotations {
   width: 100%;
-  margin-top: 8px;
+  /* Fills the row where there is room, and scrolls inside its container where there is not. */
+  min-width: 20rem;
   border-collapse: collapse;
   font-size: 11px;
   text-align: left;

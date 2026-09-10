@@ -27,8 +27,25 @@
  */
 import { test, expect, type Page } from '@playwright/test';
 import { openDesigner, applyPreset } from './support';
+import { auditLayout } from './support-layout';
 
 const DESIGNER = 'cedar-embeddable-designer';
+
+/** Cards whose disclosure rows do not share a left edge, which is this suite's own claim. */
+async function misalignedRows(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const root = document.querySelector('cedar-embeddable-designer')!.shadowRoot!;
+    const offenders: string[] = [];
+    for (const card of root.querySelectorAll('[id^=field-card-]')) {
+      const label = (card.querySelector('input') as HTMLInputElement | null)?.value || card.id;
+      const lefts = [
+        ...new Set([...card.querySelectorAll('summary')].map((row) => Math.round(row.getBoundingClientRect().left))),
+      ];
+      if (lefts.length > 1) offenders.push(`${label}: disclosure rows start at ${lefts.join(', ')}`);
+    }
+    return offenders;
+  });
+}
 
 /**
  * The tallest a field card may be, measured and then rounded up.
@@ -83,68 +100,10 @@ async function everyTypeOnPage(page: Page): Promise<string[]> {
   return labels;
 }
 
-/** Everything the invariants need, read in one pass so the page is measured once. */
-async function measure(page: Page) {
-  return page.evaluate(() => {
-    const root = document.querySelector('cedar-embeddable-designer')!.shadowRoot!;
-    const cards = [...root.querySelectorAll('[id^=field-card-]')];
-
-    /** An element that scrolls on purpose is not an element that clips by accident. */
-    const scrolls = (element: Element): boolean => {
-      const style = getComputedStyle(element);
-      return /auto|scroll/.test(style.overflowX) || /auto|scroll/.test(style.overflowY);
-    };
-
-    /** Controls hold their own value and scroll it; their content is not the layout's business. */
-    const OWN_SCROLL = ['input', 'textarea', 'select', 'svg', 'path', 'img'];
-
-    const clipped: string[] = [];
-    const escaped: string[] = [];
-    const misaligned: string[] = [];
-    const geometry: { id: string; label: string; width: number; height: number }[] = [];
-
-    for (const card of cards) {
-      const box = card.getBoundingClientRect();
-      const label = (card.querySelector('input') as HTMLInputElement | null)?.value || card.id;
-      geometry.push({ id: card.id, label, width: Math.round(box.width), height: Math.round(box.height) });
-
-      for (const element of card.querySelectorAll('*')) {
-        if (OWN_SCROLL.includes(element.tagName.toLowerCase()) || scrolls(element)) continue;
-
-        const text = (element.textContent ?? '').trim();
-        if (element.children.length === 0 && text && element.scrollWidth > element.clientWidth + 1) {
-          clipped.push(`${label}: "${text.slice(0, 30)}" needs ${element.scrollWidth}px in ${element.clientWidth}px`);
-        }
-
-        const inner = element.getBoundingClientRect();
-        if (inner.width > 0 && inner.right > box.right + 1) {
-          escaped.push(
-            `${label}: ${element.tagName.toLowerCase()} reaches ${Math.round(inner.right)}px past ${Math.round(box.right)}px`,
-          );
-        }
-      }
-
-      const lefts = [
-        ...new Set([...card.querySelectorAll('summary')].map((row) => Math.round(row.getBoundingClientRect().left))),
-      ];
-      if (lefts.length > 1) misaligned.push(`${label}: disclosure rows start at ${lefts.join(', ')}`);
-    }
-
-    const doc = document.documentElement;
-    return {
-      clipped,
-      escaped,
-      misaligned,
-      geometry,
-      pageScrollWidth: doc.scrollWidth,
-      pageClientWidth: doc.clientWidth,
-    };
-  });
-}
-
 test('the whole palette lays out without clipping, escaping or drifting', async ({ page }) => {
   const labels = await everyTypeOnPage(page);
-  const { clipped, escaped, misaligned, geometry } = await measure(page);
+  const { clipped, escaped, geometry } = await auditLayout(page);
+  const misaligned = await misalignedRows(page);
 
   // The palette itself, so a type that stopped being offered is not silently uncovered.
   expect(labels.length).toBe(26);
@@ -189,12 +148,9 @@ test.describe('the page never scrolls sideways', () => {
     test(`at ${viewport.name}`, async ({ page }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
       await everyTypeOnPage(page);
-      const { pageScrollWidth, pageClientWidth } = await measure(page);
+      const { pageOverflow } = await auditLayout(page);
 
-      expect(
-        pageScrollWidth,
-        `${viewport.name} scrolls ${pageScrollWidth - pageClientWidth}px sideways`,
-      ).toBeLessThanOrEqual(pageClientWidth);
+      expect(pageOverflow, `${viewport.name} scrolls ${pageOverflow}px sideways`).toBeLessThanOrEqual(0);
     });
   }
 });
