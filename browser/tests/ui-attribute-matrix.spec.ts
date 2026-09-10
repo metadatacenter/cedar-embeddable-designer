@@ -133,9 +133,23 @@ const CONTROLS: readonly Control[] = [
   },
 ];
 
-/** A designer holding exactly one card, of the named type. */
-async function oneCardOf(page: Page, paletteType: string): Promise<void> {
-  await openDesigner(page);
+/**
+ * A designer holding exactly one card, of the named type.
+ *
+ * `query` reaches the host fixture, which is how the term-picker stub is asked for.
+ * `bundle` names a sibling script to load before the card exists, since the controls
+ * those siblings provide are mounted as the card renders.
+ */
+async function oneCardOf(
+  page: Page,
+  paletteType: string,
+  options: { query?: string; bundle?: string } = {},
+): Promise<void> {
+  await openDesigner(page, options.query ?? '');
+  if (options.bundle) {
+    await page.addScriptTag({ path: options.bundle });
+    await page.waitForFunction(() => !!customElements.get('cedar-embeddable-field'));
+  }
   await applyPreset(page, 'modular');
   const designer = page.locator(DESIGNER);
   const cards = designer.locator('[id^=field-card-]');
@@ -217,6 +231,10 @@ for (const width of WIDTHS) {
 interface Lifecycle {
   readonly control: string;
   readonly paletteType: string;
+  /** Passed to the host fixture, for a row that needs the term-picker stub. */
+  readonly query?: string;
+  /** An environment variable naming a sibling bundle this row needs. */
+  readonly requires?: 'CEF_BUNDLE';
   /** Bring the control into view, or into existence, before touching it. */
   readonly prepare?: (page: Page) => Promise<void>;
   readonly set: (page: Page) => Promise<void>;
@@ -566,6 +584,30 @@ const LIFECYCLES: readonly Lifecycle[] = [
     set: async (page) => setIn(page, 'Field metadata', 'Alternate labels', 'Alternate\nAutre'),
     restore: async (page) => setIn(page, 'Field metadata', 'Alternate labels', ''),
   },
+  /*
+   * The two controls a sibling component provides, and only CED's half of them.
+   *
+   * CEF and `<cedar-term-picker>` have thorough suites of their own, and
+   * `cef-defaults.spec.ts` already covers what each of twenty types stores and clears
+   * through CEF. None of that is repeated here. What no other suite asks is whether the
+   * value a sibling emits reaches the template, whether undoing it returns the template
+   * exactly rather than merely returning the value, and whether the card still holds its
+   * shape with someone else's component inside it — which is the failure this matrix
+   * exists to catch, and the annotations table proved it is not hypothetical.
+   *
+   * So one row each, not a cross. The constraint row uses the host's picker stub, which
+   * emits what the real picker emits: the claim is that CED accepts it, and the picker's
+   * own behaviour is the picker's business.
+   */
+  {
+    control: 'a default value through CEF',
+    paletteType: 'text',
+    requires: 'CEF_BUNDLE',
+    set: async (page) => card(page).locator('app-field-default-value input').first().fill('Example'),
+    restore: async (page) => card(page).locator('app-field-default-value input').first().fill(''),
+    read: (template) => constraints(template, 'Text')['defaultValue'],
+    whenSet: 'Example',
+  },
   {
     control: 'an annotation',
     paletteType: 'text',
@@ -591,7 +633,12 @@ for (const width of WIDTHS) {
 
     for (const lifecycle of LIFECYCLES) {
       test(`${lifecycle.control} on a ${lifecycle.paletteType} field`, async ({ page }) => {
-        await oneCardOf(page, lifecycle.paletteType);
+        const bundle = lifecycle.requires ? process.env[lifecycle.requires] : undefined;
+        test.skip(
+          lifecycle.requires !== undefined && !bundle,
+          `${lifecycle.requires} names the sibling bundle this control comes from.`,
+        );
+        await oneCardOf(page, lifecycle.paletteType, { query: lifecycle.query, bundle });
         await lifecycle.prepare?.(page);
 
         const before = await currentTemplate(page);
@@ -615,3 +662,57 @@ for (const width of WIDTHS) {
     }
   });
 }
+
+/**
+ * The controls a sibling component provides, from CED's side of the boundary only.
+ *
+ * CEF and `<cedar-term-picker>` are separately and thoroughly tested, and
+ * `cef-defaults.spec.ts` already covers what twenty types store and clear through CEF
+ * while `constraints.spec.ts` drives the real picker through choosing and removing
+ * constraints. None of that belongs here twice.
+ *
+ * Two things do, because no other suite asks them. Whether what a sibling emits reaches
+ * the template — the contract CED is on the hook for. And whether a card still holds
+ * its shape with someone else's component inside it, which is the failure this matrix
+ * exists to catch and which the annotations table showed is not hypothetical.
+ *
+ * The constraint case is not a set-and-restore row for a reason worth stating: removing
+ * a constraint is a control the picker owns, so reversing one is not CED's half of
+ * anything. Setting is.
+ */
+test.describe('what a sibling component contributes', () => {
+  for (const width of WIDTHS) {
+    test(`a constraint the picker emits reaches the template at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      // The host's stub emits what the real picker emits; accepting it is the claim.
+      await oneCardOf(page, 'controlledTerms', { query: '?picker=stub' });
+      const panel = card(page).locator('app-controlled-term-config');
+      const before = await currentTemplate(page);
+
+      await clickCentred(panel.getByRole('button', { name: /Edit controlled-term constraints/ }));
+      await page.locator('#stub-pick').click();
+
+      await expect
+        .poll(async () => JSON.stringify(await currentTemplate(page)) !== JSON.stringify(before), { timeout: 10_000 })
+        .toBe(true);
+      await expectLaidOut(page, `a constraint at ${width}`);
+    });
+
+    test(`the card holds its shape with CEF inside it at ${width}`, async ({ page }) => {
+      test.skip(!process.env.CEF_BUNDLE, 'CEF_BUNDLE names the bundle that provides the control.');
+      await page.setViewportSize({ width, height: 900 });
+      await oneCardOf(page, 'text', { bundle: process.env.CEF_BUNDLE });
+
+      // The real control, not the panel's "unavailable" placeholder.
+      await expect(card(page).locator('app-field-default-value input').first()).toBeVisible();
+      await expectLaidOut(page, `CEF mounted at ${width}`);
+
+      await page.evaluate(() => {
+        const root = document.querySelector('cedar-embeddable-designer')!.shadowRoot!;
+        for (const details of root.querySelectorAll('details')) (details as HTMLDetailsElement).open = true;
+      });
+      await page.waitForTimeout(150);
+      await expectLaidOut(page, `CEF mounted, every panel open, at ${width}`);
+    });
+  }
+});

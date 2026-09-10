@@ -52,15 +52,23 @@ export async function auditLayout(page: Page, cardIndex?: number): Promise<Layou
       geometry.push({ id: card.id, label, width: Math.round(box.width), height: Math.round(box.height) });
 
       /*
-       * Content inside a scroller is the scroller's business, not the card's.
-       * Extending past the visible box is what scrolling is for, so an element with a
-       * scrolling ancestor is skipped and the scroller itself is measured against the
-       * card instead. Without this the annotations table reported fifteen escapes for
-       * the one thing that was working as intended.
+       * Two kinds of element are not laid out inside the card, and measuring them
+       * against it reports the thing that is working as a defect.
+       *
+       * A scroller's content is the scroller's business: extending past the visible box
+       * is what scrolling is for, so the content is skipped and the scroller itself is
+       * measured against the card. Without this the annotations table reported fifteen
+       * escapes for the one thing that had just been fixed.
+       *
+       * A `position: fixed` subtree is placed against the viewport and not against any
+       * container, so a card holding a modal — the term picker opens one — appeared to
+       * be leaking a full-width overlay. Whether that overlay fits is a question about
+       * the viewport, which `pageOverflow` already asks.
        */
-      const insideScroller = (element: Element): boolean => {
-        for (let node = element.parentElement; node && node !== card; node = node.parentElement) {
-          if (scrolls(node)) return true;
+      const detached = (element: Element): boolean => {
+        for (let node: Element | null = element; node && node !== card; node = node.parentElement) {
+          if (getComputedStyle(node).position === 'fixed') return true;
+          if (node !== element && scrolls(node)) return true;
         }
         return false;
       };
@@ -69,7 +77,7 @@ export async function auditLayout(page: Page, cardIndex?: number): Promise<Layou
         if (OWN_SCROLL.includes(element.tagName.toLowerCase()) || scrolls(element)) continue;
         // Deliberately invisible: showing nothing to anyone, so nothing to clip.
         if (element.clientWidth <= 1 || element.clientHeight <= 1) continue;
-        if (insideScroller(element)) continue;
+        if (detached(element)) continue;
 
         const text = (element.textContent ?? '').trim();
         if (element.children.length === 0 && text && element.scrollWidth > element.clientWidth + 1) {
