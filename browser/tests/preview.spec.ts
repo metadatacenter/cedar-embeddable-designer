@@ -28,7 +28,7 @@ test('renders the template with CEE', async ({ page }) => {
 
   const [first] = await mounts(page);
   expect(first.template['@type']).toBe('https://schema.metadatacenter.org/core/Template');
-  expect(first.template['schema:name']).toBe('Untitled Template');
+  expect(first.template['schema:name']).toBe('');
 });
 
 test('hands CEE a read-only configuration', async ({ page }) => {

@@ -25,7 +25,7 @@
  * edge of every card out of reach.
  */
 import { expect, test, type Page } from '@playwright/test';
-import { applyPreset, clickCentred, currentTemplate, openDesigner } from './support';
+import { openSettings, applyPreset, clickCentred, currentTemplate, openDesigner } from './support';
 import { expectLaidOut, DESIGNER } from './support-layout';
 import {
   accepts,
@@ -73,9 +73,7 @@ interface Control {
 const card = (page: Page) => page.locator(DESIGNER).locator('[id^=field-card-]').first();
 const settings = (page: Page) => card(page).locator('app-field-settings');
 const disclosure = (page: Page, heading: string) =>
-  settings(page)
-    .locator('details')
-    .filter({ has: page.locator('summary', { hasText: heading }) });
+  settings(page).getByRole('tabpanel', { name: heading, exact: true, includeHidden: true });
 
 const CONTROLS: readonly Control[] = [
   {
@@ -95,7 +93,7 @@ const CONTROLS: readonly Control[] = [
   },
   {
     name: 'options list',
-    find: (page) => card(page).getByRole('button', { name: /Add option/ }),
+    find: (page) => card(page).getByRole('button', { name: /Add option/, includeHidden: true }),
     expected: allowsOptions,
   },
   {
@@ -125,7 +123,7 @@ const CONTROLS: readonly Control[] = [
   },
   {
     name: 'media dimensions',
-    find: (page) => disclosure(page, 'Media'),
+    find: (page) => disclosure(page, 'Media size'),
     expected: (type) => accepts(type, 'mediaDimensions'),
   },
   {
@@ -209,14 +207,12 @@ for (const width of WIDTHS) {
 
           await expectLaidOut(page, `${paletteType} collapsed`);
 
-          // Open every panel: the state an author spends the longest in, and the one
-          // where a control that does not fit has room to prove it.
-          await page.evaluate(() => {
-            const root = document.querySelector('cedar-embeddable-designer')!.shadowRoot!;
-            for (const details of root.querySelectorAll('details')) (details as HTMLDetailsElement).open = true;
-          });
-          await page.waitForTimeout(150);
-          await expectLaidOut(page, `${paletteType} expanded`);
+          await settings(page).getByRole('button', { name: 'Expand field settings' }).click();
+          const tabs = settings(page).getByRole('tab');
+          for (let index = 0; index < (await tabs.count()); index++) {
+            await tabs.nth(index).click();
+            await expectLaidOut(page, `${paletteType} ${await tabs.nth(index).textContent()}`);
+          }
         });
       }
     });
@@ -270,7 +266,11 @@ const property = (template: Record<string, unknown>, key: string): Record<string
 const constraints = (template: Record<string, unknown>, key: string): Record<string, unknown> =>
   (property(template, key)['_valueConstraints'] as Record<string, unknown>) ?? {};
 
-const open = (page: Page, heading: string) => disclosure(page, heading).locator('summary').click();
+const open = async (page: Page, heading: string) => {
+  const expand = settings(page).getByRole('button', { name: 'Expand field settings' });
+  if (await expand.count()) await expand.click();
+  await settings(page).getByRole('tab', { name: heading, exact: true }).click();
+};
 
 /**
  * Put a value in a box, or take it out, and wait for the box to show it.
@@ -384,7 +384,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
      * page disagree about where the button is until it stops moving.
      */
     set: async (page) => {
-      await clickCentred(card(page).getByRole('button', { name: /Add option/ }));
+      await clickCentred(card(page).getByRole('button', { name: /Add option/, includeHidden: true }));
       await card(page).getByLabel('Option 2', { exact: true }).fill('Beta');
     },
     restore: async (page) =>
@@ -690,6 +690,7 @@ for (const width of WIDTHS) {
           `${lifecycle.requires} names the sibling bundle this control comes from.`,
         );
         await oneCardOf(page, lifecycle.paletteType, { query: lifecycle.query, bundle });
+        await open(page, 'Values');
         await lifecycle.prepare?.(page);
 
         /*
@@ -759,6 +760,7 @@ test.describe('what a sibling component contributes', () => {
       await page.setViewportSize({ width, height: 900 });
       // The host's stub emits what the real picker emits; accepting it is the claim.
       await oneCardOf(page, 'controlledTerms', { query: '?picker=stub' });
+      await open(page, 'Values');
       const panel = card(page).locator('app-controlled-term-config');
       const before = await currentTemplate(page);
 
@@ -784,6 +786,10 @@ test.describe('what a sibling component contributes', () => {
         .first()
         .click();
       await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
+      await expect(designer.locator('app-controlled-term-config')).toBeAttached();
+      await openSettings(
+        designer.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') }),
+      );
       const panel = designer.locator('[id^=field-card-]').last().locator('app-controlled-term-config');
       await clickCentred(panel.getByRole('button', { name: /Edit controlled-term constraints/ }));
       await expect(designer.locator('[role=dialog]')).toBeVisible();
@@ -828,6 +834,7 @@ test.describe('what a sibling component contributes', () => {
       await page.setViewportSize({ width, height: 900 });
       await oneCardOf(page, 'text', { bundle: process.env.CEF_BUNDLE });
 
+      await open(page, 'Values');
       // The real control, not the panel's "unavailable" placeholder.
       await expect(card(page).locator('app-field-default-value input').first()).toBeVisible();
       await expectLaidOut(page, `CEF mounted at ${width}`);

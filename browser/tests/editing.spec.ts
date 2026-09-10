@@ -6,6 +6,7 @@ import {
   currentTemplate,
   fieldName,
   fieldOrder,
+  openSettings,
   openDesigner,
   templateName,
   waitForPublished,
@@ -40,6 +41,7 @@ test('an edit reaches the overview sidebar', async ({ page }) => {
 test('reselecting a list type keeps its options and occurrence settings', async ({ page }) => {
   const designer = await openDesigner(page);
   const card = designer.locator('#field-card-2');
+  await openSettings(card);
   await card.getByLabel('Option 1', { exact: true }).fill('Alpha');
   await card.getByLabel('Option 2', { exact: true }).fill('Beta');
   await card.getByRole('button', { name: '▼', exact: true }).click();
@@ -58,6 +60,7 @@ test('reselecting a list type keeps its options and occurrence settings', async 
 test('adding an option redraws the field and republishes', async ({ page }) => {
   const designer = await openDesigner(page);
 
+  await openSettings(designer.locator('#field-card-2'));
   await clickCentred(designer.getByRole('button', { name: /Add option/ }).first());
 
   await expect(designer.getByPlaceholder('Option 3')).toBeVisible();

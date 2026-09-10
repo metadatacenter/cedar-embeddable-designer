@@ -1,12 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { openDesigner, currentTemplate } from './support';
+import { openSettings, openDesigner, currentTemplate } from './support';
 
 test('authors field metadata and rejects duplicate annotation names', async ({ page }) => {
   await openDesigner(page);
-  const section = page
-    .locator('#field-card-1 details')
-    .filter({ has: page.getByText('Field metadata', { exact: false }) });
-  await section.locator('summary').click();
+  const section = await openSettings(page.locator('app-field-card').first(), 'Field metadata');
   await section.getByLabel('Preferred label', { exact: true }).fill('Heading');
   await section.getByLabel('Identifier', { exact: true }).fill('title-field');
   await section.getByLabel('Language', { exact: true }).fill('en');

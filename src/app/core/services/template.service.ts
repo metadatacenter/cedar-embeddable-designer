@@ -125,7 +125,7 @@ export class TemplateService {
 
   readonly session = new EditorSession(
     containerFromFlat({
-      name: 'Untitled Template',
+      name: '',
       description: '',
       identifier: '',
       version: '0.0.1',

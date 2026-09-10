@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openDesigner, currentTemplate } from './support';
+import { openSettings, openDesigner, currentTemplate } from './support';
 
 test('preserves an imported invalid default and lets the author resolve it', async ({ page }) => {
   await openDesigner(page);
@@ -17,6 +17,7 @@ test('preserves an imported invalid default and lets the author resolve it', asy
   await expect
     .poll(async () => ((await currentTemplate(page)).properties as any).Category._valueConstraints.defaultValue)
     .toBe('Yellow');
+  await openSettings(card);
   await card.getByPlaceholder('Option 1').fill('Crimson');
   await expect(error).toBeVisible();
   await expect

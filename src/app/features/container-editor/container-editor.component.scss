@@ -7,7 +7,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin: 1rem 0;
+  margin: 0.5rem 0;
 }
 .container-path button {
   padding: 0.4rem 0.6rem;
@@ -35,4 +35,45 @@
 .container-path button {
   max-width: 100%;
   overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+  .template-header-card__icon {
+    display: none;
+  }
+  .template-header-row > .template-field-group {
+    width: 100%;
+    flex: none;
+  }
+}
+.child-move {
+  padding: 0.375rem 0;
+}
+.child-move select {
+  min-height: 30px;
+  border-radius: 3px;
+  padding: 3px 6px;
+  background: white;
+  font: inherit;
+}
+
+.template-header-row > .template-field-group.flex-1 {
+  min-width: min(100%, 14rem);
+}
+.template-header-row > .template-field-group.w-24 {
+  margin-left: auto;
+}
+
+.element-child-move {
+  padding: 6px 16px;
+}
+
+.template-header-row {
+  align-items: flex-start;
+}
+.publication-status {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: right;
 }

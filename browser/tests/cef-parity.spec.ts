@@ -32,7 +32,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { buildTemplate, fieldToJson, templateToJson } from '../../src/app/core/model/cedar-template';
 import { defaultToCef } from '../../src/app/core/model/field-default';
 import { Field } from '../../src/app/core/models/types';
-import { applyPreset, openDesigner } from './support';
+import { openSettings, applyPreset, openDesigner } from './support';
 
 /**
  * Properties that cross a shadow boundary by inheritance, plus the box metrics a
@@ -87,6 +87,7 @@ async function designerWithCef(page: Page, type: string): Promise<void> {
   }, template);
   // Semantic is the preset that shows Default Value, which is what mounts CEF.
   await applyPreset(page, 'semantic');
+  await openSettings(page.locator('app-field-card').first());
   await page.locator('app-field-default-value').first().waitFor({ state: 'visible' });
 }
 

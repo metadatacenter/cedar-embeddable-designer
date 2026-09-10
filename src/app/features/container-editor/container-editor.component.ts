@@ -1,3 +1,4 @@
+import { publicationStatusLabel } from '../../shared/publication-status';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
@@ -23,6 +24,7 @@ import { ElementCardComponent } from '../element-card/element-card.component';
   styleUrls: ['../../app.component.scss', './container-editor.component.scss'],
 })
 export class ContainerEditorComponent {
+  readonly publicationStatusLabel = publicationStatusLabel;
   readonly service = inject(TemplateService);
   readonly fieldView = fieldView;
   readonly childName = childName;

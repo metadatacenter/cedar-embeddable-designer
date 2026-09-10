@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openDesigner, currentTemplate, child, applyPreset } from './support';
+import { openSettings, openDesigner, currentTemplate, child, applyPreset } from './support';
 
 test('saves complete fields, edits isolated copies, and restores the library after reload', async ({ page }) => {
   const designer = await openDesigner(page);
@@ -13,7 +13,17 @@ test('saves complete fields, edits isolated copies, and restores the library aft
     (node as unknown as { template: unknown }).template = template;
   }, source);
   await expect(designer.getByLabel('Field version and publication status').first()).toContainText('2.3.4');
-  await designer.getByRole('button', { name: 'Save field to library', exact: true }).first().click();
+  await expect(designer.getByRole('button', { name: 'Save field to library', exact: true })).toHaveCount(0);
+  await applyPreset(page, 'semantic');
+  await designer.getByRole('button', { name: 'Field Designer', exact: true }).click();
+  await designer
+    .locator('app-field-designer')
+    .getByLabel('Import field or specification')
+    .setInputFiles({
+      name: 'title.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify(field)),
+    });
   const library = designer.locator('app-field-designer');
   await library
     .locator('summary')
@@ -63,6 +73,6 @@ test('published first-class fields show lifecycle information while their defini
   await expect(designer.getByLabel('Field version and publication status').first()).toContainText('1.2.0');
   await expect(designer.getByLabel('Field version and publication status').first()).toContainText('Published');
   await expect(designer.getByPlaceholder('Enter field name').first()).toBeDisabled();
-  await designer.locator('app-field-settings').first().getByText('Field identity', { exact: false }).click();
+  await openSettings(designer.locator('app-field-card').first(), 'Field identity');
   await expect(designer.locator('app-field-settings').first()).toContainText('1.2.0');
 });

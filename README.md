@@ -225,3 +225,18 @@ so what is under test is this component's half of that contract.
 ## Licence
 
 BSD 2-Clause. See [license.txt](license.txt).
+
+## Local debugging example
+
+With `npm start`, open `http://localhost:4200/?example=all-fields` (or the port
+passed to `npm start`). This loads `public/examples/all-fields-nested.json`, a
+snapshot of the local all-fields template, including NIH Grant ID and DOI in its
+single, repeated and nested collections. Edits in CED remain local until exported;
+the example page does not write back to the stack. Choose Modular to expose all
+authoring features.
+
+Field cards start compact. The grey bottom chevron reveals underline tabs for
+values, display, placement, type-specific constraints, metadata and identity.
+Tabs retain unapplied edits when switched or collapsed. Published fields allow
+inspection but keep editing controls disabled. Reusable field work remains in
+Field Designer; cards no longer offer a Save field to library action.

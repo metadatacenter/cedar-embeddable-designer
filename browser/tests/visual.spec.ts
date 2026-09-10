@@ -27,13 +27,11 @@
  * looks like when CEE is present is `cef-parity.spec.ts`, which compares it against
  * CEF's own rendering instead of against a picture.
  *
- * The disclosure rows stay shut in every shot but one. Open, `Field identity` shows
- * provenance stamps, and a timestamp in a baseline is a baseline that expires. The one
- * expanded shot masks them rather than hiding the row, so the layout is still the
- * layout an author sees.
+ * Settings stay collapsed except for the metadata-tab shot, which masks the
+ * generated property IRI while retaining the layout an author sees.
  */
 import { expect, test, type Page } from '@playwright/test';
-import { applyPreset, openDesigner } from './support';
+import { openSettings, applyPreset, openDesigner } from './support';
 
 const DESIGNER = 'cedar-embeddable-designer';
 
@@ -157,13 +155,10 @@ test.describe('the designer', () => {
    * One card with everything open, which is the state an author spends the longest in
    * and the only shot where the settings panels are visible at all.
    */
-  test('shows a text field with every panel open', async ({ page }) => {
+  test('shows a text field with metadata settings expanded', async ({ page }) => {
     const designer = await designerShowing(page, ['Text']);
     const card = designer.locator('[id^=field-card-]').first();
-    await page.evaluate(() => {
-      const root = document.querySelector('cedar-embeddable-designer')!.shadowRoot!;
-      for (const details of root.querySelectorAll('details')) (details as HTMLDetailsElement).open = true;
-    });
+    await openSettings(card, 'Field metadata');
 
     await expect(card).toHaveScreenshot('card-expanded.png', {
       ...SHOT,

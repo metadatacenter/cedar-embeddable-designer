@@ -1,5 +1,5 @@
 import { expect, test, Page } from '@playwright/test';
-import { applyPreset, child, currentTemplate, openDesigner, publishedTemplates } from './support';
+import { openSettings, applyPreset, child, currentTemplate, openDesigner, publishedTemplates } from './support';
 
 // By default the contract is hermetic. CEF_BUNDLE exercises the same tests against
 // a real, built CEE sibling bundle, including both nested shadow roots.
@@ -47,6 +47,7 @@ async function withFieldElement(page: Page): Promise<void> {
   }
   await openDesigner(page);
   await applyPreset(page, 'semantic');
+  await openSettings(page.locator('app-field-card').first());
   if (process.env.CEF_BUNDLE) {
     await page.addScriptTag({ path: process.env.CEF_BUNDLE });
     await page.waitForFunction(() => !!customElements.get('cedar-embeddable-field'));
@@ -83,6 +84,7 @@ test('opening a saved template supplies its text default to CEF', async ({ page 
   await page.evaluate((template) => {
     (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
   }, template);
+  await openSettings(page.locator('app-field-card').first());
   const input = page
     .locator('.field-drop-item')
     .first()
@@ -99,6 +101,7 @@ test('a missing CEF leaves saved defaults intact and offers no substitute input'
     (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
   }, template);
   await applyPreset(page, 'semantic');
+  await openSettings(page.locator('app-field-card').first());
   const control = designer.locator('.field-drop-item').first().locator('app-field-default-value');
   await expect(control.getByRole('status')).toHaveText('Default value editor is unavailable.');
   await expect(control.locator('input')).toHaveCount(0);

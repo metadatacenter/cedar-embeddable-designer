@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openDesigner, currentTemplate } from './support';
+import { openSettings, openDesigner, currentTemplate } from './support';
 
 test('published fields are visibly read-only while draft fields remain editable', async ({ page }) => {
   await openDesigner(page);
@@ -16,8 +16,7 @@ test('published fields are visibly read-only while draft fields remain editable'
   await expect(card.getByPlaceholder('Enter field name')).toBeDisabled();
   await expect(card.getByLabel('Requirement')).toBeDisabled();
   await expect(card.locator('app-field-card button').first()).toBeDisabled();
-  const metadata = card.locator('details').filter({ has: page.getByText('Field metadata', { exact: false }) });
-  await metadata.locator('summary').click();
+  const metadata = await openSettings(card, 'Field metadata');
   await expect(metadata.getByLabel('Preferred label', { exact: true })).toBeDisabled();
   await expect(metadata.getByRole('button', { name: 'Apply' })).toBeDisabled();
   await page.locator('.field-drop-item').nth(1).getByPlaceholder('Enter field name').fill('Draft changed');

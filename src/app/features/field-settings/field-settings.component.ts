@@ -20,6 +20,43 @@ import { TemplateService } from '../../core/services/template.service';
 })
 export class FieldSettingsComponent implements OnChanges {
   @Input({ required: true }) field!: Field;
+  @Input() hasValues = false;
+  @Input() hasPlacement = false;
+  expanded = false;
+  activeTab = 'Display';
+  get tabs(): string[] {
+    return [
+      ...(this.hasValues ? ['Values'] : []),
+      ...(this.multiple ? ['Occurrences'] : []),
+      'Display',
+      ...(this.hasPlacement ? ['Placement'] : []),
+      ...(this.accepts('textLength') ? ['Text constraints'] : []),
+      ...(this.accepts('numericBounds') ? ['Numeric constraints'] : []),
+      ...(this.accepts('temporalPrecision') ? ['Temporal settings'] : []),
+      ...(this.accepts('mediaDimensions') ? ['Media size'] : []),
+      'Field metadata',
+      'Field identity',
+    ];
+  }
+  get selectedTab(): string {
+    return this.tabs.includes(this.activeTab) ? this.activeTab : this.tabs[0];
+  }
+  selectTab(tab: string): void {
+    this.activeTab = tab;
+  }
+  onTabKey(event: KeyboardEvent, index: number): void {
+    const tabs = this.tabs;
+    let next = index;
+    if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+    else if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = tabs.length - 1;
+    else return;
+    event.preventDefault();
+    this.selectTab(tabs[next]);
+    const parent = (event.currentTarget as HTMLElement).parentElement;
+    parent?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next]?.focus();
+  }
   readonly service = inject(TemplateService);
   schemaTitle = '';
   schemaDescription = '';

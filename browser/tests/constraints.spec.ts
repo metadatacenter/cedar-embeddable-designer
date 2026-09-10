@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { applyPreset, child, clickCentred, currentTemplate, openDesigner } from './support';
+import { openSettings, applyPreset, child, clickCentred, currentTemplate, openDesigner } from './support';
 
 /**
  * Choosing what constrains a field, which is the designer's reason to exist.
@@ -17,6 +17,8 @@ async function openConstraintPanel(page: import('@playwright/test').Page) {
   await applyPreset(page, 'semantic');
   await designer.getByRole('button', { name: /Add Field/ }).click();
   await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
+  await expect(designer.locator('app-controlled-term-config')).toBeAttached();
+  await openSettings(designer.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') }));
   return designer.locator('app-controlled-term-config');
 }
 
@@ -32,6 +34,8 @@ test('says what is missing when the host has not loaded the picker', async ({ pa
   await designer.getByRole('button', { name: /Add Field/ }).click();
   await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
 
+  await expect(designer.locator('app-controlled-term-config')).toBeAttached();
+  await openSettings(designer.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') }));
   const panel = designer.locator('app-controlled-term-config');
   // A host that has not loaded the picker is a normal state rather than a fault,
   // so the panel names what it needs instead of offering a search that cannot run.
@@ -223,6 +227,8 @@ test('the real picker preserves saved actions and explicitly clears an invalid d
     checked = true;
     return route.fulfill({ json: { collection: [] } });
   });
+  await expect(designer.locator('app-controlled-term-config')).toBeAttached();
+  await openSettings(designer.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') }));
   const panel = designer.locator('app-controlled-term-config');
   if (process.env.CEF_BUNDLE) {
     const summary = panel.locator('cedar-embeddable-field');

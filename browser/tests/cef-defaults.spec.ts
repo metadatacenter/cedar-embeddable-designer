@@ -2,7 +2,7 @@ import { fieldNode, newNodeId } from '../../src/app/core/model/container-draft';
 import { expect, test, Page } from '@playwright/test';
 import { buildTemplate, templateToJson, newContainer, buildContainer } from '../../src/app/core/model/cedar-template';
 import { Field } from '../../src/app/core/models/types';
-import { applyPreset, child, currentTemplate, openDesigner, openPreview } from './support';
+import { openSettings, applyPreset, child, currentTemplate, openDesigner, openPreview } from './support';
 
 // CI supplies a pinned real sibling; local runs opt in by setting CEF_BUNDLE.
 async function openField(page: Page, type: string, extra: Partial<Field> = {}, query = '', loadBundle = true) {
@@ -35,6 +35,7 @@ async function openField(page: Page, type: string, extra: Partial<Field> = {}, q
     (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
   }, template);
   await applyPreset(page, 'semantic');
+  await openSettings(page.locator('app-field-card').first());
   return page.locator('app-field-default-value');
 }
 async function constraints(page: Page) {
@@ -59,6 +60,7 @@ for (const [type, text, stored] of [
     await page.evaluate((template) => {
       (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
     }, saved);
+    await openSettings(page.locator('app-field-card').first());
     await expect(input).toHaveValue(text);
     await input.fill('');
     await expect.poll(async () => (await constraints(page))['defaultValue']).toBeUndefined();
@@ -67,10 +69,7 @@ for (const [type, text, stored] of [
 
 test('real CEE preview honors deployment display overrides over field metadata', async ({ page }) => {
   await openField(page, 'shortText', { preferredLabel: 'Semantic label', helpText: 'Artifact description' });
-  const section = page
-    .locator('app-field-settings details')
-    .filter({ has: page.locator('summary', { hasText: /^Display / }) });
-  await section.locator('summary').click();
+  const section = await openSettings(page.locator('app-field-card').first(), 'Display');
   await section.getByLabel('Display label', { exact: true }).fill('Deployment heading');
   await section.getByLabel('Display description', { exact: true }).fill('Deployment help');
   await section.getByRole('button', { name: 'Apply', exact: true }).click();
@@ -116,6 +115,7 @@ test('time default comes from time segments and restores on reopen', async ({ pa
   await page.evaluate((template) => {
     (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
   }, saved);
+  await openSettings(page.locator('app-field-card').first());
   await expect(control.getByRole('textbox', { name: 'Hour', exact: true })).toHaveValue('14');
   await expect(control.getByRole('textbox', { name: 'Minute', exact: true })).toHaveValue('30');
 });
@@ -299,6 +299,7 @@ test('an unfinished controlled-term field stays controlled when reopened', async
   await page.evaluate((template) => {
     (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
   }, before);
+  await openSettings(page.locator('app-field-card').first());
   await expect(page.locator('app-controlled-term-config')).toBeVisible();
 });
 

@@ -1,241 +1,366 @@
-@if (multiple) {
-  <details class="settings">
-    <summary>Occurrences <span>minimum and maximum values</span></summary>
-    <form (ngSubmit)="saveBounds()" class="row">
-      <label
-        >Minimum<input type="number" name="min" min="0" step="1" [(ngModel)]="min" placeholder="Automatic"
-      /></label>
-      <label
-        >Maximum<input type="number" name="max" min="0" step="1" [(ngModel)]="max" placeholder="Unlimited"
-      /></label>
-      <button type="submit">Apply</button>
-    </form>
-    @if (error) {
-      <p role="alert">{{ error }}</p>
-    }
-  </details>
-}
-
-<details class="settings">
-  <summary>Display <span>labels and layout</span></summary>
-  <form (ngSubmit)="saveLayout()" class="row">
-    <label>Display label<input name="displayLabel" [(ngModel)]="displayLabel" placeholder="Field name" /></label>
-    <label
-      >Display description<input name="displayDescription" [(ngModel)]="displayDescription" placeholder="Field help"
-    /></label>
-    <label class="check"><input type="checkbox" name="hidden" [(ngModel)]="hidden" />Hidden</label>
-    @if (dynamic) {
-      <label class="check"
-        ><input type="checkbox" name="continue" [(ngModel)]="continuePreviousLine" />Continue previous line</label
+<div [hidden]="!expanded" [id]="'field-settings-' + field.id">
+  <div class="tabs" role="tablist" aria-label="Field settings">
+    @for (tab of tabs; track tab; let index = $index) {
+      <button
+        type="button"
+        role="tab"
+        [id]="'field-tab-' + field.id + '-' + tab.replaceAll(' ', '-')"
+        [attr.aria-controls]="'field-panel-' + field.id + '-' + tab.replaceAll(' ', '-')"
+        [attr.aria-selected]="selectedTab === tab"
+        [tabIndex]="selectedTab === tab ? 0 : -1"
+        (click)="selectTab(tab)"
+        (keydown)="onTabKey($event, index)"
       >
+        {{ tab }}
+      </button>
     }
-    <button type="submit">Apply</button>
-  </form>
-  @if (error) {
-    <p role="alert">{{ error }}</p>
+  </div>
+  @if (hasPlacement) {
+    <section
+      role="tabpanel"
+      [hidden]="selectedTab !== 'Placement'"
+      [id]="'field-panel-' + field.id + '-Placement'"
+      [attr.aria-labelledby]="'field-tab-' + field.id + '-Placement'"
+    >
+      <ng-content select="[field-placement]" />
+    </section>
   }
-</details>
+  @if (hasValues) {
+    <section
+      role="tabpanel"
+      [hidden]="selectedTab !== 'Values'"
+      [id]="'field-panel-' + field.id + '-Values'"
+      [attr.aria-labelledby]="'field-tab-' + field.id + '-Values'"
+    >
+      <ng-content select="[field-values]" />
+    </section>
+  }
+  @if (multiple) {
+    <section
+      class="settings"
+      role="tabpanel"
+      [hidden]="selectedTab !== 'Occurrences'"
+      [id]="'field-panel-' + field.id + '-Occurrences'"
+      [attr.aria-labelledby]="'field-tab-' + field.id + '-Occurrences'"
+    >
+      <form (ngSubmit)="saveBounds()" class="row">
+        <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields">
+          <label
+            >Minimum<input type="number" name="min" min="0" step="1" [(ngModel)]="min" placeholder="Automatic"
+          /></label>
+          <label
+            >Maximum<input type="number" name="max" min="0" step="1" [(ngModel)]="max" placeholder="Unlimited"
+          /></label>
+          <button type="submit">Apply</button>
+        </fieldset>
+      </form>
+      @if (error) {
+        <p role="alert">{{ error }}</p>
+      }
+    </section>
+  }
 
-@if (accepts('textLength')) {
-  <details class="settings">
-    <summary>Text constraints <span>length and pattern</span></summary>
-    <form (ngSubmit)="saveText()" class="row">
-      <label
-        >Minimum length<input name="minLength" type="number" min="0" step="1" [(ngModel)]="text.minLength"
-      /></label>
-      <label
-        >Maximum length<input name="maxLength" type="number" min="0" step="1" [(ngModel)]="text.maxLength"
-      /></label>
-      <label
-        >Regular expression<input class="wide" name="regex" [(ngModel)]="text.regex" placeholder="e.g. ^[A-Z]+$"
-      /></label>
-      <button type="submit">Apply</button>
-    </form>
-    @if (error) {
-      <p role="alert">{{ error }}</p>
-    }
-  </details>
-}
-
-@if (accepts('numericBounds')) {
-  <details class="settings">
-    <summary>Numeric constraints <span>datatype, range and units</span></summary>
-    <form (ngSubmit)="saveNumeric()" class="row">
-      <label
-        >Datatype<select name="numericType" aria-label="Datatype" [(ngModel)]="numeric.type">
-          @for (type of numericTypes; track type) {
-            <option [value]="type">{{ type }}</option>
-          }
-        </select></label
-      >
-      <label>Minimum value<input name="numericMin" type="number" step="any" [(ngModel)]="numeric.min" /></label>
-      <label>Maximum value<input name="numericMax" type="number" step="any" [(ngModel)]="numeric.max" /></label>
-      <label
-        >Decimal places<input name="decimalPlaces" type="number" min="0" step="1" [(ngModel)]="numeric.decimalPlaces"
-      /></label>
-      <label>Unit of measure<input name="unit" [(ngModel)]="numeric.unit" placeholder="e.g. mg" /></label>
-      <button type="submit">Apply</button>
-    </form>
-    @if (error) {
-      <p role="alert">{{ error }}</p>
-    }
-  </details>
-}
-
-@if (accepts('temporalPrecision')) {
-  <details class="settings">
-    <summary>Temporal settings <span>datatype, precision and time display</span></summary>
-    <form (ngSubmit)="saveTemporal()" class="row">
-      <label
-        >Temporal datatype<select
-          name="temporalType"
-          aria-label="Temporal datatype"
-          [ngModel]="temporal.type"
-          (ngModelChange)="changeTemporalType($event)"
-        >
-          <option value="xsd:date">Date</option>
-          <option value="xsd:time">Time</option>
-          <option value="xsd:dateTime">Date and time</option>
-        </select></label
-      >
-      <label
-        >Precision<select name="granularity" aria-label="Precision" [(ngModel)]="temporal.granularity">
-          @for (value of granularities; track value) {
-            <option [value]="value">{{ value === 'decimalSecond' ? 'Fractional second' : value }}</option>
-          }
-        </select></label
-      >
-      @if (temporal.type !== 'xsd:date') {
+  <section
+    class="settings"
+    role="tabpanel"
+    [hidden]="selectedTab !== 'Display'"
+    [id]="'field-panel-' + field.id + '-Display'"
+    [attr.aria-labelledby]="'field-tab-' + field.id + '-Display'"
+  >
+    <form (ngSubmit)="saveLayout()" class="row">
+      <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields">
+        <label>Display label<input name="displayLabel" [(ngModel)]="displayLabel" placeholder="Field name" /></label>
         <label
-          >Time format<select name="timeFormat" aria-label="Time format" [(ngModel)]="temporal.inputTimeFormat">
-            <option [ngValue]="null">Automatic</option>
-            <option value="12h">12 hour</option>
-            <option value="24h">24 hour</option>
-          </select></label
-        >
-        <label class="check"
-          ><input type="checkbox" name="timezone" [(ngModel)]="temporal.timezoneEnabled" />Show timezone</label
-        >
-      }
-      <button type="submit">Apply</button>
+          >Display description<input
+            name="displayDescription"
+            [(ngModel)]="displayDescription"
+            placeholder="Field help"
+        /></label>
+        <label class="check"><input type="checkbox" name="hidden" [(ngModel)]="hidden" />Hidden</label>
+        @if (dynamic) {
+          <label class="check"
+            ><input type="checkbox" name="continue" [(ngModel)]="continuePreviousLine" />Continue previous line</label
+          >
+        }
+        <button type="submit">Apply</button>
+      </fieldset>
     </form>
     @if (error) {
       <p role="alert">{{ error }}</p>
     }
-  </details>
-}
+  </section>
 
-@if (accepts('mediaDimensions')) {
-  <details class="settings">
-    <summary>Media size <span>dimensions in pixels</span></summary>
-    <form (ngSubmit)="saveMedia()" class="row">
-      <label
-        >Width<input type="number" name="width" min="1" step="1" [(ngModel)]="width" placeholder="Automatic"
-      /></label>
-      <label
-        >Height<input type="number" name="height" min="1" step="1" [(ngModel)]="height" placeholder="Automatic"
-      /></label>
-      <button type="submit">Apply</button>
-    </form>
-    @if (error) {
-      <p role="alert">{{ error }}</p>
-    }
-  </details>
-}
-
-<details class="settings">
-  <summary>Field metadata <span>labels, identifiers and annotations</span></summary>
-  <form (ngSubmit)="saveMetadata()">
-    <div class="row">
-      <label>Property name<input name="deploymentName" [(ngModel)]="deploymentName" /></label>
-      <label>Schema title<input name="schemaTitle" [(ngModel)]="schemaTitle" /></label>
-      <label
-        >Schema description<textarea name="schemaDescription" [(ngModel)]="schemaDescription" rows="2"></textarea>
-      </label>
-      <label>Preferred label<input name="preferredLabel" [(ngModel)]="preferredLabel" /></label>
-      <label>Identifier<input name="schemaIdentifier" [(ngModel)]="schemaIdentifier" /></label>
-      <label>Language<input name="language" [(ngModel)]="language" placeholder="e.g. en" /></label>
-      @if (dynamic) {
-        <label>Property IRI<input class="wide" name="propertyIri" [(ngModel)]="propertyIri" /></label>
+  @if (accepts('textLength')) {
+    <section
+      class="settings"
+      role="tabpanel"
+      [hidden]="selectedTab !== 'Text constraints'"
+      [id]="'field-panel-' + field.id + '-Text-constraints'"
+      [attr.aria-labelledby]="'field-tab-' + field.id + '-Text-constraints'"
+    >
+      <form (ngSubmit)="saveText()" class="row">
+        <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields">
+          <label
+            >Minimum length<input name="minLength" type="number" min="0" step="1" [(ngModel)]="text.minLength"
+          /></label>
+          <label
+            >Maximum length<input name="maxLength" type="number" min="0" step="1" [(ngModel)]="text.maxLength"
+          /></label>
+          <label
+            >Regular expression<input class="wide" name="regex" [(ngModel)]="text.regex" placeholder="e.g. ^[A-Z]+$"
+          /></label>
+          <button type="submit">Apply</button>
+        </fieldset>
+      </form>
+      @if (error) {
+        <p role="alert">{{ error }}</p>
       }
-      <label
-        >Alternate labels<textarea
-          rows="2"
-          name="alternateLabels"
-          [(ngModel)]="alternateLabels"
-          placeholder="One label per line"
-        ></textarea>
-      </label>
-    </div>
-    @if (annotations.length) {
-      <!--
+    </section>
+  }
+
+  @if (accepts('numericBounds')) {
+    <section
+      class="settings"
+      role="tabpanel"
+      [hidden]="selectedTab !== 'Numeric constraints'"
+      [id]="'field-panel-' + field.id + '-Numeric-constraints'"
+      [attr.aria-labelledby]="'field-tab-' + field.id + '-Numeric-constraints'"
+    >
+      <form (ngSubmit)="saveNumeric()" class="row">
+        <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields">
+          <label
+            >Datatype<select name="numericType" aria-label="Datatype" [(ngModel)]="numeric.type">
+              @for (type of numericTypes; track type) {
+                <option [value]="type">{{ type }}</option>
+              }
+            </select></label
+          >
+          <label>Minimum value<input name="numericMin" type="number" step="any" [(ngModel)]="numeric.min" /></label>
+          <label>Maximum value<input name="numericMax" type="number" step="any" [(ngModel)]="numeric.max" /></label>
+          <label
+            >Decimal places<input
+              name="decimalPlaces"
+              type="number"
+              min="0"
+              step="1"
+              [(ngModel)]="numeric.decimalPlaces"
+          /></label>
+          <label>Unit of measure<input name="unit" [(ngModel)]="numeric.unit" placeholder="e.g. mg" /></label>
+          <button type="submit">Apply</button>
+        </fieldset>
+      </form>
+      @if (error) {
+        <p role="alert">{{ error }}</p>
+      }
+    </section>
+  }
+
+  @if (accepts('temporalPrecision')) {
+    <section
+      class="settings"
+      role="tabpanel"
+      [hidden]="selectedTab !== 'Temporal settings'"
+      [id]="'field-panel-' + field.id + '-Temporal-settings'"
+      [attr.aria-labelledby]="'field-tab-' + field.id + '-Temporal-settings'"
+    >
+      <form (ngSubmit)="saveTemporal()" class="row">
+        <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields">
+          <label
+            >Temporal datatype<select
+              name="temporalType"
+              aria-label="Temporal datatype"
+              [ngModel]="temporal.type"
+              (ngModelChange)="changeTemporalType($event)"
+            >
+              <option value="xsd:date">Date</option>
+              <option value="xsd:time">Time</option>
+              <option value="xsd:dateTime">Date and time</option>
+            </select></label
+          >
+          <label
+            >Precision<select name="granularity" aria-label="Precision" [(ngModel)]="temporal.granularity">
+              @for (value of granularities; track value) {
+                <option [value]="value">{{ value === 'decimalSecond' ? 'Fractional second' : value }}</option>
+              }
+            </select></label
+          >
+          @if (temporal.type !== 'xsd:date') {
+            <label
+              >Time format<select name="timeFormat" aria-label="Time format" [(ngModel)]="temporal.inputTimeFormat">
+                <option [ngValue]="null">Automatic</option>
+                <option value="12h">12 hour</option>
+                <option value="24h">24 hour</option>
+              </select></label
+            >
+            <label class="check"
+              ><input type="checkbox" name="timezone" [(ngModel)]="temporal.timezoneEnabled" />Show timezone</label
+            >
+          }
+          <button type="submit">Apply</button>
+        </fieldset>
+      </form>
+      @if (error) {
+        <p role="alert">{{ error }}</p>
+      }
+    </section>
+  }
+
+  @if (accepts('mediaDimensions')) {
+    <section
+      class="settings"
+      role="tabpanel"
+      [hidden]="selectedTab !== 'Media size'"
+      [id]="'field-panel-' + field.id + '-Media-size'"
+      [attr.aria-labelledby]="'field-tab-' + field.id + '-Media-size'"
+    >
+      <form (ngSubmit)="saveMedia()" class="row">
+        <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields">
+          <label
+            >Width<input type="number" name="width" min="1" step="1" [(ngModel)]="width" placeholder="Automatic"
+          /></label>
+          <label
+            >Height<input type="number" name="height" min="1" step="1" [(ngModel)]="height" placeholder="Automatic"
+          /></label>
+          <button type="submit">Apply</button>
+        </fieldset>
+      </form>
+      @if (error) {
+        <p role="alert">{{ error }}</p>
+      }
+    </section>
+  }
+
+  <section
+    class="settings"
+    role="tabpanel"
+    [hidden]="selectedTab !== 'Field metadata'"
+    [id]="'field-panel-' + field.id + '-Field-metadata'"
+    [attr.aria-labelledby]="'field-tab-' + field.id + '-Field-metadata'"
+  >
+    <form (ngSubmit)="saveMetadata()">
+      <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields">
+        <div class="row">
+          <label>Property name<input name="deploymentName" [(ngModel)]="deploymentName" /></label>
+          <label>Schema title<input name="schemaTitle" [(ngModel)]="schemaTitle" /></label>
+          <label
+            >Schema description<textarea name="schemaDescription" [(ngModel)]="schemaDescription" rows="2"></textarea>
+          </label>
+          <label>Preferred label<input name="preferredLabel" [(ngModel)]="preferredLabel" /></label>
+          <label>Identifier<input name="schemaIdentifier" [(ngModel)]="schemaIdentifier" /></label>
+          <label>Language<input name="language" [(ngModel)]="language" placeholder="e.g. en" /></label>
+          @if (dynamic) {
+            <label>Property IRI<input class="wide" name="propertyIri" [(ngModel)]="propertyIri" /></label>
+          }
+          <label
+            >Alternate labels<textarea
+              rows="2"
+              name="alternateLabels"
+              [(ngModel)]="alternateLabels"
+              placeholder="One label per line"
+            ></textarea>
+          </label>
+        </div>
+        @if (annotations.length) {
+          <!--
         Scrolls sideways rather than being crushed. Three text boxes and a button do
         not fit a card 208px wide, and shrinking them to fit would leave none of them
         usable — so the table keeps its width and the container carries the overflow.
       -->
-      <div class="annotations-scroll">
-        <table class="annotations">
-          <caption>
-            Annotations
-          </caption>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Value</th>
-              <th><span class="sr-only">Actions</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (annotation of annotations; track $index; let i = $index) {
-              <tr>
-                <td>
-                  <input [name]="'annotationName' + i" aria-label="Annotation name" [(ngModel)]="annotation.name" />
-                </td>
-                <td>
-                  <select [name]="'annotationKind' + i" aria-label="Annotation type" [(ngModel)]="annotation.kind">
-                    <option value="literal">Text</option>
-                    <option value="iri">IRI</option>
-                  </select>
-                </td>
-                <td>
-                  <input [name]="'annotationValue' + i" aria-label="Annotation value" [(ngModel)]="annotation.value" />
-                </td>
-                <td><button type="button" aria-label="Remove annotation" (click)="removeAnnotation(i)">×</button></td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+          <div class="annotations-scroll">
+            <table class="annotations">
+              <caption>
+                Annotations
+              </caption>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Value</th>
+                  <th><span class="sr-only">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (annotation of annotations; track $index; let i = $index) {
+                  <tr>
+                    <td>
+                      <input [name]="'annotationName' + i" aria-label="Annotation name" [(ngModel)]="annotation.name" />
+                    </td>
+                    <td>
+                      <select [name]="'annotationKind' + i" aria-label="Annotation type" [(ngModel)]="annotation.kind">
+                        <option value="literal">Text</option>
+                        <option value="iri">IRI</option>
+                      </select>
+                    </td>
+                    <td>
+                      <input
+                        [name]="'annotationValue' + i"
+                        aria-label="Annotation value"
+                        [(ngModel)]="annotation.value"
+                      />
+                    </td>
+                    <td>
+                      <button type="button" aria-label="Remove annotation" (click)="removeAnnotation(i)">×</button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+        <div class="row">
+          <button type="button" (click)="addAnnotation()">Add annotation</button>
+          <button type="submit">Apply</button>
+        </div>
+      </fieldset>
+    </form>
+    @if (error) {
+      <p role="alert">{{ error }}</p>
     }
-    <div class="row">
-      <button type="button" (click)="addAnnotation()">Add annotation</button>
-      <button type="submit">Apply</button>
-    </div>
-  </form>
-  @if (error) {
-    <p role="alert">{{ error }}</p>
-  }
-</details>
+  </section>
 
-<details class="settings">
-  <summary>Field identity <span>version, publication and provenance</span></summary>
-  <dl class="identity">
-    <dt>Field IRI</dt>
-    <dd>{{ field.atId || 'Not assigned' }}</dd>
-    <dt>Version</dt>
-    <dd>{{ artifact.version || 'Not specified' }}</dd>
-    <dt>Publication status</dt>
-    <dd>{{ artifact.publicationStatus || 'Not specified' }}</dd>
-    <dt>Model version</dt>
-    <dd>{{ artifact.schemaVersion || 'Not specified' }}</dd>
-    <dt>Created</dt>
-    <dd>{{ artifact.createdOn || 'Not recorded' }} {{ artifact.createdBy }}</dd>
-    <dt>Modified</dt>
-    <dd>{{ artifact.modifiedOn || 'Not recorded' }} {{ artifact.modifiedBy }}</dd>
-    <dt>Derived from</dt>
-    <dd>{{ artifact.derivedFrom || 'Not recorded' }}</dd>
-    <dt>Previous version</dt>
-    <dd>{{ artifact.previousVersion || 'Not recorded' }}</dd>
-  </dl>
-</details>
+  <section
+    class="settings"
+    role="tabpanel"
+    [hidden]="selectedTab !== 'Field identity'"
+    [id]="'field-panel-' + field.id + '-Field-identity'"
+    [attr.aria-labelledby]="'field-tab-' + field.id + '-Field-identity'"
+  >
+    <dl class="identity">
+      <dt>Field IRI</dt>
+      <dd>{{ field.atId || 'Not assigned' }}</dd>
+      <dt>Version</dt>
+      <dd>{{ artifact.version || 'Not specified' }}</dd>
+      <dt>Publication status</dt>
+      <dd>{{ artifact.publicationStatus || 'Not specified' }}</dd>
+      <dt>Model version</dt>
+      <dd>{{ artifact.schemaVersion || 'Not specified' }}</dd>
+      <dt>Created</dt>
+      <dd>{{ artifact.createdOn || 'Not recorded' }} {{ artifact.createdBy }}</dd>
+      <dt>Modified</dt>
+      <dd>{{ artifact.modifiedOn || 'Not recorded' }} {{ artifact.modifiedBy }}</dd>
+      <dt>Derived from</dt>
+      <dd>{{ artifact.derivedFrom || 'Not recorded' }}</dd>
+      <dt>Previous version</dt>
+      <dd>{{ artifact.previousVersion || 'Not recorded' }}</dd>
+    </dl>
+  </section>
+</div>
+<button
+  type="button"
+  class="settings-toggle"
+  [attr.aria-expanded]="expanded"
+  [attr.aria-controls]="'field-settings-' + field.id"
+  [attr.aria-label]="expanded ? 'Collapse field settings' : 'Expand field settings'"
+  (click)="expanded = !expanded"
+>
+  <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" [class.expanded]="expanded">
+    <path
+      d="m6 9 6 6 6-6"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+</button>

@@ -1,3 +1,4 @@
+import { publicationStatusLabel } from '../../shared/publication-status';
 import { Component, input, inject, signal, effect } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ElementNode, Placement } from '../../core/model/container-draft';
@@ -9,9 +10,18 @@ import { TemplateService } from '../../core/services/template.service';
   template: `<section aria-label="Element" class="element-card">
     <header>
       <strong>{{ node().definition.name }}</strong
-      ><span>Element · {{ node().definition.children.length }} children</span>
+      ><span
+        >Element · {{ node().definition.children.length }} children ·
+        {{
+          publicationStatusLabel(
+            node().definition.metadata ? node().definition.metadata?.artifact?.publicationStatus : 'bibo:draft'
+          )
+        }}</span
+      >
     </header>
-    <p>{{ node().definition.description }}</p>
+    @if (node().definition.description) {
+      <p>{{ node().definition.description }}</p>
+    }
     <div class="actions">
       <button type="button" (click)="service.openContainer(node().id)">Edit Element</button>
       <button type="button" (click)="service.duplicateElement(node().id)">Duplicate Element</button>
@@ -31,13 +41,15 @@ import { TemplateService } from '../../core/services/template.service';
           <option value="recommended">Recommended</option>
         </select></label
       >
-      <label><input type="checkbox" [(ngModel)]="draft().allowMultiple" /> Allow multiple</label>
+      <label class="check"><input type="checkbox" [(ngModel)]="draft().allowMultiple" /> Allow multiple</label>
       @if (draft().allowMultiple) {
         <label>Minimum occurrences <input type="number" min="0" step="1" [(ngModel)]="draft().minItems" /></label>
         <label>Maximum occurrences <input type="number" min="0" step="1" [(ngModel)]="draft().maxItems" /></label>
       }
-      <label><input type="checkbox" [(ngModel)]="draft().hidden" /> Hidden</label>
-      <label><input type="checkbox" [(ngModel)]="draft().continuePreviousLine" /> Continue previous line</label>
+      <label class="check"><input type="checkbox" [(ngModel)]="draft().hidden" /> Hidden</label>
+      <label class="check"
+        ><input type="checkbox" [(ngModel)]="draft().continuePreviousLine" /> Continue previous line</label
+      >
       @if (error()) {
         <p role="alert">{{ error() }}</p>
       }
@@ -54,14 +66,22 @@ import { TemplateService } from '../../core/services/template.service';
         background: white;
         border: 1px solid #b7d6db;
         border-radius: 0.5rem;
-        padding: 1rem;
+        padding: 8px 16px;
       }
       header,
       .actions {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.75rem;
+        gap: 0.5rem;
         justify-content: space-between;
+        align-items: center;
+      }
+      p {
+        margin: 4px 0;
+      }
+      .actions {
+        justify-content: flex-start;
+        margin-top: 4px;
       }
       header span {
         color: #64748b;
@@ -88,6 +108,23 @@ import { TemplateService } from '../../core/services/template.service';
         width: 100%;
         box-sizing: border-box;
       }
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .check input {
+        margin: 0;
+        width: 14px;
+        height: 14px;
+        flex: none;
+      }
+      .actions button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 30px;
+      }
       p[role='alert'] {
         color: #b91c1c;
       }
@@ -95,6 +132,7 @@ import { TemplateService } from '../../core/services/template.service';
   ],
 })
 export class ElementCardComponent {
+  readonly publicationStatusLabel = publicationStatusLabel;
   readonly node = input.required<ElementNode>();
   readonly service = inject(TemplateService);
   readonly draft = signal<Placement>({ status: 'optional', allowMultiple: false });

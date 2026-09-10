@@ -14,9 +14,17 @@ import { CedConfig } from './ced-public-api';
   template: `
     <cedar-embeddable-designer
       [config]="config"
+      [artifact]="example()"
       (templateChange)="onTemplateChange($event)"
     ></cedar-embeddable-designer>
-    <p class="dev-host__status">Last templateChange: {{ changeCount() }} event(s)</p>
+    <p class="dev-host__status">
+      @if (exampleError()) {
+        {{ exampleError() }}
+      } @else {
+        Last templateChange: {{ changeCount() }} event(s) |
+        <a href="?example=all-fields">All-fields debugging example</a>
+      }
+    </p>
   `,
   styles: [
     `
@@ -28,6 +36,9 @@ import { CedConfig } from './ced-public-api';
       cedar-embeddable-designer {
         flex: 1 1 auto;
         min-height: 0;
+      }
+      .dev-host__status a {
+        color: #a5dce3;
       }
       .dev-host__status {
         margin: 0;
@@ -63,6 +74,19 @@ export class DevHostComponent {
     bridgeBaseUrl: 'https://bridge.metadatacenter.orgx/',
   };
 
+  readonly example = signal<object | undefined>(undefined);
+  readonly exampleError = signal('');
+  constructor() {
+    if (new URLSearchParams(location.search).get('example') === 'all-fields') {
+      fetch('examples/all-fields-nested.json')
+        .then((response) => {
+          if (!response.ok) throw new Error(`Example load failed (${response.status})`);
+          return response.json();
+        })
+        .then((artifact) => this.example.set(artifact))
+        .catch((error: unknown) => this.exampleError.set(error instanceof Error ? error.message : String(error)));
+    }
+  }
   readonly changeCount = signal(0);
 
   onTemplateChange(_event: Event): void {

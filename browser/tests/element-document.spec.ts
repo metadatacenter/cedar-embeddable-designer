@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openDesigner, currentTemplate } from './support';
+import { openSettings, openDesigner, currentTemplate } from './support';
 
 test('creates, edits, exports and reopens a standalone element through the public API', async ({ page }) => {
   await openDesigner(page);
@@ -22,6 +22,7 @@ for (const width of [1280, 375]) {
   test(`creates nested elements, edits cardinality, moves a field, and reopens at ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await openDesigner(page);
+    await page.getByPlaceholder('Template name').fill('Debug template');
     await page.getByRole('button', { name: 'Basic', exact: true }).click();
     await page.getByRole('button', { name: /Modular/ }).click();
     await page.getByRole('button', { name: 'Add Element', exact: true }).click();
@@ -39,9 +40,10 @@ for (const width of [1280, 375]) {
     await child.getByRole('button', { name: 'Edit Element', exact: true }).click();
     await page.getByPlaceholder('Element name').fill('Sample');
     const path = page.getByRole('navigation', { name: 'Container path' });
-    await path.getByRole('button', { name: 'Untitled Template', exact: true }).click();
+    await path.getByRole('button', { name: 'Debug template', exact: true }).click();
     const field = page.locator('.field-drop-item').first();
-    await field.getByLabel('Move child to container').selectOption({ label: 'Untitled Template / Element / sample' });
+    await openSettings(field, 'Placement');
+    await field.getByLabel('Move child to container').selectOption({ label: 'Debug template / Element / sample' });
     if (width < 768) {
       await page.locator('app-element-card').getByRole('button', { name: 'Edit Element', exact: true }).click();
       await page.locator('app-element-card').getByRole('button', { name: 'Edit Element', exact: true }).click();

@@ -1525,10 +1525,7 @@ export function elementView(node: ElementNode): Field {
   };
 }
 
-export function newContainer(
-  kind: 'template' | 'element',
-  name = kind === 'template' ? 'Untitled Template' : 'Untitled Element',
-): ContainerDraft {
+export function newContainer(kind: 'template' | 'element', name = ''): ContainerDraft {
   return {
     id: newNodeId(),
     kind,

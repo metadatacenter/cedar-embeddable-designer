@@ -1,3 +1,4 @@
+import { publicationStatusLabel } from '../../shared/publication-status';
 import { FieldSettingsComponent } from '../field-settings/field-settings.component';
 import { Component, Input, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -33,9 +34,10 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './field-card.component.html',
-  styleUrl: '../../shared/_field-error.scss',
+  styleUrls: ['../../shared/_field-error.scss', './field-card.component.scss'],
 })
 export class FieldCardComponent {
+  readonly publicationStatusLabel = publicationStatusLabel;
   @Input() field!: Field;
   @Input() standalone = false;
 

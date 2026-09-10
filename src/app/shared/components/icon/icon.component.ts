@@ -5,6 +5,9 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   selector: 'app-icon',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [
+    ':host { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; } svg { display: block; }',
+  ],
   template: `
     <svg
       [class]="className"
@@ -15,7 +18,6 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       stroke-linejoin="round"
       viewBox="0 0 24 24"
       [innerHTML]="sanitizedSvg"
-      style="display: inline-block; vertical-align: middle;"
     ></svg>
   `,
 })

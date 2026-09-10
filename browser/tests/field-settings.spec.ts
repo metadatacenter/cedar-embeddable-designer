@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { openDesigner, currentTemplate } from './support';
+import { openSettings, openDesigner, currentTemplate } from './support';
 
 test('authors occurrence limits and rejects an inverted range', async ({ page }) => {
   await openDesigner(page);
   const card = page.locator('#field-card-1');
   await card.getByRole('checkbox', { name: 'Allow multiple', exact: true }).check();
   const settings = card.locator('app-field-settings');
-  await settings.getByText('Occurrences', { exact: false }).click();
+  await openSettings(card, 'Occurrences');
   await settings.getByLabel('Minimum', { exact: true }).fill('2');
   await settings.getByLabel('Maximum', { exact: true }).fill('5');
   await settings.getByRole('button', { name: 'Apply', exact: true }).click();
@@ -22,8 +22,7 @@ test('authors occurrence limits and rejects an inverted range', async ({ page })
 test('writes display labels and layout settings', async ({ page }) => {
   await openDesigner(page);
   const settings = page.locator('#field-card-1 app-field-settings');
-  const section = settings.locator('details').filter({ has: page.locator('summary').filter({ hasText: 'Display' }) });
-  await section.locator('summary').click();
+  const section = await openSettings(page.locator('#field-card-1'), 'Display');
   await section.getByLabel('Display label', { exact: true }).fill('Shown title');
   await section.getByLabel('Display description', { exact: true }).fill('Shown help');
   await section.getByLabel('Hidden', { exact: true }).check();
@@ -53,10 +52,7 @@ test('authors recommended fields without marking them required', async ({ page }
 
 test('authors text constraints and rejects invalid patterns', async ({ page }) => {
   await openDesigner(page);
-  const section = page
-    .locator('#field-card-1 details')
-    .filter({ has: page.locator('summary').filter({ hasText: 'Text constraints' }) });
-  await section.locator('summary').click();
+  const section = await openSettings(page.locator('app-field-card').first(), 'Text constraints');
   await section.getByLabel('Minimum length').fill('2');
   await section.getByLabel('Maximum length').fill('8');
   await section.getByLabel('Regular expression').fill('^[A-Z]+$');
@@ -77,10 +73,7 @@ test('authors numeric datatype bounds precision and units', async ({ page }) => 
     .locator('.field-type-dropdown-container button')
     .filter({ has: page.getByText('Number', { exact: true }) })
     .click();
-  const section = card
-    .locator('details')
-    .filter({ has: page.locator('summary').filter({ hasText: 'Numeric constraints' }) });
-  await section.locator('summary').click();
+  const section = await openSettings(card, 'Numeric constraints');
   await section.getByLabel('Datatype').selectOption('xsd:int');
   await section.getByLabel('Minimum value').fill('1');
   await section.getByLabel('Maximum value').fill('12');
@@ -95,10 +88,7 @@ test('authors numeric datatype bounds precision and units', async ({ page }) => 
 test('authors datetime precision timezone and time format', async ({ page }) => {
   await openDesigner(page);
   const card = page.locator('#field-card-3');
-  const section = card
-    .locator('details')
-    .filter({ has: page.locator('summary').filter({ hasText: 'Temporal settings' }) });
-  await section.locator('summary').click();
+  const section = await openSettings(card, 'Temporal settings');
   await section.getByLabel('Temporal datatype').selectOption('xsd:dateTime');
   await section.getByLabel('Precision').selectOption('second');
   await section.getByLabel('Time format').selectOption('12h');
@@ -131,8 +121,7 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
     .locator('.field-type-dropdown-container button')
     .filter({ has: page.getByText('Image', { exact: true }) })
     .click();
-  const section = card.locator('details').filter({ has: page.getByText('Media size', { exact: false }) });
-  await section.locator('summary').click();
+  const section = await openSettings(card, 'Media size');
   await section.getByLabel('Width').fill('640');
   await section.getByLabel('Height').fill('360');
   await section.getByRole('button', { name: 'Apply' }).click();
@@ -147,6 +136,7 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
   // Named by its visible label now. It used to carry `aria-label="Rich text markup"`,
   // which said something different from the "Content" heading beside it, so the
   // control announced one name and showed another.
+  await openSettings(card, 'Values');
   await card.getByLabel('Content', { exact: true }).fill('<p>First</p>\n<p>Second</p>');
   await expect
     .poll(async () => ((await currentTemplate(page)).properties as any).Title._ui._content)
