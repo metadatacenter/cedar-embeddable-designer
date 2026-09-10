@@ -11,6 +11,7 @@ import {
 import { PreferencesService } from './preferences.service';
 import {
   DesignerTemplate,
+  ContainerMetadata,
   buildTemplate,
   newFieldIdentity,
   newTemplateIdentifier,
@@ -110,6 +111,7 @@ export class TemplateService {
   readonly templateIdentifier = signal<string>('');
   readonly templateVersion = signal<string>('0.0.1');
   readonly loadError = signal<string | null>(null);
+  private readonly containerMetadata = signal<ContainerMetadata | undefined>(undefined);
 
   readonly fields = signal<Field[]>(starterFields());
 
@@ -166,6 +168,7 @@ export class TemplateService {
     identifier: this.templateIdentifier() || this.mintedIdentifier(),
     version: this.templateVersion(),
     fields: this.fields(),
+    metadata: this.containerMetadata(),
   }));
 
   readonly template = computed(() => buildTemplate(this.designerTemplate()));
@@ -223,6 +226,7 @@ export class TemplateService {
       identifier: this.templateIdentifier(),
       version: this.templateVersion(),
       fields: this.fields(),
+      metadata: this.containerMetadata(),
     });
   }
 
@@ -488,6 +492,7 @@ export class TemplateService {
 
   resetTemplate() {
     this.loadError.set(null);
+    this.containerMetadata.set(undefined);
     this.templateName.set('Untitled Template');
     this.templateDesc.set('');
     this.templateIdentifier.set('');
@@ -525,6 +530,7 @@ export class TemplateService {
     this.templateDesc.set(state.description);
     this.templateIdentifier.set(state.identifier);
     this.templateVersion.set(state.version);
+    this.containerMetadata.set(state.metadata);
     this.fields.set(state.fields);
     this.markSaved();
   }

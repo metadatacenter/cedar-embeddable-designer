@@ -188,6 +188,22 @@ describe('TemplateService', () => {
   });
 
   describe('loading', () => {
+    it('keeps root provenance during edits and clears it for a new document', () => {
+      const source = {
+        ...service.templateJson(),
+        'bibo:status': 'bibo:published',
+        'pav:createdOn': '2026-09-01T00:00:00Z',
+      };
+      service.loadTemplate(source);
+      service.templateName.set('Renamed');
+      expect(service.templateJson()).toMatchObject({
+        'bibo:status': 'bibo:published',
+        'pav:createdOn': source['pav:createdOn'],
+      });
+      service.resetTemplate();
+      expect(service.templateJson()['bibo:status']).toBe('bibo:draft');
+      expect(service.templateJson()['pav:createdOn']).toBeNull();
+    });
     it('rejects nested content without replacing the open document or its dirty state', () => {
       service.templateName.set('Keep my edits');
       const before = service.templateJson();
