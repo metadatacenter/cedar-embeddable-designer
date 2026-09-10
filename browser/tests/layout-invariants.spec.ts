@@ -174,9 +174,17 @@ test('the whole palette lays out without clipping, escaping or drifting', async 
  * shows up nowhere else and makes every card unreachable at the right edge.
  */
 test.describe('the page never scrolls sideways', () => {
+  /*
+   * 375 is the width that earned its place. At 1280 and 768 the designer was clean,
+   * and at 375 three separate rules pushed content out: a settings label that would
+   * not shrink below its input, the header's action group, and the template header's
+   * own row — together scrolling the page 109px sideways and putting the right edge
+   * of every card out of reach. None of that was visible at the two wider sizes.
+   */
   for (const viewport of [
     { name: 'desktop', width: 1280, height: 900 },
     { name: 'narrow', width: 768, height: 900 },
+    { name: 'phone', width: 375, height: 900 },
   ]) {
     test(`at ${viewport.name}`, async ({ page }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });

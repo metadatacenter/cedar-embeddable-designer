@@ -144,7 +144,10 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
     .locator('.field-type-dropdown-container button')
     .filter({ has: page.getByText('Rich Text', { exact: true }) })
     .click();
-  await card.getByLabel('Rich text markup').fill('<p>First</p>\n<p>Second</p>');
+  // Named by its visible label now. It used to carry `aria-label="Rich text markup"`,
+  // which said something different from the "Content" heading beside it, so the
+  // control announced one name and showed another.
+  await card.getByLabel('Content', { exact: true }).fill('<p>First</p>\n<p>Second</p>');
   await expect
     .poll(async () => ((await currentTemplate(page)).properties as any).Title._ui._content)
     .toBe('<p>First</p>\n<p>Second</p>');

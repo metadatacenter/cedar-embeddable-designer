@@ -175,6 +175,7 @@
           (click)="service.deleteField(field.id)"
           class="text-gray-400 hover:text-red-600 p-0.5 transition-colors border-none bg-transparent cursor-pointer shrink-0"
           title="Delete field"
+          aria-label="Delete field"
         >
           <app-icon key="trash" className="w-4 h-4 text-gray-400 hover:text-red-600"></app-icon>
         </button>
@@ -202,6 +203,7 @@
                 (click)="service.deleteOption(field.id, optIdx)"
                 class="text-gray-400 hover:text-red-600 transition-colors cursor-pointer border-none bg-transparent flex items-center justify-center p-0.5"
                 title="Delete option"
+                aria-label="Delete option"
               >
                 <app-icon key="trash" className="w-3.5 h-3.5 text-gray-400 hover:text-red-600"></app-icon>
               </button>
@@ -247,17 +249,22 @@
   -->
     @if (contentLabel(field.type); as label) {
       <div class="mt-2.5 px-1">
-        <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5 block">{{ label }}</label>
+        <label
+          [for]="'field-content-' + field.id"
+          class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5 block"
+          >{{ label }}</label
+        >
         @if (hasMarkupContent(field.type)) {
           <textarea
+            [id]="'field-content-' + field.id"
             rows="4"
-            aria-label="Rich text markup"
             [ngModel]="field.content || ''"
             (ngModelChange)="service.updateContent(field.id, $event)"
             class="text-sm w-full border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:border-teal-600"
           ></textarea>
         } @else {
           <input
+            [id]="'field-content-' + field.id"
             type="text"
             [ngModel]="field.content || ''"
             (ngModelChange)="service.updateContent(field.id, $event)"
@@ -273,10 +280,13 @@
       <div class="space-y-2 mt-2.5 px-1 border-t border-gray-100 pt-2.5">
         @if (service.preferences().showHelpText) {
           <div>
-            <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5 block"
+            <label
+              [for]="'field-help-' + field.id"
+              class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5 block"
               >Help Text</label
             >
             <input
+              [id]="'field-help-' + field.id"
               type="text"
               [ngModel]="field.helpText || ''"
               (ngModelChange)="service.updateHelpText(field.id, $event)"
@@ -289,9 +299,16 @@
         <!-- A static field shows something rather than collecting one, so it has
            no default for a form-filler to start from. -->
         @if (service.preferences().showDefaultValue && allowsDefault(field.type)) {
-          <div>
-            <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5 block"
-              >Default Value</label
+          <!--
+            A group label rather than a `label` element: what it names is a composite
+            control — CEF, or the term picker — and not one input, so `for` has nothing
+            to point at and a bare `label` named nothing at all.
+          -->
+          <div role="group" [attr.aria-labelledby]="'field-default-label-' + field.id">
+            <span
+              [id]="'field-default-label-' + field.id"
+              class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5 block"
+              >Default Value</span
             >
             <app-field-default-value [field]="field"></app-field-default-value>
           </div>

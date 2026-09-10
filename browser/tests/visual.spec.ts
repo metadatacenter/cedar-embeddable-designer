@@ -67,6 +67,17 @@ const SHOT = {
 } as const;
 
 /**
+ * The version stamp in the header, which no baseline can hold.
+ *
+ * It comes from package.json and therefore changes on every dev build, so left
+ * visible every shot showing the header would go red for a reason no diff image could
+ * tell apart from a real one — which is exactly what teaches people to reach for
+ * --update-snapshots. CEE hides its own version stamp for the same reason. Masked
+ * rather than hidden, so the header keeps the space it occupies.
+ */
+const maskVersion = (page: Page) => [page.locator(DESIGNER).locator('.ced-version')];
+
+/**
  * A designer holding one card of each named type, and nothing else.
  *
  * The three starting fields are removed first, so each group's photograph is of that
@@ -109,7 +120,7 @@ test.describe('the designer', () => {
   for (const [group, labels] of Object.entries(GROUPS)) {
     test(`shows ${group} fields`, async ({ page }) => {
       const designer = await designerShowing(page, labels);
-      await expect(designer).toHaveScreenshot(`${group}.png`, SHOT);
+      await expect(designer).toHaveScreenshot(`${group}.png`, { ...SHOT, mask: maskVersion(page) });
     });
   }
 
@@ -121,7 +132,7 @@ test.describe('the designer', () => {
   for (const preset of ['basic', 'semantic', 'modular'] as const) {
     test(`shows a text field under the ${preset} profile`, async ({ page }) => {
       const designer = await designerShowing(page, ['Text'], preset);
-      await expect(designer).toHaveScreenshot(`profile-${preset}.png`, SHOT);
+      await expect(designer).toHaveScreenshot(`profile-${preset}.png`, { ...SHOT, mask: maskVersion(page) });
     });
   }
 
@@ -168,6 +179,6 @@ test.describe('the designer', () => {
     await page.setViewportSize({ width: 768, height: 900 });
     const designer = await designerShowing(page, GROUPS['simple-inputs']);
 
-    await expect(designer).toHaveScreenshot('narrow.png', SHOT);
+    await expect(designer).toHaveScreenshot('narrow.png', { ...SHOT, mask: maskVersion(page) });
   });
 });

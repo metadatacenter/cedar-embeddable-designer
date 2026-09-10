@@ -13,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService, FIELD_TYPES } from './core/services/template.service';
 import { Field } from './core/models/types';
+import { CED_VERSION } from './version';
 
 // Custom components
 import { IconComponent } from './shared/components/icon/icon.component';
@@ -45,6 +46,8 @@ import { FieldCardComponent } from './features/field-card/field-card.component';
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
+  /** Shown in the header, from package.json rather than a literal beside it. */
+  readonly version = CED_VERSION;
   readonly service = inject(TemplateService);
   private readonly host = inject(ElementRef<HTMLElement>);
 

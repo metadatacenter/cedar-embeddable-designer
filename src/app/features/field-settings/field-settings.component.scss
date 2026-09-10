@@ -32,6 +32,17 @@ label {
   flex-direction: column;
   gap: 2px;
   font-size: 11px;
+  /*
+   * Shrinkable, or a wide control overflows the card that holds it.
+   *
+   * A flex item will not go below its content's width without `min-width: 0`, so
+   * `.wide`'s own `max-width: 100%` had nothing to resolve against: the label grew to
+   * the input's 230px inside a card 208px wide, and both left the card. Visible only
+   * below about 900px of viewport, which is why it survived — the designer is usually
+   * looked at wide.
+   */
+  min-width: 0;
+  max-width: 100%;
 }
 input,
 select,

@@ -23,6 +23,8 @@
      */
     "isolatedModules": true,
     "esModuleInterop": true,
+    /* So `version.ts` can read the version from package.json instead of a literal. */
+    "resolveJsonModule": true,
     "experimentalDecorators": true,
     /*
      * Angular requires this false, and TypeScript defaults it to true whenever the

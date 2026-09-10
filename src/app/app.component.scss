@@ -17,7 +17,12 @@
 }
 
 .app-header__inner {
-  @apply max-w-7xl mx-auto px-6 py-1.5 flex items-center justify-between;
+  /*
+   * Wraps below roughly 900px. Without it the action group is pushed past the right
+   * edge and takes the whole page with it, so the document scrolls sideways and the
+   * fields below become unreachable at their right edge.
+   */
+  @apply max-w-7xl mx-auto px-6 py-1.5 flex flex-wrap items-center justify-between gap-y-1;
 }
 
 .app-header__brand {
@@ -29,7 +34,8 @@
 }
 
 .app-header__actions {
-  @apply flex items-center gap-4;
+  /* `min-w-0` so the group may shrink rather than insisting on its content's width. */
+  @apply flex min-w-0 flex-wrap items-center gap-4;
 }
 
 /* ─── Header Buttons ──────────────────────────────────────────────────────── */
@@ -163,15 +169,17 @@
 }
 
 .template-header-card__inputs {
-  @apply flex-1 flex flex-col gap-1;
+  /* A flex child will not go below its content without this, whatever `flex-1` says. */
+  @apply flex-1 min-w-0 flex flex-col gap-1;
 }
 
 .template-header-row {
-  @apply flex items-end gap-4 w-full;
+  /* Name, identifier and version sit on one line where there is room, and stack where there is not. */
+  @apply flex flex-wrap items-end gap-4 w-full;
 }
 
 .template-field-group {
-  @apply flex flex-col;
+  @apply flex min-w-0 flex-col;
 }
 
 .template-field-label {
