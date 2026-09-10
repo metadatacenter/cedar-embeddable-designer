@@ -1030,12 +1030,15 @@ export function templateToJson(template: Template): JsonNode {
  * rather than returning the string. An export that quietly drops a field's version or
  * its provenance is worse than one that fails: the file looks complete.
  *
- * The model library also writes a compact form, and this does not offer it. Nothing in
- * the designer asked for one, `readTemplate` cannot read what it produces — a compact
- * document has no `modelVersion` and the reader rejects it — and the check below could
- * not have verified it, so the parameter that used to select it was a way to obtain a
- * file CED could not reopen, with the guard silently not applying. Compact export needs
- * a reader before it needs a writer.
+ * The model library also writes a compact form, and this does not offer it. Compact
+ * YAML omits everything with a default, so it is an incomplete serialisation and a
+ * write-only one: the ecosystem produces it and does not consume it, and CED refuses
+ * it on input for that reason. The check below could not have covered it either, since
+ * verifying an export means reading it back.
+ *
+ * So a compact writer is not waiting on a compact reader — no reader is coming. If CED
+ * ever offers a compact export it will be a deliberate feature for something that only
+ * needs to read the values, and it will still not be a form the designer can reopen.
  */
 export function templateToYaml(template: Template): string {
   const yaml = CedarWriters.yaml().getStrict().getTemplateWriter().getAsYamlString(template, false);
@@ -1064,12 +1067,32 @@ export function templateToYaml(template: Template): string {
 }
 
 /**
+ * Whether a YAML document is the compact form, which is the form to refuse.
+ *
+ * Compact YAML omits everything that has a default — `status`, `version` and
+ * `modelVersion` among them — so it is an incomplete serialisation and a write-only
+ * one. Reading it does not recover a template; it invents the parts that were left
+ * out, and a template whose model version was guessed is worse than a file that would
+ * not open.
+ *
+ * The absence of `modelVersion` is the marker, which is what the model library keys
+ * on too. Its own message says a compact reader "has to be asked for", and that is
+ * exactly the invitation to decline: the library can be asked, and CED should not ask.
+ */
+function isCompactYaml(document: string): boolean {
+  return !/^modelVersion\s*:/m.test(document);
+}
+
+/**
  * A template from JSON or YAML, in either case as the same model.
  *
  * Throws on a source that is not a template. The designer used to swallow that:
  * `loadTemplate` caught the parse failure, logged it and returned, leaving the
  * author looking at their previous template with no indication that the file they
  * opened had not been read.
+ *
+ * Compact YAML is refused rather than read, in words meant for whoever opened the
+ * file rather than for whoever wrote the reader.
  */
 export function readTemplate(source: string | object): Template {
   if (typeof source !== 'string') {
@@ -1082,6 +1105,12 @@ export function readTemplate(source: string | object): Template {
   const trimmed = source.trim();
   if (trimmed.startsWith('{')) {
     return CedarReaders.json().getStrict().getTemplateReader().readFromString(trimmed).template;
+  }
+
+  if (isCompactYaml(trimmed)) {
+    throw new Error(
+      'This is compact YAML, which leaves out everything that has a default and cannot be opened as a template. Open the full YAML or the JSON instead.',
+    );
   }
 
   const template = CedarReaders.yaml().getStrict().getTemplateReader().readFromString(trimmed).template;
@@ -1364,6 +1393,12 @@ export function readField(source: string): Field {
     if (property.items) property.items = sourceNode;
     else document.properties[field.schema_name] = sourceNode;
     return toDesignerTemplate(readTemplate(JSON.stringify(document))).fields[0];
+  }
+  // A field document carries the same marker as a template, and the same reason applies.
+  if (isCompactYaml(text)) {
+    throw new Error(
+      'This is compact YAML, which leaves out everything that has a default and cannot be opened as a field. Open the full YAML or the JSON instead.',
+    );
   }
   const reader = CedarReaders.yaml().getStrict().getTemplateFieldReader();
   const parsed = reader.readFromString(text);
