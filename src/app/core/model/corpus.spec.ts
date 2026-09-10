@@ -115,20 +115,16 @@ describe('the vendored corpus', () => {
   });
 });
 
-describe.each(corpus.map((template) => [template.id, template] as const))('%s', (_id, template) => {
+describe.each(
+  corpus
+    .filter((template) => template.declaredElements.length === 0)
+    .map((template) => [template.id, template] as const),
+)('%s', (_id, template) => {
   it('opens', () => {
     expect(() => toDesignerTemplate(readTemplate(template.source))).not.toThrow();
   });
 
-  /**
-   * Every field child survives, and every element child does not.
-   *
-   * The second half is the measured distance to template elements, which CED has no
-   * authoring surface for: an element child is dropped rather than mangled. When
-   * elements land this fails for the five templates that carry them, which is the
-   * point of stating it as a rule instead of skipping those files.
-   */
-  it('keeps every field it declares, and drops the elements', () => {
+  it('keeps every field it declares', () => {
     const state = toDesignerTemplate(readTemplate(template.source));
 
     expect(state.fields.map((field) => field.deploymentName ?? field.name)).toEqual(template.declaredFields);
@@ -173,7 +169,7 @@ describe.each(corpus.map((template) => [template.id, template] as const))('%s', 
  * than a count typed in.
  */
 describe('what the corpus says CED can do', () => {
-  it('opens every template', () => {
+  it('refuses exactly the templates containing unsupported elements', () => {
     const unopenable = corpus.filter((template) => {
       try {
         toDesignerTemplate(readTemplate(template.source));
@@ -182,7 +178,12 @@ describe('what the corpus says CED can do', () => {
         return true;
       }
     });
-    expect(unopenable.map((template) => template.id)).toEqual([]);
+    expect(unopenable.map((template) => template.id)).toEqual(
+      corpus.filter((template) => template.declaredElements.length > 0).map((template) => template.id),
+    );
+    for (const template of unopenable) {
+      expect(() => toDesignerTemplate(readTemplate(template.source))).toThrow(/Element editing is not supported/);
+    }
   });
 
   it('cannot yet represent the templates that use elements', () => {

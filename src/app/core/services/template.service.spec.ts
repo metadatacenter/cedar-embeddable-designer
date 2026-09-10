@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import nestedTemplate from '../model/fixtures/corpus/template-028.json';
 import { TemplateService } from './template.service';
 import { Field, FIELD_TYPES } from '../models/types';
 import { templateToJson } from '../model/cedar-template';
@@ -187,6 +188,16 @@ describe('TemplateService', () => {
   });
 
   describe('loading', () => {
+    it('rejects nested content without replacing the open document or its dirty state', () => {
+      service.templateName.set('Keep my edits');
+      const before = service.templateJson();
+      expect(() => service.loadTemplate(nestedTemplate)).toThrow(/Element editing is not supported/);
+      expect(service.templateJson()).toEqual(before);
+      expect(service.isDirty()).toBe(true);
+      expect(service.loadError()).toContain('not opened');
+      service.loadTemplate(before);
+      expect(service.loadError()).toBeNull();
+    });
     it('round-trips its own template', () => {
       service.templateName.set('Study');
       service.updateFieldStatus(service.fields()[0].id, 'recommended');

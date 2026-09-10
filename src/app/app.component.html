@@ -1,4 +1,7 @@
 <div class="app-shell">
+  @if (service.loadError()) {
+    <p class="ced-field-error" role="alert">{{ service.loadError() }}</p>
+  }
   @if (exportError) {
     <p class="ced-field-error" role="alert">{{ exportError }}</p>
   }

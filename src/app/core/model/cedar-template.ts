@@ -1256,6 +1256,15 @@ function defaultOf(field: TemplateField): FieldDefaultValue {
 
 /** A parsed template, as the flat state the designer works in. */
 export function toDesignerTemplate(template: Template): DesignerTemplate {
+  const elements = template.getChildrenInfo().children.filter(
+    (info) => template.getChild(info.name)?.cedarArtifactType === CedarArtifactType.TEMPLATE_ELEMENT,
+  );
+  if (elements.length) {
+    throw new Error(
+      `This template contains elements (${elements.map((info) => info.name).join(', ')}). ` +
+        'Element editing is not supported yet; the template was not opened to avoid losing nested content.',
+    );
+  }
   const fields: Field[] = [];
 
   template.getChildrenInfo().children.forEach((info, index) => {

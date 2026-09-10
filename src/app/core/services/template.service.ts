@@ -109,6 +109,7 @@ export class TemplateService {
   readonly templateDesc = signal<string>('');
   readonly templateIdentifier = signal<string>('');
   readonly templateVersion = signal<string>('0.0.1');
+  readonly loadError = signal<string | null>(null);
 
   readonly fields = signal<Field[]>(starterFields());
 
@@ -486,6 +487,7 @@ export class TemplateService {
   }
 
   resetTemplate() {
+    this.loadError.set(null);
     this.templateName.set('Untitled Template');
     this.templateDesc.set('');
     this.templateIdentifier.set('');
@@ -510,7 +512,14 @@ export class TemplateService {
       return;
     }
 
-    const state = toDesignerTemplate(readTemplate(source as string | object));
+    let state: DesignerTemplate;
+    try {
+      state = toDesignerTemplate(readTemplate(source as string | object));
+    } catch (error) {
+      this.loadError.set(error instanceof Error ? error.message : String(error));
+      throw error;
+    }
+    this.loadError.set(null);
 
     this.templateName.set(state.name || 'Untitled Template');
     this.templateDesc.set(state.description);
