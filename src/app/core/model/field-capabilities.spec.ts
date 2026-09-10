@@ -26,28 +26,17 @@ import { FieldParameter, PARAMETER_SETTERS, descriptorOf, parametersOf } from '.
 const paletteTypes = Object.keys(FIELD_TYPES);
 
 /**
- * Setters every field carries, which belong to the artifact rather than to one kind
- * of field. The descriptor says nothing about them because it would say the same
- * thing about every type.
+ * Editable artifact metadata shared by every field type.
  */
 const SHARED_SETTERS = new Set([
-  'withAtId',
   'withAlternateLabels',
   'addAlternateLabel',
-  'withCreatedBy',
-  'withCreatedOn',
-  'withDerivedFrom',
   'withDescription',
-  'withLastUpdatedOn',
-  'withModifiedBy',
   'withPreferredLabel',
   'withSchemaDescription',
   'withSchemaIdentifier',
   'withSchemaName',
-  'withSchemaVersion',
-  'withStatus',
   'withTitle',
-  'withVersion',
 ]);
 
 /**
@@ -72,9 +61,16 @@ const DESCRIBED_ELSEWHERE = new Set([
  * it should empty out as that work lands.
  */
 const UNADOPTED: Record<string, string> = {
-  // Empty, and worth keeping that way: every setter the library offers on a type the
-  // palette has is authored somewhere in the designer today. An entry here is a
-  // deliberate gap, not a hiding place — write the reason, then take it out again.
+  addAction: 'Imported controlled-term exclusion and reordering are preserved; authoring is deferred.',
+  withAtId: 'Assigned or imported field identity is displayed, not edited.',
+  withCreatedBy: 'Imported provenance is displayed, not edited.',
+  withCreatedOn: 'Imported provenance is displayed, not edited.',
+  withDerivedFrom: 'Imported provenance is displayed, not edited.',
+  withLastUpdatedOn: 'Imported provenance is displayed, not edited.',
+  withModifiedBy: 'Imported provenance is displayed, not edited.',
+  withSchemaVersion: 'The model schema version is preserved, not edited.',
+  withStatus: 'Publication authoring is deferred.',
+  withVersion: 'Field version authoring is deferred.',
 };
 
 /** Every setter on a built builder, including the ones it inherits. */

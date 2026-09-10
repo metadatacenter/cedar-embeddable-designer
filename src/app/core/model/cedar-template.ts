@@ -236,7 +236,7 @@ export const PARAMETER_SETTERS: Record<FieldParameter, readonly string[]> = {
   temporalTimezone: ['withTimezoneEnabled'],
   temporalTimeFormat: ['withInputTimeFormat'],
   mediaDimensions: ['withWidth', 'withHeight'],
-  controlledTermConstraints: ['addOntology', 'addBranch', 'addClass', 'addValueSet', 'addAction'],
+  controlledTermConstraints: ['addOntology', 'addBranch', 'addClass', 'addValueSet'],
 };
 
 interface FieldDescriptor {
