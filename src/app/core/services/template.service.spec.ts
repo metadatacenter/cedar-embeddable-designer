@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { TemplateService } from './template.service';
-import { Field } from '../models/types';
+import { Field, FIELD_TYPES } from '../models/types';
 import { templateToJson } from '../model/cedar-template';
 
 /**
@@ -22,6 +22,35 @@ describe('TemplateService', () => {
     TestBed.configureTestingModule({});
     service = TestBed.inject(TemplateService);
   });
+
+  it.each(Object.keys(FIELD_TYPES))('reselecting %s leaves the field and dirty state unchanged', (type) => {
+    const field: Field = {
+      ...service.fields()[0],
+      type,
+      options: ['Alpha', 'Beta'],
+      defaultValue: { kind: 'literal', value: 'Alpha' },
+      allowMultiple: true,
+      textConstraints: { minLength: 2, maxLength: 20, regex: '^[A-Z]+$' },
+      numeric: { type: 'xsd:decimal', min: 1, max: 10, decimalPlaces: 2, unit: 'mg' },
+      temporal: { type: 'xsd:dateTime', granularity: 'second', timezoneEnabled: true, inputTimeFormat: '24h' },
+      customFieldId: 42,
+      libraryId: 7,
+    };
+    service.fields.set([field]);
+    const before = service.fields();
+    service.updateFieldType(field.id, type);
+    expect(service.fields()).toBe(before);
+    expect(service.fields()[0]).toEqual(field);
+  });
+
+  it.each(['multipleChoice', 'checkboxes', 'singleChoiceList', 'multipleChoiceList'])(
+    'preserves option labels when converting to %s',
+    (type) => {
+      service.fields.set([{ ...service.fields()[0], type: 'checkboxes', options: ['Alpha', 'Beta'] }]);
+      service.updateFieldType(1, type);
+      expect(service.fields()[0].options).toEqual(['Alpha', 'Beta']);
+    },
+  );
 
   it('copies every field setting from a library without linking deployed copies', () => {
     const definition: Field = {

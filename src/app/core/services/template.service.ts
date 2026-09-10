@@ -19,6 +19,7 @@ import {
   templateToYaml,
   toDesignerTemplate,
   defaultValueError,
+  allowsOptions,
 } from '../model/cedar-template';
 
 export { FIELD_TYPES } from '../models/types';
@@ -288,15 +289,14 @@ export class TemplateService {
   }
 
   updateFieldType(id: number, type: string) {
-    if (this.isPublished(id)) return;
+    if (this.isPublished(id) || this.fields().find((field) => field.id === id)?.type === type) return;
     this.fields.update((prev) =>
       prev.map((f) =>
         f.id === id
           ? {
               ...f,
               type,
-              options:
-                type === 'multipleChoice' || type === 'checkboxes' ? (f.options.length > 0 ? f.options : ['']) : [],
+              options: allowsOptions(type) ? (f.options.length > 0 ? f.options : ['']) : [],
               defaultValue: { kind: 'none' },
               temporal: undefined,
               numeric: undefined,
