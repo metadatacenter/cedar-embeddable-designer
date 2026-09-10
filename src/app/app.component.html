@@ -119,6 +119,9 @@
                   New Template
                 </span>
               </button>
+              <button type="button" class="file-menu-item" (click)="newTemplate('element'); showFileMenu.set(false)">
+                New Element
+              </button>
               <button
                 (click)="openTemplateFile(); showFileMenu.set(false)"
                 class="w-full px-3.5 py-2 text-left text-xs font-medium text-gray-700 hover:bg-gray-100 flex items-center justify-between"
@@ -289,7 +292,7 @@
                       [ngModel]="service.templateName()"
                       (ngModelChange)="service.templateName.set($event)"
                       class="template-input font-medium text-base text-gray-900"
-                      placeholder="Template name"
+                      [placeholder]="service.session.active().kind === 'element' ? 'Element name' : 'Template name'"
                     />
                   </div>
 

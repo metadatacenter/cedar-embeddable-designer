@@ -95,6 +95,13 @@ export class CedarEmbeddableDesignerElementComponent {
     return this.cedarTemplate();
   }
 
+  @Input() set artifact(data: unknown) {
+    this.template = data;
+  }
+  @Input() get currentArtifact(): object {
+    return this.cedarTemplate();
+  }
+  @Output() artifactChange = new EventEmitter<object>();
   @Output() templateChange = new EventEmitter<object>();
 
   constructor() {
@@ -109,9 +116,16 @@ export class CedarEmbeddableDesignerElementComponent {
      * root effect, scheduled on state changes rather than on this view's refresh,
      * so what the host receives no longer depends on the wrapper's change detection.
      */
-    const changes = effect(() => this.templateChange.emit(this.cedarTemplate()), {
-      injector: inject(EnvironmentInjector),
-    });
+    const changes = effect(
+      () => {
+        const artifact = this.cedarTemplate();
+        this.templateChange.emit(artifact);
+        this.artifactChange.emit(artifact);
+      },
+      {
+        injector: inject(EnvironmentInjector),
+      },
+    );
     inject(DestroyRef).onDestroy(() => changes.destroy());
   }
 

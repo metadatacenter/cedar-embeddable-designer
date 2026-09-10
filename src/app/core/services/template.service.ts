@@ -1,5 +1,5 @@
 import { EditorSession } from './editor-session';
-import { containerFromFlat, flatView, newNodeId } from '../model/container-draft';
+import { containerFromFlat, flatView, newNodeId, ContainerDraft } from '../model/container-draft';
 import { FieldLibraryService } from './field-library.service';
 import { Injectable, signal, computed, inject } from '@angular/core';
 import {
@@ -16,10 +16,12 @@ import {
   buildTemplate,
   newFieldIdentity,
   newTemplateIdentifier,
-  readTemplate,
+  readContainer,
+  buildContainer,
+  containerPreview,
+  newContainer,
   templateToJson,
   templateToYaml,
-  toDesignerTemplate,
   defaultValueError,
   allowsOptions,
 } from '../model/cedar-template';
@@ -120,7 +122,6 @@ export class TemplateService {
   readonly templateIdentifier = this.session.property('identifier');
   readonly templateVersion = this.session.property('version');
   readonly loadError = signal<string | null>(null);
-  private readonly containerMetadata = this.session.property('metadata');
   readonly fields = this.session.fieldBinding();
 
   /**
@@ -175,7 +176,12 @@ export class TemplateService {
     identifier: this.session.document().identifier || this.mintedIdentifier(),
   }));
 
-  readonly template = computed(() => buildTemplate(this.designerTemplate()));
+  readonly document = computed(() => ({
+    ...this.session.document(),
+    identifier: this.session.document().identifier || this.mintedIdentifier(),
+  }));
+  readonly template = computed(() => buildContainer(this.document()));
+  readonly previewJson = computed(() => templateToJson(containerPreview(this.document())));
   readonly templateJson = computed(() => templateToJson(this.template()));
   readonly templateYaml = computed(() => templateToYaml(this.template()));
 
@@ -487,15 +493,15 @@ export class TemplateService {
     return this.preferencesService.getActivePreset();
   }
 
-  resetTemplate() {
+  resetTemplate(kind: 'template' | 'element' = 'template') {
     this.loadError.set(null);
-    this.containerMetadata.set(undefined);
-    this.templateName.set('Untitled Template');
-    this.templateDesc.set('');
-    this.templateIdentifier.set('');
     this.mintedIdentifier.set(newTemplateIdentifier());
-    this.templateVersion.set('0.0.1');
-    this.fields.set(starterFields());
+    const document = newContainer(kind);
+    if (kind === 'template') {
+      document.identifier = '';
+      document.children = containerFromFlat({ ...document, fields: starterFields() }).children;
+    }
+    this.session.replace(document);
     this.markSaved();
   }
 
@@ -514,21 +520,20 @@ export class TemplateService {
       return;
     }
 
-    let state: DesignerTemplate;
+    let state: ContainerDraft;
     try {
-      state = toDesignerTemplate(readTemplate(source as string | object));
+      state = readContainer(source as string | object);
+      if (state.children.some((child) => child.kind === 'element'))
+        throw new Error(
+          'This document contains elements. Element editing is not supported yet; the document was not opened to avoid losing nested content.',
+        );
     } catch (error) {
       this.loadError.set(error instanceof Error ? error.message : String(error));
       throw error;
     }
     this.loadError.set(null);
 
-    this.templateName.set(state.name || 'Untitled Template');
-    this.templateDesc.set(state.description);
-    this.templateIdentifier.set(state.identifier);
-    this.templateVersion.set(state.version);
-    this.containerMetadata.set(state.metadata);
-    this.fields.set(state.fields);
+    this.session.replace(state);
     this.markSaved();
   }
 }

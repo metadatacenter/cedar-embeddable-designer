@@ -61,10 +61,13 @@ export type CedTemplate = CedJsonObject;
  */
 export interface CedarEmbeddableDesignerElement extends HTMLElement {
   config: CedConfig | null;
+  /** A template or element document. The legacy property name remains supported. */
   template: CedJsonObject | string | null;
+  artifact: CedJsonObject | string | null;
+  readonly currentArtifact: CedJsonObject;
   readonly currentTemplate: CedTemplate;
   addEventListener(
-    type: 'templateChange',
+    type: 'templateChange' | 'artifactChange',
     listener: (event: CustomEvent<CedTemplate>) => void,
     options?: boolean | AddEventListenerOptions,
   ): void;

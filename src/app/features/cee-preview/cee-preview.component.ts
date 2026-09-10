@@ -51,7 +51,7 @@ export class CeePreviewComponent {
   constructor() {
     effect((onCleanup) => {
       const host = this.mount()?.nativeElement;
-      const template = this.service.templateJson();
+      const template = this.service.previewJson();
       if (host === undefined) {
         return;
       }

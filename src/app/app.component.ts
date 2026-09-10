@@ -203,11 +203,11 @@ export class AppComponent {
 
   // File Operations
 
-  newTemplate(): void {
+  newTemplate(kind: 'template' | 'element' = 'template'): void {
     if (!this.confirmDiscard('Create a new template without saving?')) {
       return;
     }
-    this.service.resetTemplate();
+    this.service.resetTemplate(kind);
   }
 
   /**
