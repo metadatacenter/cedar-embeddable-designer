@@ -8,6 +8,7 @@ import { Field } from '../../core/models/types';
 import {
   fieldArtifactMetadata,
   choiceDefaultConflict,
+  accepts,
   allowsDefault,
   allowsMultiple,
   allowsOptions,
@@ -64,6 +65,16 @@ export class FieldCardComponent {
 
   allowsOptions(type: string): boolean {
     return allowsOptions(type);
+  }
+
+  /** Whether the type's values are drawn from a vocabulary, so the card offers the panel. */
+  allowsControlledTerms(type: string): boolean {
+    return accepts(type, 'controlledTermConstraints');
+  }
+
+  /** Whether the type's one static value is markup, which takes more than a single line. */
+  hasMarkupContent(type: string): boolean {
+    return contentKindOf(type) === 'markup';
   }
 
   /** The label for a static field's one value, or nothing for a type without one. */

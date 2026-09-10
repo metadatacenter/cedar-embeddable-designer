@@ -12,7 +12,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { defaultFromCef, defaultToCef } from '../../core/model/field-default';
-import { defaultValueError, fieldToJson } from '../../core/model/cedar-template';
+import { accepts, defaultValueError, fieldToJson } from '../../core/model/cedar-template';
 import { CeeTemplateObject } from '../../core/model/cee-preview';
 import { Field, FieldDefaultValue } from '../../core/models/types';
 import { TemplateService } from '../../core/services/template.service';
@@ -42,6 +42,12 @@ export class FieldDefaultValueComponent {
   private readonly terminology = inject(TerminologyService);
   private readonly destroyRef = inject(DestroyRef);
   readonly terminologyBaseUrl = this.terminology.baseUrl;
+  /**
+   * Whether this field's values come from a vocabulary, which decides how its
+   * default is authored: through the term picker, checked against the field's
+   * constraints, rather than through CEF.
+   */
+  readonly allowsControlledTerms = computed(() => accepts(this.field().type, 'controlledTermConstraints'));
   readonly checking = signal(false);
   readonly pickerSources = computed(() => {
     const sources = (this.field().controlledTermConstraints?.constraints ?? []).flatMap((config) => {
@@ -86,7 +92,7 @@ export class FieldDefaultValueComponent {
       const field = this.field();
       const config = {
         ...this.service.fieldEditorConfig(),
-        readOnlyMode: !!field.publishedDefinition || field.type === 'controlledTerms',
+        readOnlyMode: !!field.publishedDefinition || accepts(field.type, 'controlledTermConstraints'),
       };
       if (!host) return;
       if (!this.editor || this.configKey !== JSON.stringify(config)) {
@@ -116,7 +122,7 @@ export class FieldDefaultValueComponent {
 
   private readonly acceptValue = (event: Event): void => {
     const detail = (event as CustomEvent<{ value: FieldDefaultValue; valid: boolean }>).detail;
-    if (this.field().type === 'controlledTerms' || this.field().publishedDefinition) return;
+    if (this.allowsControlledTerms() || this.field().publishedDefinition) return;
     if (detail?.valid === true) this.save(defaultFromCef(this.field(), detail.value));
   };
 

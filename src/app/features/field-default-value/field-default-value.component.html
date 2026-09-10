@@ -1,8 +1,8 @@
 @if (available()) {
-  @if (field().type !== 'controlledTerms' || field().controlledTermConstraints?.constraints?.length) {
+  @if (!allowsControlledTerms() || field().controlledTermConstraints?.constraints?.length) {
     <div #mount (focusin)="service.selectedField.set(field().id)"></div>
   }
-  @if (field().type === 'controlledTerms') {
+  @if (allowsControlledTerms()) {
     @if (!field().controlledTermConstraints?.constraints?.length) {
       <p role="status" class="text-sm text-gray-500">Choose a vocabulary constraint before setting a default.</p>
     } @else if (!pickerAvailable() || !terminologyBaseUrl()) {

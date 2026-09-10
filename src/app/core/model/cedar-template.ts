@@ -194,6 +194,51 @@ export function newTemplateIdentifier(): string {
  */
 type DeploymentKind = 'plain' | 'alwaysSingle' | 'alwaysMultiple' | 'static';
 
+/**
+ * A parameter one kind of field accepts and others do not.
+ *
+ * Named for what an author sets, not for the method that records it, because the
+ * two do not correspond one to one: a numeric field's bounds are two setters and
+ * a temporal field's precision is a datatype plus a granularity. The setters each
+ * one requires are named by `PARAMETER_SETTERS`, which is what lets a test ask the
+ * model library whether a type really accepts what its descriptor claims.
+ *
+ * The parameters every field carries are not here. A name, a description, an
+ * identifier, a status and the provenance stamps belong to the artifact rather
+ * than to one kind of field, and the descriptor would say the same thing about
+ * every type.
+ */
+export type FieldParameter =
+  | 'textLength'
+  | 'textPattern'
+  | 'numericBounds'
+  | 'numericPrecision'
+  | 'numericType'
+  | 'numericUnit'
+  | 'temporalPrecision'
+  | 'temporalTimezone'
+  | 'temporalTimeFormat'
+  | 'mediaDimensions'
+  | 'controlledTermConstraints';
+
+/**
+ * The model library setters each parameter is written through, all of which a
+ * type's builder must have for the descriptor's claim to hold.
+ */
+export const PARAMETER_SETTERS: Record<FieldParameter, readonly string[]> = {
+  textLength: ['withMinLength', 'withMaxLength'],
+  textPattern: ['withRegex'],
+  numericBounds: ['withMinValue', 'withMaxValue'],
+  numericPrecision: ['withDecimalPlaces'],
+  numericType: ['withNumberType'],
+  numericUnit: ['withUnitOfMeasure'],
+  temporalPrecision: ['withTemporalType', 'withTemporalGranularity'],
+  temporalTimezone: ['withTimezoneEnabled'],
+  temporalTimeFormat: ['withInputTimeFormat'],
+  mediaDimensions: ['withWidth', 'withHeight'],
+  controlledTermConstraints: ['addOntology', 'addBranch', 'addClass', 'addValueSet', 'addAction'],
+};
+
 interface FieldDescriptor {
   readonly cedarType: CedarFieldType;
   readonly build: () => FieldBuilder;
@@ -201,6 +246,8 @@ interface FieldDescriptor {
   /** Whether the type takes the author's list of options. */
   readonly options?: (builder: FieldBuilder, label: string, selected: boolean) => unknown;
   readonly defaultKind?: FieldDefaultValue['kind'];
+  /** The parameters this type accepts beyond those every field carries. */
+  readonly parameters?: readonly FieldParameter[];
   /**
    * Set where the type carries no `_valueConstraints` and `deployment` does not
    * already say so.
@@ -221,6 +268,7 @@ const FIELD_DESCRIPTORS: Record<string, FieldDescriptor> = {
     cedarType: CedarFieldType.TEXT,
     build: () => CedarBuilders.textFieldBuilder(),
     deployment: 'plain',
+    parameters: ['textLength', 'textPattern'],
   },
   paragraph: {
     defaultKind: 'literal',
@@ -261,12 +309,14 @@ const FIELD_DESCRIPTORS: Record<string, FieldDescriptor> = {
     cedarType: CedarFieldType.TEMPORAL,
     build: () => CedarBuilders.temporalFieldBuilder(),
     deployment: 'plain',
+    parameters: ['temporalPrecision', 'temporalTimezone', 'temporalTimeFormat'],
   },
   time: {
     defaultKind: 'temporal',
     cedarType: CedarFieldType.TEMPORAL,
     build: () => CedarBuilders.temporalFieldBuilder(),
     deployment: 'plain',
+    parameters: ['temporalPrecision', 'temporalTimezone', 'temporalTimeFormat'],
   },
   email: {
     defaultKind: 'literal',
@@ -291,12 +341,14 @@ const FIELD_DESCRIPTORS: Record<string, FieldDescriptor> = {
     cedarType: CedarFieldType.NUMERIC,
     build: () => CedarBuilders.numericFieldBuilder(),
     deployment: 'plain',
+    parameters: ['numericBounds', 'numericPrecision', 'numericType', 'numericUnit'],
   },
   controlledTerms: {
     defaultKind: 'iri',
     cedarType: CedarFieldType.CONTROLLED_TERM,
     build: () => CedarBuilders.controlledTermFieldBuilder(),
     deployment: 'plain',
+    parameters: ['controlledTermConstraints'],
   },
   attributeValue: {
     cedarType: CedarFieldType.ATTRIBUTE_VALUE,
@@ -356,6 +408,7 @@ const FIELD_DESCRIPTORS: Record<string, FieldDescriptor> = {
     build: () => CedarBuilders.imageFieldBuilder(),
     deployment: 'static',
     content: 'url',
+    parameters: ['mediaDimensions'],
   },
   richText: {
     cedarType: CedarFieldType.STATIC_RICH_TEXT,
@@ -368,6 +421,7 @@ const FIELD_DESCRIPTORS: Record<string, FieldDescriptor> = {
     build: () => CedarBuilders.youtubeFieldBuilder(),
     deployment: 'static',
     content: 'videoId',
+    parameters: ['mediaDimensions'],
   },
   sectionBreak: {
     cedarType: CedarFieldType.STATIC_SECTION_BREAK,
@@ -389,6 +443,26 @@ export function descriptorOf(paletteType: string): FieldDescriptor {
 /** Static blocks and attribute-value fields have no default in the model. */
 export function allowsDefault(paletteType: string): boolean {
   return descriptorOf(paletteType).defaultKind !== undefined;
+}
+
+/**
+ * Whether a type accepts a parameter, asked of the descriptor rather than of the
+ * type's name.
+ *
+ * The settings panel and the writer both used to test the name — `type === 'text'`
+ * for length and pattern, `'date' || 'time'` for precision, `'image' || 'youtube'`
+ * for dimensions. Each such chain is a second place to remember a decision the
+ * descriptor already records, and they diverge in the direction that is hardest to
+ * notice: a control offered for a type whose builder has no setter behind it
+ * writes nothing, and the author is told nothing.
+ */
+export function accepts(paletteType: string, parameter: FieldParameter): boolean {
+  return descriptorOf(paletteType).parameters?.includes(parameter) ?? false;
+}
+
+/** Every parameter a type accepts, for a caller enumerating rather than asking. */
+export function parametersOf(paletteType: string): readonly FieldParameter[] {
+  return descriptorOf(paletteType).parameters ?? [];
 }
 
 export function temporalGranularities(type: string) {
@@ -702,10 +776,10 @@ function buildField(field: Field): TemplateField {
     builder.withAtId(field.atId);
   }
 
-  if (field.type === 'date' || field.type === 'time') {
+  if (accepts(field.type, 'temporalPrecision')) {
     buildTemporal(builder, field);
   }
-  if (field.type === 'text' && field.textConstraints) {
+  if (accepts(field.type, 'textLength') && field.textConstraints) {
     const { minLength, maxLength, regex } = field.textConstraints;
     if (
       [minLength, maxLength].some((n) => n !== null && (!Number.isInteger(n) || n < 0)) ||
@@ -728,7 +802,7 @@ function buildField(field: Field): TemplateField {
       .withMaxLength(field.textConstraints.maxLength)
       .withRegex(field.textConstraints.regex);
   }
-  if (field.type === 'number' && field.numeric) {
+  if (accepts(field.type, 'numericBounds') && field.numeric) {
     const { min, max, decimalPlaces } = field.numeric;
     if ([min, max].some((n) => n !== null && !Number.isFinite(n)) || (min !== null && max !== null && min > max))
       throw new Error('Numeric bounds must be finite, with minimum no greater than maximum.');
@@ -745,13 +819,13 @@ function buildField(field: Field): TemplateField {
   if (descriptor.options) {
     buildOptions(builder, field);
   }
-  if (field.type === 'controlledTerms') {
+  if (accepts(field.type, 'controlledTermConstraints')) {
     buildControlledTermSet(builder, field.controlledTermConstraints);
   }
   if (descriptor.content) {
     buildStaticContent(builder, descriptor.content, field.content ?? '');
   }
-  if (field.type === 'image' || field.type === 'youtube') {
+  if (accepts(field.type, 'mediaDimensions')) {
     for (const dimension of [field.width, field.height]) {
       if (dimension != null && (!Number.isInteger(dimension) || dimension <= 0))
         throw new Error('Media dimensions must be positive whole numbers.');
@@ -778,7 +852,9 @@ function buildField(field: Field): TemplateField {
           (builder as NumericFieldBuilder).withDefaultValue(value.value);
           break;
         case 'iri':
-          if (field.type === 'controlledTerms') {
+          // A term default carries a label beside its IRI, and only a type whose
+          // values are drawn from a vocabulary has one to carry.
+          if (accepts(field.type, 'controlledTermConstraints')) {
             (builder as ControlledTermFieldBuilder).withDefaultValue(
               new ControlledTermDefaultValueBuilder()
                 .withTermUri(new Iri(value.iri))

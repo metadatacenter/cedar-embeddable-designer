@@ -2,7 +2,9 @@ import { ChangeDetectionStrategy, Component, Input, OnChanges, inject } from '@a
 import { FormsModule } from '@angular/forms';
 import { Field } from '../../core/models/types';
 import {
+  accepts,
   descriptorOf,
+  FieldParameter,
   fieldArtifactMetadata,
   NUMERIC_TYPES,
   temporalGranularities,
@@ -37,6 +39,10 @@ export class FieldSettingsComponent implements OnChanges {
   continuePreviousLine = false;
   get dynamic(): boolean {
     return descriptorOf(this.field.type).deployment !== 'static';
+  }
+  /** Whether this field's type takes a parameter, so the panel offers its control. */
+  accepts(parameter: FieldParameter): boolean {
+    return accepts(this.field.type, parameter);
   }
   text: NonNullable<Field['textConstraints']> = { minLength: null, maxLength: null, regex: null };
   readonly numericTypes = NUMERIC_TYPES;

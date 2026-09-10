@@ -36,7 +36,7 @@
   }
 </details>
 
-@if (field.type === 'text') {
+@if (accepts('textLength')) {
   <details class="settings">
     <summary>Text constraints <span>length and pattern</span></summary>
     <form (ngSubmit)="saveText()" class="row">
@@ -57,7 +57,7 @@
   </details>
 }
 
-@if (field.type === 'number') {
+@if (accepts('numericBounds')) {
   <details class="settings">
     <summary>Numeric constraints <span>datatype, range and units</span></summary>
     <form (ngSubmit)="saveNumeric()" class="row">
@@ -82,7 +82,7 @@
   </details>
 }
 
-@if (field.type === 'date' || field.type === 'time') {
+@if (accepts('temporalPrecision')) {
   <details class="settings">
     <summary>Temporal settings <span>datatype, precision and time display</span></summary>
     <form (ngSubmit)="saveTemporal()" class="row">
@@ -124,7 +124,7 @@
   </details>
 }
 
-@if (field.type === 'image' || field.type === 'youtube') {
+@if (accepts('mediaDimensions')) {
   <details class="settings">
     <summary>Media size <span>dimensions in pixels</span></summary>
     <form (ngSubmit)="saveMedia()" class="row">
