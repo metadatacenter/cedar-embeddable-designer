@@ -1,7 +1,7 @@
 import { expect, test, Page } from '@playwright/test';
 import { buildTemplate, templateToJson } from '../../src/app/core/model/cedar-template';
 import { Field } from '../../src/app/core/models/types';
-import { applyPreset, child, currentTemplate, openDesigner } from './support';
+import { applyPreset, child, currentTemplate, openDesigner, openPreview } from './support';
 
 // Opt-in integration suite: CEF_BUNDLE names the actual sibling bundle to exercise.
 async function openField(page: Page, type: string, extra: Partial<Field> = {}, query = '') {
@@ -50,10 +50,32 @@ for (const [type, text, stored] of [
     const input = control.locator(type === 'paragraph' ? 'textarea' : 'input').first();
     await input.fill(text);
     await expect.poll(async () => (await constraints(page))['defaultValue']).toBe(stored);
+    await input.press('Tab');
+    await expect(input).toHaveValue(text);
+    const saved = await currentTemplate(page);
+    await page.evaluate((template) => {
+      (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
+    }, saved);
+    await expect(input).toHaveValue(text);
     await input.fill('');
     await expect.poll(async () => (await constraints(page))['defaultValue']).toBeUndefined();
   });
 }
+
+test('real CEE preview honors deployment display overrides over field metadata', async ({ page }) => {
+  await openField(page, 'shortText', { preferredLabel: 'Semantic label', helpText: 'Artifact description' });
+  const section = page
+    .locator('app-field-settings details')
+    .filter({ has: page.locator('summary', { hasText: /^Display / }) });
+  await section.locator('summary').click();
+  await section.getByLabel('Display label', { exact: true }).fill('Deployment heading');
+  await section.getByLabel('Display description', { exact: true }).fill('Deployment help');
+  await section.getByRole('button', { name: 'Apply', exact: true }).click();
+  const preview = await openPreview(page);
+  await expect(preview.locator('.title-label')).toContainText('Deployment heading');
+  await expect(preview.locator('.cee-field-spec-description')).toHaveText('Deployment help');
+  await expect(preview.getByText('Semantic label', { exact: true })).toHaveCount(0);
+});
 
 for (const type of ['multipleChoice', 'checkboxes', 'singleChoiceList', 'multipleChoiceList']) {
   test(`${type} saves selected options as defaults`, async ({ page }) => {
