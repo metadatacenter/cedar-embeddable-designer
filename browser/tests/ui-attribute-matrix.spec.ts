@@ -39,6 +39,17 @@ import { FIELD_TYPES } from '../../src/app/core/models/types';
 
 const WIDTHS = [1280, 375] as const;
 
+/**
+ * How long a template change is waited for.
+ *
+ * Generous on purpose. The heaviest rows switch a field to several values, which
+ * rewrites its property into an array, and they run last in a suite of a hundred and
+ * thirty — where a container is measurably slower than it was at the start. A budget
+ * tight enough to catch a hang is not the point here: nothing hangs, and a row that
+ * genuinely cannot save still fails at any budget.
+ */
+const SETTLE = 25_000;
+
 /** Palette label to the descriptor's key, which is how a card is found by type. */
 const LABEL_OF: Record<string, string> = Object.fromEntries(
   Object.entries(FIELD_TYPES).map(([key, value]) => [key, value.label]),
@@ -156,13 +167,13 @@ async function oneCardOf(
   for (let remaining = await cards.count(); remaining > 0; remaining--) {
     await designer.locator('[id^=field-card-]').first().getByTitle('Delete field').first().click();
   }
-  await expect.poll(async () => cards.count(), { timeout: 10_000 }).toBe(0);
+  await expect.poll(async () => cards.count(), { timeout: SETTLE }).toBe(0);
   await designer
     .getByRole('button', { name: /Add Field/ })
     .first()
     .click();
   await designer.getByRole('button', { name: LABEL_OF[paletteType], exact: true }).click();
-  await expect.poll(async () => cards.count(), { timeout: 10_000 }).toBe(1);
+  await expect.poll(async () => cards.count(), { timeout: SETTLE }).toBe(1);
 }
 
 const paletteTypes = Object.keys(FIELD_TYPES);
@@ -254,6 +265,12 @@ const constraints = (template: Record<string, unknown>, key: string): Record<str
   (property(template, key)['_valueConstraints'] as Record<string, unknown>) ?? {};
 
 const open = (page: Page, heading: string) => disclosure(page, heading).locator('summary').click();
+
+/** Fill a control and wait for it to hold the value, for controls that save as you type. */
+const fillAndCheck = async (control: ReturnType<Page['locator']>, value: string) => {
+  await control.fill(value);
+  await expect(control).toHaveValue(value);
+};
 const apply = (page: Page, heading: string) =>
   disclosure(page, heading).getByRole('button', { name: 'Apply', exact: true }).click();
 
@@ -263,13 +280,26 @@ const fillAndApply = (page: Page, heading: string, label: string, value: string)
   await apply(page, heading);
 };
 
+/*
+ * Filling and applying, with the control checked before the button is pressed.
+ *
+ * Apply reads the component's own state, which `ngModel` updates from the control's
+ * input event — so pressing it in the same breath as the fill can save the previous
+ * value, and the template then never changes and the test times out waiting for it.
+ * Invisible on a fast machine and frequent in a container, which is where it showed up:
+ * runs of the same suite disagreed by a dozen tests.
+ */
 const setIn = async (page: Page, heading: string, label: string, value: string) => {
-  await disclosure(page, heading).getByLabel(label, { exact: true }).fill(value);
+  const control = disclosure(page, heading).getByLabel(label, { exact: true });
+  await control.fill(value);
+  await expect(control).toHaveValue(value);
   await apply(page, heading);
 };
 
 const chooseIn = async (page: Page, heading: string, label: string, value: string) => {
-  await disclosure(page, heading).getByLabel(label, { exact: true }).selectOption(value);
+  const control = disclosure(page, heading).getByLabel(label, { exact: true });
+  await control.selectOption(value);
+  await expect(control).toHaveValue(value);
   await apply(page, heading);
 };
 
@@ -277,6 +307,7 @@ const tickIn = async (page: Page, heading: string, label: string, on: boolean) =
   const box = disclosure(page, heading).getByRole('checkbox', { name: label, exact: true });
   if (on) await box.check();
   else await box.uncheck();
+  await expect(box).toBeChecked({ checked: on });
   await apply(page, heading);
 };
 
@@ -306,8 +337,8 @@ const LIFECYCLES: readonly Lifecycle[] = [
   {
     control: 'help text',
     paletteType: 'text',
-    set: async (page) => card(page).getByLabel('Help Text', { exact: true }).fill('Some help'),
-    restore: async (page) => card(page).getByLabel('Help Text', { exact: true }).fill(''),
+    set: async (page) => fillAndCheck(card(page).getByLabel('Help Text', { exact: true }), 'Some help'),
+    restore: async (page) => fillAndCheck(card(page).getByLabel('Help Text', { exact: true }), ''),
     read: (template) => property(template, 'Text')['schema:description'],
     whenSet: 'Some help',
   },
@@ -641,11 +672,33 @@ for (const width of WIDTHS) {
         await oneCardOf(page, lifecycle.paletteType, { query: lifecycle.query, bundle });
         await lifecycle.prepare?.(page);
 
-        const before = await currentTemplate(page);
+        /*
+         * Wait for the template to stop moving before snapshotting it.
+         *
+         * Most rows only open a disclosure to prepare, which changes nothing. The
+         * occurrence rows have to switch the field to several values first, and
+         * `templateChange` is published a tick after the click — so a baseline taken
+         * straight afterwards could be the template from before that change, and the
+         * comparison at the end would then be against a state the field never returns
+         * to. Two equal reads in a row is enough: the only writer is the click that has
+         * already happened.
+         */
+        let before = await currentTemplate(page);
+        await expect
+          .poll(
+            async () => {
+              const again = await currentTemplate(page);
+              const settled = JSON.stringify(again) === JSON.stringify(before);
+              before = again;
+              return settled;
+            },
+            { timeout: SETTLE },
+          )
+          .toBe(true);
 
         await lifecycle.set(page);
         await expect
-          .poll(async () => JSON.stringify(await currentTemplate(page)) !== JSON.stringify(before), { timeout: 10_000 })
+          .poll(async () => JSON.stringify(await currentTemplate(page)) !== JSON.stringify(before), { timeout: SETTLE })
           .toBe(true);
         if (lifecycle.read) {
           expect(
@@ -656,7 +709,15 @@ for (const width of WIDTHS) {
         await expectLaidOut(page, `${lifecycle.control} set`);
 
         await lifecycle.restore(page);
-        await expect.poll(async () => await currentTemplate(page), { timeout: 10_000 }).toEqual(before);
+        await expect
+          .poll(
+            async () => {
+              if (lifecycle.savedVia) await apply(page, lifecycle.savedVia);
+              return await currentTemplate(page);
+            },
+            { timeout: SETTLE },
+          )
+          .toEqual(before);
         await expectLaidOut(page, `${lifecycle.control} restored`);
       });
     }
@@ -693,7 +754,7 @@ test.describe('what a sibling component contributes', () => {
       await page.locator('#stub-pick').click();
 
       await expect
-        .poll(async () => JSON.stringify(await currentTemplate(page)) !== JSON.stringify(before), { timeout: 10_000 })
+        .poll(async () => JSON.stringify(await currentTemplate(page)) !== JSON.stringify(before), { timeout: SETTLE })
         .toBe(true);
       await expectLaidOut(page, `a constraint at ${width}`);
     });

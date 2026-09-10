@@ -75,38 +75,82 @@ export class FieldSettingsComponent implements OnChanges {
   get multiple(): boolean {
     return descriptorOf(this.field.type).deployment === 'alwaysMultiple' || this.field.allowMultiple;
   }
+  /**
+   * What each box held when it was last read from the field.
+   *
+   * The panel's boxes are a draft: an author types, then presses Apply. `field` is an
+   * input that changes identity on *any* template edit, so reloading every box from it
+   * on every change threw away whatever was half-typed — and it was not only a
+   * theoretical race. It made this suite disagree with itself by a dozen tests a run:
+   * an Apply arriving from the previous step reloaded the box the current step had just
+   * cleared, and Apply then saved the value that had been put back.
+   *
+   * So a box adopts an incoming value only where the author has not touched it, which
+   * is what this records. An untouched box still follows the field, so a change made
+   * elsewhere is still shown.
+   */
+  private loaded: Record<string, unknown> = {};
+  private loadedFieldId: number | null = null;
+
+  private adopt<T>(key: string, current: T, incoming: T): T {
+    const untouched = JSON.stringify(current) === JSON.stringify(this.loaded[key]);
+    this.loaded[key] = incoming;
+    return untouched ? incoming : current;
+  }
+
   ngOnChanges(): void {
-    this.schemaTitle = this.artifact.title ?? '';
-    this.schemaDescription = this.artifact.description ?? '';
-    this.preferredLabel = this.field.preferredLabel ?? '';
-    this.alternateLabels = this.field.alternateLabels?.join('\n') ?? '';
-    this.schemaIdentifier = this.field.schemaIdentifier ?? '';
-    this.language = this.field.language ?? '';
-    this.propertyIri = this.field.propertyIri ?? '';
-    this.deploymentName = this.field.deploymentName ?? this.field.name;
-    this.annotations = this.field.annotations?.map((annotation) => ({ ...annotation })) ?? [];
-    this.displayLabel = this.field.displayLabel ?? '';
-    this.displayDescription = this.field.displayDescription ?? '';
-    this.hidden = this.field.hidden ?? false;
-    this.continuePreviousLine = this.field.continuePreviousLine ?? false;
-    this.text = { ...(this.field.textConstraints ?? { minLength: null, maxLength: null, regex: null }) };
-    this.numeric = {
+    const first = this.loadedFieldId !== this.field.id;
+    if (first) {
+      // A different field: the previous draft belonged to the previous card.
+      this.loaded = {};
+      this.loadedFieldId = this.field.id;
+    }
+    const take = <T>(key: string, current: T, incoming: T): T =>
+      first ? incoming : this.adopt(key, current, incoming);
+    if (first) this.loaded = {};
+
+    this.schemaTitle = take('schemaTitle', this.schemaTitle, this.artifact.title ?? '');
+    this.schemaDescription = take('schemaDescription', this.schemaDescription, this.artifact.description ?? '');
+    this.preferredLabel = take('preferredLabel', this.preferredLabel, this.field.preferredLabel ?? '');
+    this.alternateLabels = take('alternateLabels', this.alternateLabels, this.field.alternateLabels?.join('\n') ?? '');
+    this.schemaIdentifier = take('schemaIdentifier', this.schemaIdentifier, this.field.schemaIdentifier ?? '');
+    this.language = take('language', this.language, this.field.language ?? '');
+    this.propertyIri = take('propertyIri', this.propertyIri, this.field.propertyIri ?? '');
+    this.deploymentName = take('deploymentName', this.deploymentName, this.field.deploymentName ?? this.field.name);
+    this.annotations = take(
+      'annotations',
+      this.annotations,
+      this.field.annotations?.map((annotation) => ({ ...annotation })) ?? [],
+    );
+    this.displayLabel = take('displayLabel', this.displayLabel, this.field.displayLabel ?? '');
+    this.displayDescription = take('displayDescription', this.displayDescription, this.field.displayDescription ?? '');
+    this.hidden = take('hidden', this.hidden, this.field.hidden ?? false);
+    this.continuePreviousLine = take(
+      'continuePreviousLine',
+      this.continuePreviousLine,
+      this.field.continuePreviousLine ?? false,
+    );
+    this.text = take('text', this.text, {
+      ...(this.field.textConstraints ?? { minLength: null, maxLength: null, regex: null }),
+    });
+    this.numeric = take('numeric', this.numeric, {
       ...(this.field.numeric ?? { type: 'xsd:decimal', min: null, max: null, decimalPlaces: null, unit: null }),
-    };
-    this.temporal = {
+    });
+    this.temporal = take('temporal', this.temporal, {
       ...(this.field.temporal ?? {
         type: this.field.type === 'time' ? 'xsd:time' : 'xsd:date',
         granularity: this.field.type === 'time' ? 'minute' : 'day',
         timezoneEnabled: false,
         inputTimeFormat: null,
       }),
-    };
-    this.width = this.field.width ?? null;
-    this.height = this.field.height ?? null;
-    this.min = this.field.minItems ?? null;
-    this.max = this.field.maxItems ?? null;
+    });
+    this.width = take('width', this.width, this.field.width ?? null);
+    this.height = take('height', this.height, this.field.height ?? null);
+    this.min = take('min', this.min, this.field.minItems ?? null);
+    this.max = take('max', this.max, this.field.maxItems ?? null);
     this.error = null;
   }
+
   saveMetadata(): void {
     if (this.propertyIri && !/^[a-z][a-z0-9+.-]*:\S+$/i.test(this.propertyIri)) {
       this.error = 'The property IRI must be an absolute identifier.';

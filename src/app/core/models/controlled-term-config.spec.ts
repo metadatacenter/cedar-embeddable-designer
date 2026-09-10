@@ -68,34 +68,52 @@ describe('the constraint union', () => {
   });
 
   /**
-   * Still assignable to what the picker publishes, which is the claim that makes
-   * narrowing safe rather than merely tidy.
+   * The same four variants the picker now publishes.
    *
-   * `PublishedConfig` is a copy of `ControlledTermConfig` from
-   * `cedar-term-picker/src/app/search/constraint-set.ts` — copied rather than imported,
-   * because CED loads the picker as a script and does not depend on its package. If the
-   * picker narrows its own contract one day this stops compiling, which is the right
-   * time to hear about it.
+   * `PublishedConfig` mirrors `ControlledTermConfig` from
+   * `cedar-term-picker/src/app/search/constraint-set.ts` — mirrored rather than
+   * imported, because CED loads the picker as a script and does not depend on its
+   * package. The two were narrowed together, so this is what would catch them drifting
+   * apart: a variant the picker tightens further, or a key it drops, stops compiling
+   * here.
    */
-  it('is assignable to the contract the picker publishes', () => {
-    interface PublishedConfig {
-      sourceType: 'ontology-term' | 'ontology' | 'value-set' | 'ontology-branch';
-      uri?: string;
-      iri?: string;
-      sourceSystem?: string;
-      source?: string;
-      label?: string;
-      termType?: 'OntologyClass' | 'Value';
-      numTerms?: number | null;
-      sourceId?: string;
-      sourceName?: string;
-      ontologyId?: string;
-      ontologyName?: string;
-      branchRootId?: string;
-      branchRootName?: string;
-      searchDepth?: number;
-      version?: { id: string; effectiveDate?: string; declaredVersion?: string };
-    }
+  it('matches the contract the picker publishes', () => {
+    type PublishedConfig =
+      | {
+          sourceType: 'ontology';
+          ontologyId: string;
+          ontologyName?: string;
+          uri?: string;
+          sourceId?: string;
+          numTerms?: number | null;
+        }
+      | {
+          sourceType: 'ontology-branch';
+          branchRootId: string;
+          branchRootName?: string;
+          sourceId?: string;
+          source?: string;
+          ontologyName?: string;
+          searchDepth?: number;
+        }
+      | {
+          sourceType: 'ontology-term';
+          sourceId: string;
+          label?: string;
+          sourceName?: string;
+          ontologyId?: string;
+          ontologyName?: string;
+          source?: string;
+          termType?: 'OntologyClass' | 'Value';
+        }
+      | {
+          sourceType: 'value-set';
+          sourceId: string;
+          sourceName?: string;
+          ontologyId?: string;
+          ontologyName?: string;
+          numTerms?: number | null;
+        };
 
     const ours: ControlledTermConfig[] = [
       { sourceType: 'ontology', ontologyId: 'DOID', ontologyName: 'Human Disease Ontology' },
@@ -103,9 +121,11 @@ describe('the constraint union', () => {
       { sourceType: 'ontology-term', sourceId: 'urn:melanoma', label: 'melanoma' },
       { sourceType: 'value-set', sourceId: 'urn:list', sourceName: 'A list' },
     ];
+    // Assignable both ways: neither side accepts a constraint the other would refuse.
     const asPublished: PublishedConfig[] = ours;
+    const asOurs: ControlledTermConfig[] = asPublished;
 
-    expect(asPublished.map((constraint) => constraint.sourceType)).toEqual([
+    expect(asOurs.map((constraint) => constraint.sourceType)).toEqual([
       'ontology',
       'ontology-branch',
       'ontology-term',

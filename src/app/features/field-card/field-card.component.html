@@ -194,7 +194,7 @@
               type="text"
               [ngModel]="option"
               (ngModelChange)="service.updateOption(field.id, optIdx, $event)"
-              class="text-sm text-gray-700 border-none outline-none bg-transparent flex-1 border-b border-gray-200 focus:border-teal-500 pb-0.5"
+              class="text-sm text-gray-700 border-none outline-none bg-transparent flex-1 min-w-0 border-b border-gray-200 focus:border-teal-500 pb-0.5"
               (focus)="service.selectedField.set(field.id)"
               [placeholder]="'Option ' + (optIdx + 1)"
               [attr.aria-label]="'Option ' + (optIdx + 1)"
