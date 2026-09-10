@@ -25,8 +25,8 @@
  * Width is the one measurement excluded, and deliberately: the card is narrower than
  * the page and constraining a control's width is what a layout is for.
  *
- * Opt-in, like `cef-defaults.spec.ts`, because it needs the real sibling bundle.
- * `CEF_BUNDLE` names it and `playwright.config.ts` skips this file without it.
+ * CI builds the pinned sibling and supplies `CEF_BUNDLE`. Local runs can opt in
+ * with the same variable; `playwright.config.ts` skips this file without it.
  */
 import { expect, test, type Page } from '@playwright/test';
 import { buildTemplate, fieldToJson, templateToJson } from '../../src/app/core/model/cedar-template';

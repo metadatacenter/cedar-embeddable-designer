@@ -105,3 +105,71 @@ jobs:
       # that a failure means something.
       - name: Audit what ships
         run: npm run audit:prod
+
+  cef-integration:
+    name: CED with real CEE and CEF
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    env:
+      CEF_BUNDLE: ${{ github.workspace }}/cedar-embeddable-editor/visual/public/cedar-embeddable-editor.js
+    steps:
+      - name: Check out CED
+        uses: actions/checkout@v4
+        with:
+          path: cedar-embeddable-designer
+
+      # Update this pin deliberately when adopting CEE/CEF changes. A moving
+      # branch would make a CED revision's integration result irreproducible.
+      - name: Check out the supported CEE revision
+        uses: actions/checkout@v4
+        with:
+          repository: metadatacenter/cedar-embeddable-editor
+          ref: 8abcc34b6f44e5cb9f3c4baa019370e30cb2b321
+          path: cedar-embeddable-editor
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+          cache: npm
+          cache-dependency-path: |
+            cedar-embeddable-designer/package-lock.json
+            cedar-embeddable-designer/browser/package-lock.json
+            cedar-embeddable-editor/package-lock.json
+            cedar-embeddable-editor/visual/package-lock.json
+
+      - name: Build CEE and CEF from the pinned source
+        working-directory: cedar-embeddable-editor
+        run: |
+          npm ci
+          npm --prefix visual ci
+          npm run build:production
+          npm --prefix visual run bundle
+          npm --prefix visual run check:fresh
+
+      - name: Build CED and install Chromium
+        working-directory: cedar-embeddable-designer
+        run: |
+          npm ci
+          npm --prefix browser ci
+          ./browser/node_modules/.bin/playwright install --with-deps chromium
+          npm run dist
+
+      - name: Record the exact integration inputs
+        run: |
+          git -C cedar-embeddable-designer rev-parse HEAD
+          git -C cedar-embeddable-editor rev-parse HEAD
+          test -s "$CEF_BUNDLE"
+          sha256sum "$CEF_BUNDLE" cedar-embeddable-designer/dist-bundle/cedar-embeddable-designer.js
+
+      - name: Test CED with the real CEE and CEF bundle
+        working-directory: cedar-embeddable-designer
+        run: npm run test:browser:prebuilt
+
+      - name: Keep failure traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cef-integration-traces
+          path: cedar-embeddable-designer/browser/test-results
+          if-no-files-found: ignore

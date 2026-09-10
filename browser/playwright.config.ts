@@ -19,8 +19,8 @@ const port = Number(process.env.PORT ?? 4598);
 export default defineConfig({
   testDir: './tests',
   /**
-   * Two opt-in sets. The CEF specs need the real sibling bundle, named by
-   * `CEF_BUNDLE`. The visual baselines need the container that makes them mean
+   * Two conditional sets. CI supplies the real sibling bundle for CEF specs via
+   * `CEF_BUNDLE`; local runs opt in. The visual baselines need the container that makes them mean
    * anything, and `browser/run-in-container.sh` is what sets `CED_VISUAL` — so a
    * developer running the behaviour suite never meets a pixel failure they have no
    * way to act on.

@@ -3,11 +3,13 @@ import { buildTemplate, templateToJson } from '../../src/app/core/model/cedar-te
 import { Field } from '../../src/app/core/models/types';
 import { applyPreset, child, currentTemplate, openDesigner, openPreview } from './support';
 
-// Opt-in integration suite: CEF_BUNDLE names the actual sibling bundle to exercise.
-async function openField(page: Page, type: string, extra: Partial<Field> = {}, query = '') {
+// CI supplies a pinned real sibling; local runs opt in by setting CEF_BUNDLE.
+async function openField(page: Page, type: string, extra: Partial<Field> = {}, query = '', loadBundle = true) {
   await openDesigner(page, query);
-  await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
-  await page.waitForFunction(() => !!customElements.get('cedar-embeddable-field'));
+  if (loadBundle) {
+    await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
+    await page.waitForFunction(() => !!customElements.get('cedar-embeddable-field'));
+  }
   const template = templateToJson(
     buildTemplate({
       name: 'Defaults',
@@ -297,4 +299,21 @@ test('an unfinished controlled-term field stays controlled when reopened', async
     (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
   }, before);
   await expect(page.locator('app-controlled-term-config')).toBeVisible();
+});
+
+test('loads CEF after opening a document without losing its saved default', async ({ page }) => {
+  const control = await openField(
+    page,
+    'text',
+    { defaultValue: { kind: 'literal', value: 'Saved default' } },
+    '',
+    false,
+  );
+  expect(await page.evaluate(() => !!customElements.get('cedar-embeddable-field'))).toBe(false);
+  await expect.poll(async () => (await constraints(page))['defaultValue']).toBe('Saved default');
+  await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
+  const input = control.locator('input').first();
+  await expect(input).toHaveValue('Saved default');
+  await input.fill('After registration');
+  await expect.poll(async () => (await constraints(page))['defaultValue']).toBe('After registration');
 });
