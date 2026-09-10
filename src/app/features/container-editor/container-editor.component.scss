@@ -120,3 +120,61 @@
     margin-top: 0;
   }
 }
+
+[hidden] {
+  display: none !important;
+}
+.nested-content {
+  padding: 0 12px 8px;
+}
+.element-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+.element-toggle svg {
+  transform: rotate(180deg);
+}
+.element-toggle svg.collapsed {
+  transform: none;
+}
+.container-content > app-element-card {
+  display: block;
+  margin-bottom: 8px;
+}
+@container (max-width: 400px) {
+  .nested-content {
+    padding: 0 6px 6px;
+  }
+}
+
+.element-drag-handle {
+  display: inline-flex;
+  cursor: grab;
+}
+
+.container-content > .add-field-section {
+  margin-top: 8px;
+}
+.element-actions {
+  justify-content: center;
+}
+.btn-element-action {
+  color: #0f7686;
+  border: 1px solid #b7d6db;
+  background: white;
+  border-radius: 4px;
+  padding: 4px 10px;
+  min-height: 28px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}

@@ -1,4 +1,13 @@
-import { Component, Input, inject, signal, HostListener, computed, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  Input,
+  input,
+  inject,
+  signal,
+  HostListener,
+  computed,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { TemplateService, FIELD_TYPES } from '../../core/services/template.service';
@@ -17,6 +26,7 @@ export class FieldTypePickerComponent {
   readonly service = inject(TemplateService);
 
   @Input() insertPosition = 0;
+  readonly containerId = input<number>();
 
   searchText = '';
   readonly showDropdown = signal(false);
@@ -40,7 +50,7 @@ export class FieldTypePickerComponent {
   readonly visibleFieldTypesList = computed(() => {
     const visible = this.service.preferences().visibleFieldTypes;
     return Object.entries(FIELD_TYPES)
-      .filter(([key]) => visible[key] !== false && this.service.canAddField(key))
+      .filter(([key]) => visible[key] !== false && this.service.canAddField(key, this.containerId()))
       .map(([key, value]) => ({ key, value }));
   });
 
@@ -51,11 +61,11 @@ export class FieldTypePickerComponent {
   }
 
   onFieldClick(key: string) {
-    this.service.addField(key, this.insertPosition);
+    this.service.addField(key, this.insertPosition, this.containerId());
   }
 
   onCustomFieldClick(field: CustomField) {
-    this.service.addCustomFieldToTemplate(field, this.insertPosition);
+    this.service.addCustomFieldToTemplate(field, this.insertPosition, this.containerId());
   }
 
   close() {

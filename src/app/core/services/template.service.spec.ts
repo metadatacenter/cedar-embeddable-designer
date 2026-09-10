@@ -1,3 +1,4 @@
+import { findContainer } from '../model/container-draft';
 import { buildContainer } from '../model/cedar-template';
 import { TestBed } from '@angular/core/testing';
 import nestedTemplate from '../model/fixtures/corpus/template-028.json';
@@ -23,6 +24,33 @@ describe('TemplateService', () => {
     localStorage.clear();
     TestBed.configureTestingModule({});
     service = TestBed.inject(TemplateService);
+  });
+
+  it('targets inline edits and field-type validation independently of the selected container', () => {
+    const rootId = service.session.document().id;
+    const rootFieldId = service.fields()[0].id;
+    service.addElement(rootId);
+    const element = service.session.document().children.find((node) => node.kind === 'element')!;
+    service.addField('text', 0, element.id);
+    const nestedId = findContainer(service.session.document(), element.id)!.children[0].id;
+    service.openContainer(rootId);
+    service.updateFieldName(nestedId, 'Nested text');
+    expect(service.updateFieldSettings(nestedId, { displayLabel: 'Nested label' })).toBeNull();
+    service.updateFieldType(nestedId, 'pageBreak');
+    expect(service.loadError()).toContain('Page breaks');
+    service.openContainer(element.id);
+    service.updateFieldName(rootFieldId, 'Root text');
+    service.updateFieldType(rootFieldId, 'pageBreak');
+    const root = service.session.document();
+    expect(root.children[0]).toMatchObject({ definition: { name: 'Root text', type: 'pageBreak' } });
+    expect(root.children.find((node) => node.id === element.id)).toMatchObject({
+      definition: {
+        children: [{ definition: { name: 'Nested text', type: 'text' }, placement: { displayLabel: 'Nested label' } }],
+      },
+    });
+    service.toggleElement(element.id);
+    service.openContainer(element.id);
+    expect(service.collapsedElements().has(element.id)).toBe(false);
   });
 
   it.each(Object.keys(FIELD_TYPES))('reselecting %s leaves the field and dirty state unchanged', (type) => {

@@ -1,18 +1,5 @@
-@if (service.breadcrumbs().length > 1) {
-  <nav aria-label="Container path" class="container-path">
-    @for (container of service.breadcrumbs(); track container.id) {
-      <button
-        type="button"
-        (click)="service.openContainer(container.id)"
-        [attr.aria-current]="container.id === service.session.active().id ? 'page' : null"
-      >
-        {{ container.name }}
-      </button>
-    }
-  </nav>
-}
 <!-- Template Header Card -->
-<div class="template-header-card">
+<div class="template-header-card" (focusin)="activate()">
   <div
     class="template-header-card__gradient"
     [style.background]="
@@ -21,7 +8,18 @@
   ></div>
   <div class="template-header-card__body">
     <div class="template-header-card__icon" [style.backgroundColor]="service.COLORS.primaryLight">
-      <app-icon key="paragraph" className="w-6 h-6" [style.color]="service.COLORS.primary"></app-icon>
+      @if (placementNode()) {
+        <span
+          cdkDragHandle
+          class="element-drag-handle"
+          title="Drag element to reorder"
+          aria-label="Drag element to reorder"
+        >
+          <app-icon key="folder" className="w-6 h-6" [style.color]="service.COLORS.primary" />
+        </span>
+      } @else {
+        <app-icon key="paragraph" className="w-6 h-6" [style.color]="service.COLORS.primary" />
+      }
     </div>
     <div class="template-header-card__inputs">
       <!-- Top Row: Name, Identifier, Version -->
@@ -30,10 +28,10 @@
           <label class="template-field-label">Name</label>
           <input
             type="text"
-            [ngModel]="service.templateName()"
-            (ngModelChange)="service.templateName.set($event)"
+            [ngModel]="container().name"
+            (ngModelChange)="update({ name: $event })"
             class="template-input font-medium text-base text-gray-900"
-            [placeholder]="service.session.active().kind === 'element' ? 'Element name' : 'Template name'"
+            [placeholder]="container().kind === 'element' ? 'Element name' : 'Template name'"
           />
         </div>
 
@@ -41,8 +39,8 @@
           <label class="template-field-label">Identifier</label>
           <input
             type="text"
-            [ngModel]="service.templateSchemaIdentifier()"
-            (ngModelChange)="service.templateSchemaIdentifier.set($event)"
+            [ngModel]="container().schemaIdentifier"
+            (ngModelChange)="update({ schemaIdentifier: $event })"
             class="template-input font-medium text-sm text-gray-800"
             placeholder="Identifier"
           />
@@ -52,16 +50,14 @@
           <label class="template-field-label">Version</label>
           <input
             type="text"
-            [ngModel]="service.templateVersion()"
-            (ngModelChange)="service.templateVersion.set($event)"
+            [ngModel]="container().version"
+            (ngModelChange)="update({ version: $event })"
             class="template-input font-medium text-sm text-gray-800 text-right"
             placeholder="0.0.1"
           />
           @if (
             publicationStatusLabel(
-              service.session.active().metadata
-                ? service.session.active().metadata?.artifact?.publicationStatus
-                : 'bibo:draft'
+              container().metadata ? container().metadata?.artifact?.publicationStatus : 'bibo:draft'
             );
             as status
           ) {
@@ -75,109 +71,127 @@
         <label class="template-field-label">Description</label>
         <input
           type="text"
-          [ngModel]="service.templateDesc()"
-          (ngModelChange)="service.templateDesc.set($event)"
+          [ngModel]="container().description"
+          (ngModelChange)="update({ description: $event })"
           class="template-input text-sm text-gray-600"
           placeholder="Add description..."
         />
       </div>
     </div>
+    @if (placementNode()) {
+      <button
+        type="button"
+        class="element-toggle"
+        [attr.aria-expanded]="!collapsed()"
+        [attr.aria-label]="(collapsed() ? 'Expand ' : 'Collapse ') + container().name"
+        [attr.aria-controls]="'element-content-' + container().id"
+        (click)="$event.stopPropagation(); service.toggleElement(container().id)"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" [class.collapsed]="collapsed()">
+          <path
+            d="m6 9 6 6 6-6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+    }
   </div>
 </div>
 
-<!-- Fields Drop List -->
-<div cdkDropList (cdkDropListDropped)="onDrop($event)" class="fields-drop-list">
-  @for (node of service.children(); track node.id; let idx = $index) {
-    <div class="field-drop-item" [id]="'field-card-' + node.id">
-      <!-- Insert Zone (modal style) -->
-      @if (service.preferences().fieldSelectionStyle === 'modal') {
-        <div class="insert-zone" (click)="service.showPicker.set(idx)">
-          <button class="btn-insert-here" [style.backgroundColor]="service.COLORS.primary">＋ Add field here</button>
-        </div>
-        @if (service.showPicker() === idx) {
-          <div class="my-3">
-            <app-field-type-picker [insertPosition]="idx"></app-field-type-picker>
+<div
+  class="container-content"
+  [class.nested-content]="!!placementNode()"
+  [hidden]="collapsed()"
+  [id]="'element-content-' + container().id"
+>
+  @if (placementNode(); as element) {
+    <app-element-card [node]="element" />
+  }
+  <!-- Fields Drop List -->
+  <div cdkDropList (cdkDropListDropped)="onDrop($event)" class="fields-drop-list">
+    @for (node of container().children; track node.id; let idx = $index) {
+      <div class="field-drop-item" [id]="'field-card-' + node.id">
+        <!-- Insert Zone (modal style) -->
+        @if (service.preferences().fieldSelectionStyle === 'modal') {
+          <div class="insert-zone" (click)="chooseField(idx)">
+            <button class="btn-insert-here" [style.backgroundColor]="service.COLORS.primary">＋ Add field here</button>
           </div>
-        }
-      }
-      <!-- Drag Container -->
-      <div
-        cdkDrag
-        [cdkDragData]="node.id"
-        [cdkDragDisabled]="node.kind === 'field' && !!node.definition.publishedDefinition"
-        (click)="service.selectedField.set(node.id)"
-        class="field-drag-container"
-        [class.selected]="service.selectedField() === node.id"
-      >
-        @if (service.selectedField() === node.id) {
-          <div class="field-selection-bar"></div>
-        }
-        @if (node.kind === 'field') {
-          <app-field-card [field]="fieldView(node)">
-            <div field-placement>
-              @if (service.hasElements()) {
-                <div class="child-move">
-                  <label
-                    >Move {{ childName(node) }} to
-                    <select
-                      aria-label="Move child to container"
-                      (change)="service.moveChild(node.id, +$any($event.target).value)"
-                      [value]="service.session.active().id"
-                    >
-                      @for (destination of destinations(node); track destination.id) {
-                        <option [value]="destination.id">{{ destination.name }}</option>
-                      }
-                    </select>
-                  </label>
-                </div>
-              }
-            </div>
-          </app-field-card>
-        } @else {
-          <app-element-card [node]="node" />
-          @if (service.hasElements()) {
-            <div class="child-move element-child-move">
-              <label
-                >Move {{ childName(node) }} to
-                <select
-                  aria-label="Move child to container"
-                  (change)="service.moveChild(node.id, +$any($event.target).value)"
-                  [value]="service.session.active().id"
-                >
-                  @for (destination of destinations(node); track destination.id) {
-                    <option [value]="destination.id">{{ destination.name }}</option>
-                  }
-                </select>
-              </label>
+          @if (pickerAt(idx)) {
+            <div class="my-3">
+              <app-field-type-picker [containerId]="container().id" [insertPosition]="idx"></app-field-type-picker>
             </div>
           }
         }
-      </div>
-    </div>
-  }
-</div>
-
-<!-- Bottom Add Field Section (modal style) -->
-@if (service.preferences().fieldSelectionStyle === 'modal') {
-  <div class="add-field-section">
-    <button
-      (click)="service.showPicker.set(service.children().length)"
-      class="btn-add-field"
-      [style.backgroundColor]="service.COLORS.primary"
-    >
-      <span class="text-base font-bold">＋</span>
-      Add Field
-    </button>
-    @if (service.showPicker() === service.children().length) {
-      <div class="add-field-section__picker">
-        <app-field-type-picker [insertPosition]="service.children().length"></app-field-type-picker>
+        <!-- Drag Container -->
+        <div
+          cdkDrag
+          [cdkDragData]="node.id"
+          [cdkDragDisabled]="node.kind === 'field' && !!node.definition.publishedDefinition"
+          (click)="$event.stopPropagation(); activate(); service.selectedField.set(node.id)"
+          class="field-drag-container"
+          [class.selected]="service.selectedField() === node.id"
+        >
+          @if (service.selectedField() === node.id) {
+            <div class="field-selection-bar"></div>
+          }
+          @if (node.kind === 'field') {
+            <app-field-card [field]="fieldView(node)">
+              <div field-placement>
+                @if (service.hasElements()) {
+                  <div class="child-move">
+                    <label
+                      >Move {{ childName(node) }} to
+                      <select
+                        aria-label="Move child to container"
+                        (change)="service.moveChild(node.id, +$any($event.target).value)"
+                        [value]="container().id"
+                      >
+                        @for (destination of destinations(node); track destination.id) {
+                          <option [value]="destination.id">{{ destination.name }}</option>
+                        }
+                      </select>
+                    </label>
+                  </div>
+                }
+              </div>
+            </app-field-card>
+          } @else {
+            <app-container-editor [containerId]="node.id" [placementNode]="node" />
+          }
+        </div>
       </div>
     }
   </div>
-}
-@if (service.preferences().showElements) {
-  <div class="element-actions">
-    <button type="button" class="btn-add-field" (click)="service.addElement()">Add Element</button>
-    <button type="button" class="btn-add-field" (click)="importElement()">Import Element</button>
-  </div>
-}
+
+  <!-- Bottom Add Field Section (modal style) -->
+  @if (service.preferences().fieldSelectionStyle === 'modal') {
+    <div class="add-field-section">
+      <button
+        (click)="chooseField(container().children.length)"
+        class="btn-add-field"
+        [style.backgroundColor]="service.COLORS.primary"
+      >
+        <span class="text-base font-bold">＋</span>
+        Add Field
+      </button>
+      @if (pickerAt(container().children.length)) {
+        <div class="add-field-section__picker">
+          <app-field-type-picker
+            [containerId]="container().id"
+            [insertPosition]="container().children.length"
+          ></app-field-type-picker>
+        </div>
+      }
+    </div>
+  }
+  @if (service.preferences().showElements) {
+    <div class="element-actions">
+      <button type="button" class="btn-element-action" (click)="service.addElement(container().id)">Add Element</button>
+      <button type="button" class="btn-element-action" (click)="importElement()">Import Element</button>
+    </div>
+  }
+</div>

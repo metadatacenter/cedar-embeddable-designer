@@ -212,7 +212,7 @@ export class TemplateService {
   readonly showFieldDesigner = signal<boolean>(false);
   readonly libraryDraft = signal<Field | null>(null);
   saveFieldToLibrary(id: number): void {
-    const field = this.fields().find((field) => field.id === id);
+    const field = this.fieldsFor(id)().find((field) => field.id === id);
     if (field) {
       this.libraryDraft.set(structuredClone(field));
       this.showFieldDesigner.set(true);
@@ -253,9 +253,32 @@ export class TemplateService {
     this.savedState.set(this.stateKey());
   }
 
+  /** Field edits are addressed by node identity, never by the last selected container. */
+  parentContainerId(id: number): number {
+    return parentOf(this.session.document(), id)?.id ?? this.session.active().id;
+  }
+  private fieldsFor(id: number) {
+    return this.session.fieldBinding(this.parentContainerId(id));
+  }
+  updateContainerDefinition(
+    id: number,
+    changes: Partial<Pick<ContainerDraft, 'name' | 'description' | 'schemaIdentifier' | 'version'>>,
+  ): void {
+    this.session.document.update((root) => updateContainer(root, id, (container) => ({ ...container, ...changes })));
+  }
+  readonly collapsedElements = signal<ReadonlySet<number>>(new Set());
+  toggleElement(id: number): void {
+    this.collapsedElements.update((previous) => {
+      const next = new Set(previous);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
   // Field manipulation methods
-  addField(type: string, position: number) {
-    if (!this.canAddField(type)) {
+  addField(type: string, position: number, targetId = this.session.active().id) {
+    if (!this.canAddField(type, targetId)) {
       this.loadError.set('Page breaks can only be placed in templates.');
       return;
     }
@@ -270,7 +293,7 @@ export class TemplateService {
       allowMultiple: false,
     };
 
-    this.insertNode(fieldNode(newField), position);
+    this.insertNode(fieldNode(newField), position, targetId);
 
     this.showPicker.set(null);
     this.selectedField.set(newField.id);
@@ -278,8 +301,8 @@ export class TemplateService {
     this.scrollRequest.set(newField.id);
   }
 
-  addCustomFieldToTemplate(customField: CustomField, position: number) {
-    if (!this.canAddField(customField.definition.type)) {
+  addCustomFieldToTemplate(customField: CustomField, position: number, targetId = this.session.active().id) {
+    if (!this.canAddField(customField.definition.type, targetId)) {
       this.loadError.set('Page breaks can only be placed in templates.');
       return;
     }
@@ -290,7 +313,7 @@ export class TemplateService {
       libraryId: customField.libraryId,
     };
 
-    this.insertNode(fieldNode(newField), position);
+    this.insertNode(fieldNode(newField), position, targetId);
 
     this.showPicker.set(null);
     this.selectedField.set(newField.id);
@@ -300,7 +323,7 @@ export class TemplateService {
 
   deleteField(id: number) {
     if (this.isPublished(id)) return;
-    this.fields.update((prev) => prev.filter((f) => f.id !== id));
+    this.fieldsFor(id).update((prev) => prev.filter((f) => f.id !== id));
     if (this.selectedField() === id) {
       this.selectedField.set(null);
     }
@@ -308,16 +331,16 @@ export class TemplateService {
 
   updateFieldName(id: number, name: string) {
     if (this.isPublished(id)) return;
-    this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, name } : f)));
+    this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, name } : f)));
   }
 
   updateFieldType(id: number, type: string) {
-    if (!this.canAddField(type)) {
+    if (!this.canAddField(type, this.parentContainerId(id))) {
       this.loadError.set('Page breaks can only be placed in templates.');
       return;
     }
-    if (this.isPublished(id) || this.fields().find((field) => field.id === id)?.type === type) return;
-    this.fields.update((prev) =>
+    if (this.isPublished(id) || this.fieldsFor(id)().find((field) => field.id === id)?.type === type) return;
+    this.fieldsFor(id).update((prev) =>
       prev.map((f) =>
         f.id === id
           ? {
@@ -338,12 +361,12 @@ export class TemplateService {
   }
 
   convertFieldToCustomField(fieldId: number, customField: CustomField) {
-    if (!this.canAddField(customField.definition.type)) {
+    if (!this.canAddField(customField.definition.type, this.parentContainerId(fieldId))) {
       this.loadError.set('Page breaks can only be placed in templates.');
       return;
     }
     if (this.isPublished(fieldId)) return;
-    this.fields.update((fields) =>
+    this.fieldsFor(fieldId).update((fields) =>
       fields.map((field) =>
         field.id === fieldId
           ? {
@@ -371,12 +394,12 @@ export class TemplateService {
 
   updateFieldStatus(id: number, status: string) {
     if (this.isPublished(id)) return;
-    this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, status } : f)));
+    this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, status } : f)));
   }
 
   updateOption(fieldId: number, optionIndex: number, value: string) {
     if (this.isPublished(fieldId)) return;
-    this.fields.update((prev) =>
+    this.fieldsFor(fieldId).update((prev) =>
       prev.map((f) => {
         if (f.id === fieldId) {
           const newOptions = [...f.options];
@@ -396,7 +419,7 @@ export class TemplateService {
 
   addOption(fieldId: number) {
     if (this.isPublished(fieldId)) return;
-    this.fields.update((prev) =>
+    this.fieldsFor(fieldId).update((prev) =>
       prev.map((f) => {
         if (f.id === fieldId) {
           /*
@@ -414,7 +437,7 @@ export class TemplateService {
 
   deleteOption(fieldId: number, optionIndex: number) {
     if (this.isPublished(fieldId)) return;
-    this.fields.update((prev) =>
+    this.fieldsFor(fieldId).update((prev) =>
       prev.map((f) => {
         if (f.id === fieldId) {
           const newOptions = f.options.filter((_, index) => index !== optionIndex);
@@ -432,20 +455,22 @@ export class TemplateService {
   }
 
   isPublished(id: number): boolean {
-    return !!this.fields().find((field) => field.id === id)?.publishedDefinition;
+    return !!this.fieldsFor(id)().find((field) => field.id === id)?.publishedDefinition;
   }
 
   updateFieldSettings(id: number, changes: Partial<Field>): string | null {
     if (this.isPublished(id)) return 'Published fields are read-only. Editing a draft version is not available yet.';
     if (
       changes.deploymentName !== undefined &&
-      this.children().some((node) => node.id !== id && childName(node) === changes.deploymentName?.trim())
+      (findContainer(this.session.document(), this.parentContainerId(id))?.children ?? []).some(
+        (node) => node.id !== id && childName(node) === changes.deploymentName?.trim(),
+      )
     )
       return 'Another child already uses that property name.';
-    const current = this.fields().find((field) => field.id === id);
-    if (current && !this.canAddField(changes.type ?? current.type))
+    const current = this.fieldsFor(id)().find((field) => field.id === id);
+    if (current && !this.canAddField(changes.type ?? current.type, this.parentContainerId(id)))
       return 'Page breaks can only be placed in templates.';
-    const fields = this.fields().map((field) => (field.id === id ? { ...field, ...changes } : field));
+    const fields = this.fieldsFor(id)().map((field) => (field.id === id ? { ...field, ...changes } : field));
     try {
       buildTemplate({
         name: this.templateName(),
@@ -454,7 +479,7 @@ export class TemplateService {
         version: '0.0.1',
         fields,
       });
-      this.fields.set(fields);
+      this.fieldsFor(id).set(fields);
       return null;
     } catch (error) {
       return error instanceof Error ? error.message : String(error);
@@ -463,7 +488,7 @@ export class TemplateService {
 
   updateDefaultValue(id: number, value: FieldDefaultValue) {
     if (this.isPublished(id)) return;
-    this.fields.update((prev) =>
+    this.fieldsFor(id).update((prev) =>
       prev.map((f) =>
         f.id === id && defaultValueError(f, value) === null
           ? { ...f, defaultValue: value, importedChoiceDefault: undefined }
@@ -474,23 +499,25 @@ export class TemplateService {
 
   toggleAllowMultiple(id: number) {
     if (this.isPublished(id)) return;
-    this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, allowMultiple: !f.allowMultiple } : f)));
+    this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, allowMultiple: !f.allowMultiple } : f)));
   }
 
   /** The one value a static field shows. */
   updateContent(id: number, content: string) {
     if (this.isPublished(id)) return;
-    this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, content } : f)));
+    this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, content } : f)));
   }
 
   updateHelpText(id: number, helpText: string) {
     if (this.isPublished(id)) return;
-    this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, helpText } : f)));
+    this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, helpText } : f)));
   }
 
   updateControlledTermConstraints(id: number, constraints: ControlledTermSet) {
     if (this.isPublished(id)) return;
-    this.fields.update((prev) => prev.map((f) => (f.id === id ? { ...f, controlledTermConstraints: constraints } : f)));
+    this.fieldsFor(id).update((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, controlledTermConstraints: constraints } : f)),
+    );
   }
 
   moveField(dragIndex: number, hoverIndex: number) {
@@ -533,6 +560,7 @@ export class TemplateService {
       document.children = containerFromFlat({ ...document, fields: starterFields() }).children;
     }
     this.session.replace(document);
+    this.collapsedElements.set(new Set());
     this.markSaved();
   }
 
@@ -561,6 +589,7 @@ export class TemplateService {
     this.loadError.set(null);
 
     this.session.replace(state);
+    this.collapsedElements.set(new Set());
     this.markSaved();
   }
   readonly children = computed(() => this.session.active().children);
@@ -579,12 +608,25 @@ export class TemplateService {
     }
     return active === this.session.document().id ? [this.session.document()] : path;
   });
-  canAddField(type: string): boolean {
-    return allowedInContainer(type, this.session.active().kind);
+  canAddField(type: string, targetId = this.session.active().id): boolean {
+    return allowedInContainer(
+      type,
+      findContainer(this.session.document(), targetId)?.kind ?? this.session.active().kind,
+    );
   }
   openContainer(id: number): void {
     if (!this.containerChoices().some((choice) => choice.id === id)) return;
     this.session.activeId.set(id);
+    this.collapsedElements.update((previous) => {
+      const next = new Set(previous);
+      let current = findContainer(this.session.document(), id);
+      while (current) {
+        next.delete(current.id);
+        current = parentOf(this.session.document(), current.id);
+      }
+      return next;
+    });
+    this.scrollRequest.set(id);
     this.showPicker.set(null);
     this.selectedField.set(null);
     this.fieldTypeDropdown.set(null);
@@ -612,7 +654,7 @@ export class TemplateService {
     );
   }
 
-  addElement(): void {
+  addElement(targetId = this.session.active().id): void {
     const definition = newContainer('element', 'Element');
     this.insertNode(
       {
@@ -621,7 +663,8 @@ export class TemplateService {
         definition,
         placement: { status: 'optional', allowMultiple: false, propertyIri: newFieldIdentity().propertyIri },
       },
-      this.children().length,
+      Number.MAX_SAFE_INTEGER,
+      targetId,
     );
   }
   importElement(source: string | object, targetId = this.session.active().id): void {
@@ -640,7 +683,8 @@ export class TemplateService {
     );
   }
   duplicateElement(id: number): void {
-    const node = this.children().find((child): child is ElementNode => child.kind === 'element' && child.id === id);
+    const parent = parentOf(this.session.document(), id);
+    const node = parent?.children.find((child): child is ElementNode => child.kind === 'element' && child.id === id);
     if (!node) return;
     const clone = (source: ChildNode): ChildNode => {
       const copy = structuredClone(source);
@@ -676,7 +720,8 @@ export class TemplateService {
     try {
       this.insertNode(
         clone({ ...node, definition: readContainer(templateToJson(buildContainer(node.definition))) }),
-        this.children().findIndex((child) => child.id === id) + 1,
+        parent!.children.findIndex((child) => child.id === id) + 1,
+        parent!.id,
       );
     } catch (error) {
       this.loadError.set(error instanceof Error ? error.message : String(error));

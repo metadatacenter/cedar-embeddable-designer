@@ -1,37 +1,14 @@
-import { publicationStatusLabel } from '../../shared/publication-status';
 import { Component, input, inject, signal, effect } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ElementNode, Placement } from '../../core/model/container-draft';
+import { ElementNode, Placement, findContainer } from '../../core/model/container-draft';
 import { TemplateService } from '../../core/services/template.service';
 
 @Component({
   selector: 'app-element-card',
   imports: [FormsModule],
   template: `<section aria-label="Element" class="element-card">
-    <header>
-      <strong>{{ node().definition.name }}</strong
-      ><span
-        >Element · {{ node().definition.children.length }} children
-        @if (
-          publicationStatusLabel(
-            node().definition.metadata ? node().definition.metadata?.artifact?.publicationStatus : 'bibo:draft'
-          );
-          as status
-        ) {
-          · {{ status }}
-        }
-      </span>
-    </header>
-    @if (node().definition.description) {
-      <p>{{ node().definition.description }}</p>
-    }
-    <div class="actions">
-      <button type="button" (click)="service.openContainer(node().id)">Edit Element</button>
-      <button type="button" (click)="service.duplicateElement(node().id)">Duplicate Element</button>
-      <button type="button" (click)="service.deleteChild(node().id)">Remove Element</button>
-    </div>
     <details>
-      <summary>Placement</summary>
+      <summary>Element settings</summary>
       <label>Property name <input [(ngModel)]="draft().deploymentName" (ngModelChange)="apply()" /></label>
       <label>Display label <input [(ngModel)]="draft().displayLabel" (ngModelChange)="apply()" /></label>
       <label>Display description <input [(ngModel)]="draft().displayDescription" (ngModelChange)="apply()" /></label>
@@ -64,6 +41,22 @@ import { TemplateService } from '../../core/services/template.service';
         ><input type="checkbox" [(ngModel)]="draft().continuePreviousLine" (ngModelChange)="apply()" /> Continue
         previous line</label
       >
+      <label
+        >Move element to
+        <select
+          aria-label="Move element to container"
+          [ngModel]="service.parentContainerId(node().id)"
+          (ngModelChange)="service.moveChild(node().id, +$event)"
+        >
+          @for (destination of destinations(); track destination.id) {
+            <option [value]="destination.id">{{ destination.name }}</option>
+          }
+        </select>
+      </label>
+      <div class="actions">
+        <button type="button" (click)="service.duplicateElement(node().id)">Duplicate Element</button>
+        <button type="button" (click)="service.deleteChild(node().id)">Remove Element</button>
+      </div>
       @if (error()) {
         <p role="alert">{{ error() }}</p>
       }
@@ -76,10 +69,10 @@ import { TemplateService } from '../../core/services/template.service';
       }
       .element-card {
         color: #334155;
-        background: white;
-        border: 1px solid #b7d6db;
+        background: #f4f6f6;
+        border: 0;
         border-radius: 0.5rem;
-        padding: 8px 16px;
+        padding: 4px 8px;
       }
       header,
       .actions {
@@ -105,7 +98,7 @@ import { TemplateService } from '../../core/services/template.service';
         padding: 0.4rem;
       }
       details {
-        margin-top: 0.5rem;
+        margin-top: 0;
       }
       label {
         display: block;
@@ -145,16 +138,23 @@ import { TemplateService } from '../../core/services/template.service';
   ],
 })
 export class ElementCardComponent {
-  readonly publicationStatusLabel = publicationStatusLabel;
   readonly node = input.required<ElementNode>();
   readonly service = inject(TemplateService);
   readonly draft = signal<Placement>({ status: 'optional', allowMultiple: false });
   readonly error = signal<string | null>(null);
+  private loadedPlacement = '';
   constructor() {
     effect(() => {
+      // Editing an inline descendant must not reset incomplete placement input.
+      const signature = JSON.stringify([this.node().id, this.node().placement]);
+      if (signature === this.loadedPlacement) return;
+      this.loadedPlacement = signature;
       this.draft.set({ ...this.node().placement });
       this.error.set(null);
     });
+  }
+  destinations() {
+    return this.service.containerChoices().filter((choice) => !findContainer(this.node().definition, choice.id));
   }
   apply(): void {
     this.error.set(this.service.updateElementPlacement(this.node().id, this.draft()));

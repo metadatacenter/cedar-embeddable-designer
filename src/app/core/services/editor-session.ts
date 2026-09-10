@@ -27,9 +27,14 @@ export class EditorSession {
       update: (update: (previous: ContainerDraft[K]) => ContainerDraft[K]) => set(update(value())),
     });
   }
-  fieldBinding() {
-    const value = computed(() => flatView(this.active()).fields);
-    const set = (fields: Field[]) => this.update((container) => replaceFields(container, fields));
+  fieldBinding(containerId?: number) {
+    const container = () => (containerId === undefined ? this.active() : findContainer(this.document(), containerId));
+    const value = computed(() => (container() ? flatView(container()!).fields : []));
+    const set = (fields: Field[]) => {
+      const target = container();
+      if (target)
+        this.document.update((root) => updateContainer(root, target.id, (current) => replaceFields(current, fields)));
+    };
     return Object.assign(value, { set, update: (update: (previous: Field[]) => Field[]) => set(update(value())) });
   }
 }

@@ -38,10 +38,12 @@ endpoint: unset, search is off and the panel says so.
 
 Choose **File → New Element** to author an element document. The **Modular**
 profile enables **Add Element** and **Import Element** within any container.
-Existing nested content stays visible in every profile. Use **Edit Element**, the
-outline, and breadcrumbs to navigate; every view edits the same document session.
+Existing nested content stays visible in every profile. Elements render inline with
+the same header and field layout as templates, expanded by default. The header
+chevron collapses their contents without losing edits; the Overview expands and
+scrolls to the selected field or element.
 
-An element's **Placement** panel controls its property name, display overrides,
+An element's **Element settings** panel controls its property name, display overrides,
 property IRI, requirement, cardinality and layout. Move controls transfer fields
 or whole element subtrees between containers. Cycles and conflicting property
 names are refused; page breaks are offered only in templates.

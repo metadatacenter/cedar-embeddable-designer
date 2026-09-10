@@ -10,8 +10,13 @@ test('opens an element-containing template without dropping nested content', asy
   await expect(page.locator('app-element-card').first()).toBeVisible();
   const saved = await currentTemplate(page);
   expect(saved['_ui']).toEqual(nestedTemplate['_ui']);
-  await page.locator('app-element-card').first().getByRole('button', { name: 'Edit Element', exact: true }).click();
-  await expect(page.getByRole('navigation', { name: 'Container path' })).toBeVisible();
+  const element = page.locator('app-container-editor').nth(1);
+  const toggle = element.locator(':scope > .template-header-card .element-toggle');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await toggle.click();
+  await expect(element.locator(':scope > .container-content')).toBeHidden();
+  await toggle.click();
+  await expect(element.locator(':scope > .container-content')).toBeVisible();
   expect(await currentTemplate(page)).toEqual(saved);
 });
 

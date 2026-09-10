@@ -5,6 +5,7 @@ for (const nested of [false, true]) {
   test(`overview reorders ${nested ? 'nested' : 'root'} fields only on drop`, async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 1000 });
     const designer = await openDesigner(page);
+    let editor = designer.locator('app-container-editor').first();
     if (nested) {
       await applyPreset(page, 'modular');
       await designer.getByRole('button', { name: 'Add Element', exact: true }).click();
@@ -16,15 +17,16 @@ for (const nested of [false, true]) {
         await select.selectOption(value!);
       }
       await designer.locator('.overview-panel').getByRole('button', { name: 'Element', exact: true }).click();
-      await expect(designer.locator('app-field-card input[aria-label="Field name"]').first()).toHaveValue('Title');
-      await expect(designer.locator('app-field-card')).toHaveCount(2);
+      editor = designer.locator('app-container-editor').last();
+      await expect(editor.locator('app-field-card input[aria-label="Field name"]').first()).toHaveValue('Title');
+      await expect(editor.locator('app-field-card')).toHaveCount(2);
     }
     const outline = designer.locator('app-container-outline').last();
     const rows = outline.locator(':scope > ul > li');
     const handle = rows.first().getByRole('button', { name: 'Reorder Title', exact: true });
     const last = rows.last();
     const before = await currentTemplate(page);
-    const names = await designer
+    const names = await editor
       .locator('app-field-card input[aria-label="Field name"]')
       .evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value));
     const alignment = await rows.first().evaluate((el) => {
@@ -44,7 +46,7 @@ for (const nested of [false, true]) {
     await expect(page.locator('.cdk-drag-preview')).toBeVisible();
     expect(await currentTemplate(page)).toEqual(before);
     expect(
-      await designer
+      await editor
         .locator('app-field-card input[aria-label="Field name"]')
         .evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value)),
     ).toEqual(names);
@@ -57,7 +59,7 @@ for (const nested of [false, true]) {
       .toEqual(expected);
     await expect
       .poll(async () =>
-        designer
+        editor
           .locator('app-field-card input[aria-label="Field name"]')
           .evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value)),
       )

@@ -181,4 +181,23 @@ test.describe('the designer', () => {
 
     await expect(designer).toHaveScreenshot('narrow.png', { ...SHOT, mask: maskVersion(page) });
   });
+  for (const width of [1280, 375]) {
+    test(`shows inline elements expanded and collapsed at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 1000 });
+      const designer = await openDesigner(page);
+      await applyPreset(page, 'modular');
+      await designer.getByRole('button', { name: 'Add Element', exact: true }).click();
+      const element = designer.locator('app-container-editor').nth(1);
+      await element.getByPlaceholder('Element name').fill('Study details');
+      const field = designer.locator('app-field-card').first();
+      await openSettings(field, 'Placement');
+      const destination = field.getByLabel('Move child to container');
+      await destination.selectOption((await destination.locator('option').last().getAttribute('value'))!);
+      await expect(element.locator('app-field-card')).toHaveCount(1);
+      await page.mouse.move(0, 0);
+      await expect(element).toHaveScreenshot(`element-expanded-${width}.png`, SHOT);
+      await element.locator(':scope > .template-header-card .element-toggle').click();
+      await expect(element).toHaveScreenshot(`element-collapsed-${width}.png`, SHOT);
+    });
+  }
 });
