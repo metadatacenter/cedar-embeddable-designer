@@ -765,6 +765,58 @@ test.describe('what a sibling component contributes', () => {
       await expectLaidOut(page, `a constraint at ${width}`);
     });
 
+    test(`the picker overlay keeps the keyboard at ${width}`, async ({ page }) => {
+      test.skip(!process.env.PICKER_BUNDLE, 'PICKER_BUNDLE names the picker whose controls are trapped.');
+      await page.setViewportSize({ width, height: 900 });
+      await openDesigner(page);
+      await page.addScriptTag({ path: process.env.PICKER_BUNDLE! });
+      await page.waitForFunction(() => !!customElements.get('cedar-term-picker'));
+      await applyPreset(page, 'modular');
+      const designer = page.locator(DESIGNER);
+      await designer
+        .getByRole('button', { name: /Add Field/ })
+        .first()
+        .click();
+      await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
+      const panel = designer.locator('[id^=field-card-]').last().locator('app-controlled-term-config');
+      await clickCentred(panel.getByRole('button', { name: /Edit controlled-term constraints/ }));
+      await expect(designer.locator('[role=dialog]')).toBeVisible();
+
+      /*
+       * Where focus really is, which `document.activeElement` cannot say: it stops at a
+       * shadow host, and every control worth tabbing to is inside the picker's own root.
+       */
+      const outside = () =>
+        page.evaluate(() => {
+          let element: Element | null = document.activeElement;
+          while (element?.shadowRoot?.activeElement) element = element.shadowRoot.activeElement;
+          const root = document.querySelector('cedar-embeddable-designer')!.shadowRoot!;
+          const dialog = root.querySelector('[role=dialog]');
+          if (!dialog || !element) return true;
+          if (dialog === element || dialog.contains(element)) return false;
+          return ![...dialog.querySelectorAll('*')].some((node) =>
+            (node as HTMLElement).shadowRoot?.contains(element!),
+          );
+        });
+
+      // Focus is moved in when the overlay opens, rather than left on the card behind it.
+      expect(await outside(), 'focus stayed outside the overlay when it opened').toBe(false);
+
+      const escapes: string[] = [];
+      for (const key of ['Tab', 'Shift+Tab']) {
+        for (let press = 0; press < 30; press++) {
+          await page.keyboard.press(key);
+          if (await outside()) escapes.push(`${key} #${press + 1}`);
+        }
+      }
+      expect(escapes, 'the keyboard left an overlay that covers the card behind it').toEqual([]);
+
+      // Escape closes it and gives focus back, rather than dropping the author at the top.
+      await page.keyboard.press('Escape');
+      await expect(designer.locator('[role=dialog]')).toHaveCount(0);
+      await expect(panel.getByRole('button', { name: /Edit controlled-term constraints/ })).toBeFocused();
+    });
+
     test(`the card holds its shape with CEF inside it at ${width}`, async ({ page }) => {
       test.skip(!process.env.CEF_BUNDLE, 'CEF_BUNDLE names the bundle that provides the control.');
       await page.setViewportSize({ width, height: 900 });

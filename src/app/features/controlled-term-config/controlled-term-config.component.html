@@ -12,7 +12,7 @@
     <span role="status">Constraint preview needs the field editor.</span>
   }
   @if (pickerAvailable && terminologyBaseUrl()) {
-    <button type="button" (click)="openPicker()" aria-label="Edit controlled-term constraints">Edit</button>
+    <button #editButton type="button" (click)="openPicker()" aria-label="Edit controlled-term constraints">Edit</button>
   }
 </div>
 @if (!pickerAvailable || !terminologyBaseUrl()) {
@@ -24,8 +24,12 @@
 @if (pickerOpen()) {
   <div class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-6">
     <div
+      #dialog
       role="dialog"
+      aria-modal="true"
+      tabindex="-1"
       aria-label="Controlled-term constraints"
+      (keydown)="onDialogKeydown($event)"
       class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto"
     >
       @if (checking()) {
