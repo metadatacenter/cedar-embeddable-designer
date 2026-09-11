@@ -1,7 +1,8 @@
+import { PALETTE_FIELD_TYPES } from '../../../core/models/types';
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
-import { TemplateService, FIELD_TYPES } from '../../../core/services/template.service';
+import { TemplateService } from '../../../core/services/template.service';
 import { UserPreferences } from '../../../core/models/types';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 
@@ -19,7 +20,7 @@ export class PreferencesModalComponent {
   readonly presets: Array<'basic' | 'semantic' | 'modular'> = ['basic', 'semantic', 'modular'];
 
   get fieldTypesList() {
-    return Object.entries(FIELD_TYPES).map(([key, value]) => ({ key, value }));
+    return Object.entries(PALETTE_FIELD_TYPES).map(([key, value]) => ({ key, value }));
   }
 
   /**

@@ -1,3 +1,4 @@
+import { PALETTE_FIELD_TYPES } from '../../core/models/types';
 import {
   Component,
   ElementRef,
@@ -12,7 +13,7 @@ import {
 } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
-import { TemplateService, FIELD_TYPES } from '../../core/services/template.service';
+import { TemplateService } from '../../core/services/template.service';
 import { CustomField } from '../../core/models/types';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 
@@ -71,7 +72,7 @@ export class FieldTypePickerComponent {
 
   readonly visibleFieldTypesList = computed(() => {
     const visible = this.service.preferences().visibleFieldTypes;
-    return Object.entries(FIELD_TYPES)
+    return Object.entries(PALETTE_FIELD_TYPES)
       .filter(([key]) => visible[key] !== false && this.service.canAddField(key, this.containerId()))
       .map(([key, value]) => ({ key, value }));
   });

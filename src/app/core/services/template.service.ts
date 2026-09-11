@@ -296,7 +296,7 @@ export class TemplateService {
       id: newNodeId(),
       ...newFieldIdentity(),
       type,
-      name: FIELD_TYPES[type].label,
+      name: type === 'date' || type === 'time' ? 'Temporal' : FIELD_TYPES[type].label,
       status: 'optional',
       options: type === 'multipleChoice' || type === 'checkboxes' ? [''] : [],
       defaultValue: { kind: 'none' },

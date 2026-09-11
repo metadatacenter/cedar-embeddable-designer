@@ -89,7 +89,7 @@ test('authors datetime precision timezone and time format', async ({ page }) => 
   await openDesigner(page);
   const card = page.locator('#field-card-3');
   const section = await openSettings(card, 'Temporal settings');
-  await section.getByLabel('Temporal datatype').selectOption('xsd:dateTime');
+  await section.getByLabel('Temporal type').selectOption('xsd:dateTime');
   await section.getByLabel('Precision').selectOption('second');
   await section.getByLabel('Time format').selectOption('12h');
   await section.getByLabel('Show timezone').check();
@@ -103,7 +103,7 @@ test('authors datetime precision timezone and time format', async ({ page }) => 
     .toMatchObject({ temporalGranularity: 'second', timezoneEnabled: true, inputTimeFormat: '12h' });
   await expect(card.locator('div.rounded-full').filter({ hasText: 'Date and time' })).toBeVisible();
   await page.screenshot({ path: '/tmp/ced-temporal-settings.png' });
-  await section.getByLabel('Temporal datatype').selectOption('xsd:time');
+  await section.getByLabel('Temporal type').selectOption('xsd:time');
   await expect(section.getByLabel('Precision').locator('option')).toHaveText([
     'hour',
     'minute',
@@ -115,7 +115,10 @@ test('authors datetime precision timezone and time format', async ({ page }) => 
 test('authors media dimensions and multiline rich text', async ({ page }) => {
   const designer = await openDesigner(page);
   await applyPreset(page, 'modular');
-  await designer.getByRole('button', { name: /Add Field/ }).last().click();
+  await designer
+    .getByRole('button', { name: /Add Field/ })
+    .last()
+    .click();
   await designer.locator('app-field-type-picker').getByRole('button', { name: 'Image', exact: true }).click();
   await expect(designer.locator('app-field-card')).toHaveCount(4);
   const card = designer.locator('app-field-card').last();
@@ -124,16 +127,21 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
   await section.getByLabel('Width').fill('640');
   await expect.poll(async () => ((await currentTemplate(page)).properties as any).Picture._ui._size?.width).toBe(640);
   await section.getByLabel('Height').fill('360');
-  await expect.poll(async () => ((await currentTemplate(page)).properties as any).Picture._ui._size)
+  await expect
+    .poll(async () => ((await currentTemplate(page)).properties as any).Picture._ui._size)
     .toEqual({ width: 640, height: 360 });
-  await designer.getByRole('button', { name: /Add Field/ }).last().click();
+  await designer
+    .getByRole('button', { name: /Add Field/ })
+    .last()
+    .click();
   await designer.locator('app-field-type-picker').getByRole('button', { name: 'Rich Text', exact: true }).click();
   await expect(designer.locator('app-field-card')).toHaveCount(5);
   await card.getByRole('textbox', { name: 'Field name', exact: true }).fill('Rich content');
   await openSettings(card, 'Content');
   await expect(card.getByRole('tab').first()).toHaveText('Display');
   await card.getByRole('textbox', { name: 'Content', exact: true }).fill('<p>First</p>\n<p>Second</p>');
-  await expect.poll(async () => ((await currentTemplate(page)).properties as any)['Rich content']._ui._content)
+  await expect
+    .poll(async () => ((await currentTemplate(page)).properties as any)['Rich content']._ui._content)
     .toBe('<p>First</p>\n<p>Second</p>');
 });
 
@@ -146,3 +154,35 @@ async function loadFieldFixture(page: import('@playwright/test').Page, inputType
     designer.artifact = template;
   }, inputType);
 }
+
+test('one Temporal palette entry supports date, time and date-time without changing field identity', async ({
+  page,
+}) => {
+  const designer = await openDesigner(page);
+  await designer
+    .getByRole('button', { name: /Add Field/ })
+    .last()
+    .click();
+  const picker = designer.locator('app-field-type-picker');
+  await expect(picker.getByRole('button', { name: 'Temporal', exact: true })).toHaveCount(1);
+  await expect(picker.getByRole('button', { name: /^(Date|Time|Date and time)$/ })).toHaveCount(0);
+  await picker.getByRole('button', { name: 'Temporal', exact: true }).click();
+  await expect(designer.locator('app-field-card')).toHaveCount(4);
+  const card = designer.locator('app-field-card').last();
+  const settings = await openSettings(card, 'Temporal settings');
+  const original = ((await currentTemplate(page)).properties as any).Temporal['@id'];
+  for (const [type, preview] of [
+    ['xsd:time', 'Time picker'],
+    ['xsd:dateTime', 'Date and time'],
+    ['xsd:date', 'Date picker'],
+  ]) {
+    await settings.getByLabel('Temporal type', { exact: true }).selectOption(type);
+    await expect(card.getByPlaceholder(preview, { exact: true })).toBeVisible();
+    await expect
+      .poll(async () => {
+        const field = ((await currentTemplate(page)).properties as any).Temporal;
+        return [field['@id'], field._valueConstraints.temporalType];
+      })
+      .toEqual([original, type]);
+  }
+});

@@ -1,7 +1,8 @@
+import { PALETTE_FIELD_TYPES } from '../../core/models/types';
 import { Component, ElementRef, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
-import { TemplateService, FIELD_TYPES } from '../../core/services/template.service';
+import { TemplateService } from '../../core/services/template.service';
 import { Field, CustomField } from '../../core/models/types';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 
@@ -24,7 +25,7 @@ export class FieldLibrarySidebarComponent {
 
   readonly visibleFieldTypesList = computed(() => {
     const visible = this.service.preferences().visibleFieldTypes;
-    return Object.entries(FIELD_TYPES)
+    return Object.entries(PALETTE_FIELD_TYPES)
       .filter(([key]) => visible[key] !== false && this.service.canAddField(key))
       .map(([key, value]) => ({ key, value }));
   });

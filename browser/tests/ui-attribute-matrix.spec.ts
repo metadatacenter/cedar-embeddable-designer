@@ -176,7 +176,17 @@ async function oneCardOf(
     .getByRole('button', { name: /Add Field/ })
     .first()
     .click();
-  await designer.getByRole('button', { name: LABEL_OF[paletteType], exact: true }).click();
+  await designer
+    .getByRole('button', {
+      name: ['date', 'time'].includes(paletteType) ? 'Temporal' : LABEL_OF[paletteType],
+      exact: true,
+    })
+    .click();
+  if (paletteType === 'time') {
+    await openSettings(card(page), 'Temporal settings');
+    await card(page).getByLabel('Temporal type', { exact: true }).selectOption('xsd:time');
+    await settings(page).getByRole('button', { name: 'Collapse field settings', exact: true }).click();
+  }
   await expect.poll(async () => cards.count(), { timeout: SETTLE }).toBe(1);
 }
 
@@ -286,7 +296,10 @@ const constraints = (template: Record<string, unknown>, key: string): Record<str
 const open = async (page: Page, heading: string) => {
   const expand = settings(page).getByRole('button', { name: 'Expand field settings' });
   if (await expand.count()) await expand.click();
-  if (heading === 'Values' && (await settings(page).getByRole('tab', { name: 'Content', exact: true, includeHidden: true }).count()))
+  if (
+    heading === 'Values' &&
+    (await settings(page).getByRole('tab', { name: 'Content', exact: true, includeHidden: true }).count())
+  )
     heading = 'Content';
   await settings(page).getByRole('tab', { name: heading, exact: true }).click();
 };
@@ -506,8 +519,8 @@ const LIFECYCLES: readonly Lifecycle[] = [
     control: 'temporal datatype',
     paletteType: 'date',
     prepare: (page) => open(page, 'Temporal settings'),
-    set: async (page) => chooseIn(page, 'Temporal settings', 'Temporal datatype', 'xsd:dateTime'),
-    restore: async (page) => chooseIn(page, 'Temporal settings', 'Temporal datatype', 'xsd:date'),
+    set: async (page) => chooseIn(page, 'Temporal settings', 'Temporal type', 'xsd:dateTime'),
+    restore: async (page) => chooseIn(page, 'Temporal settings', 'Temporal type', 'xsd:date'),
   },
   {
     control: 'precision',

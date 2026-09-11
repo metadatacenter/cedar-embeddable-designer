@@ -43,7 +43,7 @@ const DESIGNER = 'cedar-embeddable-designer';
  * collects, and therefore what its card has to show.
  */
 const GROUPS: Record<string, readonly string[]> = {
-  'simple-inputs': ['Text', 'Paragraph', 'Number', 'Date', 'Time'],
+  'simple-inputs': ['Text', 'Paragraph', 'Number', 'Temporal'],
   choices: ['Multiple Choice', 'Checkboxes', 'List', 'Multi-select List'],
   vocabulary: ['Controlled Terms', 'Attribute Value', 'ORCID', 'DOI'],
   static: ['Image', 'Rich Text', 'YouTube', 'Section Break', 'Page Break'],

@@ -273,3 +273,10 @@ export const FIELD_TYPES: Record<string, { label: string; preview: string }> = {
   sectionBreak: { label: 'Section Break', preview: 'A divider between sections' },
   pageBreak: { label: 'Page Break', preview: 'A break between pages' },
 };
+
+/** One authoring choice for the temporal model; date/time remain internal subtype keys. */
+export const PALETTE_FIELD_TYPES: typeof FIELD_TYPES = Object.fromEntries(
+  Object.entries(FIELD_TYPES)
+    .filter(([key]) => key !== 'time')
+    .map(([key, value]) => [key, key === 'date' ? { ...value, label: 'Temporal' } : value]),
+);

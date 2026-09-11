@@ -256,9 +256,9 @@
       <form (ngSubmit)="saveTemporal()" class="row">
         <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields">
           <label
-            >Temporal datatype<select
+            >Temporal type<select
               name="temporalType"
-              aria-label="Temporal datatype"
+              aria-label="Temporal type"
               [ngModel]="temporal.type"
               (ngModelChange)="changeTemporalType($event); saveTemporal()"
             >

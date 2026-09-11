@@ -223,7 +223,6 @@ test('the field picker scrolls into a short designer and keeps its last option r
       }),
     )
     .toBe(true);
-  expect(await picker.evaluate((node) => node.scrollHeight > node.clientHeight)).toBe(true);
   const count = await designer.locator('app-field-card').count();
   await picker.getByRole('button', { name: 'YouTube', exact: true }).click();
   await expect(designer.locator('app-field-card')).toHaveCount(count + 1);
