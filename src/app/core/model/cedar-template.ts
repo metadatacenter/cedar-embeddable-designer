@@ -503,6 +503,63 @@ export function temporalGranularities(type: string) {
 
 export const NUMERIC_TYPES = NumberType.values().map((type) => type.getValue()!);
 
+const INTEGER_RANGES: Record<string, readonly [number, number]> = {
+  'xsd:byte': [-128, 127],
+  'xsd:short': [-32768, 32767],
+  'xsd:int': [-2147483648, 2147483647],
+  // The model stores JavaScript numbers, so the full 64-bit range is not lossless.
+  'xsd:long': [Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER],
+};
+
+function validateNumericSettings(field: Field): void {
+  const { type, min, max, decimalPlaces } = field.numeric!;
+  if (!NUMERIC_TYPES.some((candidate) => candidate === type)) throw new Error('Choose a supported numeric datatype.');
+  const range = INTEGER_RANGES[type];
+  const values: [string, number | null][] = [
+    ['Minimum value', min],
+    ['Maximum value', max],
+  ];
+  if (field.defaultValue?.kind === 'number') values.push(['Default value', field.defaultValue.value]);
+  for (const [label, value] of values) {
+    if (value === null) continue;
+    if (!Number.isFinite(value)) throw new Error(`${label} must be a finite number.`);
+    if (range) {
+      if (!Number.isInteger(value)) throw new Error(`${label} must be a whole number for ${type}.`);
+      if (value < range[0] || value > range[1]) {
+        const limit = type === 'xsd:long' ? 'safely supported range' : 'range';
+        throw new Error(`${label} must be within the ${type} ${limit}: ${range[0]} to ${range[1]}.`);
+      }
+    }
+    if (type === 'xsd:float') {
+      const magnitude = Math.abs(value);
+      if (magnitude > 3.4028234663852886e38 || (magnitude !== 0 && magnitude < 1.401298464324817e-45))
+        throw new Error(
+          `${label} is outside the xsd:float range (nonzero magnitude 1.401298464324817e-45 to 3.4028234663852886e38).`,
+        );
+    }
+  }
+  if (min !== null && max !== null && min > max)
+    throw new Error('Numeric bounds must have minimum no greater than maximum.');
+  if (decimalPlaces !== null && (!Number.isSafeInteger(decimalPlaces) || decimalPlaces < 0))
+    throw new Error('Decimal places must be a nonnegative whole number.');
+  if (range && decimalPlaces !== null && decimalPlaces !== 0)
+    throw new Error(`Decimal places must be 0 or left empty for ${type}.`);
+  if (decimalPlaces !== null) {
+    for (const [label, value] of values) {
+      if (value === null) continue;
+      // Count decimal digits without multiplication or rounding, including exponent notation.
+      const [coefficient, exponent = '0'] = String(value).toLowerCase().split('e');
+      const places = Math.max(0, (coefficient.split('.')[1]?.length ?? 0) - Number(exponent));
+      if (places > decimalPlaces) throw new Error(`${label} must have no more than ${decimalPlaces} decimal places.`);
+    }
+  }
+  if (field.defaultValue?.kind === 'number') {
+    const value = field.defaultValue.value;
+    if ((min !== null && value < min) || (max !== null && value > max))
+      throw new Error('The existing default is outside these bounds. Edit or clear it first.');
+  }
+}
+
 /**
  * Whether a type's author can mark it required or recommended.
  *
@@ -826,11 +883,7 @@ function buildField(field: Field): TemplateField {
       .withRegex(field.textConstraints.regex);
   }
   if (accepts(field.type, 'numericBounds') && field.numeric) {
-    const { min, max, decimalPlaces } = field.numeric;
-    if ([min, max].some((n) => n !== null && !Number.isFinite(n)) || (min !== null && max !== null && min > max))
-      throw new Error('Numeric bounds must be finite, with minimum no greater than maximum.');
-    if (decimalPlaces !== null && (!Number.isInteger(decimalPlaces) || decimalPlaces < 0))
-      throw new Error('Decimal places must be a nonnegative whole number.');
+    validateNumericSettings(field);
     const numeric = builder as NumericFieldBuilder;
     numeric
       .withNumberType(NumberType.forValue(field.numeric.type))
@@ -1031,7 +1084,7 @@ function buildContainerArtifact(
         [min, max].some((value) => value !== null && (!Number.isInteger(value) || value < 0)) ||
         (min !== null && max !== null && min > max)
       ) {
-        throw new Error('Occurrence limits must be nonnegative whole numbers, with minimum no greater than maximum.');
+        throw new Error('Minimum and maximum must be nonnegative numbers, with minimum no greater than maximum.');
       }
       deployment.withMinItems(min).withMaxItems(max);
     }

@@ -15,16 +15,6 @@
       </button>
     }
   </div>
-  @if (hasPlacement) {
-    <section
-      role="tabpanel"
-      [hidden]="selectedTab !== 'Placement'"
-      [id]="'field-panel-' + field.id + '-Placement'"
-      [attr.aria-labelledby]="'field-tab-' + field.id + '-Placement'"
-    >
-      <ng-content select="[field-placement]" />
-    </section>
-  }
   @if (hasValues) {
     <section
       role="tabpanel"
@@ -53,7 +43,7 @@
               step="1"
               [(ngModel)]="min"
               (ngModelChange)="saveBounds()"
-              placeholder="Automatic"
+              placeholder="Default (0)"
           /></label>
           <label
             >Maximum<input
@@ -81,7 +71,7 @@
     [attr.aria-labelledby]="'field-tab-' + field.id + '-Display'"
   >
     <form (ngSubmit)="saveLayout()" class="row">
-      <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields">
+      <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields display-fields">
         <label
           >Display label<input
             name="displayLabel"
@@ -96,19 +86,21 @@
             (ngModelChange)="saveLayout()"
             placeholder="Field help"
         /></label>
-        <label class="check"
-          ><input type="checkbox" name="hidden" [(ngModel)]="hidden" (ngModelChange)="saveLayout()" />Hidden</label
-        >
-        @if (dynamic) {
+        <div class="display-flags">
           <label class="check"
-            ><input
-              type="checkbox"
-              name="continue"
-              [(ngModel)]="continuePreviousLine"
-              (ngModelChange)="saveLayout()"
-            />Continue previous line</label
+            ><input type="checkbox" name="hidden" [(ngModel)]="hidden" (ngModelChange)="saveLayout()" />Hidden</label
           >
-        }
+          @if (dynamic) {
+            <label class="check"
+              ><input
+                type="checkbox"
+                name="continue"
+                [(ngModel)]="continuePreviousLine"
+                (ngModelChange)="saveLayout()"
+              />Continue previous line</label
+            >
+          }
+        </div>
       </fieldset>
     </form>
     @if (error) {
@@ -168,14 +160,14 @@
       [id]="'field-panel-' + field.id + '-Numeric-constraints'"
       [attr.aria-labelledby]="'field-tab-' + field.id + '-Numeric-constraints'"
     >
-      <form (ngSubmit)="saveNumeric()" class="row">
+      <form #numericForm (ngSubmit)="saveNumeric(numericForm)" class="row">
         <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields">
           <label
             >Datatype<select
               name="numericType"
               aria-label="Datatype"
               [(ngModel)]="numeric.type"
-              (ngModelChange)="saveNumeric()"
+              (ngModelChange)="saveNumeric(numericForm)"
             >
               @for (type of numericTypes; track type) {
                 <option [value]="type">{{ type }}</option>
@@ -188,7 +180,7 @@
               type="number"
               step="any"
               [(ngModel)]="numeric.min"
-              (ngModelChange)="saveNumeric()"
+              (ngModelChange)="saveNumeric(numericForm)"
           /></label>
           <label
             >Maximum value<input
@@ -196,7 +188,7 @@
               type="number"
               step="any"
               [(ngModel)]="numeric.max"
-              (ngModelChange)="saveNumeric()"
+              (ngModelChange)="saveNumeric(numericForm)"
           /></label>
           <label
             >Decimal places<input
@@ -205,13 +197,13 @@
               min="0"
               step="1"
               [(ngModel)]="numeric.decimalPlaces"
-              (ngModelChange)="saveNumeric()"
+              (ngModelChange)="saveNumeric(numericForm)"
           /></label>
           <label
             >Unit of measure<input
               name="unit"
               [(ngModel)]="numeric.unit"
-              (ngModelChange)="saveNumeric()"
+              (ngModelChange)="saveNumeric(numericForm)"
               placeholder="e.g. mg"
           /></label>
         </fieldset>
@@ -331,121 +323,7 @@
     [id]="'field-panel-' + field.id + '-Field-details'"
     [attr.aria-labelledby]="'field-tab-' + field.id + '-Field-details'"
   >
-    <form (ngSubmit)="saveMetadata()">
-      <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields">
-        <div class="row">
-          <label
-            >Property name<input name="deploymentName" [(ngModel)]="deploymentName" (ngModelChange)="saveMetadata()"
-          /></label>
-          <label
-            >Schema title<input name="schemaTitle" [(ngModel)]="schemaTitle" (ngModelChange)="saveMetadata()"
-          /></label>
-          <label
-            >Schema description<textarea
-              name="schemaDescription"
-              [(ngModel)]="schemaDescription"
-              (ngModelChange)="saveMetadata()"
-              rows="2"
-            ></textarea>
-          </label>
-          <label
-            >Preferred label<input name="preferredLabel" [(ngModel)]="preferredLabel" (ngModelChange)="saveMetadata()"
-          /></label>
-          <label
-            >Identifier<input name="schemaIdentifier" [(ngModel)]="schemaIdentifier" (ngModelChange)="saveMetadata()"
-          /></label>
-          <label
-            >Language<input
-              name="language"
-              [(ngModel)]="language"
-              (ngModelChange)="saveMetadata()"
-              placeholder="e.g. en"
-          /></label>
-          @if (dynamic) {
-            <label
-              >Property IRI<input
-                class="wide"
-                name="propertyIri"
-                [(ngModel)]="propertyIri"
-                (ngModelChange)="saveMetadata()"
-            /></label>
-          }
-          <label
-            >Alternate labels<textarea
-              rows="2"
-              name="alternateLabels"
-              [(ngModel)]="alternateLabels"
-              (ngModelChange)="saveMetadata()"
-              placeholder="One label per line"
-            ></textarea>
-          </label>
-        </div>
-        @if (annotations.length) {
-          <!--
-        Scrolls sideways rather than being crushed. Three text boxes and a button do
-        not fit a card 208px wide, and shrinking them to fit would leave none of them
-        usable — so the table keeps its width and the container carries the overflow.
-      -->
-          <div class="annotations-scroll">
-            <table class="annotations">
-              <caption>
-                Annotations
-              </caption>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Type</th>
-                  <th>Value</th>
-                  <th><span class="sr-only">Actions</span></th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (annotation of annotations; track $index; let i = $index) {
-                  <tr>
-                    <td>
-                      <input
-                        [name]="'annotationName' + i"
-                        aria-label="Annotation name"
-                        [(ngModel)]="annotation.name"
-                        (ngModelChange)="saveMetadata()"
-                      />
-                    </td>
-                    <td>
-                      <select
-                        [name]="'annotationKind' + i"
-                        aria-label="Annotation type"
-                        [(ngModel)]="annotation.kind"
-                        (ngModelChange)="saveMetadata()"
-                      >
-                        <option value="literal">Text</option>
-                        <option value="iri">IRI</option>
-                      </select>
-                    </td>
-                    <td>
-                      <input
-                        [name]="'annotationValue' + i"
-                        aria-label="Annotation value"
-                        [(ngModel)]="annotation.value"
-                        (ngModelChange)="saveMetadata()"
-                      />
-                    </td>
-                    <td>
-                      <button type="button" aria-label="Remove annotation" (click)="removeAnnotation(i)">×</button>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        }
-        <div class="row">
-          <button type="button" (click)="addAnnotation()">Add annotation</button>
-        </div>
-      </fieldset>
-    </form>
-    @if (error) {
-      <p role="alert">{{ error }}</p>
-    }
+    <p class="details-placeholder">Coming soon: language, alternate labels, property IRI/property name, annotations.</p>
   </section>
 
   <section
@@ -458,20 +336,28 @@
     <dl class="identity">
       <dt>Field IRI</dt>
       <dd>{{ field.atId || 'Not assigned' }}</dd>
-      <dt>Version</dt>
-      <dd>{{ artifact.version || 'Not specified' }}</dd>
-      <dt>Publication status</dt>
-      <dd>{{ artifact.publicationStatus || 'Not specified' }}</dd>
+      @if (artifact.version) {
+        <dt>Version</dt>
+        <dd>{{ artifact.version }}</dd>
+      }
+      @if (artifact.publicationStatus) {
+        <dt>Publication status</dt>
+        <dd>{{ artifact.publicationStatus }}</dd>
+      }
       <dt>Model version</dt>
       <dd>{{ artifact.schemaVersion || 'Not specified' }}</dd>
       <dt>Created</dt>
-      <dd>{{ artifact.createdOn || 'Not recorded' }} {{ artifact.createdBy }}</dd>
+      <dd>{{ artifact.createdOn?.slice(0, 10) || 'Not recorded' }}</dd>
       <dt>Modified</dt>
-      <dd>{{ artifact.modifiedOn || 'Not recorded' }} {{ artifact.modifiedBy }}</dd>
-      <dt>Derived from</dt>
-      <dd>{{ artifact.derivedFrom || 'Not recorded' }}</dd>
-      <dt>Previous version</dt>
-      <dd>{{ artifact.previousVersion || 'Not recorded' }}</dd>
+      <dd>{{ artifact.modifiedOn?.slice(0, 10) || 'Not recorded' }}</dd>
+      @if (artifact.derivedFrom) {
+        <dt>Derived from</dt>
+        <dd>{{ artifact.derivedFrom }}</dd>
+      }
+      @if (artifact.previousVersion) {
+        <dt>Previous version</dt>
+        <dd>{{ artifact.previousVersion }}</dd>
+      }
     </dl>
   </section>
 </div>

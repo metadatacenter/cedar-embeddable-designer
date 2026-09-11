@@ -1,28 +1,31 @@
 import { test, expect } from '@playwright/test';
 import { openSettings, openDesigner, currentTemplate } from './support';
 
-test('authors field metadata and rejects duplicate annotation names', async ({ page }) => {
-  await openDesigner(page);
-  const section = await openSettings(page.locator('app-field-card').first(), 'Field details');
-  await section.getByLabel('Preferred label', { exact: true }).fill('Heading');
-  await section.getByLabel('Identifier', { exact: true }).fill('title-field');
-  await section.getByLabel('Language', { exact: true }).fill('en');
-  await section.getByLabel('Property IRI', { exact: true }).fill('https://example.org/title');
-  await section.getByLabel('Alternate labels', { exact: true }).fill('Caption\nName');
-  await section.getByRole('button', { name: 'Add annotation' }).click();
-  await section.getByLabel('Annotation name').fill('source');
-  await section.getByLabel('Annotation type').selectOption('iri');
-  await section.getByLabel('Annotation value').fill('https://example.org/source');
-  await expect
-    .poll(async () => ((await currentTemplate(page)).properties as any).Title)
-    .toMatchObject({
+test('removed details controls remain absent and imported metadata survives display edits', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await page.evaluate(() => {
+    const designer = document.querySelector('cedar-embeddable-designer') as any;
+    const template = structuredClone(designer.currentTemplate);
+    Object.assign(template.properties.Title, {
       'skos:prefLabel': 'Heading',
       'skos:altLabel': ['Caption', 'Name'],
       'schema:identifier': 'title-field',
       _annotations: { source: { '@id': 'https://example.org/source' } },
     });
-  await page.screenshot({ path: '/tmp/ced-field-metadata.png' });
-  await section.getByRole('button', { name: 'Add annotation' }).click();
-  await section.getByLabel('Annotation name').nth(1).fill('source');
-  await expect(section.getByRole('alert')).toContainText('unique');
+    designer.artifact = template;
+  });
+  const card = designer.locator('app-field-card').first();
+  const section = await openSettings(card, 'Display');
+  const details = await openSettings(card, 'Field details');
+  await expect(details).toContainText('Coming soon: language, alternate labels, property IRI/property name, annotations.');
+  await openSettings(card, 'Display');
+  await expect(card.getByLabel('Property IRI', { exact: true })).toHaveCount(0);
+  await expect(card.getByRole('button', { name: 'Add annotation' })).toHaveCount(0);
+  await section.getByLabel('Display label', { exact: true }).fill('Visible heading');
+  expect(((await currentTemplate(page)).properties as any).Title).toMatchObject({
+    'skos:prefLabel': 'Heading',
+    'skos:altLabel': ['Caption', 'Name'],
+    'schema:identifier': 'title-field',
+    _annotations: { source: { '@id': 'https://example.org/source' } },
+  });
 });

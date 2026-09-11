@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openSettings, openDesigner, currentTemplate } from './support';
+import { openSettings, openDesigner, currentTemplate, nestFixtureFields } from './support';
 
 test('creates, edits, exports and reopens a standalone element through the public API', async ({ page }) => {
   await openDesigner(page);
@@ -51,9 +51,8 @@ for (const width of [1280, 375]) {
     await placement.getByLabel('Allow multiple', { exact: true }).check();
     await placement.getByLabel('Minimum occurrences', { exact: true }).fill('2');
     await placement.getByLabel('Maximum occurrences', { exact: true }).fill('4');
-    const field = root.locator('app-field-card').first();
-    await openSettings(field, 'Placement');
-    await field.getByLabel('Move child to container').selectOption({ label: 'Debug template / Element / sample' });
+    await nestFixtureFields(page, ['Element', 'sample']);
+    await placement.locator('summary').click();
     const moved = nested.locator('app-field-card').first();
     await expect(moved.getByRole('textbox', { name: 'Field name', exact: true })).toHaveValue('Title');
     await placement.getByLabel('Minimum occurrences', { exact: true }).fill('8');
@@ -83,8 +82,8 @@ for (const width of [1280, 375]) {
     expect(properties.Element.properties.sample.minItems).toBe(2);
     expect(properties.Element.properties.sample.maxItems).toBe(4);
     expect(properties.Element.properties.sample.items['schema:name']).toBe('Sample');
-    expect(properties.Element.properties.sample.items._ui.propertyLabels['Nested title']).toBe('Nested display');
-    expect(properties['Root category']).toBeDefined();
+    expect(properties.Element.properties.sample.items._ui.propertyLabels.Title).toBe('Nested display');
+    expect(Object.values(properties).some((field: any) => (field.items ?? field)['schema:name'] === 'Root category')).toBe(true);
     expect(await root.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
     await page.screenshot({ path: `/tmp/ced-inline-elements-${width}.png`, fullPage: true });
     await page.evaluate((artifact) => {

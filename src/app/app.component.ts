@@ -102,7 +102,14 @@ export class AppComponent {
   private scrollToCard(fieldId: number): void {
     const root = this.host.nativeElement.getRootNode() as Document | ShadowRoot;
     const card = root.querySelector(`#field-card-${fieldId}`);
-    card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const elementHeader = card?.querySelector(
+      ':scope > .field-drag-container > app-container-editor > .template-header-card',
+    );
+    if (elementHeader) {
+      elementHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 
   getDesignerClasses(): Record<string, boolean> {

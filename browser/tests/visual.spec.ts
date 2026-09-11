@@ -1,3 +1,4 @@
+import { nestFixtureFields } from './support';
 /**
  * What the designer looks like, recorded.
  *
@@ -158,20 +159,12 @@ test.describe('the designer', () => {
   test('shows a text field with metadata settings expanded', async ({ page }) => {
     const designer = await designerShowing(page, ['Text']);
     const card = designer.locator('[id^=field-card-]').first();
-    await openSettings(card, 'Field details');
+    await openSettings(card, 'Field metadata');
 
     await expect(card).toHaveScreenshot('card-expanded.png', {
       ...SHOT,
-      /*
-       * Two kinds of value no baseline can hold. `Field metadata` shows the field's
-       * IRI, minted fresh with `crypto.randomUUID()` every time a field is added, and
-       * the created and modified stamps beside it are a clock. The property IRI in
-       * `Field details` is a second UUID, in an input rather than the list.
-       *
-       * Masked rather than hidden, so the rows still occupy the space they occupy for
-       * an author — which is the whole point of photographing this state.
-       */
-      mask: [card.locator('dl.identity'), card.locator('input[name="propertyIri"]')],
+      // Field identities and provenance vary between runs.
+      mask: [card.locator('dl.identity')],
     });
   });
 
@@ -189,10 +182,7 @@ test.describe('the designer', () => {
       await designer.getByRole('button', { name: 'Add Element', exact: true }).click();
       const element = designer.locator('app-container-editor').nth(1);
       await element.getByPlaceholder('Element name').fill('Study details');
-      const field = designer.locator('app-field-card').first();
-      await openSettings(field, 'Placement');
-      const destination = field.getByLabel('Move child to container');
-      await destination.selectOption((await destination.locator('option').last().getAttribute('value'))!);
+      await nestFixtureFields(page, ['Element']);
       await expect(element.locator('app-field-card')).toHaveCount(1);
       await page.mouse.move(0, 0);
       await expect(element).toHaveScreenshot(`element-expanded-${width}.png`, SHOT);

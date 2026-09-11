@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { applyPreset, child, currentTemplate, fieldOrder, openDesigner, openSettings } from './support';
+import { applyPreset, child, currentTemplate, fieldOrder, openDesigner, nestFixtureFields } from './support';
 
 for (const nested of [false, true]) {
   test(`overview reorders ${nested ? 'nested' : 'root'} fields only on drop`, async ({ page }) => {
@@ -9,13 +9,7 @@ for (const nested of [false, true]) {
     if (nested) {
       await applyPreset(page, 'modular');
       await designer.getByRole('button', { name: 'Add Element', exact: true }).click();
-      for (let index = 0; index < 2; index++) {
-        const target = designer.locator('app-field-card').first();
-        await openSettings(target, 'Placement');
-        const select = target.getByLabel('Move child to container');
-        const value = await select.locator('option').last().getAttribute('value');
-        await select.selectOption(value!);
-      }
+      await nestFixtureFields(page, ['Element'], 2);
       await designer.locator('.overview-panel').getByRole('button', { name: 'Element', exact: true }).click();
       editor = designer.locator('app-container-editor').last();
       await expect(editor.locator('app-field-card input[aria-label="Field name"]').first()).toHaveValue('Title');

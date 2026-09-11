@@ -10,19 +10,19 @@ for (const width of [1440, 768, 375]) {
     await expect(designer.getByRole('tab')).toHaveCount(0);
     const card = designer.locator('app-field-card').first();
     const before = await currentTemplate(page);
-    const metadata = await openSettings(card, 'Field details');
+    const metadata = await openSettings(card, 'Display');
     await expect(card.getByRole('button', { name: 'Apply', exact: true })).toHaveCount(0);
-    await metadata.getByLabel('Preferred label', { exact: true }).fill('Live label');
-    await openSettings(card, 'Display');
+    await metadata.getByLabel('Display label', { exact: true }).fill('Live label');
+    await openSettings(card, 'Field metadata');
     await card.getByRole('button', { name: 'Collapse field settings' }).click();
     await expect(card.getByRole('tab')).toHaveCount(0);
-    await openSettings(card, 'Field details');
-    await expect(metadata.getByLabel('Preferred label', { exact: true })).toHaveValue('Live label');
-    expect(((await currentTemplate(page)).properties as any).Title['skos:prefLabel']).toBe('Live label');
+    await openSettings(card, 'Display');
+    await expect(metadata.getByLabel('Display label', { exact: true })).toHaveValue('Live label');
+    expect(((await currentTemplate(page))._ui as any).propertyLabels.Title).toBe('Live label');
     expect((await currentTemplate(page))['@id']).toEqual(before['@id']);
-    const tab = card.getByRole('tab', { name: 'Field details', exact: true });
+    const tab = card.getByRole('tab', { name: 'Display', exact: true });
     await tab.focus();
-    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('End');
     await expect(card.getByRole('tab', { name: 'Field metadata', exact: true })).toBeFocused();
     await expect(card.getByRole('tabpanel', { name: 'Field metadata', exact: true })).toBeVisible();
     const measurements = await card.evaluate((el) => {

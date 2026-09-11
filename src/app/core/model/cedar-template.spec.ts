@@ -715,7 +715,7 @@ for (const type of ['text', 'checkboxes', 'multipleChoiceList', 'attributeValue'
 }
 it('refuses inverted occurrence limits before writing', () => {
   expect(() => buildTemplate(templateOf(field({ allowMultiple: true, minItems: 5, maxItems: 2 })))).toThrow(
-    /Occurrence/,
+    /Minimum and maximum/,
   );
 });
 
@@ -995,4 +995,63 @@ describe('complete field specification transfer', () => {
       expect(fieldToJson(readField(JSON.stringify(original)))).toEqual(original);
     });
   }
+});
+
+const numericField = (numeric: Partial<NonNullable<Field['numeric']>>, value?: number) =>
+  templateOf(
+    field({
+      type: 'number',
+      numeric: { type: 'xsd:decimal', min: null, max: null, decimalPlaces: null, unit: null, ...numeric },
+      ...(value === undefined ? {} : { defaultValue: { kind: 'number' as const, value } }),
+    }),
+  );
+
+for (const [type, min, max] of [
+  ['xsd:byte', -128, 127],
+  ['xsd:short', -32768, 32767],
+  ['xsd:int', -2147483648, 2147483647],
+  ['xsd:long', Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER],
+] as const) {
+  it(`validates both bounds, defaults and precision for ${type}`, () => {
+    expect(() => buildTemplate(numericField({ type, min, max, decimalPlaces: 0 }, max))).not.toThrow();
+    for (const changes of [{ min: min - 1 }, { max: max + 1 }, { min: 1.5 }, { max: 1.5 }, { decimalPlaces: 2 }])
+      expect(() => buildTemplate(numericField({ type, ...changes }))).toThrow();
+    expect(() => buildTemplate(numericField({ type }, max + 1))).toThrow(/range/);
+  });
+}
+
+it('rejects invalid datatypes, nonfinite bounds, ordering and decimal-place settings', () => {
+  for (const changes of [
+    { type: 'xsd:unknown' },
+    { min: NaN },
+    { max: Infinity },
+    { min: -Infinity },
+    { min: 3, max: 2 },
+    { decimalPlaces: -1 },
+    { decimalPlaces: 0.5 },
+    { decimalPlaces: Infinity },
+  ])
+    expect(() => buildTemplate(numericField(changes))).toThrow();
+  expect(() => buildTemplate(numericField({ min: 2, max: 2 }, 2))).not.toThrow();
+});
+
+it('checks float range including overflow and underflow, while double allows smaller magnitudes', () => {
+  for (const value of [3.5e38, -3.5e38, 1e-46, -1e-46]) {
+    expect(() => buildTemplate(numericField({ type: 'xsd:float', min: value }))).toThrow(/range/);
+    expect(() => buildTemplate(numericField({ type: 'xsd:float', max: value }))).toThrow(/range/);
+  }
+  for (const value of [0, 1.401298464324817e-45, 3.4028234663852886e38])
+    expect(() => buildTemplate(numericField({ type: 'xsd:float', min: value, max: value }))).not.toThrow();
+  expect(() =>
+    buildTemplate(numericField({ type: 'xsd:double', min: Number.MIN_VALUE, max: Number.MAX_VALUE })),
+  ).not.toThrow();
+});
+
+it('checks decimal precision for bounds and defaults without rounding exponent notation', () => {
+  for (const changes of [{ min: 1.234 }, { max: 1.234 }])
+    expect(() => buildTemplate(numericField({ decimalPlaces: 2, ...changes }))).toThrow(/decimal places/);
+  expect(() => buildTemplate(numericField({ decimalPlaces: 6, min: 1e-7 }))).toThrow(/decimal places/);
+  expect(() => buildTemplate(numericField({ decimalPlaces: 7, min: 1e-7, max: 1e21 }, 1e-7))).not.toThrow();
+  expect(() => buildTemplate(numericField({ decimalPlaces: 2 }, 0.123))).toThrow(/decimal places/);
+  expect(() => buildTemplate(numericField({ min: 1, max: 3 }, 4))).toThrow(/default.*outside/);
 });

@@ -139,26 +139,7 @@
             <div class="field-selection-bar"></div>
           }
           @if (node.kind === 'field') {
-            <app-field-card [field]="fieldView(node)">
-              <div field-placement>
-                @if (service.hasElements()) {
-                  <div class="child-move">
-                    <label
-                      >Move {{ childName(node) }} to
-                      <select
-                        aria-label="Move child to container"
-                        (change)="service.moveChild(node.id, +$any($event.target).value)"
-                        [value]="container().id"
-                      >
-                        @for (destination of destinations(node); track destination.id) {
-                          <option [value]="destination.id">{{ destination.name }}</option>
-                        }
-                      </select>
-                    </label>
-                  </div>
-                }
-              </div>
-            </app-field-card>
+            <app-field-card [field]="fieldView(node)" />
           } @else {
             <app-container-editor [containerId]="node.id" [placementNode]="node" />
           }

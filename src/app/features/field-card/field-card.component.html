@@ -212,7 +212,6 @@
         service.preferences().showHelpText ||
         (service.preferences().showDefaultValue && allowsDefault(field.type))
       "
-      [hasPlacement]="!standalone && service.hasElements()"
     >
       <fieldset field-values [disabled]="!!field.publishedDefinition" class="border-0 m-0 p-0 min-w-0">
         <!-- Field Preview / Options Editing Inside Card -->
@@ -338,7 +337,6 @@
           </div>
         }
       </fieldset>
-      <div field-placement><ng-content select="[field-placement]" /></div>
     </app-field-settings>
   </div>
 

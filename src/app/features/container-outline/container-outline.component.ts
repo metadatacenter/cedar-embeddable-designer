@@ -55,7 +55,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
         display: flex;
         align-items: center;
         gap: 4px;
-        padding: 4px 8px;
+        padding: 0 8px;
       }
       .outline-row:hover {
         background: #f9fafb;

@@ -3,7 +3,7 @@ import { Component, inject, input, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService } from '../../core/services/template.service';
-import { ChildNode, fieldView, childName, findContainer } from '../../core/model/container-draft';
+import { fieldView, findContainer } from '../../core/model/container-draft';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { FieldCardComponent } from '../field-card/field-card.component';
 import { FieldTypePickerComponent } from '../field-type-picker/field-type-picker.component';
@@ -57,12 +57,6 @@ export class ContainerEditorComponent {
   }
   pickerAt(index: number): boolean {
     return this.service.session.active().id === this.container().id && this.service.showPicker() === index;
-  }
-  readonly childName = childName;
-  destinations(node: ChildNode) {
-    return this.service
-      .containerChoices()
-      .filter((choice) => node.kind !== 'element' || !findContainer(node.definition, choice.id));
   }
   onDrop(event: CdkDragDrop<unknown>) {
     this.service.moveChild(event.item.data as number, this.container().id, event.currentIndex);

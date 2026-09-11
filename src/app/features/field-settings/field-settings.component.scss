@@ -9,6 +9,10 @@
   background: #f4f6f6;
   border-radius: 3px;
 }
+.details-placeholder {
+  margin: 0;
+  color: #64748b;
+}
 .row {
   display: flex;
   align-items: end;
@@ -224,4 +228,25 @@ button:focus-visible {
   align-self: end;
   justify-self: start;
   min-height: 28px;
+}
+
+.display-fields {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  align-items: center;
+  container-type: inline-size;
+}
+.display-flags {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.display-flags .check {
+  align-self: start;
+  min-height: 20px;
+}
+@container (max-width: 480px) {
+  .display-fields > label,
+  .display-flags {
+    grid-column: 1 / -1;
+  }
 }

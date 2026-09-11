@@ -44,8 +44,8 @@ chevron collapses their contents without losing edits; the Overview expands and
 scrolls to the selected field or element.
 
 An element's **Element settings** panel controls its property name, display overrides,
-property IRI, requirement, cardinality and layout. Move controls transfer fields
-or whole element subtrees between containers. Cycles and conflicting property
+property IRI, requirement, cardinality and layout. Its move control transfers
+whole element subtrees between containers. Cycles and conflicting property
 names are refused; page breaks are offered only in templates.
 
 **Import Element** makes an independent in-memory copy retaining the imported

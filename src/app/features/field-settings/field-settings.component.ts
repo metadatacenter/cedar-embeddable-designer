@@ -21,20 +21,18 @@ import { TemplateService } from '../../core/services/template.service';
 export class FieldSettingsComponent implements OnChanges {
   @Input({ required: true }) field!: Field;
   @Input() hasValues = false;
-  @Input() hasPlacement = false;
   expanded = false;
   activeTab = 'Display';
   get tabs(): string[] {
     return [
       ...(this.hasValues ? ['Values'] : []),
-      ...(this.multiple ? ['Occurrences'] : []),
       'Display',
-      ...(this.hasPlacement ? ['Placement'] : []),
       ...(this.accepts('textLength') ? ['Text constraints'] : []),
       ...(this.accepts('numericBounds') ? ['Numeric constraints'] : []),
       ...(this.accepts('temporalPrecision') ? ['Temporal settings'] : []),
       ...(this.accepts('mediaDimensions') ? ['Media size'] : []),
       'Field details',
+      ...(this.multiple ? ['Occurrences'] : []),
       'Field metadata',
     ];
   }
@@ -58,18 +56,9 @@ export class FieldSettingsComponent implements OnChanges {
     parent?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next]?.focus();
   }
   readonly service = inject(TemplateService);
-  schemaTitle = '';
-  schemaDescription = '';
   get artifact() {
     return fieldArtifactMetadata(this.field);
   }
-  preferredLabel = '';
-  alternateLabels = '';
-  schemaIdentifier = '';
-  language = '';
-  propertyIri = '';
-  deploymentName = '';
-  annotations: NonNullable<Field['annotations']> = [];
   displayLabel = '';
   displayDescription = '';
   hidden = false;
@@ -110,7 +99,9 @@ export class FieldSettingsComponent implements OnChanges {
   max: number | null = null;
   private errors: Record<string, string | null> = {};
   get error(): string | null {
-    return this.errors[this.selectedTab] ?? null;
+    const message = this.errors[this.selectedTab] ?? null;
+    const prefix = `${this.field.name.trim() || 'an unnamed field'}: `;
+    return message?.startsWith(prefix) ? message.slice(prefix.length) : message;
   }
   get multiple(): boolean {
     return descriptorOf(this.field.type).deployment === 'alwaysMultiple' || this.field.allowMultiple;
@@ -136,19 +127,6 @@ export class FieldSettingsComponent implements OnChanges {
       first ? incoming : this.adopt(key, current, incoming);
     if (first) this.loaded = {};
 
-    this.schemaTitle = take('schemaTitle', this.schemaTitle, this.artifact.title ?? '');
-    this.schemaDescription = take('schemaDescription', this.schemaDescription, this.artifact.description ?? '');
-    this.preferredLabel = take('preferredLabel', this.preferredLabel, this.field.preferredLabel ?? '');
-    this.alternateLabels = take('alternateLabels', this.alternateLabels, this.field.alternateLabels?.join('\n') ?? '');
-    this.schemaIdentifier = take('schemaIdentifier', this.schemaIdentifier, this.field.schemaIdentifier ?? '');
-    this.language = take('language', this.language, this.field.language ?? '');
-    this.propertyIri = take('propertyIri', this.propertyIri, this.field.propertyIri ?? '');
-    this.deploymentName = take('deploymentName', this.deploymentName, this.field.deploymentName ?? this.field.name);
-    this.annotations = take(
-      'annotations',
-      this.annotations,
-      this.field.annotations?.map((annotation) => ({ ...annotation })) ?? [],
-    );
     this.displayLabel = take('displayLabel', this.displayLabel, this.field.displayLabel ?? '');
     this.displayDescription = take('displayDescription', this.displayDescription, this.field.displayDescription ?? '');
     this.hidden = take('hidden', this.hidden, this.field.hidden ?? false);
@@ -178,32 +156,6 @@ export class FieldSettingsComponent implements OnChanges {
     if (first) this.errors = {};
   }
 
-  saveMetadata(): void {
-    if (this.dynamic && this.propertyIri && !/^[a-z][a-z0-9+.-]*:\S+$/i.test(this.propertyIri)) {
-      this.errors['Field details'] = 'The property IRI must be an absolute identifier.';
-      return;
-    }
-    this.errors['Field details'] = this.service.updateFieldSettings(this.field.id, {
-      artifact: { ...this.artifact, title: this.schemaTitle || null, description: this.schemaDescription || null },
-      preferredLabel: this.preferredLabel || undefined,
-      alternateLabels: this.alternateLabels
-        .split('\n')
-        .map((label) => label.trim())
-        .filter(Boolean),
-      schemaIdentifier: this.schemaIdentifier || undefined,
-      language: this.language || undefined,
-      propertyIri: this.propertyIri || undefined,
-      deploymentName: this.deploymentName || undefined,
-      annotations: this.annotations.map((annotation) => ({ ...annotation })),
-    });
-  }
-  addAnnotation(): void {
-    this.annotations = [...this.annotations, { name: '', kind: 'literal', value: '' }];
-  }
-  removeAnnotation(index: number): void {
-    this.annotations = this.annotations.filter((_, i) => i !== index);
-    this.saveMetadata();
-  }
   saveMedia(): void {
     this.errors['Media size'] = this.service.updateFieldSettings(this.field.id, {
       width: this.width,
@@ -216,7 +168,15 @@ export class FieldSettingsComponent implements OnChanges {
       type: this.temporal.type === 'xsd:time' ? 'time' : 'date',
     });
   }
-  saveNumeric(): void {
+  saveNumeric(form?: HTMLFormElement): void {
+    // Number inputs expose malformed text (e.g. an incomplete exponent) as null.
+    // Keep that draft out of the model instead of treating it as a cleared bound.
+    const invalid = form && Array.from(form.querySelectorAll('input')).find((input) => input.validity.badInput);
+    if (invalid) {
+      const label = invalid.closest('label')?.textContent?.trim() || 'Numeric value';
+      this.errors['Numeric constraints'] = `${label} must be a valid number.`;
+      return;
+    }
     this.errors['Numeric constraints'] = this.service.updateFieldSettings(this.field.id, {
       numeric: { ...this.numeric, unit: this.numeric.unit || null },
     });
