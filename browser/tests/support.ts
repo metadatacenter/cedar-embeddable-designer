@@ -122,43 +122,47 @@ export async function openSettings(card: Locator, tab = 'Values'): Promise<Locat
   const toggle = settings.locator('.settings-toggle');
   await expect(toggle).toBeVisible();
   if ((await toggle.getAttribute('aria-expanded')) === 'false') await clickCentred(toggle);
+  if (tab === 'Values' && (await settings.getByRole('tab', { name: 'Content', exact: true }).count())) tab = 'Content';
   await clickCentred(settings.getByRole('tab', { name: tab, exact: true }));
   return settings.getByRole('tabpanel', { name: tab, exact: true });
 }
 
 /** Build a nested test fixture through the public artifact input. */
 export async function nestFixtureFields(page: Page, path: string[], count = 1): Promise<void> {
-  await page.evaluate(({ path, count }) => {
-    const designer = document.querySelector('cedar-embeddable-designer') as HTMLElement & {
-      currentTemplate: any;
-      artifact: object;
-    };
-    const artifact = structuredClone(designer.currentTemplate);
-    let target = artifact;
-    for (const key of path) {
-      const property = target.properties[key];
-      target = property.items ?? property;
-    }
-    for (const key of artifact._ui.order.slice(0, count)) {
-      target.properties[key] = artifact.properties[key];
-      delete artifact.properties[key];
-      artifact._ui.order = artifact._ui.order.filter((name: string) => name !== key);
-      target._ui.order.push(key);
-      for (const map of ['propertyLabels', 'propertyDescriptions']) {
-        if (artifact._ui[map]?.[key] !== undefined) {
-          (target._ui[map] ??= {})[key] = artifact._ui[map][key];
-          delete artifact._ui[map][key];
+  await page.evaluate(
+    ({ path, count }) => {
+      const designer = document.querySelector('cedar-embeddable-designer') as HTMLElement & {
+        currentTemplate: any;
+        artifact: object;
+      };
+      const artifact = structuredClone(designer.currentTemplate);
+      let target = artifact;
+      for (const key of path) {
+        const property = target.properties[key];
+        target = property.items ?? property;
+      }
+      for (const key of artifact._ui.order.slice(0, count)) {
+        target.properties[key] = artifact.properties[key];
+        delete artifact.properties[key];
+        artifact._ui.order = artifact._ui.order.filter((name: string) => name !== key);
+        target._ui.order.push(key);
+        for (const map of ['propertyLabels', 'propertyDescriptions']) {
+          if (artifact._ui[map]?.[key] !== undefined) {
+            (target._ui[map] ??= {})[key] = artifact._ui[map][key];
+            delete artifact._ui[map][key];
+          }
+        }
+        if (artifact['@context'][key] !== undefined) {
+          target['@context'][key] = artifact['@context'][key];
+          delete artifact['@context'][key];
+        }
+        if (artifact.required?.includes(key)) {
+          artifact.required = artifact.required.filter((name: string) => name !== key);
+          (target.required ??= []).push(key);
         }
       }
-      if (artifact['@context'][key] !== undefined) {
-        target['@context'][key] = artifact['@context'][key];
-        delete artifact['@context'][key];
-      }
-      if (artifact.required?.includes(key)) {
-        artifact.required = artifact.required.filter((name: string) => name !== key);
-        (target.required ??= []).push(key);
-      }
-    }
-    designer.artifact = artifact;
-  }, { path, count });
+      designer.artifact = artifact;
+    },
+    { path, count },
+  );
 }

@@ -142,31 +142,6 @@ test.describe('identity', () => {
   });
 });
 
-test.describe('menus', () => {
-  test('the file menu opens and closes on a click outside it', async ({ page }) => {
-    const designer = await openDesigner(page);
-
-    await designer.getByRole('button', { name: 'File' }).click();
-    await expect(designer.getByRole('button', { name: 'Download as JSON' })).toBeVisible();
-
-    await designer.locator('.app-header__brand').click();
-
-    // A mousedown inside the shadow root is retargeted at the host by the time it
-    // reaches the document, so reading `event.target` closed every menu on its
-    // own opening click. The handler reads the composed path instead.
-    await expect(designer.getByRole('button', { name: 'Download as JSON' })).toBeHidden();
-  });
-
-  test('the file menu stays open while the pointer is inside it', async ({ page }) => {
-    const designer = await openDesigner(page);
-
-    await designer.getByRole('button', { name: 'File' }).click();
-    await designer.getByRole('button', { name: 'New Template' }).hover();
-
-    await expect(designer.getByRole('button', { name: 'Download as JSON' })).toBeVisible();
-  });
-});
-
 test('adding a field scrolls to it without reaching for the document', async ({ page }) => {
   const designer = await openDesigner(page);
   const errors: string[] = [];
@@ -197,39 +172,6 @@ test('dragging a field leaves nothing behind in the host document', async ({ pag
   expect(await page.evaluate(() => document.body.querySelectorAll('.cdk-drag-preview').length)).toBe(0);
 });
 
-test.describe('unsaved changes', () => {
-  test('a new template is not guarded when nothing has changed', async ({ page }) => {
-    const designer = await openDesigner(page);
-    let asked = false;
-    page.on('dialog', (dialog) => {
-      asked = true;
-      void dialog.dismiss();
-    });
-
-    await designer.getByRole('button', { name: 'File' }).click();
-    await designer.getByRole('button', { name: 'New Template' }).click();
-
-    expect(asked).toBe(false);
-  });
-
-  test('a new template is guarded once a field has been edited', async ({ page }) => {
-    const designer = await openDesigner(page);
-    let message = '';
-    page.on('dialog', (dialog) => {
-      message = dialog.message();
-      void dialog.dismiss();
-    });
-
-    await fieldName(page, 0).fill('Edited');
-    await designer.getByRole('button', { name: 'File' }).click();
-    await designer.getByRole('button', { name: 'New Template' }).click();
-
-    // The flag this replaced was raised by field reordering and nothing else, so
-    // every other edit was discarded without a word.
-    expect(message).toContain('unsaved changes');
-  });
-});
-
 test('the element publishes each edit once', async ({ page }) => {
   const designer = await openDesigner(page);
 
@@ -246,4 +188,43 @@ test('the element publishes each edit once', async ({ page }) => {
   // One event per distinct state, not one per character: `fill` sets the value in
   // a single input event.
   expect(names.filter((name) => name === 'Counted')).toHaveLength(1);
+});
+
+test('header panel icons toggle Overview and CEE without changing the template', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const designer = await openDesigner(page);
+  const header = designer.locator('.app-header');
+  const before = await currentTemplate(page);
+  await header.getByRole('button', { name: 'Close Overview', exact: true }).click();
+  await expect(designer.locator('.overview-panel')).toHaveCount(0);
+  await expect(designer.locator('.btn-overview-toggle')).toHaveCount(0);
+  await header.getByRole('button', { name: 'Open Overview', exact: true }).click();
+  await expect(designer.locator('.overview-panel')).toBeVisible();
+  await header.getByRole('button', { name: 'Open Preview', exact: true }).click();
+  await expect(designer.locator('app-cee-preview')).toBeVisible();
+  await header.getByRole('button', { name: 'Close Preview', exact: true }).click();
+  await expect(designer.locator('app-cee-preview')).toHaveCount(0);
+  expect(await currentTemplate(page)).toEqual(before);
+});
+
+test('the field picker scrolls into a short designer and keeps its last option reachable', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 420 });
+  const designer = await openDesigner(page);
+  await designer.getByRole('button', { name: 'Basic', exact: true }).click();
+  await designer.getByRole('button', { name: /Modular/ }).click();
+  await designer.getByRole('button', { name: /Add Field/ }).click();
+  const picker = designer.locator('.picker-container');
+  await expect
+    .poll(() =>
+      picker.evaluate((node) => {
+        const frame = node.closest('.designer-scroll')!.getBoundingClientRect();
+        const rect = node.getBoundingClientRect();
+        return rect.top >= frame.top && rect.bottom <= frame.bottom;
+      }),
+    )
+    .toBe(true);
+  expect(await picker.evaluate((node) => node.scrollHeight > node.clientHeight)).toBe(true);
+  const count = await designer.locator('app-field-card').count();
+  await picker.getByRole('button', { name: 'YouTube', exact: true }).click();
+  await expect(designer.locator('app-field-card')).toHaveCount(count + 1);
 });

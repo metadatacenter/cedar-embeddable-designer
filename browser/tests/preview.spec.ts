@@ -26,6 +26,15 @@ test('renders the template with CEE', async ({ page }) => {
   await expect(panel.locator('cedar-embeddable-editor')).toBeVisible();
   await expect.poll(async () => (await mounts(page)).length).toBeGreaterThan(0);
 
+  const offsets = await panel.locator('.cee-preview__bar').evaluate((bar) => {
+    const row = bar.getBoundingClientRect();
+    const center = row.top + row.height / 2;
+    return Array.from(bar.children).map((child) => {
+      const rect = child.getBoundingClientRect();
+      return Math.abs(rect.top + rect.height / 2 - center);
+    });
+  });
+  expect(Math.max(...offsets)).toBeLessThanOrEqual(1);
   const [first] = await mounts(page);
   expect(first.template['@type']).toBe('https://schema.metadatacenter.org/core/Template');
   expect(first.template['schema:name']).toBe('');

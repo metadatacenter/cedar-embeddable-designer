@@ -22,7 +22,7 @@
    * edge and takes the whole page with it, so the document scrolls sideways and the
    * fields below become unreachable at their right edge.
    */
-  @apply max-w-7xl mx-auto px-6 py-1.5 flex flex-wrap items-center justify-between gap-y-1;
+  @apply w-full px-3 py-1.5 flex flex-wrap items-center justify-between gap-y-1;
 }
 
 .app-header__brand {
@@ -178,14 +178,47 @@
   @apply text-sm leading-none text-gray-900 font-semibold;
 }
 
-/* ─── Overview Toggle Button ──────────────────────────────────────────────── */
-.btn-overview-toggle {
-  @apply fixed top-24 px-3 py-2 bg-white rounded-lg border border-gray-300 shadow-md hover:shadow-lg transition-all z-20 flex items-center gap-2 cursor-pointer;
+/* Header panel controls mirror the side they open. */
+.panel-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #8b9093;
+  cursor: pointer;
+}
+.panel-toggle:hover,
+.panel-toggle[aria-expanded='true'] {
+  color: #0f7686;
+  background: #f4f6f6;
+}
+.panel-toggle:focus-visible {
+  outline: 2px solid #0f7686;
+  outline-offset: 2px;
+}
+@media (max-width: 767px) {
+  .overview-toggle {
+    display: none;
+  }
 }
 
 /* ─── Designer Workspace ──────────────────────────────────────────────────── */
 .designer-workspace {
   @apply relative py-5 px-6 max-w-4xl mx-auto w-full;
+}
+
+.designer-scroll--split,
+.preview-panel {
+  flex: 0 0 50%;
+  width: 50%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 /* ─── Template Header Card ────────────────────────────────────────────────── */

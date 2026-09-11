@@ -18,11 +18,42 @@
   @if (hasValues) {
     <section
       role="tabpanel"
-      [hidden]="selectedTab !== 'Values'"
-      [id]="'field-panel-' + field.id + '-Values'"
-      [attr.aria-labelledby]="'field-tab-' + field.id + '-Values'"
+      [hidden]="selectedTab !== valuesTab"
+      [id]="'field-panel-' + field.id + '-' + valuesTab"
+      [attr.aria-labelledby]="'field-tab-' + field.id + '-' + valuesTab"
     >
       <ng-content select="[field-values]" />
+      @if (accepts('mediaDimensions')) {
+        <div class="settings">
+          <form (ngSubmit)="saveMedia()" class="row">
+            <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields">
+              <label
+                >Width<input
+                  type="number"
+                  name="width"
+                  min="1"
+                  step="1"
+                  [(ngModel)]="width"
+                  (ngModelChange)="saveMedia()"
+                  placeholder="Automatic"
+              /></label>
+              <label
+                >Height<input
+                  type="number"
+                  name="height"
+                  min="1"
+                  step="1"
+                  [(ngModel)]="height"
+                  (ngModelChange)="saveMedia()"
+                  placeholder="Automatic"
+              /></label>
+            </fieldset>
+          </form>
+          @if (error) {
+            <p role="alert">{{ error }}</p>
+          }
+        </div>
+      }
     </section>
   }
   @if (multiple) {
@@ -256,7 +287,7 @@
                 [(ngModel)]="temporal.inputTimeFormat"
                 (ngModelChange)="saveTemporal()"
               >
-                <option [ngValue]="null">Automatic</option>
+                <option [ngValue]="null">Default (24 hour)</option>
                 <option value="12h">12 hour</option>
                 <option value="24h">24 hour</option>
               </select></label
@@ -270,44 +301,6 @@
               />Show timezone</label
             >
           }
-        </fieldset>
-      </form>
-      @if (error) {
-        <p role="alert">{{ error }}</p>
-      }
-    </section>
-  }
-
-  @if (accepts('mediaDimensions')) {
-    <section
-      class="settings"
-      role="tabpanel"
-      [hidden]="selectedTab !== 'Media size'"
-      [id]="'field-panel-' + field.id + '-Media-size'"
-      [attr.aria-labelledby]="'field-tab-' + field.id + '-Media-size'"
-    >
-      <form (ngSubmit)="saveMedia()" class="row">
-        <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields">
-          <label
-            >Width<input
-              type="number"
-              name="width"
-              min="1"
-              step="1"
-              [(ngModel)]="width"
-              (ngModelChange)="saveMedia()"
-              placeholder="Automatic"
-          /></label>
-          <label
-            >Height<input
-              type="number"
-              name="height"
-              min="1"
-              step="1"
-              [(ngModel)]="height"
-              (ngModelChange)="saveMedia()"
-              placeholder="Automatic"
-          /></label>
         </fieldset>
       </form>
       @if (error) {

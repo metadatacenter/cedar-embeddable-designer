@@ -23,14 +23,16 @@ export class FieldSettingsComponent implements OnChanges {
   @Input() hasValues = false;
   expanded = false;
   activeTab = 'Display';
+  get valuesTab(): string {
+    return ['richText', 'image', 'youtube'].includes(this.field.type) ? 'Content' : 'Values';
+  }
   get tabs(): string[] {
     return [
-      ...(this.hasValues ? ['Values'] : []),
       'Display',
+      ...(this.hasValues ? [this.valuesTab] : []),
       ...(this.accepts('textLength') ? ['Text constraints'] : []),
       ...(this.accepts('numericBounds') ? ['Numeric constraints'] : []),
       ...(this.accepts('temporalPrecision') ? ['Temporal settings'] : []),
-      ...(this.accepts('mediaDimensions') ? ['Media size'] : []),
       'Field details',
       ...(this.multiple ? ['Occurrences'] : []),
       'Field metadata',
@@ -157,7 +159,7 @@ export class FieldSettingsComponent implements OnChanges {
   }
 
   saveMedia(): void {
-    this.errors['Media size'] = this.service.updateFieldSettings(this.field.id, {
+    this.errors['Content'] = this.service.updateFieldSettings(this.field.id, {
       width: this.width,
       height: this.height,
     });

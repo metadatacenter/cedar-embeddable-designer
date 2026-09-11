@@ -49,7 +49,6 @@ export class AppComponent {
 
   // Layout & UI states
   readonly showFieldsOverview = signal(true);
-  readonly showFileMenu = signal(false);
   readonly showProfileMenu = signal(false);
 
   /**
@@ -128,9 +127,9 @@ export class AppComponent {
       'duration-300': true,
       'overflow-y-auto': true,
       relative: true,
-      'flex-1': true,
+      'flex-1': !preview,
       'w-full': !preview,
-      'w-2/3': preview,
+      'designer-scroll--split': preview,
       'pl-72': selectionStyle === 'sidebar' && !collapsed,
       'pl-12': selectionStyle === 'sidebar' && collapsed,
     };
@@ -144,15 +143,6 @@ export class AppComponent {
       return preview ? '224px 1fr' : '256px 1fr';
     }
     return '1fr';
-  }
-
-  getOverviewButtonLeft(): string {
-    const selectionStyle = this.service.preferences().fieldSelectionStyle;
-    const collapsed = this.service.sidebarCollapsed();
-    if (selectionStyle === 'sidebar') {
-      return collapsed ? '4.5rem' : '19.5rem';
-    }
-    return '1.5rem';
   }
 
   get FIELD_TYPES_LIST() {
@@ -194,70 +184,13 @@ export class AppComponent {
       this.service.showUserMenu.set(false);
     }
 
-    if (this.showFileMenu() && !within('.file-menu-container')) {
-      this.showFileMenu.set(false);
-    }
-
     if (this.showProfileMenu() && !within('.profile-menu-container')) {
       this.showProfileMenu.set(false);
     }
   }
 
-  // File Operations
-
-  newTemplate(kind: 'template' | 'element' = 'template'): void {
-    if (!this.confirmDiscard('Create a new template without saving?')) {
-      return;
-    }
-    this.service.resetTemplate(kind);
-  }
-
-  /**
-   * Open a template file the user picks.
-   *
-   * A file input rather than a native dialog. The Electron shell that owned the
-   * native one is gone: an embedded component reads and writes through its host,
-   * and the standalone application is a web page like any other.
-   */
-  openTemplateFile(): void {
-    if (!this.confirmDiscard('Open another template without saving?')) {
-      return;
-    }
-
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json,.yaml,.yml';
-    input.onchange = () => {
-      const file = input.files?.[0];
-      if (!file) {
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          this.service.loadTemplate(reader.result as string);
-        } catch {
-          alert('Failed to parse the selected template file.');
-        }
-      };
-      reader.onerror = () => alert('Could not read the selected file.');
-      reader.readAsText(file);
-    };
-    input.click();
-  }
-
   saveTemplateAsJson(): void {
     this.download(JSON.stringify(this.service.templateJson(), null, 2), 'application/json', 'json');
-  }
-
-  exportError: string | null = null;
-  saveTemplateAsYaml(): void {
-    this.exportError = null;
-    try {
-      this.download(this.service.templateYaml(), 'application/yaml', 'yaml');
-    } catch (error) {
-      this.exportError = error instanceof Error ? error.message : String(error);
-    }
   }
 
   /** The template name, reduced to something a filesystem will take. */
@@ -278,9 +211,5 @@ export class AppComponent {
     anchor.remove();
     URL.revokeObjectURL(url);
     this.service.markSaved();
-  }
-
-  private confirmDiscard(question: string): boolean {
-    return !this.service.isDirty() || confirm(`You have unsaved changes. ${question}`);
   }
 }

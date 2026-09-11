@@ -1101,7 +1101,7 @@ function buildContainerArtifact(
     const metadata = state.metadata;
     applyArtifactMetadata(template, metadata.artifact);
     // Preserve an absent imported version until the author actually changes it.
-    if (state.version !== (metadata.artifact.version ?? '0.0.1')) {
+    if (state.version !== (metadata.artifact.version ?? '')) {
       template.pav_version = PavVersion.forValue(state.version);
     }
     template.language = Language.forValue(metadata.language);
@@ -1497,7 +1497,7 @@ function projectContainerFields(template: Template | TemplateElement): DesignerT
     description: template.schema_description ?? '',
     identifier: template.at_id?.getValue() ?? '',
     schemaIdentifier: template.schema_identifier,
-    version: template.pav_version?.getValue() ?? '0.0.1',
+    version: template.pav_version?.getValue() ?? '',
     metadata: {
       artifact: artifactMetadataOf(template),
       language: template.language.getValue(),
@@ -1594,6 +1594,14 @@ export function newContainer(kind: 'template' | 'element', name = ''): Container
     version: '0.0.1',
     children: [],
   };
+}
+
+/** Read lifecycle defaults without rebuilding an element's descendants. */
+export function containerArtifactMetadata(draft: ContainerDraft): ArtifactMetadata {
+  return (
+    draft.metadata?.artifact ??
+    artifactMetadataOf(buildContainerArtifact({ ...flatView(draft), fields: [] }, draft.kind, []))
+  );
 }
 
 export function buildContainer(draft: ContainerDraft): Template | TemplateElement {

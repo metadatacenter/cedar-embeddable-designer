@@ -46,7 +46,7 @@
       <cedar-term-picker
         [query]="field.name"
         [selectionMode]="'constraints'"
-        [constraintSet]="field.controlledTermConstraints || empty"
+        [constraintSet]="pickerConstraints"
         [terminologyBaseUrl]="terminologyBaseUrl()"
         (constraintsSelected)="applyPicked($event)"
         (constraintsChanged)="draftChanged()"

@@ -123,7 +123,7 @@ const CONTROLS: readonly Control[] = [
   },
   {
     name: 'media dimensions',
-    find: (page) => disclosure(page, 'Media size'),
+    find: (page) => card(page).getByLabel('Width', { exact: true }),
     expected: (type) => accepts(type, 'mediaDimensions'),
   },
   {
@@ -286,6 +286,8 @@ const constraints = (template: Record<string, unknown>, key: string): Record<str
 const open = async (page: Page, heading: string) => {
   const expand = settings(page).getByRole('button', { name: 'Expand field settings' });
   if (await expand.count()) await expand.click();
+  if (heading === 'Values' && (await settings(page).getByRole('tab', { name: 'Content', exact: true, includeHidden: true }).count()))
+    heading = 'Content';
   await settings(page).getByRole('tab', { name: heading, exact: true }).click();
 };
 
@@ -387,8 +389,8 @@ const LIFECYCLES: readonly Lifecycle[] = [
   {
     control: 'rich text content',
     paletteType: 'richText',
-    set: async (page) => card(page).getByLabel('Content', { exact: true }).fill('<p>Some markup</p>'),
-    restore: async (page) => card(page).getByLabel('Content', { exact: true }).fill(''),
+    set: async (page) => card(page).getByRole('textbox', { name: 'Content', exact: true }).fill('<p>Some markup</p>'),
+    restore: async (page) => card(page).getByRole('textbox', { name: 'Content', exact: true }).fill(''),
   },
   {
     control: 'an image address',
@@ -526,12 +528,12 @@ const LIFECYCLES: readonly Lifecycle[] = [
     paletteType: 'time',
     prepare: (page) => open(page, 'Temporal settings'),
     set: async (page) => chooseIn(page, 'Temporal settings', 'Time format', '24h'),
-    // "Automatic" is bound with `ngValue` and so carries no plain value; choosing it by
+    // "Default (24 hour)" is bound with `ngValue` and so carries no plain value; choosing it by
     // the label is both what works and what an author does.
     restore: async (page) => {
       await disclosure(page, 'Temporal settings')
         .getByLabel('Time format', { exact: true })
-        .selectOption({ label: 'Automatic' });
+        .selectOption({ label: 'Default (24 hour)' });
     },
   },
 
@@ -539,16 +541,16 @@ const LIFECYCLES: readonly Lifecycle[] = [
   {
     control: 'width',
     paletteType: 'image',
-    prepare: (page) => open(page, 'Media size'),
-    set: async (page) => setIn(page, 'Media size', 'Width', '640'),
-    restore: async (page) => setIn(page, 'Media size', 'Width', ''),
+    prepare: (page) => open(page, 'Content'),
+    set: async (page) => setIn(page, 'Content', 'Width', '640'),
+    restore: async (page) => setIn(page, 'Content', 'Width', ''),
   },
   {
     control: 'height',
     paletteType: 'image',
-    prepare: (page) => open(page, 'Media size'),
-    set: async (page) => setIn(page, 'Media size', 'Height', '360'),
-    restore: async (page) => setIn(page, 'Media size', 'Height', ''),
+    prepare: (page) => open(page, 'Content'),
+    set: async (page) => setIn(page, 'Content', 'Height', '360'),
+    restore: async (page) => setIn(page, 'Content', 'Height', ''),
   },
 
   // ── Occurrences, which exist only once several values are allowed ───────────
@@ -597,7 +599,6 @@ const LIFECYCLES: readonly Lifecycle[] = [
     read: (template) => constraints(template, 'Text')['defaultValue'],
     whenSet: 'Example',
   },
-
 ];
 
 for (const width of WIDTHS) {

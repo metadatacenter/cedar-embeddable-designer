@@ -3,8 +3,7 @@ import { openSettings, openDesigner, currentTemplate, nestFixtureFields } from '
 
 test('creates, edits, exports and reopens a standalone element through the public API', async ({ page }) => {
   await openDesigner(page);
-  await page.getByRole('button', { name: 'File', exact: true }).click();
-  await page.getByRole('button', { name: 'New Element', exact: true }).click();
+  await loadStandalone(page, 'Element');
   const name = page.getByPlaceholder('Element name');
   await name.fill('Study element');
   const element = await currentTemplate(page);
@@ -45,14 +44,28 @@ for (const width of [1280, 375]) {
     await directContent(parent).getByRole('button', { name: 'Add Element', exact: true }).click();
     const nested = nestedEditors(parent).first();
     await directHeader(nested).getByPlaceholder('Element name').fill('Sample');
-    const placement = directContent(nested).locator(':scope > app-element-card');
-    await placement.locator('summary').click();
-    await placement.getByLabel('Property name', { exact: true }).fill('sample');
+    const placement = directHeader(nested).locator(':scope > app-element-card');
+    await placement.getByRole('button', { name: 'Expand element settings', exact: true }).click();
+    await expect(placement.getByRole('tablist')).toBeVisible();
+    await placement.getByRole('tab', { name: 'Display', exact: true }).focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(placement.getByRole('tab', { name: 'Element details', exact: true })).toBeFocused();
+    await placement.getByRole('button', { name: 'Collapse element settings', exact: true }).click();
+    await expect(placement.getByRole('tablist')).toBeHidden();
+    await expect(directContent(nested)).toBeVisible();
+    await placement.getByRole('button', { name: 'Expand element settings', exact: true }).click();
+    const details = placement.getByRole('tabpanel', { name: 'Element details', exact: true });
+    await expect(details).toContainText(
+      'Coming soon: language, alternate labels, property IRI/property name, annotations.',
+    );
+    await expect(details.locator('input')).toHaveCount(0);
+    await placement.getByRole('tab', { name: 'Occurrences', exact: true }).click();
     await placement.getByLabel('Allow multiple', { exact: true }).check();
     await placement.getByLabel('Minimum occurrences', { exact: true }).fill('2');
     await placement.getByLabel('Maximum occurrences', { exact: true }).fill('4');
-    await nestFixtureFields(page, ['Element', 'sample']);
-    await placement.locator('summary').click();
+    await nestFixtureFields(page, ['Element', 'Element']);
+    await placement.getByRole('button', { name: 'Expand element settings', exact: true }).click();
+    await placement.getByRole('tab', { name: 'Occurrences', exact: true }).click();
     const moved = nested.locator('app-field-card').first();
     await expect(moved.getByRole('textbox', { name: 'Field name', exact: true })).toHaveValue('Title');
     await placement.getByLabel('Minimum occurrences', { exact: true }).fill('8');
@@ -79,13 +92,15 @@ for (const width of [1280, 375]) {
     await rootCategory.getByRole('textbox', { name: 'Field name', exact: true }).fill('Root category');
     const saved = await currentTemplate(page);
     const properties = saved.properties as Record<string, any>;
-    expect(properties.Element.properties.sample.minItems).toBe(2);
-    expect(properties.Element.properties.sample.maxItems).toBe(4);
-    expect(properties.Element.properties.sample.items['schema:name']).toBe('Sample');
-    expect(properties.Element.properties.sample.items._ui.propertyLabels.Title).toBe('Nested display');
-    expect(Object.values(properties).some((field: any) => (field.items ?? field)['schema:name'] === 'Root category')).toBe(true);
+    expect(properties.Element.properties.Element.minItems).toBe(2);
+    expect(properties.Element.properties.Element.maxItems).toBe(4);
+    expect(properties.Element.properties.Element.items['schema:name']).toBe('Sample');
+    expect(properties.Element.properties.Element.items._ui.propertyLabels.Title).toBe('Nested display');
+    expect(
+      Object.values(properties).some((field: any) => (field.items ?? field)['schema:name'] === 'Root category'),
+    ).toBe(true);
     expect(await root.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
-    await page.screenshot({ path: `/tmp/ced-inline-elements-${width}.png`, fullPage: true });
+    await page.screenshot({ path: test.info().outputPath(`ced-inline-elements-${width}.png`), fullPage: true });
     await page.evaluate((artifact) => {
       (document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object }).artifact = artifact;
     }, saved);
@@ -97,8 +112,7 @@ for (const width of [1280, 375]) {
 for (const kind of ['Template', 'Element']) {
   test(`${kind} Identifier edits schema:identifier without changing @id`, async ({ page }) => {
     await openDesigner(page);
-    await page.getByRole('button', { name: 'File', exact: true }).click();
-    await page.getByRole('button', { name: `New ${kind}`, exact: true }).click();
+    await loadStandalone(page, kind);
     const original = await currentTemplate(page);
     const identifier = page.getByPlaceholder('Identifier', { exact: true });
     await expect(identifier).toHaveValue('');
@@ -115,4 +129,61 @@ for (const kind of ['Template', 'Element']) {
     expect(cleared['@id']).toEqual(original['@id']);
     expect(cleared['schema:identifier'] ?? null).toBeNull();
   });
+}
+
+test('element metadata shows provenance without changing the artifact and hides empty optional values', async ({
+  page,
+}) => {
+  const designer = await openDesigner(page);
+  await page.getByRole('button', { name: 'Basic', exact: true }).click();
+  await page.getByRole('button', { name: /Modular/ }).click();
+  await designer.getByRole('button', { name: 'Add Element', exact: true }).click();
+  const artifact = await currentTemplate(page);
+  const element = (artifact.properties as Record<string, any>).Element;
+  element['pav:createdOn'] = '2026-08-18T16:07:23-07:00';
+  element['pav:lastUpdatedOn'] = '2026-09-11T07:27:46-07:00';
+  element['pav:derivedFrom'] = 'https://example.org/elements/source';
+  element['pav:previousVersion'] = 'https://example.org/elements/previous';
+  const load = async () => {
+    await page.evaluate((value) => {
+      (document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object }).artifact = value;
+    }, artifact);
+    const settings = designer.locator('app-element-card').first();
+    await settings.getByRole('button', { name: 'Expand element settings', exact: true }).click();
+    await settings.getByRole('tab', { name: 'Element metadata', exact: true }).click();
+    return settings.getByRole('tabpanel', { name: 'Element metadata', exact: true });
+  };
+  const panel = await load();
+  const before = await currentTemplate(page);
+  await expect(panel).toContainText(element['@id']);
+  await expect(panel).toContainText('2026-08-18T16:07:23-07:00');
+  await expect(panel).toContainText('2026-09-11T07:27:46-07:00');
+  await expect(panel).toContainText('https://example.org/elements/source');
+  await expect(panel).toContainText('https://example.org/elements/previous');
+  expect(await currentTemplate(page)).toEqual(before);
+  element['bibo:status'] = 'bibo:published';
+  const published = await load();
+  await expect(published.locator('dd').filter({ hasText: /^Published$/ })).toBeVisible();
+  for (const key of ['pav:version', 'bibo:status', 'pav:derivedFrom', 'pav:previousVersion']) delete element[key];
+  const empty = await load();
+  await expect(
+    designer.locator('app-container-editor').nth(1).getByPlaceholder('Version', { exact: true }),
+  ).toHaveValue('');
+  await expect(empty.locator('dd').filter({ hasText: /^Draft$/ })).toHaveCount(0);
+  for (const label of ['Version', 'Publication status', 'Derived from', 'Previous version']) {
+    await expect(empty.locator('dt').filter({ hasText: new RegExp('^' + label + '$') })).toHaveCount(0);
+  }
+});
+
+// Standalone documents are supplied by the embedding host, without a File menu.
+async function loadStandalone(page: import('@playwright/test').Page, kind: string) {
+  if (kind === 'Template') return;
+  await page.getByRole('button', { name: 'Basic', exact: true }).click();
+  await page.getByRole('button', { name: /Modular/ }).click();
+  await page.getByRole('button', { name: 'Add Element', exact: true }).click();
+  const template = await currentTemplate(page);
+  const element = (template.properties as Record<string, any>).Element;
+  await page.evaluate((artifact) => {
+    (document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object }).artifact = artifact;
+  }, element);
 }

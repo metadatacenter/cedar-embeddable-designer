@@ -1,5 +1,7 @@
 import {
   Component,
+  ElementRef,
+  afterNextRender,
   Input,
   input,
   inject,
@@ -24,6 +26,26 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 })
 export class FieldTypePickerComponent {
   readonly service = inject(TemplateService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  constructor() {
+    afterNextRender(() => {
+      const host = this.host.nativeElement;
+      const scroller = host.closest<HTMLElement>('.designer-scroll');
+      const picker = host.querySelector<HTMLElement>('.picker-container');
+      if (!scroller || !picker) return;
+      // Bound the picker to its embedding panel, which may be shorter than the viewport.
+      picker.style.maxHeight = Math.max(80, scroller.clientHeight - 24) + 'px';
+      const bounds = scroller.getBoundingClientRect();
+      const rect = picker.getBoundingClientRect();
+      if (rect.bottom > bounds.bottom - 12 || rect.top < bounds.top + 12) {
+        scroller.scrollTo({
+          top: scroller.scrollTop + rect.top - bounds.top - 12,
+          behavior: 'smooth',
+        });
+      }
+    });
+  }
 
   @Input() insertPosition = 0;
   readonly containerId = input<number>();

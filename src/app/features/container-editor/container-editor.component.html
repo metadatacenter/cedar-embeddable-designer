@@ -53,7 +53,7 @@
             [ngModel]="container().version"
             (ngModelChange)="update({ version: $event })"
             class="template-input font-medium text-sm text-gray-800 text-right"
-            placeholder="0.0.1"
+            placeholder="Version"
           />
           @if (
             publicationStatusLabel(
@@ -100,6 +100,9 @@
       </button>
     }
   </div>
+  @if (placementNode(); as element) {
+    <app-element-card [node]="element" />
+  }
 </div>
 
 <div
@@ -108,9 +111,6 @@
   [hidden]="collapsed()"
   [id]="'element-content-' + container().id"
 >
-  @if (placementNode(); as element) {
-    <app-element-card [node]="element" />
-  }
   <!-- Fields Drop List -->
   <div cdkDropList (cdkDropListDropped)="onDrop($event)" class="fields-drop-list">
     @for (node of container().children; track node.id; let idx = $index) {

@@ -120,7 +120,7 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
   await expect(designer.locator('app-field-card')).toHaveCount(4);
   const card = designer.locator('app-field-card').last();
   await card.getByRole('textbox', { name: 'Field name', exact: true }).fill('Picture');
-  const section = await openSettings(card, 'Media size');
+  const section = await openSettings(card, 'Content');
   await section.getByLabel('Width').fill('640');
   await expect.poll(async () => ((await currentTemplate(page)).properties as any).Picture._ui._size?.width).toBe(640);
   await section.getByLabel('Height').fill('360');
@@ -130,8 +130,9 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
   await designer.locator('app-field-type-picker').getByRole('button', { name: 'Rich Text', exact: true }).click();
   await expect(designer.locator('app-field-card')).toHaveCount(5);
   await card.getByRole('textbox', { name: 'Field name', exact: true }).fill('Rich content');
-  await openSettings(card, 'Values');
-  await card.getByLabel('Content', { exact: true }).fill('<p>First</p>\n<p>Second</p>');
+  await openSettings(card, 'Content');
+  await expect(card.getByRole('tab').first()).toHaveText('Display');
+  await card.getByRole('textbox', { name: 'Content', exact: true }).fill('<p>First</p>\n<p>Second</p>');
   await expect.poll(async () => ((await currentTemplate(page)).properties as any)['Rich content']._ui._content)
     .toBe('<p>First</p>\n<p>Second</p>');
 });

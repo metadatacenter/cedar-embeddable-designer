@@ -4,7 +4,10 @@
   box-shadow:
     0 10px 15px -3px rgba(0, 0, 0, 0.1),
     0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  padding: 1.5rem;
+  padding: 14px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /* Header */
@@ -12,7 +15,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 8px;
 }
 
 .picker-header-left {
@@ -22,6 +25,7 @@
 }
 
 .picker-title {
+  margin: 0;
   font-size: 0.875rem;
   font-weight: 500;
   color: #111827;
@@ -136,7 +140,7 @@
 
 /* Custom Fields Message */
 .custom-fields-empty-msg {
-  margin-bottom: 1rem;
+  margin-bottom: 8px;
   padding: 1rem;
   background-color: #f9fafb;
   border-radius: 0.5rem;
@@ -151,21 +155,21 @@
 
 /* Fields Grid */
 .fields-section {
-  margin-bottom: 1rem;
+  margin-bottom: 8px;
 }
 
 .fields-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
+  gap: 5px;
 }
 
 .btn-field-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
+  gap: 2px;
+  padding: 4px 6px;
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
   background-color: #ffffff;

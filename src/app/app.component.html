@@ -2,13 +2,21 @@
   @if (service.loadError()) {
     <p class="ced-field-error" role="alert">{{ service.loadError() }}</p>
   }
-  @if (exportError) {
-    <p class="ced-field-error" role="alert">{{ exportError }}</p>
-  }
   <!-- Header -->
   <header class="app-header">
     <div class="app-header__inner">
       <div class="app-header__brand flex items-center gap-3">
+        <button
+          type="button"
+          class="panel-toggle overview-toggle"
+          (click)="showFieldsOverview.set(!showFieldsOverview())"
+          [attr.aria-expanded]="showFieldsOverview()"
+          aria-controls="ced-overview"
+          [attr.aria-label]="showFieldsOverview() ? 'Close Overview' : 'Open Overview'"
+          [title]="showFieldsOverview() ? 'Close Overview' : 'Open Overview'"
+        >
+          <app-icon key="panelLeft" className="w-5 h-5" />
+        </button>
         <div class="flex flex-col items-center justify-center text-center cursor-default group">
           <!--
             Inline, not <img src="cedar-logo.png">. The element ships as one
@@ -94,69 +102,6 @@
             </div>
           }
         </div>
-
-        <!-- Dropdown "File" menu next to logo -->
-        <div class="relative file-menu-container ml-2">
-          <button
-            (click)="showFileMenu.set(!showFileMenu())"
-            class="px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100/80 rounded flex items-center gap-1 transition-colors"
-          >
-            <span>File</span>
-            <app-icon key="chevronDown" className="w-3.5 h-3.5 text-gray-500"></app-icon>
-          </button>
-
-          <!-- File Dropdown Menu -->
-          @if (showFileMenu()) {
-            <div
-              class="absolute top-full left-0 mt-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50 animate-in fade-in zoom-in-95 duration-100"
-            >
-              <button
-                (click)="newTemplate(); showFileMenu.set(false)"
-                class="w-full px-3.5 py-2 text-left text-xs font-medium text-gray-700 hover:bg-gray-100 flex items-center justify-between"
-              >
-                <span class="flex items-center gap-2">
-                  <app-icon key="filePlus" className="w-4 h-4 text-gray-500"></app-icon>
-                  New Template
-                </span>
-              </button>
-              <button
-                type="button"
-                class="w-full px-3.5 py-2 text-left text-xs font-medium text-gray-700 hover:bg-gray-100 flex items-center justify-between"
-                (click)="newTemplate('element'); showFileMenu.set(false)"
-              >
-                New Element
-              </button>
-              <button
-                (click)="openTemplateFile(); showFileMenu.set(false)"
-                class="w-full px-3.5 py-2 text-left text-xs font-medium text-gray-700 hover:bg-gray-100 flex items-center justify-between"
-              >
-                <span class="flex items-center gap-2">
-                  <app-icon key="folder" className="w-4 h-4 text-gray-500"></app-icon>
-                  Open Template...
-                </span>
-              </button>
-              <div class="my-1 border-t border-gray-100"></div>
-              <button
-                (click)="saveTemplateAsJson(); showFileMenu.set(false)"
-                class="w-full px-3.5 py-2 text-left text-xs font-medium text-gray-700 hover:bg-gray-100 flex items-center justify-between"
-              >
-                <span class="flex items-center gap-2">
-                  <app-icon key="save" className="w-4 h-4 text-[#2D6F5F]"></app-icon>
-                  Download as JSON
-                </span>
-              </button>
-              <button
-                (click)="saveTemplateAsYaml(); showFileMenu.set(false)"
-                class="w-full px-3.5 py-2 text-left text-xs font-medium text-gray-700 hover:bg-gray-100 flex items-center justify-between"
-              >
-                <span class="flex items-center gap-2">
-                  <app-icon key="save" className="w-4 h-4 text-gray-500"></app-icon>
-                  Download as YAML
-                </span>
-              </button>
-            </div>
-          }
-        </div>
       </div>
 
       <div class="app-header__actions">
@@ -169,14 +114,6 @@
           >
             <app-icon key="library" className="w-4 h-4"></app-icon>
             Field Designer
-          </button>
-        }
-
-        <!-- Preview Toggle -->
-        @if (!service.showPreview()) {
-          <button (click)="service.showPreview.set(true)" class="btn-header btn-header--secondary">
-            <app-icon key="eye" className="w-4 h-4"></app-icon>
-            Preview
           </button>
         }
 
@@ -212,6 +149,17 @@
             </div>
           }
         </div>
+        <button
+          type="button"
+          class="panel-toggle"
+          (click)="service.showPreview.set(!service.showPreview())"
+          [attr.aria-expanded]="service.showPreview()"
+          aria-controls="ced-preview"
+          [attr.aria-label]="service.showPreview() ? 'Close Preview' : 'Open Preview'"
+          [title]="service.showPreview() ? 'Close CEE preview' : 'Open CEE preview'"
+        >
+          <app-icon key="panelRight" className="w-5 h-5" />
+        </button>
       </div>
     </div>
   </header>
@@ -228,7 +176,7 @@
       <div class="designer-grid" [style.--designer-columns]="getGridTemplateColumns()">
         <!-- Fields Overview Panel -->
         @if (service.session.document().children.length > 0 && showFieldsOverview()) {
-          <div class="overview-panel">
+          <div class="overview-panel" id="ced-overview">
             <div class="overview-panel__card">
               <div class="overview-panel__header">
                 <div class="overview-panel__header-left">
@@ -293,20 +241,6 @@
 
         <!-- Designer Workspace -->
         <div class="designer-workspace">
-          <!-- Overview Toggle -->
-          @if (service.session.document().children.length > 0 && !showFieldsOverview()) {
-            <button
-              (click)="showFieldsOverview.set(true)"
-              class="btn-overview-toggle"
-              [style.left]="getOverviewButtonLeft()"
-            >
-              <app-icon key="list" className="w-4 h-4 text-gray-700"></app-icon>
-              <span class="text-xs font-semibold text-gray-700"
-                >Show Overview ({{ service.session.document().children.length }})</span
-              >
-            </button>
-          }
-
           <app-container-editor />
         </div>
       </div>
@@ -314,7 +248,7 @@
 
     <!-- Preview: the template as CEE renders it -->
     @if (service.showPreview()) {
-      <app-cee-preview class="w-[35%] bg-white border-l border-gray-300"></app-cee-preview>
+      <app-cee-preview id="ced-preview" class="preview-panel bg-white border-l border-gray-300"></app-cee-preview>
     }
   </div>
 

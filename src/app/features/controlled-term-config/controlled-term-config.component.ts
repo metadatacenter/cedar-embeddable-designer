@@ -36,7 +36,16 @@ export class ControlledTermConfigComponent implements OnChanges {
   readonly invalidDefault = signal(false);
   private pending: { field: Field; set: ControlledTermSet } | null = null;
   @Input() field!: Field;
-  readonly empty: ControlledTermSet = { constraints: [], actions: [] };
+  pickerConstraints: ControlledTermSet = { constraints: [], actions: [] };
+
+  private orderedConstraints(set: ControlledTermSet): ControlledTermSet {
+    // Match the CEF summary's grouping; retain order within each kind.
+    const order = ['ontology-branch', 'ontology', 'value-set', 'ontology-term'];
+    return {
+      ...set,
+      constraints: [...set.constraints].sort((a, b) => order.indexOf(a.sourceType) - order.indexOf(b.sourceType)),
+    };
+  }
 
   /**
    * The dialog, and the button that opened it.
@@ -67,6 +76,9 @@ export class ControlledTermConfigComponent implements OnChanges {
   summaryArtifact: ReturnType<typeof fieldToJson> | null = null;
 
   ngOnChanges(): void {
+    this.pickerConstraints = this.orderedConstraints(
+      this.field.controlledTermConstraints ?? { constraints: [], actions: [] },
+    );
     this.summaryArtifact = fieldToJson({ ...this.field, defaultValue: { kind: 'none' } });
   }
 
@@ -92,7 +104,7 @@ export class ControlledTermConfigComponent implements OnChanges {
 
   async applyPicked(event: Event): Promise<void> {
     if (this.checking()) return;
-    const set = structuredClone((event as CustomEvent<ControlledTermSet>).detail);
+    const set = this.orderedConstraints(structuredClone((event as CustomEvent<ControlledTermSet>).detail));
     const field = this.field;
     this.error.set(null);
     this.invalidDefault.set(false);

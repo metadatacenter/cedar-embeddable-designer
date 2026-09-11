@@ -186,6 +186,11 @@ test.describe('the designer', () => {
       await expect(element.locator('app-field-card')).toHaveCount(1);
       await page.mouse.move(0, 0);
       await expect(element).toHaveScreenshot(`element-expanded-${width}.png`, SHOT);
+      const settings = element.locator(':scope > .template-header-card > app-element-card');
+      await settings.getByRole('button', { name: 'Expand element settings', exact: true }).click();
+      await page.mouse.move(0, 0);
+      await expect(element).toHaveScreenshot(`element-settings-${width}.png`, SHOT);
+      await settings.getByRole('button', { name: 'Collapse element settings', exact: true }).click();
       await element.locator(':scope > .template-header-card .element-toggle').click();
       await expect(element).toHaveScreenshot(`element-collapsed-${width}.png`, SHOT);
     });

@@ -58,7 +58,7 @@ test('header controls share a vertical center and version is right aligned', asy
     }),
   );
   expect(Math.max(...centers) - Math.min(...centers)).toBeLessThanOrEqual(1);
-  await expect(designer.getByPlaceholder('0.0.1')).toHaveCSS('text-align', 'right');
+  await expect(designer.getByPlaceholder('Version', { exact: true })).toHaveCSS('text-align', 'right');
 });
 
 test('compact cards keep controls close and enabled trash icons black', async ({ page }) => {
