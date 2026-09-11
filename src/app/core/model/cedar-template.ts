@@ -513,7 +513,8 @@ const INTEGER_RANGES: Record<string, readonly [number, number]> = {
 
 function validateNumericSettings(field: Field): void {
   const { type, min, max, decimalPlaces } = field.numeric!;
-  if (!NUMERIC_TYPES.some((candidate) => candidate === type)) throw new Error('Choose a supported numeric datatype.');
+  if (!NUMERIC_TYPES.some((candidate) => candidate === type)) throw new Error('Choose a datatype from the list.');
+  const typeLabel = type.replace('xsd:', '');
   const range = INTEGER_RANGES[type];
   const values: [string, number | null][] = [
     ['Minimum value', min],
@@ -522,41 +523,45 @@ function validateNumericSettings(field: Field): void {
   if (field.defaultValue?.kind === 'number') values.push(['Default value', field.defaultValue.value]);
   for (const [label, value] of values) {
     if (value === null) continue;
-    if (!Number.isFinite(value)) throw new Error(`${label} must be a finite number.`);
+    if (!Number.isFinite(value)) throw new Error(`${label} must be a valid number, not infinity.`);
     if (range) {
-      if (!Number.isInteger(value)) throw new Error(`${label} must be a whole number for ${type}.`);
+      if (!Number.isInteger(value)) throw new Error(`${label} cannot have decimal places for ${typeLabel}.`);
       if (value < range[0] || value > range[1]) {
-        const limit = type === 'xsd:long' ? 'safely supported range' : 'range';
-        throw new Error(`${label} must be within the ${type} ${limit}: ${range[0]} to ${range[1]}.`);
+        const limit = type === 'xsd:long' ? 'supported long range' : `${typeLabel} range`;
+        throw new Error(`${label} must be between ${range[0]} and ${range[1]} (${limit}).`);
       }
     }
     if (type === 'xsd:float') {
       const magnitude = Math.abs(value);
-      if (magnitude > 3.4028234663852886e38 || (magnitude !== 0 && magnitude < 1.401298464324817e-45))
+      if (magnitude > 3.4028234663852886e38)
+        throw new Error(`${label} must be between -3.4028234663852886e38 and 3.4028234663852886e38 (float range).`);
+      if (magnitude !== 0 && magnitude < 1.401298464324817e-45)
         throw new Error(
-          `${label} is outside the xsd:float range (nonzero magnitude 1.401298464324817e-45 to 3.4028234663852886e38).`,
+          `${label} is too close to zero for the float range. Use 0 or a number at least 1.401298464324817e-45 away from zero.`,
         );
     }
   }
-  if (min !== null && max !== null && min > max)
-    throw new Error('Numeric bounds must have minimum no greater than maximum.');
+  if (min !== null && max !== null && min > max) throw new Error('Minimum must not be greater than maximum.');
   if (decimalPlaces !== null && (!Number.isSafeInteger(decimalPlaces) || decimalPlaces < 0))
-    throw new Error('Decimal places must be a nonnegative whole number.');
+    throw new Error('Decimal places must be a nonnegative number.');
   if (range && decimalPlaces !== null && decimalPlaces !== 0)
-    throw new Error(`Decimal places must be 0 or left empty for ${type}.`);
+    throw new Error(`Decimal places must be 0 or left empty for ${typeLabel}.`);
   if (decimalPlaces !== null) {
     for (const [label, value] of values) {
       if (value === null) continue;
       // Count decimal digits without multiplication or rounding, including exponent notation.
       const [coefficient, exponent = '0'] = String(value).toLowerCase().split('e');
       const places = Math.max(0, (coefficient.split('.')[1]?.length ?? 0) - Number(exponent));
-      if (places > decimalPlaces) throw new Error(`${label} must have no more than ${decimalPlaces} decimal places.`);
+      if (places > decimalPlaces)
+        throw new Error(
+          `${label} must have no more than ${decimalPlaces} decimal ${decimalPlaces === 1 ? 'place' : 'places'}.`,
+        );
     }
   }
   if (field.defaultValue?.kind === 'number') {
     const value = field.defaultValue.value;
     if ((min !== null && value < min) || (max !== null && value > max))
-      throw new Error('The existing default is outside these bounds. Edit or clear it first.');
+      throw new Error('The default is outside the minimum and maximum. Change or clear it first.');
   }
 }
 

@@ -106,7 +106,14 @@ export class AppComponent {
       ':scope > .field-drag-container > app-container-editor > .template-header-card',
     );
     if (elementHeader) {
-      elementHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const scroller = elementHeader.closest<HTMLElement>('.designer-scroll');
+      if (scroller) {
+        scroller.scrollTo({
+          top:
+            scroller.scrollTop + elementHeader.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 16,
+          behavior: 'smooth',
+        });
+      }
     } else {
       card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -134,7 +141,7 @@ export class AppComponent {
     const overview = this.showFieldsOverview();
     const preview = this.service.showPreview();
     if (fieldsCount > 0 && overview) {
-      return preview ? '180px 1fr' : '256px 1fr';
+      return preview ? '224px 1fr' : '256px 1fr';
     }
     return '1fr';
   }
@@ -182,10 +189,6 @@ export class AppComponent {
      */
     const path = event.composedPath();
     const within = (selector: string) => path.some((node) => node instanceof Element && node.matches(selector));
-
-    if (this.service.fieldTypeDropdown() !== null && !within('.field-type-dropdown-container')) {
-      this.service.fieldTypeDropdown.set(null);
-    }
 
     if (this.service.showUserMenu() && !within('.user-menu-container')) {
       this.service.showUserMenu.set(false);

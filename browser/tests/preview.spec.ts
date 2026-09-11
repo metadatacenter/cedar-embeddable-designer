@@ -94,3 +94,18 @@ test('says so when the host has not loaded CEE', async ({ page }) => {
   await expect(panel).toContainText('cedar-embeddable-editor');
   await expect(panel.locator('cedar-embeddable-editor')).toHaveCount(0);
 });
+
+test('switches between one read-only and one editable preview without changing the template', async ({ page }) => {
+  await openDesigner(page, '?cee=stub');
+  const panel = await openPreview(page);
+  await expect.poll(async () => (await mounts(page)).length).toBeGreaterThan(0);
+  const original = (await mounts(page))[0].template;
+  await panel.getByRole('combobox', { name: 'Preview mode' }).selectOption('editable');
+  await expect.poll(async () => (await mounts(page)).at(-1)?.config.readOnlyMode).toBe(false);
+  await expect(panel.locator('cedar-embeddable-editor')).toHaveCount(1);
+  expect((await mounts(page)).at(-1)?.template).toEqual(original);
+  await panel.getByRole('combobox', { name: 'Preview mode' }).selectOption('read-only');
+  await expect.poll(async () => (await mounts(page)).at(-1)?.config.readOnlyMode).toBe(true);
+  await expect(panel.locator('cedar-embeddable-editor')).toHaveCount(1);
+  expect(await page.evaluate(() => (window as unknown as { __ceeConfigs: number }).__ceeConfigs)).toBe(3);
+});

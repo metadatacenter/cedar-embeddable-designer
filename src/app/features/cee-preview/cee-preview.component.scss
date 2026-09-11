@@ -27,6 +27,23 @@
   text-transform: uppercase;
   color: var(--cedar-text-muted, #6b7280);
 }
+.cee-preview__bar select {
+  margin-left: auto;
+  margin-right: 8px;
+  min-width: 0;
+  padding: 3px 6px;
+  border: 1px solid #b8cdcf;
+  border-radius: 3px;
+  background: white;
+  font: inherit;
+  font-size: 12px;
+}
+.cee-preview__notice {
+  margin: 0;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: #64748b;
+}
 
 .cee-preview__close {
   display: inline-flex;
@@ -53,6 +70,7 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: none;
 }
 
 .cee-preview__missing {

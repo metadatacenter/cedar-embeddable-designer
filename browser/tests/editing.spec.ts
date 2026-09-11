@@ -38,22 +38,13 @@ test('an edit reaches the overview sidebar', async ({ page }) => {
   await expect(designer.getByText('Study title', { exact: true }).first()).toBeVisible();
 });
 
-test('reselecting a list type keeps its options and occurrence settings', async ({ page }) => {
+test('field type icons have no conversion menu', async ({ page }) => {
   const designer = await openDesigner(page);
-  const card = designer.locator('#field-card-2');
-  await openSettings(card);
-  await card.getByLabel('Option 1', { exact: true }).fill('Alpha');
-  await card.getByLabel('Option 2', { exact: true }).fill('Beta');
-  await card.getByRole('button', { name: '▼', exact: true }).click();
-  await card.getByRole('button', { name: 'List Choose one from a list', exact: true }).click();
-  await card.getByLabel('Allow multiple', { exact: true }).check();
-  await expect.poll(async () => (await currentTemplate(page)).properties).toHaveProperty('Category.type', 'array');
+  const card = designer.locator('app-field-card').first();
   const before = await currentTemplate(page);
-  await card.getByRole('button', { name: '▼', exact: true }).click();
-  await card.getByRole('button', { name: 'List Choose one from a list', exact: true }).click();
-  await expect(card.getByLabel('Option 1', { exact: true })).toHaveValue('Alpha');
-  await expect(card.getByLabel('Option 2', { exact: true })).toHaveValue('Beta');
-  await expect(card.getByLabel('Allow multiple', { exact: true })).toBeChecked();
+  await expect(card.getByRole('button', { name: '▼', exact: true })).toHaveCount(0);
+  await card.locator('.field-type-icon').click();
+  await expect(designer.locator('.field-type-dropdown-container')).toHaveCount(0);
   expect(await currentTemplate(page)).toEqual(before);
 });
 

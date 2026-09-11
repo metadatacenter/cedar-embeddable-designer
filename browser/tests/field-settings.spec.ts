@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { openSettings, openDesigner, currentTemplate } from './support';
+import { openSettings, openDesigner, currentTemplate, applyPreset } from './support';
 
 test('authors occurrence limits and rejects an inverted range', async ({ page }) => {
   await openDesigner(page);
-  const card = page.locator('#field-card-1');
+  const card = page.locator('app-field-card').first();
   await card.getByRole('checkbox', { name: 'Allow multiple', exact: true }).check();
   const settings = card.locator('app-field-settings');
   await openSettings(card, 'Occurrences');
@@ -72,12 +72,8 @@ test('authors text constraints and rejects invalid patterns', async ({ page }) =
 
 test('authors numeric datatype bounds precision and units', async ({ page }) => {
   await openDesigner(page);
-  const card = page.locator('#field-card-1');
-  await card.locator('app-field-card button').first().click();
-  await card
-    .locator('.field-type-dropdown-container button')
-    .filter({ has: page.getByText('Number', { exact: true }) })
-    .click();
+  const card = page.locator('app-field-card').first();
+  await loadFieldFixture(page, 'numeric');
   const section = await openSettings(card, 'Numeric constraints');
   await section.getByLabel('Datatype').selectOption('xsd:int');
   await section.getByLabel('Minimum value').fill('1');
@@ -117,30 +113,35 @@ test('authors datetime precision timezone and time format', async ({ page }) => 
 });
 
 test('authors media dimensions and multiline rich text', async ({ page }) => {
-  await openDesigner(page);
-  const card = page.locator('#field-card-1');
-  await card.locator('app-field-card button').first().click();
-  await card
-    .locator('.field-type-dropdown-container button')
-    .filter({ has: page.getByText('Image', { exact: true }) })
-    .click();
+  const designer = await openDesigner(page);
+  await applyPreset(page, 'modular');
+  await designer.getByRole('button', { name: /Add Field/ }).last().click();
+  await designer.locator('app-field-type-picker').getByRole('button', { name: 'Image', exact: true }).click();
+  await expect(designer.locator('app-field-card')).toHaveCount(4);
+  const card = designer.locator('app-field-card').last();
+  await card.getByRole('textbox', { name: 'Field name', exact: true }).fill('Picture');
   const section = await openSettings(card, 'Media size');
   await section.getByLabel('Width').fill('640');
+  await expect.poll(async () => ((await currentTemplate(page)).properties as any).Picture._ui._size?.width).toBe(640);
   await section.getByLabel('Height').fill('360');
-  await expect
-    .poll(async () => ((await currentTemplate(page)).properties as any).Title._ui._size)
+  await expect.poll(async () => ((await currentTemplate(page)).properties as any).Picture._ui._size)
     .toEqual({ width: 640, height: 360 });
-  await card.locator('app-field-card button').first().click();
-  await card
-    .locator('.field-type-dropdown-container button')
-    .filter({ has: page.getByText('Rich Text', { exact: true }) })
-    .click();
-  // Named by its visible label now. It used to carry `aria-label="Rich text markup"`,
-  // which said something different from the "Content" heading beside it, so the
-  // control announced one name and showed another.
+  await designer.getByRole('button', { name: /Add Field/ }).last().click();
+  await designer.locator('app-field-type-picker').getByRole('button', { name: 'Rich Text', exact: true }).click();
+  await expect(designer.locator('app-field-card')).toHaveCount(5);
+  await card.getByRole('textbox', { name: 'Field name', exact: true }).fill('Rich content');
   await openSettings(card, 'Values');
   await card.getByLabel('Content', { exact: true }).fill('<p>First</p>\n<p>Second</p>');
-  await expect
-    .poll(async () => ((await currentTemplate(page)).properties as any).Title._ui._content)
+  await expect.poll(async () => ((await currentTemplate(page)).properties as any)['Rich content']._ui._content)
     .toBe('<p>First</p>\n<p>Second</p>');
 });
+
+async function loadFieldFixture(page: import('@playwright/test').Page, inputType: string) {
+  await page.evaluate((inputType) => {
+    const designer = document.querySelector('cedar-embeddable-designer') as any;
+    const template = structuredClone(designer.currentTemplate);
+    template.properties.Title._ui = { inputType };
+    template.properties.Title._valueConstraints = inputType === 'numeric' ? { numberType: 'xsd:decimal' } : {};
+    designer.artifact = template;
+  }, inputType);
+}

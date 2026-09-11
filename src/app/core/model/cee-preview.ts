@@ -34,7 +34,7 @@ export interface CeeTemplateObject {
  * asking for it costs nothing on a template with none.
  */
 export interface CeePreviewConfig {
-  readonly readOnlyMode: true;
+  readonly readOnlyMode: boolean;
   readonly showTemplateDescription: true;
   readonly showExpandCollapseAll: false;
 }
@@ -73,10 +73,9 @@ export function ceePreviewAvailable(registry: Pick<CustomElementRegistry, 'get'>
  * One of these lasts as long as the panel: the caller keeps it and assigns each
  * new template to it.
  *
- * Read-only always, and not a setting: the designer is where a template is
- * changed, so a preview that accepted input would be collecting answers nothing
- * keeps. With no instance behind it CEE reads a read-only form as a statement of
- * what each field will accept, which is what an author is asking to see.
+ * Read-only is the default; editable mode lets an author try filling in the form.
+ * Preview answers are temporary and never change the authored template. Switching
+ * modes requires a new element because CEE applies configuration once.
  *
  * Expand All and Collapse All are off for the same reason. The designer has its
  * own controls over the same template beside the preview, and a second set acting
@@ -86,8 +85,11 @@ export function ceePreviewAvailable(registry: Pick<CustomElementRegistry, 'get'>
  * The template is assigned by the caller once the element is in the document,
  * which is the order CEE's own hosts use, and again whenever it changes.
  */
-export function createCeePreview(factory: Pick<Document, 'createElement'> = document): CeePreviewElement {
+export function createCeePreview(
+  factory: Pick<Document, 'createElement'> = document,
+  readOnly = true,
+): CeePreviewElement {
   const editor = factory.createElement(CEE_PREVIEW_TAG) as CeePreviewElement;
-  editor.config = CEE_PREVIEW_CONFIG;
+  editor.config = { ...CEE_PREVIEW_CONFIG, readOnlyMode: readOnly };
   return editor;
 }

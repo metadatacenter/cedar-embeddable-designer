@@ -88,6 +88,35 @@
   @apply grid h-full;
   grid-template-columns: var(--designer-columns, 1fr);
 }
+.overview-panel__header {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.overview-panel__actions {
+  display: flex;
+  margin-left: auto;
+}
+.overview-panel__actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+.overview-panel__actions button:hover {
+  color: #0f7686;
+  background: #f4f6f6;
+}
+
+.designer-scroll,
+.overview-panel__card {
+  overscroll-behavior: none;
+}
 
 @media (max-width: 767px) {
   // The overview is hidden at this width; it must not keep an empty grid column.

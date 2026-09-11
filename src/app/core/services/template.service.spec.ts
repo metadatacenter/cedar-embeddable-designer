@@ -3,7 +3,7 @@ import { buildContainer } from '../model/cedar-template';
 import { TestBed } from '@angular/core/testing';
 import nestedTemplate from '../model/fixtures/corpus/template-028.json';
 import { TemplateService } from './template.service';
-import { Field, FIELD_TYPES } from '../models/types';
+import { Field } from '../models/types';
 import { templateToJson } from '../model/cedar-template';
 
 /**
@@ -36,13 +36,12 @@ describe('TemplateService', () => {
     service.openContainer(rootId);
     service.updateFieldName(nestedId, 'Nested text');
     expect(service.updateFieldSettings(nestedId, { displayLabel: 'Nested label' })).toBeNull();
-    service.updateFieldType(nestedId, 'pageBreak');
+    service.addField('pageBreak', 0, element.id);
     expect(service.loadError()).toContain('Page breaks');
     service.openContainer(element.id);
     service.updateFieldName(rootFieldId, 'Root text');
-    service.updateFieldType(rootFieldId, 'pageBreak');
     const root = service.session.document();
-    expect(root.children[0]).toMatchObject({ definition: { name: 'Root text', type: 'pageBreak' } });
+    expect(root.children[0]).toMatchObject({ definition: { name: 'Root text', type: 'text' } });
     expect(root.children.find((node) => node.id === element.id)).toMatchObject({
       definition: {
         children: [{ definition: { name: 'Nested text', type: 'text' }, placement: { displayLabel: 'Nested label' } }],
@@ -52,35 +51,6 @@ describe('TemplateService', () => {
     service.openContainer(element.id);
     expect(service.collapsedElements().has(element.id)).toBe(false);
   });
-
-  it.each(Object.keys(FIELD_TYPES))('reselecting %s leaves the field and dirty state unchanged', (type) => {
-    const field: Field = {
-      ...service.fields()[0],
-      type,
-      options: ['Alpha', 'Beta'],
-      defaultValue: { kind: 'literal', value: 'Alpha' },
-      allowMultiple: true,
-      textConstraints: { minLength: 2, maxLength: 20, regex: '^[A-Z]+$' },
-      numeric: { type: 'xsd:decimal', min: 1, max: 10, decimalPlaces: 2, unit: 'mg' },
-      temporal: { type: 'xsd:dateTime', granularity: 'second', timezoneEnabled: true, inputTimeFormat: '24h' },
-      customFieldId: 42,
-      libraryId: 7,
-    };
-    service.fields.set([field]);
-    const before = service.fields();
-    service.updateFieldType(field.id, type);
-    expect(service.fields()).toBe(before);
-    expect(service.fields()[0]).toEqual(field);
-  });
-
-  it.each(['multipleChoice', 'checkboxes', 'singleChoiceList', 'multipleChoiceList'])(
-    'preserves option labels when converting to %s',
-    (type) => {
-      service.fields.set([{ ...service.fields()[0], type: 'checkboxes', options: ['Alpha', 'Beta'] }]);
-      service.updateFieldType(1, type);
-      expect(service.fields()[0].options).toEqual(['Alpha', 'Beta']);
-    },
-  );
 
   it('copies every field setting from a library without linking deployed copies', () => {
     const definition: Field = {
@@ -127,7 +97,6 @@ describe('TemplateService', () => {
     const id = service.fields()[0].id;
     expect(service.isPublished(id)).toBe(true);
     service.updateFieldName(id, 'Changed');
-    service.updateFieldType(id, 'number');
     service.updateFieldStatus(id, 'optional');
     service.updateDefaultValue(id, { kind: 'literal', value: 'Changed' });
     service.updateHelpText(id, 'Changed');
@@ -192,7 +161,6 @@ describe('TemplateService', () => {
       ['a field is renamed', (s: TemplateService) => s.updateFieldName(s.fields()[0].id, 'Other')],
       ['a field is deleted', (s: TemplateService) => s.deleteField(s.fields()[0].id)],
       ['a field is reordered', (s: TemplateService) => s.moveField(0, 1)],
-      ['a field type changes', (s: TemplateService) => s.updateFieldType(s.fields()[0].id, 'email')],
       ['a status changes', (s: TemplateService) => s.updateFieldStatus(s.fields()[0].id, 'recommended')],
       ['an option is added', (s: TemplateService) => s.addOption(s.fields()[1].id)],
       ['help text changes', (s: TemplateService) => s.updateHelpText(s.fields()[0].id, 'Help')],
@@ -294,7 +262,7 @@ describe('default editing', () => {
   });
 
   it('rejects an invalid numeric default before the template signal can throw', () => {
-    service.updateFieldType(1, 'number');
+    service.fields.set([{ ...service.fields()[0], type: 'number' }]);
     service.updateDefaultValue(1, { kind: 'number', value: 0 });
     service.updateDefaultValue(1, { kind: 'number', value: Number.NaN });
     expect(service.fields()[0].defaultValue).toEqual({ kind: 'number', value: 0 });
@@ -302,7 +270,7 @@ describe('default editing', () => {
   });
 
   it('renames selected defaults and removes them when their options are deleted', () => {
-    service.updateFieldType(1, 'checkboxes');
+    service.fields.set([{ ...service.fields()[0], type: 'checkboxes', options: [''] }]);
     service.updateOption(1, 0, 'A');
     service.addOption(1);
     service.updateOption(1, 1, 'B');

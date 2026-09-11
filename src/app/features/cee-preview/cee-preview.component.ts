@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, ElementRef, inject, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 
 import { TemplateService } from '../../core/services/template.service';
 import {
@@ -34,6 +34,8 @@ const REBUILD_QUIET_MS = 200;
 })
 export class CeePreviewComponent {
   readonly service = inject(TemplateService);
+  readonly readOnly = signal(true);
+  private editorReadOnly = true;
 
   /**
    * Whether CEE can be offered.
@@ -52,11 +54,12 @@ export class CeePreviewComponent {
     effect((onCleanup) => {
       const host = this.mount()?.nativeElement;
       const template = this.service.previewJson();
+      const readOnly = this.readOnly();
       if (host === undefined) {
         return;
       }
 
-      const timer = setTimeout(() => this.show(host, template), REBUILD_QUIET_MS);
+      const timer = setTimeout(() => this.show(host, template, readOnly), REBUILD_QUIET_MS);
       onCleanup(() => clearTimeout(timer));
     });
   }
@@ -73,9 +76,11 @@ export class CeePreviewComponent {
    * The first template is assigned after the element is in the document, which is
    * the order CEE's own hosts use.
    */
-  private show(host: HTMLDivElement, template: CeeTemplateObject): void {
-    if (this.editor === null) {
-      this.editor = createCeePreview();
+  private show(host: HTMLDivElement, template: CeeTemplateObject, readOnly: boolean): void {
+    if (this.editor === null || this.editorReadOnly !== readOnly) {
+      // CEE accepts configuration once; changing modes requires a fresh instance.
+      this.editor = createCeePreview(document, readOnly);
+      this.editorReadOnly = readOnly;
       host.replaceChildren(this.editor);
     }
     this.editor.templateObject = template;

@@ -169,7 +169,7 @@ export class FieldSettingsComponent implements OnChanges {
     });
   }
   saveNumeric(form?: HTMLFormElement): void {
-    // Number inputs expose malformed text (e.g. an incomplete exponent) as null.
+    // Number inputs expose malformed text (e.g., an incomplete exponent) as null.
     // Keep that draft out of the model instead of treating it as a cleared bound.
     const invalid = form && Array.from(form.querySelectorAll('input')).find((input) => input.validity.badInput);
     if (invalid) {

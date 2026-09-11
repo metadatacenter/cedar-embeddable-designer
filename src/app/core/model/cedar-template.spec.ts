@@ -774,7 +774,7 @@ it('preserves authored numeric constraints and refuses a conflicting default', (
     buildTemplate(templateOf(field({ type: 'number', numeric, defaultValue: { kind: 'number', value: 2.5 } }))),
   ).toThrow();
   expect(() => buildTemplate(templateOf(field({ type: 'number', numeric: { ...numeric, min: 20 } })))).toThrow(
-    /bounds/,
+    /Minimum must not be greater than maximum/,
   );
 });
 

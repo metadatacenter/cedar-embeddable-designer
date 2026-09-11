@@ -37,12 +37,15 @@ describe('the editor the preview builds', () => {
     expect(created).toEqual([CEE_PREVIEW_TAG]);
   });
 
-  it('is read-only, always', () => {
-    // Not a setting: the designer is where a template is changed, so a preview
-    // that accepted input would be collecting answers nothing keeps.
+  it('defaults to read-only', () => {
     const editor: CeePreviewElement = createCeePreview(factory);
 
     expect(editor.config.readOnlyMode).toBe(true);
+  });
+
+  it('can create an editable preview without changing the read-only default', () => {
+    expect(createCeePreview(factory, false).config.readOnlyMode).toBe(false);
+    expect(createCeePreview(factory).config.readOnlyMode).toBe(true);
   });
 
   it("turns off the editor's own expand and collapse controls", () => {

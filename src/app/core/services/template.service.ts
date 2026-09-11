@@ -38,7 +38,6 @@ import {
   templateToJson,
   templateToYaml,
   defaultValueError,
-  allowsOptions,
 } from '../model/cedar-template';
 
 export { FIELD_TYPES } from '../models/types';
@@ -219,7 +218,6 @@ export class TemplateService {
     }
   }
   readonly selectedField = signal<number | null>(null);
-  readonly fieldTypeDropdown = signal<number | null>(null);
   readonly fieldTypeDropdownLibrary = signal<number | null>(null);
 
   // Proxies for PreferencesService State
@@ -267,6 +265,18 @@ export class TemplateService {
     this.session.document.update((root) => updateContainer(root, id, (container) => ({ ...container, ...changes })));
   }
   readonly collapsedElements = signal<ReadonlySet<number>>(new Set());
+  expandAllElements(): void {
+    this.collapsedElements.set(new Set());
+  }
+  collapseAllElements(): void {
+    this.collapsedElements.set(
+      new Set(
+        this.containerChoices()
+          .filter((choice) => choice.id !== this.session.document().id)
+          .map((choice) => choice.id),
+      ),
+    );
+  }
   toggleElement(id: number): void {
     this.collapsedElements.update((previous) => {
       const next = new Set(previous);
@@ -332,52 +342,6 @@ export class TemplateService {
   updateFieldName(id: number, name: string) {
     if (this.isPublished(id)) return;
     this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, name } : f)));
-  }
-
-  updateFieldType(id: number, type: string) {
-    if (!this.canAddField(type, this.parentContainerId(id))) {
-      this.loadError.set('Page breaks can only be placed in templates.');
-      return;
-    }
-    if (this.isPublished(id) || this.fieldsFor(id)().find((field) => field.id === id)?.type === type) return;
-    this.fieldsFor(id).update((prev) =>
-      prev.map((f) =>
-        f.id === id
-          ? {
-              ...f,
-              type,
-              options: allowsOptions(type) ? (f.options.length > 0 ? f.options : ['']) : [],
-              defaultValue: { kind: 'none' },
-              temporal: undefined,
-              numeric: undefined,
-              textConstraints: undefined,
-              allowMultiple: false,
-              customFieldId: undefined,
-              libraryId: undefined,
-            }
-          : f,
-      ),
-    );
-  }
-
-  convertFieldToCustomField(fieldId: number, customField: CustomField) {
-    if (!this.canAddField(customField.definition.type, this.parentContainerId(fieldId))) {
-      this.loadError.set('Page breaks can only be placed in templates.');
-      return;
-    }
-    if (this.isPublished(fieldId)) return;
-    this.fieldsFor(fieldId).update((fields) =>
-      fields.map((field) =>
-        field.id === fieldId
-          ? {
-              ...structuredClone(customField.definition),
-              id: fieldId,
-              customFieldId: customField.id,
-              libraryId: customField.libraryId,
-            }
-          : field,
-      ),
-    );
   }
 
   updateCustomField(updated: CustomField) {
@@ -629,7 +593,6 @@ export class TemplateService {
     this.scrollRequest.set(id);
     this.showPicker.set(null);
     this.selectedField.set(null);
-    this.fieldTypeDropdown.set(null);
   }
   private insertNode(node: ChildNode, position: number, targetId = this.session.active().id): void {
     const target = findContainer(this.session.document(), targetId);

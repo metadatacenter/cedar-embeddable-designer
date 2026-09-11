@@ -60,3 +60,32 @@ for (const nested of [false, true]) {
       .toEqual(expected);
   });
 }
+
+test('Overview elements collapse individually and together without changing the document', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await applyPreset(page, 'modular');
+  await designer.getByRole('button', { name: 'Add Element', exact: true }).click();
+  await nestFixtureFields(page, ['Element'], 2);
+  const overview = designer.locator('.overview-panel');
+  const before = await currentTemplate(page);
+  const toggle = overview.getByRole('button', { name: 'Collapse Element', exact: true });
+  await toggle.click();
+  await expect(overview.getByRole('button', { name: /^Title/ })).toBeHidden();
+  const element = designer.locator('app-container-editor').last();
+  const content = element.locator(':scope > .container-content');
+  await expect(content).toBeHidden();
+  await overview.getByRole('button', { name: 'Expand Element', exact: true }).click();
+  await expect(overview.getByRole('button', { name: /^Title/ })).toBeVisible();
+  await expect(content).toBeVisible();
+  await element.getByRole('button', { name: 'Collapse Element', exact: true }).click();
+  await expect(overview.getByRole('button', { name: /^Title/ })).toBeHidden();
+  await element.getByRole('button', { name: 'Expand Element', exact: true }).click();
+  await expect(overview.getByRole('button', { name: /^Title/ })).toBeVisible();
+  await overview.getByRole('button', { name: 'Collapse all elements', exact: true }).click();
+  await expect(content).toBeHidden();
+  await expect(overview.getByRole('button', { name: /^Title/ })).toBeHidden();
+  await overview.getByRole('button', { name: 'Expand all elements', exact: true }).click();
+  await expect(overview.getByRole('button', { name: /^Title/ })).toBeVisible();
+  await expect(content).toBeVisible();
+  expect(await currentTemplate(page)).toEqual(before);
+});

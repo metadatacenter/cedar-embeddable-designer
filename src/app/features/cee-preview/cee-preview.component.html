@@ -1,6 +1,16 @@
 <div class="cee-preview">
   <div class="cee-preview__bar">
     <span class="cee-preview__title">Preview</span>
+    @if (editorAvailable) {
+      <select
+        aria-label="Preview mode"
+        [value]="readOnly() ? 'read-only' : 'editable'"
+        (change)="readOnly.set($any($event.target).value === 'read-only')"
+      >
+        <option value="read-only">Read-only</option>
+        <option value="editable">Editable</option>
+      </select>
+    }
     <button (click)="service.showPreview.set(false)" class="cee-preview__close" title="Close preview" type="button">
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -20,6 +30,11 @@
   </div>
 
   @if (editorAvailable) {
+    @if (!readOnly()) {
+      <p class="cee-preview__notice">
+        Try filling in the form. Entries reset when the template or preview mode changes.
+      </p>
+    }
     <div class="cee-preview__mount" #mount></div>
   } @else {
     <p class="cee-preview__missing">

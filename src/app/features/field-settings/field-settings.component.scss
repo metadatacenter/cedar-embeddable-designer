@@ -235,6 +235,15 @@ button:focus-visible {
   align-items: center;
   container-type: inline-size;
 }
+.text-constraint-fields {
+  grid-template-columns: minmax(80px, 1fr) minmax(80px, 1fr) minmax(0, 7fr);
+  container-type: inline-size;
+}
+@container (max-width: 400px) {
+  .text-constraint-fields > label {
+    grid-column: 1 / -1;
+  }
+}
 .display-flags {
   display: flex;
   flex-direction: column;

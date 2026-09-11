@@ -6,109 +6,15 @@
 <div>
   <div class="field-card-body">
     <fieldset [disabled]="!!field.publishedDefinition" class="border-0 m-0 p-0 min-w-0">
-      <!-- Header Row: Icon, Name editing, Type select -->
+      <!-- Header Row: Icon and Name editing -->
       <div class="field-header" [class.standalone]="standalone">
         <div class="field-heading">
-          <!-- Icon dropdown type switch -->
-          <div class="relative flex-shrink-0">
-            <button
-              (click)="
-                $event.stopPropagation();
-                service.fieldTypeDropdown.set(service.fieldTypeDropdown() === field.id ? null : field.id);
-                service.selectedField.set(field.id)
-              "
-              class="cursor-pointer hover:bg-gray-100 rounded px-2 py-1 -ml-2 transition-colors flex items-center gap-1.5 text-left border-none bg-transparent"
-              [style.color]="service.COLORS.primary"
-            >
-              <app-icon [key]="getFieldIcon(field)" className="w-5 h-5"></app-icon>
-              <span class="text-[10px] text-gray-500 font-semibold uppercase">▼</span>
-            </button>
-
-            <!-- Field Type Switch Panel -->
-            @if (service.fieldTypeDropdown() === field.id) {
-              <div
-                class="absolute left-0 top-full mt-1 bg-white rounded-lg shadow-xl border border-gray-200 z-50 w-64 animate-fade-in field-type-dropdown-container"
-              >
-                <div class="p-2 max-h-80 overflow-y-auto custom-scrollbar">
-                  <!-- Standard Fields -->
-                  <div class="mb-2">
-                    <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide px-2 py-1">
-                      Standard Fields
-                    </p>
-                    @for (item of FIELD_TYPES_LIST | keyvalue; track item.key) {
-                      <button
-                        (click)="
-                          $event.stopPropagation();
-                          service.updateFieldType(field.id, item.key);
-                          service.fieldTypeDropdown.set(null)
-                        "
-                        class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left border-none bg-transparent cursor-pointer"
-                        [class.bg-teal-50]="field.type === item.key && !field.customFieldId"
-                      >
-                        <app-icon [key]="item.key" className="w-5 h-5 text-gray-500"></app-icon>
-                        <div class="flex-1 min-w-0">
-                          <span class="text-sm font-medium text-gray-900 block">{{ item.value.label }}</span>
-                          <span class="text-xs text-gray-500 truncate block">{{ item.value.preview }}</span>
-                        </div>
-                      </button>
-                    }
-                  </div>
-                  <!-- Custom fields from libraries -->
-                  @if (service.libraries().length > 0) {
-                    <div class="border-t border-gray-200 pt-2">
-                      <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide px-2 py-1">
-                        Custom Fields
-                      </p>
-                      <!-- Library Selection -->
-                      @if (service.fieldTypeDropdownLibrary() === null) {
-                        @for (lib of service.libraries(); track lib.id) {
-                          <button
-                            (click)="$event.stopPropagation(); service.fieldTypeDropdownLibrary.set(lib.id)"
-                            class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left border-none bg-transparent cursor-pointer"
-                          >
-                            <app-icon key="library" className="w-5 h-5 text-gray-500"></app-icon>
-                            <div class="flex-1 min-w-0">
-                              <span class="text-sm font-medium text-gray-900 block">{{ lib.name }}</span>
-                            </div>
-                            <span class="text-gray-400 text-xs">▶</span>
-                          </button>
-                        }
-                      } @else {
-                        <button
-                          (click)="$event.stopPropagation(); service.fieldTypeDropdownLibrary.set(null)"
-                          class="w-full flex items-center gap-2 p-2 hover:bg-gray-50 text-left border-none bg-transparent cursor-pointer text-gray-600 mb-1"
-                        >
-                          <span class="text-xs">◀ Back</span>
-                        </button>
-                        @for (cf of service.customFields(); track cf.id) {
-                          <button
-                            [style.display]="cf.libraryId === service.fieldTypeDropdownLibrary() ? 'flex' : 'none'"
-                            (click)="
-                              $event.stopPropagation();
-                              service.convertFieldToCustomField(field.id, cf);
-                              service.fieldTypeDropdown.set(null);
-                              service.fieldTypeDropdownLibrary.set(null)
-                            "
-                            class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left border-none bg-transparent cursor-pointer"
-                            [class.bg-teal-50]="field.customFieldId === cf.id"
-                          >
-                            <app-icon [key]="cf.definition.type" className="w-5 h-5 text-gray-500"></app-icon>
-                            <div class="flex-1 min-w-0">
-                              <span class="text-sm font-medium text-gray-900 block">{{ cf.definition.name }}</span>
-                              @if (cf.definition.helpText) {
-                                <span class="text-xs text-gray-500 truncate block">{{ cf.definition.helpText }}</span>
-                              }
-                            </div>
-                          </button>
-                        }
-                      }
-                      <!-- Custom Fields under library list -->
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-          </div>
+          <app-icon
+            [key]="getFieldIcon(field)"
+            class="field-type-icon flex-shrink-0"
+            className="w-5 h-5"
+            [style.color]="service.COLORS.primary"
+          />
 
           <!-- Field Title Name editing -->
           <input

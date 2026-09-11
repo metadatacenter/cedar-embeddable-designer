@@ -11,6 +11,22 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
     @for (node of container().children; track node.id) {
       <li cdkDrag [cdkDragData]="node.id" [cdkDragDisabled]="locked(node)">
         <div class="outline-row" [class.active]="service.selectedField() === node.id">
+          @if (node.kind === 'element') {
+            <button
+              type="button"
+              class="outline-toggle"
+              [attr.aria-expanded]="!service.collapsedElements().has(node.id)"
+              [attr.aria-label]="(service.collapsedElements().has(node.id) ? 'Expand ' : 'Collapse ') + childName(node)"
+              [title]="service.collapsedElements().has(node.id) ? 'Expand element' : 'Collapse element'"
+              (click)="service.toggleElement(node.id)"
+            >
+              <app-icon
+                key="chevronDown"
+                className="w-3 h-3"
+                [style.transform]="service.collapsedElements().has(node.id) ? 'rotate(-90deg)' : ''"
+              />
+            </button>
+          }
           <button type="button" class="select-node" (click)="select(node)">
             <app-icon [key]="node.kind === 'field' ? node.definition.type : 'folder'" className="w-4 h-4" />
             <span class="node-name">{{ childName(node) }}</span>
@@ -31,7 +47,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
           </button>
         </div>
         @if (node.kind === 'element') {
-          <app-container-outline [container]="node.definition" />
+          <app-container-outline [container]="node.definition" [hidden]="service.collapsedElements().has(node.id)" />
         }
       </li>
     }
@@ -41,6 +57,19 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
       :host {
         display: block;
         min-width: 0;
+      }
+      :host([hidden]) {
+        display: none;
+      }
+      .outline-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+        width: 16px;
+        height: 24px;
+        padding: 0;
+        color: #64748b;
       }
       ul {
         list-style: none;
