@@ -305,18 +305,18 @@ test('an unfinished controlled-term field stays controlled when reopened', async
 test('loads CEF after opening a document without losing its saved default', async ({ page }) => {
   const control = await openField(
     page,
-    'text',
-    { defaultValue: { kind: 'literal', value: 'Saved default' } },
+    'phone',
+    { defaultValue: { kind: 'literal', value: '+1 555 123 4567' } },
     '',
     false,
   );
   expect(await page.evaluate(() => !!customElements.get('cedar-embeddable-field'))).toBe(false);
-  await expect.poll(async () => (await constraints(page))['defaultValue']).toBe('Saved default');
+  await expect.poll(async () => (await constraints(page))['defaultValue']).toBe('+1 555 123 4567');
   await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
   const input = control.locator('input').first();
-  await expect(input).toHaveValue('Saved default');
-  await input.fill('After registration');
-  await expect.poll(async () => (await constraints(page))['defaultValue']).toBe('After registration');
+  await expect(input).toHaveValue('+1 555 123 4567');
+  await input.fill('+1 555 987 6543');
+  await expect.poll(async () => (await constraints(page))['defaultValue']).toBe('+1 555 987 6543');
 });
 
 test('previews an element document through CEE while publishing element artifacts', async ({ page }) => {

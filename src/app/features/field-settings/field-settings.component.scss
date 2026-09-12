@@ -259,3 +259,21 @@ button:focus-visible {
     grid-column: 1 / -1;
   }
 }
+
+.default-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.numeric-constraint-fields {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 110px), 1fr));
+  align-items: start;
+}
+.numeric-default {
+  min-width: 0;
+}
+.numeric-default .default-label {
+  font-weight: inherit;
+}

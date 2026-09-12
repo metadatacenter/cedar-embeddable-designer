@@ -1,4 +1,4 @@
-import { defaultFromCef, defaultToCef } from './field-default';
+import { defaultFromCef, defaultToCef, temporalDefaultError } from './field-default';
 import { Field, TemporalSettings } from '../models/types';
 
 describe('temporal defaults at the CEF boundary', () => {
@@ -29,5 +29,29 @@ describe('temporal defaults at the CEF boundary', () => {
     };
     expect(defaultToCef(field)).toEqual({ kind: 'temporal', value: instance });
     expect(defaultFromCef(field, { kind: 'temporal', value: instance })).toEqual(field.defaultValue);
+  });
+});
+
+describe('temporal default validation', () => {
+  it.each([
+    ['xsd:date', 'day', '2024-02-29', true],
+    ['xsd:date', 'day', '2025-02-29', false],
+    ['xsd:date', 'month', '2026-13', false],
+    ['xsd:date', 'month', '2026-09-01', false],
+    ['xsd:time', 'minute', '23:59', true],
+    ['xsd:time', 'minute', '24:00', false],
+    ['xsd:time', 'second', '12:00:60', false],
+    ['xsd:time', 'minute', '12:00:01', false],
+    ['xsd:time', 'decimalSecond', '12:00:01.123', true],
+    ['xsd:dateTime', 'minute', '2026-04-31T12:00', false],
+    ['xsd:dateTime', 'minute', '2026-04-30T12:00+14:01', false],
+    ['xsd:dateTime', 'minute', '2026-04-30T12:00-14:00', true],
+  ] as const)('checks %s %s default %s', (type, granularity, value, valid) => {
+    const field = { temporal: { type, granularity, timezoneEnabled: true } } as Field;
+    expect(temporalDefaultError(field, { kind: 'temporal', value }) === null).toBe(valid);
+  });
+  it('rejects an offset when timezone is disabled', () => {
+    const field = { temporal: { type: 'xsd:time', granularity: 'minute', timezoneEnabled: false } } as Field;
+    expect(temporalDefaultError(field, { kind: 'temporal', value: '12:00Z' })).toContain('timezone');
   });
 });

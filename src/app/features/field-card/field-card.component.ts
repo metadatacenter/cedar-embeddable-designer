@@ -16,7 +16,6 @@ import {
   allowsStatus,
   contentKindOf,
 } from '../../core/model/cedar-template';
-import { FieldDefaultValueComponent } from '../field-default-value/field-default-value.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { ControlledTermConfigComponent } from '../controlled-term-config/controlled-term-config.component';
 
@@ -30,7 +29,6 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
     IconComponent,
     ControlledTermConfigComponent,
     DragDropModule,
-    FieldDefaultValueComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './field-card.component.html',

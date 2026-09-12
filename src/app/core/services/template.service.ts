@@ -434,6 +434,10 @@ export class TemplateService {
     const current = this.fieldsFor(id)().find((field) => field.id === id);
     if (current && !this.canAddField(changes.type ?? current.type, this.parentContainerId(id)))
       return 'Page breaks can only be placed in templates.';
+    if (current) {
+      const error = defaultValueError({ ...current, ...changes }, changes.defaultValue ?? current.defaultValue);
+      if (error) return error;
+    }
     const fields = this.fieldsFor(id)().map((field) => (field.id === id ? { ...field, ...changes } : field));
     try {
       buildTemplate({

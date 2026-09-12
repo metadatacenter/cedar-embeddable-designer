@@ -269,6 +269,39 @@ describe('default editing', () => {
     expect(() => service.templateJson()).not.toThrow();
   });
 
+  it('validates text defaults and prevents incompatible constraint changes', () => {
+    expect(
+      service.updateFieldSettings(1, { textConstraints: { minLength: 2, maxLength: 4, regex: '^[A-Z]+$' } }),
+    ).toBeNull();
+    service.updateDefaultValue(1, { kind: 'literal', value: 'ABC' });
+    service.updateDefaultValue(1, { kind: 'literal', value: 'abc' });
+    expect(service.fields()[0].defaultValue).toEqual({ kind: 'literal', value: 'ABC' });
+    expect(
+      service.updateFieldSettings(1, { textConstraints: { minLength: 2, maxLength: 2, regex: null } }),
+    ).not.toBeNull();
+    expect(service.fields()[0].textConstraints?.maxLength).toBe(4);
+  });
+
+  it('validates numeric defaults and prevents incompatible bounds', () => {
+    const numeric = { type: 'xsd:byte', min: 0, max: 100, decimalPlaces: null, unit: null };
+    service.fields.set([{ ...service.fields()[0], type: 'number', numeric }]);
+    service.updateDefaultValue(1, { kind: 'number', value: 50 });
+    for (const value of [-1, 101, 22222, 2.5]) service.updateDefaultValue(1, { kind: 'number', value });
+    expect(service.fields()[0].defaultValue).toEqual({ kind: 'number', value: 50 });
+    expect(service.updateFieldSettings(1, { numeric: { ...numeric, max: 40 } })).not.toBeNull();
+    expect(service.fields()[0].numeric?.max).toBe(100);
+  });
+
+  it('rejects invalid temporal defaults and incompatible precision changes', () => {
+    const temporal = { type: 'xsd:date', granularity: 'day', timezoneEnabled: false, inputTimeFormat: null } as const;
+    service.fields.set([{ ...service.fields()[0], type: 'date', temporal }]);
+    service.updateDefaultValue(1, { kind: 'temporal', value: '2024-02-29' });
+    service.updateDefaultValue(1, { kind: 'temporal', value: '2025-02-29' });
+    expect(service.fields()[0].defaultValue).toEqual({ kind: 'temporal', value: '2024-02-29' });
+    expect(service.updateFieldSettings(1, { temporal: { ...temporal, granularity: 'year' } })).not.toBeNull();
+    expect(service.fields()[0].temporal?.granularity).toBe('day');
+  });
+
   it('renames selected defaults and removes them when their options are deleted', () => {
     service.fields.set([{ ...service.fields()[0], type: 'checkboxes', options: [''] }]);
     service.updateOption(1, 0, 'A');

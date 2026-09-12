@@ -53,7 +53,7 @@ const INHERITED = [
 const BOX = ['height', 'paddingTop', 'paddingBottom', 'paddingLeft', 'paddingRight', 'borderRadius'] as const;
 
 /** Default-capable types whose CEF control is a text-like input, so there is something to measure. */
-const TYPES = ['text', 'paragraph', 'email', 'phone', 'link', 'number'] as const;
+const TYPES = ['email', 'phone', 'link'] as const;
 
 function fieldOf(type: string): Field {
   return {

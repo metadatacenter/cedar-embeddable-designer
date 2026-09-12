@@ -1,8 +1,10 @@
+import { FieldDefaultValueComponent } from '../field-default-value/field-default-value.component';
 import { ChangeDetectionStrategy, Component, Input, OnChanges, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Field } from '../../core/models/types';
 import {
   accepts,
+  allowsDefault,
   descriptorOf,
   FieldParameter,
   fieldArtifactMetadata,
@@ -13,7 +15,7 @@ import { TemplateService } from '../../core/services/template.service';
 
 @Component({
   selector: 'app-field-settings',
-  imports: [FormsModule],
+  imports: [FormsModule, FieldDefaultValueComponent],
   templateUrl: './field-settings.component.html',
   styleUrl: './field-settings.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,15 +26,21 @@ export class FieldSettingsComponent implements OnChanges {
   expanded = false;
   activeTab = 'Display';
   get valuesTab(): string {
-    return ['richText', 'image', 'youtube'].includes(this.field.type) ? 'Content' : 'Values';
+    return ['richText', 'image', 'youtube'].includes(this.field.type) ? 'Content' : 'Constraints';
+  }
+  readonly allowsDefault = allowsDefault;
+  get hasConstraints(): boolean {
+    return (
+      allowsDefault(this.field.type) ||
+      this.accepts('temporalPrecision') ||
+      this.accepts('textLength') ||
+      this.accepts('numericBounds')
+    );
   }
   get tabs(): string[] {
     return [
       'Display',
-      ...(this.hasValues ? [this.valuesTab] : []),
-      ...(this.accepts('textLength') ? ['Text constraints'] : []),
-      ...(this.accepts('numericBounds') ? ['Numeric constraints'] : []),
-      ...(this.accepts('temporalPrecision') ? ['Temporal settings'] : []),
+      ...(this.hasValues || this.hasConstraints ? [this.valuesTab] : []),
       'Field details',
       ...(this.multiple ? ['Occurrences'] : []),
       'Field metadata',
@@ -165,7 +173,7 @@ export class FieldSettingsComponent implements OnChanges {
     });
   }
   saveTemporal(): void {
-    this.errors['Temporal settings'] = this.service.updateFieldSettings(this.field.id, {
+    this.errors['Constraints'] = this.service.updateFieldSettings(this.field.id, {
       temporal: { ...this.temporal },
       type: this.temporal.type === 'xsd:time' ? 'time' : 'date',
     });
@@ -176,15 +184,15 @@ export class FieldSettingsComponent implements OnChanges {
     const invalid = form && Array.from(form.querySelectorAll('input')).find((input) => input.validity.badInput);
     if (invalid) {
       const label = invalid.closest('label')?.textContent?.trim() || 'Numeric value';
-      this.errors['Numeric constraints'] = `${label} must be a valid number.`;
+      this.errors['Constraints'] = `${label} must be a valid number.`;
       return;
     }
-    this.errors['Numeric constraints'] = this.service.updateFieldSettings(this.field.id, {
+    this.errors['Constraints'] = this.service.updateFieldSettings(this.field.id, {
       numeric: { ...this.numeric, unit: this.numeric.unit || null },
     });
   }
   saveText(): void {
-    this.errors['Text constraints'] = this.service.updateFieldSettings(this.field.id, {
+    this.errors['Constraints'] = this.service.updateFieldSettings(this.field.id, {
       textConstraints: { ...this.text, regex: this.text.regex || null },
     });
   }

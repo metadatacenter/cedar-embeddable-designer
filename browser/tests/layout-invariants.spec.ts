@@ -28,6 +28,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { openDesigner, applyPreset } from './support';
 import { auditLayout } from './support-layout';
+import { PALETTE_FIELD_TYPES } from '../../src/app/core/models/types';
 
 const DESIGNER = 'cedar-embeddable-designer';
 
@@ -106,7 +107,7 @@ test('the whole palette lays out without clipping, escaping or drifting', async 
   const misaligned = await misalignedRows(page);
 
   // The palette itself, so a type that stopped being offered is not silently uncovered.
-  expect(labels.length).toBe(26);
+  expect(labels).toEqual(Object.values(PALETTE_FIELD_TYPES).map((type) => type.label));
 
   expect.soft(clipped, 'text a card cannot show in the space it gives it').toEqual([]);
   expect.soft(escaped, 'content reaching outside the card that holds it').toEqual([]);

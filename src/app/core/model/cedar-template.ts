@@ -1,3 +1,4 @@
+import { temporalDefaultError } from './field-default';
 import {
   ContainerDraft,
   ChildNode,
@@ -875,12 +876,11 @@ function buildField(field: Field): TemplateField {
     const pattern = regex ? new RegExp(regex) : null;
     if (field.defaultValue.kind === 'literal') {
       const value = field.defaultValue.value;
-      if (
-        (minLength !== null && value.length < minLength) ||
-        (maxLength !== null && value.length > maxLength) ||
-        (pattern && !pattern.test(value))
-      )
-        throw new Error('The existing default does not satisfy these text constraints. Edit or clear it first.');
+      if (minLength !== null && value.length < minLength)
+        throw new Error(`Default value must contain at least ${minLength} characters.`);
+      if (maxLength !== null && value.length > maxLength)
+        throw new Error(`Default value must contain no more than ${maxLength} characters.`);
+      if (pattern && !pattern.test(value)) throw new Error('Default value must match the regular expression.');
     }
     (builder as TextFieldBuilder)
       .withMinLength(field.textConstraints.minLength)
@@ -974,6 +974,8 @@ function buildField(field: Field): TemplateField {
 /** Validate before changing state; model builders may reject intermediate defaults. */
 export function defaultValueError(field: Field, value: FieldDefaultValue): string | null {
   try {
+    const temporalError = temporalDefaultError(field, value);
+    if (temporalError) return temporalError;
     if (allowsOptions(field.type)) {
       const values = value.kind === 'literal' ? [value.value] : value.kind === 'literals' ? value.values : [];
       if (values.some((option) => !field.options.includes(option))) return 'Choose a default from the field options.';

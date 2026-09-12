@@ -144,7 +144,7 @@ describe.each(
       // And it says which field, which is the difference between a refusal an author
       // can act on and one that only says the template is wrong somewhere.
       const offender = state.fields.find((field) => field.textConstraints)?.name;
-      expect(() => buildTemplate(state)).toThrow(/does not satisfy these text constraints/);
+      expect(() => buildTemplate(state)).toThrow(/Default value must/);
       expect(() => buildTemplate(state)).toThrow(new RegExp(`^${offender}: `));
       return;
     }

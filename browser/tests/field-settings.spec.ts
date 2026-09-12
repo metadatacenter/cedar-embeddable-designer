@@ -59,7 +59,7 @@ test('authors recommended fields without marking them required', async ({ page }
 
 test('authors text constraints and rejects invalid patterns', async ({ page }) => {
   await openDesigner(page);
-  const section = await openSettings(page.locator('app-field-card').first(), 'Text constraints');
+  const section = await openSettings(page.locator('app-field-card').first(), 'Constraints');
   await section.getByLabel('Minimum length').fill('2');
   await section.getByLabel('Maximum length').fill('8');
   await section.getByLabel('Regular expression').fill('^[A-Z]+$');
@@ -74,7 +74,7 @@ test('authors numeric datatype bounds precision and units', async ({ page }) => 
   await openDesigner(page);
   const card = page.locator('app-field-card').first();
   await loadFieldFixture(page, 'numeric');
-  const section = await openSettings(card, 'Numeric constraints');
+  const section = await openSettings(card, 'Constraints');
   await section.getByLabel('Datatype').selectOption('xsd:int');
   await section.getByLabel('Minimum value').fill('1');
   await section.getByLabel('Maximum value').fill('12');
@@ -88,7 +88,7 @@ test('authors numeric datatype bounds precision and units', async ({ page }) => 
 test('authors datetime precision timezone and time format', async ({ page }) => {
   await openDesigner(page);
   const card = page.locator('#field-card-3');
-  const section = await openSettings(card, 'Temporal settings');
+  const section = await openSettings(card, 'Constraints');
   await section.getByLabel('Temporal type').selectOption('xsd:dateTime');
   await section.getByLabel('Precision').selectOption('second');
   await section.getByLabel('Time format').selectOption('12h');
@@ -169,12 +169,12 @@ test('one Temporal palette entry supports date, time and date-time without chang
   await picker.getByRole('button', { name: 'Temporal', exact: true }).click();
   await expect(designer.locator('app-field-card')).toHaveCount(4);
   const card = designer.locator('app-field-card').last();
-  const settings = await openSettings(card, 'Temporal settings');
+  const settings = await openSettings(card, 'Constraints');
   const original = ((await currentTemplate(page)).properties as any).Temporal['@id'];
   for (const [type, preview] of [
-    ['xsd:time', 'Time picker'],
+    ['xsd:time', 'Time'],
     ['xsd:dateTime', 'Date and time'],
-    ['xsd:date', 'Date picker'],
+    ['xsd:date', 'Date'],
   ]) {
     await settings.getByLabel('Temporal type', { exact: true }).selectOption(type);
     await expect(card.getByPlaceholder(preview, { exact: true })).toBeVisible();

@@ -1,4 +1,43 @@
-@if (available()) {
+@if (native()) {
+  <div class="native-default">
+    @if (field().type === 'paragraph') {
+      <textarea
+        #control
+        aria-label="Default value"
+        rows="2"
+        [value]="draft()"
+        [disabled]="!!field().publishedDefinition"
+        [attr.aria-invalid]="!!error()"
+        (input)="editNative(control.value)"
+      ></textarea>
+    } @else {
+      <input
+        #control
+        type="text"
+        aria-label="Default value"
+        [value]="draft()"
+        [attr.inputmode]="field().type === 'number' ? 'decimal' : null"
+        [disabled]="!!field().publishedDefinition"
+        [attr.aria-invalid]="!!error()"
+        (input)="editNative(control.value)"
+      />
+    }
+    @if (draft()) {
+      <button
+        type="button"
+        aria-label="Clear default"
+        title="Clear default"
+        [disabled]="!!field().publishedDefinition"
+        (click)="clear()"
+      >
+        ×
+      </button>
+    }
+  </div>
+  @if (error()) {
+    <p role="alert" class="ced-field-error">{{ error() }}</p>
+  }
+} @else if (available()) {
   @if (!allowsControlledTerms() || field().controlledTermConstraints?.constraints?.length) {
     <div #mount (focusin)="service.selectedField.set(field().id)"></div>
   }

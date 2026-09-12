@@ -117,12 +117,16 @@ export async function applyPreset(page: Page, preset: 'basic' | 'semantic' | 'mo
 }
 
 /** Reveal one field's settings without changing the document. */
-export async function openSettings(card: Locator, tab = 'Values'): Promise<Locator> {
+export async function openSettings(card: Locator, tab = 'Constraints'): Promise<Locator> {
   const settings = card.locator('app-field-settings');
   const toggle = settings.locator('.settings-toggle');
   await expect(toggle).toBeVisible();
   if ((await toggle.getAttribute('aria-expanded')) === 'false') await clickCentred(toggle);
-  if (tab === 'Values' && (await settings.getByRole('tab', { name: 'Content', exact: true }).count())) tab = 'Content';
+  if (
+    tab === 'Constraints' &&
+    (await settings.getByRole('tab', { name: 'Content', exact: true, includeHidden: true }).count())
+  )
+    tab = 'Content';
   await clickCentred(settings.getByRole('tab', { name: tab, exact: true }));
   return settings.getByRole('tabpanel', { name: tab, exact: true });
 }

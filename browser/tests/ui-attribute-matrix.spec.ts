@@ -108,17 +108,17 @@ const CONTROLS: readonly Control[] = [
   },
   {
     name: 'text constraints',
-    find: (page) => disclosure(page, 'Text constraints'),
+    find: (page) => card(page).getByLabel('Minimum length', { exact: true }),
     expected: (type) => accepts(type, 'textLength'),
   },
   {
     name: 'numeric constraints',
-    find: (page) => disclosure(page, 'Numeric constraints'),
+    find: (page) => card(page).getByLabel('Datatype', { exact: true }),
     expected: (type) => accepts(type, 'numericBounds'),
   },
   {
     name: 'temporal settings',
-    find: (page) => disclosure(page, 'Temporal settings'),
+    find: (page) => card(page).getByLabel('Temporal type', { exact: true }),
     expected: (type) => accepts(type, 'temporalPrecision'),
   },
   {
@@ -183,9 +183,10 @@ async function oneCardOf(
     })
     .click();
   if (paletteType === 'time') {
-    await openSettings(card(page), 'Temporal settings');
+    await openSettings(card(page), 'Constraints');
     await card(page).getByLabel('Temporal type', { exact: true }).selectOption('xsd:time');
     await settings(page).getByRole('button', { name: 'Collapse field settings', exact: true }).click();
+    await expect(settings(page).getByRole('button', { name: 'Expand field settings', exact: true })).toBeVisible();
   }
   await expect.poll(async () => cards.count(), { timeout: SETTLE }).toBe(1);
 }
@@ -297,7 +298,7 @@ const open = async (page: Page, heading: string) => {
   const expand = settings(page).getByRole('button', { name: 'Expand field settings' });
   if (await expand.count()) await expand.click();
   if (
-    heading === 'Values' &&
+    heading === 'Constraints' &&
     (await settings(page).getByRole('tab', { name: 'Content', exact: true, includeHidden: true }).count())
   )
     heading = 'Content';
@@ -454,97 +455,97 @@ const LIFECYCLES: readonly Lifecycle[] = [
   {
     control: 'minimum length',
     paletteType: 'text',
-    prepare: (page) => open(page, 'Text constraints'),
-    set: async (page) => setIn(page, 'Text constraints', 'Minimum length', '4'),
-    restore: async (page) => setIn(page, 'Text constraints', 'Minimum length', ''),
+    prepare: (page) => open(page, 'Constraints'),
+    set: async (page) => setIn(page, 'Constraints', 'Minimum length', '4'),
+    restore: async (page) => setIn(page, 'Constraints', 'Minimum length', ''),
     read: (template) => constraints(template, 'Text')['minLength'],
     whenSet: 4,
   },
   {
     control: 'maximum length',
     paletteType: 'text',
-    prepare: (page) => open(page, 'Text constraints'),
-    set: async (page) => setIn(page, 'Text constraints', 'Maximum length', '40'),
-    restore: async (page) => setIn(page, 'Text constraints', 'Maximum length', ''),
+    prepare: (page) => open(page, 'Constraints'),
+    set: async (page) => setIn(page, 'Constraints', 'Maximum length', '40'),
+    restore: async (page) => setIn(page, 'Constraints', 'Maximum length', ''),
   },
   {
     control: 'a regular expression',
     paletteType: 'text',
-    prepare: (page) => open(page, 'Text constraints'),
-    set: async (page) => setIn(page, 'Text constraints', 'Regular expression', '^[A-Z]+$'),
-    restore: async (page) => setIn(page, 'Text constraints', 'Regular expression', ''),
+    prepare: (page) => open(page, 'Constraints'),
+    set: async (page) => setIn(page, 'Constraints', 'Regular expression', '^[A-Z]+$'),
+    restore: async (page) => setIn(page, 'Constraints', 'Regular expression', ''),
   },
 
   // ── Numeric constraints ─────────────────────────────────────────────────────
   {
     control: 'numeric datatype',
     paletteType: 'number',
-    prepare: (page) => open(page, 'Numeric constraints'),
-    set: async (page) => chooseIn(page, 'Numeric constraints', 'Datatype', 'xsd:int'),
-    restore: async (page) => chooseIn(page, 'Numeric constraints', 'Datatype', 'xsd:decimal'),
+    prepare: (page) => open(page, 'Constraints'),
+    set: async (page) => chooseIn(page, 'Constraints', 'Datatype', 'xsd:int'),
+    restore: async (page) => chooseIn(page, 'Constraints', 'Datatype', 'xsd:decimal'),
   },
   {
     control: 'minimum value',
     paletteType: 'number',
-    prepare: (page) => open(page, 'Numeric constraints'),
-    set: async (page) => setIn(page, 'Numeric constraints', 'Minimum value', '1'),
-    restore: async (page) => setIn(page, 'Numeric constraints', 'Minimum value', ''),
+    prepare: (page) => open(page, 'Constraints'),
+    set: async (page) => setIn(page, 'Constraints', 'Minimum value', '1'),
+    restore: async (page) => setIn(page, 'Constraints', 'Minimum value', ''),
   },
   {
     control: 'maximum value',
     paletteType: 'number',
-    prepare: (page) => open(page, 'Numeric constraints'),
-    set: async (page) => setIn(page, 'Numeric constraints', 'Maximum value', '99'),
-    restore: async (page) => setIn(page, 'Numeric constraints', 'Maximum value', ''),
+    prepare: (page) => open(page, 'Constraints'),
+    set: async (page) => setIn(page, 'Constraints', 'Maximum value', '99'),
+    restore: async (page) => setIn(page, 'Constraints', 'Maximum value', ''),
     read: (template) => constraints(template, 'Number')['maxValue'],
     whenSet: 99,
   },
   {
     control: 'decimal places',
     paletteType: 'number',
-    prepare: (page) => open(page, 'Numeric constraints'),
-    set: async (page) => setIn(page, 'Numeric constraints', 'Decimal places', '2'),
-    restore: async (page) => setIn(page, 'Numeric constraints', 'Decimal places', ''),
+    prepare: (page) => open(page, 'Constraints'),
+    set: async (page) => setIn(page, 'Constraints', 'Decimal places', '2'),
+    restore: async (page) => setIn(page, 'Constraints', 'Decimal places', ''),
   },
   {
     control: 'unit of measure',
     paletteType: 'number',
-    prepare: (page) => open(page, 'Numeric constraints'),
-    set: async (page) => setIn(page, 'Numeric constraints', 'Unit of measure', 'mg'),
-    restore: async (page) => setIn(page, 'Numeric constraints', 'Unit of measure', ''),
+    prepare: (page) => open(page, 'Constraints'),
+    set: async (page) => setIn(page, 'Constraints', 'Unit of measure', 'mg'),
+    restore: async (page) => setIn(page, 'Constraints', 'Unit of measure', ''),
   },
 
   // ── Temporal settings ───────────────────────────────────────────────────────
   {
     control: 'temporal datatype',
     paletteType: 'date',
-    prepare: (page) => open(page, 'Temporal settings'),
-    set: async (page) => chooseIn(page, 'Temporal settings', 'Temporal type', 'xsd:dateTime'),
-    restore: async (page) => chooseIn(page, 'Temporal settings', 'Temporal type', 'xsd:date'),
+    prepare: (page) => open(page, 'Constraints'),
+    set: async (page) => chooseIn(page, 'Constraints', 'Temporal type', 'xsd:dateTime'),
+    restore: async (page) => chooseIn(page, 'Constraints', 'Temporal type', 'xsd:date'),
   },
   {
     control: 'precision',
     paletteType: 'date',
-    prepare: (page) => open(page, 'Temporal settings'),
-    set: async (page) => chooseIn(page, 'Temporal settings', 'Precision', 'month'),
-    restore: async (page) => chooseIn(page, 'Temporal settings', 'Precision', 'day'),
+    prepare: (page) => open(page, 'Constraints'),
+    set: async (page) => chooseIn(page, 'Constraints', 'Precision', 'month'),
+    restore: async (page) => chooseIn(page, 'Constraints', 'Precision', 'day'),
   },
   {
     control: 'the timezone control',
     paletteType: 'time',
-    prepare: (page) => open(page, 'Temporal settings'),
-    set: async (page) => tickIn(page, 'Temporal settings', 'Show timezone', true),
-    restore: async (page) => tickIn(page, 'Temporal settings', 'Show timezone', false),
+    prepare: (page) => open(page, 'Constraints'),
+    set: async (page) => tickIn(page, 'Constraints', 'Show timezone', true),
+    restore: async (page) => tickIn(page, 'Constraints', 'Show timezone', false),
   },
   {
     control: 'time format',
     paletteType: 'time',
-    prepare: (page) => open(page, 'Temporal settings'),
-    set: async (page) => chooseIn(page, 'Temporal settings', 'Time format', '24h'),
+    prepare: (page) => open(page, 'Constraints'),
+    set: async (page) => chooseIn(page, 'Constraints', 'Time format', '24h'),
     // "Default (24 hour)" is bound with `ngValue` and so carries no plain value; choosing it by
     // the label is both what works and what an author does.
     restore: async (page) => {
-      await disclosure(page, 'Temporal settings')
+      await disclosure(page, 'Constraints')
         .getByLabel('Time format', { exact: true })
         .selectOption({ label: 'Default (24 hour)' });
     },
@@ -604,9 +605,8 @@ const LIFECYCLES: readonly Lifecycle[] = [
    * own behaviour is the picker's business.
    */
   {
-    control: 'a default value through CEF',
+    control: 'a native text default',
     paletteType: 'text',
-    requires: 'CEF_BUNDLE',
     set: async (page) => card(page).locator('app-field-default-value input').first().fill('Example'),
     restore: async (page) => card(page).locator('app-field-default-value input').first().fill(''),
     read: (template) => constraints(template, 'Text')['defaultValue'],
@@ -628,7 +628,7 @@ for (const width of WIDTHS) {
           `${lifecycle.requires} names the sibling bundle this control comes from.`,
         );
         await oneCardOf(page, lifecycle.paletteType, { query: lifecycle.query, bundle });
-        await open(page, 'Values');
+        await open(page, 'Constraints');
         await lifecycle.prepare?.(page);
 
         /*
@@ -698,7 +698,7 @@ test.describe('what a sibling component contributes', () => {
       await page.setViewportSize({ width, height: 900 });
       // The host's stub emits what the real picker emits; accepting it is the claim.
       await oneCardOf(page, 'controlledTerms', { query: '?picker=stub' });
-      await open(page, 'Values');
+      await open(page, 'Constraints');
       const panel = card(page).locator('app-controlled-term-config');
       const before = await currentTemplate(page);
 
@@ -770,9 +770,9 @@ test.describe('what a sibling component contributes', () => {
     test(`the card holds its shape with CEF inside it at ${width}`, async ({ page }) => {
       test.skip(!process.env.CEF_BUNDLE, 'CEF_BUNDLE names the bundle that provides the control.');
       await page.setViewportSize({ width, height: 900 });
-      await oneCardOf(page, 'text', { bundle: process.env.CEF_BUNDLE });
+      await oneCardOf(page, 'email', { bundle: process.env.CEF_BUNDLE });
 
-      await open(page, 'Values');
+      await open(page, 'Constraints');
       // The real control, not the panel's "unavailable" placeholder.
       await expect(card(page).locator('app-field-default-value input').first()).toBeVisible();
       await expectLaidOut(page, `CEF mounted at ${width}`);

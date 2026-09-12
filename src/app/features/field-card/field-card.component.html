@@ -115,8 +115,7 @@
         allowsOptions(field.type) ||
         allowsControlledTerms(field.type) ||
         !!contentLabel(field.type) ||
-        service.preferences().showHelpText ||
-        (service.preferences().showDefaultValue && allowsDefault(field.type))
+        service.preferences().showHelpText
       "
     >
       <fieldset field-values [disabled]="!!field.publishedDefinition" class="border-0 m-0 p-0 min-w-0">
@@ -201,9 +200,7 @@
         }
 
         <!-- Help Text and Default Value editing (Only if configured in preferences) -->
-        @if (
-          service.preferences().showHelpText || (service.preferences().showDefaultValue && allowsDefault(field.type))
-        ) {
+        @if (service.preferences().showHelpText) {
           <div class="space-y-2 mt-1 px-1">
             @if (service.preferences().showHelpText) {
               <div>
@@ -221,23 +218,6 @@
                   class="text-sm text-gray-700 w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-teal-500"
                   (focus)="service.selectedField.set(field.id)"
                 />
-              </div>
-            }
-            <!-- A static field shows something rather than collecting one, so it has
-           no default for a form-filler to start from. -->
-            @if (service.preferences().showDefaultValue && allowsDefault(field.type)) {
-              <!--
-            A group label rather than a `label` element: what it names is a composite
-            control — CEF, or the term picker — and not one input, so `for` has nothing
-            to point at and a bare `label` named nothing at all.
-          -->
-              <div role="group" [attr.aria-labelledby]="'field-default-label-' + field.id">
-                <span
-                  [id]="'field-default-label-' + field.id"
-                  class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5 block"
-                  >Default Value</span
-                >
-                <app-field-default-value [field]="field"></app-field-default-value>
               </div>
             }
           </div>

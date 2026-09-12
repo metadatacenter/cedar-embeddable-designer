@@ -15,7 +15,7 @@
       </button>
     }
   </div>
-  @if (hasValues) {
+  @if (hasValues || hasConstraints) {
     <section
       role="tabpanel"
       [hidden]="selectedTab !== valuesTab"
@@ -23,6 +23,166 @@
       [attr.aria-labelledby]="'field-tab-' + field.id + '-' + valuesTab"
     >
       <ng-content select="[field-values]" />
+      @if (accepts('textLength')) {
+        <div class="settings">
+          <form (ngSubmit)="saveText()" class="row">
+            <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields text-constraint-fields">
+              <label
+                >Minimum length<input
+                  name="minLength"
+                  type="number"
+                  min="0"
+                  step="1"
+                  [(ngModel)]="text.minLength"
+                  (ngModelChange)="saveText()"
+              /></label>
+              <label
+                >Maximum length<input
+                  name="maxLength"
+                  type="number"
+                  min="0"
+                  step="1"
+                  [(ngModel)]="text.maxLength"
+                  (ngModelChange)="saveText()"
+              /></label>
+              <label
+                >Regular expression<input
+                  class="wide"
+                  name="regex"
+                  [(ngModel)]="text.regex"
+                  (ngModelChange)="saveText()"
+                  placeholder="e.g., ^[A-Z]+$"
+              /></label>
+            </fieldset>
+          </form>
+          @if (error) {
+            <p role="alert">{{ error }}</p>
+          }
+        </div>
+      }
+      @if (accepts('numericBounds')) {
+        <div class="settings">
+          <form #numericForm (ngSubmit)="saveNumeric(numericForm)" class="row">
+            <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields numeric-constraint-fields">
+              <label
+                >Datatype<select
+                  name="numericType"
+                  aria-label="Datatype"
+                  [(ngModel)]="numeric.type"
+                  (ngModelChange)="saveNumeric(numericForm)"
+                >
+                  @for (type of numericTypes; track type) {
+                    <option [value]="type">{{ type }}</option>
+                  }
+                </select></label
+              >
+              <label
+                >Minimum value<input
+                  name="numericMin"
+                  type="number"
+                  step="any"
+                  [(ngModel)]="numeric.min"
+                  (ngModelChange)="saveNumeric(numericForm)"
+              /></label>
+              <label
+                >Maximum value<input
+                  name="numericMax"
+                  type="number"
+                  step="any"
+                  [(ngModel)]="numeric.max"
+                  (ngModelChange)="saveNumeric(numericForm)"
+              /></label>
+              <div class="numeric-default" role="group" [attr.aria-labelledby]="'numeric-default-label-' + field.id">
+                <span class="default-label" [id]="'numeric-default-label-' + field.id">Default value</span>
+                <app-field-default-value [field]="field" />
+              </div>
+              <label
+                >Decimal places<input
+                  name="decimalPlaces"
+                  type="number"
+                  min="0"
+                  step="1"
+                  [(ngModel)]="numeric.decimalPlaces"
+                  (ngModelChange)="saveNumeric(numericForm)"
+              /></label>
+              <label
+                >Unit of measure<input
+                  name="unit"
+                  [(ngModel)]="numeric.unit"
+                  (ngModelChange)="saveNumeric(numericForm)"
+                  placeholder="e.g., mg"
+              /></label>
+            </fieldset>
+          </form>
+          @if (error) {
+            <p role="alert">{{ error }}</p>
+          }
+        </div>
+      }
+      @if (accepts('temporalPrecision')) {
+        <div class="settings">
+          <form (ngSubmit)="saveTemporal()" class="row">
+            <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields">
+              <label
+                >Temporal type<select
+                  name="temporalType"
+                  aria-label="Temporal type"
+                  [ngModel]="temporal.type"
+                  (ngModelChange)="changeTemporalType($event); saveTemporal()"
+                >
+                  <option value="xsd:date">Date</option>
+                  <option value="xsd:time">Time</option>
+                  <option value="xsd:dateTime">Date and time</option>
+                </select></label
+              >
+              <label
+                >Precision<select
+                  name="granularity"
+                  aria-label="Precision"
+                  [(ngModel)]="temporal.granularity"
+                  (ngModelChange)="saveTemporal()"
+                >
+                  @for (value of granularities; track value) {
+                    <option [value]="value">{{ value === 'decimalSecond' ? 'Fractional second' : value }}</option>
+                  }
+                </select></label
+              >
+              @if (temporal.type !== 'xsd:date') {
+                <label
+                  >Time format<select
+                    name="timeFormat"
+                    aria-label="Time format"
+                    [(ngModel)]="temporal.inputTimeFormat"
+                    (ngModelChange)="saveTemporal()"
+                  >
+                    <option [ngValue]="null">Default (24 hour)</option>
+                    <option value="12h">12 hour</option>
+                    <option value="24h">24 hour</option>
+                  </select></label
+                >
+                <label class="check"
+                  ><input
+                    type="checkbox"
+                    name="timezone"
+                    [(ngModel)]="temporal.timezoneEnabled"
+                    (ngModelChange)="saveTemporal()"
+                  />Show timezone</label
+                >
+              }
+            </fieldset>
+          </form>
+          @if (error) {
+            <p role="alert">{{ error }}</p>
+          }
+        </div>
+      }
+      @if (allowsDefault(field.type) && !accepts('numericBounds')) {
+        <div class="settings" role="group" [attr.aria-labelledby]="'field-default-label-' + field.id">
+          <span class="default-label" [id]="'field-default-label-' + field.id">Default value</span>
+          <app-field-default-value [field]="field" />
+        </div>
+      }
+
       @if (accepts('mediaDimensions')) {
         <div class="settings">
           <form (ngSubmit)="saveMedia()" class="row">
@@ -138,176 +298,6 @@
       <p role="alert">{{ error }}</p>
     }
   </section>
-
-  @if (accepts('textLength')) {
-    <section
-      class="settings"
-      role="tabpanel"
-      [hidden]="selectedTab !== 'Text constraints'"
-      [id]="'field-panel-' + field.id + '-Text-constraints'"
-      [attr.aria-labelledby]="'field-tab-' + field.id + '-Text-constraints'"
-    >
-      <form (ngSubmit)="saveText()" class="row">
-        <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields text-constraint-fields">
-          <label
-            >Minimum length<input
-              name="minLength"
-              type="number"
-              min="0"
-              step="1"
-              [(ngModel)]="text.minLength"
-              (ngModelChange)="saveText()"
-          /></label>
-          <label
-            >Maximum length<input
-              name="maxLength"
-              type="number"
-              min="0"
-              step="1"
-              [(ngModel)]="text.maxLength"
-              (ngModelChange)="saveText()"
-          /></label>
-          <label
-            >Regular expression<input
-              class="wide"
-              name="regex"
-              [(ngModel)]="text.regex"
-              (ngModelChange)="saveText()"
-              placeholder="e.g., ^[A-Z]+$"
-          /></label>
-        </fieldset>
-      </form>
-      @if (error) {
-        <p role="alert">{{ error }}</p>
-      }
-    </section>
-  }
-
-  @if (accepts('numericBounds')) {
-    <section
-      class="settings"
-      role="tabpanel"
-      [hidden]="selectedTab !== 'Numeric constraints'"
-      [id]="'field-panel-' + field.id + '-Numeric-constraints'"
-      [attr.aria-labelledby]="'field-tab-' + field.id + '-Numeric-constraints'"
-    >
-      <form #numericForm (ngSubmit)="saveNumeric(numericForm)" class="row">
-        <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields">
-          <label
-            >Datatype<select
-              name="numericType"
-              aria-label="Datatype"
-              [(ngModel)]="numeric.type"
-              (ngModelChange)="saveNumeric(numericForm)"
-            >
-              @for (type of numericTypes; track type) {
-                <option [value]="type">{{ type }}</option>
-              }
-            </select></label
-          >
-          <label
-            >Minimum value<input
-              name="numericMin"
-              type="number"
-              step="any"
-              [(ngModel)]="numeric.min"
-              (ngModelChange)="saveNumeric(numericForm)"
-          /></label>
-          <label
-            >Maximum value<input
-              name="numericMax"
-              type="number"
-              step="any"
-              [(ngModel)]="numeric.max"
-              (ngModelChange)="saveNumeric(numericForm)"
-          /></label>
-          <label
-            >Decimal places<input
-              name="decimalPlaces"
-              type="number"
-              min="0"
-              step="1"
-              [(ngModel)]="numeric.decimalPlaces"
-              (ngModelChange)="saveNumeric(numericForm)"
-          /></label>
-          <label
-            >Unit of measure<input
-              name="unit"
-              [(ngModel)]="numeric.unit"
-              (ngModelChange)="saveNumeric(numericForm)"
-              placeholder="e.g., mg"
-          /></label>
-        </fieldset>
-      </form>
-      @if (error) {
-        <p role="alert">{{ error }}</p>
-      }
-    </section>
-  }
-
-  @if (accepts('temporalPrecision')) {
-    <section
-      class="settings"
-      role="tabpanel"
-      [hidden]="selectedTab !== 'Temporal settings'"
-      [id]="'field-panel-' + field.id + '-Temporal-settings'"
-      [attr.aria-labelledby]="'field-tab-' + field.id + '-Temporal-settings'"
-    >
-      <form (ngSubmit)="saveTemporal()" class="row">
-        <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields">
-          <label
-            >Temporal type<select
-              name="temporalType"
-              aria-label="Temporal type"
-              [ngModel]="temporal.type"
-              (ngModelChange)="changeTemporalType($event); saveTemporal()"
-            >
-              <option value="xsd:date">Date</option>
-              <option value="xsd:time">Time</option>
-              <option value="xsd:dateTime">Date and time</option>
-            </select></label
-          >
-          <label
-            >Precision<select
-              name="granularity"
-              aria-label="Precision"
-              [(ngModel)]="temporal.granularity"
-              (ngModelChange)="saveTemporal()"
-            >
-              @for (value of granularities; track value) {
-                <option [value]="value">{{ value === 'decimalSecond' ? 'Fractional second' : value }}</option>
-              }
-            </select></label
-          >
-          @if (temporal.type !== 'xsd:date') {
-            <label
-              >Time format<select
-                name="timeFormat"
-                aria-label="Time format"
-                [(ngModel)]="temporal.inputTimeFormat"
-                (ngModelChange)="saveTemporal()"
-              >
-                <option [ngValue]="null">Default (24 hour)</option>
-                <option value="12h">12 hour</option>
-                <option value="24h">24 hour</option>
-              </select></label
-            >
-            <label class="check"
-              ><input
-                type="checkbox"
-                name="timezone"
-                [(ngModel)]="temporal.timezoneEnabled"
-                (ngModelChange)="saveTemporal()"
-              />Show timezone</label
-            >
-          }
-        </fieldset>
-      </form>
-      @if (error) {
-        <p role="alert">{{ error }}</p>
-      }
-    </section>
-  }
 
   <section
     class="settings"

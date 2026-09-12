@@ -48,6 +48,9 @@ export class FieldDefaultValueComponent {
    * constraints, rather than through CEF.
    */
   readonly allowsControlledTerms = computed(() => accepts(this.field().type, 'controlledTermConstraints'));
+  readonly native = computed(() => ['text', 'paragraph', 'number'].includes(this.field().type));
+  readonly draft = signal('');
+  private defaultKey = '';
   readonly checking = signal(false);
   readonly pickerSources = computed(() => {
     const sources = (this.field().controlledTermConstraints?.constraints ?? []).flatMap((config) => {
@@ -88,6 +91,18 @@ export class FieldDefaultValueComponent {
     destroyRef.onDestroy(() => this.editor?.removeEventListener('valueChange', this.acceptValue));
 
     effect(() => {
+      const field = this.field();
+      if (!this.native()) return;
+      const key = JSON.stringify([field.id, field.defaultValue]);
+      if (key !== this.defaultKey) {
+        this.defaultKey = key;
+        const value = field.defaultValue;
+        this.draft.set(value.kind === 'literal' || value.kind === 'number' ? String(value.value) : '');
+        this.error.set(null);
+      }
+    });
+
+    effect(() => {
       const host = this.mount()?.nativeElement;
       const field = this.field();
       const config = {
@@ -126,6 +141,24 @@ export class FieldDefaultValueComponent {
     if (detail?.valid === true) this.save(defaultFromCef(this.field(), detail.value));
   };
 
+  editNative(text: string): void {
+    if (this.field().publishedDefinition) return;
+    this.draft.set(text);
+    if (text === '') {
+      this.save({ kind: 'none' });
+      return;
+    }
+    if (this.field().type === 'number') {
+      if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(text.trim()) || !Number.isFinite(Number(text))) {
+        this.error.set('Enter a valid number.');
+        return;
+      }
+      this.save({ kind: 'number', value: Number(text) });
+    } else {
+      this.save({ kind: 'literal', value: text });
+    }
+  }
+
   private save(value: FieldDefaultValue): void {
     const error = defaultValueError(this.field(), value);
     this.error.set(error);
@@ -146,6 +179,8 @@ export class FieldDefaultValueComponent {
   }
 
   clear(): void {
+    if (this.field().publishedDefinition) return;
+    this.draft.set('');
     this.cancelPicker();
     this.save({ kind: 'none' });
   }
