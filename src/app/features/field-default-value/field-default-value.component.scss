@@ -85,3 +85,9 @@
     cursor: pointer;
   }
 }
+
+.native-default input[aria-invalid='true'],
+.native-default textarea[aria-invalid='true'] {
+  border-color: #b42318;
+  outline-color: #b42318;
+}

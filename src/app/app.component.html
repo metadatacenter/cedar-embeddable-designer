@@ -2,6 +2,18 @@
   @if (service.loadError()) {
     <p class="ced-field-error" role="alert">{{ service.loadError() }}</p>
   }
+  @if (service.validationReport().issues.length; as count) {
+    <details class="validation-summary">
+      <summary>⚠ {{ count }} settings {{ count === 1 ? 'error' : 'errors' }} — review before saving</summary>
+      <ul>
+        @for (issue of service.validationReport().issues; track $index) {
+          <li>
+            <button type="button" (click)="service.revealIssue(issue)">{{ issue.label }}: {{ issue.message }}</button>
+          </li>
+        }
+      </ul>
+    </details>
+  }
   <!-- Header -->
   <header class="app-header">
     <div class="app-header__inner">
@@ -257,6 +269,8 @@
     <div class="floating-save__wrapper">
       <button
         (click)="saveTemplateAsJson()"
+        aria-label="Download as JSON"
+        [title]="service.validationReport().canSave ? 'Download as JSON' : 'Resolve settings errors before downloading'"
         class="btn-save flex items-center justify-center"
         [style.backgroundColor]="service.COLORS.primary"
       >

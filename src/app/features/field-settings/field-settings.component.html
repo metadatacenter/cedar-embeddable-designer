@@ -25,8 +25,12 @@
       <ng-content select="[field-values]" />
       @if (accepts('textLength')) {
         <div class="settings">
-          <form (ngSubmit)="saveText()" class="row">
-            <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields text-constraint-fields">
+          <form #textForm (ngSubmit)="saveText(textForm)" class="row">
+            <fieldset
+              [attr.aria-invalid]="!!error"
+              [disabled]="!!field.publishedDefinition"
+              class="settings-fields text-constraint-fields"
+            >
               <label
                 >Minimum length<input
                   name="minLength"
@@ -34,7 +38,7 @@
                   min="0"
                   step="1"
                   [(ngModel)]="text.minLength"
-                  (ngModelChange)="saveText()"
+                  (ngModelChange)="saveText(textForm)"
               /></label>
               <label
                 >Maximum length<input
@@ -43,14 +47,14 @@
                   min="0"
                   step="1"
                   [(ngModel)]="text.maxLength"
-                  (ngModelChange)="saveText()"
+                  (ngModelChange)="saveText(textForm)"
               /></label>
               <label
                 >Regular expression<input
                   class="wide"
                   name="regex"
                   [(ngModel)]="text.regex"
-                  (ngModelChange)="saveText()"
+                  (ngModelChange)="saveText(textForm)"
                   placeholder="e.g., ^[A-Z]+$"
               /></label>
             </fieldset>
@@ -63,7 +67,11 @@
       @if (accepts('numericBounds')) {
         <div class="settings">
           <form #numericForm (ngSubmit)="saveNumeric(numericForm)" class="row">
-            <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields numeric-constraint-fields">
+            <fieldset
+              [attr.aria-invalid]="!!error"
+              [disabled]="!!field.publishedDefinition"
+              class="settings-fields numeric-constraint-fields"
+            >
               <label
                 >Datatype<select
                   name="numericType"
@@ -122,7 +130,7 @@
       @if (accepts('temporalPrecision')) {
         <div class="settings">
           <form (ngSubmit)="saveTemporal()" class="row">
-            <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields">
+            <fieldset [attr.aria-invalid]="!!error" [disabled]="!!field.publishedDefinition" class="settings-fields">
               <label
                 >Temporal type<select
                   name="temporalType"
@@ -185,8 +193,8 @@
 
       @if (accepts('mediaDimensions')) {
         <div class="settings">
-          <form (ngSubmit)="saveMedia()" class="row">
-            <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields">
+          <form #mediaForm (ngSubmit)="saveMedia(mediaForm)" class="row">
+            <fieldset [attr.aria-invalid]="!!error" [disabled]="!!field.publishedDefinition" class="settings-fields">
               <label
                 >Width<input
                   type="number"
@@ -194,7 +202,7 @@
                   min="1"
                   step="1"
                   [(ngModel)]="width"
-                  (ngModelChange)="saveMedia()"
+                  (ngModelChange)="saveMedia(mediaForm)"
                   placeholder="Automatic"
               /></label>
               <label
@@ -204,7 +212,7 @@
                   min="1"
                   step="1"
                   [(ngModel)]="height"
-                  (ngModelChange)="saveMedia()"
+                  (ngModelChange)="saveMedia(mediaForm)"
                   placeholder="Automatic"
               /></label>
             </fieldset>
@@ -224,8 +232,8 @@
       [id]="'field-panel-' + field.id + '-Occurrences'"
       [attr.aria-labelledby]="'field-tab-' + field.id + '-Occurrences'"
     >
-      <form (ngSubmit)="saveBounds()" class="row">
-        <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields">
+      <form #boundsForm (ngSubmit)="saveBounds(boundsForm)" class="row">
+        <fieldset [attr.aria-invalid]="!!error" [disabled]="!!field.publishedDefinition" class="settings-fields">
           <label
             >Minimum<input
               type="number"
@@ -233,7 +241,7 @@
               min="0"
               step="1"
               [(ngModel)]="min"
-              (ngModelChange)="saveBounds()"
+              (ngModelChange)="saveBounds(boundsForm)"
               placeholder="Default (0)"
           /></label>
           <label
@@ -243,7 +251,7 @@
               min="0"
               step="1"
               [(ngModel)]="max"
-              (ngModelChange)="saveBounds()"
+              (ngModelChange)="saveBounds(boundsForm)"
               placeholder="Unlimited"
           /></label>
         </fieldset>
@@ -262,7 +270,11 @@
     [attr.aria-labelledby]="'field-tab-' + field.id + '-Display'"
   >
     <form (ngSubmit)="saveLayout()" class="row">
-      <fieldset [disabled]="!!field.publishedDefinition" class="settings-fields display-fields">
+      <fieldset
+        [attr.aria-invalid]="!!error"
+        [disabled]="!!field.publishedDefinition"
+        class="settings-fields display-fields"
+      >
         <label
           >Display label<input
             name="displayLabel"

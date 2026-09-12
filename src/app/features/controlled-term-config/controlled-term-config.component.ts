@@ -58,6 +58,22 @@ export class ControlledTermConfigComponent implements OnChanges {
   private readonly dialog = viewChild<ElementRef<HTMLElement>>('dialog');
   private readonly editButton = viewChild<ElementRef<HTMLElement>>('editButton');
 
+  private reportValidation(): void {
+    this.service.setSettingsError(
+      this.field.id,
+      'controlledTerms',
+      this.error() ?? (this.checking() ? 'Checking the default against the constraints…' : null),
+    );
+  }
+  private setError(message: string | null): void {
+    this.error.set(message);
+    this.reportValidation();
+  }
+  private setChecking(checking: boolean): void {
+    this.checking.set(checking);
+    this.reportValidation();
+  }
+
   constructor() {
     // Runs when the dialog appears, which is after the click that opened it: the
     // view child resolves only once the overlay has rendered.
@@ -83,7 +99,7 @@ export class ControlledTermConfigComponent implements OnChanges {
   }
 
   openPicker(): void {
-    this.error.set(null);
+    this.setError(null);
     this.invalidDefault.set(false);
     this.pending = null;
     this.pickerOpen.set(true);
@@ -97,20 +113,20 @@ export class ControlledTermConfigComponent implements OnChanges {
 
   draftChanged(): void {
     this.pending = null;
-    this.checking.set(false);
+    this.setChecking(false);
     this.invalidDefault.set(false);
-    this.error.set(null);
+    this.setError(null);
   }
 
   async applyPicked(event: Event): Promise<void> {
     if (this.checking()) return;
     const set = this.orderedConstraints(structuredClone((event as CustomEvent<ControlledTermSet>).detail));
     const field = this.field;
-    this.error.set(null);
+    this.setError(null);
     this.invalidDefault.set(false);
     const attempt = { field, set };
     this.pending = attempt;
-    this.checking.set(true);
+    this.setChecking(true);
     try {
       const artifact = fieldToJson({ ...field, controlledTermConstraints: set, defaultValue: { kind: 'none' } });
       if (
@@ -127,7 +143,7 @@ export class ControlledTermConfigComponent implements OnChanges {
         if (this.pending !== attempt || this.field !== field) return;
         if (!allowed) {
           this.invalidDefault.set(true);
-          this.error.set(
+          this.setError(
             'The existing default is not permitted by these constraints. Clear it and apply, or revise the constraints.',
           );
           return;
@@ -138,9 +154,9 @@ export class ControlledTermConfigComponent implements OnChanges {
       this.closePicker();
     } catch (error) {
       if (this.pending !== attempt || this.field !== field) return;
-      this.error.set(error instanceof Error ? error.message : 'Could not apply constraints.');
+      this.setError(error instanceof Error ? error.message : 'Could not apply constraints.');
     } finally {
-      if (this.pending === attempt) this.checking.set(false);
+      if (this.pending === attempt) this.setChecking(false);
     }
   }
 

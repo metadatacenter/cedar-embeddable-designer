@@ -339,3 +339,21 @@
 .floating-save__tooltip {
   @apply absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded shadow-lg opacity-0 pointer-events-none transition-opacity whitespace-nowrap;
 }
+
+.validation-summary {
+  color: #b42318;
+  background: #fff4f2;
+  padding: 6px 16px;
+  font-size: 12px;
+  flex: none;
+  max-height: 25vh;
+  overflow: auto;
+}
+.validation-summary summary,
+.validation-summary button {
+  cursor: pointer;
+}
+.validation-summary button {
+  text-align: left;
+  text-decoration: underline;
+}

@@ -159,3 +159,14 @@
   font-size: 12px;
   cursor: pointer;
 }
+
+.field-drag-container.invalid {
+  outline: 2px solid #b42318;
+  outline-offset: 1px;
+}
+.validation-badge {
+  color: #b42318;
+  font-size: 12px;
+  padding: 4px 12px;
+  display: block;
+}

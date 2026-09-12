@@ -1,5 +1,15 @@
 import { FieldDefaultValueComponent } from '../field-default-value/field-default-value.component';
-import { ChangeDetectionStrategy, Component, Input, OnChanges, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  Input,
+  OnChanges,
+  inject,
+  effect,
+  afterRenderEffect,
+  ChangeDetectorRef,
+  ElementRef,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Field } from '../../core/models/types';
 import {
@@ -108,8 +118,62 @@ export class FieldSettingsComponent implements OnChanges {
   min: number | null = null;
   max: number | null = null;
   private errors: Record<string, string | null> = {};
+  private report(tab: string, message: string | null): void {
+    this.errors[tab] = message;
+    this.service.setSettingsError(
+      this.field.id,
+      tab === 'Constraints'
+        ? this.accepts('numericBounds')
+          ? 'numeric'
+          : this.accepts('textLength')
+            ? 'textConstraints'
+            : 'temporal'
+        : tab === 'Occurrences'
+          ? 'occurrences'
+          : tab === 'Content'
+            ? 'media'
+            : 'display',
+      message,
+      tab,
+    );
+  }
+  private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
+  private readonly changeDetector = inject(ChangeDetectorRef);
+  constructor() {
+    let focused: unknown;
+    afterRenderEffect(() => {
+      const issue = this.service.validationTarget();
+      if (!issue || issue === focused || issue.nodeId !== this.field?.id) return;
+      focused = issue;
+      const panel = this.host.nativeElement.querySelector<HTMLElement>('[role="tabpanel"]:not([hidden])');
+      const control =
+        issue.setting === 'defaultValue'
+          ? panel?.querySelector<HTMLElement>(
+              'app-field-default-value input, app-field-default-value textarea, app-field-default-value button',
+            )
+          : panel?.querySelector<HTMLElement>('input, select, textarea, button');
+      control?.focus({ preventScroll: true });
+    });
+    effect(() => {
+      const issue = this.service.validationTarget();
+      if (issue?.nodeId === this.field?.id) {
+        this.expanded = true;
+        this.activeTab = issue.tab;
+        this.changeDetector.markForCheck();
+      }
+    });
+  }
   get error(): string | null {
-    const message = this.errors[this.selectedTab] ?? null;
+    const message =
+      (this.errors[this.selectedTab] ??
+        this.service
+          .validationReport()
+          .issues.filter(
+            (issue) => issue.nodeId === this.field.id && issue.source === 'model' && issue.tab === this.selectedTab,
+          )
+          .map((issue) => issue.message)
+          .join(' ')) ||
+      null;
     const prefix = `${this.field.name.trim() || 'an unnamed field'}: `;
     return message?.startsWith(prefix) ? message.slice(prefix.length) : message;
   }
@@ -166,17 +230,30 @@ export class FieldSettingsComponent implements OnChanges {
     if (first) this.errors = {};
   }
 
-  saveMedia(): void {
-    this.errors['Content'] = this.service.updateFieldSettings(this.field.id, {
-      width: this.width,
-      height: this.height,
-    });
+  private badInput(form: HTMLFormElement | undefined, tab: string): boolean {
+    const invalid = form && Array.from(form.querySelectorAll('input')).find((input) => input.validity.badInput);
+    if (!invalid) return false;
+    this.report(tab, `${invalid.closest('label')?.textContent?.trim() || 'Value'} must be a valid number.`);
+    return true;
+  }
+  saveMedia(form?: HTMLFormElement): void {
+    if (this.badInput(form, 'Content')) return;
+    this.report(
+      'Content',
+      this.service.updateFieldSettings(this.field.id, {
+        width: this.width,
+        height: this.height,
+      }),
+    );
   }
   saveTemporal(): void {
-    this.errors['Constraints'] = this.service.updateFieldSettings(this.field.id, {
-      temporal: { ...this.temporal },
-      type: this.temporal.type === 'xsd:time' ? 'time' : 'date',
-    });
+    this.report(
+      'Constraints',
+      this.service.updateFieldSettings(this.field.id, {
+        temporal: { ...this.temporal },
+        type: this.temporal.type === 'xsd:time' ? 'time' : 'date',
+      }),
+    );
   }
   saveNumeric(form?: HTMLFormElement): void {
     // Number inputs expose malformed text (e.g., an incomplete exponent) as null.
@@ -184,30 +261,44 @@ export class FieldSettingsComponent implements OnChanges {
     const invalid = form && Array.from(form.querySelectorAll('input')).find((input) => input.validity.badInput);
     if (invalid) {
       const label = invalid.closest('label')?.textContent?.trim() || 'Numeric value';
-      this.errors['Constraints'] = `${label} must be a valid number.`;
+      this.report('Constraints', `${label} must be a valid number.`);
       return;
     }
-    this.errors['Constraints'] = this.service.updateFieldSettings(this.field.id, {
-      numeric: { ...this.numeric, unit: this.numeric.unit || null },
-    });
+    this.report(
+      'Constraints',
+      this.service.updateFieldSettings(this.field.id, {
+        numeric: { ...this.numeric, unit: this.numeric.unit || null },
+      }),
+    );
   }
-  saveText(): void {
-    this.errors['Constraints'] = this.service.updateFieldSettings(this.field.id, {
-      textConstraints: { ...this.text, regex: this.text.regex || null },
-    });
+  saveText(form?: HTMLFormElement): void {
+    if (this.badInput(form, 'Constraints')) return;
+    this.report(
+      'Constraints',
+      this.service.updateFieldSettings(this.field.id, {
+        textConstraints: { ...this.text, regex: this.text.regex || null },
+      }),
+    );
   }
   saveLayout(): void {
-    this.errors['Display'] = this.service.updateFieldSettings(this.field.id, {
-      displayLabel: this.displayLabel || undefined,
-      displayDescription: this.displayDescription || undefined,
-      hidden: this.hidden,
-      continuePreviousLine: this.continuePreviousLine,
-    });
+    this.report(
+      'Display',
+      this.service.updateFieldSettings(this.field.id, {
+        displayLabel: this.displayLabel || undefined,
+        displayDescription: this.displayDescription || undefined,
+        hidden: this.hidden,
+        continuePreviousLine: this.continuePreviousLine,
+      }),
+    );
   }
-  saveBounds(): void {
-    this.errors['Occurrences'] = this.service.updateFieldSettings(this.field.id, {
-      minItems: this.min,
-      maxItems: this.max,
-    });
+  saveBounds(form?: HTMLFormElement): void {
+    if (this.badInput(form, 'Occurrences')) return;
+    this.report(
+      'Occurrences',
+      this.service.updateFieldSettings(this.field.id, {
+        minItems: this.min,
+        maxItems: this.max,
+      }),
+    );
   }
 }

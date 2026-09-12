@@ -190,6 +190,11 @@ export class AppComponent {
   }
 
   saveTemplateAsJson(): void {
+    const report = this.service.validationReport();
+    if (!report.canSave) {
+      this.service.revealIssue(report.issues[0]);
+      return;
+    }
     this.download(JSON.stringify(this.service.templateJson(), null, 2), 'application/json', 'json');
   }
 

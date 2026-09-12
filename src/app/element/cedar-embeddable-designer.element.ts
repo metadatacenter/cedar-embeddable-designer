@@ -12,7 +12,7 @@ import {
 import { TemplateService } from '../core/services/template.service';
 import { TerminologyService } from '../core/services/terminology.service';
 import { PreferencesService } from '../core/services/preferences.service';
-import { CedConfig } from '../ced-public-api';
+import { CedConfig, CedValidationReport } from '../ced-public-api';
 import { AppComponent } from '../app.component';
 import { FontRegistrar } from '../shared/font-registrar/font-registrar';
 
@@ -101,6 +101,14 @@ export class CedarEmbeddableDesignerElementComponent {
   @Input() get currentArtifact(): object {
     return this.cedarTemplate();
   }
+  @Input() get validationReport(): CedValidationReport {
+    return structuredClone(this.service.validationReport());
+  }
+  @Input() get canSave(): boolean {
+    return this.validationReport.canSave;
+  }
+  @Input() readonly validate = (): CedValidationReport => structuredClone(this.service.validationReport());
+  @Output() validationChange = new EventEmitter<CedValidationReport>();
   @Output() artifactChange = new EventEmitter<object>();
   @Output() templateChange = new EventEmitter<object>();
 
@@ -116,6 +124,10 @@ export class CedarEmbeddableDesignerElementComponent {
      * root effect, scheduled on state changes rather than on this view's refresh,
      * so what the host receives no longer depends on the wrapper's change detection.
      */
+    const validation = effect(() => this.validationChange.emit(structuredClone(this.service.validationReport())), {
+      injector: inject(EnvironmentInjector),
+    });
+    inject(DestroyRef).onDestroy(() => validation.destroy());
     const changes = effect(
       () => {
         const artifact = this.cedarTemplate();

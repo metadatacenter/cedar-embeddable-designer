@@ -1,5 +1,5 @@
 import { publicationStatusLabel } from '../../shared/publication-status';
-import { Component, input, inject, signal, effect, computed } from '@angular/core';
+import { Component, input, inject, signal, effect, computed, ChangeDetectorRef, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ElementNode, Placement } from '../../core/model/container-draft';
 import { containerArtifactMetadata } from '../../core/model/cedar-template';
@@ -39,7 +39,16 @@ export class ElementCardComponent {
     buttons?.[next].focus();
   }
   private loadedPlacement = '';
+  private readonly changeDetector = inject(ChangeDetectorRef);
   constructor() {
+    effect(() => {
+      const issue = this.service.validationTarget();
+      if (issue?.nodeId === this.node().id) {
+        this.expanded = true;
+        this.activeTab = issue.tab;
+        this.changeDetector.markForCheck();
+      }
+    });
     effect(() => {
       // Editing an inline descendant must not reset incomplete placement input.
       const signature = JSON.stringify([this.node().id, this.node().placement]);
@@ -49,7 +58,18 @@ export class ElementCardComponent {
       this.error.set(null);
     });
   }
+  private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
   apply(): void {
+    const invalid = Array.from(this.host.nativeElement.querySelectorAll('input')).find(
+      (input) => input.validity.badInput,
+    );
+    if (invalid) {
+      const message = `${invalid.closest('label')?.textContent?.trim() || 'Value'} must be a valid number.`;
+      this.error.set(message);
+      this.service.setSettingsError(this.node().id, 'placement', message, this.activeTab);
+      return;
+    }
     this.error.set(this.service.updateElementPlacement(this.node().id, this.draft()));
+    this.service.setSettingsError(this.node().id, 'placement', this.error(), this.activeTab);
   }
 }

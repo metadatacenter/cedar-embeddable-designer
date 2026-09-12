@@ -64,6 +64,14 @@ export interface CedarEmbeddableDesignerElement extends HTMLElement {
   /** A template or element document. The legacy property name remains supported. */
   template: CedJsonObject | string | null;
   artifact: CedJsonObject | string | null;
+  readonly validationReport: CedValidationReport;
+  readonly canSave: boolean;
+  validate(): CedValidationReport;
+  addEventListener(
+    type: 'validationChange',
+    listener: (event: CustomEvent<CedValidationReport>) => void,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
   readonly currentArtifact: CedJsonObject;
   readonly currentTemplate: CedTemplate;
   addEventListener(
@@ -82,4 +90,22 @@ declare global {
   interface HTMLElementTagNameMap {
     'cedar-embeddable-designer': CedarEmbeddableDesignerElement;
   }
+}
+
+/** Settings validation includes unsaved edits; IDs are stable within this document session. */
+export interface CedValidationIssue {
+  nodeId: number;
+  path: number[];
+  label: string;
+  setting: string;
+  tab: string;
+  code: string;
+  message: string;
+  severity: 'error';
+  source: 'model' | 'draft';
+}
+export interface CedValidationReport {
+  valid: boolean;
+  canSave: boolean;
+  issues: CedValidationIssue[];
 }

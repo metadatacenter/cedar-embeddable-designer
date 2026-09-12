@@ -80,3 +80,21 @@ it('deduplicates source scopes while retaining distinct release pins', () => {
     { sourceAcronym: 'DOID', sourceSystem: undefined, version: { id: 'other' } },
   ]);
 });
+
+it('blocks saving while terminology validation is pending and clears the report on cancellation', async () => {
+  const { panel, service, allows } = setup();
+  let resolve!: (value: boolean) => void;
+  allows.mockReturnValue(
+    new Promise<boolean>((done) => {
+      resolve = done;
+    }),
+  );
+  const pending = panel.selectTerm(selection());
+  expect(service.validationReport().canSave).toBe(false);
+  expect(service.validationReport().issues[0].setting).toBe('defaultValue');
+  panel.cancelPicker();
+  expect(service.validationReport().canSave).toBe(true);
+  resolve(true);
+  await pending;
+  expect(service.validationReport().canSave).toBe(true);
+});

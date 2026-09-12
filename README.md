@@ -247,3 +247,26 @@ Field Designer; cards no longer offer a Save field to library action.
 The Overview shows each field's type icon and a right-aligned reorder handle.
 Dragging reorders siblings within the Overview; the document and main editor update
 only when the field is dropped. Focused handles also support Arrow Up/Down.
+
+### Settings validation and saving
+
+Use `designer.validate()` (or the read-only `validationReport` property) before
+saving. `report.canSave` and `designer.canSave` are false while settings are invalid,
+including pending edits that have not replaced the last valid model value and
+in-progress default terminology checks. `currentArtifact` and artifact change
+events alone are therefore not a save-readiness check.
+
+Listen for `validationChange` to update the wrapper's Save button and error list.
+Its detail is the same report: `{ valid, canSave, issues }`. Each issue includes a
+session `nodeId`, an ancestor-ID `path`, a display `label`, `setting`, settings `tab`,
+stable category `code`, user-facing `message`, `severity: 'error'`, and `source`
+(`model` or `draft`). Do not parse messages or persist session IDs across documents.
+Validation checks the settings CED supports; it does not replace server validation,
+permission checks, or save/publish lifecycle rules.
+
+CED marks affected cards and Overview entries, including ancestor elements, and
+provides a summary linking to the relevant settings. Correcting or clearing an edit
+removes its issue; deleting an item or loading another document removes its pending
+issues from the report. CED’s JSON download also refuses invalid settings and opens the affected item.
+The wrapper remains responsible for saving and can display
+the report when a save is attempted.

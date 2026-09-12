@@ -27,6 +27,15 @@
             placeholder="Enter field name"
             aria-label="Field name"
           />
+          @if (service.issuesFor(field.id).length; as count) {
+            <button
+              type="button"
+              class="validation-badge"
+              (click)="service.revealIssue(service.issuesFor(field.id)[0])"
+            >
+              ⚠ {{ count }} {{ count === 1 ? 'error' : 'errors' }}
+            </button>
+          }
         </div>
         @if (!standalone) {
           <span class="field-drag-handle" cdkDragHandle title="Drag to reorder" aria-label="Drag to reorder">

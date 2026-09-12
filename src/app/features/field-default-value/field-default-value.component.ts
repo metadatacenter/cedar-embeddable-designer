@@ -78,6 +78,22 @@ export class FieldDefaultValueComponent {
   private artifactKey: string | null = null;
   private configKey: string | null = null;
 
+  private reportValidation(): void {
+    this.service.setSettingsError(
+      this.field().id,
+      'defaultValue',
+      this.error() ?? (this.checking() ? 'Checking the default against the constraints…' : null),
+    );
+  }
+  private setError(message: string | null): void {
+    this.error.set(message);
+    this.reportValidation();
+  }
+  private setChecking(checking: boolean): void {
+    this.checking.set(checking);
+    this.reportValidation();
+  }
+
   constructor() {
     const destroyRef = this.destroyRef;
     for (const [tag, ready] of [
@@ -98,7 +114,7 @@ export class FieldDefaultValueComponent {
         this.defaultKey = key;
         const value = field.defaultValue;
         this.draft.set(value.kind === 'literal' || value.kind === 'number' ? String(value.value) : '');
-        this.error.set(null);
+        this.setError(null);
       }
     });
 
@@ -126,7 +142,7 @@ export class FieldDefaultValueComponent {
       if (key !== this.artifactKey) {
         this.editor.fieldObject = artifact;
         this.artifactKey = key;
-        this.error.set(null);
+        this.setError(null);
       }
       const value = defaultToCef(field);
       if (JSON.stringify(this.editor.currentValue) !== JSON.stringify(value)) {
@@ -139,6 +155,7 @@ export class FieldDefaultValueComponent {
     const detail = (event as CustomEvent<{ value: FieldDefaultValue; valid: boolean }>).detail;
     if (this.allowsControlledTerms() || this.field().publishedDefinition) return;
     if (detail?.valid === true) this.save(defaultFromCef(this.field(), detail.value));
+    else this.setError('Enter a valid default value.');
   };
 
   editNative(text: string): void {
@@ -150,7 +167,7 @@ export class FieldDefaultValueComponent {
     }
     if (this.field().type === 'number') {
       if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(text.trim()) || !Number.isFinite(Number(text))) {
-        this.error.set('Enter a valid number.');
+        this.setError('Enter a valid number.');
         return;
       }
       this.save({ kind: 'number', value: Number(text) });
@@ -161,7 +178,7 @@ export class FieldDefaultValueComponent {
 
   private save(value: FieldDefaultValue): void {
     const error = defaultValueError(this.field(), value);
-    this.error.set(error);
+    this.setError(error);
     if (error === null) this.service.updateDefaultValue(this.field().id, value);
   }
 
@@ -174,8 +191,8 @@ export class FieldDefaultValueComponent {
   cancelPicker(): void {
     this.pending = null;
     this.pickerOpen.set(false);
-    this.checking.set(false);
-    this.error.set(null);
+    this.setChecking(false);
+    this.setError(null);
   }
 
   clear(): void {
@@ -188,7 +205,7 @@ export class FieldDefaultValueComponent {
   async selectTerm(event: Event): Promise<void> {
     const picked = (event as CustomEvent<PickedConstraint>).detail;
     if (picked?.type !== 'class') {
-      this.error.set('Choose a single term for the default value.');
+      this.setError('Choose a single term for the default value.');
       return;
     }
     if (this.checking()) return;
@@ -196,8 +213,8 @@ export class FieldDefaultValueComponent {
     if (field.publishedDefinition || !this.pickerOpen()) return;
     const attempt = {};
     this.pending = attempt;
-    this.checking.set(true);
-    this.error.set(null);
+    this.setChecking(true);
+    this.setError(null);
     try {
       const allowed = await this.terminology.allowsDefault(
         fieldToJson({ ...field, defaultValue: { kind: 'none' }, importedChoiceDefault: undefined }),
@@ -207,20 +224,18 @@ export class FieldDefaultValueComponent {
       // A response for a field the author has since changed cannot set its default.
       if (this.destroyRef.destroyed || this.pending !== attempt || this.field() !== field) return;
       if (!allowed) {
-        this.error.set('This term is not permitted by the field constraints.');
+        this.setError('This term is not permitted by the field constraints.');
         return;
       }
       this.save({ kind: 'iri', iri: picked.termIri, label: picked.termLabel });
       if (this.error() === null) this.pickerOpen.set(false);
     } catch (error) {
       if (this.destroyRef.destroyed || this.pending !== attempt || this.field() !== field) return;
-      this.error.set(
-        error instanceof Error ? error.message : 'Could not check the term against the field constraints.',
-      );
+      this.setError(error instanceof Error ? error.message : 'Could not check the term against the field constraints.');
     } finally {
       if (this.pending === attempt) {
         this.pending = null;
-        this.checking.set(false);
+        this.setChecking(false);
       }
     }
   }

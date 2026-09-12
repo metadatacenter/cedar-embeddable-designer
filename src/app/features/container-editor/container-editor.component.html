@@ -6,6 +6,9 @@
       'linear-gradient(90deg, ' + service.COLORS.primary + ' 0%, ' + service.COLORS.primaryLight + ' 100%)'
     "
   ></div>
+  @if (placementNode() && service.issuesFor(container().id).length; as count) {
+    <span class="validation-badge">⚠ {{ count }} {{ count === 1 ? 'error' : 'errors' }}</span>
+  }
   <div class="template-header-card__body">
     <div class="template-header-card__icon" [style.backgroundColor]="service.COLORS.primaryLight">
       @if (placementNode()) {
@@ -134,9 +137,16 @@
           (click)="$event.stopPropagation(); activate(); service.selectedField.set(node.id)"
           class="field-drag-container"
           [class.selected]="service.selectedField() === node.id"
+          [class.invalid]="service.issuesFor(node.id).length > 0"
+          [style.outline-color]="service.issuesFor(node.id).length ? '#b42318' : null"
+          [style.--tw-ring-color]="service.issuesFor(node.id).length ? '#b42318' : null"
+          [style.border-color]="service.issuesFor(node.id).length ? '#b42318' : null"
         >
           @if (service.selectedField() === node.id) {
-            <div class="field-selection-bar"></div>
+            <div
+              class="field-selection-bar"
+              [style.background-color]="service.issuesFor(node.id).length ? '#b42318' : null"
+            ></div>
           }
           @if (node.kind === 'field') {
             <app-field-card [field]="fieldView(node)" />

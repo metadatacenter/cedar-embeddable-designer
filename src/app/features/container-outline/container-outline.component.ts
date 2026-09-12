@@ -10,7 +10,11 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
   template: `<ul cdkDropList [cdkDropListData]="container().children" (cdkDropListDropped)="drop($event)">
     @for (node of container().children; track node.id) {
       <li cdkDrag [cdkDragData]="node.id" [cdkDragDisabled]="locked(node)">
-        <div class="outline-row" [class.active]="service.selectedField() === node.id">
+        <div
+          class="outline-row"
+          [class.active]="service.selectedField() === node.id"
+          [class.invalid]="service.issuesFor(node.id).length > 0"
+        >
           @if (node.kind === 'element') {
             <button
               type="button"
@@ -30,6 +34,11 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
           <button type="button" class="select-node" (click)="select(node)">
             <app-icon [key]="node.kind === 'field' ? node.definition.type : 'folder'" className="w-4 h-4" />
             <span class="node-name">{{ childName(node) }}</span>
+            @if (service.issuesFor(node.id).length; as count) {
+              <span class="validation-badge" [attr.aria-label]="count + ' errors'" [title]="count + ' errors'"
+                >⚠ {{ count }}</span
+              >
+            }
             @if (node.placement.status === 'required') {
               <span aria-label="Required">*</span>
             }
@@ -85,6 +94,13 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
         align-items: center;
         gap: 4px;
         padding: 0 8px;
+      }
+      .outline-row.invalid {
+        box-shadow: inset 3px 0 #b42318;
+      }
+      .validation-badge {
+        color: #b42318;
+        font-size: 11px;
       }
       .outline-row:hover {
         background: #f9fafb;
