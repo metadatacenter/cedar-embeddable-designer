@@ -41,6 +41,7 @@ describe('the editor the preview builds', () => {
     const editor: CeePreviewElement = createCeePreview(factory);
 
     expect(editor.config.readOnlyMode).toBe(true);
+    expect(editor.getAttribute('density')).toBe('compact');
   });
 
   it('can create an editable preview without changing the read-only default', () => {

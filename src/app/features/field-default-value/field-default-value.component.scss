@@ -55,22 +55,23 @@
     box-sizing: border-box;
     width: 100%;
     min-width: 0;
-    min-height: 28px;
-    padding: 3px 5px;
-    border: 1px solid #ccc;
-    border-radius: 2px;
+    min-height: var(--cedar-control-height, 36px);
+    padding: calc((var(--cedar-control-height, 36px) - var(--cedar-control-line-height, 22px)) / 2 - 1px) 8px;
+    border: 1px solid var(--cedar-control-border, #777);
+    border-radius: var(--cedar-control-radius, 4px);
     background: white;
     color: #444;
     font: inherit;
-    font-size: 11px;
-    font-weight: 600;
+    font-size: var(--cedar-control-font-size, 14px);
+    line-height: var(--cedar-control-line-height, 22px);
+    font-weight: 400;
   }
   textarea {
     resize: vertical;
   }
   input:focus,
   textarea:focus {
-    outline: 2px solid #b4d4da;
+    outline: 2px solid var(--cedar-control-focus, #0f7686);
     outline-offset: 0;
   }
   [aria-invalid='true'] {
@@ -81,13 +82,14 @@
     background: transparent;
     color: #64748b;
     font-size: 18px;
-    line-height: 24px;
+    line-height: var(--cedar-control-height, 36px);
+    min-width: 24px;
     cursor: pointer;
   }
 }
 
 .native-default input[aria-invalid='true'],
 .native-default textarea[aria-invalid='true'] {
-  border-color: #b42318;
-  outline-color: #b42318;
+  border-color: var(--cedar-control-error, #b42318);
+  outline-color: var(--cedar-control-error, #b42318);
 }

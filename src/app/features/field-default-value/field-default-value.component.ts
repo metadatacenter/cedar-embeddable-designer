@@ -129,6 +129,7 @@ export class FieldDefaultValueComponent {
       if (!this.editor || this.configKey !== JSON.stringify(config)) {
         this.editor?.removeEventListener('valueChange', this.acceptValue);
         this.editor = document.createElement(FIELD_TAG) as FieldElement;
+        this.editor.setAttribute('density', 'compact');
         this.editor.config = config;
         this.configKey = JSON.stringify(config);
         this.artifactKey = null;

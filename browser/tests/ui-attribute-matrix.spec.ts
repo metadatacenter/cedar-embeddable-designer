@@ -220,14 +220,18 @@ for (const width of WIDTHS) {
 
           await settings(page).getByRole('button', { name: 'Expand field settings' }).click();
           const tabs = settings(page).getByRole('tab');
+          // count() does not wait: without this, the loop can silently check zero tabs.
+          await expect(tabs.first()).toBeVisible();
           for (let index = 0; index < (await tabs.count()); index++) {
             await tabs.nth(index).click();
+            await expect(tabs.nth(index)).toHaveAttribute('aria-selected', 'true');
             await expectLaidOut(page, `${paletteType} ${await tabs.nth(index).textContent()}`);
             const leadingGap = await settings(page).evaluate((el) => {
               const panel = el.querySelector<HTMLElement>('[role="tabpanel"]:not([hidden])')!;
+              // An empty choice list starts with Add option, not an input.
               const first = [
                 ...panel.querySelectorAll<HTMLElement>(
-                  'label, dt, app-controlled-term-config, [field-values] input, [field-values] textarea',
+                  'label, dt, .default-label, app-controlled-term-config, [field-values] input, [field-values] textarea, [field-values] button',
                 ),
               ]
                 .filter((node) => node.getClientRects().length > 0)

@@ -117,6 +117,7 @@ async function bothControls(page: Page, type: string) {
       // Off to one side and out of the flow, so it cannot disturb what is being measured.
       reference.style.cssText = 'position:absolute;left:0;top:2000px;width:530px';
       document.body.appendChild(reference);
+      reference.setAttribute('density', 'compact');
       reference.config = { readOnlyMode: false };
       reference.fieldObject = artifact;
       reference.value = value;

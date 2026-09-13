@@ -90,6 +90,7 @@ export function createCeePreview(
   readOnly = true,
 ): CeePreviewElement {
   const editor = factory.createElement(CEE_PREVIEW_TAG) as CeePreviewElement;
+  editor.setAttribute('density', 'compact');
   editor.config = { ...CEE_PREVIEW_CONFIG, readOnlyMode: readOnly };
   return editor;
 }
