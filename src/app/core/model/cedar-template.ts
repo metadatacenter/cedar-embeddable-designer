@@ -1066,7 +1066,6 @@ function buildContainerArtifact(
      * image field threw here until this branch existed.
      */
     if (deployment instanceof AbstractDynamicChildDeploymentInfoBuilder) {
-      deployment.withValueRecommendationEnabled(field.valueRecommendationEnabled ?? false);
       deployment.withRequiredValue(field.status === 'required').withRecommendedValue(field.status === 'recommended');
       if (field.propertyIri) {
         deployment.withIri(field.propertyIri);
@@ -1074,12 +1073,13 @@ function buildContainerArtifact(
     }
 
     /*
-     * A line placement narrows further still: an element's deployment builder descends from the
-     * dynamic one and has no such setter, because an element's `_ui` has nowhere to keep the
-     * setting and the validation library refuses a template that states it there.
+     * A line placement and a value recommendation narrow further still: an element's deployment
+     * builder descends from the dynamic one and has neither setter, because an element's `_ui` has
+     * nowhere to keep them and the validation library refuses a template that states them there.
      */
     if (deployment instanceof AbstractFieldChildDeploymentInfoBuilder) {
       deployment.withContinuePreviousLine(field.continuePreviousLine ?? false);
+      deployment.withValueRecommendationEnabled(field.valueRecommendationEnabled ?? false);
     }
 
     /*
@@ -1432,7 +1432,8 @@ function projectContainerFields(template: Template | TemplateElement): DesignerT
     fields.push({
       id: index + 1,
       artifact: artifactMetadataOf(field),
-      valueRecommendationEnabled: dynamic.valueRecommendationEnabled,
+      valueRecommendationEnabled:
+        info instanceof AbstractFieldChildDeploymentInfo ? info.valueRecommendationEnabled : false,
       publishedDefinition:
         field.bibo_status === BiboStatus.PUBLISHED
           ? JSON.stringify(CedarWriters.json().getStrict().getFieldWriterForField(field).getAsJsonNode(field))
@@ -1660,7 +1661,6 @@ export function toContainerDraft(container: Template | TemplateElement): Contain
         minItems: dynamic.minItems,
         maxItems: dynamic.maxItems,
         propertyIri: dynamic.iri ?? undefined,
-        valueRecommendationEnabled: dynamic.valueRecommendationEnabled,
       },
     };
   });
