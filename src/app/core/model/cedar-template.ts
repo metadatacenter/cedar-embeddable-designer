@@ -38,6 +38,8 @@ import {
   Language,
   AbstractDynamicChildDeploymentInfo,
   AbstractDynamicChildDeploymentInfoBuilder,
+  AbstractFieldChildDeploymentInfo,
+  AbstractFieldChildDeploymentInfoBuilder,
   BiboStatus,
   CedarArtifactType,
   BioportalTermType,
@@ -55,6 +57,7 @@ import {
   ChildDeploymentInfo,
   ChildDeploymentInfoBuilder,
   ChildDeploymentInfoAlwaysMultipleBuilder,
+  ChildDeploymentInfoElementBuilder,
   Iri,
   JsonNode,
   JsonPath,
@@ -1063,7 +1066,6 @@ function buildContainerArtifact(
      * image field threw here until this branch existed.
      */
     if (deployment instanceof AbstractDynamicChildDeploymentInfoBuilder) {
-      deployment.withContinuePreviousLine(field.continuePreviousLine ?? false);
       deployment.withValueRecommendationEnabled(field.valueRecommendationEnabled ?? false);
       deployment.withRequiredValue(field.status === 'required').withRecommendedValue(field.status === 'recommended');
       if (field.propertyIri) {
@@ -1072,19 +1074,28 @@ function buildContainerArtifact(
     }
 
     /*
+     * A line placement narrows further still: an element's deployment builder descends from the
+     * dynamic one and has no such setter, because an element's `_ui` has nowhere to keep the
+     * setting and the validation library refuses a template that states it there.
+     */
+    if (deployment instanceof AbstractFieldChildDeploymentInfoBuilder) {
+      deployment.withContinuePreviousLine(field.continuePreviousLine ?? false);
+    }
+
+    /*
      * Only where the type leaves the choice open. A checkbox, an attribute-value
      * field and a multiple-choice list are multiple by their type and a radio is
      * single by its, so their deployment builders have no flag to set — the
      * library models that by giving them a different builder rather than by
-     * ignoring the call.
+     * ignoring the call. An element states its multiplicity the same way a field
+     * whose type leaves it open does, through a builder of its own.
      */
-    if (deployment instanceof ChildDeploymentInfoBuilder) {
+    const statesMultiplicity =
+      deployment instanceof ChildDeploymentInfoBuilder || deployment instanceof ChildDeploymentInfoElementBuilder;
+    if (statesMultiplicity) {
       deployment.withMultiInstance(field.allowMultiple);
     }
-    if (
-      deployment instanceof ChildDeploymentInfoAlwaysMultipleBuilder ||
-      (deployment instanceof ChildDeploymentInfoBuilder && field.allowMultiple)
-    ) {
+    if (deployment instanceof ChildDeploymentInfoAlwaysMultipleBuilder || (statesMultiplicity && field.allowMultiple)) {
       const min = field.minItems ?? null;
       const max = field.maxItems ?? null;
       if (
@@ -1095,7 +1106,7 @@ function buildContainerArtifact(
       }
       deployment.withMinItems(min).withMaxItems(max);
     }
-    builder.addChild(built, deployment.build() as ChildDeploymentInfo);
+    builder.addChild(built, deployment.build());
   });
 
   const template = builder.build();
@@ -1477,7 +1488,7 @@ function projectContainerFields(template: Template | TemplateElement): DesignerT
       displayLabel: info.label ?? undefined,
       displayDescription: info.description ?? undefined,
       hidden: info.hidden,
-      continuePreviousLine: dynamic.continuePreviousLine ?? false,
+      continuePreviousLine: info instanceof AbstractFieldChildDeploymentInfo ? info.continuePreviousLine : false,
       minItems: info.isMultiInAnyWay() ? dynamic.minItems : null,
       maxItems: info.isMultiInAnyWay() ? dynamic.maxItems : null,
       helpText: field.schema_description ?? '',
@@ -1649,7 +1660,6 @@ export function toContainerDraft(container: Template | TemplateElement): Contain
         minItems: dynamic.minItems,
         maxItems: dynamic.maxItems,
         propertyIri: dynamic.iri ?? undefined,
-        continuePreviousLine: dynamic.continuePreviousLine,
         valueRecommendationEnabled: dynamic.valueRecommendationEnabled,
       },
     };

@@ -22,6 +22,12 @@ const placementKeys = [
 ] as const;
 type PlacementKey = (typeof placementKeys)[number];
 export type Placement = Pick<Field, PlacementKey>;
+/**
+ * An element's placement is a field's without the line placement. The CEDAR model gives
+ * `continuePreviousLine` to a dynamic field, and an element's `_ui` has nowhere to keep one, so the
+ * deployment builder the model library hands back for an element has no such setter to call.
+ */
+export type ElementPlacement = Omit<Placement, 'continuePreviousLine'>;
 export type FieldDefinition = Omit<Field, PlacementKey | 'id'>;
 export interface FieldNode {
   kind: 'field';
@@ -32,7 +38,7 @@ export interface FieldNode {
 export interface ElementNode {
   kind: 'element';
   id: number;
-  placement: Placement;
+  placement: ElementPlacement;
   definition: ContainerDraft;
 }
 export type ChildNode = FieldNode | ElementNode;

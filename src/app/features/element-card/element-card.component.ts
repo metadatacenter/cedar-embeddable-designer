@@ -1,7 +1,7 @@
 import { publicationStatusLabel } from '../../shared/publication-status';
 import { Component, input, inject, signal, effect, computed, ChangeDetectorRef, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ElementNode, Placement } from '../../core/model/container-draft';
+import { ElementNode, ElementPlacement } from '../../core/model/container-draft';
 import { containerArtifactMetadata } from '../../core/model/cedar-template';
 import { TemplateService } from '../../core/services/template.service';
 
@@ -14,7 +14,7 @@ import { TemplateService } from '../../core/services/template.service';
 export class ElementCardComponent {
   readonly node = input.required<ElementNode>();
   readonly service = inject(TemplateService);
-  readonly draft = signal<Placement>({ status: 'optional', allowMultiple: false });
+  readonly draft = signal<ElementPlacement>({ status: 'optional', allowMultiple: false });
   readonly error = signal<string | null>(null);
   expanded = false;
   activeTab = 'Display';
