@@ -1,3 +1,4 @@
+@use '../../shared/control-style';
 @use '../../shared/field-error';
 .default-dialog-overlay {
   position: fixed;
@@ -52,27 +53,13 @@
   gap: 4px;
   input,
   textarea {
-    box-sizing: border-box;
     width: 100%;
     min-width: 0;
-    min-height: var(--cedar-control-height, 36px);
-    padding: calc((var(--cedar-control-height, 36px) - var(--cedar-control-line-height, 22px)) / 2 - 1px) 8px;
-    border: 1px solid var(--cedar-control-border, #777);
-    border-radius: var(--cedar-control-radius, 4px);
-    background: white;
-    color: #444;
-    font: inherit;
-    font-size: var(--cedar-control-font-size, 14px);
-    line-height: var(--cedar-control-line-height, 22px);
-    font-weight: 400;
+    @include control-style.compact-control;
   }
+
   textarea {
     resize: vertical;
-  }
-  input:focus,
-  textarea:focus {
-    outline: 2px solid var(--cedar-control-focus, #0f7686);
-    outline-offset: 0;
   }
   [aria-invalid='true'] {
     border-color: #f44336;

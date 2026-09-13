@@ -118,6 +118,11 @@ async function bothControls(page: Page, type: string) {
       reference.style.cssText = 'position:absolute;left:0;top:2000px;width:530px';
       document.body.appendChild(reference);
       reference.setAttribute('density', 'compact');
+      // The public authoring profile is intentional; compare the same tokens.
+      for (const token of ['height', 'font-size', 'line-height', 'radius', 'border']) {
+        const name = `--cedar-control-${token}`;
+        reference.style.setProperty(name, getComputedStyle(inCard).getPropertyValue(name));
+      }
       reference.config = { readOnlyMode: false };
       reference.fieldObject = artifact;
       reference.value = value;

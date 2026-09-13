@@ -1,0 +1,20 @@
+// Native adapter for the shared CEE/CEF compact control contract.
+// Keep defaults synchronized with CEE STYLING.md; host CSS tokens override both.
+@mixin compact-control {
+  box-sizing: border-box;
+  min-height: var(--cedar-control-height, 36px);
+  padding: calc((var(--cedar-control-height, 36px) - var(--cedar-control-line-height, 21px)) / 2 - 1px) 5px;
+  border: 1px solid var(--cedar-control-border, rgba(0, 0, 0, 0.38));
+  border-radius: var(--cedar-control-radius, 4px);
+  background: white;
+  color: #444;
+  font-family: inherit;
+  font-size: var(--cedar-control-font-size, 14px);
+  line-height: var(--cedar-control-line-height, 21px);
+  font-weight: 400;
+  &:focus {
+    outline: 2px solid var(--cedar-control-focus, #0f7686);
+    outline-offset: 0;
+  }
+}
+
