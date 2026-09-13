@@ -14,7 +14,7 @@ import { TemplateService } from '../../core/services/template.service';
 export class ElementCardComponent {
   readonly node = input.required<ElementNode>();
   readonly service = inject(TemplateService);
-  readonly draft = signal<ElementPlacement>({ status: 'optional', allowMultiple: false });
+  readonly draft = signal<ElementPlacement>({ allowMultiple: false });
   readonly error = signal<string | null>(null);
   expanded = false;
   activeTab = 'Display';

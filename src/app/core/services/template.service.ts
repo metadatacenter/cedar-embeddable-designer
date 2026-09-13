@@ -752,12 +752,16 @@ export class TemplateService {
     const base = childName(node).trim() || (node.kind === 'element' ? 'Element' : 'Field');
     let name = base;
     for (let suffix = 2; used.has(name); suffix++) name = `${base} ${suffix}`;
-    node =
-      node.kind === 'field' &&
-      node.placement.deploymentName === undefined &&
-      node.definition.customFieldId === undefined
-        ? { ...node, definition: { ...node.definition, name } }
-        : { ...node, placement: { ...node.placement, deploymentName: name } };
+    if (node.kind === 'field') {
+      node =
+        node.placement.deploymentName === undefined && node.definition.customFieldId === undefined
+          ? { ...node, definition: { ...node.definition, name } }
+          : { ...node, placement: { ...node.placement, deploymentName: name } };
+    } else {
+      // Branching on the kind keeps each placement its own type; one spread over the union loses
+      // which of the two it is, and an element's placement is the narrower of them.
+      node = { ...node, placement: { ...node.placement, deploymentName: name } };
+    }
     this.session.document.update((root) =>
       updateContainer(root, targetId, (container) => {
         const children = [...container.children];
@@ -774,7 +778,7 @@ export class TemplateService {
         kind: 'element',
         id: definition.id,
         definition,
-        placement: { status: 'optional', allowMultiple: false, propertyIri: newFieldIdentity().propertyIri },
+        placement: { allowMultiple: false, propertyIri: newFieldIdentity().propertyIri },
       },
       Number.MAX_SAFE_INTEGER,
       targetId,
@@ -789,7 +793,7 @@ export class TemplateService {
         kind: 'element',
         id: definition.id,
         definition,
-        placement: { status: 'optional', allowMultiple: false, propertyIri: newFieldIdentity().propertyIri },
+        placement: { allowMultiple: false, propertyIri: newFieldIdentity().propertyIri },
       },
       Number.MAX_SAFE_INTEGER,
       targetId,
@@ -870,7 +874,9 @@ export class TemplateService {
     const next = updateContainer(this.session.document(), parent.id, (container) => ({
       ...container,
       children: container.children.map((node) =>
-        node.id === id ? { ...node, placement: { ...placement, deploymentName: name } } : node,
+        node.id === id && node.kind === 'element'
+          ? { ...node, placement: { ...placement, deploymentName: name } }
+          : node,
       ),
     }));
     try {

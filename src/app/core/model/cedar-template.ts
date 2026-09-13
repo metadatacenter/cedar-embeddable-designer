@@ -58,6 +58,7 @@ import {
   ChildDeploymentInfoBuilder,
   ChildDeploymentInfoAlwaysMultipleBuilder,
   ChildDeploymentInfoElementBuilder,
+  ChildDeploymentInfoStaticBuilder,
   Iri,
   JsonNode,
   JsonPath,
@@ -1056,30 +1057,33 @@ function buildContainerArtifact(
     const deployment = built
       .createDeploymentBuilder(keys[index])
       .withLabel(field.displayLabel ?? null)
-      .withDescription(field.displayDescription ?? null)
-      .withHidden(field.hidden ?? false);
+      .withDescription(field.displayDescription ?? null);
 
     /*
-     * A static field's deployment builder does not extend the dynamic one, so it
-     * has no required value, no recommended value and no property IRI — those are
-     * not settings it ignores, they are methods it does not have. Building an
-     * image field threw here until this branch existed.
+     * A static field's deployment builder does not extend the dynamic one, so it has no property
+     * IRI — not a setting it ignores, a method it does not have. Building an image field threw
+     * here until this branch existed.
      */
-    if (deployment instanceof AbstractDynamicChildDeploymentInfoBuilder) {
-      deployment.withRequiredValue(field.status === 'required').withRecommendedValue(field.status === 'recommended');
-      if (field.propertyIri) {
-        deployment.withIri(field.propertyIri);
-      }
+    if (deployment instanceof AbstractDynamicChildDeploymentInfoBuilder && field.propertyIri) {
+      deployment.withIri(field.propertyIri);
     }
 
     /*
-     * A line placement and a value recommendation narrow further still: an element's deployment
-     * builder descends from the dynamic one and has neither setter, because an element's `_ui` has
-     * nowhere to keep them and the validation library refuses a template that states them there.
+     * Everything a field's own `_ui` and `_valueConstraints` hold: an element's deployment builder
+     * has none of these setters, because an element's `_ui` admits an order, property labels and
+     * property descriptions and an element has no `_valueConstraints` at all, so the validation
+     * library refuses a template that states any of them there. A static field keeps only the
+     * hidden flag, through its own builder.
      */
     if (deployment instanceof AbstractFieldChildDeploymentInfoBuilder) {
-      deployment.withContinuePreviousLine(field.continuePreviousLine ?? false);
-      deployment.withValueRecommendationEnabled(field.valueRecommendationEnabled ?? false);
+      deployment
+        .withHidden(field.hidden ?? false)
+        .withRequiredValue(field.status === 'required')
+        .withRecommendedValue(field.status === 'recommended')
+        .withContinuePreviousLine(field.continuePreviousLine ?? false)
+        .withValueRecommendationEnabled(field.valueRecommendationEnabled ?? false);
+    } else if (deployment instanceof ChildDeploymentInfoStaticBuilder) {
+      deployment.withHidden(field.hidden ?? false);
     }
 
     /*
@@ -1594,6 +1598,8 @@ export function elementView(node: ElementNode): Field {
     helpText: node.definition.description,
     options: [],
     defaultValue: { kind: 'none' },
+    // An element records no requirement, so the view says what the model would answer.
+    status: 'optional',
     ...node.placement,
   };
 }
@@ -1655,8 +1661,6 @@ export function toContainerDraft(container: Template | TemplateElement): Contain
         deploymentName: info.name,
         displayLabel: info.label ?? undefined,
         displayDescription: info.description ?? undefined,
-        hidden: info.hidden,
-        status: dynamic.requiredValue ? 'required' : dynamic.recommendedValue ? 'recommended' : 'optional',
         allowMultiple: info instanceof ChildDeploymentInfo ? info.multiInstance : info.isMultiInAnyWay(),
         minItems: dynamic.minItems,
         maxItems: dynamic.maxItems,

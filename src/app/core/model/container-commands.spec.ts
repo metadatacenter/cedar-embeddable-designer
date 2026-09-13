@@ -31,7 +31,7 @@ function setup() {
     kind: 'element',
     id: definition.id,
     definition,
-    placement: { status: 'optional', allowMultiple: false },
+    placement: { allowMultiple: false },
   });
   a.children.push(leaf, element(b));
   root.children.push(element(a));

@@ -77,7 +77,6 @@ describe('recursive container codec', () => {
       definition: child,
       placement: {
         deploymentName: 'sample',
-        status: 'required',
         allowMultiple: true,
         minItems: 2,
         maxItems: 4,

@@ -23,11 +23,16 @@ const placementKeys = [
 type PlacementKey = (typeof placementKeys)[number];
 export type Placement = Pick<Field, PlacementKey>;
 /**
- * An element's placement is a field's without the line placement or the value recommendation. The
- * CEDAR model gives both to a dynamic field, and an element's `_ui` has nowhere to keep either, so
- * the deployment builder the model library hands back for an element has neither setter to call.
+ * An element's placement is what a parent can actually record about an element it holds: its
+ * deployment name, its property IRI, its labels and its cardinality. The line placement, the value
+ * recommendation, the hidden flag and the requirement are a field's — an element's `_ui` admits an
+ * order, property labels and property descriptions, and an element has no `_valueConstraints` — so
+ * the model library's element deployment builder has none of those setters to call.
  */
-export type ElementPlacement = Omit<Placement, 'continuePreviousLine' | 'valueRecommendationEnabled'>;
+export type ElementPlacement = Omit<
+  Placement,
+  'continuePreviousLine' | 'valueRecommendationEnabled' | 'hidden' | 'status'
+>;
 export type FieldDefinition = Omit<Field, PlacementKey | 'id'>;
 export interface FieldNode {
   kind: 'field';

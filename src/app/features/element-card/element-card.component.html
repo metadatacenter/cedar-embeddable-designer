@@ -59,11 +59,6 @@
               <label
                 >Display description <input [(ngModel)]="draft().displayDescription" (ngModelChange)="apply()"
               /></label>
-              <div class="display-flags">
-                <label class="check"
-                  ><input type="checkbox" [(ngModel)]="draft().hidden" (ngModelChange)="apply()" /> Hidden</label
-                >
-              </div>
             </div>
           }
           @case ('Element details') {
@@ -73,14 +68,6 @@
           }
           @case ('Occurrences') {
             <div class="settings-fields">
-              <label
-                >Status
-                <select [(ngModel)]="draft().status" (ngModelChange)="apply()">
-                  <option value="optional">Optional</option>
-                  <option value="required">Required</option>
-                  <option value="recommended">Recommended</option>
-                </select></label
-              >
               <label class="check"
                 ><input type="checkbox" [(ngModel)]="draft().allowMultiple" (ngModelChange)="apply()" /> Allow
                 multiple</label

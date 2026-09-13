@@ -39,7 +39,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
                 >⚠ {{ count }}</span
               >
             }
-            @if (node.placement.status === 'required') {
+            @if (node.kind === 'field' && node.placement.status === 'required') {
               <span aria-label="Required">*</span>
             }
           </button>

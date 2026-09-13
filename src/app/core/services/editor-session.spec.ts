@@ -41,7 +41,7 @@ describe('container editor session', () => {
     root.children.push({
       kind: 'element',
       id: child.id,
-      placement: { status: 'optional', allowMultiple: false },
+      placement: { allowMultiple: false },
       definition: child,
     });
     const session = new EditorSession(root);
