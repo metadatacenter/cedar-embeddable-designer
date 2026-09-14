@@ -106,13 +106,13 @@ and this bundle carries none of them. They are siblings rather than dependencies
 host loads three scripts and each component stays its own size:
 
 ```html
-<script src="cedar-term-picker.js"></script>
+<script src="cedar-embeddable-term-picker.js"></script>
 <script src="cedar-embeddable-editor.js"></script>
 <script src="cedar-embeddable-designer.js"></script>
 ```
 
 A field's complete controlled-term constraint set is assembled with
-[`<cedar-term-picker>`](https://github.com/metadatacenter/cedar-term-picker) in its
+[`<cedar-embeddable-term-picker>`](https://github.com/metadatacenter/cedar-embeddable-term-picker) in its
 `constraints` mode. Load a bundle supporting `constraintSet` and
 `constraintsSelected`. Authors can add, inspect, replace and remove constraints,
 set branch depth, and author term exclusions and result positions. JSON and YAML
@@ -142,7 +142,7 @@ open; clearing the control removes them. Numeric bounds and temporal precision
 from imported fields are preserved. Choice defaults use `selectedByDefault` on
 the field's options.
 
-Controlled-term defaults use `<cedar-term-picker>` in `selectionMode="term"` and
+Controlled-term defaults use `<cedar-embeddable-term-picker>` in `selectionMode="term"` and
 are checked against the field's vocabulary constraints before saving. The host
 sets `terminologyBaseUrl` for that check and `bridgeBaseUrl` for external authority
 lookups. Load current sibling bundles: without CEF or the required term picker,
@@ -152,18 +152,18 @@ To run the browser integration tests against real sibling bundles after building
 
 ```bash
 CEF_BUNDLE="$PWD/../cedar-embeddable-editor/visual/public/cedar-embeddable-editor.js" \
-PICKER_BUNDLE="$PWD/../cedar-term-picker/dist-bundle/cedar-term-picker.js" \
+PICKER_BUNDLE="$PWD/../cedar-embeddable-term-picker/dist-bundle/cedar-embeddable-term-picker.js" \
 npm --prefix browser test
 ```
 
 To try all three scripts together from source:
 
 ```bash
-npm --prefix ../cedar-term-picker run dist
+npm --prefix ../cedar-embeddable-term-picker run dist
 npm --prefix ../cedar-embeddable-editor run build:production
 npm --prefix ../cedar-embeddable-editor/visual run bundle
 npm run dist
-cp ../cedar-term-picker/dist-bundle/cedar-term-picker.js dist-bundle/
+cp ../cedar-embeddable-term-picker/dist-bundle/cedar-embeddable-term-picker.js dist-bundle/
 cp ../cedar-embeddable-editor/visual/public/cedar-embeddable-editor.js dist-bundle/
 ```
 
@@ -215,13 +215,13 @@ None of those are visible to a unit test.
 
 It drives the built single-file bundle in a host page whose own CSS is chosen to
 be as intrusive as possible, and it is hermetic: no test reaches a terminology
-server, and the one covering `<cedar-term-picker>` registers a stub in the page,
+server, and the one covering `<cedar-embeddable-term-picker>` registers a stub in the page,
 so what is under test is this component's half of that contract.
 
 ## Related Repositories
 
 - [cedar-embeddable-editor](https://github.com/metadatacenter/cedar-embeddable-editor) — renders a template as a form and produces instances
-- [cedar-term-picker](https://github.com/metadatacenter/cedar-term-picker) — chooses the ontology, branch, term or value set that constrains a field
+- [cedar-embeddable-term-picker](https://github.com/metadatacenter/cedar-embeddable-term-picker) — chooses the ontology, branch, term or value set that constrains a field
 - [cedar-model-typescript-library](https://github.com/metadatacenter/cedar-model-typescript-library) — the CEDAR model, and the readers and writers for its serializations
 
 ## Licence

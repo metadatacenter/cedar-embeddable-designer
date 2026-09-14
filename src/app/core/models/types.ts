@@ -29,7 +29,7 @@ export interface ControlledTermVersionRef {
  * A vocabulary constraint, as one of the four things it can actually be.
  *
  * The field names are not ours to choose: this shape crosses to
- * `<cedar-term-picker>` through its `constraintSet` input, and the picker publishes it
+ * `<cedar-embeddable-term-picker>` through its `constraintSet` input, and the picker publishes it
  * as `ControlledTermConfig` in its own contract. What was ours to fix is that the
  * contract is one interface with fifteen optional fields, so every field appeared to
  * be readable on every kind of constraint and the compiler had nothing to say about

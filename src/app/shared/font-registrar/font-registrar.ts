@@ -7,7 +7,7 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation } from '@angular/
  * stylesheet that carries font faces cannot be encapsulated with the rest. This
  * is the only unencapsulated component here, and its stylesheet holds no
  * selectors — only the CEDAR-namespaced faces — so nothing of the host page can
- * be reached by it. CEE and `cedar-term-picker` arrived at the same arrangement
+ * be reached by it. CEE and `cedar-embeddable-term-picker` arrived at the same arrangement
  * for the same reason.
  *
  * The faces are embedded rather than fetched. A host page is not obliged to load

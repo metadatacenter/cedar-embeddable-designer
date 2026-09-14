@@ -72,7 +72,7 @@ test('the sibling components are not imported', () => {
   const importers = sources()
     .filter((file) =>
       importsOf(file).some(
-        (module) => module.includes('cedar-embeddable-editor') || module.includes('cedar-term-picker'),
+        (module) => module.includes('cedar-embeddable-editor') || module.includes('cedar-embeddable-term-picker'),
       ),
     )
     .map((file) => relative(SRC, file));

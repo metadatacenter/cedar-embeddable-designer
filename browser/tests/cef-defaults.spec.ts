@@ -275,7 +275,7 @@ test('the real picker selects a default within the field vocabulary', async ({ p
   });
   await page.addScriptTag({ path: process.env.PICKER_BUNDLE! });
   await control.getByRole('button', { name: 'Choose default term' }).click();
-  const picker = control.locator('cedar-term-picker');
+  const picker = control.locator('cedar-embeddable-term-picker');
   await expect(control.getByRole('dialog', { name: 'Choose default term' })).toBeVisible();
   await expect(picker.getByLabel('Search vocabulary and release').locator('option')).toHaveCount(2);
   await picker.locator('input[type=search]').fill('cancer');

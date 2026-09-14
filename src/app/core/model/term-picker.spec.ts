@@ -10,7 +10,7 @@ import { ControlledTermField } from 'cedar-model-typescript-library';
  * the designer's own config object, because the config is a staging post and the
  * `_valueConstraints` it produces is the thing a form will be rendered from.
  *
- * The fixtures are the shapes `<cedar-term-picker>` emits, abbreviated to the
+ * The fixtures are the shapes `<cedar-embeddable-term-picker>` emits, abbreviated to the
  * fields the designer reads.
  */
 function fieldWith(picked: PickedConstraint): ControlledTermField {

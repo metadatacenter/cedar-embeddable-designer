@@ -1,7 +1,7 @@
 /**
  * Copy the sibling web components into `public/`, for the development host.
  *
- * The designer offers term search through `<cedar-term-picker>` and previews a
+ * The designer offers term search through `<cedar-embeddable-term-picker>` and previews a
  * template with `<cedar-embeddable-editor>`. Neither is bundled — a host page
  * loads all three scripts — so a development host that serves the designer alone
  * has two surfaces that can only report their own absence.
@@ -18,9 +18,9 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const siblings = [
   {
-    name: 'cedar-term-picker',
-    from: resolve(root, '../cedar-term-picker/dist-bundle/cedar-term-picker.js'),
-    built: 'npm --prefix ../cedar-term-picker run dist',
+    name: 'cedar-embeddable-term-picker',
+    from: resolve(root, '../cedar-embeddable-term-picker/dist-bundle/cedar-embeddable-term-picker.js'),
+    built: 'npm --prefix ../cedar-embeddable-term-picker run dist',
   },
   {
     name: 'cedar-embeddable-editor',

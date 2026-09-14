@@ -8,7 +8,7 @@
  * variant's required field.
  *
  * The runtime assertions beside them are the other half. The shape crosses to
- * `<cedar-term-picker>` through its `constraintSet` input, so narrowing the type must
+ * `<cedar-embeddable-term-picker>` through its `constraintSet` input, so narrowing the type must
  * not have changed what is actually sent: the same keys, on the same variants, with the
  * same values.
  */
@@ -71,7 +71,7 @@ describe('the constraint union', () => {
    * The same four variants the picker now publishes.
    *
    * `PublishedConfig` mirrors `ControlledTermConfig` from
-   * `cedar-term-picker/src/app/search/constraint-set.ts` — mirrored rather than
+   * `cedar-embeddable-term-picker/src/app/search/constraint-set.ts` — mirrored rather than
    * imported, because CED loads the picker as a script and does not depend on its
    * package. The two were narrowed together, so this is what would catch them drifting
    * apart: a variant the picker tightens further, or a key it drops, stops compiling

@@ -7,7 +7,7 @@ import { openSettings, applyPreset, child, clickCentred, currentTemplate, openDe
  * The constraint reached no template at all until the model library took over
  * serialization — the panel collected an ontology, a branch or a value set and
  * the exporter dropped every one of them. What fills the panel is
- * `<cedar-term-picker>`, a sibling component the host loads, so these tests stub
+ * `<cedar-embeddable-term-picker>`, a sibling component the host loads, so these tests stub
  * it: what is under test is the designer's half of that contract.
  */
 
@@ -39,7 +39,7 @@ test('says what is missing when the host has not loaded the picker', async ({ pa
   const panel = designer.locator('app-controlled-term-config');
   // A host that has not loaded the picker is a normal state rather than a fault,
   // so the panel names what it needs instead of offering a search that cannot run.
-  await expect(panel).toContainText('cedar-term-picker');
+  await expect(panel).toContainText('cedar-embeddable-term-picker');
   await expect(panel.getByRole('button', { name: /Edit controlled-term constraints/ })).toBeHidden();
 });
 
@@ -56,7 +56,7 @@ test('a chosen term becomes a constraint on the field', async ({ page }) => {
   const panel = await openConstraintPanel(page);
   await clickCentred(panel.getByRole('button', { name: /Edit controlled-term constraints/ }));
 
-  await expect(page.locator('cedar-term-picker')).toBeVisible();
+  await expect(page.locator('cedar-embeddable-term-picker')).toBeVisible();
   await page.locator('#stub-pick').click();
 
   const constraints = child(await currentTemplate(page), 'Controlled Terms')['_valueConstraints'] as {
@@ -90,14 +90,14 @@ test('choosing a term closes the picker', async ({ page }) => {
   await clickCentred(panel.getByRole('button', { name: /Edit controlled-term constraints/ }));
   await page.locator('#stub-pick').click();
 
-  await expect(page.locator('cedar-term-picker')).toHaveCount(0);
+  await expect(page.locator('cedar-embeddable-term-picker')).toHaveCount(0);
 });
 
 test('the picker is told which field it is choosing for, and which server to ask', async ({ page }) => {
   const panel = await openConstraintPanel(page);
   await clickCentred(panel.getByRole('button', { name: /Edit controlled-term constraints/ }));
 
-  const picker = page.locator('cedar-term-picker');
+  const picker = page.locator('cedar-embeddable-term-picker');
   expect(await picker.evaluate((node) => (node as unknown as { query: string }).query)).toBe('Controlled Terms');
   expect(await picker.evaluate((node) => (node as unknown as { terminologyBaseUrl: string }).terminologyBaseUrl)).toBe(
     'http://localhost:4598/fake-terminology/',
@@ -237,7 +237,7 @@ test('the real picker preserves saved actions and explicitly clears an invalid d
     await expect(summary.locator('input')).toHaveCount(0);
   }
   await panel.getByRole('button', { name: 'Edit controlled-term constraints' }).click();
-  const picker = panel.locator('cedar-term-picker');
+  const picker = panel.locator('cedar-embeddable-term-picker');
   await expect(picker.locator('.constraint-table').first().locator('tbody tr')).toHaveCount(2);
   await picker.getByRole('button', { name: 'Remove constraint 1', exact: true }).click();
   await picker.getByRole('button', { name: 'Cancel', exact: true }).click();

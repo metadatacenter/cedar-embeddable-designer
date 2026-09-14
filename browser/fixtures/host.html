@@ -53,7 +53,7 @@
       const params = new URLSearchParams(location.search);
       if (params.get('picker') === 'stub') {
         /*
-          A stand-in for <cedar-term-picker>, so this suite tests the designer's
+          A stand-in for <cedar-embeddable-term-picker>, so this suite tests the designer's
           half of that contract without depending on another component's build.
           It emits the one event shape the designer reads.
         */
@@ -103,7 +103,7 @@
             });
           }
         }
-        customElements.define('cedar-term-picker', StubPicker);
+        customElements.define('cedar-embeddable-term-picker', StubPicker);
       }
 
       if (params.get('cee') === 'stub') {

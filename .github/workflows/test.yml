@@ -26,7 +26,7 @@ jobs:
       # One Node for the whole job, and the one `.nvmrc` names, so the build that
       # ships is produced by the toolchain that exercised it. 24 rather than 22 of
       # the versions Angular 22 accepts: 24 is the active LTS where 22 is in
-      # maintenance. CEE and cedar-term-picker are on the same version.
+      # maintenance. CEE and cedar-embeddable-term-picker are on the same version.
       - name: Use Node.js 24
         uses: actions/setup-node@v4
         with:

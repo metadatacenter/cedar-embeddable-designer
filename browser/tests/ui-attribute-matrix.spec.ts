@@ -596,7 +596,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
   /*
    * The two controls a sibling component provides, and only CED's half of them.
    *
-   * CEF and `<cedar-term-picker>` have thorough suites of their own, and
+   * CEF and `<cedar-embeddable-term-picker>` have thorough suites of their own, and
    * `cef-defaults.spec.ts` already covers what each of twenty types stores and clears
    * through CEF. None of that is repeated here. What no other suite asks is whether the
    * value a sibling emits reaches the template, whether undoing it returns the template
@@ -682,7 +682,7 @@ for (const width of WIDTHS) {
 /**
  * The controls a sibling component provides, from CED's side of the boundary only.
  *
- * CEF and `<cedar-term-picker>` are separately and thoroughly tested, and
+ * CEF and `<cedar-embeddable-term-picker>` are separately and thoroughly tested, and
  * `cef-defaults.spec.ts` already covers what twenty types store and clear through CEF
  * while `constraints.spec.ts` drives the real picker through choosing and removing
  * constraints. None of that belongs here twice.
@@ -720,7 +720,7 @@ test.describe('what a sibling component contributes', () => {
       await page.setViewportSize({ width, height: 900 });
       await openDesigner(page);
       await page.addScriptTag({ path: process.env.PICKER_BUNDLE! });
-      await page.waitForFunction(() => !!customElements.get('cedar-term-picker'));
+      await page.waitForFunction(() => !!customElements.get('cedar-embeddable-term-picker'));
       await applyPreset(page, 'modular');
       const designer = page.locator(DESIGNER);
       await designer

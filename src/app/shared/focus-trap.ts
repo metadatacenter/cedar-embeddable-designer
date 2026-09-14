@@ -4,7 +4,7 @@
  * The usual focus trap collects `querySelectorAll` of a focusable selector and wraps
  * at the ends. That finds nothing useful here: the designer opens the term picker in
  * an overlay, and everything an author would tab to is inside
- * `<cedar-term-picker>`'s own shadow root, where a light-DOM query cannot reach.
+ * `<cedar-embeddable-term-picker>`'s own shadow root, where a light-DOM query cannot reach.
  * `document.activeElement` has the matching problem — it reports the custom element,
  * not the control inside it.
  *

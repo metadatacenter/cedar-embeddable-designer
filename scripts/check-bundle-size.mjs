@@ -15,7 +15,7 @@
  * the alternative and is not one — a host page is not obliged to load anything
  * for the designer, and a component that renders in a different typeface
  * depending on whether a font request succeeded is not one typeface. CEE embeds
- * the same three weights, and `cedar-term-picker` copied them for the same reason.
+ * the same three weights, and `cedar-embeddable-term-picker` copied them for the same reason.
  *
  * The limits leave headroom deliberately. Raising one is a decision to be taken
  * on evidence and recorded here, not a step in making a build pass.
