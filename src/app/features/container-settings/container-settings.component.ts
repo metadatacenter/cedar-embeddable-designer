@@ -15,8 +15,8 @@ import { TypesPickerComponent } from '../types-picker/types-picker.component';
     textarea {
       width: 100%;
       box-sizing: border-box;
-      min-height: 28px;
-      resize: vertical;
+      height: var(--cedar-control-height, 28px);
+      resize: none;
     }
     .display-fields {
       display: grid;
