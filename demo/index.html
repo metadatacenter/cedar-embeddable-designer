@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>CEDAR Embeddable Designer — demo</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+      }
+      cedar-embeddable-designer {
+        display: block;
+        height: 90vh;
+      }
+    </style>
+  </head>
+  <body>
+    <cedar-embeddable-designer id="d"></cedar-embeddable-designer>
+    <!--
+      Two sibling web components, both loaded by the host. Neither bundles the
+      other: the designer offers term search when the picker is present and says
+      so plainly when it is not.
+    -->
+    <script src="cedar-embeddable-term-picker.js"></script>
+    <!-- CEE renders the preview: a third sibling, and the form renderer production uses. -->
+    <script src="cedar-embeddable-editor.js"></script>
+    <script src="cedar-embeddable-designer.js"></script>
+    <script>
+      customElements.whenDefined('cedar-embeddable-designer').then(() => {
+        // The local terminology server: production does not serve the picker's
+        // version-aware /search yet.
+        document.getElementById('d').config = { terminologyBaseUrl: 'http://localhost:9004/' };
+      });
+    </script>
+  </body>
+</html>

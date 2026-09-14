@@ -1,5 +1,6 @@
 /**
  * Copy the sibling web components into `public/`, for the development host.
+ * With `--bundle-demo`, stage them and `demo/index.html` into `dist-bundle/`.
  *
  * The designer offers term search through `<cedar-embeddable-term-picker>` and previews a
  * template with `<cedar-embeddable-editor>`. Neither is bundled — a host page
@@ -30,14 +31,19 @@ const siblings = [
   },
 ];
 
-mkdirSync(join(root, 'public'), { recursive: true });
+const bundleDemo = process.argv.includes('--bundle-demo');
+const target = join(root, bundleDemo ? 'dist-bundle' : 'public');
+mkdirSync(target, { recursive: true });
+if (bundleDemo) copyFileSync(join(root, 'demo/index.html'), join(target, 'index.html'));
 
 for (const sibling of siblings) {
-  const to = join(root, 'public', `${sibling.name}.js`);
+  const to = join(target, `${sibling.name}.js`);
   if (!existsSync(sibling.from)) {
     console.log(`  ${sibling.name}: not built, skipping — \`${sibling.built}\` to include it`);
     continue;
   }
   copyFileSync(sibling.from, to);
-  console.log(`  ${sibling.name}: ${statSync(to).size.toLocaleString('en-US')} bytes staged to public/`);
+  console.log(
+    `  ${sibling.name}: ${statSync(to).size.toLocaleString('en-US')} bytes staged to ${bundleDemo ? 'dist-bundle' : 'public'}/`,
+  );
 }
