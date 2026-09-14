@@ -40,7 +40,7 @@ drives it in a browser.
   package belongs to is derived from its version, so a development snapshot
   cannot reach npmjs by forgetting a flag.
 - Term search through
-  [`<cedar-term-picker>`](https://github.com/metadatacenter/cedar-term-picker),
+  [`<cedar-embeddable-term-picker>`](https://github.com/metadatacenter/cedar-embeddable-term-picker),
   a sibling web component the embedding page loads alongside the designer. A
   field's constraint is chosen from what the terminology server holds instead of
   typed from memory. Where the picker is absent the panel says so.

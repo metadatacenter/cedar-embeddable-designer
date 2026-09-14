@@ -10,7 +10,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     /*
-     * On, matching cedar-term-picker. A binding nothing reads is either a mistake
+     * On, matching cedar-embeddable-term-picker. A binding nothing reads is either a mistake
      * or a leftover, and both are cheaper to remove when the compiler names them
      * than when someone wonders later whether they matter.
      */

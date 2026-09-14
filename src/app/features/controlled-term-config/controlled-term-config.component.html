@@ -14,7 +14,7 @@
 </div>
 @if (!pickerAvailable || !terminologyBaseUrl()) {
   <p role="status" class="text-xs text-amber-800 mb-3">
-    Constraint editing needs <code>&lt;cedar-term-picker&gt;</code> and a configured <code>terminologyBaseUrl</code>.
+    Constraint editing needs <code>&lt;cedar-embeddable-term-picker&gt;</code> and a configured <code>terminologyBaseUrl</code>.
     Saved constraints remain intact.
   </p>
 }
@@ -36,7 +36,7 @@
           Clear default and apply constraints
         </button>
       }
-      <cedar-term-picker
+      <cedar-embeddable-term-picker
         [query]="field.name"
         [selectionMode]="'constraints'"
         [constraintSet]="field.controlledTermConstraints || empty"
@@ -44,7 +44,7 @@
         (constraintsSelected)="applyPicked($event)"
         (constraintsChanged)="draftChanged()"
         (cancelled)="closePicker()"
-      ></cedar-term-picker>
+      ></cedar-embeddable-term-picker>
     </div>
   </div>
 }

@@ -45,7 +45,7 @@ export class TerminologyService {
   readonly configured = signal(false);
 
   /**
-   * The terminology server a host named, for handing on to `<cedar-term-picker>`.
+   * The terminology server a host named, for handing on to `<cedar-embeddable-term-picker>`.
    *
    * The picker addresses the same server by a different path — its own
    * version-aware `/search` rather than `bioportal/search` — so what it needs is

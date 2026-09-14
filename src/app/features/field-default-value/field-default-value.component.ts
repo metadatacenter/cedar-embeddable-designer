@@ -59,7 +59,7 @@ export class FieldDefaultValueComponent {
     });
   });
   readonly available = signal(customElements.get(FIELD_TAG) !== undefined);
-  readonly pickerAvailable = signal(customElements.get('cedar-term-picker') !== undefined);
+  readonly pickerAvailable = signal(customElements.get('cedar-embeddable-term-picker') !== undefined);
   readonly pickerOpen = signal(false);
   readonly error = signal<string | null>(null);
   private readonly mount = viewChild<ElementRef<HTMLDivElement>>('mount');
@@ -71,7 +71,7 @@ export class FieldDefaultValueComponent {
     const destroyRef = this.destroyRef;
     for (const [tag, ready] of [
       [FIELD_TAG, this.available],
-      ['cedar-term-picker', this.pickerAvailable],
+      ['cedar-embeddable-term-picker', this.pickerAvailable],
     ] as const) {
       void customElements.whenDefined(tag).then(() => {
         if (!destroyRef.destroyed) ready.set(true);

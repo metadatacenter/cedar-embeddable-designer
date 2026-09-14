@@ -12,13 +12,13 @@
         Choose default term
       </button>
       @if (pickerOpen()) {
-        <cedar-term-picker
+        <cedar-embeddable-term-picker
           [terminologyBaseUrl]="terminologyBaseUrl()"
           [selectionMode]="'term'"
           [sources]="pickerSources()"
           (selected)="selectTerm($event)"
           (cancelled)="pickerOpen.set(false)"
-        ></cedar-term-picker>
+        ></cedar-embeddable-term-picker>
       }
     }
     @if (field().defaultValue.kind !== 'none') {

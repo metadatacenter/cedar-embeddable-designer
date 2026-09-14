@@ -51,5 +51,5 @@ Thumbs.db
 
 # Sibling web components, staged into the development host by `npm start`.
 # Build output of neighbouring repositories, not of this one.
-/public/cedar-term-picker.js
+/public/cedar-embeddable-term-picker.js
 /public/cedar-embeddable-editor.js

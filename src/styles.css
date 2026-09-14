@@ -78,7 +78,7 @@
 /*
   CEDAR's design values.
 
-  Copied from `cedar-term-picker/src/_cee-tokens.scss` and `_cedar-neutrals.scss`,
+  Copied from `cedar-embeddable-term-picker/src/_cee-tokens.scss` and `_cedar-neutrals.scss`,
   which took them from the CEDAR Embeddable Editor at commit c4ae049 and recorded
   where each was read from. The designer takes the same values so the three look
   like one platform rather than three products. When one has to change in all of
