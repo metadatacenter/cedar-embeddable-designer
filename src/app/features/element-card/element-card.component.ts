@@ -1,3 +1,5 @@
+import { TypesPickerComponent } from '../types-picker/types-picker.component';
+import { PropertyPickerComponent } from '../property-picker/property-picker.component';
 import { publicationStatusLabel } from '../../shared/publication-status';
 import { Component, input, inject, signal, effect, computed, ChangeDetectorRef, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -7,7 +9,7 @@ import { TemplateService } from '../../core/services/template.service';
 
 @Component({
   selector: 'app-element-card',
-  imports: [FormsModule],
+  imports: [FormsModule, PropertyPickerComponent, TypesPickerComponent],
   templateUrl: './element-card.component.html',
   styleUrls: ['../field-settings/field-settings.component.scss', './element-card.component.scss'],
 })
@@ -59,6 +61,11 @@ export class ElementCardComponent {
     });
   }
   private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
+  saveProperty(iri: string): void {
+    const error = this.service.updateElementPlacement(this.node().id, { ...this.node().placement, propertyIri: iri });
+    this.error.set(error);
+    this.service.setSettingsError(this.node().id, 'propertyIri', error, 'Element metadata');
+  }
   apply(): void {
     const invalid = Array.from(this.host.nativeElement.querySelectorAll('input')).find(
       (input) => input.validity.badInput,

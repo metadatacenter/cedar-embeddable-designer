@@ -24,7 +24,9 @@ import { gzipSync } from 'node:zlib';
 import { readFileSync } from 'node:fs';
 import { OUT, readManifest } from './make-bundle.mjs';
 
-const RAW_LIMIT = 1_250_000;
+// 2026-09-14: container settings, class-set authoring, and the updated model
+// measure 1,261,748 raw / 401,298 gzip bytes. Retain the compressed ceiling.
+const RAW_LIMIT = 1_300_000;
 const GZIP_LIMIT = 420_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;

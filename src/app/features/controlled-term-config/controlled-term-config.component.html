@@ -1,8 +1,7 @@
-@if (!field.controlledTermConstraints?.constraints?.length) {
-  <p role="status" class="text-xs text-gray-500 mb-1">Choose vocabulary constraints for this field.</p>
-}
 <div class="constraint-summary" aria-label="Controlled-term constraints">
-  @if (summaryAvailable) {
+  @if (!field.controlledTermConstraints?.constraints?.length) {
+    <span class="empty-constraint">Choose a vocabulary constraint</span>
+  } @else if (summaryAvailable) {
     <cedar-embeddable-field
       [config]="summaryConfig"
       [fieldObject]="summaryArtifact"
@@ -17,8 +16,8 @@
 </div>
 @if (!pickerAvailable || !terminologyBaseUrl()) {
   <p role="status" class="text-xs text-amber-800 mb-3">
-    Constraint editing needs <code>&lt;cedar-embeddable-term-picker&gt;</code> and a configured <code>terminologyBaseUrl</code>.
-    Saved constraints remain intact.
+    Constraint editing needs <code>&lt;cedar-embeddable-term-picker&gt;</code> and a configured
+    <code>terminologyBaseUrl</code>. Saved constraints remain intact.
   </p>
 }
 @if (pickerOpen()) {
@@ -46,6 +45,7 @@
       <cedar-embeddable-term-picker
         [query]="field.name"
         [selectionMode]="'constraints'"
+        [termTypes]="['ontology', 'class', 'branch', 'valueSet']"
         [constraintSet]="pickerConstraints"
         [terminologyBaseUrl]="terminologyBaseUrl()"
         (constraintsSelected)="applyPicked($event)"

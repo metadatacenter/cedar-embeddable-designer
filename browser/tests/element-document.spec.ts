@@ -56,7 +56,7 @@ for (const width of [1280, 375]) {
     await placement.getByRole('button', { name: 'Expand element settings', exact: true }).click();
     const details = placement.getByRole('tabpanel', { name: 'Element details', exact: true });
     await expect(details).toContainText(
-      'Coming soon: language, alternate labels, property IRI/property name, annotations.',
+      'Coming soon: language, alternate labels, property name, annotations.',
     );
     await expect(details.locator('input')).toHaveCount(0);
     await placement.getByRole('tab', { name: 'Occurrences', exact: true }).click();

@@ -130,7 +130,7 @@ p[role='alert'] {
 
 .identity {
   display: grid;
-  grid-template-columns: max-content 1fr;
+  grid-template-columns: max-content minmax(0, 1fr);
   gap: 3px 12px;
   margin: 0;
   font-size: 11px;
@@ -286,4 +286,8 @@ button:focus-visible {
 fieldset[aria-invalid='true'] {
   border-left: 2px solid #b42318;
   padding-left: 6px;
+}
+
+.identity dt.editable {
+  align-self: center;
 }

@@ -22,3 +22,12 @@ button {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+.empty-constraint {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  padding: 6px 8px;
+  color: #777;
+}

@@ -404,7 +404,7 @@ export class TemplateService {
   }
   updateContainerDefinition(
     id: number,
-    changes: Partial<Pick<ContainerDraft, 'name' | 'description' | 'schemaIdentifier' | 'version'>>,
+    changes: Partial<Pick<ContainerDraft, 'name' | 'description' | 'schemaIdentifier' | 'version' | 'metadata'>>,
   ): void {
     this.session.document.update((root) => updateContainer(root, id, (container) => ({ ...container, ...changes })));
   }

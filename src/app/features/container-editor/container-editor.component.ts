@@ -1,3 +1,4 @@
+import { ContainerSettingsComponent } from '../container-settings/container-settings.component';
 import { publicationStatusLabel } from '../../shared/publication-status';
 import { Component, inject, input, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -20,6 +21,7 @@ import { ElementCardComponent } from '../element-card/element-card.component';
     FieldCardComponent,
     FieldTypePickerComponent,
     ElementCardComponent,
+    ContainerSettingsComponent,
   ],
   templateUrl: './container-editor.component.html',
   styleUrls: ['../../app.component.scss', './container-editor.component.scss'],

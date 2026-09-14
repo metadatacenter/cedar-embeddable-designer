@@ -105,6 +105,8 @@
   </div>
   @if (placementNode(); as element) {
     <app-element-card [node]="element" />
+  } @else {
+    <app-container-settings [container]="container()" />
   }
 </div>
 

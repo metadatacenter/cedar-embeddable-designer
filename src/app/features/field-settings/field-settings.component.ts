@@ -1,3 +1,4 @@
+import { PropertyPickerComponent } from '../property-picker/property-picker.component';
 import { FieldDefaultValueComponent } from '../field-default-value/field-default-value.component';
 import {
   ChangeDetectionStrategy,
@@ -25,7 +26,7 @@ import { TemplateService } from '../../core/services/template.service';
 
 @Component({
   selector: 'app-field-settings',
-  imports: [FormsModule, FieldDefaultValueComponent],
+  imports: [FormsModule, FieldDefaultValueComponent, PropertyPickerComponent],
   templateUrl: './field-settings.component.html',
   styleUrl: './field-settings.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -235,6 +236,9 @@ export class FieldSettingsComponent implements OnChanges {
     if (!invalid) return false;
     this.report(tab, `${invalid.closest('label')?.textContent?.trim() || 'Value'} must be a valid number.`);
     return true;
+  }
+  saveProperty(iri: string): void {
+    this.report('Field metadata', this.service.updateFieldSettings(this.field.id, { propertyIri: iri }));
   }
   saveMedia(form?: HTMLFormElement): void {
     if (this.badInput(form, 'Content')) return;

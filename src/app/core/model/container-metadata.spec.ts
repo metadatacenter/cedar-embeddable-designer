@@ -30,7 +30,7 @@ for (const format of ['JSON', 'YAML']) {
       template.pav_previousVersion = CedarArtifactId.forValue('urn:test:previous');
       template.schema_identifier = 'study-id';
       template.language = Language.forValue('en');
-      template.instanceTypeSpecification = 'urn:test:instance-type';
+      template.instanceTypeSpecifications = ['urn:test:instance-type', 'urn:test:second-type'];
       template.header = 'Header';
       template.footer = 'Footer';
       template.annotations = new Annotations();

@@ -318,7 +318,7 @@
     [id]="'field-panel-' + field.id + '-Field-details'"
     [attr.aria-labelledby]="'field-tab-' + field.id + '-Field-details'"
   >
-    <p class="details-placeholder">Coming soon: language, alternate labels, property IRI/property name, annotations.</p>
+    <p class="details-placeholder">Coming soon: language, alternate labels, property name, annotations.</p>
   </section>
 
   <section
@@ -352,6 +352,16 @@
       @if (artifact.previousVersion) {
         <dt>Previous version</dt>
         <dd>{{ artifact.previousVersion }}</dd>
+      }
+      @if (dynamic) {
+        <dt class="editable">Property IRI</dt>
+        <dd>
+          <app-property-picker
+            [iri]="field.propertyIri"
+            [disabled]="!!field.publishedDefinition"
+            (propertySelected)="saveProperty($event)"
+          />
+        </dd>
       }
     </dl>
   </section>

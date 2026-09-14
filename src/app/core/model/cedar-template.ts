@@ -184,6 +184,8 @@ export interface ContainerMetadata {
   language: string | null;
   annotations: Field['annotations'];
   instanceType: string | null;
+  instanceTypes?: string[];
+  typeSelections?: ControlledTermSet;
   header: string | null;
   footer: string | null;
 }
@@ -1054,10 +1056,12 @@ function buildContainerArtifact(
     const field = views[index];
     const built =
       node.kind === 'field' ? buildFieldNaming(field) : (buildContainer(node.definition) as TemplateElement);
+    // YAML restores effective labels/descriptions for new child entries. State
+    // those defaults explicitly, while preserving absent imported overrides.
     const deployment = built
       .createDeploymentBuilder(keys[index])
-      .withLabel(field.displayLabel ?? null)
-      .withDescription(field.displayDescription ?? null);
+      .withLabel(field.displayLabel ?? (field.artifact ? null : field.name))
+      .withDescription(field.displayDescription ?? (field.artifact ? null : field.helpText || null));
 
     /*
      * A static field's deployment builder does not extend the dynamic one, so it has no property
@@ -1122,7 +1126,8 @@ function buildContainerArtifact(
       template.pav_version = PavVersion.forValue(state.version);
     }
     template.language = Language.forValue(metadata.language);
-    template.instanceTypeSpecification = metadata.instanceType;
+    template.instanceTypeSpecifications =
+      metadata.instanceTypes ?? (metadata.instanceType ? [metadata.instanceType] : []);
     if (template instanceof Template) {
       template.header = metadata.header;
       template.footer = metadata.footer;
@@ -1520,6 +1525,7 @@ function projectContainerFields(template: Template | TemplateElement): DesignerT
       artifact: artifactMetadataOf(template),
       language: template.language.getValue(),
       instanceType: template.instanceTypeSpecification,
+      instanceTypes: [...template.instanceTypeSpecifications],
       header: template instanceof Template ? template.header : null,
       footer: template instanceof Template ? template.footer : null,
       annotations: template.annotations?.getAnnotationNames().map((name) => {

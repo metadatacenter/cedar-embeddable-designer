@@ -51,6 +51,12 @@
                 <dt>Previous version</dt>
                 <dd>{{ artifact().previousVersion }}</dd>
               }
+              <dt class="editable">Property IRI</dt>
+              <dd>
+                <app-property-picker [iri]="node().placement.propertyIri" (propertySelected)="saveProperty($event)" />
+              </dd>
+              <dt class="editable">Types</dt>
+              <dd><app-types-picker [container]="node().definition" /></dd>
             </dl>
           }
           @case ('Display') {
@@ -62,9 +68,7 @@
             </div>
           }
           @case ('Element details') {
-            <p class="details-placeholder">
-              Coming soon: language, alternate labels, property IRI/property name, annotations.
-            </p>
+            <p class="details-placeholder">Coming soon: language, alternate labels, property name, annotations.</p>
           }
           @case ('Occurrences') {
             <div class="settings-fields">
