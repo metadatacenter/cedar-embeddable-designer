@@ -6,9 +6,11 @@
   margin: 4px 0 0;
 }
 
-// CEE's advisory colour; this explains a read-only state rather than an invalid value.
+// CEDAR's advisory colour; this explains a read-only state rather than an invalid
+// value. Written out as #856404 until the shared values arrived, which is what the
+// editor said when this was copied from it and not what it says now.
 .published-warning {
-  color: #856404;
+  color: var(--cedar-warning);
   background: #fff8e5;
   font-size: 12px;
   line-height: 1.3;

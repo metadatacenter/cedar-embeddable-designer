@@ -1,4 +1,13 @@
 @import 'tailwindcss';
+/*
+  CEDAR's design values, from the package that holds them for every component that
+  draws CEDAR. The file is the Sass partial compiled to custom properties, because
+  Tailwind's `@theme` reads properties and not Sass variables. It declares them on
+  `:root` and `:host` both, which is what this file needs: the designer renders
+  inside a shadow root when it is embedded, and `:root` matches the document
+  element, outside it.
+*/
+@import '@org.metadatacenter/cedar-design-tokens/custom-properties.css';
 @source "./app/**/*.{html,ts}";
 
 @theme inline {
@@ -7,7 +16,7 @@
     rather than Tailwind's rem defaults. `CEE Roboto` is the namespaced family the
     embedded faces declare; the fallbacks are CEE's.
   */
-  --font-sans: 'CEE Roboto', 'Helvetica Neue', sans-serif;
+  --font-sans: var(--cedar-font-family);
   --text-xs: var(--text-xs);
   --text-sm: var(--text-sm);
   --text-base: var(--text-base);
@@ -76,17 +85,18 @@
 }
 
 /*
-  CEDAR's design values.
+  What this application is built from, on top of the shared values imported above.
 
-  Copied from `cedar-embeddable-term-picker/src/_cee-tokens.scss` and `_cedar-neutrals.scss`,
-  which took them from the CEDAR Embeddable Editor at commit c4ae049 and recorded
-  where each was read from. The designer takes the same values so the three look
-  like one platform rather than three products. When one has to change in all of
-  them, that is the moment to consider a shared package rather than a third copy.
+  The palettes, the type scale and the neutrals are no longer stated here. They
+  were copied from the term picker, which had copied them from the editor, and
+  three copies of one palette drifted exactly as three copies do: this file still
+  said #856404 for the advisory colour a month after the editor chose #b45309.
+  What remains below is this application's own — the semantic names its utility
+  layer is built from, and the radius and weights that go with them.
 
-  What was here before was shadcn's default theme, shipped by the Figma Make
-  export: a near-black `--primary`, a lavender-grey scale, and five chart colours
-  for charts this application does not draw.
+  What was here before all of that was shadcn's default theme, shipped by the
+  Figma Make export: a near-black `--primary`, a lavender-grey scale, and five
+  chart colours for charts this application does not draw.
 
   `:host` as well as `:root`, because the designer renders inside a shadow root
   when it is embedded and `:root` matches the document element, which is outside
@@ -117,14 +127,14 @@
     that is not prose is not on this scale — the count badge in its pill and the
     Material icons are glyphs, and they keep their own.
   */
-  --text-xs: 12px;
-  --text-sm: 12px;
-  --text-base: 14px;
-  --text-lg: 15px;
-  --text-xl: 18px;
-  --text-2xl: 20px;
+  --text-xs: var(--cedar-font-size-small);
+  --text-sm: var(--cedar-font-size-small);
+  --text-base: var(--cedar-font-size);
+  --text-lg: var(--cedar-font-size-lead);
+  --text-xl: var(--cedar-font-size-element-heading);
+  --text-2xl: var(--cedar-font-size-heading);
 
-  --font-size: 14px;
+  --font-size: var(--cedar-font-size);
   --font-weight-normal: 400;
   --font-weight-medium: 500;
 
@@ -138,45 +148,23 @@
     `CEE Roboto` is the namespaced family the embedded faces declare; the
     fallbacks are CEE's.
   */
-  --font-sans: 'CEE Roboto', 'Helvetica Neue', sans-serif;
-
-  /* CEDAR's teal, at the hues CEE publishes: 500 is the default. */
-  --cedar-primary-50: #e2eff0;
-  --cedar-primary-100: #b7d6db;
-  --cedar-primary-200: #87bbc3;
-  --cedar-primary-300: #579faa;
-  --cedar-primary-400: #338b98;
-  --cedar-primary-500: #0f7686;
-  --cedar-primary-600: #0d6e7e;
-  --cedar-primary-700: #0b6373;
-  --cedar-primary-800: #085969;
-  --cedar-primary-900: #044656;
-
-  /* CEDAR's rust, whose default hue is A200 rather than 500. */
-  --cedar-accent-100: #dbbcb7;
-  --cedar-accent-500: #861f0f;
-  --cedar-accent-a200: #ff5c55;
-
-  /* The title colour CEE uses for a component heading. */
-  --cedar-heading: #0b3938;
+  --font-sans: var(--cedar-font-family);
 
   /*
-    Neutrals, which CEE has no palette for: its greys are literals written where
-    each is used, so the picker gathered them one value at a time and this takes
-    them from there.
-  */
-  --cedar-border-control: #777;
-  --cedar-border-rule: #d7e0df;
-  --cedar-border-rule-light: #e5ebea;
-  --cedar-surface-panel: #f5f5f5;
-  --cedar-surface-tinted: #e4f1f1;
-  --cedar-text-primary: rgba(0, 0, 0, 0.87);
-  --cedar-text-muted: #555;
+    Four names this application already used, each now resolving to the shared
+    property that carries the value. Kept as aliases rather than rewritten at
+    every site, because a hue is referred to by the name the utility layer was
+    built from; the value itself is stated once, in the package.
 
-  /* Material's red 500, which is what CEE renders for a danger state. */
-  --cedar-warn: #f44336;
-  /* Advisory rather than an error, and deliberately unlike the colour that is one. */
-  --cedar-warning: #856404;
+    The advisory colour is the one that makes the point. It read #856404 here,
+    which is what the editor's token file said when these were copied from it.
+    The editor moved to #b45309 and this copy did not, so the designer marked an
+    advisory in a colour no other CEDAR surface drew.
+  */
+  --cedar-accent-a200: var(--cedar-accent-A200);
+  --cedar-heading: var(--cedar-color-component-title);
+  --cedar-warn: var(--cedar-color-warn);
+  --cedar-warning: var(--cedar-color-warning);
 
   /* The names the utility layer below is built from, resolved to the values above. */
   --background: #ffffff;
