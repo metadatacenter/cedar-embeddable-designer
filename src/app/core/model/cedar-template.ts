@@ -1012,7 +1012,7 @@ function buildFieldNaming(field: Field): TemplateField {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const name = field.name.trim() || 'an unnamed field';
-    throw new Error(`${name}: ${message}`);
+    throw new Error(`${name}: ${message}`, { cause: error });
   }
 }
 

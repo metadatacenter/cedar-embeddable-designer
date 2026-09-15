@@ -65,7 +65,7 @@ export class FieldSettingsComponent implements OnChanges {
   }
   onTabKey(event: KeyboardEvent, index: number): void {
     const tabs = this.tabs;
-    let next = index;
+    let next: number;
     if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
     else if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
     else if (event.key === 'Home') next = 0;

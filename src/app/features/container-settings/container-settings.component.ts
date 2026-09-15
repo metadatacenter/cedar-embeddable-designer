@@ -45,7 +45,7 @@ export class ContainerSettingsComponent {
     return this.tabs().includes(this.activeTab) ? this.activeTab : this.metadataTab();
   }
   keydown(event: KeyboardEvent, index: number): void {
-    let next = index;
+    let next: number;
     if (event.key === 'ArrowRight') next = (index + 1) % this.tabs().length;
     else if (event.key === 'ArrowLeft') next = (index + this.tabs().length - 1) % this.tabs().length;
     else if (event.key === 'Home') next = 0;

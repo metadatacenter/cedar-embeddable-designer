@@ -29,9 +29,10 @@ import { buildTemplate, readTemplate, templateToJson, toDesignerTemplate } from 
  *
  * `import.meta.glob` rather than `node:fs`: the spec environment is bundled for the
  * browser and has no filesystem. `src/import-meta-glob.d.ts` declares the one member
- * used.
+ * used. The workspace-root path also resolves when Angular gives the coverage
+ * run a virtual test-file location.
  */
-const files = import.meta.glob<{ default: Record<string, unknown> }>('./fixtures/corpus/*.json', {
+const files = import.meta.glob<{ default: Record<string, unknown> }>('/src/app/core/model/fixtures/corpus/*.json', {
   eager: true,
 });
 

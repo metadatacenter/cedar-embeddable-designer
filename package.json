@@ -56,30 +56,37 @@
     "@angular/forms": "^22.1.6",
     "@angular/platform-browser": "^22.1.6",
     "@tailwindcss/postcss": "^4.3.3",
-    "cedar-model-typescript-library": "npm:@org.metadatacenter/cedar-model-typescript-library@1.0.11-dev.20260914.3147347",
+    "cedar-model-typescript-library": "npm:@org.metadatacenter/cedar-model-typescript-library@1.0.12-dev.20260914.2979eb0",
     "rxjs": "~7.8.0",
     "tailwindcss": "^4.3.3",
     "tslib": "^2.3.0",
-    "zone.js": "~0.15.0"
+    "zone.js": "~0.16.3"
   },
   "devDependencies": {
     "@angular/build": "^22.1.8",
     "@angular/cli": "^22.1.8",
     "@angular/compiler-cli": "^22.1.6",
-    "@eslint/js": "^9.39.5",
+    "@eslint/js": "^10.0.1",
     "@org.metadatacenter/cedar-design-tokens": "0.1.0-dev.20260915.4e0a0032",
     "@types/node": "^24.13.3",
     "@vitest/coverage-v8": "^4.1.11",
     "angular-eslint": "^22.1.0",
-    "esbuild": "^0.25.12",
-    "eslint": "^9.39.5",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
-    "globals": "^16.5.0",
-    "jsdom": "^24.1.3",
+    "globals": "^17.12.0",
+    "jsdom": "^30.0.1",
     "prettier": "^3.9.6",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.68.0",
     "vitest": "^4.0.8"
+  },
+  "allowScripts": {
+    "@parcel/watcher@2.6.0": true,
+    "esbuild@0.28.2": true,
+    "fsevents@2.3.3": true,
+    "lmdb@3.5.6": true,
+    "msgpackr-extract@3.0.4": true
   }
 }

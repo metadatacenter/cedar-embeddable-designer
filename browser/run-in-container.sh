@@ -23,7 +23,7 @@
 #
 # So both sides run the same container. Playwright publishes an image per release
 # carrying the browsers that release drives and the fonts they rasterise with, and
-# `v1.62.1-noble` matches the version `browser/package.json` resolves. Move that pin
+# `v1.63.0-noble` matches the version `browser/package.json` resolves. Move that pin
 # and the baselines move with it, exactly as an OS upgrade used to.
 #
 # CED's CI already runs on `ubuntu-24.04-arm`, so neither side emulates. A runner
@@ -37,7 +37,7 @@
 # with `npm run test:browser`. This is only for the pixels.
 set -euo pipefail
 
-IMAGE="mcr.microsoft.com/playwright:v1.62.1-noble"
+IMAGE="mcr.microsoft.com/playwright:v1.63.0-noble"
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # Which half to run. `behaviour` excludes the baselines by naming everything else.
