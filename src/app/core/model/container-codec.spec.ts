@@ -55,43 +55,49 @@ describe('recursive container codec', () => {
       expect(templateToJson(buildContainer(readContainer(first)))).toEqual(first);
     });
   }
-  it('round-trips a standalone element with nested cardinality, labels, and provenance', () => {
-    const root = newContainer('element', 'Study');
-    root.preferredLabel = 'Study label';
-    root.alternateLabels = ['Alternative'];
-    const child = newContainer('element', 'Sample');
-    child.children.push(
-      fieldNode({
-        id: newNodeId(),
-        name: 'Title',
-        type: 'text',
-        status: 'required',
-        allowMultiple: false,
-        options: [],
-        defaultValue: { kind: 'literal', value: 'Default' },
-      }),
-    );
-    root.children.push({
-      id: child.id,
-      kind: 'element',
-      definition: child,
-      placement: {
-        deploymentName: 'sample',
-        allowMultiple: true,
-        minItems: 2,
-        maxItems: 4,
-        displayLabel: 'Samples',
-        propertyIri: 'urn:sample',
-      },
-    });
-    const model = buildContainer(root);
-    const json = templateToJson(model);
-    expect(json['@type']).toBe('https://schema.metadatacenter.org/core/TemplateElement');
-    for (const source of [json, JSON.stringify(json), templateToYaml(model)]) {
-      expect(templateToJson(buildContainer(readContainer(source)))).toEqual(json);
-    }
-    const preview = templateToJson(containerPreview(root));
-    expect(preview['@type']).toBe('https://schema.metadatacenter.org/core/Template');
-    expect((preview['properties'] as Record<string, unknown>)['Study']).toEqual(json);
-  });
+  it.each(['text', 'paragraph'])(
+    'round-trips nested repeated %s with length bounds and element cardinality',
+    (type) => {
+      const root = newContainer('element', 'Study');
+      root.preferredLabel = 'Study label';
+      root.alternateLabels = ['Alternative'];
+      const child = newContainer('element', 'Sample');
+      child.children.push(
+        fieldNode({
+          id: newNodeId(),
+          name: 'Title',
+          type,
+          textConstraints: { minLength: 2, maxLength: 40, regex: null },
+          minItems: 1,
+          maxItems: 3,
+          status: 'required',
+          allowMultiple: true,
+          options: [],
+          defaultValue: { kind: 'literal', value: 'Default' },
+        }),
+      );
+      root.children.push({
+        id: child.id,
+        kind: 'element',
+        definition: child,
+        placement: {
+          deploymentName: 'sample',
+          allowMultiple: true,
+          minItems: 2,
+          maxItems: 4,
+          displayLabel: 'Samples',
+          propertyIri: 'urn:sample',
+        },
+      });
+      const model = buildContainer(root);
+      const json = templateToJson(model);
+      expect(json['@type']).toBe('https://schema.metadatacenter.org/core/TemplateElement');
+      for (const source of [json, JSON.stringify(json), templateToYaml(model)]) {
+        expect(templateToJson(buildContainer(readContainer(source)))).toEqual(json);
+      }
+      const preview = templateToJson(containerPreview(root));
+      expect(preview['@type']).toBe('https://schema.metadatacenter.org/core/Template');
+      expect((preview['properties'] as Record<string, unknown>)['Study']).toEqual(json);
+    },
+  );
 });

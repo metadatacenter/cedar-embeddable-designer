@@ -882,7 +882,7 @@ describe('complete controlled-term constraints', () => {
       requiredValue: false,
       ontologies: [0, 1].map((i) => ({
         ...common,
-        uri: `https://custom.example/ontology/${i}`,
+        uri: `https://data.bioontology.org/ontologies/O${i}`,
         acronym: `O${i}`,
         name: `Ontology ${i}`,
         numTerms: i,
@@ -916,6 +916,11 @@ describe('complete controlled-term constraints', () => {
       ],
     };
     initial.properties.Terms._valueConstraints = constraints;
+    const customUriSource = JSON.parse(JSON.stringify(initial));
+    customUriSource.properties.Terms._valueConstraints.ontologies[0].uri = 'https://custom.example/ontology/0';
+    const customUriModel = readTemplate(JSON.stringify(customUriSource));
+    expect(templateToJson(customUriModel)).toEqual(customUriSource);
+    expect(() => templateToYaml(customUriModel)).toThrow(/Export JSON/);
     const imported = readTemplate(JSON.stringify(initial));
     for (const source of [templateToJson(imported), templateToYaml(imported)]) {
       const opened = toDesignerTemplate(readTemplate(source));
@@ -1054,4 +1059,63 @@ it('checks decimal precision for bounds and defaults without rounding exponent n
   expect(() => buildTemplate(numericField({ decimalPlaces: 7, min: 1e-7, max: 1e21 }, 1e-7))).not.toThrow();
   expect(() => buildTemplate(numericField({ decimalPlaces: 2 }, 0.123))).toThrow(/decimal places/);
   expect(() => buildTemplate(numericField({ min: 1, max: 3 }, 4))).toThrow(/default.*outside/);
+});
+
+describe('paragraph length constraints', () => {
+  it.each([
+    [null, null],
+    [0, 0],
+    [2, null],
+    [null, 40],
+    [2, 40],
+  ])('preserves minimum %s and maximum %s through JSON and YAML', (minLength, maxLength) => {
+    const textConstraints = { minLength, maxLength, regex: null };
+    const original = buildTemplate(
+      templateOf(field({ type: 'paragraph', textConstraints, allowMultiple: true, minItems: 1, maxItems: 3 })),
+    );
+    for (const source of [templateToJson(original), templateToYaml(original)]) {
+      const state = toDesignerTemplate(readTemplate(source));
+      expect(state.fields[0]).toMatchObject({ textConstraints, allowMultiple: true, minItems: 1, maxItems: 3 });
+      expect(templateToJson(buildTemplate(state))).toEqual(templateToJson(original));
+    }
+  });
+  it.each([
+    [-1, 5],
+    [1.5, 5],
+    [6, 5],
+    [0, -1],
+    [0, 2.5],
+  ])('rejects invalid paragraph bounds %s to %s', (minLength, maxLength) => {
+    expect(() =>
+      buildTemplate(templateOf(field({ type: 'paragraph', textConstraints: { minLength, maxLength, regex: null } }))),
+    ).toThrow(/Text lengths/);
+  });
+  it.each(['A', 'ABCDE'])('rejects the out-of-bounds default %s', (value) => {
+    expect(() =>
+      buildTemplate(
+        templateOf(
+          field({
+            type: 'paragraph',
+            textConstraints: { minLength: 2, maxLength: 4, regex: null },
+            defaultValue: { kind: 'literal', value },
+          }),
+        ),
+      ),
+    ).toThrow(/Default value/);
+  });
+  it('preserves multiline defaults and does not apply text-only regex', () => {
+    const state = templateOf(
+      field({
+        type: 'paragraph',
+        textConstraints: { minLength: 2, maxLength: 4, regex: '[' },
+        defaultValue: { kind: 'literal', value: 'A\nB' },
+      }),
+    );
+    for (const source of [templateToJson(buildTemplate(state)), templateToYaml(buildTemplate(state))]) {
+      expect(toDesignerTemplate(readTemplate(source)).fields[0]).toMatchObject({
+        textConstraints: { minLength: 2, maxLength: 4, regex: null },
+        defaultValue: { kind: 'literal', value: 'A\nB' },
+      });
+    }
+  });
 });

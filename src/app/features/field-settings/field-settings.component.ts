@@ -280,7 +280,7 @@ export class FieldSettingsComponent implements OnChanges {
     this.report(
       'Constraints',
       this.service.updateFieldSettings(this.field.id, {
-        textConstraints: { ...this.text, regex: this.text.regex || null },
+        textConstraints: { ...this.text, regex: this.accepts('textPattern') ? this.text.regex || null : null },
       }),
     );
   }

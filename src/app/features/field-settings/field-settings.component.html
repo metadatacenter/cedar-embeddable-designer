@@ -49,14 +49,16 @@
                   [(ngModel)]="text.maxLength"
                   (ngModelChange)="saveText(textForm)"
               /></label>
-              <label
-                >Regular expression<input
-                  class="wide"
-                  name="regex"
-                  [(ngModel)]="text.regex"
-                  (ngModelChange)="saveText(textForm)"
-                  placeholder="e.g., ^[A-Z]+$"
-              /></label>
+              @if (accepts('textPattern')) {
+                <label
+                  >Regular expression<input
+                    class="wide"
+                    name="regex"
+                    [(ngModel)]="text.regex"
+                    (ngModelChange)="saveText(textForm)"
+                    placeholder="e.g., ^[A-Z]+$"
+                /></label>
+              }
             </fieldset>
           </form>
           @if (error) {

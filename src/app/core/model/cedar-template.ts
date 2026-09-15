@@ -73,6 +73,8 @@ import {
   NumericField,
   TextField,
   TextFieldBuilder,
+  TextArea,
+  TextAreaBuilder,
   NumericFieldBuilder,
   TemporalFieldBuilder,
   ControlledTermDefaultValueBuilder,
@@ -307,6 +309,7 @@ const FIELD_DESCRIPTORS: Record<string, FieldDescriptor> = {
     cedarType: CedarFieldType.TEXTAREA,
     build: () => CedarBuilders.textAreaBuilder(),
     deployment: 'plain',
+    parameters: ['textLength'],
   },
   multipleChoice: {
     defaultKind: 'literal',
@@ -879,7 +882,7 @@ function buildField(field: Field): TemplateField {
     ) {
       throw new Error('Text lengths must be nonnegative whole numbers, with minimum no greater than maximum.');
     }
-    const pattern = regex ? new RegExp(regex) : null;
+    const pattern = accepts(field.type, 'textPattern') && regex ? new RegExp(regex) : null;
     if (field.defaultValue.kind === 'literal') {
       const value = field.defaultValue.value;
       if (minLength !== null && value.length < minLength)
@@ -888,10 +891,8 @@ function buildField(field: Field): TemplateField {
         throw new Error(`Default value must contain no more than ${maxLength} characters.`);
       if (pattern && !pattern.test(value)) throw new Error('Default value must match the regular expression.');
     }
-    (builder as TextFieldBuilder)
-      .withMinLength(field.textConstraints.minLength)
-      .withMaxLength(field.textConstraints.maxLength)
-      .withRegex(field.textConstraints.regex);
+    (builder as TextFieldBuilder | TextAreaBuilder).withMinLength(minLength).withMaxLength(maxLength);
+    if (accepts(field.type, 'textPattern')) (builder as TextFieldBuilder).withRegex(regex);
   }
   if (accepts(field.type, 'numericBounds') && field.numeric) {
     validateNumericSettings(field);
@@ -1477,11 +1478,11 @@ function projectContainerFields(template: Template | TemplateElement): DesignerT
             }
           : undefined,
       textConstraints:
-        field.cedarFieldType === CedarFieldType.TEXT
+        field.cedarFieldType === CedarFieldType.TEXT || field.cedarFieldType === CedarFieldType.TEXTAREA
           ? {
-              minLength: (field as TextField).valueConstraints.minLength,
-              maxLength: (field as TextField).valueConstraints.maxLength,
-              regex: (field as TextField).valueConstraints.regex,
+              minLength: (field as TextField | TextArea).valueConstraints.minLength,
+              maxLength: (field as TextField | TextArea).valueConstraints.maxLength,
+              regex: field.cedarFieldType === CedarFieldType.TEXT ? (field as TextField).valueConstraints.regex : null,
             }
           : undefined,
       numeric:

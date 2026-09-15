@@ -112,6 +112,11 @@ const CONTROLS: readonly Control[] = [
     expected: (type) => accepts(type, 'textLength'),
   },
   {
+    name: 'text pattern',
+    find: (page) => card(page).getByLabel('Regular expression', { exact: true }),
+    expected: (type) => accepts(type, 'textPattern'),
+  },
+  {
     name: 'numeric constraints',
     find: (page) => card(page).getByLabel('Datatype', { exact: true }),
     expected: (type) => accepts(type, 'numericBounds'),
