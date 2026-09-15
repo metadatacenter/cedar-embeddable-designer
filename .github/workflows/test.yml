@@ -120,11 +120,19 @@ jobs:
 
       # Update this pin deliberately when adopting CEE/CEF changes. A moving
       # branch would make a CED revision's integration result irreproducible.
+      #
+      # It also has to be updated when the pin stops building, which is not the
+      # same thing and gives no warning. A CEE revision names an exact model
+      # library dev snapshot, Nexus keeps only so many of those, and 6af8718d's
+      # 1.0.9-dev.20260911.07caa05 was still being served at 17:47 on 2026-09-15
+      # and 404 by 18:23. The step that fails is the one that builds CEE, before
+      # any of CED is exercised, so the job goes red for a reason that is
+      # nothing to do with the commit that triggered it.
       - name: Check out the supported CEE revision
         uses: actions/checkout@v4
         with:
           repository: metadatacenter/cedar-embeddable-editor
-          ref: 6af8718d9707aca6a3a55691c6f92a92f6e5696a
+          ref: e00cded61c0aacd2e484400684740ed02e6f46ac
           path: cedar-embeddable-editor
 
       - name: Use Node.js 24
