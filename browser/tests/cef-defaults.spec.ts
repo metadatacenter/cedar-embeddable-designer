@@ -371,6 +371,10 @@ test('Display controls retain the compact authoring scale', async ({ page }) => 
   const panel = await openSettings(page.locator('app-field-card').first(), 'Display');
   for (const input of await panel.locator('input:not([type="checkbox"])').all()) {
     await expect(input).toHaveCSS('height', '28px');
-    await expect(input).toHaveCSS('font-size', '11px');
+    // The step below the body, which is what compact means here: an authoring
+    // control is smaller than the form text it is describing. 11px until the
+    // designer joined the scale the editor and the term picker share, whose
+    // smallest step is 12px and which has nothing under it.
+    await expect(input).toHaveCSS('font-size', '12px');
   }
 });
