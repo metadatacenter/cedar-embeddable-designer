@@ -1,6 +1,7 @@
+import { HeaderToggleDirective } from '../../shared/header-toggle.directive';
 import { ContainerSettingsComponent } from '../container-settings/container-settings.component';
 import { publicationStatusLabel } from '../../shared/publication-status';
-import { Component, inject, input, computed } from '@angular/core';
+import { Component, inject, input, computed, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService } from '../../core/services/template.service';
@@ -16,6 +17,7 @@ import { ElementCardComponent } from '../element-card/element-card.component';
   host: { '(click)': '$event.stopPropagation()' },
   imports: [
     FormsModule,
+    HeaderToggleDirective,
     DragDropModule,
     IconComponent,
     FieldCardComponent,
@@ -27,6 +29,13 @@ import { ElementCardComponent } from '../element-card/element-card.component';
   styleUrls: ['../../app.component.scss', './container-editor.component.scss'],
 })
 export class ContainerEditorComponent {
+  private readonly templateSettings = viewChild(ContainerSettingsComponent);
+  private readonly elementSettings = viewChild(ElementCardComponent);
+  toggleSettings(): void {
+    const settings = this.placementNode() ? this.elementSettings() : this.templateSettings();
+    settings?.toggleExpanded();
+  }
+
   readonly publicationStatusLabel = publicationStatusLabel;
   readonly service = inject(TemplateService);
   readonly containerId = input<number>();

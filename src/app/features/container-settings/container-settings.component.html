@@ -86,7 +86,7 @@
   [attr.aria-expanded]="expanded"
   [attr.aria-controls]="'container-settings-' + container().id"
   [attr.aria-label]="(expanded ? 'Collapse ' : 'Expand ') + container().kind + ' settings'"
-  (click)="expanded = !expanded"
+  (click)="toggleExpanded()"
 >
   <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" [class.expanded]="expanded">
     <path

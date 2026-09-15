@@ -14,6 +14,11 @@ import { TemplateService } from '../../core/services/template.service';
   styleUrls: ['../field-settings/field-settings.component.scss', './element-card.component.scss'],
 })
 export class ElementCardComponent {
+  toggleExpanded(): void {
+    this.expanded = !this.expanded;
+    this.changeDetector.markForCheck();
+  }
+
   readonly node = input.required<ElementNode>();
   readonly service = inject(TemplateService);
   readonly draft = signal<ElementPlacement>({ allowMultiple: false });

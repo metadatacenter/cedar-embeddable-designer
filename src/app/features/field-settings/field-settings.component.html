@@ -374,7 +374,7 @@
   [attr.aria-expanded]="expanded"
   [attr.aria-controls]="'field-settings-' + field.id"
   [attr.aria-label]="expanded ? 'Collapse field settings' : 'Expand field settings'"
-  (click)="expanded = !expanded"
+  (click)="toggleExpanded()"
 >
   <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" [class.expanded]="expanded">
     <path

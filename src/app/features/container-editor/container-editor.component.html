@@ -9,7 +9,7 @@
   @if (placementNode() && service.issuesFor(container().id).length; as count) {
     <span class="validation-badge">⚠ {{ count }} {{ count === 1 ? 'error' : 'errors' }}</span>
   }
-  <div class="template-header-card__body">
+  <div class="template-header-card__body" appHeaderToggle (headerToggle)="toggleSettings()">
     <div class="template-header-card__icon" [style.backgroundColor]="'var(--cedar-primary-50)'">
       @if (placementNode()) {
         <span

@@ -1,3 +1,4 @@
+import { ChangeDetectorRef } from '@angular/core';
 import { Component, computed, inject, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ContainerDraft } from '../../core/model/container-draft';
@@ -26,6 +27,12 @@ import { TypesPickerComponent } from '../types-picker/types-picker.component';
   `,
 })
 export class ContainerSettingsComponent {
+  private readonly changeDetector = inject(ChangeDetectorRef);
+  toggleExpanded(): void {
+    this.expanded = !this.expanded;
+    this.changeDetector.markForCheck();
+  }
+
   readonly container = input.required<ContainerDraft>();
   readonly service = inject(TemplateService);
   readonly artifact = computed(() => containerArtifactMetadata(this.container()));

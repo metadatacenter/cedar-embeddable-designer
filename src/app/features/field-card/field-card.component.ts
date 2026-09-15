@@ -1,6 +1,7 @@
+import { HeaderToggleDirective } from '../../shared/header-toggle.directive';
 import { publicationStatusLabel } from '../../shared/publication-status';
 import { FieldSettingsComponent } from '../field-settings/field-settings.component';
-import { Component, Input, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, inject, ChangeDetectionStrategy, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DragDropModule } from '@angular/cdk/drag-drop';
@@ -24,6 +25,7 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
   standalone: true,
   imports: [
     CommonModule,
+    HeaderToggleDirective,
     FieldSettingsComponent,
     FormsModule,
     IconComponent,
@@ -35,6 +37,12 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
   styleUrls: ['../../shared/_field-error.scss', './field-card.component.scss'],
 })
 export class FieldCardComponent {
+  private readonly settings = viewChild(FieldSettingsComponent);
+  toggleSettings(): void {
+    const settings = this.settings();
+    settings?.toggleExpanded();
+  }
+
   get identityLabel(): string {
     const metadata = fieldArtifactMetadata(this.field);
     return [metadata.version, publicationStatusLabel(metadata.publicationStatus)].filter(Boolean).join(' · ');

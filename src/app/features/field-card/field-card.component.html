@@ -7,7 +7,7 @@
   <div class="field-card-body">
     <fieldset [disabled]="!!field.publishedDefinition" class="border-0 m-0 p-0 min-w-0">
       <!-- Header Row: Icon and Name editing -->
-      <div class="field-header" [class.standalone]="standalone">
+      <div appHeaderToggle (headerToggle)="toggleSettings()" class="field-header" [class.standalone]="standalone">
         <div class="field-heading">
           <app-icon
             [key]="getFieldIcon(field)"

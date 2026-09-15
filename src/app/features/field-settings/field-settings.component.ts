@@ -32,6 +32,11 @@ import { TemplateService } from '../../core/services/template.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FieldSettingsComponent implements OnChanges {
+  toggleExpanded(): void {
+    this.expanded = !this.expanded;
+    this.changeDetector.markForCheck();
+  }
+
   @Input({ required: true }) field!: Field;
   @Input() hasValues = false;
   expanded = false;
