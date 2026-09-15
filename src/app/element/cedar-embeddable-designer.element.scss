@@ -10,6 +10,15 @@
   width: 100%;
   height: 100%;
   min-height: 500px;
+  /*
+    The body of the scale, stated where the scale can be inherited from, as CEE
+    and the term picker both state theirs. Every visible size in the designer is
+    set by the rule that draws it, so nothing reads this today; what it prevents
+    is the next one that forgets to, which would otherwise take the browser's
+    16px — a size this scale does not contain.
+  */
+  font-size: var(--text-base);
+  font-family: var(--font-sans);
 }
 
 /*

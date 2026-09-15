@@ -100,7 +100,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
       }
       .validation-badge {
         color: #b42318;
-        font-size: 11px;
+        font-size: 12px;
       }
       .outline-row:hover {
         background: #f9fafb;

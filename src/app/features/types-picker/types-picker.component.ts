@@ -27,7 +27,7 @@ import { trapTab } from '../../shared/focus-trap';
       @if (selections().constraints.length && summaryAvailable) {
         <cedar-embeddable-field [config]="config" [fieldObject]="summary()" [value]="value" />
       } @else {
-        <span class="iri">{{ selections().constraints.length ? labels() : 'Choose types' }}</span>
+        <span class="iri">{{ selections().constraints.length ? labels() : 'Click on Edit to choose types' }}</span>
       }
       @if (available && baseUrl()) {
         <button #trigger type="button" [disabled]="disabled()" (click)="open()" aria-label="Edit types">Edit</button>
@@ -67,11 +67,11 @@ import { trapTab } from '../../shared/focus-trap';
       display: flex;
       align-items: center;
       gap: 12px;
-      font-size: 11px;
+      font-size: 12px;
     }
     .unavailable {
       margin: 3px 0 0;
-      font-size: 11px;
+      font-size: 12px;
       overflow-wrap: anywhere;
     }
     .iri {
@@ -98,7 +98,7 @@ import { trapTab } from '../../shared/focus-trap';
       display: block;
       flex: 1;
       min-width: 0;
-      --cedar-control-font-size: 11px;
+      --cedar-control-font-size: 12px;
     }
     .placeholder {
       color: #777;

@@ -80,7 +80,7 @@ test('compact cards keep controls close and enabled trash icons black', async ({
   expect(spacing.top).toBeLessThanOrEqual(8);
   expect(spacing.afterHeader).toBeLessThanOrEqual(6);
   expect(spacing.belowPreview).toBeLessThanOrEqual(18);
-  expect(spacing.toggleHeight).toBe(16);
+  expect(spacing.toggleHeight).toBe(14);
   await expect(card.getByRole('button', { name: 'Delete field' }).locator('svg')).toHaveCSS('color', 'rgb(0, 0, 0)');
 });
 

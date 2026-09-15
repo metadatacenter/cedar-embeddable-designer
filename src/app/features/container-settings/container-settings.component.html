@@ -52,7 +52,7 @@
   >
     <dl class="identity">
       <dt>{{ container().kind === 'template' ? 'Template IRI' : 'Element IRI' }}</dt>
-      <dd>{{ container().identifier || 'Not assigned' }}</dd>
+      <dd>{{ container().identifier || 'Not yet assigned' }}</dd>
       @if (container().version) {
         <dt>Version</dt>
         <dd>{{ container().version }}</dd>
@@ -64,9 +64,9 @@
       <dt>Model version</dt>
       <dd>{{ artifact().schemaVersion || 'Not specified' }}</dd>
       <dt>Created</dt>
-      <dd>{{ artifact().createdOn || 'Not recorded' }}</dd>
+      <dd>{{ artifact().createdOn || 'Not yet recorded' }}</dd>
       <dt>Modified</dt>
-      <dd>{{ artifact().modifiedOn || 'Not recorded' }}</dd>
+      <dd>{{ artifact().modifiedOn || 'Not yet recorded' }}</dd>
       @if (artifact().derivedFrom) {
         <dt>Derived from</dt>
         <dd>{{ artifact().derivedFrom }}</dd>

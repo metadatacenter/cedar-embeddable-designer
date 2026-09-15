@@ -330,7 +330,7 @@
   >
     <dl class="identity">
       <dt>Field IRI</dt>
-      <dd>{{ field.atId || 'Not assigned' }}</dd>
+      <dd>{{ field.atId || 'Not yet assigned' }}</dd>
       @if (artifact.version) {
         <dt>Version</dt>
         <dd>{{ artifact.version }}</dd>
@@ -342,9 +342,9 @@
       <dt>Model version</dt>
       <dd>{{ artifact.schemaVersion || 'Not specified' }}</dd>
       <dt>Created</dt>
-      <dd>{{ artifact.createdOn || 'Not recorded' }}</dd>
+      <dd>{{ artifact.createdOn || 'Not yet recorded' }}</dd>
       <dt>Modified</dt>
-      <dd>{{ artifact.modifiedOn || 'Not recorded' }}</dd>
+      <dd>{{ artifact.modifiedOn || 'Not yet recorded' }}</dd>
       @if (artifact.derivedFrom) {
         <dt>Derived from</dt>
         <dd>{{ artifact.derivedFrom }}</dd>

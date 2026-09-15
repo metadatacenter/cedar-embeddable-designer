@@ -63,11 +63,11 @@ import { trapTab } from '../../shared/focus-trap';
       display: flex;
       align-items: center;
       gap: 12px;
-      font-size: 11px;
+      font-size: 12px;
     }
     .unavailable {
       margin: 3px 0 0;
-      font-size: 11px;
+      font-size: 12px;
       overflow-wrap: anywhere;
     }
     .iri {

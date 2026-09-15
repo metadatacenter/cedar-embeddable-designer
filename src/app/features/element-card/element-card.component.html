@@ -28,7 +28,7 @@
           @case ('Element metadata') {
             <dl class="identity">
               <dt>Element IRI</dt>
-              <dd>{{ node().definition.identifier || 'Not assigned' }}</dd>
+              <dd>{{ node().definition.identifier || 'Not yet assigned' }}</dd>
               @if (node().definition.version) {
                 <dt>Version</dt>
                 <dd>{{ node().definition.version }}</dd>
@@ -40,9 +40,9 @@
               <dt>Model version</dt>
               <dd>{{ artifact().schemaVersion || 'Not specified' }}</dd>
               <dt>Created</dt>
-              <dd>{{ artifact().createdOn || 'Not recorded' }}</dd>
+              <dd>{{ artifact().createdOn || 'Not yet recorded' }}</dd>
               <dt>Modified</dt>
-              <dd>{{ artifact().modifiedOn || 'Not recorded' }}</dd>
+              <dd>{{ artifact().modifiedOn || 'Not yet recorded' }}</dd>
               @if (artifact().derivedFrom) {
                 <dt>Derived from</dt>
                 <dd>{{ artifact().derivedFrom }}</dd>

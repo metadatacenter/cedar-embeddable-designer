@@ -34,6 +34,12 @@ app-icon {
 
 .field-header {
   display: grid;
+  /*
+    Three columns, the outer two equal: the drag handle is in the middle one and
+    has to share a centre with the settings chevron under it, which only an even
+    split gives. Sizing the controls column to its contents instead moved the
+    handle by the difference between the halves — 27px at 1440 and 195px at 768.
+  */
   grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr);
   align-items: center;
   column-gap: 8px;
@@ -57,7 +63,16 @@ app-icon {
 .field-header.standalone {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
-@container (max-width: 680px) {
+/*
+  Below this the controls take a row of their own, because they no longer fit
+  beside the name: a type chip, a requirement menu, a checkbox and a delete come
+  to about 322px at this scale, and half a card has that much only above roughly
+  680px. The bound was 680px while the controls were 11px, which put it exactly
+  on the boundary the 12px scale crossed — "Paragraph" wrapped inside the
+  controls and left the menu beside nothing. Linux rasterises wider than macOS,
+  so the headroom here is deliberate rather than tight.
+*/
+@container (max-width: 760px) {
   .field-controls {
     grid-column: 1 / -1;
     grid-row: 2;
@@ -69,7 +84,7 @@ app-icon {
 
 .validation-badge {
   color: #b42318;
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
   cursor: pointer;
 }
