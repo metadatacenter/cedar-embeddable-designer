@@ -1,0 +1,98 @@
+@use '../../shared/control-style';
+:host {
+  display: block;
+  min-width: 0;
+  font-size: var(--cedar-font-size-small);
+}
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.table-scroll {
+  overflow-x: auto;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 330px;
+  table-layout: fixed;
+}
+caption {
+  text-align: left;
+  font-weight: 600;
+  padding: 4px 0;
+}
+th {
+  text-align: left;
+  font-weight: 500;
+}
+th:nth-child(1) {
+  width: 28%;
+}
+th:nth-child(2) {
+  width: 72px;
+}
+th:nth-child(4) {
+  width: 32px;
+}
+th,
+td {
+  padding: 4px;
+  border-bottom: 1px solid var(--cedar-color-border, #d1d5db);
+  vertical-align: top;
+}
+input,
+select,
+textarea {
+  @include control-style.compact-control;
+  width: 100%;
+  box-sizing: border-box;
+}
+textarea {
+  resize: none;
+  min-height: 28px;
+}
+button {
+  font: inherit;
+  color: var(--cedar-color-primary);
+  background: white;
+  border: 1px solid var(--cedar-primary-100);
+  border-radius: 3px;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.add {
+  margin-top: 8px;
+}
+.empty {
+  color: #64748b;
+}
+p[role='alert'] {
+  color: #b42318;
+  margin: 4px 0 0;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 2px;
+  border: 0;
+  background: transparent;
+  color: black;
+}

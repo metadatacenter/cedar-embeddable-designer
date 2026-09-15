@@ -25,6 +25,9 @@
         [hidden]="activeTab !== tab"
       >
         @switch (tab) {
+          @case ('Annotations') {
+            <app-annotations-editor [container]="node().definition" />
+          }
           @case ('Element metadata') {
             <dl class="identity">
               <dt>Element IRI</dt>
@@ -68,7 +71,7 @@
             </div>
           }
           @case ('Element details') {
-            <p class="details-placeholder">Coming soon: language, alternate labels, annotations.</p>
+            <p class="details-placeholder">Coming soon: language, alternate labels.</p>
           }
           @case ('Occurrences') {
             <div class="settings-fields">

@@ -15,6 +15,15 @@
       </button>
     }
   </div>
+  <section
+    role="tabpanel"
+    [hidden]="selectedTab !== 'Annotations'"
+    [id]="'field-panel-' + field.id + '-Annotations'"
+    [attr.aria-labelledby]="'field-tab-' + field.id + '-Annotations'"
+    class="settings"
+  >
+    <app-annotations-editor [field]="field" />
+  </section>
   @if (hasValues || hasConstraints) {
     <section
       role="tabpanel"
@@ -320,7 +329,7 @@
     [id]="'field-panel-' + field.id + '-Field-details'"
     [attr.aria-labelledby]="'field-tab-' + field.id + '-Field-details'"
   >
-    <p class="details-placeholder">Coming soon: language, alternate labels, annotations.</p>
+    <p class="details-placeholder">Coming soon: language, alternate labels.</p>
   </section>
 
   <section

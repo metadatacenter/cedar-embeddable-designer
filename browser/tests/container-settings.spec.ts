@@ -6,7 +6,7 @@ test('template settings preserve header, footer and multiple types, and element 
   const settings = designer.locator('app-container-settings').first();
   await expect(settings.getByRole('tab')).toHaveCount(0);
   await settings.getByRole('button', {name: 'Expand template settings'}).click();
-  await expect(settings.getByRole('tab')).toHaveText(['Display', 'Template Metadata']);
+  await expect(settings.getByRole('tab')).toHaveText(['Display', 'Annotations', 'Template Metadata']);
   await settings.getByLabel('Header', {exact:true}).fill('Read before entering data');
   await settings.getByLabel('Footer', {exact:true}).fill('Thank you');
   await settings.getByRole('tab', {name: 'Template Metadata'}).click();

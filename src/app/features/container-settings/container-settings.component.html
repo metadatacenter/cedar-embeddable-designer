@@ -15,6 +15,15 @@
       </button>
     }
   </div>
+  <section
+    role="tabpanel"
+    [hidden]="selected() !== 'Annotations'"
+    [id]="tabId('Annotations') + '-panel'"
+    [attr.aria-labelledby]="tabId('Annotations')"
+    class="settings"
+  >
+    <app-annotations-editor [container]="container()" />
+  </section>
   @if (container().kind === 'template') {
     <section
       class="settings"

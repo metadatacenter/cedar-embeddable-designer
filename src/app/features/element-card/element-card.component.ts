@@ -1,3 +1,4 @@
+import { AnnotationsEditorComponent } from '../annotations-editor/annotations-editor.component';
 import { TypesPickerComponent } from '../types-picker/types-picker.component';
 import { PropertyPickerComponent } from '../property-picker/property-picker.component';
 import { publicationStatusLabel } from '../../shared/publication-status';
@@ -9,7 +10,7 @@ import { TemplateService } from '../../core/services/template.service';
 
 @Component({
   selector: 'app-element-card',
-  imports: [FormsModule, PropertyPickerComponent, TypesPickerComponent],
+  imports: [AnnotationsEditorComponent, FormsModule, PropertyPickerComponent, TypesPickerComponent],
   templateUrl: './element-card.component.html',
   styleUrls: ['../field-settings/field-settings.component.scss', './element-card.component.scss'],
 })
@@ -25,7 +26,7 @@ export class ElementCardComponent {
   readonly error = signal<string | null>(null);
   expanded = false;
   activeTab = 'Display';
-  readonly tabs = ['Display', 'Element details', 'Occurrences', 'Element metadata'];
+  readonly tabs = ['Display', 'Element details', 'Annotations', 'Occurrences', 'Element metadata'];
   readonly artifact = computed(() => containerArtifactMetadata(this.node().definition));
   readonly publicationStatus = computed(() => publicationStatusLabel(this.artifact().publicationStatus));
   tabId(tab: string): string {

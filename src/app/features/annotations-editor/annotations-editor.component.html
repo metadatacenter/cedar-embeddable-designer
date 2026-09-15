@@ -1,0 +1,67 @@
+<fieldset [disabled]="disabled()">
+  <div class="table-scroll">
+    <table>
+      <caption>
+        Annotations
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Annotation name</th>
+          <th scope="col">Value type</th>
+          <th scope="col">Value</th>
+          <th scope="col"><span class="sr-only">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track $index; let i = $index) {
+          <tr>
+            <td>
+              <input
+                [attr.aria-label]="'Annotation name ' + (i + 1)"
+                [ngModel]="row.name"
+                (ngModelChange)="edit(i, { name: $event })"
+              />
+            </td>
+            <td>
+              <select
+                [attr.aria-label]="'Annotation value type ' + (i + 1)"
+                [ngModel]="row.kind"
+                (ngModelChange)="edit(i, { kind: $event })"
+              >
+                <option value="literal">Text</option>
+                <option value="iri">IRI</option>
+              </select>
+            </td>
+            <td>
+              <textarea
+                rows="1"
+                [attr.aria-label]="'Annotation value ' + (i + 1)"
+                [ngModel]="row.value"
+                (ngModelChange)="edit(i, { value: $event })"
+              ></textarea>
+            </td>
+            <td>
+              <button
+                type="button"
+                class="remove"
+                title="Remove annotation"
+                [attr.aria-label]="'Remove annotation ' + (i + 1)"
+                (click)="remove(i)"
+              >
+                <app-icon key="trash" className="w-4 h-4" />
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="empty">No annotations.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <button type="button" class="add" (click)="add()">Add annotation</button>
+</fieldset>
+@if (error(); as message) {
+  <p role="alert">{{ message }}</p>
+}

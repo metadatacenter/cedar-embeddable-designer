@@ -1,3 +1,4 @@
+import { AnnotationsEditorComponent } from '../annotations-editor/annotations-editor.component';
 import { PropertyPickerComponent } from '../property-picker/property-picker.component';
 import { FieldDefaultValueComponent } from '../field-default-value/field-default-value.component';
 import {
@@ -26,7 +27,7 @@ import { TemplateService } from '../../core/services/template.service';
 
 @Component({
   selector: 'app-field-settings',
-  imports: [FormsModule, FieldDefaultValueComponent, PropertyPickerComponent],
+  imports: [AnnotationsEditorComponent, FormsModule, FieldDefaultValueComponent, PropertyPickerComponent],
   templateUrl: './field-settings.component.html',
   styleUrl: './field-settings.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -58,6 +59,7 @@ export class FieldSettingsComponent implements OnChanges {
       'Display',
       ...(this.hasValues || this.hasConstraints ? [this.valuesTab] : []),
       'Field details',
+      'Annotations',
       ...(this.multiple ? ['Occurrences'] : []),
       'Field metadata',
     ];
