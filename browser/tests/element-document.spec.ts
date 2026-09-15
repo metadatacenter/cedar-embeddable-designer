@@ -56,11 +56,21 @@ for (const width of [1280, 375]) {
     await placement.getByRole('button', { name: 'Expand element settings', exact: true }).click();
     const details = placement.getByRole('tabpanel', { name: 'Element details', exact: true });
     await expect(details).toContainText(
-      'Coming soon: language, alternate labels, property name, annotations.',
+      'Coming soon: language, alternate labels, annotations.',
     );
     await expect(details.locator('input')).toHaveCount(0);
     await placement.getByRole('tab', { name: 'Occurrences', exact: true }).click();
     await placement.getByLabel('Allow multiple', { exact: true }).check();
+    const checkbox = placement.getByLabel('Allow multiple', { exact: true });
+    const colors = await checkbox.evaluate((node) => {
+      const probe = document.createElement('span');
+      probe.style.color = 'var(--cedar-color-primary)';
+      node.parentElement!.appendChild(probe);
+      const primary = getComputedStyle(probe).color;
+      probe.remove();
+      return { accent: getComputedStyle(node).accentColor, primary };
+    });
+    expect(colors.accent).toBe(colors.primary);
     await placement.getByLabel('Minimum occurrences', { exact: true }).fill('2');
     await placement.getByLabel('Maximum occurrences', { exact: true }).fill('4');
     await nestFixtureFields(page, ['Element', 'Element']);

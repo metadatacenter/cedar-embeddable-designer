@@ -248,6 +248,11 @@
     line-height: 1.5;
   }
 
+  input[type='checkbox'],
+  input[type='radio'] {
+    accent-color: var(--cedar-color-primary);
+  }
+
   /* Custom checkbox styling for white background */
   input[type='checkbox'].checkbox-white {
     appearance: none;

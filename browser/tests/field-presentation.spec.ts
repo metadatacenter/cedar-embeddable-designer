@@ -127,3 +127,30 @@ test('field identity omits absent values and separators', async ({ page }) => {
     else await expect(identity).toHaveCount(0);
   }
 });
+
+for (const width of [1440, 768, 375]) {
+  test(`text constraint inputs align without overflow at ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    const designer = await openDesigner(page);
+    const card = designer.locator('app-field-card').first();
+    await openSettings(card, 'Constraints');
+    const fields = card.locator('.text-constraint-fields');
+    const inputs = fields.locator('input');
+    const boxes = await inputs.evaluateAll((nodes) => nodes.map((node) => {
+      const r = node.getBoundingClientRect();
+      return { x: r.x, y: r.y, right: r.right };
+    }));
+    expect(boxes).toHaveLength(3);
+    const bounds = await fields.boundingBox();
+    for (const box of boxes) {
+      expect(box.x).toBeGreaterThanOrEqual(bounds!.x);
+      expect(box.right).toBeLessThanOrEqual(bounds!.x + bounds!.width + 1);
+    }
+    if (bounds!.width > 400) {
+      expect(Math.max(...boxes.map((b) => b.y)) - Math.min(...boxes.map((b) => b.y))).toBeLessThan(1);
+    } else {
+      expect(boxes[1].y).toBeGreaterThan(boxes[0].y);
+      expect(boxes[2].y).toBeGreaterThan(boxes[1].y);
+    }
+  });
+}
