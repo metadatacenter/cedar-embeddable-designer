@@ -17,15 +17,23 @@ type Annotation = NonNullable<Field['annotations']>[number];
 export class AnnotationsEditorComponent {
   readonly field = input<Field>();
   readonly container = input<ContainerDraft>();
+  readonly draft = signal<Annotation>({ name: '', kind: 'literal', value: '' });
+  readonly addError = signal<string | null>(null);
   readonly rows = signal<Annotation[]>([]);
   readonly error = signal<string | null>(null);
   readonly disabled = computed(() => !!this.field()?.publishedDefinition);
   private readonly service = inject(TemplateService);
   private loaded = '';
+  private loadedOwner: number | undefined;
 
   constructor() {
     effect(() => {
       const owner = this.field() ?? this.container();
+      if (owner?.id !== this.loadedOwner) {
+        this.loadedOwner = owner?.id;
+        this.draft.set({ name: '', kind: 'literal', value: '' });
+        this.addError.set(null);
+      }
       const annotations = this.field()?.annotations ?? this.container()?.metadata?.annotations ?? [];
       const signature = JSON.stringify([owner?.id, annotations]);
       if (signature === this.loaded) return;
@@ -35,10 +43,21 @@ export class AnnotationsEditorComponent {
     });
   }
 
+  editDraft(changes: Partial<Annotation>): void {
+    if (this.disabled()) return;
+    this.draft.update((draft) => ({ ...draft, ...changes }));
+    this.addError.set(null);
+  }
   add(): void {
     if (this.disabled()) return;
-    this.rows.update((rows) => [...rows, { name: '', kind: 'literal', value: '' }]);
-    this.save();
+    const rows = [...this.rows(), { ...this.draft() }];
+    const error = this.validate(rows);
+    this.addError.set(error);
+    if (error) return;
+    if (this.save(rows)) {
+      this.rows.set(rows);
+      this.draft.set({ name: '', kind: 'literal', value: '' });
+    }
   }
   remove(index: number): void {
     if (this.disabled()) return;
@@ -50,10 +69,7 @@ export class AnnotationsEditorComponent {
     this.rows.update((rows) => rows.map((row, i) => (i === index ? { ...row, ...changes } : row)));
     this.save();
   }
-  private save(): void {
-    const owner = this.field() ?? this.container();
-    if (!owner) return;
-    const rows = this.rows();
+  private validate(rows: Annotation[]): string | null {
     const names = new Set<string>();
     let error: string | null = null;
     for (const row of rows) {
@@ -71,6 +87,12 @@ export class AnnotationsEditorComponent {
         break;
       }
     }
+    return error;
+  }
+  private save(rows = this.rows()): boolean {
+    const owner = this.field() ?? this.container();
+    if (!owner) return false;
+    let error = this.validate(rows);
     if (!error) {
       const annotations = rows.map((row) => ({ ...row }));
       if (this.field()) {
@@ -90,5 +112,6 @@ export class AnnotationsEditorComponent {
     }
     this.error.set(error);
     this.service.setSettingsError(owner.id, 'annotations', error, 'Annotations');
+    return !error;
   }
 }

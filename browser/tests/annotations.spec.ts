@@ -3,21 +3,24 @@ import { openDesigner, openSettings, currentTemplate, child } from './support';
 import type { CedarEmbeddableDesignerElement } from '../../src/app/ced-public-api';
 
 async function addRows(editor: Locator) {
+  await editor.getByRole('textbox', { name: 'New annotation name', exact: true }).fill('note');
+  await editor.getByRole('textbox', { name: 'New annotation value', exact: true }).fill('Reviewed');
   await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();
   await expect(editor.locator('textarea').first()).toHaveCSS('resize', 'none');
   await expect(editor.getByRole('button', { name: 'Remove annotation 1', exact: true }).locator('svg')).toBeVisible();
-  await editor.getByRole('textbox', { name: 'Annotation name 1', exact: true }).fill('note');
-  await editor.getByRole('textbox', { name: 'Annotation value 1', exact: true }).fill('Reviewed');
+  await expect(editor.getByRole('textbox', { name: 'New annotation name', exact: true })).toHaveValue('');
+  await editor.getByRole('textbox', { name: 'New annotation name', exact: true }).fill('source');
+  await editor.getByRole('combobox', { name: 'New annotation value type', exact: true }).selectOption('iri');
+  await editor.getByRole('textbox', { name: 'New annotation value', exact: true }).fill('urn:source');
   await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();
-  await editor.getByRole('textbox', { name: 'Annotation name 2', exact: true }).fill('source');
-  await editor.getByRole('combobox', { name: 'Annotation value type 2', exact: true }).selectOption('iri');
-  await editor.getByRole('textbox', { name: 'Annotation value 2', exact: true }).fill('urn:source');
 }
 async function reloadArtifact(page: Page, artifact: object) {
+  const previousCard = await page.locator('cedar-embeddable-designer app-field-card').first().elementHandle();
   await page.evaluate((artifact) => {
     (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).artifact =
       artifact as never;
   }, artifact);
+  if (previousCard) await expect.poll(() => previousCard.evaluate((card) => card.isConnected)).toBe(false);
 }
 const annotations = { note: { '@value': 'Reviewed' }, source: { '@id': 'urn:source' } };
 
@@ -92,4 +95,23 @@ test('invalid annotations remain editable across tabs and block saving without c
   await expect(editor.getByRole('alert')).toContainText('absolute');
   await editor.getByRole('button', { name: 'Remove annotation 2', exact: true }).click();
   await expect(editor.getByRole('alert')).toHaveCount(0);
+});
+
+test('the add row validates only on Add and keeps rejected drafts outside the table', async ({ page }) => {
+  const designer = await openDesigner(page);
+  const card = designer.locator('app-field-card').first();
+  await openSettings(card, 'Annotations');
+  const editor = card.locator('app-annotations-editor');
+  await editor.getByRole('textbox', { name: 'New annotation name', exact: true }).fill('source');
+  await editor.getByRole('combobox', { name: 'New annotation value type', exact: true }).selectOption('iri');
+  await editor.getByRole('textbox', { name: 'New annotation value', exact: true }).fill('partial');
+  await expect(editor.getByRole('alert')).toHaveCount(0);
+  await expect(editor.getByRole('button', { name: /Remove annotation/ })).toHaveCount(0);
+  await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();
+  await expect(editor.getByRole('alert')).toContainText('absolute');
+  await expect(editor.getByRole('textbox', { name: 'New annotation value', exact: true })).toHaveValue('partial');
+  await editor.getByRole('textbox', { name: 'New annotation value', exact: true }).fill('urn:source');
+  await expect(editor.getByRole('alert')).toHaveCount(0);
+  await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();
+  await expect(editor.getByRole('button', { name: 'Remove annotation 1', exact: true })).toBeVisible();
 });

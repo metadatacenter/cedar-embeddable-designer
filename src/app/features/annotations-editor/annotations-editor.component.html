@@ -1,4 +1,35 @@
 <fieldset [disabled]="disabled()">
+  <div class="add-row">
+    <label
+      >Annotation name<input
+        aria-label="New annotation name"
+        [ngModel]="draft().name"
+        (ngModelChange)="editDraft({ name: $event })"
+    /></label>
+    <label
+      >Value type<select
+        aria-label="New annotation value type"
+        [ngModel]="draft().kind"
+        (ngModelChange)="editDraft({ kind: $event })"
+      >
+        <option value="literal">Text</option>
+        <option value="iri">IRI</option>
+      </select></label
+    >
+    <label
+      >Value<textarea
+        rows="1"
+        aria-label="New annotation value"
+        [ngModel]="draft().value"
+        (ngModelChange)="editDraft({ value: $event })"
+      ></textarea>
+    </label>
+    <button type="button" class="add" (click)="add()">Add annotation</button>
+  </div>
+  @if (addError(); as message) {
+    <p role="alert">{{ message }}</p>
+  }
+
   <div class="table-scroll">
     <table>
       <caption>
@@ -60,7 +91,6 @@
       </tbody>
     </table>
   </div>
-  <button type="button" class="add" (click)="add()">Add annotation</button>
 </fieldset>
 @if (error(); as message) {
   <p role="alert">{{ message }}</p>

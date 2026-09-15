@@ -20,22 +20,30 @@ for (const kind of ['field', 'template', 'element'] as const) {
       const editor = fixture.componentInstance;
       const before = service.templateJson();
       editor.add();
-      expect(editor.error()).toContain('name');
-      expect(service.validationReport().canSave).toBe(false);
+      expect(editor.addError()).toContain('name');
+      expect(editor.rows()).toHaveLength(0);
+      expect(service.validationReport().canSave).toBe(true);
       expect(service.templateJson()).toEqual(before);
-      editor.edit(0, { name: 'note', value: 'Reviewed' });
+      editor.editDraft({ name: 'note', value: 'Reviewed' });
+      expect(editor.addError()).toBeNull();
+      editor.add();
       expect(editor.error()).toBeNull();
       expect(service.validationReport().canSave).toBe(true);
       const saved = service.templateJson();
+      editor.editDraft({ name: 'note', value: 'duplicate' });
+      expect(editor.addError()).toBeNull();
       editor.add();
-      editor.edit(1, { name: 'note', value: 'duplicate' });
-      expect(editor.error()).toContain('unique');
+      expect(editor.addError()).toContain('unique');
       expect(service.templateJson()).toEqual(saved);
-      editor.edit(1, { name: 'source', kind: 'iri', value: 'not an IRI' });
-      expect(editor.error()).toContain('absolute');
+      editor.editDraft({ name: 'source', kind: 'iri', value: 'not an IRI' });
+      expect(editor.addError()).toBeNull();
+      editor.add();
+      expect(editor.addError()).toContain('absolute');
       expect(service.templateJson()).toEqual(saved);
-      editor.edit(1, { value: 'urn:source' });
-      expect(editor.error()).toBeNull();
+      editor.editDraft({ value: 'urn:source' });
+      editor.add();
+      expect(editor.addError()).toBeNull();
+      expect(editor.draft()).toEqual({ name: '', kind: 'literal', value: '' });
       const json = JSON.stringify(service.templateJson());
       expect(json).toContain('urn:source');
       expect(json).toContain('Reviewed');
@@ -65,7 +73,7 @@ it('retains invalid rows through unrelated input updates and protects published 
   await fixture.whenStable();
   const editor = fixture.componentInstance;
   expect(editor.rows()[0].value).toBe('imported');
-  editor.add();
+  editor.edit(0, { name: '' });
   fixture.componentRef.setInput('field', {
     ...field,
     name: 'Renamed',
@@ -73,7 +81,7 @@ it('retains invalid rows through unrelated input updates and protects published 
   });
   fixture.detectChanges();
   await fixture.whenStable();
-  expect(editor.rows()).toHaveLength(2);
+  expect(editor.rows()).toHaveLength(1);
   expect(editor.error()).toContain('name');
   fixture.componentRef.setInput('field', { ...field, publishedDefinition: {} });
   fixture.detectChanges();
