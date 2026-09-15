@@ -88,3 +88,10 @@ app-icon {
   white-space: nowrap;
   cursor: pointer;
 }
+
+/* Leave header space after the editable name available for toggling settings. */
+.field-heading > input {
+  field-sizing: content;
+  flex: 0 1 auto;
+  max-width: 100%;
+}

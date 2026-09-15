@@ -92,7 +92,7 @@ test('invalid annotations remain editable across tabs and block saving without c
   expect(report.issues).toContainEqual(expect.objectContaining({ tab: 'Annotations', setting: 'annotations' }));
   await editor.getByRole('textbox', { name: 'Annotation name 2', exact: true }).fill('source');
   await editor.getByRole('textbox', { name: 'Annotation value 2', exact: true }).fill('invalid');
-  await expect(editor.getByRole('alert')).toContainText('absolute');
+  await expect(editor.getByRole('alert')).toHaveText('Annotation value must be a valid IRI.');
   await editor.getByRole('button', { name: 'Remove annotation 2', exact: true }).click();
   await expect(editor.getByRole('alert')).toHaveCount(0);
 });
@@ -108,7 +108,7 @@ test('the add row validates only on Add and keeps rejected drafts outside the ta
   await expect(editor.getByRole('alert')).toHaveCount(0);
   await expect(editor.getByRole('button', { name: /Remove annotation/ })).toHaveCount(0);
   await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();
-  await expect(editor.getByRole('alert')).toContainText('absolute');
+  await expect(editor.getByRole('alert')).toHaveText('Annotation value must be a valid IRI.');
   await expect(editor.getByRole('textbox', { name: 'New annotation value', exact: true })).toHaveValue('partial');
   await editor.getByRole('textbox', { name: 'New annotation value', exact: true }).fill('urn:source');
   await expect(editor.getByRole('alert')).toHaveCount(0);

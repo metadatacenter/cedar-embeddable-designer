@@ -83,7 +83,7 @@ export class AnnotationsEditorComponent {
       }
       names.add(row.name);
       if (row.kind === 'iri' && !/^[a-z][a-z0-9+.-]*:\S+$/i.test(row.value)) {
-        error = 'An annotation IRI must be an absolute identifier.';
+        error = 'Annotation value must be a valid IRI.';
         break;
       }
     }

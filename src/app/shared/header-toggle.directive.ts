@@ -31,10 +31,11 @@ export class HeaderToggleDirective {
     if (event.defaultPrevented || this.moved || event.button !== 0) return;
     for (const node of event.composedPath()) {
       if (node === event.currentTarget) break;
+      if (node instanceof HTMLLabelElement && node.control) return;
       if (
         node instanceof Element &&
         node.matches(
-          'input, textarea, select, button, a, label, [contenteditable], [role="button"], [role="checkbox"], [role="combobox"], [tabindex], .cdk-drag-handle',
+          'input, textarea, select, button, a, [contenteditable], [role="button"], [role="checkbox"], [role="combobox"], [tabindex], .cdk-drag-handle',
         )
       )
         return;

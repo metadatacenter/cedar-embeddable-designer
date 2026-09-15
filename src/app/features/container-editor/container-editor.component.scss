@@ -71,6 +71,10 @@
   line-height: 16px;
 }
 .template-input {
+  field-sizing: content;
+  width: auto;
+  max-width: 100%;
+  align-self: flex-start;
   padding-top: 0;
   padding-bottom: 0;
   line-height: 20px;
@@ -172,4 +176,8 @@
   font-size: var(--cedar-font-size-small);
   padding: 4px 12px;
   display: block;
+}
+
+.template-field-group.text-right .template-input {
+  align-self: flex-end;
 }

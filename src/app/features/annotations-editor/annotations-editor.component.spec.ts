@@ -38,7 +38,7 @@ for (const kind of ['field', 'template', 'element'] as const) {
       editor.editDraft({ name: 'source', kind: 'iri', value: 'not an IRI' });
       expect(editor.addError()).toBeNull();
       editor.add();
-      expect(editor.addError()).toContain('absolute');
+      expect(editor.addError()).toBe('Annotation value must be a valid IRI.');
       expect(service.templateJson()).toEqual(saved);
       editor.editDraft({ value: 'urn:source' });
       editor.add();

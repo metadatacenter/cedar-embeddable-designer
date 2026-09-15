@@ -24,9 +24,13 @@ caption {
   font-weight: 600;
   padding: 4px 0;
 }
+.add-row label,
+th {
+  font-size: var(--cedar-font-size-small);
+  font-weight: 500;
+}
 th {
   text-align: left;
-  font-weight: 500;
 }
 th:nth-child(1) {
   width: 28%;
