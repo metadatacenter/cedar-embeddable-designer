@@ -46,31 +46,9 @@
       <tbody>
         @for (row of rows(); track $index; let i = $index) {
           <tr>
-            <td>
-              <input
-                [attr.aria-label]="'Annotation name ' + (i + 1)"
-                [ngModel]="row.name"
-                (ngModelChange)="edit(i, { name: $event })"
-              />
-            </td>
-            <td>
-              <select
-                [attr.aria-label]="'Annotation value type ' + (i + 1)"
-                [ngModel]="row.kind"
-                (ngModelChange)="edit(i, { kind: $event })"
-              >
-                <option value="literal">Text</option>
-                <option value="iri">IRI</option>
-              </select>
-            </td>
-            <td>
-              <textarea
-                rows="1"
-                [attr.aria-label]="'Annotation value ' + (i + 1)"
-                [ngModel]="row.value"
-                (ngModelChange)="edit(i, { value: $event })"
-              ></textarea>
-            </td>
+            <td>{{ row.name }}</td>
+            <td>{{ row.kind === 'iri' ? 'IRI' : 'Text' }}</td>
+            <td class="annotation-value">{{ row.value }}</td>
             <td>
               <button
                 type="button"

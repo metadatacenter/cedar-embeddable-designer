@@ -31,6 +31,7 @@ th {
 }
 th {
   text-align: left;
+  border-bottom: 1px solid var(--cedar-color-border, #d1d5db);
 }
 th:nth-child(1) {
   width: 28%;
@@ -44,7 +45,6 @@ th:nth-child(4) {
 th,
 td {
   padding: 4px;
-  border-bottom: 1px solid var(--cedar-color-border, #d1d5db);
   vertical-align: top;
 }
 input,
@@ -127,4 +127,11 @@ p[role='alert'] {
   border: 0;
   background: transparent;
   color: black;
+}
+
+td {
+  overflow-wrap: anywhere;
+}
+.annotation-value {
+  white-space: pre-wrap;
 }

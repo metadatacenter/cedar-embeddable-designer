@@ -54,47 +54,37 @@ for (const width of [1280, 375]) {
     await reloadArtifact(page, saved);
     await openSettings(designer.locator('app-field-card').first(), 'Annotations');
     await expect(
-      designer.locator('app-field-card').first().getByRole('textbox', { name: 'Annotation value 1', exact: true }),
-    ).toHaveValue('Reviewed');
+      designer.locator('app-field-card').first().locator('tbody tr').first().locator('td').nth(2),
+    ).toHaveText('Reviewed');
     expect(await currentTemplate(page)).toEqual(saved);
     // The same element metadata editor is available when an element is opened as its own document.
     await reloadArtifact(page, child(saved, 'Element'));
     const standalone = designer.locator('app-container-settings');
     await standalone.getByRole('button', { name: 'Expand element settings' }).click();
     await standalone.getByRole('tab', { name: 'Annotations', exact: true }).click();
-    await expect(standalone.getByRole('textbox', { name: 'Annotation value 2', exact: true })).toHaveValue(
-      'urn:source',
-    );
+    await expect(standalone.locator('tbody tr').nth(1).locator('td').nth(2)).toHaveText('urn:source');
     await standalone.getByRole('button', { name: 'Remove annotation 2', exact: true }).click();
     expect((await currentTemplate(page))._annotations).toEqual({ note: { '@value': 'Reviewed' } });
   });
 }
 
-test('invalid annotations remain editable across tabs and block saving without changing stored annotations', async ({
-  page,
-}) => {
+test('annotation rows are read-only and can be removed and replaced', async ({ page }) => {
   const designer = await openDesigner(page);
   const card = designer.locator('app-field-card').first();
   await openSettings(card, 'Annotations');
   const editor = card.locator('app-annotations-editor');
   await addRows(editor);
-  const saved = await currentTemplate(page);
-  await editor.getByRole('textbox', { name: 'Annotation name 2', exact: true }).fill('note');
-  await expect(editor.getByRole('alert')).toContainText('unique');
-  expect(await currentTemplate(page)).toEqual(saved);
-  await card.getByRole('tab', { name: 'Display', exact: true }).click();
-  await card.getByRole('tab', { name: 'Annotations', exact: true }).click();
-  await expect(editor.getByRole('textbox', { name: 'Annotation name 2', exact: true })).toHaveValue('note');
-  const report = await page.evaluate(() =>
-    (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).validate(),
-  );
-  expect(report.canSave).toBe(false);
-  expect(report.issues).toContainEqual(expect.objectContaining({ tab: 'Annotations', setting: 'annotations' }));
-  await editor.getByRole('textbox', { name: 'Annotation name 2', exact: true }).fill('source');
-  await editor.getByRole('textbox', { name: 'Annotation value 2', exact: true }).fill('invalid');
-  await expect(editor.getByRole('alert')).toHaveText('Annotation value must be a valid IRI.');
-  await editor.getByRole('button', { name: 'Remove annotation 2', exact: true }).click();
-  await expect(editor.getByRole('alert')).toHaveCount(0);
+  await expect(editor.locator('tbody input, tbody select, tbody textarea, tbody [contenteditable]')).toHaveCount(0);
+  await expect(editor.locator('tbody tr').first()).toContainText('note');
+  await expect(editor.locator('tbody tr').first()).toContainText('Reviewed');
+  await editor.getByRole('button', { name: 'Remove annotation 1', exact: true }).click();
+  await editor.getByRole('textbox', { name: 'New annotation name', exact: true }).fill('note');
+  await editor.getByRole('textbox', { name: 'New annotation value', exact: true }).fill('Updated');
+  await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();
+  expect(child(await currentTemplate(page), 'Title')._annotations).toEqual({
+    source: { '@id': 'urn:source' },
+    note: { '@value': 'Updated' },
+  });
 });
 
 test('the add row validates only on Add and keeps rejected drafts outside the table', async ({ page }) => {

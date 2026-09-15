@@ -64,11 +64,6 @@ export class AnnotationsEditorComponent {
     this.rows.update((rows) => rows.filter((_, i) => i !== index));
     this.save();
   }
-  edit(index: number, changes: Partial<Annotation>): void {
-    if (this.disabled()) return;
-    this.rows.update((rows) => rows.map((row, i) => (i === index ? { ...row, ...changes } : row)));
-    this.save();
-  }
   private validate(rows: Annotation[]): string | null {
     const names = new Set<string>();
     let error: string | null = null;

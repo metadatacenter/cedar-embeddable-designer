@@ -60,7 +60,7 @@ for (const kind of ['field', 'template', 'element'] as const) {
   });
 }
 
-it('retains invalid rows through unrelated input updates and protects published fields', async () => {
+it('retains partial entry through unrelated input updates and protects published fields', async () => {
   localStorage.clear();
   const service = TestBed.inject(TemplateService);
   const fixture = TestBed.createComponent(AnnotationsEditorComponent);
@@ -73,7 +73,7 @@ it('retains invalid rows through unrelated input updates and protects published 
   await fixture.whenStable();
   const editor = fixture.componentInstance;
   expect(editor.rows()[0].value).toBe('imported');
-  editor.edit(0, { name: '' });
+  editor.editDraft({ name: 'unfinished', kind: 'iri', value: 'partial' });
   fixture.componentRef.setInput('field', {
     ...field,
     name: 'Renamed',
@@ -82,13 +82,13 @@ it('retains invalid rows through unrelated input updates and protects published 
   fixture.detectChanges();
   await fixture.whenStable();
   expect(editor.rows()).toHaveLength(1);
-  expect(editor.error()).toContain('name');
+  expect(editor.draft().value).toBe('partial');
+  expect(editor.addError()).toBeNull();
   fixture.componentRef.setInput('field', { ...field, publishedDefinition: {} });
   fixture.detectChanges();
   await fixture.whenStable();
   const rows = editor.rows();
   editor.add();
-  editor.edit(0, { name: 'changed' });
   editor.remove(0);
   expect(editor.rows()).toEqual(rows);
 });
