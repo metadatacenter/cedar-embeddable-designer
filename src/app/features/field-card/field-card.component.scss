@@ -84,7 +84,7 @@ app-icon {
 
 .validation-badge {
   color: #b42318;
-  font-size: 12px;
+  font-size: var(--cedar-font-size-small);
   white-space: nowrap;
   cursor: pointer;
 }

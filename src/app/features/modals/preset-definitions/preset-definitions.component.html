@@ -15,9 +15,9 @@
       <div class="flex items-center gap-3">
         <div
           class="w-10 h-10 rounded-full flex items-center justify-center"
-          [style.backgroundColor]="service.COLORS.primaryLight"
+          [style.backgroundColor]="'var(--cedar-primary-50)'"
         >
-          <app-icon key="settings" [style.color]="service.COLORS.primary" className="w-5 h-5"></app-icon>
+          <app-icon key="settings" [style.color]="'var(--cedar-color-primary)'" className="w-5 h-5"></app-icon>
         </div>
         <h2 class="text-lg font-semibold text-gray-900">Define Presets</h2>
       </div>
@@ -193,7 +193,7 @@
       <button
         (click)="close()"
         class="px-4 py-2 text-sm font-medium text-white rounded-lg transition-all shadow hover:shadow-md cursor-pointer"
-        [style.backgroundColor]="service.COLORS.primary"
+        [style.backgroundColor]="'var(--cedar-color-primary)'"
       >
         Done
       </button>

@@ -3,14 +3,14 @@
   <div
     class="template-header-card__gradient"
     [style.background]="
-      'linear-gradient(90deg, ' + service.COLORS.primary + ' 0%, ' + service.COLORS.primaryLight + ' 100%)'
+      'linear-gradient(90deg, ' + 'var(--cedar-color-primary)' + ' 0%, ' + 'var(--cedar-primary-50)' + ' 100%)'
     "
   ></div>
   @if (placementNode() && service.issuesFor(container().id).length; as count) {
     <span class="validation-badge">⚠ {{ count }} {{ count === 1 ? 'error' : 'errors' }}</span>
   }
   <div class="template-header-card__body">
-    <div class="template-header-card__icon" [style.backgroundColor]="service.COLORS.primaryLight">
+    <div class="template-header-card__icon" [style.backgroundColor]="'var(--cedar-primary-50)'">
       @if (placementNode()) {
         <span
           cdkDragHandle
@@ -18,10 +18,10 @@
           title="Drag element to reorder"
           aria-label="Drag element to reorder"
         >
-          <app-icon key="folder" className="w-6 h-6" [style.color]="service.COLORS.primary" />
+          <app-icon key="folder" className="w-6 h-6" [style.color]="'var(--cedar-color-primary)'" />
         </span>
       } @else {
-        <app-icon key="paragraph" className="w-6 h-6" [style.color]="service.COLORS.primary" />
+        <app-icon key="paragraph" className="w-6 h-6" [style.color]="'var(--cedar-color-primary)'" />
       }
     </div>
     <div class="template-header-card__inputs">
@@ -123,7 +123,9 @@
         <!-- Insert Zone (modal style) -->
         @if (service.preferences().fieldSelectionStyle === 'modal') {
           <div class="insert-zone" (click)="chooseField(idx)">
-            <button class="btn-insert-here" [style.backgroundColor]="service.COLORS.primary">＋ Add field here</button>
+            <button class="btn-insert-here" [style.backgroundColor]="'var(--cedar-color-primary)'">
+              ＋ Add field here
+            </button>
           </div>
           @if (pickerAt(idx)) {
             <div class="my-3">
@@ -166,7 +168,7 @@
       <button
         (click)="chooseField(container().children.length)"
         class="btn-add-field"
-        [style.backgroundColor]="service.COLORS.primary"
+        [style.backgroundColor]="'var(--cedar-color-primary)'"
       >
         <span class="text-base font-bold">＋</span>
         Add Field

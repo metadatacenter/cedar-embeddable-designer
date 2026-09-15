@@ -1,4 +1,5 @@
-import { CedValidationIssue, CedValidationReport } from '../../ced-public-api';
+import { validateDocument } from '../model/document-validation';
+import { CedValidationIssue } from '../../ced-public-api';
 import { EditorSession } from './editor-session';
 import {
   containerFromFlat,
@@ -8,7 +9,6 @@ import {
   ChildNode,
   ElementNode,
   fieldNode,
-  fieldView,
   containers,
   childName,
   moveChild,
@@ -40,8 +40,6 @@ import {
   templateToJson,
   templateToYaml,
   defaultValueError,
-  fieldToJson,
-  choiceDefaultConflict,
 } from '../model/cedar-template';
 
 export { FIELD_TYPES } from '../models/types';
@@ -109,21 +107,6 @@ export class TemplateService {
   // Inject PreferencesService
   readonly preferencesService = inject(PreferencesService);
 
-  /**
-   * CEDAR's teal, at the hues the CEDAR Embeddable Editor publishes.
-   *
-   * These were a green nobody in CEDAR uses — `#2D6F5F`, labelled "Cedar green"
-   * by the Figma export. The real values live as custom properties in
-   * `styles.css`; this object exists because a handful of bindings set a colour
-   * from TypeScript rather than from a class.
-   */
-  readonly COLORS = {
-    primary: '#0f7686',
-    primaryHover: '#0d6e7e',
-    primaryLight: '#e2eff0',
-    border: '#b7d6db',
-  };
-
   readonly fieldEditorConfig = signal<{ bridgeBaseUrl?: string; terminologyBaseUrl?: string }>({});
 
   readonly session = new EditorSession(
@@ -153,124 +136,7 @@ export class TemplateService {
       return next;
     });
   }
-  readonly validationReport = computed<CedValidationReport>(() => {
-    const issues: CedValidationIssue[] = [];
-    const drafts = this.draftIssues();
-    const visit = (container: ContainerDraft, ancestors: number[]) => {
-      const path = [...ancestors, container.id];
-      const add = (
-        id: number,
-        label: string,
-        nodePath: number[],
-        setting: string,
-        message: string,
-        tab: string,
-        source: 'model' | 'draft',
-      ) => {
-        const prefix = `${label.trim() || 'an unnamed field'}: `;
-        issues.push({
-          nodeId: id,
-          label,
-          path: nodePath,
-          setting,
-          message: message.startsWith(prefix) ? message.slice(prefix.length) : message,
-          tab,
-          code: `${setting}.invalid`,
-          severity: 'error',
-          source,
-        });
-      };
-      const pending = (id: number, label: string, nodePath: number[]) => {
-        for (const [key, value] of Object.entries(drafts)) {
-          if (key.startsWith(`${id}:`))
-            add(id, label, nodePath, key.slice(key.indexOf(':') + 1), value.message, value.tab, 'draft');
-        }
-      };
-      pending(container.id, container.name, path);
-      for (const node of container.children) {
-        if (node.kind === 'element') {
-          visit(node.definition, path);
-          try {
-            buildContainer({ ...container, children: [{ ...node, definition: { ...node.definition, children: [] } }] });
-          } catch (error) {
-            add(
-              node.id,
-              childName(node),
-              [...path, node.id],
-              'placement',
-              error instanceof Error ? error.message : String(error),
-              'Occurrences',
-              'model',
-            );
-          }
-          continue;
-        }
-        const field = fieldView(node);
-        const nodePath = [...path, node.id];
-        pending(node.id, childName(node), nodePath);
-        const settingsField: Field = { ...field, defaultValue: { kind: 'none' }, importedChoiceDefault: undefined };
-        let settingsValid = true;
-        try {
-          fieldToJson(settingsField);
-        } catch (error) {
-          settingsValid = false;
-          const media = ['image', 'youtube', 'richText'].includes(field.type);
-          add(
-            node.id,
-            childName(node),
-            nodePath,
-            'settings',
-            error instanceof Error ? error.message : String(error),
-            media ? 'Content' : 'Constraints',
-            'model',
-          );
-        }
-        if (settingsValid) {
-          try {
-            buildTemplate({
-              name: 'Validation',
-              description: '',
-              identifier: 'urn:ced:validation',
-              version: '0.0.1',
-              fields: [settingsField],
-            });
-          } catch (error) {
-            add(
-              node.id,
-              childName(node),
-              nodePath,
-              'occurrences',
-              error instanceof Error ? error.message : String(error),
-              'Occurrences',
-              'model',
-            );
-          }
-          const error = choiceDefaultConflict(field) ?? defaultValueError(field, field.defaultValue);
-          if (error) add(node.id, childName(node), nodePath, 'defaultValue', error, 'Constraints', 'model');
-        }
-      }
-    };
-    visit(this.session.document(), []);
-    try {
-      buildContainer(this.document());
-    } catch (error) {
-      if (!issues.some((issue) => issue.source === 'model')) {
-        const root = this.session.document();
-        issues.push({
-          nodeId: root.id,
-          path: [root.id],
-          label: root.name,
-          setting: 'artifact',
-          tab: 'Display',
-          code: 'artifact.invalid',
-          message: error instanceof Error ? error.message : String(error),
-          severity: 'error',
-          source: 'model',
-        });
-      }
-    }
-    return { valid: issues.length === 0, canSave: issues.length === 0, issues };
-  });
+  readonly validationReport = computed(() => validateDocument(this.document(), this.draftIssues()));
   issuesFor(id: number): CedValidationIssue[] {
     return this.validationReport().issues.filter((issue) => issue.path.includes(id));
   }

@@ -67,11 +67,11 @@ import { trapTab } from '../../shared/focus-trap';
       display: flex;
       align-items: center;
       gap: 12px;
-      font-size: 12px;
+      font-size: var(--cedar-font-size-small);
     }
     .unavailable {
       margin: 3px 0 0;
-      font-size: 12px;
+      font-size: var(--cedar-font-size-small);
       overflow-wrap: anywhere;
     }
     .iri {
@@ -98,7 +98,7 @@ import { trapTab } from '../../shared/focus-trap';
       display: block;
       flex: 1;
       min-width: 0;
-      --cedar-control-font-size: 12px;
+      --cedar-control-font-size: var(--cedar-font-size-small);
     }
     .placeholder {
       color: #777;

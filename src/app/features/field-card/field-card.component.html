@@ -13,7 +13,7 @@
             [key]="getFieldIcon(field)"
             class="field-type-icon flex-shrink-0"
             className="w-5 h-5"
-            [style.color]="service.COLORS.primary"
+            [style.color]="'var(--cedar-color-primary)'"
           />
 
           <!-- Field Title Name editing -->
@@ -22,7 +22,7 @@
             [ngModel]="field.name"
             (ngModelChange)="service.updateFieldName(field.id, $event)"
             class="text-sm font-semibold text-gray-900 border-none outline-none pb-0.5 flex-1 min-w-0 bg-transparent border-b-2"
-            [style.borderBottomColor]="service.selectedField() === field.id ? service.COLORS.primary : '#d1d5db'"
+            [style.borderBottomColor]="service.selectedField() === field.id ? 'var(--cedar-color-primary)' : '#d1d5db'"
             (focus)="service.selectedField.set(field.id)"
             placeholder="Enter field name"
             aria-label="Field name"
@@ -85,9 +85,7 @@
                   (change)="service.toggleAllowMultiple(field.id)"
                   class="w-3.5 h-3.5 checkbox-white"
                 />
-                <span class="text-xs text-gray-600 group-hover:text-gray-900 whitespace-nowrap"
-                  >Allow multiple</span
-                >
+                <span class="text-xs text-gray-600 group-hover:text-gray-900 whitespace-nowrap">Allow multiple</span>
               </label>
             }
             @if (!standalone) {

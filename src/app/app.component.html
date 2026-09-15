@@ -122,7 +122,7 @@
           <button
             (click)="service.showFieldDesigner.set(true)"
             class="btn-header btn-header--primary"
-            [style.backgroundColor]="service.COLORS.primary"
+            [style.backgroundColor]="'var(--cedar-color-primary)'"
           >
             <app-icon key="library" className="w-4 h-4"></app-icon>
             Field Designer
@@ -136,7 +136,7 @@
             class="user-menu-trigger"
             title="User Menu"
           >
-            <div class="user-menu-avatar" [style.backgroundColor]="service.COLORS.primary">
+            <div class="user-menu-avatar" [style.backgroundColor]="'var(--cedar-color-primary)'">
               <app-icon key="user" className="w-4 h-4"></app-icon>
             </div>
           </button>
@@ -272,7 +272,7 @@
         aria-label="Download as JSON"
         [title]="service.validationReport().canSave ? 'Download as JSON' : 'Resolve settings errors before downloading'"
         class="btn-save flex items-center justify-center"
-        [style.backgroundColor]="service.COLORS.primary"
+        [style.backgroundColor]="'var(--cedar-color-primary)'"
       >
         <app-icon key="save" className="w-5 h-5 text-white"></app-icon>
       </button>

@@ -27,7 +27,9 @@
             (click)="service.selectedField.set(field.id)"
             class="draggable-field-item group"
             [class.active]="service.selectedField() === field.id"
-            [style.borderLeftColor]="service.selectedField() === field.id ? service.COLORS.primary : 'transparent'"
+            [style.borderLeftColor]="
+              service.selectedField() === field.id ? 'var(--cedar-color-primary)' : 'transparent'
+            "
           >
             <span class="draggable-icon">
               <app-icon [key]="getFieldIconKey(field)" className="w-5 h-5"></app-icon>
@@ -37,7 +39,7 @@
             </div>
             <div
               class="draggable-indicator"
-              [style.backgroundColor]="service.selectedField() === field.id ? service.COLORS.primary : '#94A3B8'"
+              [style.backgroundColor]="service.selectedField() === field.id ? 'var(--cedar-color-primary)' : '#94A3B8'"
             ></div>
             <div class="draggable-handle" cdkDragHandle>
               <app-icon key="list" className="w-3 h-3"></app-icon>
@@ -132,7 +134,7 @@
           <div class="relative">
             <app-icon key="list" className="w-5 h-5 text-gray-600"></app-icon>
             @if (service.children().length > 0) {
-              <div class="badge-count-indicator" [style.backgroundColor]="service.COLORS.primary">
+              <div class="badge-count-indicator" [style.backgroundColor]="'var(--cedar-color-primary)'">
                 {{ service.children().length }}
               </div>
             }

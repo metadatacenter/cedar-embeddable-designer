@@ -14,8 +14,8 @@
 }
 .container-path button {
   padding: 0.4rem 0.6rem;
-  color: #0f7686;
-  border: 1px solid #b7d6db;
+  color: var(--cedar-color-primary);
+  border: 1px solid var(--cedar-primary-100);
   border-radius: 0.3rem;
   background: white;
 }
@@ -54,7 +54,7 @@
 }
 .publication-status {
   color: #64748b;
-  font-size: 12px;
+  font-size: var(--cedar-font-size-small);
   line-height: 18px;
   text-align: right;
 }
@@ -149,14 +149,14 @@
   justify-content: center;
 }
 .btn-element-action {
-  color: #0f7686;
-  border: 1px solid #b7d6db;
+  color: var(--cedar-color-primary);
+  border: 1px solid var(--cedar-primary-100);
   background: white;
   border-radius: 4px;
   padding: 4px 10px;
   min-height: 28px;
   font: inherit;
-  font-size: 12px;
+  font-size: var(--cedar-font-size-small);
   cursor: pointer;
 }
 
@@ -166,7 +166,7 @@
 }
 .validation-badge {
   color: #b42318;
-  font-size: 12px;
+  font-size: var(--cedar-font-size-small);
   padding: 4px 12px;
   display: block;
 }

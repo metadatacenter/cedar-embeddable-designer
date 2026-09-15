@@ -261,8 +261,8 @@
   }
 
   input[type='checkbox'].checkbox-white:checked {
-    background-color: #2d6f5f;
-    border-color: #2d6f5f;
+    background-color: var(--cedar-color-primary);
+    border-color: var(--cedar-color-primary);
   }
 
   input[type='checkbox'].checkbox-white:checked::after {
@@ -278,7 +278,7 @@
   }
 
   input[type='checkbox'].checkbox-white:hover {
-    border-color: #2d6f5f;
+    border-color: var(--cedar-color-primary);
   }
 
   /* Radio button white styling */
@@ -295,7 +295,7 @@
 
   input[type='radio'].radio-white:checked {
     background-color: #ffffff;
-    border-color: #2d6f5f;
+    border-color: var(--cedar-color-primary);
     border-width: 2px;
   }
 
@@ -307,12 +307,12 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background-color: #2d6f5f;
+    background-color: var(--cedar-color-primary);
     transform: translate(-50%, -50%);
   }
 
   input[type='radio'].radio-white:hover {
-    border-color: #2d6f5f;
+    border-color: var(--cedar-color-primary);
   }
 }
 

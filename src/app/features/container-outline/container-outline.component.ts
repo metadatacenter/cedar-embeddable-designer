@@ -100,7 +100,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
       }
       .validation-badge {
         color: #b42318;
-        font-size: 12px;
+        font-size: var(--cedar-font-size-small);
       }
       .outline-row:hover {
         background: #f9fafb;
@@ -123,7 +123,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
         padding: 2px 0;
         color: #374151;
         text-align: left;
-        font-size: 12px;
+        font-size: var(--cedar-font-size-small);
       }
       .select-node app-icon {
         flex: none;
@@ -161,7 +161,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
         list-style: none;
       }
       button:focus-visible {
-        outline: 2px solid #0f7686;
+        outline: 2px solid var(--cedar-color-primary);
         outline-offset: 1px;
       }
     `,

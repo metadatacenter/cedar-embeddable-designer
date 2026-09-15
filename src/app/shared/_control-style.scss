@@ -9,12 +9,11 @@
   background: white;
   color: #444;
   font-family: inherit;
-  font-size: var(--cedar-control-font-size, 14px);
+  font-size: var(--cedar-control-font-size, var(--cedar-font-size));
   line-height: var(--cedar-control-line-height, 21px);
   font-weight: 400;
   &:focus {
-    outline: 2px solid var(--cedar-control-focus, #0f7686);
+    outline: 2px solid var(--cedar-control-focus, var(--cedar-color-primary));
     outline-offset: 0;
   }
 }
-

@@ -109,7 +109,7 @@
   cursor: pointer;
 }
 .overview-panel__actions button:hover {
-  color: #0f7686;
+  color: var(--cedar-color-primary);
   background: #f4f6f6;
 }
 
@@ -195,11 +195,11 @@
 }
 .panel-toggle:hover,
 .panel-toggle[aria-expanded='true'] {
-  color: #0f7686;
+  color: var(--cedar-color-primary);
   background: #f4f6f6;
 }
 .panel-toggle:focus-visible {
-  outline: 2px solid #0f7686;
+  outline: 2px solid var(--cedar-color-primary);
   outline-offset: 2px;
 }
 @media (max-width: 767px) {
@@ -278,7 +278,7 @@
 
 .btn-insert-here {
   @apply text-white rounded-full px-3 py-1 shadow-md font-medium border-none cursor-pointer;
-  font-size: 12px;
+  font-size: var(--cedar-font-size-small);
 }
 
 /* ─── Field Drag Container ────────────────────────────────────────────────── */
@@ -344,7 +344,7 @@
   color: #b42318;
   background: #fff4f2;
   padding: 6px 16px;
-  font-size: 12px;
+  font-size: var(--cedar-font-size-small);
   flex: none;
   max-height: 25vh;
   overflow: auto;
