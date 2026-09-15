@@ -118,11 +118,11 @@ p[role='alert'] {
 }
 
 .remove {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   padding: 2px;
   border: 0;
   background: transparent;
@@ -130,6 +130,8 @@ p[role='alert'] {
 }
 
 td {
+  padding: 2px 4px;
+  vertical-align: middle;
   overflow-wrap: anywhere;
 }
 .annotation-value {

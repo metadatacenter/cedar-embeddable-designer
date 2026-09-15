@@ -93,6 +93,10 @@ test('the add row validates only on Add and keeps rejected drafts outside the ta
   await openSettings(card, 'Annotations');
   const editor = card.locator('app-annotations-editor');
   await editor.getByRole('textbox', { name: 'New annotation name', exact: true }).fill('source');
+  await expect(editor.getByRole('alert')).toHaveCount(0);
+  await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();
+  await expect(editor.getByRole('alert')).toHaveText('An annotation value is required.');
+  await expect(editor.getByRole('button', { name: /Remove annotation/ })).toHaveCount(0);
   await editor.getByRole('combobox', { name: 'New annotation value type', exact: true }).selectOption('iri');
   await editor.getByRole('textbox', { name: 'New annotation value', exact: true }).fill('partial');
   await expect(editor.getByRole('alert')).toHaveCount(0);

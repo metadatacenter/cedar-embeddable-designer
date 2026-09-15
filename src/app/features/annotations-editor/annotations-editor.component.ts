@@ -77,6 +77,10 @@ export class AnnotationsEditorComponent {
         break;
       }
       names.add(row.name);
+      if (!row.value.trim()) {
+        error = 'An annotation value is required.';
+        break;
+      }
       if (row.kind === 'iri' && !/^[a-z][a-z0-9+.-]*:\S+$/i.test(row.value)) {
         error = 'Annotation value must be a valid IRI.';
         break;

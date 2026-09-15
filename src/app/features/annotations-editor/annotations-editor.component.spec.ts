@@ -24,7 +24,17 @@ for (const kind of ['field', 'template', 'element'] as const) {
       expect(editor.rows()).toHaveLength(0);
       expect(service.validationReport().canSave).toBe(true);
       expect(service.templateJson()).toEqual(before);
-      editor.editDraft({ name: 'note', value: 'Reviewed' });
+      for (const valueKind of ['literal', 'iri'] as const) {
+        for (const value of ['', '  \n\t']) {
+          editor.editDraft({ name: 'note', kind: valueKind, value });
+          expect(editor.addError()).toBeNull();
+          editor.add();
+          expect(editor.addError()).toBe('An annotation value is required.');
+          expect(editor.rows()).toHaveLength(0);
+          expect(service.templateJson()).toEqual(before);
+        }
+      }
+      editor.editDraft({ name: 'note', kind: 'literal', value: 'Reviewed' });
       expect(editor.addError()).toBeNull();
       editor.add();
       expect(editor.error()).toBeNull();
