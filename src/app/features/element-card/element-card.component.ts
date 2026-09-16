@@ -1,3 +1,4 @@
+import { ElementLabelsComponent } from '../element-labels/element-labels.component';
 import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 import { AnnotationsEditorComponent } from '../annotations-editor/annotations-editor.component';
 import { TypesPickerComponent } from '../types-picker/types-picker.component';
@@ -12,6 +13,7 @@ import { TemplateService } from '../../core/services/template.service';
 @Component({
   selector: 'app-element-card',
   imports: [
+    ElementLabelsComponent,
     LanguageSelectorComponent,
     AnnotationsEditorComponent,
     FormsModule,

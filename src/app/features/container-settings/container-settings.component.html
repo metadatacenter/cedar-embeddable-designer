@@ -52,6 +52,9 @@
       </div>
     }
     <app-language-selector [container]="container()" />
+    @if (container().kind === 'element') {
+      <app-element-labels [container]="container()" />
+    }
   </section>
   <section
     class="settings"

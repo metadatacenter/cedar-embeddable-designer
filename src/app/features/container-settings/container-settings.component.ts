@@ -1,3 +1,4 @@
+import { ElementLabelsComponent } from '../element-labels/element-labels.component';
 import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 import { AnnotationsEditorComponent } from '../annotations-editor/annotations-editor.component';
 import { ChangeDetectorRef } from '@angular/core';
@@ -11,7 +12,13 @@ import { TypesPickerComponent } from '../types-picker/types-picker.component';
 
 @Component({
   selector: 'app-container-settings',
-  imports: [LanguageSelectorComponent, AnnotationsEditorComponent, FormsModule, TypesPickerComponent],
+  imports: [
+    ElementLabelsComponent,
+    LanguageSelectorComponent,
+    AnnotationsEditorComponent,
+    FormsModule,
+    TypesPickerComponent,
+  ],
   templateUrl: './container-settings.component.html',
   styleUrls: ['../field-settings/field-settings.component.scss', '../element-card/element-card.component.scss'],
   styles: `
