@@ -20,6 +20,11 @@ test('field and element property choices update only their parent context and ca
         element.dispatchEvent(new CustomEvent('constraintsSelected', { detail: { constraints, actions: [] } })),
       constraints,
     );
+  await emit([]);
+  await expect(picker).toHaveCount(0);
+  expect(await currentTemplate(page)).toEqual(original);
+  await expect(metadata.getByRole('button', { name: 'Replace property IRI', exact: true })).toBeFocused();
+  await metadata.getByRole('button', { name: 'Replace property IRI', exact: true }).click();
   await emit([{ sourceType: 'ontology', sourceId: 'RO' }]);
   await expect(page.getByRole('alert')).toContainText('Select one property');
   expect(await currentTemplate(page)).toEqual(original);
@@ -39,6 +44,11 @@ test('field and element property choices update only their parent context and ca
   const element = designer.locator('app-element-card').first();
   await element.getByRole('button', { name: 'Expand element settings' }).click();
   await element.getByRole('tab', { name: 'Element metadata', exact: true }).click();
+  await element.getByRole('button', { name: 'Replace property IRI', exact: true }).click();
+  const beforeEmpty = await currentTemplate(page);
+  await emit([]);
+  await expect(picker).toHaveCount(0);
+  expect(await currentTemplate(page)).toEqual(beforeEmpty);
   await element.getByRole('button', { name: 'Replace property IRI', exact: true }).click();
   await emit([{ sourceType: 'ontology-property', sourceId: 'urn:element-property' }]);
   const saved = await currentTemplate(page);
@@ -84,6 +94,11 @@ test('real CETP selects a property for field metadata', async ({ page }) => {
   await metadata.getByRole('button', { name: 'Replace property IRI', exact: true }).click();
   const picker = page.locator('cedar-embeddable-term-picker');
   await expect(picker.getByRole('tab')).toHaveCount(1);
+  const beforeEmpty = await currentTemplate(page);
+  await picker.getByRole('button', { name: 'Done', exact: true }).click();
+  await expect(picker).toHaveCount(0);
+  expect(await currentTemplate(page)).toEqual(beforeEmpty);
+  await metadata.getByRole('button', { name: 'Replace property IRI', exact: true }).click();
   await picker.locator('input[type=search]').fill('part');
   await picker.getByRole('button', { name: /part of.*in 1 ontology/ }).click();
   await picker.getByRole('option', { name: 'part of in RO' }).click();

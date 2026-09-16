@@ -159,6 +159,10 @@ export class PropertyPickerComponent {
   select(event: Event): void {
     if (this.disabled() || !this.opened()) return;
     const constraints = (event as CustomEvent).detail?.constraints;
+    if (Array.isArray(constraints) && constraints.length === 0) {
+      this.close();
+      return;
+    }
     const selected = Array.isArray(constraints) && constraints.length === 1 ? constraints[0] : null;
     if (
       selected?.sourceType !== 'ontology-property' ||
