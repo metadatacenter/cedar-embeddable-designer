@@ -1,3 +1,13 @@
 :host {
   padding: 0 12px;
 }
+
+.occurrence-fields {
+  grid-template-columns: minmax(180px, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+
+@media (max-width: 620px) {
+  .occurrence-fields {
+    grid-template-columns: 1fr;
+  }
+}

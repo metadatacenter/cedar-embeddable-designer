@@ -57,8 +57,13 @@ for (const width of [1280, 375]) {
     await expect(placement.getByRole('tab', { name: 'Element details', exact: true })).toHaveCount(0);
     await expect(placement.getByRole('tabpanel', { name: 'Annotations', exact: true })).toBeVisible();
     await placement.getByRole('tab', { name: 'Occurrences', exact: true }).click();
-    await placement.getByLabel('Allow multiple', { exact: true }).check();
     const checkbox = placement.getByLabel('Allow multiple', { exact: true });
+    const singlePosition = await checkbox.boundingBox();
+    await checkbox.check();
+    const multiplePosition = await checkbox.boundingBox();
+    expect(singlePosition).not.toBeNull();
+    expect(multiplePosition).not.toBeNull();
+    expect(multiplePosition!.x).toBeCloseTo(singlePosition!.x, 0);
     const colors = await checkbox.evaluate((node) => {
       const probe = document.createElement('span');
       probe.style.color = 'var(--cedar-color-primary)';
