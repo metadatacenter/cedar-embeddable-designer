@@ -1,5 +1,5 @@
 import { validateDocument } from '../model/document-validation';
-import { CedValidationIssue } from '../../ced-public-api';
+import { CedChildSource, CedJsonObject, CedValidationIssue } from '../../ced-public-api';
 import { EditorSession } from './editor-session';
 import {
   containerFromFlat,
@@ -34,6 +34,7 @@ import {
   newFieldIdentity,
   newTemplateIdentifier,
   readContainer,
+  readField,
   buildContainer,
   containerPreview,
   newContainer,
@@ -543,6 +544,7 @@ export class TemplateService {
       document.children = containerFromFlat({ ...document, fields: starterFields() }).children;
     }
     this.draftIssues.set({});
+    this.childPicker.set(null);
     this.session.replace(document);
     this.collapsedElements.set(new Set());
     this.markSaved();
@@ -573,6 +575,7 @@ export class TemplateService {
     this.loadError.set(null);
 
     this.draftIssues.set({});
+    this.childPicker.set(null);
     this.session.replace(state);
     this.collapsedElements.set(new Set());
     this.markSaved();
@@ -640,6 +643,51 @@ export class TemplateService {
         return { ...container, children };
       }),
     );
+  }
+
+  readonly childSource = signal<CedChildSource | null>(null);
+  readonly childPicker = signal<{ targetId: number; position: number } | null>(null);
+  openChildPicker(targetId = this.session.active().id, position = this.session.active().children.length): void {
+    this.showPicker.set(null);
+    this.childPicker.set({ targetId, position });
+  }
+
+  /** Parse the complete batch before changing the document. Source definitions keep their identity. */
+  importChildren(
+    sources: { type: 'field' | 'element'; artifact: CedJsonObject }[],
+    targetId: number,
+    position: number,
+  ): void {
+    const root = this.session.document();
+    const target = findContainer(root, targetId);
+    if (!target) throw new Error('The destination no longer exists.');
+    const nodes = sources.map(({ type, artifact }): ChildNode => {
+      if (type === 'field') {
+        const field = readField(JSON.stringify(artifact));
+        if (!allowedInContainer(field.type, target.kind))
+          throw new Error('Page breaks can only be placed in templates.');
+        return fieldNode({
+          ...field,
+          id: newNodeId(),
+          deploymentName: field.name,
+          propertyIri: newFieldIdentity().propertyIri,
+        });
+      }
+      const definition = readContainer(artifact);
+      if (definition.kind !== 'element') throw new Error('Choose a field or element artifact.');
+      return {
+        kind: 'element',
+        id: definition.id,
+        definition,
+        placement: { allowMultiple: false, propertyIri: newFieldIdentity().propertyIri },
+      };
+    });
+    try {
+      nodes.forEach((node, index) => this.insertNode(node, position + index, targetId));
+    } catch (error) {
+      this.session.document.set(root);
+      throw error;
+    }
   }
 
   addElement(targetId = this.session.active().id): void {

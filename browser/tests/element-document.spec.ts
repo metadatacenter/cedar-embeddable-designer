@@ -1,3 +1,4 @@
+import { addElementFixture } from './support';
 import { expect, test } from '@playwright/test';
 import { openSettings, openDesigner, currentTemplate, nestFixtureFields } from './support';
 
@@ -34,14 +35,14 @@ for (const width of [1280, 375]) {
     await root.getByPlaceholder('Template name').fill('Debug template');
     await page.getByRole('button', { name: 'Basic', exact: true }).click();
     await page.getByRole('button', { name: /Modular/ }).click();
-    await root.getByRole('button', { name: 'Add Element', exact: true }).click();
+    await addElementFixture(page, root);
     const parent = nestedEditors(root).first();
     await directHeader(parent).getByPlaceholder('Element name').fill('Samples');
     await expect(directHeader(parent).getByRole('button', { name: 'Collapse Samples', exact: true })).toHaveAttribute(
       'aria-expanded',
       'true',
     );
-    await directContent(parent).getByRole('button', { name: 'Add Element', exact: true }).click();
+    await addElementFixture(page, directContent(parent));
     const nested = nestedEditors(parent).first();
     await directHeader(nested).getByPlaceholder('Element name').fill('Sample');
     const placement = directHeader(nested).locator(':scope > app-element-card');
@@ -150,7 +151,7 @@ test('element metadata shows provenance without changing the artifact and hides 
   const designer = await openDesigner(page);
   await page.getByRole('button', { name: 'Basic', exact: true }).click();
   await page.getByRole('button', { name: /Modular/ }).click();
-  await designer.getByRole('button', { name: 'Add Element', exact: true }).click();
+  await addElementFixture(page, designer);
   const artifact = await currentTemplate(page);
   const element = (artifact.properties as Record<string, any>).Element;
   element['pav:createdOn'] = '2026-08-18T16:07:23-07:00';
@@ -193,7 +194,7 @@ async function loadStandalone(page: import('@playwright/test').Page, kind: strin
   if (kind === 'Template') return;
   await page.getByRole('button', { name: 'Basic', exact: true }).click();
   await page.getByRole('button', { name: /Modular/ }).click();
-  await page.getByRole('button', { name: 'Add Element', exact: true }).click();
+  await addElementFixture(page);
   const template = await currentTemplate(page);
   const element = (template.properties as Record<string, any>).Element;
   await page.evaluate((artifact) => {

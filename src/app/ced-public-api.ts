@@ -61,6 +61,8 @@ export type CedTemplate = CedJsonObject;
  */
 export interface CedarEmbeddableDesignerElement extends HTMLElement {
   config: CedConfig | null;
+  /** Host-owned repository search and artifact retrieval. Replaceable between documents. */
+  childSource: CedChildSource | null;
   /** A template or element document. The legacy property name remains supported. */
   template: CedJsonObject | string | null;
   artifact: CedJsonObject | string | null;
@@ -108,4 +110,27 @@ export interface CedValidationReport {
   valid: boolean;
   canSave: boolean;
   issues: CedValidationIssue[];
+}
+
+/** A permission-filtered first-class artifact returned by the embedding host. */
+export interface CedChildResult {
+  id: string;
+  name: string;
+  type: 'field' | 'element';
+  createdOn?: string | null;
+  modifiedOn?: string | null;
+  version?: string | null;
+  status?: string | null;
+}
+export interface CedChildSource {
+  /** Return one page. Omit nextCursor on the final page; honor the abort signal. */
+  search(
+    query: string,
+    options: { signal: AbortSignal; cursor?: string },
+  ): Promise<{
+    results: CedChildResult[];
+    nextCursor?: string;
+  }>;
+  /** Fetch the complete JSON-LD artifact, using the host's authentication. */
+  load(result: CedChildResult, options: { signal: AbortSignal }): Promise<CedJsonObject>;
 }

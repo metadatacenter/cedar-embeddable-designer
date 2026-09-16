@@ -1,0 +1,140 @@
+:host {
+  display: contents;
+}
+dialog {
+  margin: auto;
+  width: min(1000px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 24px;
+  border: 1px solid var(--cedar-neutral-200, #ddd);
+  border-radius: 12px;
+  color: var(--cedar-color-text, #262626);
+  background: white;
+  box-sizing: border-box;
+}
+dialog::backdrop {
+  background: rgb(0 0 0 / 35%);
+}
+h2 {
+  font-size: 20px;
+  margin: 0 0 24px;
+}
+h3 {
+  font-size: 16px;
+  margin: 0;
+}
+.selection-heading,
+.actions,
+.search div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.selection-heading {
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+button {
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.primary {
+  background: var(--cedar-color-primary);
+  color: white;
+  border-color: transparent;
+}
+.table-scroll {
+  overflow: auto;
+  max-height: 260px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+th,
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+}
+th {
+  position: sticky;
+  top: 0;
+  background: var(--cedar-primary-50, #f5f5f5);
+  white-space: nowrap;
+}
+td:first-child {
+  min-width: 150px;
+  overflow-wrap: anywhere;
+}
+.empty {
+  text-align: center;
+  color: #666;
+  padding: 24px;
+}
+.search {
+  margin: 24px 0 12px;
+}
+label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+.error {
+  color: #b42318;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+/* Keep removal reachable while the selected table scrolls. */
+.selected-table th:last-child,
+.selected-table td:last-child {
+  position: sticky;
+  right: 0;
+  background: white;
+}
+.selected-table th:last-child {
+  z-index: 1;
+  background: var(--cedar-primary-50, #f5f5f5);
+}
+
+.result-row {
+  cursor: pointer;
+}
+.result-row:hover,
+.result-row:focus-visible,
+.result-row.selected {
+  background: var(--cedar-primary-50, #f5f5f5);
+}
+.result-row:focus-visible {
+  outline: 2px solid var(--cedar-color-primary);
+  outline-offset: -2px;
+}
+.result-row[aria-disabled='true'] {
+  cursor: default;
+}

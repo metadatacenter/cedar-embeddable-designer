@@ -1,3 +1,4 @@
+import { addElementFixture } from './support';
 import { test, expect } from '@playwright/test';
 import { openDesigner, currentTemplate, applyPreset } from './support';
 
@@ -46,7 +47,7 @@ test('template settings preserve header, footer and multiple types, and element 
   expect(await picker.evaluate((p: any) => p.constraintSet.constraints.length)).toBe(0);
   await picker.evaluate((p) => p.dispatchEvent(new CustomEvent('cancelled')));
   await applyPreset(page, 'modular');
-  await designer.getByRole('button', { name: 'Add Element', exact: true }).click();
+  await addElementFixture(page, designer);
   const element = designer.locator('app-element-card').first();
   await element.getByRole('button', { name: 'Expand element settings' }).click();
   await element.getByRole('tab', { name: 'Element metadata', exact: true }).click();

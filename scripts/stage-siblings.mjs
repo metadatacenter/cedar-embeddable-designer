@@ -34,7 +34,10 @@ const siblings = [
 const bundleDemo = process.argv.includes('--bundle-demo');
 const target = join(root, bundleDemo ? 'dist-bundle' : 'public');
 mkdirSync(target, { recursive: true });
-if (bundleDemo) copyFileSync(join(root, 'demo/index.html'), join(target, 'index.html'));
+if (bundleDemo) {
+  copyFileSync(join(root, 'demo/index.html'), join(target, 'index.html'));
+  copyFileSync(join(root, 'demo/local-child-source.js'), join(target, 'local-child-source.js'));
+}
 
 for (const sibling of siblings) {
   const to = join(target, `${sibling.name}.js`);

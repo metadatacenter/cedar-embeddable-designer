@@ -12,7 +12,7 @@ import {
 import { TemplateService } from '../core/services/template.service';
 import { TerminologyService } from '../core/services/terminology.service';
 import { PreferencesService } from '../core/services/preferences.service';
-import { CedConfig, CedValidationReport } from '../ced-public-api';
+import { CedChildSource, CedConfig, CedValidationReport } from '../ced-public-api';
 import { AppComponent } from '../app.component';
 import { FontRegistrar } from '../shared/font-registrar/font-registrar';
 
@@ -43,6 +43,10 @@ export class CedarEmbeddableDesignerElementComponent {
   readonly service = inject(TemplateService);
   private readonly terminology = inject(TerminologyService);
   private configured = false;
+  @Input() set childSource(source: CedChildSource | null) {
+    this.service.childSource.set(source);
+    this.service.childPicker.set(null);
+  }
 
   /**
    * The designer's configuration, which takes one assignment and keeps it.

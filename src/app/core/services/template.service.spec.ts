@@ -1,3 +1,5 @@
+import { CedJsonObject } from '../../ced-public-api';
+import { fieldToJson, newContainer } from '../model/cedar-template';
 import { findContainer } from '../model/container-draft';
 import { buildContainer } from '../model/cedar-template';
 import { TestBed } from '@angular/core/testing';
@@ -24,6 +26,50 @@ describe('TemplateService', () => {
     localStorage.clear();
     TestBed.configureTestingModule({});
     service = TestBed.inject(TemplateService);
+  });
+
+  it('inserts a mixed reusable batch in order, retaining definitions and resolving placement names', () => {
+    const field = fieldToJson(service.fields()[0]) as CedJsonObject;
+    const element = templateToJson(buildContainer(newContainer('element', 'Section'))) as CedJsonObject;
+    const root = service.session.document();
+    service.importChildren(
+      [
+        { type: 'field', artifact: field },
+        { type: 'element', artifact: element },
+      ],
+      root.id,
+      1,
+    );
+    const inserted = service.session.document().children.slice(1, 3);
+    expect(inserted[0]).toMatchObject({
+      kind: 'field',
+      definition: { name: 'Title', atId: field['@id'] },
+      placement: { deploymentName: 'Title 2' },
+    });
+    expect(inserted[1]).toMatchObject({ kind: 'element', definition: { identifier: element['@id'], name: 'Section' } });
+    expect(((service.templateJson() as CedJsonObject)['_ui'] as CedJsonObject)['order']).toEqual([
+      'Title',
+      'Title 2',
+      'Section',
+      'Category',
+      'Publication Date',
+    ]);
+  });
+
+  it('does not insert any children when one selected artifact is invalid', () => {
+    const before = service.templateJson();
+    const field = fieldToJson(service.fields()[0]) as CedJsonObject;
+    expect(() =>
+      service.importChildren(
+        [
+          { type: 'field', artifact: field },
+          { type: 'element', artifact: {} },
+        ],
+        service.session.document().id,
+        0,
+      ),
+    ).toThrow();
+    expect(service.templateJson()).toEqual(before);
   });
 
   it('targets inline edits and field-type validation independently of the selected container', () => {

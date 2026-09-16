@@ -72,20 +72,4 @@ export class ContainerEditorComponent {
   onDrop(event: CdkDragDrop<unknown>) {
     this.service.moveChild(event.item.data as number, this.container().id, event.currentIndex);
   }
-  importElement(): void {
-    const targetId = this.container().id;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json,.yaml,.yml';
-    input.onchange = async () => {
-      const file = input.files?.[0];
-      if (!file) return;
-      try {
-        this.service.importElement(await file.text(), targetId);
-      } catch (error) {
-        this.service.loadError.set(error instanceof Error ? error.message : String(error));
-      }
-    };
-    input.click();
-  }
 }

@@ -4,8 +4,7 @@
     <button type="button" (click)="service.showFieldDesigner.set(false)">Back to Template Builder</button>
   </header>
   <p class="hint">
-    Reusable field specifications, saved in this browser. Export specifications to keep or share every setting,
-    including template display and occurrence settings.
+    Reusable field specifications saved in this browser, including template display and occurrence settings.
   </p>
   @if (service.fieldLibrary.error(); as storageError) {
     <p role="alert" class="ced-field-error">{{ storageError }}</p>
@@ -40,9 +39,6 @@
   } @else {
     <div class="row">
       <button type="button" (click)="createField()">Create field</button>
-      <label
-        >Import field or specification<input type="file" accept=".json,.yaml,.yml" (change)="importField($event)"
-      /></label>
     </div>
   }
   @for (library of service.libraries(); track library.id) {
@@ -78,8 +74,7 @@
               </td>
               <td class="actions">
                 <button (click)="editField(field)">{{ field.definition.publishedDefinition ? 'View' : 'Edit' }}</button>
-                <button (click)="addToTemplate(field)">Add to template</button
-                ><button (click)="exportField(field.definition)">Export specification</button>
+                <button (click)="addToTemplate(field)">Add to template</button>
                 <button (click)="service.deleteCustomField(field.id)">Remove</button>
               </td>
             </tr>

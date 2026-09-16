@@ -63,12 +63,12 @@ const HEIGHT_BUDGET = 420;
 async function paletteLabels(page: Page): Promise<string[]> {
   const designer = page.locator(DESIGNER);
   await designer
-    .getByRole('button', { name: /Add Field/ })
+    .getByRole('button', { name: /Add Child/ })
     .first()
     .click();
   const picker = designer.locator('app-field-type-picker');
   await picker.locator('.btn-field-item').first().waitFor({ state: 'visible' });
-  const labels = await picker.locator('.btn-field-item .field-item-label').allTextContents();
+  const labels = await picker.locator('.btn-field-item:not(.btn-existing-child) .field-item-label').allTextContents();
   await page.keyboard.press('Escape');
   return labels.map((label) => label.trim()).filter(Boolean);
 }
@@ -90,7 +90,7 @@ async function everyTypeOnPage(page: Page): Promise<string[]> {
 
   for (const label of labels) {
     await designer
-      .getByRole('button', { name: /Add Field/ })
+      .getByRole('button', { name: /Add Child/ })
       .first()
       .click();
     await designer.getByRole('button', { name: label, exact: true }).click();

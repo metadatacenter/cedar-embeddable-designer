@@ -41,23 +41,19 @@ export class PreferencesService {
     },
   });
 
-  // User Preferences
-  readonly preferences = signal<UserPreferences>({
-    showRequired: true,
-    showAllowMultiple: true,
-    showHelpText: false,
-    showDefaultValue: false,
-    showFieldDesigner: false,
-    showElements: false,
-    fieldSelectionStyle: 'modal',
-    visibleFieldTypes: Object.keys(FIELD_TYPES).reduce(
-      (acc, key) => {
-        acc[key] = key !== 'controlledTerms';
-        return acc;
-      },
-      {} as Record<string, boolean>,
-    ),
-  });
+  // Start from the same Modular definition used by the profile selector.
+  readonly preferences = signal<UserPreferences>(
+    (() => {
+      const { hiddenFieldTypes, ...settings } = this.presetDefinitions().modular;
+      return {
+        ...settings,
+        fieldSelectionStyle: 'modal',
+        visibleFieldTypes: Object.fromEntries(
+          Object.keys(FIELD_TYPES).map((key) => [key, !hiddenFieldTypes.includes(key)]),
+        ),
+      };
+    })(),
+  );
 
   constructor() {
     // Sync all field types into preferences to ensure nothing is missing

@@ -2,12 +2,7 @@ import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { TemplateService } from '../../core/services/template.service';
 import { CustomField, Field } from '../../core/models/types';
-import {
-  fieldArtifactMetadata,
-  validateFieldSpecification,
-  newFieldIdentity,
-  readField,
-} from '../../core/model/cedar-template';
+import { fieldArtifactMetadata, validateFieldSpecification, newFieldIdentity } from '../../core/model/cedar-template';
 import { FieldSpecificationEditorComponent } from '../field-specification-editor/field-specification-editor.component';
 
 @Component({
@@ -96,34 +91,6 @@ export class FieldDesignerComponent {
     this.edited = null;
     this.editingId = null;
     this.error = null;
-  }
-  async importField(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-    try {
-      const source = await file.text();
-      const document = source.trim().startsWith('{') ? JSON.parse(source) : null;
-      if (document?.format === 'ced-field-specification-v1') {
-        validateFieldSpecification(document.definition);
-        this.openDraft(document.definition);
-      } else this.openDraft(readField(source));
-    } catch (error) {
-      this.error = error instanceof Error ? error.message : 'Could not read this field.';
-    }
-    input.value = '';
-  }
-  exportField(field: Field): void {
-    const url = URL.createObjectURL(
-      new Blob([JSON.stringify({ format: 'ced-field-specification-v1', definition: field }, null, 2)], {
-        type: 'application/json',
-      }),
-    );
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${field.name || 'field'}.ced-field.json`;
-    link.click();
-    URL.revokeObjectURL(url);
   }
   addToTemplate(field: CustomField): void {
     this.service.addCustomFieldToTemplate(field, this.service.fields().length);

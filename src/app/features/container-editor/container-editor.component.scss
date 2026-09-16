@@ -9,12 +9,6 @@
   padding-bottom: 4px;
 }
 .container-path,
-.element-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 0.5rem 0;
-}
 .container-path button {
   padding: 0.4rem 0.6rem;
   color: var(--cedar-color-primary);
@@ -151,20 +145,6 @@
 
 .container-content > .add-field-section {
   margin-top: 8px;
-}
-.element-actions {
-  justify-content: center;
-}
-.btn-element-action {
-  color: var(--cedar-color-primary);
-  border: 1px solid var(--cedar-primary-100);
-  background: white;
-  border-radius: 4px;
-  padding: 4px 10px;
-  min-height: 28px;
-  font: inherit;
-  font-size: var(--cedar-font-size-small);
-  cursor: pointer;
 }
 
 .field-drag-container.invalid {

@@ -147,7 +147,7 @@ test('adding a field scrolls to it without reaching for the document', async ({ 
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
 
-  await designer.getByRole('button', { name: /Add Field/ }).click();
+  await designer.getByRole('button', { name: /Add Child/ }).click();
   await designer.getByRole('button', { name: 'Text', exact: true }).first().click();
 
   await expect(designer.locator('[id^=field-card-]')).toHaveCount(4);
@@ -212,7 +212,7 @@ test('the field picker scrolls into a short designer and keeps its last option r
   const designer = await openDesigner(page);
   await designer.getByRole('button', { name: 'Basic', exact: true }).click();
   await designer.getByRole('button', { name: /Modular/ }).click();
-  await designer.getByRole('button', { name: /Add Field/ }).click();
+  await designer.getByRole('button', { name: /Add Child/ }).click();
   const picker = designer.locator('.picker-container');
   await expect
     .poll(() =>

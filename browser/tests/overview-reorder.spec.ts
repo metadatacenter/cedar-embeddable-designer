@@ -1,3 +1,4 @@
+import { addElementFixture } from './support';
 import { expect, test } from '@playwright/test';
 import { applyPreset, child, currentTemplate, fieldOrder, openDesigner, nestFixtureFields } from './support';
 
@@ -8,7 +9,7 @@ for (const nested of [false, true]) {
     let editor = designer.locator('app-container-editor').first();
     if (nested) {
       await applyPreset(page, 'modular');
-      await designer.getByRole('button', { name: 'Add Element', exact: true }).click();
+      await addElementFixture(page, designer);
       await nestFixtureFields(page, ['Element'], 2);
       await designer.locator('.overview-panel').getByRole('button', { name: 'Element', exact: true }).click();
       editor = designer.locator('app-container-editor').last();
@@ -64,7 +65,7 @@ for (const nested of [false, true]) {
 test('Overview elements collapse individually and together without changing the document', async ({ page }) => {
   const designer = await openDesigner(page);
   await applyPreset(page, 'modular');
-  await designer.getByRole('button', { name: 'Add Element', exact: true }).click();
+  await addElementFixture(page, designer);
   await nestFixtureFields(page, ['Element'], 2);
   const overview = designer.locator('.overview-panel');
   const before = await currentTemplate(page);

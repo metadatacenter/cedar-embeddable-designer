@@ -1,7 +1,7 @@
 <div class="picker-container animate-fade-in" [style.border]="'2px solid ' + 'var(--cedar-primary-100)'">
   <div class="picker-header">
     <div class="picker-header-left">
-      <h3 class="picker-title">Choose field type</h3>
+      <h3 class="picker-title">Chose child</h3>
 
       <!-- Library Dropdown with Autocomplete -->
       @if (service.libraries().length > 0) {
@@ -58,51 +58,50 @@
     </button>
   </div>
 
-  <!-- Custom Fields Section - Only show when a library is selected -->
-  @if (service.fieldTypeDropdownLibrary() !== null && libraryCustomFields.length > 0) {
-    <div class="fields-section">
-      <div class="fields-grid">
-        @for (customField of libraryCustomFields; track customField) {
-          <button
-            (click)="onCustomFieldClick(customField)"
-            class="btn-field-item"
-            [title]="customField.definition.helpText"
-          >
-            <div class="field-item-icon">
-              <app-icon [key]="customField.definition.type" className="w-5 h-5"></app-icon>
-            </div>
-            <span class="field-item-label">
-              {{ customField.definition.name }}
-            </span>
-          </button>
-        }
-      </div>
-    </div>
-  }
+  <div class="fields-grid">
+    @if (service.fieldTypeDropdownLibrary() === null) {
+      @for (item of visibleFieldTypesList(); track item) {
+        <button (click)="onFieldClick(item.key)" class="btn-field-item">
+          <div class="field-item-icon">
+            <app-icon [key]="item.key" className="w-5 h-5"></app-icon>
+          </div>
+          <span class="field-item-label">{{ item.value.label }}</span>
+        </button>
+      }
+    } @else {
+      @for (customField of libraryCustomFields; track customField) {
+        <button
+          (click)="onCustomFieldClick(customField)"
+          class="btn-field-item"
+          [title]="customField.definition.helpText"
+        >
+          <div class="field-item-icon">
+            <app-icon [key]="customField.definition.type" className="w-5 h-5"></app-icon>
+          </div>
+          <span class="field-item-label">{{ customField.definition.name }}</span>
+        </button>
+      }
+    }
+    @if (service.getActivePreset() !== 'basic') {
+      <button
+        type="button"
+        class="btn-field-item btn-existing-child"
+        (click)="service.openChildPicker(containerId() ?? service.session.active().id, insertPosition)"
+      >
+        <div class="field-item-icon">
+          <app-icon key="library" className="w-5 h-5"></app-icon>
+        </div>
+        <span class="field-item-label">Select existing fields and elements</span>
+      </button>
+    }
+  </div>
 
-  <!-- Message when library is selected but no custom fields -->
   @if (service.fieldTypeDropdownLibrary() !== null && libraryCustomFields.length === 0) {
     <div class="custom-fields-empty-msg">
       <p class="custom-fields-empty-text">
         No custom fields in this library yet. Create custom fields in the Field Designer and assign them to this
         library.
       </p>
-    </div>
-  }
-
-  <!-- Standard Fields Section - Only show when "Standard" (null) is selected -->
-  @if (service.fieldTypeDropdownLibrary() === null) {
-    <div>
-      <div class="fields-grid">
-        @for (item of visibleFieldTypesList(); track item) {
-          <button (click)="onFieldClick(item.key)" class="btn-field-item">
-            <div class="field-item-icon">
-              <app-icon [key]="item.key" className="w-5 h-5"></app-icon>
-            </div>
-            <span class="field-item-label">{{ item.value.label }}</span>
-          </button>
-        }
-      </div>
     </div>
   }
 </div>

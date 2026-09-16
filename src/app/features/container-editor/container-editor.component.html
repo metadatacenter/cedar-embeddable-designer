@@ -124,7 +124,7 @@
         @if (service.preferences().fieldSelectionStyle === 'modal') {
           <div class="insert-zone" (click)="chooseField(idx)">
             <button class="btn-insert-here" [style.backgroundColor]="'var(--cedar-color-primary)'">
-              ＋ Add field here
+              ＋ Add child here
             </button>
           </div>
           @if (pickerAt(idx)) {
@@ -162,7 +162,7 @@
     }
   </div>
 
-  <!-- Bottom Add Field Section (modal style) -->
+  <!-- Bottom Add Child Section (modal style) -->
   @if (service.preferences().fieldSelectionStyle === 'modal') {
     <div class="add-field-section">
       <button
@@ -171,7 +171,7 @@
         [style.backgroundColor]="'var(--cedar-color-primary)'"
       >
         <span class="text-base font-bold">＋</span>
-        Add Field
+        Add Child
       </button>
       @if (pickerAt(container().children.length)) {
         <div class="add-field-section__picker">
@@ -181,12 +181,6 @@
           ></app-field-type-picker>
         </div>
       }
-    </div>
-  }
-  @if (service.preferences().showElements) {
-    <div class="element-actions">
-      <button type="button" class="btn-element-action" (click)="service.addElement(container().id)">Add Element</button>
-      <button type="button" class="btn-element-action" (click)="importElement()">Import Element</button>
     </div>
   }
 </div>

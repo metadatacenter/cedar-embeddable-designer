@@ -16,15 +16,11 @@ test('saves complete fields, edits isolated copies, and restores the library aft
   await expect(designer.getByRole('button', { name: 'Save field to library', exact: true })).toHaveCount(0);
   await applyPreset(page, 'semantic');
   await designer.getByRole('button', { name: 'Field Designer', exact: true }).click();
-  await designer
-    .locator('app-field-designer')
-    .getByLabel('Import field or specification')
-    .setInputFiles({
-      name: 'title.json',
-      mimeType: 'application/json',
-      buffer: Buffer.from(JSON.stringify(field)),
-    });
   const library = designer.locator('app-field-designer');
+  await expect(library.locator('input[type="file"]')).toHaveCount(0);
+  await expect(library.getByRole('button', { name: /Export/ })).toHaveCount(0);
+  await library.getByRole('button', { name: 'Create field', exact: true }).click();
+  await library.getByPlaceholder('Enter field name').fill('Title');
   await library
     .locator('summary')
     .filter({ hasText: /^Create library$/ })
@@ -32,30 +28,17 @@ test('saves complete fields, edits isolated copies, and restores the library aft
   await library.getByLabel('Library name', { exact: true }).fill('Study fields');
   await library.getByRole('button', { name: 'Create library', exact: true }).click();
   await library.getByRole('button', { name: 'Save field', exact: true }).click();
-  await expect(library.getByRole('cell', { name: '2.3.4', exact: true })).toBeVisible();
-  const downloaded = page.waitForEvent('download');
-  await library.getByRole('button', { name: 'Export specification', exact: true }).click();
-  const download = await downloaded;
-  const exported = await download.path();
-  if (!exported) throw new Error('No exported specification');
-  await library.getByLabel('Import field or specification').setInputFiles(exported);
-  await expect(library.getByPlaceholder('Enter field name')).toHaveValue('Title');
-  await library.getByRole('button', { name: 'Cancel', exact: true }).click();
   await library.getByRole('button', { name: 'Edit', exact: true }).click();
   await library.getByPlaceholder('Enter field name').fill('Reusable title');
   await library.getByRole('button', { name: 'Save field', exact: true }).click();
   expect(child(await currentTemplate(page), 'Title')['schema:name']).toBe('Title');
   await library.getByRole('button', { name: 'Add to template', exact: true }).click();
-  const copied = child(await currentTemplate(page), 'Title 2');
+  const copied = child(await currentTemplate(page), 'Reusable title');
   expect(copied['schema:name']).toBe('Reusable title');
-  expect(copied['title']).toBe('Preserved schema title');
-  expect(copied['pav:version']).toBe('2.3.4');
-  expect(copied['_valueConstraints']).toMatchObject({ minLength: 2 });
   await page.reload();
   await applyPreset(page, 'semantic');
   await designer.getByRole('button', { name: 'Field Designer', exact: true }).click();
   await expect(library.getByRole('cell', { name: 'Reusable title', exact: true })).toBeVisible();
-  await expect(library.getByRole('cell', { name: '2.3.4', exact: true })).toBeVisible();
   await page.screenshot({ path: '/tmp/ced-field-library.png', fullPage: true });
 });
 

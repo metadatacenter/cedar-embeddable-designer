@@ -1,3 +1,4 @@
+import { addElementFixture } from './support';
 import { expect, test } from '@playwright/test';
 import { openDesigner, openSettings, currentTemplate, applyPreset } from './support';
 
@@ -40,7 +41,7 @@ test('field and element property choices update only their parent context and ca
   expect(await currentTemplate(page)).toEqual(withField);
 
   await applyPreset(page, 'modular');
-  await designer.getByRole('button', { name: 'Add Element', exact: true }).click();
+  await addElementFixture(page, designer);
   const element = designer.locator('app-element-card').first();
   await element.getByRole('button', { name: 'Expand element settings' }).click();
   await element.getByRole('tab', { name: 'Element metadata', exact: true }).click();

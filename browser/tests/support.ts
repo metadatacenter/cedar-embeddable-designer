@@ -1,3 +1,4 @@
+import elementFixture from '../../src/app/core/model/fixtures/corpus/template-028.json' with { type: 'json' };
 import { Locator, Page, expect } from '@playwright/test';
 
 /**
@@ -21,6 +22,10 @@ export async function openDesigner(page: Page, query = ''): Promise<Locator> {
   const designer = page.locator(DESIGNER);
   // The first field card is the earliest sign the designer inside has rendered.
   await expect(designer.locator('[id^=field-card-]').first()).toBeVisible();
+  // Existing workflow fixtures deliberately exercise Basic; the component defaults to Modular.
+  await designer.getByRole('button', { name: 'Modular', exact: true }).click();
+  await designer.getByRole('button', { name: /Basic/ }).click();
+  await expect(designer.getByRole('button', { name: 'Basic', exact: true })).toBeVisible();
   return designer;
 }
 
@@ -169,4 +174,39 @@ export async function nestFixtureFields(page: Page, path: string[], count = 1): 
     },
     { path, count },
   );
+}
+
+/** Supply an empty reusable element through the host contract for editing fixtures. */
+export async function addElementFixture(page: Page, scope = page.locator(DESIGNER)): Promise<void> {
+  await page.evaluate((source) => {
+    const element = structuredClone(source) as any;
+    for (const key of element._ui.order) delete element.properties[key];
+    element._ui = { order: [], propertyLabels: {}, propertyDescriptions: {} };
+    element.required = ['@context', '@id'];
+    element.properties['@context'] = { type: 'object', properties: {}, additionalProperties: false };
+    element['schema:name'] = 'Element';
+    element['schema:description'] = '';
+    element['@id'] = `https://repo.metadatacenter.org/template-elements/${crypto.randomUUID()}`;
+    element['bibo:status'] = 'bibo:draft';
+    element['pav:version'] = '0.0.1';
+    delete element['pav:derivedFrom'];
+    const host = document.querySelector('cedar-embeddable-designer') as any;
+    host.childSource = {
+      async search() {
+        return { results: [{ id: element['@id'], name: 'Element', type: 'element' }] };
+      },
+      async load() {
+        return element;
+      },
+    };
+  }, elementFixture.properties['Read & Understood Catalog']);
+  await scope
+    .getByRole('button', { name: /Add Child/ })
+    .first()
+    .click();
+  await page.getByRole('button', { name: 'Select existing fields and elements' }).click();
+  await page.getByRole('button', { name: 'Search', exact: true }).click();
+  await page.getByRole('row', { name: 'Select Element', exact: true }).click();
+  await page.getByRole('button', { name: 'Done', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
 }

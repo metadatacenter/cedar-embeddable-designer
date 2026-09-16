@@ -36,8 +36,8 @@ endpoint: unset, search is off and the panel says so.
 
 ## Templates and elements
 
-Choose **File → New Element** to author an element document. The **Modular**
-profile enables **Add Element** and **Import Element** within any container.
+The embedding host supplies the template or standalone element to author. The **Modular**
+profile exposes the reusable-child selector within any container.
 Existing nested content stays visible in every profile. Elements render inline with
 the same header and field layout as templates, expanded by default. The header
 chevron collapses their contents without losing edits; the Overview expands and
@@ -48,16 +48,12 @@ property IRI, requirement, cardinality and layout. Its move control transfers
 whole element subtrees between containers. Cycles and conflicting property
 names are refused; page breaks are offered only in templates.
 
-**Import Element** makes an independent in-memory copy retaining the imported
-artifact identity. **Duplicate Element** creates new draft identities throughout
-the subtree, with source provenance. Neither operation establishes a live link to
-a server artifact. Server persistence and publishing remain separate host work.
+
 
 The public `currentArtifact` and change events always contain the complete root
 document, including while a nested element is selected. CEE preview wraps a root
-element in a temporary template; exported documents retain their element type.
-JSON and full YAML can be reopened; YAML export is refused if the model cannot
-preserve all metadata, with JSON available instead.
+element in a temporary template; host-facing documents retain their element type.
+The public artifact input accepts JSON and full YAML.
 
 ## Requirements
 
@@ -233,7 +229,7 @@ BSD 2-Clause. See [license.txt](license.txt).
 With `npm start`, open `http://localhost:4200/?example=all-fields` (or the port
 passed to `npm start`). This loads `public/examples/all-fields-nested.json`, a
 snapshot of the local all-fields template, including NIH Grant ID and DOI in its
-single, repeated and nested collections. Edits in CED remain local until exported;
+single, repeated and nested collections. Edits in CED remain local;
 the example page does not write back to the stack. Choose Modular to expose all
 authoring features.
 
@@ -267,6 +263,50 @@ permission checks, or save/publish lifecycle rules.
 CED marks affected cards and Overview entries, including ancestor elements, and
 provides a summary linking to the relevant settings. Correcting or clearing an edit
 removes its issue; deleting an item or loading another document removes its pending
-issues from the report. CED’s JSON download also refuses invalid settings and opens the affected item.
+issues from the report.
 The wrapper remains responsible for saving and can display
 the report when a save is attempted.
+
+## Adding existing fields and elements
+
+**Add Child** retains the field-type popup and offers **Select existing fields and elements**.
+The selector stages one or more results in an upper table, with a bin to remove each
+selection and Done/Cancel beside the table. Search results below show name, artifact
+type, created and modified dates, version and status. Done loads the complete batch
+before inserting it at the chosen position; Cancel leaves the document unchanged.
+Source identities, versions, metadata and descendants are retained. Duplicate child
+names receive a unique placement name without renaming the reusable definition.
+
+The embedding host supplies `designer.childSource`, implementing the exported
+`CedChildSource` interface. `search(query, { signal, cursor })` returns
+`{ results, nextCursor? }`; each result has `id`, `name`, `type` (`field` or `element`)
+and optional `createdOn`, `modifiedOn` (ISO dates), `version`, and `status` (display
+label). `load(result, { signal })` returns that artifact's full CEDAR JSON-LD.
+The host owns authentication, permission filtering and repository URL selection.
+An omitted source shows an unavailable message; CED has no default repository.
+Replacing `childSource` closes the selector and cancels pending work. Search requests
+and artifact loads receive abort signals, and late replies cannot change a closed
+selector or a replacement document. Both popup and library-sidebar layouts expose
+the selector.
+
+### Local repository demo as test1
+
+CED starts in **Modular**. For authenticated local search, run `npm run demo:prepare`
+then `npm run demo:serve` and open `http://localhost:4599/`.
+The picker automatically matches word prefixes: `Princ` and `Princ Inv` both
+match `Principal Investigator`. Every entered word must match; no wildcard is needed.
+This translation belongs to the demo host adapter and leaves the REST API unchanged.
+The loopback-only demo server signs in to local Keycloak on port 8080 as
+`test1@test.com` and reads fields and elements through the resource server on port
+9007. It caches and renews the short-lived token in server memory. Only search and
+artifact reads are exposed; adding children changes the designer document locally.
+The fixed test account and endpoints belong to this development server, not the
+published CED component. The component's `childSource` input still belongs to its host.
+
+The browser suite keeps its existing fixtures in Basic explicitly. To exercise the
+real local integration, with the demo server running, use
+`CED_LOCAL_REPOSITORY=1 npm --prefix browser test -- --grep 'local test1'`.
+The local test reads the existing published `Principal Investigator` element and
+inserts it in the browser without saving to the repository.
+
+CED has no file import, export or download controls. Embedding hosts supply artifacts through the public inputs and receive edits through the change events.

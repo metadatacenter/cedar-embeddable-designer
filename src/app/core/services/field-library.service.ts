@@ -27,7 +27,7 @@ export class FieldLibraryService {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       } catch {
-        this.error.set('The browser could not save the field library. Export your fields before closing this page.');
+        this.error.set('The browser could not save the field library. Keep this page open and try again.');
       }
     });
   }

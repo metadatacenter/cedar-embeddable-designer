@@ -15,6 +15,7 @@
     </style>
   </head>
   <body>
+    <p style="margin: 8px 16px; font-size: 13px">Local repository: test1@test.com · Changes stay in this designer.</p>
     <cedar-embeddable-designer id="d"></cedar-embeddable-designer>
     <!--
       Two sibling web components, both loaded by the host. Neither bundles the
@@ -25,11 +26,14 @@
     <!-- CEE renders the preview: a third sibling, and the form renderer production uses. -->
     <script src="cedar-embeddable-editor.js"></script>
     <script src="cedar-embeddable-designer.js"></script>
-    <script>
+    <script type="module">
+      import { localChildSource } from './local-child-source.js';
       customElements.whenDefined('cedar-embeddable-designer').then(() => {
         // The local terminology server: production does not serve the picker's
         // version-aware /search yet.
-        document.getElementById('d').config = { terminologyBaseUrl: 'http://localhost:9004/' };
+        const designer = document.getElementById('d');
+        designer.config = { terminologyBaseUrl: 'http://localhost:9004/' };
+        designer.childSource = localChildSource;
       });
     </script>
   </body>

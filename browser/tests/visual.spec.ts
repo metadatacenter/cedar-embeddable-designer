@@ -1,3 +1,4 @@
+import { addElementFixture } from './support';
 import { nestFixtureFields } from './support';
 /**
  * What the designer looks like, recorded.
@@ -101,7 +102,7 @@ async function designerShowing(
 
   for (const label of labels) {
     await designer
-      .getByRole('button', { name: /Add Field/ })
+      .getByRole('button', { name: /Add Child/ })
       .first()
       .click();
     await designer.getByRole('button', { name: label, exact: true }).click();
@@ -143,7 +144,7 @@ test.describe('the designer', () => {
   test('shows the field type palette', async ({ page }) => {
     const designer = await designerShowing(page, ['Text']);
     await designer
-      .getByRole('button', { name: /Add Field/ })
+      .getByRole('button', { name: /Add Child/ })
       .first()
       .click();
     const picker = designer.locator('app-field-type-picker');
@@ -179,7 +180,7 @@ test.describe('the designer', () => {
       await page.setViewportSize({ width, height: 1000 });
       const designer = await openDesigner(page);
       await applyPreset(page, 'modular');
-      await designer.getByRole('button', { name: 'Add Element', exact: true }).click();
+      await addElementFixture(page, designer);
       const element = designer.locator('app-container-editor').nth(1);
       await element.getByPlaceholder('Element name').fill('Study details');
       await nestFixtureFields(page, ['Element']);

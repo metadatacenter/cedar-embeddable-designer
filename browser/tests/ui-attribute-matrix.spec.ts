@@ -178,7 +178,7 @@ async function oneCardOf(
   }
   await expect.poll(async () => cards.count(), { timeout: SETTLE }).toBe(0);
   await designer
-    .getByRole('button', { name: /Add Field/ })
+    .getByRole('button', { name: /Add Child/ })
     .first()
     .click();
   await designer
@@ -729,7 +729,7 @@ test.describe('what a sibling component contributes', () => {
       await applyPreset(page, 'modular');
       const designer = page.locator(DESIGNER);
       await designer
-        .getByRole('button', { name: /Add Field/ })
+        .getByRole('button', { name: /Add Child/ })
         .first()
         .click();
       await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();

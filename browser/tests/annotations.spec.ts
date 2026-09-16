@@ -1,3 +1,4 @@
+import { addElementFixture } from './support';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { openDesigner, openSettings, currentTemplate, child } from './support';
 import type { CedarEmbeddableDesignerElement } from '../../src/app/ced-public-api';
@@ -44,7 +45,7 @@ for (const width of [1280, 375]) {
     expect(child(await currentTemplate(page), 'Title')._annotations).toEqual(annotations);
     await page.getByRole('button', { name: 'Basic', exact: true }).click();
     await page.getByRole('button', { name: /Modular/ }).click();
-    await root.getByRole('button', { name: 'Add Element', exact: true }).click();
+    await addElementFixture(page, root);
     const elementSettings = designer.locator('app-element-card').first();
     await elementSettings.getByRole('button', { name: 'Expand element settings' }).click();
     await elementSettings.getByRole('tab', { name: 'Annotations', exact: true }).click();

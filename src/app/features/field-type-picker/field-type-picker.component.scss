@@ -1,4 +1,9 @@
+:host {
+  display: block;
+}
+
 .picker-container {
+  container-type: inline-size;
   background-color: #ffffff;
   border-radius: 0.5rem;
   box-shadow:
@@ -47,6 +52,7 @@
   border-radius: 0.5rem;
   background-color: #ffffff;
   min-width: 140px;
+  color: #374151;
   cursor: pointer;
   transition: border-color 150ms;
 
@@ -192,4 +198,14 @@
   text-align: center;
   word-break: break-word;
   width: 100%;
+}
+
+.btn-existing-child {
+  grid-column: span 2;
+}
+
+@container (max-width: 224px) {
+  .btn-existing-child {
+    grid-column: span 1;
+  }
 }

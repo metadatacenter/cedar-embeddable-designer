@@ -1,3 +1,4 @@
+import { ChildPickerComponent } from './features/child-picker/child-picker.component';
 import {
   Component,
   ElementRef,
@@ -28,6 +29,7 @@ import { ContainerOutlineComponent } from './features/container-outline/containe
   standalone: true,
   imports: [
     CommonModule,
+    ChildPickerComponent,
     IconComponent,
     FieldLibrarySidebarComponent,
     PreferencesModalComponent,
@@ -187,34 +189,5 @@ export class AppComponent {
     if (this.showProfileMenu() && !within('.profile-menu-container')) {
       this.showProfileMenu.set(false);
     }
-  }
-
-  saveTemplateAsJson(): void {
-    const report = this.service.validationReport();
-    if (!report.canSave) {
-      this.service.revealIssue(report.issues[0]);
-      return;
-    }
-    this.download(JSON.stringify(this.service.templateJson(), null, 2), 'application/json', 'json');
-  }
-
-  /** The template name, reduced to something a filesystem will take. */
-  private fileName(extension: string): string {
-    const stem = (this.service.templateName() || 'template').toLowerCase().replace(/[^a-z0-9_-]+/g, '_');
-    return `${stem || 'template'}.${extension}`;
-  }
-
-  private download(contents: string, mimeType: string, extension: string): void {
-    const url = URL.createObjectURL(new Blob([contents], { type: mimeType }));
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = this.fileName(extension);
-    // Appended to the document rather than to this component: the anchor is never
-    // rendered, and a shadow root is not a place a synthetic click needs to happen.
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    URL.revokeObjectURL(url);
-    this.service.markSaved();
   }
 }

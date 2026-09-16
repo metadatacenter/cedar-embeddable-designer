@@ -264,22 +264,6 @@
     }
   </div>
 
-  <!-- Floating Save Button -->
-  <div class="floating-save">
-    <div class="floating-save__wrapper">
-      <button
-        (click)="saveTemplateAsJson()"
-        aria-label="Download as JSON"
-        [title]="service.validationReport().canSave ? 'Download as JSON' : 'Resolve settings errors before downloading'"
-        class="btn-save flex items-center justify-center"
-        [style.backgroundColor]="'var(--cedar-color-primary)'"
-      >
-        <app-icon key="save" className="w-5 h-5 text-white"></app-icon>
-      </button>
-      <div class="floating-save__tooltip">Download as JSON</div>
-    </div>
-  </div>
-
   <!-- Modals -->
   <app-preferences-modal></app-preferences-modal>
   <app-preset-definitions-modal></app-preset-definitions-modal>
@@ -288,4 +272,8 @@
 <!-- Field Designer Overlay -->
 @if (service.showFieldDesigner()) {
   <app-field-designer class="fixed inset-0 z-50"></app-field-designer>
+}
+
+@if (service.childPicker(); as target) {
+  <app-child-picker [target]="target" />
 }

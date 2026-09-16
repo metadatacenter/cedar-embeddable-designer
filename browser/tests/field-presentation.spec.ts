@@ -136,10 +136,12 @@ for (const width of [1440, 768, 375]) {
     await openSettings(card, 'Constraints');
     const fields = card.locator('.text-constraint-fields');
     const inputs = fields.locator('input');
-    const boxes = await inputs.evaluateAll((nodes) => nodes.map((node) => {
-      const r = node.getBoundingClientRect();
-      return { x: r.x, y: r.y, right: r.right };
-    }));
+    const boxes = await inputs.evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const r = node.getBoundingClientRect();
+        return { x: r.x, y: r.y, right: r.right };
+      }),
+    );
     expect(boxes).toHaveLength(3);
     const bounds = await fields.boundingBox();
     for (const box of boxes) {

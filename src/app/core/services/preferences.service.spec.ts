@@ -19,11 +19,8 @@ describe('PreferencesService', () => {
     service = TestBed.inject(PreferencesService);
   });
 
-  it('reports basic for the initial preferences', () => {
-    // The defaults are the `basic` preset spelled out a second time, in the
-    // signal initializer rather than in the preset table. Worth pinning: the two
-    // are edited independently, and nothing else would notice them diverging.
-    expect(service.getActivePreset()).toBe('basic');
+  it('starts with the Modular profile', () => {
+    expect(service.getActivePreset()).toBe('modular');
   });
 
   it.each(['basic', 'semantic', 'modular'] as const)('reads back %s after applying it', (preset) => {

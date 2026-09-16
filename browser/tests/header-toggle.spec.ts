@@ -1,3 +1,4 @@
+import { addElementFixture } from './support';
 import { expect, test } from '@playwright/test';
 import { openDesigner } from './support';
 
@@ -59,7 +60,7 @@ for (const width of [1280, 375]) {
 
     await page.getByRole('button', { name: 'Basic', exact: true }).click();
     await page.getByRole('button', { name: /Modular/ }).click();
-    await root.getByRole('button', { name: 'Add Element', exact: true }).click();
+    await addElementFixture(page, root);
     const element = root.locator('.template-header-card').nth(1);
     const elementBody = element.locator('.template-header-card__body');
     const elementToggle = element.getByRole('button', { name: /element settings/ });

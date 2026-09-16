@@ -1,3 +1,9 @@
+@if (service.getActivePreset() !== 'basic') {
+  <button type="button" class="btn-add-item" (click)="service.openChildPicker()">
+    Select existing fields and elements
+  </button>
+}
+
 <div
   class="sidebar-container"
   [style.width]="service.sidebarCollapsed() ? '48px' : '288px'"
