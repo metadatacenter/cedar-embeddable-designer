@@ -1,0 +1,40 @@
+<fieldset [disabled]="disabled()">
+  <legend>Alternate questions</legend>
+  <div class="add-row">
+    <input aria-label="New alternate question" [ngModel]="question()" (ngModelChange)="edit($event)" />
+    <button type="button" (click)="add()">Add question</button>
+  </div>
+  @if (error(); as message) {
+    <p role="alert">{{ message }}</p>
+  }
+  <table aria-label="Alternate questions">
+    <thead>
+      <tr>
+        <th scope="col">Question</th>
+        <th scope="col" class="actions"><span class="sr-only">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (question of questions(); track $index; let i = $index) {
+        <tr>
+          <td>{{ question }}</td>
+          <td>
+            <button
+              type="button"
+              class="remove"
+              [attr.aria-label]="'Remove question ' + (i + 1)"
+              title="Remove question"
+              (click)="remove(i)"
+            >
+              <app-icon key="trash" className="w-4 h-4" />
+            </button>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="2" class="empty">No alternate questions.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</fieldset>
