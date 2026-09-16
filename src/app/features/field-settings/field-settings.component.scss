@@ -262,6 +262,14 @@ button:focus-visible {
   align-self: start;
   min-height: 20px;
 }
+.preferred-label {
+  margin-top: 8px;
+}
+.preferred-label input {
+  width: 100%;
+  box-sizing: border-box;
+  @include control-style.compact-control;
+}
 @container (max-width: 480px) {
   .display-fields > label,
   .display-flags {

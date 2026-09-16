@@ -349,19 +349,32 @@ test('previews an element document through CEE while publishing element artifact
 
 for (const type of ['number', 'date']) {
   test(`${type} default aligns with its neighboring settings controls`, async ({ page }) => {
-    const control = await openField(page, type, type === 'date' ? { temporal: { type: 'xsd:date', granularity: 'year' } } : {});
+    const control = await openField(
+      page,
+      type,
+      type === 'date' ? { temporal: { type: 'xsd:date', granularity: 'year' } } : {},
+    );
     const settings = page.locator('app-field-settings');
-    const neighbor = settings.locator('select').first();
-    const defaultBox = type === 'number' ? control.locator('input').first() : control.locator('.mat-mdc-text-field-wrapper').first();
+    const neighbor = settings.getByRole('combobox', {
+      name: type === 'number' ? 'Datatype' : 'Temporal type',
+      exact: true,
+    });
+    const defaultBox =
+      type === 'number' ? control.locator('input').first() : control.locator('.mat-mdc-text-field-wrapper').first();
     await expect(defaultBox).toBeVisible();
     await expect.poll(async () => (await defaultBox.boundingBox())!.height).toBe(28);
-    await expect.poll(async () => (await defaultBox.boundingBox())!.height).toBe((await neighbor.boundingBox())!.height);
+    await expect
+      .poll(async () => (await defaultBox.boundingBox())!.height)
+      .toBe((await neighbor.boundingBox())!.height);
     const input = control.locator('input').first();
-    await expect(input).toHaveCSS('font-size', await neighbor.evaluate(el => getComputedStyle(el).fontSize));
-    await expect(input).toHaveCSS('font-weight', await neighbor.evaluate(el => getComputedStyle(el).fontWeight));
+    await expect(input).toHaveCSS('font-size', await neighbor.evaluate((el) => getComputedStyle(el).fontSize));
+    await expect(input).toHaveCSS('font-weight', await neighbor.evaluate((el) => getComputedStyle(el).fontWeight));
     if (type === 'number') {
       expect((await defaultBox.boundingBox())!.y).toBe((await neighbor.boundingBox())!.y);
-      await expect(input).toHaveCSS('border-radius', await neighbor.evaluate(el => getComputedStyle(el).borderRadius));
+      await expect(input).toHaveCSS(
+        'border-radius',
+        await neighbor.evaluate((el) => getComputedStyle(el).borderRadius),
+      );
     }
   });
 }

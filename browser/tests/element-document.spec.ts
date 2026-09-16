@@ -58,6 +58,7 @@ for (const width of [1280, 375]) {
     await expect(placement.getByRole('tabpanel', { name: 'Annotations', exact: true })).toBeVisible();
     await placement.getByRole('tab', { name: 'Occurrences', exact: true }).click();
     const checkbox = placement.getByLabel('Allow multiple', { exact: true });
+    await expect(checkbox).toBeVisible();
     const singlePosition = await checkbox.boundingBox();
     await checkbox.check();
     const multiplePosition = await checkbox.boundingBox();
