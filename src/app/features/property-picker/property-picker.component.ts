@@ -1,3 +1,4 @@
+import { ManualIriComponent } from '../manual-iri/manual-iri.component';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -18,6 +19,7 @@ import { trapTab } from '../../shared/focus-trap';
   selector: 'app-property-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  imports: [ManualIriComponent],
   template: `
     <div class="property">
       <span class="iri" [class.placeholder]="!iri()">{{ iri() || 'Choose a property IRI' }}</span>
@@ -32,11 +34,20 @@ import { trapTab } from '../../shared/focus-trap';
           {{ iri() ? 'Replace' : 'Choose' }}
         </button>
       }
+      <button #manualTrigger type="button" [disabled]="disabled()" (click)="manualOpened.set(!manualOpened())">
+        Enter IRI manually
+      </button>
     </div>
+    @if (manualOpened()) {
+      <app-manual-iri
+        [disabled]="disabled()"
+        action="Add property"
+        (accepted)="acceptManual($event)"
+        (cancelled)="closeManual()"
+      />
+    }
     @if (!available || !baseUrl()) {
-      <p role="status" class="unavailable">
-        Property selection needs the term picker and a configured terminologyBaseUrl.
-      </p>
+      <p role="status" class="unavailable">Vocabulary search is unavailable. You can enter an IRI manually.</p>
     }
     @if (opened()) {
       <div class="overlay">
@@ -134,6 +145,17 @@ export class PropertyPickerComponent {
   readonly baseUrl = inject(TerminologyService).baseUrl;
   readonly available = termPickerAvailable();
   readonly opened = signal(false);
+  readonly manualOpened = signal(false);
+  private readonly manualTrigger = viewChild<ElementRef<HTMLButtonElement>>('manualTrigger');
+  closeManual(): void {
+    this.manualOpened.set(false);
+    this.manualTrigger()?.nativeElement.focus();
+  }
+  acceptManual(iri: string): void {
+    if (this.disabled()) return;
+    this.propertySelected.emit(iri);
+    this.closeManual();
+  }
   readonly error = signal<string | null>(null);
   private readonly dialog = viewChild<ElementRef<HTMLElement>>('dialog');
   private readonly trigger = viewChild<ElementRef<HTMLButtonElement>>('trigger');
@@ -142,6 +164,7 @@ export class PropertyPickerComponent {
   }
   open(): void {
     if (this.disabled()) return;
+    this.manualOpened.set(false);
     this.error.set(null);
     this.opened.set(true);
   }

@@ -1,3 +1,4 @@
+import { ManualIriComponent } from '../manual-iri/manual-iri.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import {
   ChangeDetectionStrategy,
@@ -23,7 +24,7 @@ import { trapTab } from '../../shared/focus-trap';
   selector: 'app-types-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  imports: [IconComponent],
+  imports: [IconComponent, ManualIriComponent],
   template: `
     <div class="property">
       <div class="type-list">
@@ -49,9 +50,21 @@ import { trapTab } from '../../shared/focus-trap';
           Add types
         </button>
       }
+      <button #manualTrigger type="button" [disabled]="disabled()" (click)="manualOpened.set(!manualOpened())">
+        Enter IRI manually
+      </button>
     </div>
+    @if (manualOpened()) {
+      <app-manual-iri
+        [disabled]="disabled()"
+        [existing]="types()"
+        action="Add type"
+        (accepted)="acceptManual($event)"
+        (cancelled)="closeManual()"
+      />
+    }
     @if (!available || !baseUrl()) {
-      <p role="status" class="unavailable">Type selection needs the term picker and a configured terminologyBaseUrl.</p>
+      <p role="status" class="unavailable">Vocabulary search is unavailable. You can enter an IRI manually.</p>
     }
     @if (opened()) {
       <div class="overlay">
@@ -177,6 +190,17 @@ export class TypesPickerComponent {
   readonly baseUrl = inject(TerminologyService).baseUrl;
   readonly available = termPickerAvailable();
   readonly opened = signal(false);
+  readonly manualOpened = signal(false);
+  private readonly manualTrigger = viewChild<ElementRef<HTMLButtonElement>>('manualTrigger');
+  closeManual(): void {
+    this.manualOpened.set(false);
+    this.manualTrigger()?.nativeElement.focus();
+  }
+  acceptManual(iri: string): void {
+    if (this.disabled()) return;
+    this.saveTypes([...new Set([...this.types(), iri])]);
+    this.closeManual();
+  }
   readonly error = signal<string | null>(null);
   private readonly dialog = viewChild<ElementRef<HTMLElement>>('dialog');
   private readonly trigger = viewChild<ElementRef<HTMLButtonElement>>('trigger');
@@ -185,6 +209,7 @@ export class TypesPickerComponent {
   }
   open(): void {
     if (this.disabled()) return;
+    this.manualOpened.set(false);
     this.error.set(null);
     this.opened.set(true);
   }
