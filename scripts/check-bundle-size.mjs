@@ -24,11 +24,9 @@ import { gzipSync } from 'node:zlib';
 import { readFileSync } from 'node:fs';
 import { OUT, readManifest } from './make-bundle.mjs';
 
-// 2026-09-15: the feature-complete authoring surface, including annotations,
-// alternate and preferred labels, language, type/property picking and manual IRI
-// entry, measures 1,303,447 raw / 409,568 gzip-9 bytes on the CI build. The raw
-// ceiling moves with that measured feature set; retain the compressed ceiling.
-const RAW_LIMIT = 1_340_000;
+// 2026-09-14: container settings, class-set authoring, and the updated model
+// measure 1,261,748 raw / 401,298 gzip bytes. Retain the compressed ceiling.
+const RAW_LIMIT = 1_300_000;
 const GZIP_LIMIT = 420_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
