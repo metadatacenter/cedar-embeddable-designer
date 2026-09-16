@@ -320,6 +320,13 @@
     @if (error) {
       <p role="alert">{{ error }}</p>
     }
+    <label
+      >Preferred name<input
+        name="preferredLabel"
+        [(ngModel)]="preferredLabel"
+        (ngModelChange)="savePreferredLabel()"
+        [disabled]="!!field.publishedDefinition"
+    /></label>
     <app-language-selector [field]="field" />
     @if (dynamic) {
       <app-alternate-questions [field]="field" />
@@ -358,6 +365,16 @@
         <dt>Previous version</dt>
         <dd>{{ artifact.previousVersion }}</dd>
       }
+      <dt class="editable"><label [for]="'field-identifier-' + field.id">Identifier</label></dt>
+      <dd>
+        <input
+          [id]="'field-identifier-' + field.id"
+          name="schemaIdentifier"
+          [(ngModel)]="schemaIdentifier"
+          (ngModelChange)="saveIdentifier()"
+          [disabled]="!!field.publishedDefinition"
+        />
+      </dd>
       @if (dynamic) {
         <dt class="editable">Property IRI</dt>
         <dd>

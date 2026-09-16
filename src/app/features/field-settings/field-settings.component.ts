@@ -95,6 +95,8 @@ export class FieldSettingsComponent implements OnChanges {
   get artifact() {
     return fieldArtifactMetadata(this.field);
   }
+  preferredLabel = '';
+  schemaIdentifier = '';
   displayLabel = '';
   displayDescription = '';
   hidden = false;
@@ -217,6 +219,8 @@ export class FieldSettingsComponent implements OnChanges {
       first ? incoming : this.adopt(key, current, incoming);
     if (first) this.loaded = {};
 
+    this.preferredLabel = take('preferredLabel', this.preferredLabel, this.field.preferredLabel ?? '');
+    this.schemaIdentifier = take('schemaIdentifier', this.schemaIdentifier, this.field.schemaIdentifier ?? '');
     this.displayLabel = take('displayLabel', this.displayLabel, this.field.displayLabel ?? '');
     this.displayDescription = take('displayDescription', this.displayDescription, this.field.displayDescription ?? '');
     this.hidden = take('hidden', this.hidden, this.field.hidden ?? false);
@@ -251,6 +255,22 @@ export class FieldSettingsComponent implements OnChanges {
     if (!invalid) return false;
     this.report(tab, `${invalid.closest('label')?.textContent?.trim() || 'Value'} must be a valid number.`);
     return true;
+  }
+  saveIdentifier(): void {
+    this.report(
+      'Field metadata',
+      this.service.updateFieldSettings(this.field.id, {
+        schemaIdentifier: this.schemaIdentifier || undefined,
+      }),
+    );
+  }
+  savePreferredLabel(): void {
+    this.report(
+      'Display',
+      this.service.updateFieldSettings(this.field.id, {
+        preferredLabel: this.preferredLabel || undefined,
+      }),
+    );
   }
   saveProperty(iri: string): void {
     this.report('Field metadata', this.service.updateFieldSettings(this.field.id, { propertyIri: iri }));
