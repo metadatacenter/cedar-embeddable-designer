@@ -1,3 +1,4 @@
+import { IconComponent } from '../../shared/components/icon/icon.component';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -11,7 +12,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { ContainerDraft } from '../../core/model/container-draft';
-import { containerArtifactMetadata, fieldToJson } from '../../core/model/cedar-template';
+import { containerArtifactMetadata } from '../../core/model/cedar-template';
 import { ControlledTermSet } from '../../core/models/types';
 import { TemplateService } from '../../core/services/template.service';
 import { TerminologyService } from '../../core/services/terminology.service';
@@ -22,15 +23,31 @@ import { trapTab } from '../../shared/focus-trap';
   selector: 'app-types-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  imports: [IconComponent],
   template: `
     <div class="property">
-      @if (selections().constraints.length && summaryAvailable) {
-        <cedar-embeddable-field [config]="config" [fieldObject]="summary()" [value]="value" />
-      } @else {
-        <span class="iri">{{ selections().constraints.length ? labels() : 'Click on Edit to choose types' }}</span>
-      }
+      <div class="type-list">
+        @for (iri of types(); track iri) {
+          <div class="type-row">
+            <span class="iri">{{ iri }}</span>
+            <button
+              type="button"
+              class="remove"
+              [disabled]="disabled()"
+              [attr.aria-label]="'Remove type ' + iri"
+              (click)="remove(iri)"
+            >
+              <app-icon key="trash" className="w-4 h-4" />
+            </button>
+          </div>
+        } @empty {
+          <span class="placeholder">No types selected.</span>
+        }
+      </div>
       @if (available && baseUrl()) {
-        <button #trigger type="button" [disabled]="disabled()" (click)="open()" aria-label="Edit types">Edit</button>
+        <button #trigger type="button" [disabled]="disabled()" (click)="open()" aria-label="Add types">
+          Add types
+        </button>
       }
     </div>
     @if (!available || !baseUrl()) {
@@ -42,7 +59,7 @@ import { trapTab } from '../../shared/focus-trap';
           #dialog
           role="dialog"
           aria-modal="true"
-          aria-label="Choose types"
+          aria-label="Add types"
           tabindex="-1"
           (keydown)="keydown($event)"
           class="dialog"
@@ -52,7 +69,7 @@ import { trapTab } from '../../shared/focus-trap';
           }
           <cedar-embeddable-term-picker
             [termTypes]="['class']"
-            [constraintSet]="selections()"
+            [constraintSet]="emptySelection"
             [selectionMode]="'constraints'"
             [terminologyBaseUrl]="baseUrl()"
             (constraintsSelected)="select($event)"
@@ -94,11 +111,26 @@ import { trapTab } from '../../shared/focus-trap';
       text-underline-offset: 2px;
       cursor: pointer;
     }
-    cedar-embeddable-field {
-      display: block;
+    .type-list {
       flex: 1;
       min-width: 0;
-      --cedar-control-font-size: var(--cedar-font-size-small);
+    }
+    .type-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .type-row + .type-row {
+      margin-top: 4px;
+    }
+    .remove {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      color: black;
+      text-decoration: none;
     }
     .placeholder {
       color: #777;
@@ -134,37 +166,13 @@ import { trapTab } from '../../shared/focus-trap';
 export class TypesPickerComponent {
   readonly container = input.required<ContainerDraft>();
   readonly service = inject(TemplateService);
-  readonly selections = computed<ControlledTermSet>(
-    () =>
-      this.container().metadata?.typeSelections ?? {
-        constraints: (
-          this.container().metadata?.instanceTypes ??
-          (this.container().metadata?.instanceType ? [this.container().metadata!.instanceType!] : [])
-        ).map((iri) => ({
-          sourceType: 'ontology-term',
-          termType: 'OntologyClass',
-          sourceId: iri,
-          sourceName: iri,
-          ontologyId: 'Types',
-        })),
-        actions: [],
-      },
-  );
-  readonly summary = computed(() =>
-    fieldToJson({
-      id: 0,
-      name: 'Types',
-      type: 'controlledTerms',
-      options: [],
-      status: 'optional',
-      allowMultiple: true,
-      defaultValue: { kind: 'none' },
-      controlledTermConstraints: this.selections(),
-    }),
-  );
-  readonly summaryAvailable = customElements.get('cedar-embeddable-field') !== undefined;
-  readonly config = { ...this.service.fieldEditorConfig(), readOnlyMode: true };
-  readonly value = { kind: 'none' };
+  readonly types = computed(() => [
+    ...new Set(
+      this.container().metadata?.instanceTypes ??
+        (this.container().metadata?.instanceType ? [this.container().metadata!.instanceType!] : []),
+    ),
+  ]);
+  readonly emptySelection: ControlledTermSet = { constraints: [], actions: [] };
   readonly disabled = input(false);
   readonly baseUrl = inject(TerminologyService).baseUrl;
   readonly available = termPickerAvailable();
@@ -191,21 +199,32 @@ export class TypesPickerComponent {
       this.close();
     } else if (this.dialog()) trapTab(this.dialog()!.nativeElement, event);
   }
-  labels(): string {
-    return this.selections()
-      .constraints.map((c) => ('sourceName' in c ? c.sourceName : '') || c.sourceId)
-      .join(', ');
+  remove(iri: string): void {
+    if (this.disabled()) return;
+    this.saveTypes(this.types().filter((type) => type !== iri));
   }
   select(event: Event): void {
-    if (!this.opened()) return;
+    if (this.disabled() || !this.opened()) return;
     const set = (event as CustomEvent<ControlledTermSet>).detail;
     if (
       !Array.isArray(set?.constraints) ||
-      set.constraints.some((c) => c.sourceType !== 'ontology-term' || !c.sourceId)
+      set.constraints.some(
+        (c) =>
+          c.sourceType !== 'ontology-term' ||
+          (c.termType && c.termType !== 'OntologyClass') ||
+          typeof c.sourceId !== 'string' ||
+          !/^[a-z][a-z0-9+.-]*:\S+$/i.test(c.sourceId),
+      )
     ) {
       this.error.set('Choose classes only.');
       return;
     }
+    if (set.constraints.length) {
+      this.saveTypes([...new Set([...this.types(), ...set.constraints.map((c) => c.sourceId!)])]);
+    }
+    this.close();
+  }
+  private saveTypes(types: string[]): void {
     const container = this.container();
     const metadata = container.metadata ?? {
       artifact: containerArtifactMetadata(container),
@@ -215,17 +234,12 @@ export class TypesPickerComponent {
       header: null,
       footer: null,
     };
-    const types = [
-      ...new Set(set.constraints.map((c) => c.sourceId).filter((iri): iri is string => typeof iri === 'string')),
-    ];
     this.service.updateContainerDefinition(container.id, {
       metadata: {
         ...metadata,
         instanceType: types[0] ?? null,
         instanceTypes: types,
-        typeSelections: structuredClone(set),
       },
     });
-    this.close();
   }
 }

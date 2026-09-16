@@ -187,7 +187,6 @@ export interface ContainerMetadata {
   annotations: Field['annotations'];
   instanceType: string | null;
   instanceTypes?: string[];
-  typeSelections?: ControlledTermSet;
   header: string | null;
   footer: string | null;
 }

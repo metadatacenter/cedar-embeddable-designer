@@ -22,8 +22,14 @@ import { trapTab } from '../../shared/focus-trap';
     <div class="property">
       <span class="iri" [class.placeholder]="!iri()">{{ iri() || 'Choose a property IRI' }}</span>
       @if (available && baseUrl()) {
-        <button #trigger type="button" [disabled]="disabled()" (click)="open()" aria-label="Edit property IRI">
-          Edit
+        <button
+          #trigger
+          type="button"
+          [disabled]="disabled()"
+          (click)="open()"
+          [attr.aria-label]="iri() ? 'Replace property IRI' : 'Choose property IRI'"
+        >
+          {{ iri() ? 'Replace' : 'Choose' }}
         </button>
       }
     </div>
