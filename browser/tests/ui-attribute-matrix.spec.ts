@@ -142,9 +142,9 @@ const CONTROLS: readonly Control[] = [
     expected: () => true,
   },
   {
-    name: 'field metadata',
+    name: 'removed field details',
     find: (page) => disclosure(page, 'Field details'),
-    expected: () => true,
+    expected: () => false,
   },
   {
     name: 'field identity',

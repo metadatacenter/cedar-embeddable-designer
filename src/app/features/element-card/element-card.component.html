@@ -69,9 +69,7 @@
                 >Display description <input [(ngModel)]="draft().displayDescription" (ngModelChange)="apply()"
               /></label>
             </div>
-          }
-          @case ('Element details') {
-            <p class="details-placeholder">Coming soon: language, alternate labels.</p>
+            <app-language-selector [container]="node().definition" />
           }
           @case ('Occurrences') {
             <div class="settings-fields">

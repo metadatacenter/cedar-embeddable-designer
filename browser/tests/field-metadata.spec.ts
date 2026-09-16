@@ -16,9 +16,7 @@ test('removed details controls remain absent and imported metadata survives disp
   });
   const card = designer.locator('app-field-card').first();
   const section = await openSettings(card, 'Display');
-  const details = await openSettings(card, 'Field details');
-  await expect(details).toContainText('Coming soon: language, alternate labels.');
-  await openSettings(card, 'Display');
+  await expect(card.getByRole('tab', { name: 'Field details', exact: true })).toHaveCount(0);
   await expect(card.getByLabel('Property IRI', { exact: true })).toHaveCount(0);
   await expect(card.getByRole('button', { name: 'Add annotation' })).toHaveCount(0);
   await section.getByLabel('Display label', { exact: true }).fill('Visible heading');

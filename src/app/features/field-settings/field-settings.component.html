@@ -320,19 +320,10 @@
     @if (error) {
       <p role="alert">{{ error }}</p>
     }
+    <app-language-selector [field]="field" />
     @if (dynamic) {
       <app-alternate-questions [field]="field" />
     }
-  </section>
-
-  <section
-    class="settings"
-    role="tabpanel"
-    [hidden]="selectedTab !== 'Field details'"
-    [id]="'field-panel-' + field.id + '-Field-details'"
-    [attr.aria-labelledby]="'field-tab-' + field.id + '-Field-details'"
-  >
-    <p class="details-placeholder">Coming soon: language.</p>
   </section>
 
   <section

@@ -1,3 +1,4 @@
+import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 import { AlternateQuestionsComponent } from '../alternate-questions/alternate-questions.component';
 import { AnnotationsEditorComponent } from '../annotations-editor/annotations-editor.component';
 import { PropertyPickerComponent } from '../property-picker/property-picker.component';
@@ -29,6 +30,7 @@ import { TemplateService } from '../../core/services/template.service';
 @Component({
   selector: 'app-field-settings',
   imports: [
+    LanguageSelectorComponent,
     AlternateQuestionsComponent,
     AnnotationsEditorComponent,
     FormsModule,
@@ -65,7 +67,6 @@ export class FieldSettingsComponent implements OnChanges {
     return [
       'Display',
       ...(this.hasValues || this.hasConstraints ? [this.valuesTab] : []),
-      'Field details',
       'Annotations',
       ...(this.multiple ? ['Occurrences'] : []),
       'Field metadata',

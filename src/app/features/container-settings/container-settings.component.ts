@@ -1,3 +1,4 @@
+import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 import { AnnotationsEditorComponent } from '../annotations-editor/annotations-editor.component';
 import { ChangeDetectorRef } from '@angular/core';
 import { Component, computed, inject, input, effect } from '@angular/core';
@@ -10,7 +11,7 @@ import { TypesPickerComponent } from '../types-picker/types-picker.component';
 
 @Component({
   selector: 'app-container-settings',
-  imports: [AnnotationsEditorComponent, FormsModule, TypesPickerComponent],
+  imports: [LanguageSelectorComponent, AnnotationsEditorComponent, FormsModule, TypesPickerComponent],
   templateUrl: './container-settings.component.html',
   styleUrls: ['../field-settings/field-settings.component.scss', '../element-card/element-card.component.scss'],
   styles: `
@@ -53,11 +54,7 @@ export class ContainerSettingsComponent {
   readonly metadataTab = computed(() =>
     this.container().kind === 'template' ? 'Template Metadata' : 'Element metadata',
   );
-  readonly tabs = computed(() =>
-    this.container().kind === 'template'
-      ? ['Display', 'Annotations', this.metadataTab()]
-      : ['Annotations', this.metadataTab()],
-  );
+  readonly tabs = computed(() => ['Display', 'Annotations', this.metadataTab()]);
   tabId(tab: string): string {
     return 'container-settings-' + this.container().id + '-' + tab.replaceAll(' ', '-');
   }

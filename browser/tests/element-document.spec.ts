@@ -49,16 +49,13 @@ for (const width of [1280, 375]) {
     await expect(placement.getByRole('tablist')).toBeVisible();
     await placement.getByRole('tab', { name: 'Display', exact: true }).focus();
     await page.keyboard.press('ArrowRight');
-    await expect(placement.getByRole('tab', { name: 'Element details', exact: true })).toBeFocused();
+    await expect(placement.getByRole('tab', { name: 'Annotations', exact: true })).toBeFocused();
     await placement.getByRole('button', { name: 'Collapse element settings', exact: true }).click();
     await expect(placement.getByRole('tablist')).toBeHidden();
     await expect(directContent(nested)).toBeVisible();
     await placement.getByRole('button', { name: 'Expand element settings', exact: true }).click();
-    const details = placement.getByRole('tabpanel', { name: 'Element details', exact: true });
-    await expect(details).toContainText(
-      'Coming soon: language, alternate labels.',
-    );
-    await expect(details.locator('input')).toHaveCount(0);
+    await expect(placement.getByRole('tab', { name: 'Element details', exact: true })).toHaveCount(0);
+    await expect(placement.getByRole('tabpanel', { name: 'Annotations', exact: true })).toBeVisible();
     await placement.getByRole('tab', { name: 'Occurrences', exact: true }).click();
     await placement.getByLabel('Allow multiple', { exact: true }).check();
     const checkbox = placement.getByLabel('Allow multiple', { exact: true });

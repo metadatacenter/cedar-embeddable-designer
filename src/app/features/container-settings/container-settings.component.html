@@ -24,14 +24,14 @@
   >
     <app-annotations-editor [container]="container()" />
   </section>
-  @if (container().kind === 'template') {
-    <section
-      class="settings"
-      role="tabpanel"
-      [hidden]="selected() !== 'Display'"
-      [id]="tabId('Display') + '-panel'"
-      [attr.aria-labelledby]="tabId('Display')"
-    >
+  <section
+    class="settings"
+    role="tabpanel"
+    [hidden]="selected() !== 'Display'"
+    [id]="tabId('Display') + '-panel'"
+    [attr.aria-labelledby]="tabId('Display')"
+  >
+    @if (container().kind === 'template') {
       <div class="settings-fields display-fields">
         <label
           >Header
@@ -50,8 +50,9 @@
           ></textarea>
         </label>
       </div>
-    </section>
-  }
+    }
+    <app-language-selector [container]="container()" />
+  </section>
   <section
     class="settings"
     role="tabpanel"

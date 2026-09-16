@@ -30,7 +30,7 @@ for (const width of [1280, 375]) {
       'Which title should be used?',
     ]);
     await editor.screenshot({ path: testInfo.outputPath('alternate-questions.png') });
-    await card.getByRole('tab', { name: 'Field details', exact: true }).click();
+    await card.getByRole('tab', { name: 'Annotations', exact: true }).click();
     await card.getByRole('tab', { name: 'Display', exact: true }).click();
     await expect(editor.getByRole('cell', { name: 'What is the title?', exact: true })).toBeVisible();
     await editor.getByRole('button', { name: 'Remove question 1' }).click();
