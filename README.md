@@ -366,9 +366,10 @@ embedded CEF both honor inherited `--cedar-control-*` overrides. Service bases
 are normalized once and forwarded identically to terminology and CEF; unknown
 keys and wrong value types produce diagnostics without disabling valid siblings.
 
-These sources require the new control, spacing and font exports from the local
-`cedar-design-tokens` checkout until its next Nexus snapshot is published and
-pinned. Install its packed tarball with `npm install --no-save --package-lock=false`
-in both CEE and CED before building. The frontend runbook's “Shared component
-defaults and configuration” section gives the complete local procedure. A normal
-`npm ci` restores the older published pin.
+The control, spacing and font exports resolve from the exact Nexus token snapshot
+in `package.json` and `package-lock.json`; a normal `npm ci` installs them. For
+unpublished token development, install a packed local tarball in both CEE and
+CED as described in the frontend runbook. Before pushing a consumer that needs
+new exports, publish a new token snapshot, update both pins and verify a clean
+`npm ci` build. The real-CEF integration workflow must also pin a CEE revision
+that supports the adopted control profile.
