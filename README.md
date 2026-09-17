@@ -21,8 +21,10 @@ The shipped declaration describes those properties and events. The original
 `template`, `currentTemplate` and `templateChange` names remain compatible aliases.
 
 `npm run dist` produces the distribution: one script an embedder loads with a
-plain `<script>` tag, its type declaration, and a staged npm directory. Nothing
-is published yet, and the package has not been released on either channel.
+plain `<script>` tag, its type declaration, and a staged npm directory.
+Development snapshots are published to CEDAR Nexus as
+`@org.metadatacenter/cedar-embeddable-designer`. The split Designer host pins an
+exact snapshot. CED is not yet released on public npmjs.
 
 Serialization is the
 [CEDAR model library's](https://github.com/metadatacenter/cedar-model-typescript-library).

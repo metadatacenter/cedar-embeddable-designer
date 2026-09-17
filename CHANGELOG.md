@@ -5,10 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.0-dev.20260916.2593d382] - 2026-09-16 (Nexus)
 
-Nothing has been published on either channel yet, so everything below is the
-first entry rather than a diff against a release. It records the reconstruction
+First Nexus development snapshot, including explicit host document loading,
+empty-document creation and dirty-state reporting. This entry records the reconstruction
 of the repository on `develop`: what arrived as a Figma Make export is now a
 Web Component with a declared contract, a distribution, and a test suite that
 drives it in a browser.
