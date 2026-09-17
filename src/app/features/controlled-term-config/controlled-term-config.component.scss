@@ -4,8 +4,8 @@
 .constraint-summary {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin: 4px 0;
+  gap: var(--cedar-space-3);
+  margin: var(--cedar-space-1) 0;
 }
 cedar-embeddable-field {
   display: block;
@@ -28,6 +28,6 @@ button {
   min-width: 0;
   border: 1px solid #ccc;
   border-radius: 2px;
-  padding: 6px 8px;
+  padding: 6px var(--cedar-space-2);
   color: var(--cedar-text-muted);
 }

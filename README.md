@@ -358,3 +358,17 @@ with the host's normal permissions, ETag saves and Workspace return navigation.
 When developing against a newer CEFD than the pinned Nexus snapshot, explicitly
 stage the local bundle using `CEDAR_CED_BUNDLE` in that host; a missing CEFD
 registration reports an upgrade error rather than waiting indefinitely.
+
+### Shared defaults during development
+
+CED/CEFD settings use the shared 32px authoring profile. Native controls and
+embedded CEF both honor inherited `--cedar-control-*` overrides. Service bases
+are normalized once and forwarded identically to terminology and CEF; unknown
+keys and wrong value types produce diagnostics without disabling valid siblings.
+
+These sources require the new control, spacing and font exports from the local
+`cedar-design-tokens` checkout until its next Nexus snapshot is published and
+pinned. Install its packed tarball with `npm install --no-save --package-lock=false`
+in both CEE and CED before building. The frontend runbook's “Shared component
+defaults and configuration” section gives the complete local procedure. A normal
+`npm ci` restores the older published pin.

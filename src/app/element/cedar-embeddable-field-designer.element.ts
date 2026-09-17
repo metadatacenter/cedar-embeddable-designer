@@ -1,3 +1,4 @@
+import { DesignerConfigService } from '../core/services/designer-config.service';
 import {
   Component,
   DestroyRef,
@@ -24,7 +25,7 @@ import { FontRegistrar } from '../shared/font-registrar/font-registrar';
 @Component({
   selector: 'app-cedar-embeddable-field-designer-element',
   imports: [FieldCardComponent, FontRegistrar],
-  providers: [TemplateService, TerminologyService, PreferencesService],
+  providers: [TemplateService, TerminologyService, PreferencesService, DesignerConfigService],
   encapsulation: ViewEncapsulation.ShadowDom,
   styleUrls: ['../../styles.css'],
   styles: [
@@ -35,12 +36,12 @@ import { FontRegistrar } from '../shared/font-registrar/font-registrar';
         font-size: var(--text-base);
       }
       .field-editor {
-        padding: 16px;
+        padding: var(--cedar-space-4);
       }
       .type-picker {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: var(--cedar-space-2);
       }
       fieldset {
         border: 0;
@@ -71,8 +72,7 @@ import { FontRegistrar } from '../shared/font-registrar/font-registrar';
 })
 export class CedarEmbeddableFieldDesignerElementComponent {
   readonly service = inject(TemplateService);
-  private readonly terminology = inject(TerminologyService);
-  private configured = false;
+  private readonly configuration = inject(DesignerConfigService);
   private readonly baseline = signal('');
   private readonly hostReadOnly = signal(false);
   readonly field = computed(() => this.service.fields()[0] as Field | undefined);
@@ -82,13 +82,7 @@ export class CedarEmbeddableFieldDesignerElementComponent {
   }));
 
   @Input() set config(value: CedConfig | null) {
-    if (!value || this.configured) return;
-    this.configured = true;
-    this.terminology.configure(value);
-    this.service.fieldEditorConfig.set({
-      bridgeBaseUrl: value.bridgeBaseUrl,
-      terminologyBaseUrl: value.terminologyBaseUrl,
-    });
+    this.configuration.apply(value);
   }
   @Input() set readOnly(value: boolean) {
     this.hostReadOnly.set(value);

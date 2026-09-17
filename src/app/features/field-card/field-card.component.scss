@@ -16,7 +16,7 @@ app-icon {
 .field-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--cedar-space-2);
   min-width: 0;
 }
 .field-summary {
@@ -29,7 +29,7 @@ app-icon {
 }
 
 .field-card-body {
-  padding: 6px 16px 0;
+  padding: 6px var(--cedar-space-4) 0;
 }
 
 .field-header {
@@ -42,14 +42,14 @@ app-icon {
   */
   grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr);
   align-items: center;
-  column-gap: 8px;
-  row-gap: 4px;
+  column-gap: var(--cedar-space-2);
+  row-gap: var(--cedar-space-1);
 }
 .field-heading,
 .field-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--cedar-space-2);
   min-width: 0;
 }
 .field-controls {
@@ -83,7 +83,7 @@ app-icon {
 }
 
 .validation-badge {
-  color: #b42318;
+  color: var(--cedar-control-error, var(--cedar-color-error));
   font-size: var(--cedar-font-size-small);
   white-space: nowrap;
   cursor: pointer;

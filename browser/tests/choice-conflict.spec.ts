@@ -13,7 +13,7 @@ test('preserves an imported invalid default and lets the author resolve it', asy
   const card = page.locator('.field-drop-item').nth(1);
   const error = card.getByRole('alert');
   await expect(error).toContainText('“Yellow” is not among the allowed options');
-  await expect(error).toHaveCSS('color', 'rgb(244, 67, 54)');
+  await expect(error).toHaveCSS('color', 'rgb(180, 35, 24)');
   await expect
     .poll(async () => ((await currentTemplate(page)).properties as any).Category._valueConstraints.defaultValue)
     .toBe('Yellow');

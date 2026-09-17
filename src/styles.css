@@ -11,6 +11,7 @@
 @source "./app/**/*.{html,ts}";
 
 @theme inline {
+  --spacing: var(--cedar-space-1);
   /*
     The font and the type scale, so `text-sm` and friends emit CEDAR's px values
     rather than Tailwind's rem defaults. `CEE Roboto` is the namespaced family the

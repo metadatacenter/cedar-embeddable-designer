@@ -114,7 +114,9 @@ test('keeps invalid numeric settings dirty and unsaveable until corrected', asyn
   await page.getByRole('button', { name: 'Expand field settings' }).click();
   await page.getByRole('tab', { name: 'Constraints', exact: true }).click();
   await page.getByLabel('Minimum value', { exact: true }).fill('10');
+  await page.evaluate(() => document.body.style.setProperty('--cedar-control-error', '#993311'));
   await page.getByLabel('Maximum value', { exact: true }).fill('5');
+  await expect(page.getByRole('alert').first()).toHaveCSS('color', 'rgb(153, 51, 17)');
   await expect
     .poll(() => page.evaluate(() => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).canSave))
     .toBe(false);

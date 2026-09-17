@@ -22,7 +22,7 @@ export type CedConfigKey = keyof CedConfig;
  */
 export interface CedConfig {
   /**
-   * Base for controlled-term search. Must end in a slash.
+   * Base for controlled-term search. A missing trailing slash is normalized.
    *
    * Identifies the CEDAR terminology server, and nothing below it: the search
    * path hangs off this and is the designer's own. Unset, the controlled-term
@@ -32,7 +32,7 @@ export interface CedConfig {
    * reaches without asking and without knowing.
    */
   terminologyBaseUrl?: string;
-  /** Base URL for external-authority default lookups through CEF (ORCID, DOI, and others). */
+  /** Base URL for external-authority default lookups through CEF. A missing trailing slash is normalized. */
   bridgeBaseUrl?: string;
 }
 

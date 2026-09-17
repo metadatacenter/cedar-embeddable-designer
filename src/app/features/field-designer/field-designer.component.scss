@@ -7,9 +7,9 @@
 .library-page {
   max-width: 1050px;
   margin: 0 auto;
-  padding: 16px;
+  padding: var(--cedar-space-4);
   font-size: var(--cedar-font-size-small);
-  color: #444;
+  color: var(--cedar-text-authoring);
 }
 header,
 .row {
@@ -28,7 +28,7 @@ h1 {
 }
 h2 {
   font-size: var(--cedar-font-size);
-  margin: 16px 0 2px;
+  margin: var(--cedar-space-4) 0 2px;
   font-weight: 500;
 }
 .hint,
@@ -42,14 +42,14 @@ small {
 }
 .library-create {
   margin: 10px 0;
-  background: #f4f6f6;
-  padding: 8px;
+  background: var(--cedar-surface-authoring);
+  padding: var(--cedar-space-2);
 }
 summary {
   cursor: pointer;
 }
 .row {
-  margin: 8px 0;
+  margin: var(--cedar-space-2) 0;
 }
 label {
   display: flex;
@@ -62,7 +62,7 @@ select {
   border: 1px solid #ccd5d4;
   background: white;
   border-radius: 3px;
-  padding: 4px 6px;
+  padding: var(--cedar-space-1) 6px;
   font: inherit;
 }
 button {
@@ -70,7 +70,7 @@ button {
   background: white;
   border: 1px solid #b8cdcf;
   border-radius: 3px;
-  padding: 4px 7px;
+  padding: var(--cedar-space-1) 7px;
   cursor: pointer;
   font: inherit;
 }
@@ -79,10 +79,10 @@ button {
   border: 1px solid #d5dede;
   border-radius: 4px;
   margin: 10px 0;
-  padding-bottom: 8px;
+  padding-bottom: var(--cedar-space-2);
 }
 .editor > .row {
-  padding: 0 16px;
+  padding: 0 var(--cedar-space-4);
 }
 table {
   width: 100%;
@@ -91,7 +91,7 @@ table {
 }
 th,
 td {
-  padding: 6px 8px;
+  padding: 6px var(--cedar-space-2);
   border-bottom: 1px solid #e1e6e5;
 }
 th {

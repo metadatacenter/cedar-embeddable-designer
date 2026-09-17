@@ -1,16 +1,25 @@
 // Native adapter for the shared CEE/CEF compact control contract.
-// Keep defaults synchronized with CEE STYLING.md; host CSS tokens override both.
+// Authoring defaults come from design tokens; public host overrides always win.
 @mixin compact-control {
   box-sizing: border-box;
-  min-height: var(--cedar-control-height, 36px);
-  padding: calc((var(--cedar-control-height, 36px) - var(--cedar-control-line-height, 21px)) / 2 - 1px) 5px;
-  border: 1px solid var(--cedar-control-border, rgba(0, 0, 0, 0.38));
-  border-radius: var(--cedar-control-radius, 4px);
+  min-height: var(--cedar-control-height, var(--cedar-control-height-authoring));
+  padding: calc(
+      (
+          var(--cedar-control-height, var(--cedar-control-height-authoring)) - var(
+              --cedar-control-line-height,
+              var(--cedar-control-line-height-authoring)
+            )
+        ) /
+        2 - 1px
+    )
+    5px;
+  border: 1px solid var(--cedar-control-border, var(--cedar-control-border-authoring));
+  border-radius: var(--cedar-control-radius, var(--cedar-control-radius-authoring));
   background: white;
-  color: #444;
+  color: var(--cedar-text-authoring);
   font-family: inherit;
-  font-size: var(--cedar-control-font-size, var(--cedar-font-size));
-  line-height: var(--cedar-control-line-height, 21px);
+  font-size: var(--cedar-control-font-size, var(--cedar-control-font-size-authoring));
+  line-height: var(--cedar-control-line-height, var(--cedar-control-line-height-authoring));
   font-weight: 400;
   &:focus {
     outline: 2px solid var(--cedar-control-focus, var(--cedar-color-primary));

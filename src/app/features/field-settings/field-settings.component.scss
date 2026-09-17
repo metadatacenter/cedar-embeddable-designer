@@ -1,30 +1,24 @@
 @use '../../shared/control-style';
 :host {
-  // One authoring scale inherited by native controls and embedded CEF alike.
-  --cedar-control-height: 28px;
-  --cedar-control-font-size: var(--cedar-font-size-small);
-  --cedar-control-line-height: 18px;
-  --cedar-control-radius: 2px;
-  --cedar-control-border: #ccc;
   display: block;
   font-size: var(--cedar-font-size-small);
-  color: #444;
+  color: var(--cedar-text-authoring);
 }
 .settings {
-  margin-top: 4px;
-  padding: 4px 8px;
-  background: #f4f6f6;
+  margin-top: var(--cedar-space-1);
+  padding: var(--cedar-space-1) var(--cedar-space-2);
+  background: var(--cedar-surface-authoring);
   border-radius: 3px;
 }
 .details-placeholder {
   margin: 0;
-  color: #64748b;
+  color: var(--cedar-text-muted);
 }
 .row {
   display: flex;
   align-items: end;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--cedar-space-2);
   padding-top: 0;
 }
 label {
@@ -52,21 +46,21 @@ textarea {
   width: 125px;
   padding: 3px 5px;
   background: white;
-  border: 1px solid #ccc;
+  border: 1px solid var(--cedar-control-border-authoring);
   border-radius: 2px;
   font: inherit;
 }
 button {
-  padding: 3px 8px;
-  color: #0b6570;
-  border: 1px solid #b8cdcf;
+  padding: 3px var(--cedar-space-2);
+  color: var(--cedar-color-primary);
+  border: 1px solid var(--cedar-border-rule);
   border-radius: 2px;
   background: white;
   cursor: pointer;
 }
 p[role='alert'] {
   margin: 5px 0 0;
-  color: var(--cedar-color-warn);
+  color: var(--cedar-control-error, var(--cedar-color-error));
   font-size: var(--cedar-font-size-small);
   line-height: 1.3;
 }
@@ -86,7 +80,7 @@ p[role='alert'] {
 
 /* Carries the annotation table's overflow instead of letting it leave the card. */
 .annotations-scroll {
-  margin-top: 8px;
+  margin-top: var(--cedar-space-2);
   overflow-x: auto;
 }
 
@@ -99,25 +93,25 @@ p[role='alert'] {
   text-align: left;
   caption {
     text-align: left;
-    color: #666;
+    color: var(--cedar-text-muted);
     font-style: italic;
     padding-bottom: 3px;
   }
   th {
-    background: #e9eeee;
-    color: #586866;
+    background: var(--cedar-surface-panel);
+    color: var(--cedar-text-muted);
     font-weight: 500;
   }
   th,
   td {
-    padding: 4px 6px;
-    border-bottom: 1px solid #e1e6e5;
+    padding: var(--cedar-space-1) 6px;
+    border-bottom: 1px solid var(--cedar-border-rule-light);
   }
   tbody tr {
     background: white;
   }
   tbody tr:nth-child(even) {
-    background: #f7f9f9;
+    background: var(--cedar-surface-panel);
   }
   input {
     width: 100%;
@@ -131,7 +125,7 @@ p[role='alert'] {
 .identity {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
-  gap: 3px 12px;
+  gap: 3px var(--cedar-space-3);
   margin: 0;
   font-size: var(--cedar-font-size-small);
 }
@@ -152,14 +146,14 @@ p[role='alert'] {
   flex-wrap: wrap;
   gap: 0.25rem;
   margin-top: 0.375rem;
-  border-bottom: 1px solid #cbd5e1;
+  border-bottom: 1px solid var(--cedar-border-rule);
 }
 .tabs button {
   background: transparent;
   border: 0;
   border-bottom: 2px solid transparent;
   border-radius: 0;
-  color: #64748b;
+  color: var(--cedar-text-muted);
   padding: 0.4rem 0.6rem;
 }
 .tabs button[aria-selected='true'] {
@@ -184,10 +178,10 @@ button:focus-visible {
   padding: 0;
   border: 0;
   background: transparent;
-  color: #9ca3af;
+  color: var(--cedar-text-muted);
 }
 .settings-toggle:hover {
-  color: #64748b;
+  color: var(--cedar-text-muted);
 }
 .settings-toggle svg.expanded {
   transform: rotate(180deg);
@@ -197,7 +191,7 @@ button:focus-visible {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
   align-items: start;
-  gap: 8px;
+  gap: var(--cedar-space-2);
   border: 0;
   margin: 0;
   padding: 0;
@@ -209,7 +203,7 @@ button:focus-visible {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
   align-items: start;
-  gap: 8px;
+  gap: var(--cedar-space-2);
 }
 .settings-fields > .row:last-child {
   display: flex;
@@ -226,7 +220,7 @@ button:focus-visible {
 }
 .settings-fields .check {
   align-self: end;
-  min-height: 28px;
+  min-height: var(--cedar-control-height, var(--cedar-control-height-authoring));
 }
 .settings-fields .check input {
   width: auto;
@@ -235,7 +229,7 @@ button:focus-visible {
 .settings-fields button {
   align-self: end;
   justify-self: start;
-  min-height: 28px;
+  min-height: var(--cedar-control-height, var(--cedar-control-height-authoring));
 }
 
 .display-fields {
@@ -263,7 +257,7 @@ button:focus-visible {
   min-height: 20px;
 }
 .preferred-label {
-  margin-top: 8px;
+  margin-top: var(--cedar-space-2);
 }
 .preferred-label input {
   width: 100%;
@@ -293,7 +287,7 @@ button:focus-visible {
 }
 
 fieldset[aria-invalid='true'] {
-  border-left: 2px solid #b42318;
+  border-left: 2px solid var(--cedar-control-error, var(--cedar-color-error));
   padding-left: 6px;
 }
 

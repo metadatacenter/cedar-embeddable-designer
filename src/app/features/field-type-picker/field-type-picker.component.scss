@@ -20,7 +20,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: var(--cedar-space-2);
 }
 
 .picker-header-left {
@@ -146,7 +146,7 @@
 
 /* Custom Fields Message */
 .custom-fields-empty-msg {
-  margin-bottom: 8px;
+  margin-bottom: var(--cedar-space-2);
   padding: 1rem;
   background-color: #f9fafb;
   border-radius: 0.5rem;
@@ -161,7 +161,7 @@
 
 /* Fields Grid */
 .fields-section {
-  margin-bottom: 8px;
+  margin-bottom: var(--cedar-space-2);
 }
 
 .fields-grid {
@@ -175,7 +175,7 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 4px 6px;
+  padding: var(--cedar-space-1) 6px;
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
   background-color: #ffffff;

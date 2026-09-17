@@ -3,10 +3,10 @@
   min-width: 0;
 }
 .template-header-card {
-  scroll-margin-top: 16px;
+  scroll-margin-top: var(--cedar-space-4);
 }
 .template-header-card__body {
-  padding-bottom: 4px;
+  padding-bottom: var(--cedar-space-1);
 }
 .container-path,
 .container-path button {
@@ -43,7 +43,7 @@
 }
 
 .element-child-move {
-  padding: 6px 16px;
+  padding: 6px var(--cedar-space-4);
 }
 
 .template-header-row {
@@ -83,7 +83,7 @@
   .template-header-card__inputs {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 11rem 6rem;
-    gap: 4px 16px;
+    gap: var(--cedar-space-1) var(--cedar-space-4);
   }
   .template-header-row {
     display: contents;
@@ -107,7 +107,7 @@
   display: none !important;
 }
 .nested-content {
-  padding: 0 12px 8px;
+  padding: 0 var(--cedar-space-3) var(--cedar-space-2);
 }
 .element-toggle {
   display: inline-flex;
@@ -130,7 +130,7 @@
 }
 .container-content > app-element-card {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: var(--cedar-space-2);
 }
 @container (max-width: 400px) {
   .nested-content {
@@ -144,17 +144,17 @@
 }
 
 .container-content > .add-field-section {
-  margin-top: 8px;
+  margin-top: var(--cedar-space-2);
 }
 
 .field-drag-container.invalid {
-  outline: 2px solid #b42318;
+  outline: 2px solid var(--cedar-control-error, var(--cedar-color-error));
   outline-offset: 1px;
 }
 .validation-badge {
-  color: #b42318;
+  color: var(--cedar-control-error, var(--cedar-color-error));
   font-size: var(--cedar-font-size-small);
-  padding: 4px 12px;
+  padding: var(--cedar-space-1) var(--cedar-space-3);
   display: block;
 }
 

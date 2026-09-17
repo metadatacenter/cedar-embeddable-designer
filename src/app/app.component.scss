@@ -90,7 +90,7 @@
 }
 .overview-panel__header {
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--cedar-space-1);
 }
 .overview-panel__actions {
   display: flex;
@@ -110,7 +110,7 @@
 }
 .overview-panel__actions button:hover {
   color: var(--cedar-color-primary);
-  background: #f4f6f6;
+  background: var(--cedar-surface-authoring);
 }
 
 .designer-scroll,
@@ -196,7 +196,7 @@
 .panel-toggle:hover,
 .panel-toggle[aria-expanded='true'] {
   color: var(--cedar-color-primary);
-  background: #f4f6f6;
+  background: var(--cedar-surface-authoring);
 }
 .panel-toggle:focus-visible {
   outline: 2px solid var(--cedar-color-primary);
@@ -316,9 +316,9 @@
 }
 
 .validation-summary {
-  color: #b42318;
+  color: var(--cedar-control-error, var(--cedar-color-error));
   background: #fff4f2;
-  padding: 6px 16px;
+  padding: 6px var(--cedar-space-4);
   font-size: var(--cedar-font-size-small);
   flex: none;
   max-height: 25vh;

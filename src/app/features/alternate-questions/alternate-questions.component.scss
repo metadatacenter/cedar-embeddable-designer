@@ -1,7 +1,7 @@
 @use '../../shared/control-style';
 :host {
   display: block;
-  margin-top: 12px;
+  margin-top: var(--cedar-space-3);
   min-width: 0;
   font-size: var(--cedar-font-size-small);
 }
@@ -14,12 +14,12 @@ fieldset {
 legend {
   font-weight: 600;
   padding: 0;
-  margin-bottom: 4px;
+  margin-bottom: var(--cedar-space-1);
 }
 .add-row {
   display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: var(--cedar-space-2);
+  margin-bottom: var(--cedar-space-2);
   flex-wrap: wrap;
 }
 input {
@@ -33,7 +33,7 @@ button {
   background: white;
   border: 1px solid var(--cedar-primary-100);
   border-radius: 3px;
-  padding: 4px 6px;
+  padding: var(--cedar-space-1) 6px;
   cursor: pointer;
 }
 button:disabled {
@@ -48,14 +48,14 @@ table {
 th {
   font-weight: 500;
   text-align: left;
-  padding: 4px;
+  padding: var(--cedar-space-1);
   border-bottom: 1px solid var(--cedar-border-rule);
 }
 th.actions {
   width: 32px;
 }
 td {
-  padding: 2px 4px;
+  padding: 2px var(--cedar-space-1);
   vertical-align: middle;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
@@ -75,8 +75,8 @@ td {
   color: #64748b;
 }
 p[role='alert'] {
-  color: #b42318;
-  margin: 4px 0;
+  color: var(--cedar-control-error, var(--cedar-color-error));
+  margin: var(--cedar-space-1) 0;
 }
 .sr-only {
   position: absolute;

@@ -362,7 +362,7 @@ for (const type of ['number', 'date']) {
     const defaultBox =
       type === 'number' ? control.locator('input').first() : control.locator('.mat-mdc-text-field-wrapper').first();
     await expect(defaultBox).toBeVisible();
-    await expect.poll(async () => (await defaultBox.boundingBox())!.height).toBe(28);
+    await expect.poll(async () => (await defaultBox.boundingBox())!.height).toBe(32);
     await expect
       .poll(async () => (await defaultBox.boundingBox())!.height)
       .toBe((await neighbor.boundingBox())!.height);
@@ -383,7 +383,7 @@ test('Display controls retain the compact authoring scale', async ({ page }) => 
   await openField(page, 'number');
   const panel = await openSettings(page.locator('app-field-card').first(), 'Display');
   for (const input of await panel.locator('input:not([type="checkbox"])').all()) {
-    await expect(input).toHaveCSS('height', '28px');
+    await expect(input).toHaveCSS('height', '32px');
     // The step below the body, which is what compact means here: an authoring
     // control is smaller than the form text it is describing. 11px until the
     // designer joined the scale the editor and the term picker share, whose
@@ -391,3 +391,43 @@ test('Display controls retain the compact authoring scale', async ({ page }) => 
     await expect(input).toHaveCSS('font-size', '12px');
   }
 });
+
+for (const host of ['CED', 'CEFD']) {
+  test(`${host} passes inherited density overrides to native settings and nested CEF`, async ({ page }) => {
+    if (host === 'CED') {
+      await openField(page, 'date');
+    } else {
+      await page.goto('/field-host.html');
+      await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
+      await page.getByRole('button', { name: 'Temporal', exact: true }).click();
+      await page.getByRole('textbox', { name: 'Field name', exact: true }).fill('Date field');
+      await openSettings(page.locator('app-field-card'), 'Constraints');
+    }
+    const native = page.getByRole('combobox', { name: 'Temporal type', exact: true });
+    const cef = page.locator('cedar-embeddable-field');
+    const cefBox = cef.locator('.mat-mdc-text-field-wrapper').first();
+    await expect.poll(async () => (await cefBox.boundingBox())!.height).toBe(32);
+    await page.evaluate(() => {
+      document.body.style.setProperty('--cedar-control-height', '44px');
+      document.body.style.setProperty('--cedar-control-font-size', '16px');
+      document.body.style.setProperty('--cedar-control-line-height', '24px');
+      document.body.style.setProperty('--cedar-control-radius', '9px');
+      document.body.style.setProperty('--cedar-control-border', '#654321');
+      document.body.style.setProperty('--cedar-control-focus', '#663399');
+    });
+    await expect(native).toHaveCSS('height', '44px');
+    await expect(native).toHaveCSS('font-size', '16px');
+    await expect(native).toHaveCSS('border-radius', '9px');
+    await expect(native).toHaveCSS('border-top-color', 'rgb(101, 67, 33)');
+    await native.focus();
+    await expect(native).toHaveCSS('outline-color', 'rgb(102, 51, 153)');
+    await expect.poll(async () => (await cefBox.boundingBox())!.height).toBe(44);
+    await expect(cef.locator('input').first()).toHaveCSS('font-size', '16px');
+    await page.setViewportSize({ width: 375, height: 800 });
+    await expect(native).toBeVisible();
+    await expect(cefBox).toBeVisible();
+    await page.evaluate(() => document.body.removeAttribute('style'));
+    await expect(native).toHaveCSS('height', '32px');
+    await expect.poll(async () => (await cefBox.boundingBox())!.height).toBe(32);
+  });
+}

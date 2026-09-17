@@ -1,3 +1,4 @@
+import { DesignerConfigService } from '../core/services/designer-config.service';
 import {
   Component,
   DestroyRef,
@@ -32,7 +33,7 @@ import { FontRegistrar } from '../shared/font-registrar/font-registrar';
 @Component({
   selector: 'app-cedar-embeddable-designer-element',
   imports: [AppComponent, FontRegistrar],
-  providers: [TemplateService, TerminologyService, PreferencesService],
+  providers: [TemplateService, TerminologyService, PreferencesService, DesignerConfigService],
   // The registrar renders nothing; it exists so its unencapsulated stylesheet,
   // which is only `@font-face` declarations, reaches the document.
   template: `<ced-font-registrar /><app-root></app-root>`,
@@ -41,8 +42,7 @@ import { FontRegistrar } from '../shared/font-registrar/font-registrar';
 })
 export class CedarEmbeddableDesignerElementComponent {
   readonly service = inject(TemplateService);
-  private readonly terminology = inject(TerminologyService);
-  private configured = false;
+  private readonly configuration = inject(DesignerConfigService);
   @Input() set childSource(source: CedChildSource | null) {
     this.service.childSource.set(source);
     this.service.childPicker.set(null);
@@ -63,15 +63,7 @@ export class CedarEmbeddableDesignerElementComponent {
    */
   @Input()
   set config(value: CedConfig | null) {
-    if (value === null || this.configured) {
-      return;
-    }
-    this.configured = true;
-    this.terminology.configure(value);
-    this.service.fieldEditorConfig.set({
-      bridgeBaseUrl: value.bridgeBaseUrl,
-      terminologyBaseUrl: value.terminologyBaseUrl,
-    });
+    this.configuration.apply(value);
   }
 
   /**

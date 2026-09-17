@@ -1,19 +1,19 @@
-// CEE's pinned Material warn colour (src/_cee-tokens.scss).
+// Shared invalid-control role, with the public host override.
 .ced-field-error {
-  color: var(--cedar-color-warn);
+  color: var(--cedar-control-error, var(--cedar-color-error));
   font-size: var(--cedar-font-size-small);
   line-height: 1.3;
-  margin: 4px 0 0;
+  margin: var(--cedar-space-1) 0 0;
 }
 
 // CEDAR's advisory colour; this explains a read-only state rather than an invalid
 // value. Written out as #856404 until the shared values arrived, which is what the
 // editor said when this was copied from it and not what it says now.
 .published-warning {
-  color: var(--cedar-warning);
-  background: #fff8e5;
+  color: var(--cedar-color-warning);
+  background: var(--cedar-surface-advisory);
   font-size: var(--cedar-font-size-small);
   line-height: 1.3;
-  margin: 6px 8px 0;
-  padding: 5px 8px;
+  margin: 6px var(--cedar-space-2) 0;
+  padding: 5px var(--cedar-space-2);
 }

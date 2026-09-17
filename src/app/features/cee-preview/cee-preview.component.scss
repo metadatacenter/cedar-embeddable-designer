@@ -17,8 +17,8 @@
   flex: 0 0 auto;
   box-sizing: border-box;
   min-height: 40px;
-  gap: 8px;
-  padding: 6px 12px;
+  gap: var(--cedar-space-2);
+  padding: 6px var(--cedar-space-3);
   border-bottom: 1px solid var(--cedar-border-rule-light);
   background: #ffffff;
 }
@@ -49,7 +49,7 @@
 }
 .cee-preview__notice {
   margin: 0;
-  padding: 4px 12px;
+  padding: var(--cedar-space-1) var(--cedar-space-3);
   font-size: var(--cedar-font-size-small);
   color: #64748b;
 }
@@ -90,7 +90,7 @@
 
 .cee-preview__missing {
   margin: 0;
-  padding: 16px;
+  padding: var(--cedar-space-4);
   font-size: var(--cedar-font-size);
   line-height: 1.6;
   color: var(--cedar-text-muted, #6b7280);

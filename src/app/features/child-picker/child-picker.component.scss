@@ -5,7 +5,7 @@ dialog {
   margin: auto;
   width: min(1000px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
-  padding: 24px;
+  padding: var(--cedar-space-6);
   border: 1px solid var(--cedar-neutral-200, #ddd);
   border-radius: 12px;
   color: var(--cedar-color-text, #262626);
@@ -17,7 +17,7 @@ dialog::backdrop {
 }
 h2 {
   font-size: 20px;
-  margin: 0 0 24px;
+  margin: 0 0 var(--cedar-space-6);
 }
 h3 {
   font-size: 16px;
@@ -28,16 +28,16 @@ h3 {
 .search div {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--cedar-space-3);
 }
 .selection-heading {
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: var(--cedar-space-3);
   flex-wrap: wrap;
 }
 button {
   min-height: 36px;
-  padding: 6px 12px;
+  padding: 6px var(--cedar-space-3);
   border: 1px solid #ccc;
   border-radius: 6px;
   cursor: pointer;
@@ -66,7 +66,7 @@ table {
 }
 th,
 td {
-  padding: 10px 12px;
+  padding: 10px var(--cedar-space-3);
   border-bottom: 1px solid #eee;
 }
 th {
@@ -82,15 +82,15 @@ td:first-child {
 .empty {
   text-align: center;
   color: #666;
-  padding: 24px;
+  padding: var(--cedar-space-6);
 }
 .search {
-  margin: 24px 0 12px;
+  margin: var(--cedar-space-6) 0 var(--cedar-space-3);
 }
 label {
   display: block;
   font-weight: 500;
-  margin-bottom: 8px;
+  margin-bottom: var(--cedar-space-2);
 }
 input {
   flex: 1;
@@ -98,10 +98,10 @@ input {
   height: 38px;
   border: 1px solid #bbb;
   border-radius: 6px;
-  padding: 8px 12px;
+  padding: var(--cedar-space-2) var(--cedar-space-3);
 }
 .error {
-  color: #b42318;
+  color: var(--cedar-control-error, var(--cedar-color-error));
 }
 .sr-only {
   position: absolute;
