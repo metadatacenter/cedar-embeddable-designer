@@ -136,8 +136,8 @@
   --text-2xl: var(--cedar-font-size-heading);
 
   --font-size: var(--cedar-font-size);
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
+  --font-weight-normal: var(--cedar-font-weight-regular, 400);
+  --font-weight-medium: var(--cedar-font-weight-medium, 500);
 
   /*
     Declared here as well as in the `@theme` block, because `@theme inline`

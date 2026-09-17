@@ -32,7 +32,7 @@
 .picker-title {
   margin: 0;
   font-size: var(--cedar-font-size);
-  font-weight: 500;
+  font-weight: var(--cedar-font-weight-medium, 500);
   color: #111827;
 }
 
@@ -122,7 +122,7 @@
 
   &.active {
     background-color: #f3f4f6;
-    font-weight: 500;
+    font-weight: var(--cedar-font-weight-medium, 500);
   }
 }
 

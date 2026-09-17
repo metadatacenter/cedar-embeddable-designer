@@ -43,25 +43,11 @@
       "value": "0.5rem",
       "count": 3
     },
-    "0c282e44fa2da0c67cce": {
-      "file": "src/app/features/child-picker/child-picker.component.scss",
-      "rule": "typography",
-      "property": "font-size",
-      "value": "20px",
-      "count": 1
-    },
     "0ca2029dbc737326bbe4": {
       "file": "src/styles.css",
       "rule": "color",
       "property": "--background",
       "value": "#ffffff",
-      "count": 1
-    },
-    "0cc1dfaf794e4e87d71c": {
-      "file": "src/app/features/cee-preview/cee-preview.component.scss",
-      "rule": "typography",
-      "property": "font-family",
-      "value": "ui-monospace, SFMono-Regular, Menlo, monospace",
       "count": 1
     },
     "0cda126e4f2b14e5eb2b": {
@@ -70,13 +56,6 @@
       "property": "background-color",
       "value": "#f9fafb",
       "count": 4
-    },
-    "0dd898947ebc4701d265": {
-      "file": "src/app/shared/_control-style.scss",
-      "rule": "typography",
-      "property": "font-weight",
-      "value": "400",
-      "count": 1
     },
     "0e504516b4bf1da1354b": {
       "file": "src/app/features/container-editor/container-editor.component.scss",
@@ -111,13 +90,6 @@
       "rule": "spacing",
       "property": "padding",
       "value": "var(--cedar-space-1) 6px",
-      "count": 1
-    },
-    "1692cea22ae1ed9ed9f6": {
-      "file": "src/app/features/alternate-questions/alternate-questions.component.scss",
-      "rule": "typography",
-      "property": "font-weight",
-      "value": "500",
       "count": 1
     },
     "18c6037676f65164e368": {
@@ -168,13 +140,6 @@
       "property": "border-radius",
       "value": "3px",
       "count": 2
-    },
-    "1c104afbeb61edae98a8": {
-      "file": "src/app/features/field-designer/field-designer.component.scss",
-      "rule": "typography",
-      "property": "font-weight",
-      "value": "500",
-      "count": 3
     },
     "1d1d309eb1666b1165fe": {
       "file": "src/app/features/field-settings/field-settings.component.scss",
@@ -358,26 +323,12 @@
       "value": "0.5rem",
       "count": 2
     },
-    "3746d3497106a0d8552f": {
-      "file": "src/app/shared/_code-highlight.scss",
-      "rule": "typography",
-      "property": "font-weight",
-      "value": "500",
-      "count": 1
-    },
     "37b6d713a52c7d30d836": {
       "file": "src/styles.css",
       "rule": "color",
       "property": "background-color",
       "value": "#ffffff",
       "count": 3
-    },
-    "37f5efa4e114e68c9494": {
-      "file": "src/app/features/field-type-picker/field-type-picker.component.scss",
-      "rule": "typography",
-      "property": "font-weight",
-      "value": "500",
-      "count": 2
     },
     "389ddee6f82b1196d021": {
       "file": "src/app/features/child-picker/child-picker.component.scss",
@@ -461,13 +412,6 @@
       "rule": "spacing",
       "property": "gap",
       "value": "5px",
-      "count": 1
-    },
-    "45cb577691ec344aa28e": {
-      "file": "src/app/features/annotations-editor/annotations-editor.component.scss",
-      "rule": "typography",
-      "property": "font-weight",
-      "value": "600",
       "count": 1
     },
     "4646e962ff9a84b10eba": {
@@ -638,13 +582,6 @@
       "value": "calc( ( var(--cedar-control-height, var(--cedar-control-height-authoring)) - var( --cedar-control-line-height, var(--cedar-control-line-height-authoring) ) ) / 2 - 1px ) 5px",
       "count": 1
     },
-    "5b3223654b30b7932866": {
-      "file": "src/app/features/child-picker/child-picker.component.scss",
-      "rule": "typography",
-      "property": "font-size",
-      "value": "13px",
-      "count": 1
-    },
     "5e40eee676fb6a03de76": {
       "file": "src/app/features/field-card/field-card.component.scss",
       "rule": "spacing",
@@ -657,13 +594,6 @@
       "rule": "color",
       "property": "color",
       "value": "#f2cc60",
-      "count": 1
-    },
-    "6027c058f86e87a901d5": {
-      "file": "src/app/features/child-picker/child-picker.component.scss",
-      "rule": "typography",
-      "property": "font-weight",
-      "value": "500",
       "count": 1
     },
     "62bb25776334be091a9e": {
@@ -722,13 +652,6 @@
       "value": "#d1d5db",
       "count": 1
     },
-    "6f2e3ed844ebd55259f0": {
-      "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
-      "rule": "typography",
-      "property": "font-size",
-      "value": "8px",
-      "count": 1
-    },
     "759ec955e0bafa6892ff": {
       "file": "src/app/features/child-picker/child-picker.component.scss",
       "rule": "color",
@@ -769,13 +692,6 @@
       "rule": "spacing",
       "property": "padding",
       "value": "6px var(--cedar-space-3)",
-      "count": 1
-    },
-    "7ab3e1377256d4c05625": {
-      "file": "src/app/features/field-settings/field-settings.component.scss",
-      "rule": "typography",
-      "property": "font-weight",
-      "value": "500",
       "count": 1
     },
     "7b112f9efbb16cebf335": {
@@ -945,13 +861,6 @@
       "property": "height",
       "value": "28px",
       "count": 2
-    },
-    "95d6b8c568aa101b1ab1": {
-      "file": "src/app/features/child-picker/child-picker.component.scss",
-      "rule": "typography",
-      "property": "font-size",
-      "value": "16px",
-      "count": 1
     },
     "95e30963b2a086a68359": {
       "file": "src/app/features/alternate-questions/alternate-questions.component.scss",
@@ -1163,20 +1072,6 @@
       "value": "2px",
       "count": 2
     },
-    "b2f1132875a5fe60dc83": {
-      "file": "src/app/features/field-settings/field-settings.component.scss",
-      "rule": "typography",
-      "property": "font-weight",
-      "value": "600",
-      "count": 1
-    },
-    "b4593e09d99c50d64121": {
-      "file": "src/app/shared/_code-highlight.scss",
-      "rule": "typography",
-      "property": "font-weight",
-      "value": "600",
-      "count": 1
-    },
     "b5bcd20df9992a71e30c": {
       "file": "src/app/features/alternate-questions/alternate-questions.component.scss",
       "rule": "spacing",
@@ -1238,13 +1133,6 @@
       "rule": "geometry",
       "property": "height",
       "value": "6px",
-      "count": 1
-    },
-    "beae78513e57c0dce226": {
-      "file": "src/app/features/cee-preview/cee-preview.component.scss",
-      "rule": "typography",
-      "property": "font-weight",
-      "value": "500",
       "count": 1
     },
     "befe296a76d91ecaeb45": {
@@ -1366,13 +1254,6 @@
       "value": "5px var(--cedar-space-2)",
       "count": 1
     },
-    "cf451572e5aa9f4f1724": {
-      "file": "src/app/features/annotations-editor/annotations-editor.component.scss",
-      "rule": "typography",
-      "property": "font-weight",
-      "value": "500",
-      "count": 1
-    },
     "d0038325ec4adf211f9e": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
       "rule": "geometry",
@@ -1385,13 +1266,6 @@
       "rule": "geometry",
       "property": "border-radius",
       "value": "3px",
-      "count": 1
-    },
-    "d0ab93646b0ff429f28f": {
-      "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
-      "rule": "typography",
-      "property": "font-weight",
-      "value": "600",
       "count": 1
     },
     "d2adee3332862017824e": {
@@ -1407,13 +1281,6 @@
       "property": "background",
       "value": "#f7f9f9",
       "count": 1
-    },
-    "d5d6c73f447950e0a1b4": {
-      "file": "src/app/features/field-settings/field-settings.component.scss",
-      "rule": "typography",
-      "property": "font-weight",
-      "value": "400",
-      "count": 2
     },
     "d6c7210089435900ceb5": {
       "file": "src/app/features/child-picker/child-picker.component.scss",
@@ -1455,13 +1322,6 @@
       "rule": "color",
       "property": "color",
       "value": "#64748b",
-      "count": 1
-    },
-    "da990528c66b73e2958b": {
-      "file": "src/app/features/alternate-questions/alternate-questions.component.scss",
-      "rule": "typography",
-      "property": "font-weight",
-      "value": "600",
       "count": 1
     },
     "dafc613f46a833b98d06": {
@@ -1526,13 +1386,6 @@
       "property": "padding",
       "value": "var(--cedar-space-1) 6px",
       "count": 1
-    },
-    "e57d42ff6bbf6c294e2b": {
-      "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
-      "rule": "typography",
-      "property": "font-weight",
-      "value": "500",
-      "count": 2
     },
     "e588e97621528cd06d91": {
       "file": "src/app/features/field-default-value/field-default-value.component.scss",
@@ -1653,25 +1506,11 @@
       "value": "0.04em",
       "count": 1
     },
-    "f8099e2b3d63168ffc97": {
-      "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
-      "rule": "typography",
-      "property": "font-weight",
-      "value": "700",
-      "count": 3
-    },
     "f98b241b285faf6ee76f": {
       "file": "src/app/features/field-settings/field-settings.component.scss",
       "rule": "spacing",
       "property": "gap",
       "value": "3px var(--cedar-space-3)",
-      "count": 1
-    },
-    "fac73dc7f5bb3466646c": {
-      "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
-      "rule": "geometry",
-      "property": "height",
-      "value": "0.75rem",
       "count": 1
     },
     "faccfea8eaeb945bd8e5": {

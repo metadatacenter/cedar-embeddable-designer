@@ -17,7 +17,7 @@
   background: white;
 }
 .container-path button[aria-current] {
-  font-weight: bold;
+  font-weight: var(--cedar-font-weight-medium, 500);
 }
 
 .container-path button {

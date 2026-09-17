@@ -16,11 +16,11 @@ dialog::backdrop {
   background: rgb(0 0 0 / 35%);
 }
 h2 {
-  font-size: 20px;
+  font-size: var(--cedar-font-size-heading);
   margin: 0 0 var(--cedar-space-6);
 }
 h3 {
-  font-size: 16px;
+  font-size: var(--cedar-font-size-lead);
   margin: 0;
 }
 .selection-heading,
@@ -61,7 +61,7 @@ button:disabled {
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: var(--cedar-font-size);
   text-align: left;
 }
 th,
@@ -89,7 +89,7 @@ td:first-child {
 }
 label {
   display: block;
-  font-weight: 500;
+  font-weight: var(--cedar-font-weight-medium, 500);
   margin-bottom: var(--cedar-space-2);
 }
 input {

@@ -12,7 +12,7 @@ fieldset {
   min-width: 0;
 }
 legend {
-  font-weight: 600;
+  font-weight: var(--cedar-font-weight-medium, 500);
   padding: 0;
   margin-bottom: var(--cedar-space-1);
 }
@@ -46,7 +46,7 @@ table {
   table-layout: fixed;
 }
 th {
-  font-weight: 500;
+  font-weight: var(--cedar-font-weight-medium, 500);
   text-align: left;
   padding: var(--cedar-space-1);
   border-bottom: 1px solid var(--cedar-border-rule);
