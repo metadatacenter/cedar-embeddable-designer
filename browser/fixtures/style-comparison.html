@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CEDAR component style comparison</title>
+    <style>
+      body {
+        margin: 16px;
+        font:
+          14px system-ui,
+          sans-serif;
+        background: #f5f5f5;
+        color: #222;
+      }
+      header {
+        margin-bottom: 16px;
+      }
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      main {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+      section {
+        padding: 16px;
+        background: white;
+        min-width: 0;
+        border: 1px solid #ddd;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      h2 {
+        font-size: 18px;
+      }
+      cedar-embeddable-designer {
+        display: block;
+        height: 650px;
+      }
+      main.narrow {
+        grid-template-columns: minmax(0, 375px);
+      }
+      main.overrides {
+        --cedar-control-height: 40px;
+        --cedar-control-radius: 8px;
+        --cedar-control-error: #842029;
+      }
+      @media (max-width: 850px) {
+        main {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>CEDAR component style comparison</h1>
+      <p>
+        Real local bundles, shared sample fields. Tab into controls to inspect focus; clear required text or enter an
+        invalid email and blur to inspect errors.
+      </p>
+      <nav>
+        <label
+          >Entry density
+          <select id="density">
+            <option value="compact">Compact (36px)</option>
+            <option value="authoring">Authoring (32px)</option>
+          </select></label
+        >
+        <label><input id="readonly" type="checkbox" /> Read-only CEE, CEF and CEFD</label>
+        <label><input id="narrow" type="checkbox" /> Narrow hosts</label>
+        <label><input id="overrides" type="checkbox" /> Host overrides (40px / 8px corners)</label>
+      </nav>
+      <p>CED remains editable; designer settings always use authoring density. This page makes no service calls.</p>
+      <p id="status" role="status">Loading local CEE and CED bundles…</p>
+    </header>
+    <main>
+      <section>
+        <h2>CEE — metadata editor</h2>
+        <div id="cee"></div>
+      </section>
+      <section>
+        <h2>CEF — individual fields</h2>
+        <div id="cef"></div>
+      </section>
+      <section>
+        <h2>CED — template designer</h2>
+        <div id="ced"></div>
+      </section>
+      <section>
+        <h2>CEFD — field designer</h2>
+        <div id="cefd"></div>
+      </section>
+    </main>
+    <script>
+      const status = document.getElementById('status');
+      function load(src) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = src;
+          script.onload = resolve;
+          script.onerror = () =>
+            reject(new Error('Missing ' + src + '. Build/stage both local bundles as described in the runbook.'));
+          document.head.appendChild(script);
+        });
+      }
+      async function start() {
+        await load('cedar-embeddable-editor.js');
+        await load('cedar-embeddable-designer.js');
+        await Promise.all(
+          [
+            'cedar-embeddable-editor',
+            'cedar-embeddable-field',
+            'cedar-embeddable-designer',
+            'cedar-embeddable-field-designer',
+          ].map((tag) => customElements.whenDefined(tag)),
+        );
+        const response = await fetch('style-comparison.json');
+        if (!response.ok) throw new Error('Missing comparison fixture');
+        const template = await response.json();
+        function render() {
+          const readOnlyMode = document.getElementById('readonly').checked;
+          const density = document.getElementById('density').value;
+          const cee = document.createElement('cedar-embeddable-editor');
+          cee.setAttribute('density', density);
+          cee.config = { readOnlyMode, showDownloadMenu: false, showExpandCollapseAll: false };
+          cee.templateObject = structuredClone(template);
+          document.getElementById('cee').replaceChildren(cee);
+          document.getElementById('cef').replaceChildren(
+            ...template._ui.order.map((key) => {
+              const field = document.createElement('cedar-embeddable-field');
+              field.setAttribute('density', density);
+              field.config = { readOnlyMode };
+              field.fieldObject = structuredClone(template.properties[key]);
+              return field;
+            }),
+          );
+          const ced = document.createElement('cedar-embeddable-designer');
+          document.getElementById('ced').replaceChildren(ced);
+          ced.loadArtifact(structuredClone(template));
+          const cefd = document.createElement('cedar-embeddable-field-designer');
+          document.getElementById('cefd').replaceChildren(cefd);
+          cefd.loadArtifact(structuredClone(template.properties._text));
+          cefd.readOnly = readOnlyMode;
+          status.textContent =
+            'Both bundles loaded. Changes are local to this page and reset when display options change.';
+        }
+        document.getElementById('density').addEventListener('change', render);
+        document.getElementById('readonly').addEventListener('change', render);
+        for (const name of ['narrow', 'overrides']) {
+          document
+            .getElementById(name)
+            .addEventListener('change', (event) =>
+              document.querySelector('main').classList.toggle(name, event.target.checked),
+            );
+        }
+        render();
+      }
+      start().catch((error) => {
+        status.textContent = error.message;
+      });
+    </script>
+  </body>
+</html>
