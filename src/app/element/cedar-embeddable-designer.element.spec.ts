@@ -49,6 +49,25 @@ describe('CedarEmbeddableDesignerElementComponent', () => {
     expect(b.getActivePreset()).toBe('basic');
   });
 
+  it('lets a host start an element, track edits and explicitly reject an unreadable load', () => {
+    const fixture = create();
+    const element = fixture.componentInstance;
+    element.newArtifact('template');
+    expect(service.children()).toHaveLength(0);
+    element.newArtifact('element');
+    expect((element.currentArtifact as Record<string, unknown>)['@type']).toBe(
+      'https://schema.metadatacenter.org/core/TemplateElement',
+    );
+    expect(element.isDirty).toBe(false);
+    service.templateName.set('A new element');
+    expect(element.isDirty).toBe(true);
+    const saved = element.currentArtifact;
+    element.loadArtifact(saved);
+    expect(element.isDirty).toBe(false);
+    expect(() => element.loadArtifact('not a CEDAR document')).toThrow();
+    expect(element.currentArtifact).toEqual(saved);
+  });
+
   describe('config', () => {
     it('is off until a host names a terminology server', () => {
       create();

@@ -66,6 +66,17 @@ export interface CedarEmbeddableDesignerElement extends HTMLElement {
   /** A template or element document. The legacy property name remains supported. */
   template: CedJsonObject | string | null;
   artifact: CedJsonObject | string | null;
+  /** Load a document synchronously; throws if it cannot be read. */
+  loadArtifact(source: CedJsonObject | string): void;
+  /** Start an empty template or element, without the demo's starter fields. */
+  newArtifact(kind: 'template' | 'element'): void;
+  /** Includes invalid, uncommitted setting edits. Reset by loading a saved document. */
+  readonly isDirty: boolean;
+  addEventListener(
+    type: 'dirtyChange',
+    listener: (event: CustomEvent<boolean>) => void,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
   readonly validationReport: CedValidationReport;
   readonly canSave: boolean;
   validate(): CedValidationReport;

@@ -105,6 +105,14 @@ export class CedarEmbeddableDesignerElementComponent {
   @Input() get currentArtifact(): object {
     return this.cedarTemplate();
   }
+  /** Explicit host loading reports failures instead of retaining a different document silently. */
+  @Input() readonly loadArtifact = (source: object | string): void => this.service.loadTemplate(source);
+  @Input() readonly newArtifact = (kind: 'template' | 'element'): void => this.service.resetTemplate(kind, false);
+  @Input() get isDirty(): boolean {
+    return this.service.isDirty() || this.service.validationReport().issues.some((issue) => issue.source === 'draft');
+  }
+  @Output() dirtyChange = new EventEmitter<boolean>();
+
   @Input() get validationReport(): CedValidationReport {
     return structuredClone(this.service.validationReport());
   }
@@ -128,6 +136,10 @@ export class CedarEmbeddableDesignerElementComponent {
      * root effect, scheduled on state changes rather than on this view's refresh,
      * so what the host receives no longer depends on the wrapper's change detection.
      */
+    const dirty = effect(() => this.dirtyChange.emit(this.isDirty), {
+      injector: inject(EnvironmentInjector),
+    });
+    inject(DestroyRef).onDestroy(() => dirty.destroy());
     const validation = effect(() => this.validationChange.emit(structuredClone(this.service.validationReport())), {
       injector: inject(EnvironmentInjector),
     });

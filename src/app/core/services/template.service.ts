@@ -535,13 +535,13 @@ export class TemplateService {
     return this.preferencesService.getActivePreset();
   }
 
-  resetTemplate(kind: 'template' | 'element' = 'template') {
+  resetTemplate(kind: 'template' | 'element' = 'template', withStarterFields = true) {
     this.loadError.set(null);
     this.mintedIdentifier.set(newTemplateIdentifier());
     const document = newContainer(kind);
     if (kind === 'template') {
       document.identifier = '';
-      document.children = containerFromFlat({ ...document, fields: starterFields() }).children;
+      document.children = withStarterFields ? containerFromFlat({ ...document, fields: starterFields() }).children : [];
     }
     this.draftIssues.set({});
     this.childPicker.set(null);
