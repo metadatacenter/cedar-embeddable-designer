@@ -77,6 +77,7 @@ if (examples.length > 0) {
           'npx',
           [
             'tsc',
+            '--ignoreConfig',
             '--noEmit',
             '--strict',
             '--target',

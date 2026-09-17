@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- CEFD (`cedar-embeddable-field-designer`) in the CED bundle: a standalone field
+  definition editor sharing CED's controls, with JSON/YAML loading, all field
+  types, validation and dirty events, isolated instances and host read-only mode.
+  Container placement controls remain in CED. The host owns repository saves.
+- CEFD contract, field-type round-trip, metadata preservation and browser tests;
+  split Designer coverage for standalone field creation, updates and stale saves.
+
 ## [0.1.0-dev.20260916.2593d382] - 2026-09-16 (Nexus)
 
 First Nexus development snapshot, including explicit host document loading,

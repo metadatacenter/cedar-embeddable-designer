@@ -312,3 +312,49 @@ The local test reads the existing published `Principal Investigator` element and
 inserts it in the browser without saving to the repository.
 
 CED has no file import, export or download controls. Embedding hosts supply artifacts through the public inputs and receive edits through the change events.
+
+## CEFD: design a standalone field
+
+The same bundle also registers `<cedar-embeddable-field-designer>`. CEFD edits one
+field definition using CED's field cards, settings and model conversion. It has
+its own state and shadow root, and multiple CEFD and CED instances can coexist.
+It does not authenticate, fetch artifacts, save, publish, or choose a version.
+
+```ts
+import type { CedarEmbeddableFieldDesignerElement } from 'cedar-embeddable-designer';
+
+await customElements.whenDefined('cedar-embeddable-field-designer');
+const field = document.createElement('cedar-embeddable-field-designer') as CedarEmbeddableFieldDesignerElement;
+document.body.append(field);
+field.config = { terminologyBaseUrl: 'https://terminology.example.org' };
+field.newArtifact('number'); // Omit the argument to show the field-type chooser.
+field.addEventListener('artifactChange', event => {
+  console.log('Current valid field definition', event.detail);
+});
+field.addEventListener('validationChange', event => {
+  console.log('Host Save enabled:', event.detail.canSave);
+});
+```
+
+Use `loadArtifact(jsonOrYaml)` to open a field. Loading is synchronous and throws
+on invalid input while preserving the current edits. Successful loads and
+`newArtifact()` reset `isDirty`; invalid settings drafts count as dirty too.
+`validate()`, `validationReport`, `canSave` and `dirtyChange` let a host manage Save
+and navigation. `currentArtifact` is null before type selection and can throw
+while the draft is invalid; check `canSave` before reading it to save. Only valid
+artifacts produce `artifactChange` events, so hosts must not treat the last event
+as a substitute for checking the current validation state.
+
+`readOnly` is host-controlled; published definitions remain read only even if the
+host clears it. Configuration is accepted once per instance. Field artifacts
+retain identity, metadata, constraints and provenance on round-trip. Placement
+controls (property IRI, requiredness, repetition and container display overrides)
+belong to CED and are absent from CEFD. Defaults, terminology, field labels,
+language and annotations use the same controls as CED. All 26 field types are
+supported; the chooser groups date/time under Temporal.
+
+The split Designer host uses CEFD for `/fields/create` and `/fields/edit/...`,
+with the host's normal permissions, ETag saves and Workspace return navigation.
+When developing against a newer CEFD than the pinned Nexus snapshot, explicitly
+stage the local bundle using `CEDAR_CED_BUNDLE` in that host; a missing CEFD
+registration reports an upgrade error rather than waiting indefinitely.

@@ -145,3 +145,73 @@ export interface CedChildSource {
   /** Fetch the complete JSON-LD artifact, using the host's authentication. */
   load(result: CedChildResult, options: { signal: AbortSignal }): Promise<CedJsonObject>;
 }
+
+/** CED field kinds, including the temporal subtypes accepted when creating a definition. */
+export type CedFieldType =
+  | 'text'
+  | 'paragraph'
+  | 'multipleChoice'
+  | 'checkboxes'
+  | 'singleChoiceList'
+  | 'multipleChoiceList'
+  | 'date'
+  | 'time'
+  | 'email'
+  | 'link'
+  | 'phone'
+  | 'number'
+  | 'controlledTerms'
+  | 'attributeValue'
+  | 'orcid'
+  | 'ror'
+  | 'pfas'
+  | 'rrid'
+  | 'pubmed'
+  | 'nihGrantId'
+  | 'doi'
+  | 'image'
+  | 'richText'
+  | 'youtube'
+  | 'sectionBreak'
+  | 'pageBreak';
+
+/**
+ * <cedar-embeddable-field-designer>, registered by the same bundle as CED.
+ * Designs a field definition; placement, persistence and lifecycle decisions belong to its host.
+ */
+export interface CedarEmbeddableFieldDesignerElement extends HTMLElement {
+  config: CedConfig | null;
+  artifact: CedJsonObject | string | null;
+  /** Host read-only mode; published definitions are always read only. */
+  readOnly: boolean;
+  /** Throws on invalid input, preserving the currently open document. */
+  loadArtifact(source: CedJsonObject | string): void;
+  /** Omit the type to show the field-type chooser. Resets the dirty baseline. */
+  newArtifact(type?: CedFieldType): void;
+  /** Null before choosing a type. May throw for an invalid draft; check canSave first. */
+  readonly currentArtifact: CedJsonObject | null;
+  readonly isDirty: boolean;
+  readonly canSave: boolean;
+  readonly validationReport: CedValidationReport;
+  validate(): CedValidationReport;
+  addEventListener(
+    type: 'artifactChange',
+    listener: (event: CustomEvent<CedJsonObject>) => void,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  addEventListener(
+    type: 'dirtyChange',
+    listener: (event: CustomEvent<boolean>) => void,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  addEventListener(
+    type: 'validationChange',
+    listener: (event: CustomEvent<CedValidationReport>) => void,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject | null,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+}

@@ -1,5 +1,6 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { createCustomElement } from '@angular/elements';
+import { CedarEmbeddableFieldDesignerElementComponent } from './app/element/cedar-embeddable-field-designer.element';
 import { appConfig } from './app/app.config';
 import { DevHostComponent } from './app/app.component.dev';
 import { CedarEmbeddableDesignerElementComponent } from './app/element/cedar-embeddable-designer.element';
@@ -14,6 +15,11 @@ import { defineCustomElementOnce } from './app/custom-element';
  */
 bootstrapApplication(DevHostComponent, appConfig)
   .then((application) => {
+    defineCustomElementOnce(
+      () => createCustomElement(CedarEmbeddableFieldDesignerElementComponent, { injector: application.injector }),
+      customElements,
+      'cedar-embeddable-field-designer',
+    );
     defineCustomElementOnce(() =>
       createCustomElement(CedarEmbeddableDesignerElementComponent, { injector: application.injector }),
     );

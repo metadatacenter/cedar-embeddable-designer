@@ -12,10 +12,11 @@ type CustomElementRegistryLike = Pick<CustomElementRegistry, 'define' | 'get'>;
 export function defineCustomElementOnce(
   createElement: () => CustomElementConstructor,
   registry: CustomElementRegistryLike = customElements,
+  name = CED_CUSTOM_ELEMENT_NAME,
 ): void {
-  if (registry.get(CED_CUSTOM_ELEMENT_NAME)) {
+  if (registry.get(name)) {
     return;
   }
 
-  registry.define(CED_CUSTOM_ELEMENT_NAME, createElement());
+  registry.define(name, createElement());
 }

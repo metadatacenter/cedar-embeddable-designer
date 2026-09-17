@@ -65,7 +65,7 @@
       footer bar of their own. They are one line of controls either way, and a
       bar cost every card its own rule, its padding and 36px of height.
     -->
-            @if (service.preferences().showRequired && allowsStatus(field.type)) {
+            @if (!service.fieldDocumentMode() && service.preferences().showRequired && allowsStatus(field.type)) {
               <select
                 aria-label="Requirement"
                 [ngModel]="field.status"
@@ -77,7 +77,7 @@
                 <option value="required">Required</option>
               </select>
             }
-            @if (service.preferences().showAllowMultiple && allowsMultiple(field.type)) {
+            @if (!service.fieldDocumentMode() && service.preferences().showAllowMultiple && allowsMultiple(field.type)) {
               <label class="flex items-center gap-1 cursor-pointer group shrink-0">
                 <input
                   type="checkbox"

@@ -280,7 +280,7 @@
     [id]="'field-panel-' + field.id + '-Display'"
     [attr.aria-labelledby]="'field-tab-' + field.id + '-Display'"
   >
-    <form (ngSubmit)="saveLayout()" class="row">
+    <form (ngSubmit)="saveLayout()" class="row" [hidden]="service.fieldDocumentMode()">
       <fieldset
         [attr.aria-invalid]="!!error"
         [disabled]="!!field.publishedDefinition"
@@ -375,7 +375,7 @@
           [disabled]="!!field.publishedDefinition"
         />
       </dd>
-      @if (dynamic) {
+      @if (dynamic && !service.fieldDocumentMode()) {
         <dt class="editable">Property IRI</dt>
         <dd>
           <app-property-picker

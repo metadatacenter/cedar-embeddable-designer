@@ -108,6 +108,9 @@ export class TemplateService {
   // Inject PreferencesService
   readonly preferencesService = inject(PreferencesService);
 
+  /** A standalone field has no container-owned placement settings. */
+  readonly fieldDocumentMode = signal(false);
+
   readonly fieldEditorConfig = signal<{ bridgeBaseUrl?: string; terminologyBaseUrl?: string }>({});
 
   readonly session = new EditorSession(
