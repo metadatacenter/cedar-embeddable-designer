@@ -31,3 +31,47 @@ test('comparison page renders the four real components and applies host profiles
   await page.getByLabel('Read-only CEE, CEF and CEFD').check();
   await expect(page.locator('#cefd').getByRole('textbox', { name: 'Field name', exact: true })).toBeDisabled();
 });
+
+for (const readOnly of [false, true]) {
+  test(`CED follows the CEE visual reference with read-only=${readOnly}`, async ({ page }, testInfo) => {
+    test.skip(!process.env.CEF_BUNDLE, 'Needs the approved CEE/CEF distribution');
+    await page.route('**/cedar-embeddable-editor.js', (route) =>
+      route.fulfill({ path: process.env.CEF_BUNDLE!, contentType: 'text/javascript' }),
+    );
+    await page.setViewportSize({ width: 1280, height: 1000 });
+    await page.goto('/style-comparison.html');
+    if (readOnly) await page.getByLabel('Read-only CEE, CEF and CEFD').check();
+    const designer = page.locator('#ced cedar-embeddable-designer');
+    const reference = page.locator('#cee .template-label');
+    const title = designer.getByPlaceholder('Template name');
+    await expect(title).toHaveValue('Style comparison');
+    for (const property of ['font-family', 'font-size', 'font-weight', 'color']) {
+      await expect(title).toHaveCSS(
+        property,
+        await reference.evaluate((el, prop) => getComputedStyle(el).getPropertyValue(prop), property),
+      );
+    }
+    await expect(designer.locator('.ced-version')).toHaveCount(0);
+    await expect(designer.locator('.template-header-card__gradient')).toHaveCount(0);
+    for (const selector of ['.template-header-card', '.field-drag-container']) {
+      const surface = designer.locator(selector).first();
+      await expect(surface).toHaveCSS('box-shadow', 'none');
+      await expect(surface).toHaveCSS('border-radius', '0px');
+      await expect(surface).toHaveCSS(
+        'background-color',
+        await page.locator('#cee .template-card').evaluate((el) => getComputedStyle(el).backgroundColor),
+      );
+    }
+    for (const width of [520, 375]) {
+      await designer.evaluate((el, width) => ((el as HTMLElement).style.width = `${width}px`), width);
+      await expect(designer.locator('.overview-panel')).toBeHidden();
+      const card = designer.locator('app-field-card').first();
+      expect(await card.evaluate((el) => el.getBoundingClientRect().width)).toBeGreaterThan(width - 60);
+      await expect(designer.locator('.template-field-label').first()).toHaveCSS('text-transform', 'none');
+      await designer.screenshot({ path: testInfo.outputPath(`ced-${width}.png`) });
+    }
+    const fieldName = page.locator('#cefd').getByRole('textbox', { name: 'Field name', exact: true });
+    if (readOnly) await expect(fieldName).toBeDisabled();
+    else await expect(fieldName).toBeEnabled();
+  });
+}

@@ -57,13 +57,6 @@
       "value": "#f9fafb",
       "count": 4
     },
-    "0e504516b4bf1da1354b": {
-      "file": "src/app/features/container-editor/container-editor.component.scss",
-      "rule": "typography",
-      "property": "line-height",
-      "value": "16px",
-      "count": 2
-    },
     "0e7bb7e7a5dfc92a50d2": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
       "rule": "color",
@@ -440,13 +433,6 @@
       "rule": "color",
       "property": "background-color",
       "value": "#f3f4f6",
-      "count": 1
-    },
-    "4a2ec852fb40097a7c3f": {
-      "file": "src/app/features/container-editor/container-editor.component.scss",
-      "rule": "typography",
-      "property": "line-height",
-      "value": "20px",
       "count": 1
     },
     "4b268602800460668e6b": {
@@ -1337,13 +1323,6 @@
       "property": "border-radius",
       "value": "9999px",
       "count": 2
-    },
-    "debccab6d4443a347666": {
-      "file": "src/app/features/container-editor/container-editor.component.scss",
-      "rule": "spacing",
-      "property": "margin-top",
-      "value": "2px",
-      "count": 1
     },
     "e1740c6e7463044f5287": {
       "file": "src/app/features/cee-preview/cee-preview.component.scss",

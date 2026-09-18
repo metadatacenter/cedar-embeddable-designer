@@ -161,11 +161,11 @@ test('brand tokens reach template bindings and native choice controls', async ({
     host.style.setProperty('--cedar-color-primary', 'rgb(80, 20, 120)');
     host.style.setProperty('--cedar-primary-50', 'rgb(240, 220, 250)');
   });
-  await expect(designer.locator('.template-header-card__icon').first()).toHaveCSS(
+  await expect(designer.getByRole('button', { name: /Add Child/ }).first()).toHaveCSS(
     'background-color',
-    'rgb(240, 220, 250)',
+    'rgb(80, 20, 120)',
   );
-  await expect(designer.locator('.template-header-card__icon app-icon').first()).toHaveCSS('color', 'rgb(80, 20, 120)');
+  await expect(designer.locator('.field-type-icon').first()).toHaveCSS('color', 'rgb(80, 20, 120)');
   await designer.locator('.user-menu-container button').first().click();
   await designer.getByRole('button', { name: 'Preferences', exact: true }).click();
   await expect(designer.locator('input.radio-white:checked')).toHaveCSS('border-color', 'rgb(80, 20, 120)');

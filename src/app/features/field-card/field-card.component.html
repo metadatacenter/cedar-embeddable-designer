@@ -55,7 +55,7 @@
               </span>
             }
             <!-- Label Badge details -->
-            <div class="text-xs bg-gray-100 border text-gray-600 font-medium px-2 py-0.5 rounded-full capitalize">
+            <div class="field-type-label">
               {{ getFieldTypeName(field) }}
             </div>
           </div>
@@ -113,7 +113,7 @@
           [placeholder]="
             field.temporal?.type === 'xsd:dateTime' ? 'Date and time' : FIELD_TYPES_LIST[field.type]?.preview || ''
           "
-          class="text-sm text-gray-500 w-full bg-gray-50 border border-gray-200 rounded-md px-3 py-1.5 cursor-not-allowed"
+          class="field-preview"
         />
       </div>
     }

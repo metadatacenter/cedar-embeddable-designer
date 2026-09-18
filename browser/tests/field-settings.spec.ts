@@ -101,7 +101,7 @@ test('authors datetime precision timezone and time format', async ({ page }) => 
   await expect
     .poll(async () => ((await currentTemplate(page)).properties as any)['Publication Date']._ui)
     .toMatchObject({ temporalGranularity: 'second', timezoneEnabled: true, inputTimeFormat: '12h' });
-  await expect(card.locator('div.rounded-full').filter({ hasText: 'Date and time' })).toBeVisible();
+  await expect(card.locator('.field-type-label').filter({ hasText: 'Date and time' })).toBeVisible();
   await page.screenshot({ path: '/tmp/ced-temporal-settings.png' });
   await section.getByLabel('Temporal type').selectOption('xsd:time');
   await expect(section.getByLabel('Precision').locator('option')).toHaveText([

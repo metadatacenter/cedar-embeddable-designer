@@ -12,7 +12,6 @@ import {
 import { CommonModule } from '@angular/common';
 import { TemplateService, FIELD_TYPES } from './core/services/template.service';
 import { Field } from './core/models/types';
-import { CED_VERSION } from './version';
 
 // Custom components
 import { IconComponent } from './shared/components/icon/icon.component';
@@ -45,7 +44,6 @@ import { ContainerOutlineComponent } from './features/container-outline/containe
 })
 export class AppComponent {
   /** Shown in the header, from package.json rather than a literal beside it. */
-  readonly version = CED_VERSION;
   readonly service = inject(TemplateService);
   private readonly host = inject(ElementRef<HTMLElement>);
 

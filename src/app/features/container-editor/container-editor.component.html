@@ -1,16 +1,10 @@
 <!-- Template Header Card -->
 <div class="template-header-card" (focusin)="activate()">
-  <div
-    class="template-header-card__gradient"
-    [style.background]="
-      'linear-gradient(90deg, ' + 'var(--cedar-color-primary)' + ' 0%, ' + 'var(--cedar-primary-50)' + ' 100%)'
-    "
-  ></div>
   @if (placementNode() && service.issuesFor(container().id).length; as count) {
     <span class="validation-badge">⚠ {{ count }} {{ count === 1 ? 'error' : 'errors' }}</span>
   }
   <div class="template-header-card__body" appHeaderToggle (headerToggle)="toggleSettings()">
-    <div class="template-header-card__icon" [style.backgroundColor]="'var(--cedar-primary-50)'">
+    <div class="template-header-card__icon">
       @if (placementNode()) {
         <span
           cdkDragHandle
@@ -76,13 +70,13 @@
       <!-- Bottom Row: Description -->
       <div class="template-field-group template-description">
         <label class="template-field-label">Description</label>
-        <input
-          type="text"
+        <textarea
+          rows="1"
           [ngModel]="container().description"
           (ngModelChange)="update({ description: $event })"
           class="template-input text-sm text-gray-600"
           placeholder="Add description..."
-        />
+        ></textarea>
       </div>
     </div>
     @if (placementNode()) {

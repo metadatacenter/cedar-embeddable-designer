@@ -29,7 +29,7 @@
         >
           <app-icon key="panelLeft" size="default" />
         </button>
-        <div class="flex flex-col items-center justify-center text-center cursor-default group">
+        <div class="designer-identity">
           <!--
             Inline, not <img src="cedar-logo.png">. The element ships as one
             script with no asset directory beside it, so a relative image is a
@@ -58,10 +58,7 @@
             </g>
             <path d="M 24 78 C 24 90 96 90 96 78 C 96 85.5 24 85.5 24 78 Z" fill="#ffffff" />
           </svg>
-          <span class="font-medium text-xs text-gray-900 tracking-wider leading-none mt-0.5">CED</span>
-          <span class="ced-version text-xs font-medium text-gray-500 leading-none scale-90" [title]="version">{{
-            version
-          }}</span>
+          <span class="designer-identity__name">Template designer</span>
         </div>
 
         <!--
@@ -119,11 +116,7 @@
       <div class="app-header__actions">
         <!-- Field Designer Button -->
         @if (service.preferences().showFieldDesigner) {
-          <button
-            (click)="service.showFieldDesigner.set(true)"
-            class="btn-header btn-header--primary"
-            [style.backgroundColor]="'var(--cedar-color-primary)'"
-          >
+          <button (click)="service.showFieldDesigner.set(true)" class="btn-header btn-header--secondary">
             <app-icon key="library" size="small"></app-icon>
             Field Designer
           </button>
@@ -136,7 +129,7 @@
             class="user-menu-trigger"
             title="User Menu"
           >
-            <div class="user-menu-avatar" [style.backgroundColor]="'var(--cedar-color-primary)'">
+            <div class="user-menu-avatar">
               <app-icon key="user" size="small"></app-icon>
             </div>
           </button>
