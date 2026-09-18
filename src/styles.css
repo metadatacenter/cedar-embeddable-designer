@@ -395,3 +395,6 @@ input[aria-invalid='true'], select[aria-invalid='true'], textarea[aria-invalid='
 }
 input[readonly], textarea[readonly] { background: var(--cedar-control-readonly-surface); }
 input:disabled, select:disabled, textarea:disabled { opacity: var(--cedar-control-disabled-opacity); }
+
+.cedar-modal-backdrop { background: var(--cedar-dialog-backdrop); }
+.cedar-modal-surface { background: var(--cedar-overlay-surface); border: 1px solid var(--cedar-overlay-border); border-radius: var(--cedar-dialog-radius); box-shadow: var(--cedar-dialog-shadow); }

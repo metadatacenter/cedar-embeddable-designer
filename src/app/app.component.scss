@@ -62,15 +62,23 @@
 }
 
 .user-menu-dropdown {
-  @apply absolute right-0 mt-2 w-56 bg-white rounded-lg border border-gray-300 shadow-lg z-50 overflow-hidden;
+  @apply absolute right-0 mt-2 w-56 border z-50 overflow-hidden;
+  background: var(--cedar-overlay-surface);
+  border-color: var(--cedar-overlay-border);
+  border-radius: var(--cedar-menu-radius);
+  box-shadow: var(--cedar-menu-shadow);
+  padding: var(--cedar-menu-padding);
   animation: fade-in 0.2s ease-out;
 }
 
 .user-menu-item {
-  @apply w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3 cursor-pointer border-none bg-transparent;
+  @apply w-full text-left text-sm text-gray-700 transition-colors flex items-center gap-3 cursor-pointer border-none bg-transparent;
 
+  min-height: var(--cedar-menu-item-height);
+  padding: var(--cedar-menu-item-padding-block) var(--cedar-menu-item-padding-inline);
+  &:hover { background: var(--cedar-action-hover-surface); }
   & + & {
-    @apply border-t border-gray-200;
+    border-top: 1px solid var(--cedar-overlay-border);
   }
 }
 

@@ -1,13 +1,12 @@
 @if (service.showPreferencesModal()) {
   <!-- Backdrop -->
   <div
-    class="fixed inset-0 z-50 animate-backdrop-fade-in"
-    style="background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px)"
+    class="cedar-modal-backdrop fixed inset-0 z-50 animate-backdrop-fade-in"
     (click)="close()"
   ></div>
   <!-- Modal -->
   <div
-    class="fixed z-50 bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden animate-modal-fade-in"
+    class="cedar-modal-surface fixed z-50 max-w-2xl w-full max-h-[85vh] overflow-hidden animate-modal-fade-in"
     style="left: 50%; top: 50%; transform: translate(-50%, -50%)"
   >
     <!-- Header -->
