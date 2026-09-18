@@ -6,14 +6,14 @@ dialog {
   width: min(1000px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
   padding: var(--cedar-space-6);
-  border: 1px solid var(--cedar-neutral-200, #ddd);
-  border-radius: 12px;
-  color: var(--cedar-color-text, #262626);
-  background: white;
+  border: 1px solid var(--cedar-overlay-border);
+  border-radius: var(--cedar-dialog-radius);
+  color: var(--cedar-text-primary);
+  background: var(--cedar-overlay-surface);
   box-sizing: border-box;
 }
 dialog::backdrop {
-  background: rgb(0 0 0 / 35%);
+  background: var(--cedar-dialog-backdrop);
 }
 h2 {
   font-size: var(--cedar-font-size-heading);
@@ -116,7 +116,7 @@ input {
 .selected-table td:last-child {
   position: sticky;
   right: 0;
-  background: white;
+  background: var(--cedar-overlay-surface);
 }
 .selected-table th:last-child {
   z-index: 1;

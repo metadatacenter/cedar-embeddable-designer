@@ -178,12 +178,12 @@
   --primary: var(--cedar-primary-500);
   --primary-foreground: #ffffff;
   --secondary: var(--cedar-surface-selected);
-  --secondary-foreground: var(--cedar-heading);
+  --secondary-foreground: var(--cedar-color-component-title);
   --muted: var(--cedar-surface-panel);
   --muted-foreground: var(--cedar-text-muted);
   --accent: var(--cedar-surface-selected);
-  --accent-foreground: var(--cedar-heading);
-  --destructive: var(--cedar-warn);
+  --accent-foreground: var(--cedar-color-component-title);
+  --destructive: var(--cedar-color-warn);
   --destructive-foreground: #ffffff;
   --border: var(--cedar-border-rule);
   --input: transparent;
