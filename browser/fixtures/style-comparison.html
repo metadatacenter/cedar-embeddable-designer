@@ -4,39 +4,38 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CEDAR component style comparison</title>
+    <link rel="stylesheet" href="/design-tokens.css" />
     <style>
       body {
-        margin: 16px;
-        font:
-          14px system-ui,
-          sans-serif;
-        background: #f5f5f5;
-        color: #222;
+        margin: var(--cedar-space-4);
+        font: var(--cedar-font-size) var(--cedar-font-family);
+        background: var(--cedar-surface-canvas);
+        color: var(--cedar-text-primary);
       }
       header {
-        margin-bottom: 16px;
+        margin-bottom: var(--cedar-form-field-gap);
       }
       nav {
         display: flex;
         flex-wrap: wrap;
-        gap: 16px;
+        gap: var(--cedar-form-field-gap);
       }
       main {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 16px;
+        gap: var(--cedar-form-field-gap);
       }
       section {
-        padding: 16px;
-        background: white;
+        padding: var(--cedar-space-4);
+        background: var(--cedar-surface-raised);
         min-width: 0;
-        border: 1px solid #ddd;
+        border: 1px solid var(--cedar-border-rule);
       }
       h1 {
-        font-size: 20px;
+        font-size: var(--cedar-font-size-heading);
       }
       h2 {
-        font-size: 18px;
+        font-size: var(--cedar-font-size-element-heading);
       }
       cedar-embeddable-designer {
         display: block;
@@ -55,6 +54,12 @@
           grid-template-columns: minmax(0, 1fr);
         }
       }
+      .status-reference { display: flex; flex-wrap: wrap; gap: var(--cedar-space-2); margin-block: var(--cedar-space-4); }
+      .status-reference span { padding: var(--cedar-space-2) var(--cedar-space-3); border-radius: var(--cedar-control-radius-default); }
+      .status-reference .error { color: var(--cedar-status-error-text); background: var(--cedar-status-error-surface); }
+      .status-reference .warning { color: var(--cedar-status-warning-text); background: var(--cedar-status-warning-surface); }
+      .status-reference .success { color: var(--cedar-status-success-text); background: var(--cedar-status-success-surface); }
+      .status-reference .info { color: var(--cedar-status-info-text); background: var(--cedar-status-info-surface); }
     </style>
   </head>
   <body>
@@ -64,6 +69,10 @@
         Real local bundles, shared sample fields. Tab into controls to inspect focus; clear required text or enter an
         invalid email and blur to inspect errors.
       </p>
+      <div class="status-reference" aria-label="Shared semantic colors">
+        <span class="error">Error · Action required</span><span class="warning">Warning · Review needed</span>
+        <span class="success">Success · Changes saved</span><span class="info">Information · Read-only</span>
+      </div>
       <nav>
         <label
           >Entry density

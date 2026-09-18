@@ -6,6 +6,8 @@ test('comparison page renders the four real components and applies host profiles
     route.fulfill({ path: process.env.CEF_BUNDLE!, contentType: 'text/javascript' }),
   );
   await page.goto('/style-comparison.html');
+  await expect(page.locator('.status-reference span')).toHaveCount(4);
+  await expect(page.locator('.status-reference .error')).toHaveCSS('background-color', 'rgb(254, 243, 242)');
   await expect(page.getByRole('status')).toContainText('Both bundles loaded');
   for (const id of ['cee', 'cef', 'ced', 'cefd']) {
     await expect(page.locator(`#${id} input`).first()).toBeVisible();
