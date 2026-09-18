@@ -419,8 +419,11 @@ for (const host of ['CED', 'CEFD']) {
     await expect(native).toHaveCSS('font-size', '16px');
     await expect(native).toHaveCSS('border-radius', '9px');
     await expect(native).toHaveCSS('border-top-color', 'rgb(101, 67, 33)');
+    await page.keyboard.press('Tab');
     await native.focus();
     await expect(native).toHaveCSS('outline-color', 'rgb(102, 51, 153)');
+    await expect(native).toHaveCSS('outline-width', '2px');
+    await expect(native).toHaveCSS('outline-offset', '2px');
     await expect.poll(async () => (await cefBox.boundingBox())!.height).toBe(44);
     await expect(cef.locator('input').first()).toHaveCSS('font-size', '16px');
     await page.setViewportSize({ width: 375, height: 800 });

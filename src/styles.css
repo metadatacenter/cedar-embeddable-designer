@@ -383,3 +383,15 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #d1d5db;
 }
+
+/* Shared focus geometry also covers toolbar and dialog actions. */
+button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
+  outline: var(--cedar-focus-ring-width) solid var(--cedar-control-focus, var(--cedar-focus-ring-color));
+  outline-offset: var(--cedar-focus-ring-offset);
+}
+
+input[aria-invalid='true'], select[aria-invalid='true'], textarea[aria-invalid='true'] {
+  border-color: var(--cedar-control-error, var(--cedar-control-invalid-border));
+}
+input[readonly], textarea[readonly] { background: var(--cedar-control-readonly-surface); }
+input:disabled, select:disabled, textarea:disabled { opacity: var(--cedar-control-disabled-opacity); }

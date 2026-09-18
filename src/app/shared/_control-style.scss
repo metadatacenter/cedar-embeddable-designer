@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/controls';
 // Native adapter for the shared CEE/CEF compact control contract.
 // Authoring defaults come from design tokens; public host overrides always win.
 @mixin compact-control {
@@ -21,8 +22,7 @@
   font-size: var(--cedar-control-font-size, var(--cedar-control-font-size-authoring));
   line-height: var(--cedar-control-line-height, var(--cedar-control-line-height-authoring));
   font-weight: var(--cedar-font-weight-regular, 400);
-  &:focus {
-    outline: 2px solid var(--cedar-control-focus, var(--cedar-color-primary));
-    outline-offset: 0;
+  &:focus-visible {
+    @include controls.focus-ring(var(--cedar-control-focus, var(--cedar-focus-ring-color)));
   }
 }
