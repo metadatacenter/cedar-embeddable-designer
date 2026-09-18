@@ -18,10 +18,14 @@
           title="Drag element to reorder"
           aria-label="Drag element to reorder"
         >
-          <app-icon key="folder" className="w-6 h-6" [style.color]="'var(--cedar-color-primary)'" />
+          <app-icon key="artifact-element" size="large" [style.color]="'var(--cedar-color-primary)'" />
         </span>
       } @else {
-        <app-icon key="paragraph" className="w-6 h-6" [style.color]="'var(--cedar-color-primary)'" />
+        <app-icon
+          [key]="container().kind === 'element' ? 'artifact-element' : 'artifact-template'"
+          size="large"
+          [style.color]="'var(--cedar-color-primary)'"
+        />
       }
     </div>
     <div class="template-header-card__inputs">
@@ -90,16 +94,7 @@
         [attr.aria-controls]="'element-content-' + container().id"
         (click)="$event.stopPropagation(); service.toggleElement(container().id)"
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" [class.collapsed]="collapsed()">
-          <path
-            d="m6 9 6 6 6-6"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
+        <app-icon key="chevron-down" size="small" [class.collapsed]="collapsed()" />
       </button>
     }
   </div>
@@ -124,7 +119,7 @@
         @if (service.preferences().fieldSelectionStyle === 'modal') {
           <div class="insert-zone" (click)="chooseField(idx)">
             <button class="btn-insert-here" [style.backgroundColor]="'var(--cedar-color-primary)'">
-              ＋ Add child here
+              <app-icon key="add" size="small" /> Add child here
             </button>
           </div>
           @if (pickerAt(idx)) {
@@ -170,7 +165,7 @@
         class="btn-add-field"
         [style.backgroundColor]="'var(--cedar-color-primary)'"
       >
-        <span class="text-base font-medium">＋</span>
+        <span class="text-base font-medium"><app-icon key="add" size="small" /></span>
         Add Child
       </button>
       @if (pickerAt(container().children.length)) {

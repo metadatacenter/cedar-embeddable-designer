@@ -183,7 +183,7 @@ button:focus-visible {
 .settings-toggle:hover {
   color: var(--cedar-text-muted);
 }
-.settings-toggle svg.expanded {
+.settings-toggle app-icon.expanded {
   transform: rotate(180deg);
 }
 

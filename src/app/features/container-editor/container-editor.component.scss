@@ -122,10 +122,10 @@
   color: #64748b;
   cursor: pointer;
 }
-.element-toggle svg {
+.element-toggle app-icon {
   transform: rotate(180deg);
 }
-.element-toggle svg.collapsed {
+.element-toggle app-icon.collapsed {
   transform: none;
 }
 .container-content > app-element-card {

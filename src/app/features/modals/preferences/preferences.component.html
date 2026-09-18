@@ -17,12 +17,12 @@
           class="w-10 h-10 rounded-full flex items-center justify-center"
           [style.backgroundColor]="'var(--cedar-primary-50)'"
         >
-          <app-icon key="settings" [style.color]="'var(--cedar-color-primary)'" className="w-5 h-5"></app-icon>
+          <app-icon key="settings" [style.color]="'var(--cedar-color-primary)'" size="default"></app-icon>
         </div>
         <h2 class="text-lg font-medium text-gray-900">User Preferences</h2>
       </div>
       <button (click)="close()" class="text-gray-400 hover:text-gray-600 transition-colors p-1">
-        <app-icon key="close" className="w-5 h-5"></app-icon>
+        <app-icon key="close" size="default"></app-icon>
       </button>
     </div>
     <!-- Content -->
@@ -212,7 +212,7 @@
                     class="w-4 h-4 checkbox-white"
                   />
                   <div class="flex items-center gap-2 text-gray-600">
-                    <app-icon [key]="item.key" className="w-5 h-5"></app-icon>
+                    <app-icon [key]="item.key" size="default"></app-icon>
                     <span class="text-sm text-gray-900 group-hover:text-gray-700">{{ item.value.label }}</span>
                   </div>
                 </label>

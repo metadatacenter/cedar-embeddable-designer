@@ -1,49 +1,30 @@
 import { TestBed } from '@angular/core/testing';
+import { getIcon, iconNames, iconStyle } from '@org.metadatacenter/cedar-design-tokens/icons';
 import { IconComponent } from './icon.component';
 
-/**
- * A component spec, rather than a plain unit test, because it is also what proves
- * the runner can compile one: `ng test` uses the Angular-aware Vitest builder, so
- * `templateUrl`, `styleUrls` and the component compiler all have to work here.
- *
- * What it checks of the component itself is the one branch with a decision in it.
- * `sanitizedSvg` hands raw markup to `bypassSecurityTrustHtml`, which is only safe
- * while the markup comes from the local table — an unknown key must produce nothing
- * rather than reach the DOM.
- */
-describe('IconComponent', () => {
-  beforeEach(() => {
-    TestBed.configureTestingModule({ imports: [IconComponent] });
-  });
-
-  it('renders the paths registered for a known key', () => {
+describe('shared icon adapter', () => {
+  it('renders every registered meaning as decorative SVG with shared geometry', () => {
     const fixture = TestBed.createComponent(IconComponent);
-    fixture.componentRef.setInput('key', 'trash');
-    fixture.detectChanges();
-
-    const svg = fixture.nativeElement.querySelector('svg') as SVGElement;
-    expect(svg.querySelectorAll('line')).toHaveLength(2);
-    expect(svg.querySelectorAll('polyline')).toHaveLength(1);
-    expect(svg.querySelectorAll('path')).toHaveLength(1);
+    for (const name of iconNames) {
+      fixture.componentRef.setInput('key', name);
+      fixture.detectChanges();
+      const svg = fixture.nativeElement.querySelector('svg') as SVGElement;
+      const reference = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      reference.innerHTML = getIcon(name).body;
+      expect(svg.innerHTML).toBe(reference.innerHTML);
+      expect(svg.getAttribute('data-cedar-icon')).toBe(getIcon(name).name);
+      expect(svg.getAttribute('aria-hidden')).toBe('true');
+      expect(svg.getAttribute('focusable')).toBe('false');
+      expect(svg.getAttribute('stroke')).toBe('currentColor');
+      expect(svg.getAttribute('stroke-width')).toBe(String(iconStyle.strokeWidth));
+      expect(svg.getAttribute('width')).toBe(String(iconStyle.default));
+    }
   });
-
-  it('renders nothing for a key the table does not carry', () => {
+  it('rejects unknown names and markup before trusting HTML', () => {
     const fixture = TestBed.createComponent(IconComponent);
-    fixture.componentRef.setInput('key', 'no-such-icon');
-    fixture.detectChanges();
-
-    const svg = fixture.nativeElement.querySelector('svg') as SVGElement;
-    expect(svg.innerHTML).toBe('');
-  });
-
-  it('puts the requested classes on the svg', () => {
-    const fixture = TestBed.createComponent(IconComponent);
-    fixture.componentRef.setInput('key', 'eye');
-    fixture.componentRef.setInput('className', 'w-4 h-4');
-    fixture.detectChanges();
-
-    const svg = fixture.nativeElement.querySelector('svg') as SVGElement;
-    // Angular's class binding writes the classes as a set, so order is not ours.
-    expect([...svg.classList].sort()).toEqual(['h-4', 'w-4']);
+    for (const name of ['not-an-icon', '__proto__', '<img onerror="alert(1)">']) {
+      fixture.componentRef.setInput('key', name);
+      expect(() => fixture.detectChanges()).toThrow(/Unknown CEDAR icon/);
+    }
   });
 });

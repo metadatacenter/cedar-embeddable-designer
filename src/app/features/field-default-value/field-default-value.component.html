@@ -30,7 +30,7 @@
         [disabled]="!!field().publishedDefinition"
         (click)="clear()"
       >
-        ×
+        <app-icon key="close" size="small" />
       </button>
     }
   </div>
@@ -55,7 +55,9 @@
               <span
                 >Default value <i>{{ field().name }}</i></span
               >
-              <button type="button" aria-label="Cancel default selection" (click)="cancelPicker()">×</button>
+              <button type="button" aria-label="Cancel default selection" (click)="cancelPicker()">
+                <app-icon key="close" size="small" />
+              </button>
             </header>
             @if (checking()) {
               <p role="status">Checking default term…</p>

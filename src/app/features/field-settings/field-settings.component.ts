@@ -1,3 +1,4 @@
+import { IconComponent } from '../../shared/components/icon/icon.component';
 import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 import { AlternateQuestionsComponent } from '../alternate-questions/alternate-questions.component';
 import { AnnotationsEditorComponent } from '../annotations-editor/annotations-editor.component';
@@ -30,6 +31,7 @@ import { TemplateService } from '../../core/services/template.service';
 @Component({
   selector: 'app-field-settings',
   imports: [
+    IconComponent,
     LanguageSelectorComponent,
     AlternateQuestionsComponent,
     AnnotationsEditorComponent,

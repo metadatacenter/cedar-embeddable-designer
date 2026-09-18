@@ -1,3 +1,4 @@
+import { IconComponent } from '../../shared/components/icon/icon.component';
 import { ElementLabelsComponent } from '../element-labels/element-labels.component';
 import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 import { AnnotationsEditorComponent } from '../annotations-editor/annotations-editor.component';
@@ -13,6 +14,7 @@ import { TypesPickerComponent } from '../types-picker/types-picker.component';
 @Component({
   selector: 'app-container-settings',
   imports: [
+    IconComponent,
     ElementLabelsComponent,
     LanguageSelectorComponent,
     AnnotationsEditorComponent,

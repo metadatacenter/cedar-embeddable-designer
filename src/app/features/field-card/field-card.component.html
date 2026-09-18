@@ -12,7 +12,7 @@
           <app-icon
             [key]="getFieldIcon(field)"
             class="field-type-icon flex-shrink-0"
-            className="w-5 h-5"
+            size="default"
             [style.color]="'var(--cedar-color-primary)'"
           />
 
@@ -39,7 +39,7 @@
         </div>
         @if (!standalone) {
           <span class="field-drag-handle" cdkDragHandle title="Drag to reorder" aria-label="Drag to reorder">
-            <app-icon key="list" className="w-5 h-4"></app-icon>
+            <app-icon key="list" size="small"></app-icon>
           </span>
         }
 
@@ -77,7 +77,9 @@
                 <option value="required">Required</option>
               </select>
             }
-            @if (!service.fieldDocumentMode() && service.preferences().showAllowMultiple && allowsMultiple(field.type)) {
+            @if (
+              !service.fieldDocumentMode() && service.preferences().showAllowMultiple && allowsMultiple(field.type)
+            ) {
               <label class="flex items-center gap-1 cursor-pointer group shrink-0">
                 <input
                   type="checkbox"
@@ -95,7 +97,7 @@
                 title="Delete field"
                 aria-label="Delete field"
               >
-                <app-icon key="trash" className="w-4 h-4"></app-icon>
+                <app-icon key="trash" size="small"></app-icon>
               </button>
             }
           </div>
@@ -132,7 +134,7 @@
           <div class="space-y-0.5 mt-1 px-1">
             @for (option of field.options; track $index; let optIdx = $index) {
               <div class="flex items-center gap-3 group/option px-1">
-                <app-icon [key]="field.type" className="w-4 h-4 text-gray-400"></app-icon>
+                <app-icon [key]="field.type" size="small" className="text-gray-400"></app-icon>
                 <input
                   type="text"
                   [ngModel]="option"
@@ -150,7 +152,7 @@
                     title="Delete option"
                     aria-label="Delete option"
                   >
-                    <app-icon key="trash" className="w-3.5 h-3.5"></app-icon>
+                    <app-icon key="trash" size="small"></app-icon>
                   </button>
                 }
               </div>
@@ -160,7 +162,7 @@
               (click)="service.addOption(field.id); service.selectedField.set(field.id)"
               class="flex items-center gap-1.5 ml-7 text-xs text-gray-500 hover:text-teal-600 transition-colors border-none bg-transparent cursor-pointer font-medium mt-0.5"
             >
-              <span class="text-sm font-medium">＋</span> Add option
+              <span class="text-sm font-medium"><app-icon key="add" size="small" /></span> Add option
             </button>
           </div>
         }

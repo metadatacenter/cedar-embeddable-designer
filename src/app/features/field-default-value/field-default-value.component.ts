@@ -1,3 +1,4 @@
+import { IconComponent } from '../../shared/components/icon/icon.component';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -30,6 +31,7 @@ interface FieldElement extends HTMLElement {
 }
 
 @Component({
+  imports: [IconComponent],
   selector: 'app-field-default-value',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './field-default-value.component.html',

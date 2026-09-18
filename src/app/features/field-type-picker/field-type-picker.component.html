@@ -54,7 +54,7 @@
     </div>
 
     <button (click)="close()" class="btn-close">
-      <app-icon key="close" className="w-5 h-5"></app-icon>
+      <app-icon key="close" size="default"></app-icon>
     </button>
   </div>
 
@@ -63,7 +63,7 @@
       @for (item of visibleFieldTypesList(); track item) {
         <button (click)="onFieldClick(item.key)" class="btn-field-item">
           <div class="field-item-icon">
-            <app-icon [key]="item.key" className="w-5 h-5"></app-icon>
+            <app-icon [key]="item.key" size="default"></app-icon>
           </div>
           <span class="field-item-label">{{ item.value.label }}</span>
         </button>
@@ -76,7 +76,7 @@
           [title]="customField.definition.helpText"
         >
           <div class="field-item-icon">
-            <app-icon [key]="customField.definition.type" className="w-5 h-5"></app-icon>
+            <app-icon [key]="customField.definition.type" size="default"></app-icon>
           </div>
           <span class="field-item-label">{{ customField.definition.name }}</span>
         </button>
@@ -89,7 +89,7 @@
         (click)="service.openChildPicker(containerId() ?? service.session.active().id, insertPosition)"
       >
         <div class="field-item-icon">
-          <app-icon key="library" className="w-5 h-5"></app-icon>
+          <app-icon key="library" size="default"></app-icon>
         </div>
         <span class="field-item-label">Select existing fields and elements</span>
       </button>

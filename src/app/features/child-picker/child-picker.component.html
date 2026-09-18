@@ -94,7 +94,7 @@
               <td>
                 {{ row.name }}
                 @if (isSelected(row)) {
-                  <span aria-hidden="true">✓</span>
+                  <app-icon key="check" size="small" />
                 }
               </td>
               <td>{{ row.type === 'field' ? 'Field' : 'Element' }}</td>
