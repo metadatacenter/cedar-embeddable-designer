@@ -1,240 +1,514 @@
-import { Injectable, signal, inject } from '@angular/core';
-import { Field, Library, CustomField, ControlledTermConfig, UserPreferences, FIELD_TYPES } from '../models/types';
+import { validateDocument } from '../model/document-validation';
+import { CedChildSource, CedJsonObject, CedValidationIssue } from '../../ced-public-api';
+import { EditorSession } from './editor-session';
+import {
+  containerFromFlat,
+  flatView,
+  newNodeId,
+  ContainerDraft,
+  ChildNode,
+  ElementNode,
+  fieldNode,
+  containers,
+  childName,
+  moveChild,
+  parentOf,
+  updateContainer,
+  allowedInContainer,
+  findContainer,
+} from '../model/container-draft';
+import { FieldLibraryService } from './field-library.service';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import {
+  Field,
+  FieldDefaultValue,
+  CustomField,
+  ControlledTermSet,
+  UserPreferences,
+  FIELD_TYPES,
+} from '../models/types';
 import { PreferencesService } from './preferences.service';
-import { fromCedarYaml } from '../cedar-shim';
+import {
+  DesignerTemplate,
+  buildTemplate,
+  newFieldIdentity,
+  newTemplateIdentifier,
+  readContainer,
+  readField,
+  buildContainer,
+  containerPreview,
+  newContainer,
+  templateToJson,
+  templateToYaml,
+  defaultValueError,
+} from '../model/cedar-template';
 
 export { FIELD_TYPES } from '../models/types';
 
+/**
+ * The three fields a new template opens with.
+ *
+ * A function, and the only source: the list was written out twice, once in the
+ * signal initializer and once in `resetTemplate`, and the two drifted — the reset
+ * copy minted field identifiers and the initializer's did not, so the fields an
+ * author saw on first load had no identity at all.
+ */
+function starterFields(): Field[] {
+  return [
+    {
+      id: 1,
+      ...newFieldIdentity(),
+      type: 'text',
+      name: 'Title',
+      status: 'required',
+      options: [],
+      defaultValue: { kind: 'none' },
+      allowMultiple: false,
+    },
+    {
+      id: 2,
+      ...newFieldIdentity(),
+      type: 'multipleChoice',
+      name: 'Category',
+      status: 'optional',
+      options: ['', ''],
+      defaultValue: { kind: 'none' },
+      allowMultiple: false,
+    },
+    {
+      id: 3,
+      ...newFieldIdentity(),
+      type: 'date',
+      name: 'Publication Date',
+      status: 'optional',
+      options: [],
+      defaultValue: { kind: 'none' },
+      allowMultiple: false,
+    },
+  ];
+}
+
+/** Keep selected options tied to their labels as the author edits the option list. */
+function choiceDefault(field: Field, options: string[], renamed?: { from: string; to: string }): FieldDefaultValue {
+  const value = field.defaultValue;
+  if (value.kind !== 'literal' && value.kind !== 'literals') return value;
+  const selected = (value.kind === 'literal' ? [value.value] : value.values)
+    .map((label) => (renamed && label === renamed.from ? renamed.to : label))
+    .filter((label) => label.trim() !== '' && (options.includes(label) || !field.options.includes(label)));
+  if (!selected.length) return { kind: 'none' };
+  return value.kind === 'literal'
+    ? { kind: 'literal', value: selected[0] }
+    : { kind: 'literals', values: [...new Set(selected)] };
+}
+
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class TemplateService {
   // Inject PreferencesService
   readonly preferencesService = inject(PreferencesService);
 
-  // Cedar green color palette
-  readonly COLORS = {
-    primary: '#2D6F5F',      // Cedar green
-    primaryHover: '#245A4D',
-    primaryLight: '#E8F3F0',
-    border: '#3B7A5D'
-  };
+  /** A standalone field has no container-owned placement settings. */
+  readonly fieldDocumentMode = signal(false);
 
-  // State Signals
-  readonly templateName = signal<string>('Untitled Template');
-  readonly templateDesc = signal<string>('');
-  readonly templateIdentifier = signal<string>('');
-  readonly templateVersion = signal<string>('0.0.1');
-  
-  readonly fields = signal<Field[]>([
-    { id: 1, type: 'text', name: 'Title', status: 'required', options: [], defaultValue: '', allowMultiple: false },
-    { id: 2, type: 'multipleChoice', name: 'Category', status: 'optional', options: ['Option 1', 'Option 2'], defaultValue: '', allowMultiple: false },
-    { id: 3, type: 'date', name: 'Publication Date', status: 'optional', options: [], defaultValue: '', allowMultiple: false }
-  ]);
+  readonly fieldEditorConfig = signal<{ bridgeBaseUrl?: string; terminologyBaseUrl?: string }>({});
 
-  readonly libraries = signal<Library[]>([]);
-  readonly customFields = signal<CustomField[]>([]);
+  readonly session = new EditorSession(
+    containerFromFlat({
+      name: '',
+      description: '',
+      identifier: '',
+      version: '0.0.1',
+      fields: starterFields(),
+    }),
+  );
+  readonly templateName = this.session.property('name');
+  readonly templateDesc = this.session.property('description');
+  readonly templateSchemaIdentifier = this.session.property('schemaIdentifier');
+  readonly templateVersion = this.session.property('version');
+  readonly loadError = signal<string | null>(null);
+  private readonly draftIssues = signal<Record<string, { message: string; tab: string }>>({});
+  readonly validationTarget = signal<CedValidationIssue | null>(null);
+  setSettingsError(id: number, setting: string, message: string | null, tab = 'Constraints'): void {
+    const key = `${id}:${setting}`;
+    this.draftIssues.update((previous) => {
+      if (previous[key]?.message === message && previous[key]?.tab === tab) return previous;
+      if (!message && !previous[key]) return previous;
+      const next = { ...previous };
+      if (message) next[key] = { message, tab };
+      else delete next[key];
+      return next;
+    });
+  }
+  readonly validationReport = computed(() => validateDocument(this.document(), this.draftIssues()));
+  issuesFor(id: number): CedValidationIssue[] {
+    return this.validationReport().issues.filter((issue) => issue.path.includes(id));
+  }
+  revealIssue(issue: CedValidationIssue): void {
+    this.openContainer(this.parentContainerId(issue.nodeId));
+    this.selectedField.set(issue.nodeId);
+    this.scrollRequest.set(issue.nodeId);
+    this.validationTarget.set({ ...issue });
+  }
+  readonly fields = this.session.fieldBinding();
+
+  /**
+   * The designer's state as it was when the template was last saved, opened or
+   * reset.
+   *
+   * Compared against the live state rather than set by each mutation, because a
+   * flag set by hand is a flag someone forgets: this used to be one boolean that
+   * only field reordering ever raised, so every other edit left the unsaved-changes
+   * guard believing there was nothing to lose.
+   *
+   * The designer's own state rather than the written template, because the two are
+   * not the same question: a template can be rewritten byte-identically and still
+   * be unsaved.
+   */
+  private readonly savedState = signal<string>('');
+
+  readonly isDirty = computed(() => this.stateKey() !== this.savedState());
+
+  /**
+   * The field a newly added card should be scrolled to, or null.
+   *
+   * The service holds the request and the component performs it. Looking the card
+   * up from here meant `document.getElementById`, which finds nothing once the
+   * designer renders inside a shadow root — the element is in the tree, just not
+   * in the document's.
+   */
+  readonly scrollRequest = signal<number | null>(null);
+
+  /**
+   * The designer's state as one value, and that value as a CEDAR template.
+   *
+   * Four places used to build the template themselves from the five signals
+   * below — both export panels, the file menu and the custom element — each
+   * calling a serializer that minted fresh identifiers, so the same template
+   * appeared with different identity in each of them. Built once here, and
+   * memoized, so what the element publishes and what the panels display are the
+   * same artifact.
+   */
+  /**
+   * The identifier a template carries before its author gives it one.
+   *
+   * Minted once per template rather than at each build, for the same reason a
+   * field's is: `buildTemplate` would otherwise invent a new one on every
+   * keystroke, and the artifact a host is holding would change identity under it.
+   * Re-minted by `resetTemplate`, which is where a new template begins.
+   */
+  private readonly mintedIdentifier = signal<string>(newTemplateIdentifier());
+
+  readonly designerTemplate = computed<DesignerTemplate>(() => ({
+    ...flatView(this.session.document()),
+    identifier: this.session.document().identifier || this.mintedIdentifier(),
+  }));
+
+  readonly document = computed(() => ({
+    ...this.session.document(),
+    identifier: this.session.document().identifier || this.mintedIdentifier(),
+  }));
+  readonly template = computed(() => buildContainer(this.document()));
+  readonly previewJson = computed(() => templateToJson(containerPreview(this.document())));
+  readonly templateJson = computed(() => templateToJson(this.template()));
+  readonly templateYaml = computed(() => templateToYaml(this.template()));
+
+  readonly fieldLibrary = inject(FieldLibraryService);
+  readonly libraries = this.fieldLibrary.libraries;
+  readonly customFields = this.fieldLibrary.fields;
   readonly selectedLibraryId = signal<number | null>(null);
   readonly sidebarCollapsed = signal<boolean>(false);
 
   // Modal & Navigation States
   readonly showPicker = signal<number | null>(null);
   readonly showPreview = signal<boolean>(false);
-  readonly previewInitialTab = signal<'preview' | 'json' | 'yaml'>('preview');
   readonly showFieldDesigner = signal<boolean>(false);
+  readonly libraryDraft = signal<Field | null>(null);
+  saveFieldToLibrary(id: number): void {
+    const field = this.fieldsFor(id)().find((field) => field.id === id);
+    if (field) {
+      this.libraryDraft.set(structuredClone(field));
+      this.showFieldDesigner.set(true);
+    }
+  }
   readonly selectedField = signal<number | null>(null);
-  readonly fieldTypeDropdown = signal<number | null>(null);
   readonly fieldTypeDropdownLibrary = signal<number | null>(null);
 
   // Proxies for PreferencesService State
-  get preferences() { return this.preferencesService.preferences; }
-  get presetDefinitions() { return this.preferencesService.presetDefinitions; }
-  get bioportalApiKey() { return this.preferencesService.bioportalApiKey; }
-  get showPreferencesModal() { return this.preferencesService.showPreferencesModal; }
-  get showPresetDefinitionsModal() { return this.preferencesService.showPresetDefinitionsModal; }
-  get showUserMenu() { return this.preferencesService.showUserMenu; }
-  get showApiKeyModal() { return this.preferencesService.showApiKeyModal; }
-
-  constructor() {}
-
-
-  // Field manipulation methods
-  addField(type: string, position: number) {
-    const newField: Field = {
-      id: Date.now(),
-      type,
-      name: FIELD_TYPES[type].label,
-      status: 'optional',
-      options: type === 'multipleChoice' || type === 'checkboxes' ? ['Option 1'] : [],
-      defaultValue: '',
-      allowMultiple: false
-    };
-
-    this.fields.update(prev => {
-      const updated = [...prev];
-      updated.splice(position, 0, newField);
-      return updated;
-    });
-
-    this.showPicker.set(null);
-    this.selectedField.set(newField.id);
-
-    // Scroll to the new field (handled by components subscribing or looking at this state)
-    setTimeout(() => {
-      const el = document.getElementById(`field-card-${newField.id}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
+  get preferences() {
+    return this.preferencesService.preferences;
+  }
+  get presetDefinitions() {
+    return this.preferencesService.presetDefinitions;
+  }
+  get showPreferencesModal() {
+    return this.preferencesService.showPreferencesModal;
+  }
+  get showPresetDefinitionsModal() {
+    return this.preferencesService.showPresetDefinitionsModal;
+  }
+  get showUserMenu() {
+    return this.preferencesService.showUserMenu;
   }
 
-  addCustomFieldToTemplate(customField: CustomField, position: number) {
+  constructor() {
+    this.markSaved();
+  }
+
+  /** Everything a save would write, and nothing that changes on its own. */
+  private stateKey(): string {
+    return JSON.stringify(this.session.document());
+  }
+
+  /** Take the current state as the baseline, after a save, an open or a reset. */
+  markSaved(): void {
+    this.savedState.set(this.stateKey());
+  }
+
+  /** Field edits are addressed by node identity, never by the last selected container. */
+  parentContainerId(id: number): number {
+    return parentOf(this.session.document(), id)?.id ?? this.session.active().id;
+  }
+  private fieldsFor(id: number) {
+    return this.session.fieldBinding(this.parentContainerId(id));
+  }
+  updateContainerDefinition(
+    id: number,
+    changes: Partial<
+      Pick<
+        ContainerDraft,
+        'name' | 'description' | 'schemaIdentifier' | 'version' | 'metadata' | 'preferredLabel' | 'alternateLabels'
+      >
+    >,
+  ): void {
+    this.session.document.update((root) => updateContainer(root, id, (container) => ({ ...container, ...changes })));
+  }
+  readonly collapsedElements = signal<ReadonlySet<number>>(new Set());
+  expandAllElements(): void {
+    this.collapsedElements.set(new Set());
+  }
+  collapseAllElements(): void {
+    this.collapsedElements.set(
+      new Set(
+        this.containerChoices()
+          .filter((choice) => choice.id !== this.session.document().id)
+          .map((choice) => choice.id),
+      ),
+    );
+  }
+  toggleElement(id: number): void {
+    this.collapsedElements.update((previous) => {
+      const next = new Set(previous);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  // Field manipulation methods
+  addField(type: string, position: number, targetId = this.session.active().id) {
+    if (!this.canAddField(type, targetId)) {
+      this.loadError.set('Page breaks can only be placed in templates.');
+      return;
+    }
     const newField: Field = {
-      id: Date.now(),
-      type: customField.baseType,
-      name: customField.name,
-      helpText: customField.description || '',
-      defaultValue: customField.placeholder || '',
+      id: newNodeId(),
+      ...newFieldIdentity(),
+      type,
+      name: type === 'date' || type === 'time' ? 'Temporal' : FIELD_TYPES[type].label,
       status: 'optional',
-      options: customField.baseType === 'multipleChoice' || customField.baseType === 'checkboxes' ? ['Option 1'] : [],
+      options: type === 'multipleChoice' || type === 'checkboxes' ? [''] : [],
+      defaultValue: { kind: 'none' },
       allowMultiple: false,
-      customFieldId: customField.id,
-      libraryId: customField.libraryId
     };
 
-    this.fields.update(prev => {
-      const updated = [...prev];
-      updated.splice(position, 0, newField);
-      return updated;
-    });
+    this.insertNode(fieldNode(newField), position, targetId);
 
     this.showPicker.set(null);
     this.selectedField.set(newField.id);
 
-    setTimeout(() => {
-      const el = document.getElementById(`field-card-${newField.id}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
+    this.scrollRequest.set(newField.id);
+  }
+
+  addCustomFieldToTemplate(customField: CustomField, position: number, targetId = this.session.active().id) {
+    if (!this.canAddField(customField.definition.type, targetId)) {
+      this.loadError.set('Page breaks can only be placed in templates.');
+      return;
+    }
+    const newField: Field = {
+      ...structuredClone(customField.definition),
+      id: newNodeId(),
+      customFieldId: customField.id,
+      libraryId: customField.libraryId,
+    };
+
+    this.insertNode(fieldNode(newField), position, targetId);
+
+    this.showPicker.set(null);
+    this.selectedField.set(newField.id);
+
+    this.scrollRequest.set(newField.id);
   }
 
   deleteField(id: number) {
-    this.fields.update(prev => prev.filter(f => f.id !== id));
+    if (this.isPublished(id)) return;
+    this.fieldsFor(id).update((prev) => prev.filter((f) => f.id !== id));
     if (this.selectedField() === id) {
       this.selectedField.set(null);
     }
   }
 
   updateFieldName(id: number, name: string) {
-    this.fields.update(prev => prev.map(f => f.id === id ? { ...f, name } : f));
+    if (this.isPublished(id)) return;
+    this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, name } : f)));
   }
 
-  updateFieldType(id: number, type: string) {
-    this.fields.update(prev => prev.map(f => f.id === id ? {
-      ...f,
-      type,
-      options: type === 'multipleChoice' || type === 'checkboxes' ? (f.options.length > 0 ? f.options : ['Option 1']) : [],
-      defaultValue: '',
-      allowMultiple: false,
-      customFieldId: undefined,
-      libraryId: undefined
-    } : f));
-  }
-
-  convertFieldToCustomField(fieldId: number, customField: CustomField) {
-    this.fields.update(prev => prev.map(f => f.id === fieldId ? {
-      ...f,
-      type: customField.baseType,
-      name: customField.name,
-      helpText: customField.description || f.helpText,
-      defaultValue: customField.placeholder || f.defaultValue,
-      options: customField.baseType === 'multipleChoice' || customField.baseType === 'checkboxes' ? (f.options.length > 0 ? f.options : ['Option 1']) : [],
-      allowMultiple: false,
-      customFieldId: customField.id,
-      libraryId: customField.libraryId
-    } : f));
-  }
-
-  updateCustomField(updatedCustomField: CustomField) {
-    // 1. Update customFields signal
-    this.customFields.update(prev =>
-      prev.map(cf => cf.id === updatedCustomField.id ? updatedCustomField : cf)
+  updateCustomField(updated: CustomField) {
+    this.customFields.update((fields) =>
+      fields.map((field) => (field.id === updated.id ? structuredClone(updated) : field)),
     );
-
-    // 2. Sync changes automatically to all fields in the template created from this custom field
-    this.fields.update(prev =>
-      prev.map(f => {
-        if (f.customFieldId === updatedCustomField.id) {
-          return {
-            ...f,
-            name: updatedCustomField.name,
-            type: updatedCustomField.baseType,
-            helpText: updatedCustomField.description || f.helpText,
-            defaultValue: updatedCustomField.placeholder || f.defaultValue
-          };
-        }
-        return f;
-      })
-    );
+    // Existing template deployments are independent copies. Editing a library field
+    // must not silently overwrite changes made in a template that already uses it.
   }
 
   deleteCustomField(id: number) {
-    this.customFields.update(prev => prev.filter(cf => cf.id !== id));
+    this.customFields.update((prev) => prev.filter((cf) => cf.id !== id));
   }
 
   updateFieldStatus(id: number, status: string) {
-    this.fields.update(prev => prev.map(f => f.id === id ? { ...f, status } : f));
+    if (this.isPublished(id)) return;
+    this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, status } : f)));
   }
 
   updateOption(fieldId: number, optionIndex: number, value: string) {
-    this.fields.update(prev => prev.map(f => {
-      if (f.id === fieldId) {
-        const newOptions = [...f.options];
-        newOptions[optionIndex] = value;
-        return { ...f, options: newOptions };
-      }
-      return f;
-    }));
+    if (this.isPublished(fieldId)) return;
+    this.fieldsFor(fieldId).update((prev) =>
+      prev.map((f) => {
+        if (f.id === fieldId) {
+          const newOptions = [...f.options];
+          newOptions[optionIndex] = value;
+          return {
+            ...f,
+            options: newOptions,
+            defaultValue: choiceDefault(f, newOptions, { from: f.options[optionIndex], to: value }),
+            importedChoiceDefault:
+              f.importedChoiceDefault === f.options[optionIndex] ? value || undefined : f.importedChoiceDefault,
+          };
+        }
+        return f;
+      }),
+    );
   }
 
   addOption(fieldId: number) {
-    this.fields.update(prev => prev.map(f => {
-      if (f.id === fieldId) {
-        return { ...f, options: [...f.options, `Option ${f.options.length + 1}`] };
-      }
-      return f;
-    }));
+    if (this.isPublished(fieldId)) return;
+    this.fieldsFor(fieldId).update((prev) =>
+      prev.map((f) => {
+        if (f.id === fieldId) {
+          /*
+           * Empty, so the input's placeholder shows the author a hint rather than
+           * a value. Seeding the label meant clicking an option put the caret in
+           * the middle of the words "Option 2" and the author had to clear them,
+           * and an option nobody renamed went into the artifact called that.
+           */
+          return { ...f, options: [...f.options, ''] };
+        }
+        return f;
+      }),
+    );
   }
 
   deleteOption(fieldId: number, optionIndex: number) {
-    this.fields.update(prev => prev.map(f => {
-      if (f.id === fieldId) {
-        const newOptions = f.options.filter((_, index) => index !== optionIndex);
-        return { ...f, options: newOptions.length > 0 ? newOptions : ['Option 1'] };
-      }
-      return f;
-    }));
+    if (this.isPublished(fieldId)) return;
+    this.fieldsFor(fieldId).update((prev) =>
+      prev.map((f) => {
+        if (f.id === fieldId) {
+          const newOptions = f.options.filter((_, index) => index !== optionIndex);
+          return {
+            ...f,
+            options: newOptions.length > 0 ? newOptions : [''],
+            defaultValue: choiceDefault(f, newOptions),
+            importedChoiceDefault:
+              f.importedChoiceDefault === f.options[optionIndex] ? undefined : f.importedChoiceDefault,
+          };
+        }
+        return f;
+      }),
+    );
   }
 
-  updateDefaultValue(id: number, value: string) {
-    this.fields.update(prev => prev.map(f => f.id === id ? { ...f, defaultValue: value } : f));
+  isPublished(id: number): boolean {
+    return !!this.fieldsFor(id)().find((field) => field.id === id)?.publishedDefinition;
+  }
+
+  updateFieldSettings(id: number, changes: Partial<Field>): string | null {
+    if (this.isPublished(id)) return 'Published fields are read-only. Editing a draft version is not available yet.';
+    if (
+      changes.deploymentName !== undefined &&
+      (findContainer(this.session.document(), this.parentContainerId(id))?.children ?? []).some(
+        (node) => node.id !== id && childName(node) === changes.deploymentName?.trim(),
+      )
+    )
+      return 'Another child already uses that property name.';
+    const current = this.fieldsFor(id)().find((field) => field.id === id);
+    if (current && !this.canAddField(changes.type ?? current.type, this.parentContainerId(id)))
+      return 'Page breaks can only be placed in templates.';
+    if (current) {
+      const error = defaultValueError({ ...current, ...changes }, changes.defaultValue ?? current.defaultValue);
+      if (error) return error;
+    }
+    const fields = this.fieldsFor(id)().map((field) => (field.id === id ? { ...field, ...changes } : field));
+    try {
+      buildTemplate({
+        name: this.templateName(),
+        description: this.templateDesc(),
+        identifier: '',
+        version: '0.0.1',
+        fields,
+      });
+      this.fieldsFor(id).set(fields);
+      return null;
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  updateDefaultValue(id: number, value: FieldDefaultValue) {
+    if (this.isPublished(id)) return;
+    this.fieldsFor(id).update((prev) =>
+      prev.map((f) =>
+        f.id === id && defaultValueError(f, value) === null
+          ? { ...f, defaultValue: value, importedChoiceDefault: undefined }
+          : f,
+      ),
+    );
   }
 
   toggleAllowMultiple(id: number) {
-    this.fields.update(prev => prev.map(f => f.id === id ? { ...f, allowMultiple: !f.allowMultiple } : f));
+    if (this.isPublished(id)) return;
+    this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, allowMultiple: !f.allowMultiple } : f)));
+  }
+
+  /** The one value a static field shows. */
+  updateContent(id: number, content: string) {
+    if (this.isPublished(id)) return;
+    this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, content } : f)));
   }
 
   updateHelpText(id: number, helpText: string) {
-    this.fields.update(prev => prev.map(f => f.id === id ? { ...f, helpText } : f));
+    if (this.isPublished(id)) return;
+    this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, helpText } : f)));
   }
 
-  updateControlledTermConfig(id: number, config: ControlledTermConfig) {
-    this.fields.update(prev => prev.map(f => f.id === id ? { ...f, controlledTermConfig: config } : f));
+  updateControlledTermConstraints(id: number, constraints: ControlledTermSet) {
+    if (this.isPublished(id)) return;
+    this.fieldsFor(id).update((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, controlledTermConstraints: constraints } : f)),
+    );
   }
 
   moveField(dragIndex: number, hoverIndex: number) {
-    this.fields.update(prev => {
+    this.fields.update((prev) => {
       const updated = [...prev];
       const dragField = updated[dragIndex];
       updated.splice(dragIndex, 1);
@@ -244,7 +518,7 @@ export class TemplateService {
   }
 
   // Proxies for PreferencesService Methods
-  updatePreference(key: keyof UserPreferences, value: any) {
+  updatePreference<K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) {
     this.preferencesService.updatePreference(key, value);
   }
 
@@ -264,92 +538,275 @@ export class TemplateService {
     return this.preferencesService.getActivePreset();
   }
 
-  // Programmatic Web Component Methods
-  setBioPortalApiKey(key: string) {
-    if (key) {
-      this.preferencesService.bioportalApiKey.set(key);
+  resetTemplate(kind: 'template' | 'element' = 'template', withStarterFields = true) {
+    this.loadError.set(null);
+    this.mintedIdentifier.set(newTemplateIdentifier());
+    const document = newContainer(kind);
+    if (kind === 'template') {
+      document.identifier = '';
+      document.children = withStarterFields ? containerFromFlat({ ...document, fields: starterFields() }).children : [];
     }
+    this.draftIssues.set({});
+    this.childPicker.set(null);
+    this.session.replace(document);
+    this.collapsedElements.set(new Set());
+    this.markSaved();
   }
 
-  resetTemplate() {
-    this.templateName.set('Untitled Template');
-    this.templateDesc.set('');
-    this.templateIdentifier.set('');
-    this.templateVersion.set('0.0.1');
-    this.fields.set([
-      { id: 1, type: 'text', name: 'Title', status: 'required', options: [], defaultValue: '', allowMultiple: false },
-      { id: 2, type: 'multipleChoice', name: 'Category', status: 'optional', options: ['Option 1', 'Option 2'], defaultValue: '', allowMultiple: false },
-      { id: 3, type: 'date', name: 'Publication Date', status: 'optional', options: [], defaultValue: '', allowMultiple: false }
-    ]);
-  }
+  /**
+   * Load a template a host or a file supplied, in either serialization.
+   *
+   * Reading is the model library's, so JSON and YAML arrive as the same
+   * `Template` and the designer's state is derived from the model rather than from
+   * whichever set of keys the file happened to use. This used to try `JSON.parse`,
+   * fall back to a hand-written YAML parser, and on failure log to the console and
+   * return — leaving the author looking at their previous template with nothing to
+   * say the file had not been read.
+   */
+  loadTemplate(source: unknown): void {
+    if (source === null || source === undefined || source === '') {
+      return;
+    }
 
-  loadTemplate(templateData: any) {
-    if (!templateData) return;
-    if (typeof templateData === 'string') {
-      try {
-        templateData = JSON.parse(templateData);
-      } catch {
-        try {
-          templateData = fromCedarYaml(templateData);
-        } catch (e) {
-          console.error('Failed to parse template as JSON or YAML:', e);
-          return;
-        }
+    let state: ContainerDraft;
+    try {
+      state = readContainer(source as string | object);
+    } catch (error) {
+      this.loadError.set(error instanceof Error ? error.message : String(error));
+      throw error;
+    }
+    this.loadError.set(null);
+
+    this.draftIssues.set({});
+    this.childPicker.set(null);
+    this.session.replace(state);
+    this.collapsedElements.set(new Set());
+    this.markSaved();
+  }
+  readonly children = computed(() => this.session.active().children);
+  readonly containerChoices = computed(() => containers(this.session.document()));
+  readonly hasElements = computed(() => this.containerChoices().length > 1);
+  readonly breadcrumbs = computed(() => {
+    const active = this.session.active().id;
+    const path: ContainerDraft[] = [];
+    let current = this.session.active();
+    path.unshift(current);
+    while (current.id !== this.session.document().id) {
+      const parent = parentOf(this.session.document(), current.id);
+      if (!parent) break;
+      path.unshift(parent);
+      current = parent;
+    }
+    return active === this.session.document().id ? [this.session.document()] : path;
+  });
+  canAddField(type: string, targetId = this.session.active().id): boolean {
+    return allowedInContainer(
+      type,
+      findContainer(this.session.document(), targetId)?.kind ?? this.session.active().kind,
+    );
+  }
+  openContainer(id: number): void {
+    if (!this.containerChoices().some((choice) => choice.id === id)) return;
+    this.session.activeId.set(id);
+    this.collapsedElements.update((previous) => {
+      const next = new Set(previous);
+      let current = findContainer(this.session.document(), id);
+      while (current) {
+        next.delete(current.id);
+        current = parentOf(this.session.document(), current.id);
       }
+      return next;
+    });
+    this.scrollRequest.set(id);
+    this.showPicker.set(null);
+    this.selectedField.set(null);
+  }
+  private insertNode(node: ChildNode, position: number, targetId = this.session.active().id): void {
+    const target = findContainer(this.session.document(), targetId);
+    if (!target) throw new Error('The import destination no longer exists.');
+    this.loadError.set(null);
+    const used = new Set(target.children.map(childName));
+    const base = childName(node).trim() || (node.kind === 'element' ? 'Element' : 'Field');
+    let name = base;
+    for (let suffix = 2; used.has(name); suffix++) name = `${base} ${suffix}`;
+    if (node.kind === 'field') {
+      node =
+        node.placement.deploymentName === undefined && node.definition.customFieldId === undefined
+          ? { ...node, definition: { ...node.definition, name } }
+          : { ...node, placement: { ...node.placement, deploymentName: name } };
+    } else {
+      // Branching on the kind keeps each placement its own type; one spread over the union loses
+      // which of the two it is, and an element's placement is the narrower of them.
+      node = { ...node, placement: { ...node.placement, deploymentName: name } };
     }
-    if (!templateData || typeof templateData !== 'object') return;
-    if (templateData.name) this.templateName.set(templateData.name);
-    else if (templateData['schema:name']) this.templateName.set(templateData['schema:name']);
+    this.session.document.update((root) =>
+      updateContainer(root, targetId, (container) => {
+        const children = [...container.children];
+        children.splice(Math.max(0, Math.min(position, children.length)), 0, node);
+        return { ...container, children };
+      }),
+    );
+  }
 
-    if (templateData.description !== undefined) this.templateDesc.set(templateData.description);
-    else if (templateData['schema:description']) this.templateDesc.set(templateData['schema:description']);
+  readonly childSource = signal<CedChildSource | null>(null);
+  readonly childPicker = signal<{ targetId: number; position: number } | null>(null);
+  openChildPicker(targetId = this.session.active().id, position = this.session.active().children.length): void {
+    this.showPicker.set(null);
+    this.childPicker.set({ targetId, position });
+  }
 
-    if (templateData.id) this.templateIdentifier.set(templateData.id);
-    else if (templateData['schema:identifier']) this.templateIdentifier.set(templateData['schema:identifier']);
-
-    if (templateData.version) this.templateVersion.set(templateData.version);
-    else if (templateData['pav:version']) this.templateVersion.set(templateData['pav:version']);
-
-    if (Array.isArray(templateData.children)) {
-      // Parse CEDAR 1.6.0 structural model format
-      const cedarTypeToEditorType: Record<string, string> = {
-        'text-field': 'text',
-        'textarea-field': 'paragraph',
-        'radio-field': 'multipleChoice',
-        'checkbox-field': 'checkboxes',
-        'temporal-field': 'date',
-        'email-field': 'email',
-        'link-field': 'link',
-        'phone-number-field': 'phone',
-        'numeric-field': 'number',
-        'image-field': 'image',
-        'orcid-field': 'orcid',
-        'controlled-term-field': 'controlledTerms'
+  /** Parse the complete batch before changing the document. Source definitions keep their identity. */
+  importChildren(
+    sources: { type: 'field' | 'element'; artifact: CedJsonObject }[],
+    targetId: number,
+    position: number,
+  ): void {
+    const root = this.session.document();
+    const target = findContainer(root, targetId);
+    if (!target) throw new Error('The destination no longer exists.');
+    const nodes = sources.map(({ type, artifact }): ChildNode => {
+      if (type === 'field') {
+        const field = readField(JSON.stringify(artifact));
+        if (!allowedInContainer(field.type, target.kind))
+          throw new Error('Page breaks can only be placed in templates.');
+        return fieldNode({
+          ...field,
+          id: newNodeId(),
+          deploymentName: field.name,
+          propertyIri: newFieldIdentity().propertyIri,
+        });
+      }
+      const definition = readContainer(artifact);
+      if (definition.kind !== 'element') throw new Error('Choose a field or element artifact.');
+      return {
+        kind: 'element',
+        id: definition.id,
+        definition,
+        placement: { allowMultiple: false, propertyIri: newFieldIdentity().propertyIri },
       };
+    });
+    try {
+      nodes.forEach((node, index) => this.insertNode(node, position + index, targetId));
+    } catch (error) {
+      this.session.document.set(root);
+      throw error;
+    }
+  }
 
-      const parsedFields: Field[] = templateData.children.map((child: any, idx: number) => {
-        const type = cedarTypeToEditorType[child.type] || 'text';
-        const options = Array.isArray(child.values)
-          ? child.values.map((v: any) => v.label || v)
-          : [];
-        const isRequired = child.configuration?.required === true;
-
-        return {
-          id: Date.now() + idx,
-          type,
-          name: child.name || child.key || `Field ${idx + 1}`,
-          helpText: child.description || '',
-          status: isRequired ? 'required' : 'optional',
-          options,
-          defaultValue: '',
-          allowMultiple: false
-        };
+  addElement(targetId = this.session.active().id): void {
+    const definition = newContainer('element', 'Element');
+    this.insertNode(
+      {
+        kind: 'element',
+        id: definition.id,
+        definition,
+        placement: { allowMultiple: false, propertyIri: newFieldIdentity().propertyIri },
+      },
+      Number.MAX_SAFE_INTEGER,
+      targetId,
+    );
+  }
+  importElement(source: string | object, targetId = this.session.active().id): void {
+    const definition = readContainer(source);
+    if (definition.kind !== 'element') throw new Error('Choose an element document to insert into this container.');
+    // Import is an independent local copy retaining its source artifact identity.
+    this.insertNode(
+      {
+        kind: 'element',
+        id: definition.id,
+        definition,
+        placement: { allowMultiple: false, propertyIri: newFieldIdentity().propertyIri },
+      },
+      Number.MAX_SAFE_INTEGER,
+      targetId,
+    );
+  }
+  duplicateElement(id: number): void {
+    const parent = parentOf(this.session.document(), id);
+    const node = parent?.children.find((child): child is ElementNode => child.kind === 'element' && child.id === id);
+    if (!node) return;
+    const clone = (source: ChildNode): ChildNode => {
+      const copy = structuredClone(source);
+      copy.id = newNodeId();
+      copy.placement.propertyIri = newFieldIdentity().propertyIri;
+      const resetMetadata = (metadata: NonNullable<Field['artifact']>, sourceId: string) => ({
+        ...metadata,
+        publicationStatus: 'bibo:draft' as const,
+        version: '0.0.1',
+        createdOn: null,
+        createdBy: null,
+        modifiedOn: null,
+        modifiedBy: null,
+        derivedFrom: sourceId || null,
+        previousVersion: null,
       });
+      if (copy.kind === 'field') {
+        const previousId = copy.definition.atId ?? '';
+        copy.definition.atId = newFieldIdentity().atId;
+        copy.definition.publishedDefinition = undefined;
+        if (copy.definition.artifact) copy.definition.artifact = resetMetadata(copy.definition.artifact, previousId);
+      } else {
+        const previousId = copy.definition.identifier;
+        copy.definition.id = copy.id;
+        copy.definition.identifier = newContainer('element').identifier;
+        copy.definition.version = '0.0.1';
+        if (copy.definition.metadata)
+          copy.definition.metadata.artifact = resetMetadata(copy.definition.metadata.artifact, previousId);
+        copy.definition.children = copy.definition.children.map(clone);
+      }
+      return copy;
+    };
+    try {
+      this.insertNode(
+        clone({ ...node, definition: readContainer(templateToJson(buildContainer(node.definition))) }),
+        parent!.children.findIndex((child) => child.id === id) + 1,
+        parent!.id,
+      );
+    } catch (error) {
+      this.loadError.set(error instanceof Error ? error.message : String(error));
+    }
+  }
 
-      this.fields.set(parsedFields);
-    } else if (Array.isArray(templateData.fields)) {
-      // Internal editor state format
-      this.fields.set(templateData.fields);
+  deleteChild(id: number): void {
+    const parent = parentOf(this.session.document(), id);
+    if (!parent) return;
+    this.session.document.update((root) =>
+      updateContainer(root, parent.id, (container) => ({
+        ...container,
+        children: container.children.filter((node) => node.id !== id),
+      })),
+    );
+    if (!this.containerChoices().some((choice) => choice.id === this.session.activeId())) this.openContainer(parent.id);
+  }
+  moveChild(id: number, targetId: number, index = Number.MAX_SAFE_INTEGER): void {
+    try {
+      this.session.document.update((root) => moveChild(root, id, targetId, index));
+      this.loadError.set(null);
+    } catch (error) {
+      this.loadError.set(error instanceof Error ? error.message : String(error));
+    }
+  }
+  updateElementPlacement(id: number, placement: ElementNode['placement']): string | null {
+    const parent = parentOf(this.session.document(), id);
+    if (!parent) return 'The element no longer exists.';
+    const name = placement.deploymentName?.trim();
+    if (!name) return 'A property name is required.';
+    if (parent.children.some((node) => node.id !== id && childName(node) === name))
+      return 'Another child already uses that property name.';
+    const next = updateContainer(this.session.document(), parent.id, (container) => ({
+      ...container,
+      children: container.children.map((node) =>
+        node.id === id && node.kind === 'element'
+          ? { ...node, placement: { ...placement, deploymentName: name } }
+          : node,
+      ),
+    }));
+    try {
+      buildContainer(next);
+      this.session.document.set(next);
+      return null;
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
     }
   }
 }

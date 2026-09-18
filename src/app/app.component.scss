@@ -1,8 +1,14 @@
 @reference "tailwindcss";
 
 /* ─── App Shell ───────────────────────────────────────────────────────────── */
+/*
+  A bounded box, not a growing one. `min-h-screen` measured the viewport, which an
+  embedded component has no business doing — it is given a height by whoever
+  embeds it — and being a minimum it let the shell grow with its content, so the
+  columns below could never scroll within it however much their own rules said so.
+*/
 .app-shell {
-  @apply min-h-screen bg-gray-100 relative flex flex-col font-sans;
+  @apply h-full min-h-0 bg-gray-100 relative flex flex-col font-sans;
 }
 
 /* ─── Header ──────────────────────────────────────────────────────────────── */
@@ -11,7 +17,12 @@
 }
 
 .app-header__inner {
-  @apply max-w-7xl mx-auto px-6 py-1.5 flex items-center justify-between;
+  /*
+   * Wraps below roughly 900px. Without it the action group is pushed past the right
+   * edge and takes the whole page with it, so the document scrolls sideways and the
+   * fields below become unreachable at their right edge.
+   */
+  @apply w-full px-3 py-1.5 flex flex-wrap items-center justify-between gap-y-1;
 }
 
 .app-header__brand {
@@ -23,7 +34,8 @@
 }
 
 .app-header__actions {
-  @apply flex items-center gap-4;
+  /* `min-w-0` so the group may shrink rather than insisting on its content's width. */
+  @apply flex min-w-0 flex-wrap items-center gap-4;
 }
 
 /* ─── Header Buttons ──────────────────────────────────────────────────────── */
@@ -63,21 +75,59 @@
 }
 
 /* ─── Main Content ────────────────────────────────────────────────────────── */
+/*
+  `min-h-0` is what lets this shrink. A flex child's automatic minimum size is its
+  content, so the row grew to the taller of its two columns and took the shell
+  with it, and `overflow-hidden` here clipped nothing.
+*/
 .main-content {
-  @apply flex-1 flex overflow-hidden;
+  @apply relative flex-1 flex min-h-0 overflow-hidden;
 }
 
-.editor-area {
-  @apply transition-all duration-300 overflow-y-auto relative flex-1;
-}
-
-.editor-grid {
+.designer-grid {
   @apply grid h-full;
+  grid-template-columns: var(--designer-columns, 1fr);
+}
+.overview-panel__header {
+  flex-wrap: wrap;
+  gap: var(--cedar-space-1);
+}
+.overview-panel__actions {
+  display: flex;
+  margin-left: auto;
+}
+.overview-panel__actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+.overview-panel__actions button:hover {
+  color: var(--cedar-color-primary);
+  background: var(--cedar-surface-authoring);
+}
+
+.designer-scroll,
+.overview-panel__card {
+  overscroll-behavior: none;
+}
+
+@media (max-width: 767px) {
+  // The overview is hidden at this width; it must not keep an empty grid column.
+  .designer-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* ─── Fields Overview Sidebar ─────────────────────────────────────────────── */
 .overview-panel {
-  @apply p-4 hidden md:block;
+  @apply p-3 hidden md:block;
 }
 
 .overview-panel__card {
@@ -89,7 +139,7 @@
 }
 
 .overview-panel__header {
-  @apply px-4 py-3 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10;
+  @apply px-3 py-2 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10;
 }
 
 .overview-panel__header-left {
@@ -109,7 +159,7 @@
 }
 
 .overview-panel__item {
-  @apply w-full flex items-center gap-2 px-3 py-2.5 hover:bg-gray-50 transition-colors text-left cursor-pointer border-none bg-transparent;
+  @apply w-full flex items-center gap-2 px-3 py-1.5 hover:bg-gray-50 transition-colors text-left cursor-pointer border-none bg-transparent;
 
   &.active {
     @apply bg-emerald-50;
@@ -125,23 +175,55 @@
 }
 
 .overview-panel__badge-required {
-  font-size: 9px;
-  @apply px-1 bg-red-100 text-red-800 rounded font-semibold;
+  @apply text-sm leading-none text-gray-900 font-medium;
 }
 
-/* ─── Overview Toggle Button ──────────────────────────────────────────────── */
-.btn-overview-toggle {
-  @apply fixed top-24 px-3 py-2 bg-white rounded-lg border border-gray-300 shadow-md hover:shadow-lg transition-all z-20 flex items-center gap-2 cursor-pointer;
+/* Header panel controls mirror the side they open. */
+.panel-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #8b9093;
+  cursor: pointer;
+}
+.panel-toggle:hover,
+.panel-toggle[aria-expanded='true'] {
+  color: var(--cedar-color-primary);
+  background: var(--cedar-surface-authoring);
+}
+.panel-toggle:focus-visible {
+  outline: 2px solid var(--cedar-color-primary);
+  outline-offset: 2px;
+}
+@media (max-width: 767px) {
+  .overview-toggle {
+    display: none;
+  }
 }
 
-/* ─── Editor Workspace ────────────────────────────────────────────────────── */
-.editor-workspace {
-  @apply relative py-8 px-6 max-w-4xl mx-auto w-full;
+/* ─── Designer Workspace ──────────────────────────────────────────────────── */
+.designer-workspace {
+  @apply relative py-5 px-6 max-w-4xl mx-auto w-full;
+}
+
+.designer-scroll--split,
+.preview-panel {
+  flex: 0 0 50%;
+  width: 50%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 /* ─── Template Header Card ────────────────────────────────────────────────── */
 .template-header-card {
-  @apply bg-white rounded-lg border border-gray-300 mb-4 overflow-hidden shadow-sm relative;
+  @apply bg-white rounded-lg border border-gray-300 mb-3 overflow-hidden shadow-sm relative;
 }
 
 .template-header-card__gradient {
@@ -149,27 +231,29 @@
 }
 
 .template-header-card__body {
-  @apply p-6 flex items-start gap-4;
+  @apply px-4 py-3 flex items-start gap-4;
 }
 
 .template-header-card__icon {
-  @apply flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center mt-1;
+  @apply flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center mt-0.5;
 }
 
 .template-header-card__inputs {
-  @apply flex-1 flex flex-col gap-1;
+  /* A flex child will not go below its content without this, whatever `flex-1` says. */
+  @apply flex-1 min-w-0 flex flex-col gap-1;
 }
 
 .template-header-row {
-  @apply flex items-end gap-4 w-full;
+  /* Name, identifier and version sit on one line where there is room, and stack where there is not. */
+  @apply flex flex-wrap items-end gap-x-4 gap-y-2 w-full;
 }
 
 .template-field-group {
-  @apply flex flex-col;
+  @apply flex min-w-0 flex-col;
 }
 
 .template-field-label {
-  @apply text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1;
+  @apply text-xs font-medium text-gray-500 uppercase tracking-wider mb-1;
 }
 
 .template-input {
@@ -178,7 +262,7 @@
 
 /* ─── Fields Drop List ────────────────────────────────────────────────────── */
 .fields-drop-list {
-  @apply space-y-3;
+  @apply space-y-2;
 }
 
 .field-drop-item {
@@ -194,7 +278,7 @@
 
 .btn-insert-here {
   @apply text-white rounded-full px-3 py-1 shadow-md font-medium border-none cursor-pointer;
-  font-size: 10px;
+  font-size: var(--cedar-font-size-small);
 }
 
 /* ─── Field Drag Container ────────────────────────────────────────────────── */
@@ -221,7 +305,7 @@
 
 .btn-add-field {
   @apply text-white rounded-full p-3 shadow-md transition-all flex items-center gap-3 px-6 cursor-pointer border-none;
-  
+
   &:hover {
     @apply scale-105;
   }
@@ -231,27 +315,20 @@
   @apply w-full mt-4;
 }
 
-/* ─── Floating Save Button ────────────────────────────────────────────────── */
-.floating-save {
-  @apply fixed bottom-6 right-6 z-30;
+.validation-summary {
+  color: var(--cedar-control-error, var(--cedar-color-error));
+  background: #fff4f2;
+  padding: 6px var(--cedar-space-4);
+  font-size: var(--cedar-font-size-small);
+  flex: none;
+  max-height: 25vh;
+  overflow: auto;
 }
-
-.floating-save__wrapper {
-  @apply relative;
-
-  &:hover .floating-save__tooltip {
-    @apply opacity-100;
-  }
+.validation-summary summary,
+.validation-summary button {
+  cursor: pointer;
 }
-
-.btn-save {
-  @apply w-12 h-12 rounded-full flex items-center justify-center text-white transition-all shadow-lg cursor-pointer border-none;
-
-  &:hover {
-    @apply shadow-xl scale-105;
-  }
-}
-
-.floating-save__tooltip {
-  @apply absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded shadow-lg opacity-0 pointer-events-none transition-opacity whitespace-nowrap;
+.validation-summary button {
+  text-align: left;
+  text-decoration: underline;
 }

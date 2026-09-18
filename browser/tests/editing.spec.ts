@@ -1,0 +1,229 @@
+import { expect, test } from '@playwright/test';
+import {
+  DESIGNER,
+  child,
+  clickCentred,
+  currentTemplate,
+  fieldName,
+  fieldOrder,
+  openSettings,
+  openDesigner,
+  templateName,
+  waitForPublished,
+} from './support';
+
+/**
+ * Editing, and the things that stop working silently.
+ *
+ * Under OnPush a view that is never marked dirty simply stops updating, and no
+ * unit test sees it — the state is correct and the screen is not. The same is
+ * true of an event the host stops receiving, a menu that will not close, and a
+ * scroll that finds nothing because it searched the wrong tree.
+ */
+
+test('an edit reaches the published template', async ({ page }) => {
+  const designer = await openDesigner(page);
+
+  await templateName(page).fill('A renamed study');
+  await waitForPublished(page, (template) => template['schema:name'] === 'A renamed study');
+});
+
+test('an edit reaches the overview sidebar', async ({ page }) => {
+  const designer = await openDesigner(page);
+
+  await fieldName(page, 0).fill('Study title');
+
+  // The sidebar is a sibling view of the same signal. Under OnPush it is the
+  // first thing to stop updating when a component is not marked dirty.
+  await expect(designer.getByText('Study title', { exact: true }).first()).toBeVisible();
+});
+
+test('field type icons have no conversion menu', async ({ page }) => {
+  const designer = await openDesigner(page);
+  const card = designer.locator('app-field-card').first();
+  const before = await currentTemplate(page);
+  await expect(card.getByRole('button', { name: '▼', exact: true })).toHaveCount(0);
+  await card.locator('.field-type-icon').click();
+  await expect(designer.locator('.field-type-dropdown-container')).toHaveCount(0);
+  expect(await currentTemplate(page)).toEqual(before);
+});
+
+test('adding an option redraws the field and republishes', async ({ page }) => {
+  const designer = await openDesigner(page);
+
+  await openSettings(designer.locator('#field-card-2'));
+  await clickCentred(designer.getByRole('button', { name: /Add option/ }).first());
+
+  await expect(designer.getByPlaceholder('Option 3')).toBeVisible();
+
+  // Named, because a blank option is deliberately not written: the row seeds an
+  // empty label so its placeholder can show the hint, and `buildOptions` skips
+  // it rather than sending out `{"label": ""}`. So adding a row changes what the
+  // author sees and nothing in the artifact, and the republish this test is
+  // about is the one the label produces.
+  await designer.getByPlaceholder('Option 3').fill('Gamma');
+
+  await waitForPublished(page, (template) => {
+    const properties = template['properties'] as Record<string, Record<string, unknown>>;
+    const category = (properties['Category']['items'] as Record<string, unknown>) ?? properties['Category'];
+    const constraints = category['_valueConstraints'] as { literals?: Array<{ label: string }> };
+    // Optional, and matched by label rather than counted. Every template
+    // published before the label was typed carries no `literals` key at all, and
+    // reading `length` of that threw inside the predicate — which fails the wait
+    // outright instead of leaving it to match a later event.
+    return (constraints.literals ?? []).some((literal) => literal.label === 'Gamma');
+  });
+});
+
+test('deleting a field removes its card and its child', async ({ page }) => {
+  const designer = await openDesigner(page);
+  const before = fieldOrder(await currentTemplate(page));
+
+  await clickCentred(designer.locator('[id^=field-card-]').last().getByTitle('Delete field', { exact: true }));
+
+  await expect(designer.locator('[id^=field-card-]')).toHaveCount(before.length - 1);
+  await waitForPublished(page, (template) => (template['_ui'] as { order: string[] }).order.length === 2);
+});
+
+test('the requirement selector reaches the template', async ({ page }) => {
+  const designer = await openDesigner(page);
+  const requiredOf = (template: Record<string, unknown>) =>
+    (child(template, 'Title')['_valueConstraints'] as { requiredValue: boolean }).requiredValue;
+
+  expect(requiredOf(await currentTemplate(page))).toBe(true);
+  await designer.locator('#field-card-1').getByLabel('Requirement', { exact: true }).selectOption('optional');
+
+  /*
+   * `_valueConstraints.requiredValue`, not the template's top-level `required`.
+   * That array is JSON Schema's, and it names every property an instance must
+   * carry — the four provenance keys, `@context`, `@id` and every field — so it
+   * lists a field whether or not its author marked it required. The author's flag
+   * is the one below, and reading the other is a mistake worth a test of its own.
+   */
+  await waitForPublished(page, (template) => {
+    const properties = template['properties'] as Record<string, Record<string, unknown>>;
+    const title = (properties['Title']['items'] as Record<string, unknown>) ?? properties['Title'];
+    return (title['_valueConstraints'] as { requiredValue: boolean }).requiredValue === false;
+  });
+  expect(requiredOf(await currentTemplate(page))).toBe(false);
+});
+
+test.describe('identity', () => {
+  test('the template keeps its identifier across edits', async ({ page }) => {
+    const designer = await openDesigner(page);
+    const before = (await currentTemplate(page))['@id'];
+
+    await templateName(page).fill('Renamed');
+    await waitForPublished(page, (template) => template['schema:name'] === 'Renamed');
+
+    // The serializer this replaced minted a fresh identifier on every call, so a
+    // host listening for changes was told the whole artifact was new on every
+    // keystroke.
+    expect((await currentTemplate(page))['@id']).toBe(before);
+  });
+
+  test('a field keeps its identifier across edits', async ({ page }) => {
+    const designer = await openDesigner(page);
+    const before = child(await currentTemplate(page), 'Title')['@id'];
+
+    await templateName(page).fill('Renamed again');
+    await waitForPublished(page, (template) => template['schema:name'] === 'Renamed again');
+
+    expect(child(await currentTemplate(page), 'Title')['@id']).toBe(before);
+  });
+
+  test('reading the template twice gives the same bytes', async ({ page }) => {
+    await openDesigner(page);
+
+    const once = JSON.stringify(await currentTemplate(page));
+    const twice = JSON.stringify(await currentTemplate(page));
+
+    expect(twice).toBe(once);
+  });
+});
+
+test('adding a field scrolls to it without reaching for the document', async ({ page }) => {
+  const designer = await openDesigner(page);
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+
+  await designer.getByRole('button', { name: /Add Child/ }).click();
+  await designer.getByRole('button', { name: 'Text', exact: true }).first().click();
+
+  await expect(designer.locator('[id^=field-card-]')).toHaveCount(4);
+  // The scroll used to be `document.getElementById`, which finds nothing in a
+  // shadow tree; the component resolves the card from its own root now.
+  expect(errors).toEqual([]);
+});
+
+test('dragging a field leaves nothing behind in the host document', async ({ page }) => {
+  const designer = await openDesigner(page);
+  const cards = designer.locator('[id^=field-card-]');
+  const source = cards.nth(1);
+  const target = cards.nth(0);
+
+  await source.hover();
+  await page.mouse.down();
+  await target.hover();
+  await page.mouse.up();
+
+  // The CDK appends a drag preview to the body by default, where the designer's
+  // styles cannot reach it.
+  expect(await page.evaluate(() => document.body.querySelectorAll('.cdk-drag-preview').length)).toBe(0);
+});
+
+test('the element publishes each edit once', async ({ page }) => {
+  const designer = await openDesigner(page);
+
+  await templateName(page).fill('Counted');
+  await waitForPublished(page, (template) => template['schema:name'] === 'Counted');
+
+  const names = await page.evaluate(
+    () =>
+      (window as unknown as { __events: Array<Record<string, unknown>> }).__events.map(
+        (template) => template['schema:name'] as string,
+      ),
+    DESIGNER,
+  );
+  // One event per distinct state, not one per character: `fill` sets the value in
+  // a single input event.
+  expect(names.filter((name) => name === 'Counted')).toHaveLength(1);
+});
+
+test('header panel icons toggle Overview and CEE without changing the template', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const designer = await openDesigner(page);
+  const header = designer.locator('.app-header');
+  const before = await currentTemplate(page);
+  await header.getByRole('button', { name: 'Close Overview', exact: true }).click();
+  await expect(designer.locator('.overview-panel')).toHaveCount(0);
+  await expect(designer.locator('.btn-overview-toggle')).toHaveCount(0);
+  await header.getByRole('button', { name: 'Open Overview', exact: true }).click();
+  await expect(designer.locator('.overview-panel')).toBeVisible();
+  await header.getByRole('button', { name: 'Open Preview', exact: true }).click();
+  await expect(designer.locator('app-cee-preview')).toBeVisible();
+  await header.getByRole('button', { name: 'Close Preview', exact: true }).click();
+  await expect(designer.locator('app-cee-preview')).toHaveCount(0);
+  expect(await currentTemplate(page)).toEqual(before);
+});
+
+test('the field picker scrolls into a short designer and keeps its last option reachable', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 420 });
+  const designer = await openDesigner(page);
+  await designer.getByRole('button', { name: 'Basic', exact: true }).click();
+  await designer.getByRole('button', { name: /Modular/ }).click();
+  await designer.getByRole('button', { name: /Add Child/ }).click();
+  const picker = designer.locator('.picker-container');
+  await expect
+    .poll(() =>
+      picker.evaluate((node) => {
+        const frame = node.closest('.designer-scroll')!.getBoundingClientRect();
+        const rect = node.getBoundingClientRect();
+        return rect.top >= frame.top && rect.bottom <= frame.bottom;
+      }),
+    )
+    .toBe(true);
+  const count = await designer.locator('app-field-card').count();
+  await picker.getByRole('button', { name: 'YouTube', exact: true }).click();
+  await expect(designer.locator('app-field-card')).toHaveCount(count + 1);
+});

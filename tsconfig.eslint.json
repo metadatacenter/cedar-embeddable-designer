@@ -1,0 +1,19 @@
+/*
+  The one TSConfig whose program contains every source file.
+
+  tsconfig.app.json lists only the build entry points and tsconfig.spec.json only the
+  specs, so neither puts every file under src/ into a program, which type-aware lint
+  rules require. This config includes them all.
+
+  Named for ESLint because that is what first needed it; `npm run typecheck` uses it
+  too, for the same reason. The build checks what the element entry point reaches, so
+  a file that nothing reachable imports is only ever checked here.
+*/
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["vitest/globals", "node"]
+  },
+  "include": ["src/**/*.ts"]
+}

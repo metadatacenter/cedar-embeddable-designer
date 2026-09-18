@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>CEFD host</title>
+    <style>
+      body {
+        margin: 16px;
+      }
+      input {
+        font-size: 40px;
+        background: hotpink;
+      }
+    </style>
+  </head>
+  <body>
+    <cedar-embeddable-field-designer id="field"></cedar-embeddable-field-designer>
+    <script>
+      window.fieldEvents = [];
+      const field = document.getElementById('field');
+      for (const type of ['artifactChange', 'dirtyChange', 'validationChange']) {
+        field.addEventListener(type, (event) => window.fieldEvents.push({ type, detail: event.detail }));
+      }
+    </script>
+    <script src="cedar-embeddable-designer.js"></script>
+  </body>
+</html>

@@ -1,0 +1,183 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out CED
+        uses: actions/checkout@v4
+
+      # One Node for the whole job, and the one `.nvmrc` names, so the build that
+      # ships is produced by the toolchain that exercised it. 24 rather than 22 of
+      # the versions Angular 22 accepts: 24 is the active LTS where 22 is in
+      # maintenance. CEE and cedar-embeddable-term-picker are on the same version.
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            browser/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install the browser test dependencies
+        run: |
+          npm --prefix browser ci
+          ./browser/node_modules/.bin/playwright install --with-deps chromium
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Source boundaries
+        run: npm run test:boundaries
+
+      - name: Packaging tests
+        run: npm run test:packaging
+
+      - name: Build the element
+        run: npm run build
+
+      - name: Build the standalone application
+        run: npm run build:app
+
+      # The distribution, from the bytes the build just produced: flatten to one
+      # script, hold it to its size ceiling, and stage the package from that exact
+      # file. Verified byte for byte afterwards, because the failure this guards
+      # against is a staged directory left over from an earlier build — it looks
+      # complete and publishes something nobody tested.
+      - name: Bundle, measure and stage the distribution
+        run: |
+          npm run bundle
+          npm run check:size
+          npm run package:npm
+
+      # Against the file an embedder downloads, in a host page that is not the
+      # development server. Everything this suite covers was found by hand in a
+      # browser and by nothing else: an element that never registered, a lookup
+      # that searched the wrong tree, a menu that closed on its own opening click,
+      # an asset the package does not carry.
+      - name: Browser tests, against the distribution
+        run: npm run test:browser:prebuilt
+
+      # The screenshot baselines, inside Playwright's own image rather than on the
+      # runner. A baseline records a machine's glyph rasterisation as much as the
+      # application's rendering, and the runner and a developer's laptop were never
+      # going to agree on that — so both sides use the one container, and the budget
+      # for a difference is zero pixels rather than a tolerance wide enough to hide a
+      # real change. The runner is arm64 so it does not emulate the image.
+      - name: Visual baselines, in the container that defines them
+        run: npm run test:visual
+
+      # Deliberately its own step rather than part of the gate above: this is the
+      # one check that can start failing without anyone having changed anything,
+      # because it fails on a disclosure rather than on a commit. Kept separate so
+      # the reason is legible from the job summary, and placed after the tests so a
+      # genuine regression is reported first.
+      #
+      # `--omit=dev` because only runtime dependencies reach what an embedder
+      # downloads. `--audit-level=high` because moderate advisories against build
+      # tooling are not worth stopping a merge for, and the value of this step is
+      # that a failure means something.
+      - name: Audit what ships
+        run: npm run audit:prod
+
+  cef-integration:
+    name: CED with real CEE and CEF
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    env:
+      CEF_BUNDLE: ${{ github.workspace }}/cedar-embeddable-editor/visual/public/cedar-embeddable-editor.js
+    steps:
+      - name: Check out CED
+        uses: actions/checkout@v4
+        with:
+          path: cedar-embeddable-designer
+
+      # Update this pin deliberately when adopting CEE/CEF changes. A moving
+      # branch would make a CED revision's integration result irreproducible.
+      #
+      # It also has to be updated when the pin stops building, which is not the
+      # same thing and gives no warning. A CEE revision names an exact model
+      # library dev snapshot, Nexus keeps only so many of those, and 6af8718d's
+      # 1.0.9-dev.20260911.07caa05 was still being served at 17:47 on 2026-09-15
+      # and 404 by 18:23. The step that fails is the one that builds CEE, before
+      # any of CED is exercised, so the job goes red for a reason that is
+      # nothing to do with the commit that triggered it.
+      - name: Check out the supported CEE revision
+        uses: actions/checkout@v4
+        with:
+          repository: metadatacenter/cedar-embeddable-editor
+          ref: 3f5b9aa6ebcdc811abfdf888608653c274db5b5c
+          path: cedar-embeddable-editor
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+          cache: npm
+          cache-dependency-path: |
+            cedar-embeddable-designer/package-lock.json
+            cedar-embeddable-designer/browser/package-lock.json
+            cedar-embeddable-editor/package-lock.json
+            cedar-embeddable-editor/visual/package-lock.json
+
+      - name: Build CEE and CEF from the pinned source
+        working-directory: cedar-embeddable-editor
+        run: |
+          npm ci
+          npm --prefix visual ci
+          npm run build:production
+          npm --prefix visual run bundle
+          npm --prefix visual run check:fresh
+
+      - name: Build CED and install Chromium
+        working-directory: cedar-embeddable-designer
+        run: |
+          npm ci
+          npm --prefix browser ci
+          ./browser/node_modules/.bin/playwright install --with-deps chromium
+          npm run dist
+
+      - name: Record the exact integration inputs
+        run: |
+          git -C cedar-embeddable-designer rev-parse HEAD
+          git -C cedar-embeddable-editor rev-parse HEAD
+          test -s "$CEF_BUNDLE"
+          sha256sum "$CEF_BUNDLE" cedar-embeddable-designer/dist-bundle/cedar-embeddable-designer.js
+
+      - name: Test CED with the real CEE and CEF bundle
+        working-directory: cedar-embeddable-designer
+        run: npm run test:browser:prebuilt
+
+      - name: Keep failure traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cef-integration-traces
+          path: cedar-embeddable-designer/browser/test-results
+          if-no-files-found: ignore

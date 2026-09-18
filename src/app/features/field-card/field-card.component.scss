@@ -1,0 +1,97 @@
+.field-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  color: #9ca3af;
+  cursor: grab;
+  padding: 2px;
+}
+app-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.field-summary,
+.field-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--cedar-space-2);
+  min-width: 0;
+}
+.field-summary {
+  flex-wrap: wrap;
+}
+.field-actions {
+  margin-left: auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.field-card-body {
+  padding: 6px var(--cedar-space-4) 0;
+}
+
+.field-header {
+  display: grid;
+  /*
+    Three columns, the outer two equal: the drag handle is in the middle one and
+    has to share a centre with the settings chevron under it, which only an even
+    split gives. Sizing the controls column to its contents instead moved the
+    handle by the difference between the halves — 27px at 1440 and 195px at 768.
+  */
+  grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--cedar-space-2);
+  row-gap: var(--cedar-space-1);
+}
+.field-heading,
+.field-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--cedar-space-2);
+  min-width: 0;
+}
+.field-controls {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.field-drag-handle {
+  grid-column: 2;
+  grid-row: 1;
+}
+.field-header.standalone {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+/*
+  Below this the controls take a row of their own, because they no longer fit
+  beside the name: a type chip, a requirement menu, a checkbox and a delete come
+  to about 322px at this scale, and half a card has that much only above roughly
+  680px. The bound was 680px while the controls were 11px, which put it exactly
+  on the boundary the 12px scale crossed — "Paragraph" wrapped inside the
+  controls and left the menu beside nothing. Linux rasterises wider than macOS,
+  so the headroom here is deliberate rather than tight.
+*/
+@container (max-width: 760px) {
+  .field-controls {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .field-heading {
+    grid-column: 1;
+  }
+}
+
+.validation-badge {
+  color: var(--cedar-control-error, var(--cedar-color-error));
+  font-size: var(--cedar-font-size-small);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* Leave header space after the editable name available for toggling settings. */
+.field-heading > input {
+  field-sizing: content;
+  flex: 0 1 auto;
+  max-width: 100%;
+}

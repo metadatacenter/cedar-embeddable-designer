@@ -1,94 +1,169 @@
-import { Component, Input, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {
+  Component,
+  CUSTOM_ELEMENTS_SCHEMA,
+  ElementRef,
+  Input,
+  effect,
+  inject,
+  signal,
+  viewChild,
+  ChangeDetectionStrategy,
+  OnChanges,
+} from '@angular/core';
 import { TemplateService } from '../../core/services/template.service';
-import { Field, ControlledTermConfig as TermConfig } from '../../core/models/types';
-import { IconComponent } from '../../shared/components/icon/icon.component';
+import { Field, ControlledTermSet } from '../../core/models/types';
+import { TerminologyService } from '../../core/services/terminology.service';
+import { termPickerAvailable } from '../../core/model/term-picker';
+import { fieldToJson } from '../../core/model/cedar-template';
+import { trapTab } from '../../shared/focus-trap';
 
 @Component({
   selector: 'app-controlled-term-config',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent],
-  templateUrl: './controlled-term-config.component.html'
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  templateUrl: './controlled-term-config.component.html',
+  styleUrl: './controlled-term-config.component.scss',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class ControlledTermConfigComponent {
+export class ControlledTermConfigComponent implements OnChanges {
   readonly service = inject(TemplateService);
-
+  private readonly terminology = inject(TerminologyService);
+  readonly terminologyBaseUrl = this.terminology.baseUrl;
+  readonly pickerAvailable = termPickerAvailable();
+  readonly pickerOpen = signal(false);
+  readonly checking = signal(false);
+  readonly error = signal<string | null>(null);
+  readonly invalidDefault = signal(false);
+  private pending: { field: Field; set: ControlledTermSet } | null = null;
   @Input() field!: Field;
+  pickerConstraints: ControlledTermSet = { constraints: [], actions: [] };
 
-  readonly isExpanded = signal(false);
-  readonly showPreview = signal(false);
+  private orderedConstraints(set: ControlledTermSet): ControlledTermSet {
+    // Match the CEF summary's grouping; retain order within each kind.
+    const order = ['ontology-branch', 'ontology', 'value-set', 'ontology-term'];
+    return {
+      ...set,
+      constraints: [...set.constraints].sort((a, b) => order.indexOf(a.sourceType) - order.indexOf(b.sourceType)),
+    };
+  }
 
-  readonly sourceTypes = [
-    {
-      id: 'ontology-term' as const,
-      label: 'Search for a Term',
-      description: 'Users search BioPortal for specific terms',
-      icon: 'star',
-      color: '#0D9488',
-      example: 'e.g., "cardiac arrest", "melanoma"',
-      searchLabel: 'Search for a term in BioPortal (e.g. \'microarray analysis\')'
-    },
-    {
-      id: 'ontology' as const,
-      label: 'Search for an Ontology',
-      description: 'Users select entire ontologies to explore',
-      icon: 'library',
-      color: '#7C3AED',
-      example: 'e.g., NCIT, SNOMED CT, Disease Ontology',
-      searchLabel: 'Search for an ontology in BioPortal (e.g. OBI) and explore it'
-    },
-    {
-      id: 'value-set' as const,
-      label: 'Search for a Value Set',
-      description: 'Users select from predefined collections',
-      icon: 'list',
-      color: '#DC2626',
-      example: 'e.g., \'Delivery Procedures\'',
-      searchLabel: 'Search for a value set in BioPortal (e.g. \'Delivery Procedures\') and explore it'
-    },
-    {
-      id: 'ontology-branch' as const,
-      label: 'Ontology Branch',
-      description: 'Restrict to subtree of an ontology',
-      icon: 'beaker',
-      color: '#059669',
-      example: 'e.g., All types of "Carcinoma"',
-      searchLabel: 'Search within a specific branch of an ontology'
+  /**
+   * The dialog, and the button that opened it.
+   *
+   * The dialog carries `tabindex="-1"` so it can be focused without joining the tab
+   * order, which gives the keyboard a place to start inside the overlay. Focus goes
+   * back to the button on close, because leaving it on a dialog that no longer exists
+   * drops the author at the top of the document.
+   */
+  private readonly dialog = viewChild<ElementRef<HTMLElement>>('dialog');
+  private readonly editButton = viewChild<ElementRef<HTMLElement>>('editButton');
+
+  private reportValidation(): void {
+    this.service.setSettingsError(
+      this.field.id,
+      'controlledTerms',
+      this.error() ?? (this.checking() ? 'Checking the default against the constraints…' : null),
+    );
+  }
+  private setError(message: string | null): void {
+    this.error.set(message);
+    this.reportValidation();
+  }
+  private setChecking(checking: boolean): void {
+    this.checking.set(checking);
+    this.reportValidation();
+  }
+
+  constructor() {
+    // Runs when the dialog appears, which is after the click that opened it: the
+    // view child resolves only once the overlay has rendered.
+    effect(() => this.dialog()?.nativeElement.focus());
+  }
+
+  /** Tab must not leave the overlay while it is covering the card behind it. */
+  onDialogKeydown(event: KeyboardEvent): void {
+    const dialog = this.dialog()?.nativeElement;
+    if (dialog) trapTab(dialog, event);
+  }
+
+  readonly summaryAvailable = customElements.get('cedar-embeddable-field') !== undefined;
+  readonly summaryConfig = { ...this.service.fieldEditorConfig(), readOnlyMode: true };
+  readonly summaryValue = { kind: 'none' };
+  summaryArtifact: ReturnType<typeof fieldToJson> | null = null;
+
+  ngOnChanges(): void {
+    this.pickerConstraints = this.orderedConstraints(
+      this.field.controlledTermConstraints ?? { constraints: [], actions: [] },
+    );
+    this.summaryArtifact = fieldToJson({ ...this.field, defaultValue: { kind: 'none' } });
+  }
+
+  openPicker(): void {
+    this.setError(null);
+    this.invalidDefault.set(false);
+    this.pending = null;
+    this.pickerOpen.set(true);
+  }
+
+  closePicker(): void {
+    this.draftChanged();
+    this.pickerOpen.set(false);
+    this.editButton()?.nativeElement.focus();
+  }
+
+  draftChanged(): void {
+    this.pending = null;
+    this.setChecking(false);
+    this.invalidDefault.set(false);
+    this.setError(null);
+  }
+
+  async applyPicked(event: Event): Promise<void> {
+    if (this.checking()) return;
+    const set = this.orderedConstraints(structuredClone((event as CustomEvent<ControlledTermSet>).detail));
+    const field = this.field;
+    this.setError(null);
+    this.invalidDefault.set(false);
+    const attempt = { field, set };
+    this.pending = attempt;
+    this.setChecking(true);
+    try {
+      const artifact = fieldToJson({ ...field, controlledTermConstraints: set, defaultValue: { kind: 'none' } });
+      if (
+        field.defaultValue.kind === 'iri' &&
+        JSON.stringify(set) !== JSON.stringify(field.controlledTermConstraints)
+      ) {
+        const allowed =
+          set.constraints.length > 0 &&
+          (await this.terminology.allowsDefault(
+            artifact,
+            field.defaultValue.iri,
+            field.defaultValue.label ?? field.defaultValue.iri,
+          ));
+        if (this.pending !== attempt || this.field !== field) return;
+        if (!allowed) {
+          this.invalidDefault.set(true);
+          this.setError(
+            'The existing default is not permitted by these constraints. Clear it and apply, or revise the constraints.',
+          );
+          return;
+        }
+      }
+      if (this.pending !== attempt || this.field !== field) return;
+      this.service.updateControlledTermConstraints(field.id, set);
+      this.closePicker();
+    } catch (error) {
+      if (this.pending !== attempt || this.field !== field) return;
+      this.setError(error instanceof Error ? error.message : 'Could not apply constraints.');
+    } finally {
+      if (this.pending === attempt) this.setChecking(false);
     }
-  ];
-
-  get config(): TermConfig {
-    return this.field.controlledTermConfig || {
-      sourceType: 'ontology-term',
-      sourceId: '',
-      sourceName: '',
-      ontologyId: '',
-      ontologyName: '',
-      allowMultipleOntologies: false,
-      searchDepth: 1,
-      restrictedOntologies: []
-    };
   }
 
-  get currentSourceType() {
-    return this.sourceTypes.find(t => t.id === this.config.sourceType) || this.sourceTypes[0];
-  }
-
-  updateConfig(updates: Partial<TermConfig>) {
-    const updatedConfig = {
-      ...this.config,
-      ...updates
-    };
-    this.service.updateControlledTermConfig(this.field.id, updatedConfig);
-  }
-
-  updateSourceType(type: 'ontology-term' | 'ontology' | 'value-set' | 'ontology-branch') {
-    this.updateConfig({ sourceType: type });
-  }
-
-  updateRestrictedOntologies(value: string) {
-    const list = value.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
-    this.updateConfig({ restrictedOntologies: list });
+  clearDefaultAndApply(): void {
+    if (!this.invalidDefault() || !this.pending || this.field !== this.pending.field) return;
+    this.service.updateDefaultValue(this.field.id, { kind: 'none' });
+    this.service.updateControlledTermConstraints(this.field.id, this.pending.set);
+    this.closePicker();
   }
 }

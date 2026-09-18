@@ -1,0 +1,132 @@
+<dialog #dialog aria-labelledby="child-picker-title" (cancel)="$event.preventDefault(); close()">
+  <h2 id="child-picker-title">Select fields and elements</h2>
+  <div class="selection-heading">
+    <h3>Selected children ({{ selected().length }})</h3>
+    <div class="actions">
+      <button type="button" (click)="close()">Cancel</button>
+      <button type="button" class="primary" [disabled]="!selected().length || saving()" (click)="done()">
+        {{ saving() ? 'Adding…' : 'Done' }}
+      </button>
+    </div>
+  </div>
+  <div class="table-scroll">
+    <table aria-label="Selected children" class="selected-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Created</th>
+          <th>Modified</th>
+          <th>Version</th>
+          <th>Status</th>
+          <th><span class="sr-only">Remove</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of selected(); track key(row)) {
+          <tr>
+            <td>{{ row.name }}</td>
+            <td>{{ row.type === 'field' ? 'Field' : 'Element' }}</td>
+            <td>{{ row.createdOn ? (row.createdOn | date: 'mediumDate') : '—' }}</td>
+            <td>{{ row.modifiedOn ? (row.modifiedOn | date: 'mediumDate') : '—' }}</td>
+            <td>{{ row.version || '—' }}</td>
+            <td>{{ row.status || '—' }}</td>
+            <td>
+              <button
+                type="button"
+                [disabled]="saving()"
+                [attr.aria-label]="'Remove ' + row.name"
+                (click)="remove(row)"
+              >
+                <app-icon key="trash" />
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="empty">Select fields and elements from the results below.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (!service.childSource()) {
+    <p role="status">Repository search is unavailable in this host.</p>
+  } @else {
+    <form (ngSubmit)="search()" class="search">
+      <label for="child-search">Search fields and elements</label>
+      <div>
+        <input
+          id="child-search"
+          name="query"
+          type="search"
+          [(ngModel)]="query"
+          placeholder="Search by name"
+          autofocus
+        /><button type="submit" [disabled]="saving()">Search</button>
+      </div>
+    </form>
+    <div class="table-scroll" [attr.aria-busy]="searching()">
+      <table aria-label="Search results">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Created</th>
+            <th>Modified</th>
+            <th>Version</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of results(); track key(row)) {
+            <tr
+              class="result-row"
+              [class.selected]="isSelected(row)"
+              [attr.tabindex]="isSelected(row) || saving() ? -1 : 0"
+              [attr.aria-label]="'Select ' + row.name"
+              [attr.aria-selected]="isSelected(row)"
+              [attr.aria-disabled]="isSelected(row) || saving()"
+              (click)="select(row)"
+              (keydown.enter)="select(row)"
+              (keydown.space)="$event.preventDefault(); select(row)"
+            >
+              <td>
+                {{ row.name }}
+                @if (isSelected(row)) {
+                  <span aria-hidden="true">✓</span>
+                }
+              </td>
+              <td>{{ row.type === 'field' ? 'Field' : 'Element' }}</td>
+              <td>{{ row.createdOn ? (row.createdOn | date: 'mediumDate') : '—' }}</td>
+              <td>{{ row.modifiedOn ? (row.modifiedOn | date: 'mediumDate') : '—' }}</td>
+              <td>{{ row.version || '—' }}</td>
+              <td>{{ row.status || '—' }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="empty">
+                {{
+                  searching()
+                    ? 'Searching…'
+                    : searched()
+                      ? 'No fields or elements found.'
+                      : error()
+                        ? 'Results could not be loaded.'
+                        : 'Enter a search to find reusable fields and elements.'
+                }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (nextCursor()) {
+      <button type="button" [disabled]="searching() || saving()" (click)="search(true)">Load more</button>
+    }
+  }
+  <p role="status" aria-live="polite">{{ searching() ? 'Searching…' : '' }}</p>
+  @if (error()) {
+    <p role="alert" class="error">{{ error() }}</p>
+  }
+</dialog>

@@ -1,0 +1,37 @@
+/*
+  The element's own box.
+
+  Separate from the global stylesheet the element also carries, because this is
+  the one rule that is about being an element rather than about the designer's
+  appearance: a custom element is inline by default and would collapse to nothing.
+*/
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  /*
+    The body of the scale, stated where the scale can be inherited from, as CEE
+    and the term picker both state theirs. Every visible size in the designer is
+    set by the rule that draws it, so nothing reads this today; what it prevents
+    is the next one that forgets to, which would otherwise take the browser's
+    16px — a size this scale does not contain.
+  */
+  font-size: var(--text-base);
+  font-family: var(--font-sans);
+}
+
+/*
+  The application's own box, which is the link between the two.
+
+  `:host` claims the height an embedder gives it and `.app-shell` fills its
+  parent, but `app-root` sits between them and a component element is inline by
+  default, so the chain broke here: the shell fell back to growing with its
+  content, a long template made the whole designer as tall as itself, and the
+  embedding page scrolled instead of the panels.
+*/
+app-root {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}

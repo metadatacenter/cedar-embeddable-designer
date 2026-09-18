@@ -1,0 +1,82 @@
+@use '../../shared/control-style';
+@use '../../shared/field-error';
+.default-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgb(0 0 0 / 40%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--cedar-space-6);
+}
+.default-dialog {
+  width: 100%;
+  max-width: 896px;
+  max-height: 90vh;
+  overflow: auto;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 20%);
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px var(--cedar-space-3);
+    background: var(--cedar-surface-authoring);
+    font-size: var(--cedar-font-size-small);
+    color: var(--cedar-text-muted);
+  }
+  i {
+    margin-left: var(--cedar-space-2);
+    color: var(--cedar-text-muted);
+  }
+  header button {
+    background: none;
+    border: 0;
+    cursor: pointer;
+    font-size: 20px;
+  }
+  p {
+    margin: 6px var(--cedar-space-3);
+    font-size: var(--cedar-font-size-small);
+  }
+}
+
+:host {
+  display: block;
+  min-width: 0;
+}
+.native-default {
+  display: flex;
+  align-items: start;
+  gap: var(--cedar-space-1);
+  input,
+  textarea {
+    width: 100%;
+    min-width: 0;
+    @include control-style.compact-control;
+  }
+
+  textarea {
+    resize: vertical;
+  }
+  [aria-invalid='true'] {
+    border-color: var(--cedar-control-error, var(--cedar-color-error));
+  }
+  button {
+    border: 0;
+    background: transparent;
+    color: #64748b;
+    font-size: 18px;
+    line-height: var(--cedar-control-height, var(--cedar-control-height-authoring));
+    min-width: 24px;
+    cursor: pointer;
+  }
+}
+
+.native-default input[aria-invalid='true'],
+.native-default textarea[aria-invalid='true'] {
+  border-color: var(--cedar-control-error, var(--cedar-color-error));
+  outline-color: var(--cedar-control-error, var(--cedar-color-error));
+}

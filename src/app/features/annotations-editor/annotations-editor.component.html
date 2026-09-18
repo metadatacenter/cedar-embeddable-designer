@@ -1,0 +1,75 @@
+<fieldset [disabled]="disabled()">
+  <div class="add-row">
+    <label
+      >Annotation name<input
+        aria-label="New annotation name"
+        [ngModel]="draft().name"
+        (ngModelChange)="editDraft({ name: $event })"
+    /></label>
+    <label
+      >Value type<select
+        aria-label="New annotation value type"
+        [ngModel]="draft().kind"
+        (ngModelChange)="editDraft({ kind: $event })"
+      >
+        <option value="literal">Text</option>
+        <option value="iri">IRI</option>
+      </select></label
+    >
+    <label
+      >Value<textarea
+        rows="1"
+        aria-label="New annotation value"
+        [ngModel]="draft().value"
+        (ngModelChange)="editDraft({ value: $event })"
+      ></textarea>
+    </label>
+    <button type="button" class="add" (click)="add()">Add annotation</button>
+  </div>
+  @if (addError(); as message) {
+    <p role="alert">{{ message }}</p>
+  }
+
+  <div class="table-scroll">
+    <table>
+      <caption>
+        Annotations
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Annotation name</th>
+          <th scope="col">Value type</th>
+          <th scope="col">Value</th>
+          <th scope="col"><span class="sr-only">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track $index; let i = $index) {
+          <tr>
+            <td>{{ row.name }}</td>
+            <td>{{ row.kind === 'iri' ? 'IRI' : 'Text' }}</td>
+            <td class="annotation-value">{{ row.value }}</td>
+            <td>
+              <button
+                type="button"
+                class="remove"
+                title="Remove annotation"
+                [attr.aria-label]="'Remove annotation ' + (i + 1)"
+                (click)="remove(i)"
+              >
+                <app-icon key="trash" className="w-4 h-4" />
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="empty">No annotations.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</fieldset>
+@if (error(); as message) {
+  <p role="alert">{{ message }}</p>
+}

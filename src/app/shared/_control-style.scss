@@ -1,0 +1,28 @@
+// Native adapter for the shared CEE/CEF compact control contract.
+// Authoring defaults come from design tokens; public host overrides always win.
+@mixin compact-control {
+  box-sizing: border-box;
+  min-height: var(--cedar-control-height, var(--cedar-control-height-authoring));
+  padding: calc(
+      (
+          var(--cedar-control-height, var(--cedar-control-height-authoring)) - var(
+              --cedar-control-line-height,
+              var(--cedar-control-line-height-authoring)
+            )
+        ) /
+        2 - 1px
+    )
+    5px;
+  border: 1px solid var(--cedar-control-border, var(--cedar-control-border-authoring));
+  border-radius: var(--cedar-control-radius, var(--cedar-control-radius-authoring));
+  background: white;
+  color: var(--cedar-text-authoring);
+  font-family: inherit;
+  font-size: var(--cedar-control-font-size, var(--cedar-control-font-size-authoring));
+  line-height: var(--cedar-control-line-height, var(--cedar-control-line-height-authoring));
+  font-weight: var(--cedar-font-weight-regular, 400);
+  &:focus {
+    outline: 2px solid var(--cedar-control-focus, var(--cedar-color-primary));
+    outline-offset: 0;
+  }
+}

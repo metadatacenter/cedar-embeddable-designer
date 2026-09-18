@@ -1,0 +1,139 @@
+@use '../../shared/control-style';
+:host {
+  display: block;
+  min-width: 0;
+  font-size: var(--cedar-font-size-small);
+}
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.table-scroll {
+  overflow-x: auto;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 330px;
+  table-layout: fixed;
+}
+caption {
+  text-align: left;
+  font-weight: var(--cedar-font-weight-medium, 500);
+  padding: var(--cedar-space-1) 0;
+}
+.add-row label,
+th {
+  font-size: var(--cedar-font-size-small);
+  font-weight: var(--cedar-font-weight-medium, 500);
+}
+th {
+  text-align: left;
+  border-bottom: 1px solid var(--cedar-border-rule);
+}
+th:nth-child(1) {
+  width: 28%;
+}
+th:nth-child(2) {
+  width: 72px;
+}
+th:nth-child(4) {
+  width: 32px;
+}
+th,
+td {
+  padding: var(--cedar-space-1);
+  vertical-align: top;
+}
+input,
+select,
+textarea {
+  @include control-style.compact-control;
+  width: 100%;
+  box-sizing: border-box;
+}
+textarea {
+  resize: none;
+  min-height: 28px;
+}
+button {
+  font: inherit;
+  color: var(--cedar-color-primary);
+  background: white;
+  border: 1px solid var(--cedar-primary-100);
+  border-radius: 3px;
+  padding: var(--cedar-space-1) 6px;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.add-row {
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) 80px minmax(100px, 2fr) auto;
+  gap: var(--cedar-space-2);
+  align-items: end;
+  margin-bottom: var(--cedar-space-2);
+}
+.add-row label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cedar-space-1);
+  min-width: 0;
+}
+.add-row button {
+  min-height: 28px;
+}
+:host {
+  container-type: inline-size;
+}
+@container (max-width: 500px) {
+  .add-row {
+    grid-template-columns: minmax(0, 1fr) 80px;
+  }
+  .add-row label:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+  .add-row button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+.empty {
+  color: #64748b;
+}
+p[role='alert'] {
+  color: var(--cedar-control-error, var(--cedar-color-error));
+  margin: var(--cedar-space-1) 0 0;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 2px;
+  border: 0;
+  background: transparent;
+  color: black;
+}
+
+td {
+  padding: 2px var(--cedar-space-1);
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+.annotation-value {
+  white-space: pre-wrap;
+}

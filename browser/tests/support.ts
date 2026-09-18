@@ -1,0 +1,212 @@
+import elementFixture from '../../src/app/core/model/fixtures/corpus/template-028.json' with { type: 'json' };
+import { Locator, Page, expect } from '@playwright/test';
+
+/**
+ * Reaching into the designer, and waiting for it honestly.
+ *
+ * Every helper here works through the shadow root, because that is where the
+ * designer lives once it is embedded — a test that could find its controls in the
+ * light DOM would be testing something the encapsulation is supposed to prevent.
+ *
+ * Playwright pierces open shadow roots for CSS selectors, so the locators below
+ * read as if the boundary were not there. Where a test needs the boundary itself
+ * — what leaked, what did not — it asks the page directly.
+ */
+
+export const DESIGNER = 'cedar-embeddable-designer';
+
+/** Load a host page and wait until the element has registered and been configured. */
+export async function openDesigner(page: Page, query = ''): Promise<Locator> {
+  await page.goto(`/host.html${query}`);
+  await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true);
+  const designer = page.locator(DESIGNER);
+  // The first field card is the earliest sign the designer inside has rendered.
+  await expect(designer.locator('[id^=field-card-]').first()).toBeVisible();
+  // Existing workflow fixtures deliberately exercise Basic; the component defaults to Modular.
+  await designer.getByRole('button', { name: 'Modular', exact: true }).click();
+  await designer.getByRole('button', { name: /Basic/ }).click();
+  await expect(designer.getByRole('button', { name: 'Basic', exact: true })).toBeVisible();
+  return designer;
+}
+
+/** The CEDAR template the element currently holds, read as a host would read it. */
+export async function currentTemplate(page: Page): Promise<Record<string, unknown>> {
+  return page.evaluate(
+    (tag) => (document.querySelector(tag) as unknown as { currentTemplate: Record<string, unknown> }).currentTemplate,
+    DESIGNER,
+  );
+}
+
+/** Every `templateChange` the host has been sent, in order. */
+export async function publishedTemplates(page: Page): Promise<Array<Record<string, unknown>>> {
+  return page.evaluate(() => (window as unknown as { __events: Array<Record<string, unknown>> }).__events);
+}
+
+/** The keys of the template's children, in the order the template declares them. */
+export function fieldOrder(template: Record<string, unknown>): string[] {
+  return (template['_ui'] as { order: string[] }).order;
+}
+
+/** One child of the template, unwrapping the array a multi-valued field is written as. */
+export function child(template: Record<string, unknown>, key: string): Record<string, unknown> {
+  const properties = template['properties'] as Record<string, Record<string, unknown>>;
+  const property = properties[key];
+  return (property['items'] as Record<string, unknown>) ?? property;
+}
+
+/**
+ * Wait until the host has been sent a template that satisfies `predicate`.
+ *
+ * `templateChange` is published from a root effect, so it lands a tick after the
+ * edit rather than within the click. Waiting on the event the host actually
+ * receives is what makes these tests about the contract rather than about timing.
+ */
+export async function waitForPublished(
+  page: Page,
+  predicate: (template: Record<string, unknown>) => boolean,
+): Promise<void> {
+  await page.waitForFunction((source) => {
+    const test = new Function(`return (${source})`)() as (t: Record<string, unknown>) => boolean;
+    const events = (window as unknown as { __events: Array<Record<string, unknown>> }).__events;
+    return events.some(test);
+  }, predicate.toString());
+}
+
+/** The template's name box, which Angular fills as a property rather than an attribute. */
+export function templateName(page: Page): Locator {
+  return page.locator(DESIGNER).getByPlaceholder('Template name');
+}
+
+/** A field's name box, by position. */
+export function fieldName(page: Page, index = 0): Locator {
+  return page.locator(DESIGNER).getByPlaceholder('Enter field name').nth(index);
+}
+
+/** Open the preview panel, which renders the template with CEE. */
+export async function openPreview(page: Page): Promise<Locator> {
+  const designer = page.locator(DESIGNER);
+  await designer
+    .getByRole('button', { name: /Preview/ })
+    .first()
+    .click();
+  return designer.locator('app-cee-preview');
+}
+
+/**
+ * Click a control the designer's own sticky header or an adjacent card overlaps.
+ *
+ * Adding a field scrolls its card into view with `behavior: 'smooth'`, and
+ * Playwright re-scrolls before every click attempt, so the two disagree about
+ * where the control is until the animation ends — the actionability check reports
+ * the header or a neighbouring card as the topmost element and retries until the
+ * test times out. A person scrolls once and clicks.
+ *
+ * `dispatchEvent` rather than a synthesised mouse press, because what is under
+ * test here is what the handler does, not whether the page's own scrolling
+ * behaviour and the runner's agree. Where a test is about hit-testing — the
+ * click-outside handlers — it uses a real click on something that is plainly
+ * visible.
+ */
+export async function clickCentred(target: Locator): Promise<void> {
+  await target.waitFor({ state: 'visible' });
+  await target.dispatchEvent('click');
+}
+
+/** Open the user menu and apply a preset, which is how field types are made visible. */
+export async function applyPreset(page: Page, preset: 'basic' | 'semantic' | 'modular'): Promise<void> {
+  const designer = page.locator(DESIGNER);
+  await designer.locator('.user-menu-container button').first().click();
+  await designer.getByRole('button', { name: 'Preferences' }).click();
+  await designer.getByRole('button', { name: preset, exact: true }).click();
+  await designer.getByRole('button', { name: 'Done' }).click();
+}
+
+/** Reveal one field's settings without changing the document. */
+export async function openSettings(card: Locator, tab = 'Constraints'): Promise<Locator> {
+  const settings = card.locator('app-field-settings');
+  const toggle = settings.locator('.settings-toggle');
+  await expect(toggle).toBeVisible();
+  if ((await toggle.getAttribute('aria-expanded')) === 'false') await clickCentred(toggle);
+  if (
+    tab === 'Constraints' &&
+    (await settings.getByRole('tab', { name: 'Content', exact: true, includeHidden: true }).count())
+  )
+    tab = 'Content';
+  await clickCentred(settings.getByRole('tab', { name: tab, exact: true }));
+  return settings.getByRole('tabpanel', { name: tab, exact: true });
+}
+
+/** Build a nested test fixture through the public artifact input. */
+export async function nestFixtureFields(page: Page, path: string[], count = 1): Promise<void> {
+  await page.evaluate(
+    ({ path, count }) => {
+      const designer = document.querySelector('cedar-embeddable-designer') as HTMLElement & {
+        currentTemplate: any;
+        artifact: object;
+      };
+      const artifact = structuredClone(designer.currentTemplate);
+      let target = artifact;
+      for (const key of path) {
+        const property = target.properties[key];
+        target = property.items ?? property;
+      }
+      for (const key of artifact._ui.order.slice(0, count)) {
+        target.properties[key] = artifact.properties[key];
+        delete artifact.properties[key];
+        artifact._ui.order = artifact._ui.order.filter((name: string) => name !== key);
+        target._ui.order.push(key);
+        for (const map of ['propertyLabels', 'propertyDescriptions']) {
+          if (artifact._ui[map]?.[key] !== undefined) {
+            (target._ui[map] ??= {})[key] = artifact._ui[map][key];
+            delete artifact._ui[map][key];
+          }
+        }
+        if (artifact['@context'][key] !== undefined) {
+          target['@context'][key] = artifact['@context'][key];
+          delete artifact['@context'][key];
+        }
+        if (artifact.required?.includes(key)) {
+          artifact.required = artifact.required.filter((name: string) => name !== key);
+          (target.required ??= []).push(key);
+        }
+      }
+      designer.artifact = artifact;
+    },
+    { path, count },
+  );
+}
+
+/** Supply an empty reusable element through the host contract for editing fixtures. */
+export async function addElementFixture(page: Page, scope = page.locator(DESIGNER)): Promise<void> {
+  await page.evaluate((source) => {
+    const element = structuredClone(source) as any;
+    for (const key of element._ui.order) delete element.properties[key];
+    element._ui = { order: [], propertyLabels: {}, propertyDescriptions: {} };
+    element.required = ['@context', '@id'];
+    element.properties['@context'] = { type: 'object', properties: {}, additionalProperties: false };
+    element['schema:name'] = 'Element';
+    element['schema:description'] = '';
+    element['@id'] = `https://repo.metadatacenter.org/template-elements/${crypto.randomUUID()}`;
+    element['bibo:status'] = 'bibo:draft';
+    element['pav:version'] = '0.0.1';
+    delete element['pav:derivedFrom'];
+    const host = document.querySelector('cedar-embeddable-designer') as any;
+    host.childSource = {
+      async search() {
+        return { results: [{ id: element['@id'], name: 'Element', type: 'element' }] };
+      },
+      async load() {
+        return element;
+      },
+    };
+  }, elementFixture.properties['Read & Understood Catalog']);
+  await scope
+    .getByRole('button', { name: /Add Child/ })
+    .first()
+    .click();
+  await page.getByRole('button', { name: 'Select existing fields and elements' }).click();
+  await page.getByRole('button', { name: 'Search', exact: true }).click();
+  await page.getByRole('row', { name: 'Select Element', exact: true }).click();
+  await page.getByRole('button', { name: 'Done', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+}

@@ -1,0 +1,40 @@
+<fieldset [disabled]="disabled()">
+  <legend>{{ heading() }}</legend>
+  <div class="add-row">
+    <input [attr.aria-label]="'New alternate ' + noun()" [ngModel]="question()" (ngModelChange)="edit($event)" />
+    <button type="button" (click)="add()">Add {{ noun() }}</button>
+  </div>
+  @if (error(); as message) {
+    <p role="alert">{{ message }}</p>
+  }
+  <table [attr.aria-label]="heading()">
+    <thead>
+      <tr>
+        <th scope="col">{{ container() ? 'Name' : 'Question' }}</th>
+        <th scope="col" class="actions"><span class="sr-only">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (question of questions(); track $index; let i = $index) {
+        <tr>
+          <td>{{ question }}</td>
+          <td>
+            <button
+              type="button"
+              class="remove"
+              [attr.aria-label]="'Remove ' + noun() + ' ' + (i + 1)"
+              [title]="'Remove ' + noun()"
+              (click)="remove(i)"
+            >
+              <app-icon key="trash" className="w-4 h-4" />
+            </button>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="2" class="empty">No alternate {{ noun() }}s.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</fieldset>

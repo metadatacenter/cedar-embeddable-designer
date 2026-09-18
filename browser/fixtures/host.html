@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Designer host</title>
+    <style>
+      /*
+        Deliberately hostile, and every rule here is one a real host page might
+        carry. None of it should cross into the designer's shadow root. If the
+        editor starts rendering in Comic Sans on pink, the encapsulation is gone.
+      */
+      * {
+        box-sizing: content-box;
+      }
+      body {
+        margin: 0;
+        font-family: Georgia, serif;
+        background: #fdf2f8;
+        color: #831843;
+      }
+      button {
+        font-size: 29px;
+        background: #db2777;
+        color: #fff;
+        border-radius: 0;
+      }
+      input {
+        font-size: 31px;
+        border: 4px dashed #db2777;
+      }
+      svg {
+        opacity: 0.25;
+      }
+      cedar-embeddable-designer {
+        display: block;
+        height: 92vh;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 id="host-heading">Host page</h1>
+    <cedar-embeddable-designer id="designer"></cedar-embeddable-designer>
+
+    <script>
+      /*
+        Recorded before the bundle loads, so a test can assert on events the
+        element publishes during its own first render.
+      */
+      window.__events = [];
+      const designer = document.getElementById('designer');
+      designer.addEventListener('templateChange', (event) => window.__events.push(event.detail));
+
+      const params = new URLSearchParams(location.search);
+      if (params.get('picker') === 'stub') {
+        /*
+          A stand-in for <cedar-embeddable-term-picker>, so this suite tests the designer's
+          half of that contract without depending on another component's build.
+          It emits the one event shape the designer reads.
+        */
+        class StubPicker extends HTMLElement {
+          connectedCallback() {
+            this.innerHTML = '<button type="button" id="stub-pick">pick a term</button>';
+            this.querySelector('#stub-pick').addEventListener('click', () => {
+              this.dispatchEvent(
+                new CustomEvent(this.selectionMode === 'constraints' ? 'constraintsSelected' : 'selected', {
+                  bubbles: true,
+                  composed: true,
+                  detail:
+                    this.selectionMode === 'constraints'
+                      ? {
+                          constraints: [
+                            ...(this.constraintSet?.constraints || []),
+                            {
+                              sourceType: 'ontology-term',
+                              sourceId: 'http://purl.obolibrary.org/obo/DOID_162',
+                              sourceName: 'cancer',
+                              ontologyId: 'DOID',
+                              version: {
+                                id: 'sha256:8f0c1e',
+                                effectiveDate: '2026-06-30',
+                                declaredVersion: 'DOID 2026-06-30',
+                              },
+                            },
+                          ],
+                          actions: this.constraintSet?.actions || [],
+                        }
+                      : {
+                          type: 'class',
+                          termIri: 'http://purl.obolibrary.org/obo/DOID_162',
+                          termLabel: 'cancer',
+                          sourceAcronym: 'DOID',
+                          sourceName: 'Human Disease Ontology',
+                          // The snapshot an author pinned, which is the reason the
+                          // picker exists and the thing the designer used to drop.
+                          version: {
+                            id: 'sha256:8f0c1e',
+                            effectiveDate: '2026-06-30',
+                            declaredVersion: 'DOID 2026-06-30',
+                          },
+                        },
+                }),
+              );
+            });
+          }
+        }
+        customElements.define('cedar-embeddable-term-picker', StubPicker);
+      }
+
+      if (params.get('cee') === 'stub') {
+        /*
+          A stand-in for <cedar-embeddable-editor>. CEE is a sibling component the
+          host loads, and a two-megabyte form renderer: this suite tests the
+          designer's half of that contract without building another repository.
+
+          It records every assignment, so a test can see that the preview hands
+          over a read-only configuration and the template the designer holds --
+          and that it replaces the element rather than reassigning a template CEE
+          would refuse.
+        */
+        window.__ceeMounts = [];
+        window.__ceeElements = 0;
+        window.__ceeConfigs = 0;
+        class StubEditor extends HTMLElement {
+          constructor() {
+            super();
+            window.__ceeElements += 1;
+          }
+          set config(value) {
+            this._config = value;
+            window.__ceeConfigs += 1;
+            this._recordWhenComplete();
+          }
+          get config() {
+            return this._config;
+          }
+          /*
+            Assignable more than once, as CEE's is while no instance has been
+            supplied. A stub that refused the second would pass a designer that
+            never sent one.
+          */
+          set templateObject(value) {
+            this._template = value;
+            this._recordWhenComplete();
+          }
+          get templateObject() {
+            return this._template;
+          }
+          _recordWhenComplete() {
+            if (!this._config || !this._template) {
+              return;
+            }
+            window.__ceeMounts.push({ config: this._config, template: this._template });
+            this.textContent = 'stub editor: ' + (this._template['schema:name'] || '');
+          }
+        }
+        customElements.define('cedar-embeddable-editor', StubEditor);
+      }
+    </script>
+
+    <script src="cedar-embeddable-designer.js"></script>
+
+    <script>
+      customElements.whenDefined('cedar-embeddable-designer').then(() => {
+        const params = new URLSearchParams(location.search);
+        if (params.get('terminology') !== 'none') {
+          document.getElementById('designer').config = {
+            terminologyBaseUrl: 'http://localhost:4598/fake-terminology/',
+            bridgeBaseUrl: 'http://localhost:4598/fake-bridge/',
+          };
+        }
+        window.__ready = true;
+      });
+    </script>
+  </body>
+</html>

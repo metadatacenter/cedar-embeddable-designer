@@ -1,91 +1,126 @@
-import { Component, inject, signal, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { ChildPickerComponent } from './features/child-picker/child-picker.component';
+import {
+  Component,
+  ElementRef,
+  HostListener,
+  ChangeDetectionStrategy,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService, FIELD_TYPES } from './core/services/template.service';
-import { ElectronService } from './core/services/electron.service';
-import { toCedarJson, toCedarYaml } from './core/cedar-shim';
 import { Field } from './core/models/types';
+import { CED_VERSION } from './version';
 
 // Custom components
 import { IconComponent } from './shared/components/icon/icon.component';
 import { FieldLibrarySidebarComponent } from './features/field-library-sidebar/field-library-sidebar.component';
 import { PreferencesModalComponent } from './features/modals/preferences/preferences.component';
 import { PresetDefinitionsModalComponent } from './features/modals/preset-definitions/preset-definitions.component';
-import { ApiKeyModalComponent } from './features/modals/api-key/api-key.component';
-import { PreviewPanelComponent } from './features/preview-panel/preview-panel.component';
-import { FieldTypePickerComponent } from './features/field-type-picker/field-type-picker.component';
+import { CeePreviewComponent } from './features/cee-preview/cee-preview.component';
 import { FieldDesignerComponent } from './features/field-designer/field-designer.component';
-import { FieldCardComponent } from './features/field-card/field-card.component';
-import { CedarExportAccordionsComponent } from './features/cedar-export-accordions/cedar-export-accordions.component';
+import { ContainerEditorComponent } from './features/container-editor/container-editor.component';
+import { ContainerOutlineComponent } from './features/container-outline/container-outline.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
-    DragDropModule,
+    ChildPickerComponent,
     IconComponent,
     FieldLibrarySidebarComponent,
     PreferencesModalComponent,
     PresetDefinitionsModalComponent,
-    ApiKeyModalComponent,
-    PreviewPanelComponent,
-    FieldTypePickerComponent,
+    CeePreviewComponent,
     FieldDesignerComponent,
-    FieldCardComponent,
-    CedarExportAccordionsComponent
+    ContainerEditorComponent,
+    ContainerOutlineComponent,
   ],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./app.component.scss'],
 })
-export class AppComponent implements OnInit, OnDestroy {
+export class AppComponent {
+  /** Shown in the header, from package.json rather than a literal beside it. */
+  readonly version = CED_VERSION;
   readonly service = inject(TemplateService);
-  readonly electronService = inject(ElectronService);
-
-  private menuUnsubscribe: (() => void) | null = null;
+  private readonly host = inject(ElementRef<HTMLElement>);
 
   // Layout & UI states
   readonly showFieldsOverview = signal(true);
-  readonly showFileMenu = signal(false);
+  readonly showProfileMenu = signal(false);
 
-  ngOnInit() {
-    this.menuUnsubscribe = this.electronService.onMenuAction((action) => {
-      if (action === 'new') this.newTemplate();
-      else if (action === 'open') this.openTemplateFile();
-      else if (action === 'save') this.saveTemplate();
-      else if (action === 'save-as') this.saveTemplateAs();
+  /**
+   * The profiles, and what each one is for.
+   *
+   * Named here rather than in the picker's markup so the three names, their
+   * order and their one-line descriptions are one list. The service decides what
+   * each profile *does*; this decides how it is described.
+   */
+  readonly profiles = [
+    { key: 'basic' as const, label: 'Basic', summary: 'Plain fields, no vocabularies' },
+    { key: 'semantic' as const, label: 'Semantic', summary: 'Adds controlled terms and help text' },
+    { key: 'modular' as const, label: 'Modular', summary: 'Adds template elements' },
+  ];
+
+  /**
+   * The profile on screen, or nothing once its settings have been edited by hand.
+   *
+   * A label rather than a key, and `Custom` where no profile matches — which is a
+   * real state an author reaches by changing one switch, and one they could not
+   * see at all while the only way to a profile was two clicks inside a modal.
+   */
+  readonly activeProfileLabel = computed(() => {
+    const active = this.service.getActivePreset();
+    return this.profiles.find((profile) => profile.key === active)?.label ?? 'Custom';
+  });
+
+  constructor() {
+    // A newly added field asks to be scrolled to; the component owns the DOM, so
+    // it is the component that finds the card. `afterNextRender` is not enough on
+    // its own here — the request outlives the render that satisfies it — so the
+    // request is cleared once served.
+    effect(() => {
+      const fieldId = this.service.scrollRequest();
+      if (fieldId === null) {
+        return;
+      }
+      this.service.scrollRequest.set(null);
+      requestAnimationFrame(() => this.scrollToCard(fieldId));
     });
   }
 
-  ngOnDestroy() {
-    if (this.menuUnsubscribe) {
-      this.menuUnsubscribe();
-    }
-  }
-
-  // Keyboard Shortcuts (Cmd/Ctrl+S, Cmd/Ctrl+Shift+S, Cmd/Ctrl+O, Cmd/Ctrl+N)
-  @HostListener('window:keydown', ['$event'])
-  handleKeyboardShortcuts(event: KeyboardEvent) {
-    const isCmdOrCtrl = event.metaKey || event.ctrlKey;
-    if (isCmdOrCtrl && event.key.toLowerCase() === 's') {
-      event.preventDefault();
-      if (event.shiftKey) {
-        this.saveTemplateAs();
-      } else {
-        this.saveTemplate();
+  /**
+   * The card for a field, looked up in this component's own root.
+   *
+   * `getRootNode()` rather than `document`, because the designer renders inside the
+   * element's shadow root when it is embedded, and a document-wide lookup finds
+   * nothing there.
+   */
+  private scrollToCard(fieldId: number): void {
+    const root = this.host.nativeElement.getRootNode() as Document | ShadowRoot;
+    const card = root.querySelector(`#field-card-${fieldId}`);
+    const elementHeader = card?.querySelector(
+      ':scope > .field-drag-container > app-container-editor > .template-header-card',
+    );
+    if (elementHeader) {
+      const scroller = elementHeader.closest<HTMLElement>('.designer-scroll');
+      if (scroller) {
+        scroller.scrollTo({
+          top:
+            scroller.scrollTop + elementHeader.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 16,
+          behavior: 'smooth',
+        });
       }
-    } else if (isCmdOrCtrl && event.key.toLowerCase() === 'o') {
-      event.preventDefault();
-      this.openTemplateFile();
-    } else if (isCmdOrCtrl && event.key.toLowerCase() === 'n') {
-      event.preventDefault();
-      this.newTemplate();
+    } else {
+      card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
 
-  getEditorClasses(): Record<string, boolean> {
+  getDesignerClasses(): Record<string, boolean> {
     const preview = this.service.showPreview();
     const selectionStyle = this.service.preferences().fieldSelectionStyle;
     const collapsed = this.service.sidebarCollapsed();
@@ -93,32 +128,23 @@ export class AppComponent implements OnInit, OnDestroy {
       'transition-all': true,
       'duration-300': true,
       'overflow-y-auto': true,
-      'relative': true,
-      'flex-1': true,
+      relative: true,
+      'flex-1': !preview,
       'w-full': !preview,
-      'w-2/3': preview,
+      'designer-scroll--split': preview,
       'pl-72': selectionStyle === 'sidebar' && !collapsed,
-      'pl-12': selectionStyle === 'sidebar' && collapsed
+      'pl-12': selectionStyle === 'sidebar' && collapsed,
     };
   }
 
   getGridTemplateColumns(): string {
-    const fieldsCount = this.service.fields().length;
+    const fieldsCount = this.service.session.document().children.length;
     const overview = this.showFieldsOverview();
     const preview = this.service.showPreview();
     if (fieldsCount > 0 && overview) {
-      return preview ? '180px 1fr' : '256px 1fr';
+      return preview ? '224px 1fr' : '256px 1fr';
     }
     return '1fr';
-  }
-
-  getOverviewButtonLeft(): string {
-    const selectionStyle = this.service.preferences().fieldSelectionStyle;
-    const collapsed = this.service.sidebarCollapsed();
-    if (selectionStyle === 'sidebar') {
-      return collapsed ? '4.5rem' : '19.5rem';
-    }
-    return '1.5rem';
   }
 
   get FIELD_TYPES_LIST() {
@@ -126,34 +152,16 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   getFieldIcon(field: Field): string {
-    if (field.customFieldId) {
-      const customField = this.service.customFields().find(cf => cf.id === field.customFieldId);
-      if (customField) {
-        return customField.baseType;
-      }
-    }
     return field.type;
   }
 
   getFieldTypeName(field: Field): string {
-    if (field.customFieldId) {
-      const customField = this.service.customFields().find(cf => cf.id === field.customFieldId);
-      if (customField) return customField.name;
-    }
     return FIELD_TYPES[field.type]?.label || field.type;
-  }
-
-  onFieldDrop(event: CdkDragDrop<Field[]>) {
-    this.service.moveField(event.previousIndex, event.currentIndex);
-    this.electronService.isDirty.set(true);
   }
 
   scrollToField(fieldId: number) {
     this.service.selectedField.set(fieldId);
-    const el = document.getElementById(`field-card-${fieldId}`);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    this.scrollToCard(fieldId);
 
     setTimeout(() => {
       if (this.service.selectedField() === fieldId) {
@@ -164,160 +172,22 @@ export class AppComponent implements OnInit, OnDestroy {
 
   @HostListener('document:mousedown', ['$event'])
   handleClickOutside(event: MouseEvent) {
-    const target = event.target as HTMLElement;
+    /*
+     * `composedPath()` rather than `event.target`. A mousedown inside the shadow
+     * root is retargeted at the host element by the time it reaches the document,
+     * so every `closest()` below would miss and each of these menus would close on
+     * its own opening click. The composed path is the route the event actually
+     * took, shadow tree included.
+     */
+    const path = event.composedPath();
+    const within = (selector: string) => path.some((node) => node instanceof Element && node.matches(selector));
 
-    if (this.service.fieldTypeDropdown() !== null && !target.closest('.field-type-dropdown-container')) {
-      this.service.fieldTypeDropdown.set(null);
-    }
-
-    if (this.service.showUserMenu() && !target.closest('.user-menu-container')) {
+    if (this.service.showUserMenu() && !within('.user-menu-container')) {
       this.service.showUserMenu.set(false);
     }
 
-    if (this.showFileMenu() && !target.closest('.file-menu-container')) {
-      this.showFileMenu.set(false);
-    }
-  }
-
-  // File Operations
-  newTemplate() {
-    if (this.electronService.isDirty()) {
-      const confirmDiscard = confirm('You have unsaved changes. Create new template without saving?');
-      if (!confirmDiscard) return;
-    }
-    this.service.resetTemplate();
-    this.electronService.currentFilePath.set(null);
-    this.electronService.isDirty.set(false);
-  }
-
-  async openTemplateFile() {
-    if (this.electronService.isDirty()) {
-      const confirmDiscard = confirm('You have unsaved changes. Open another template file without saving?');
-      if (!confirmDiscard) return;
-    }
-
-    if (this.electronService.isElectron) {
-      const result = await this.electronService.showOpenDialog([
-        { name: 'CEDAR Template Files (*.json, *.yaml)', extensions: ['json', 'yaml', 'yml'] },
-        { name: 'JSON Files (*.json)', extensions: ['json'] },
-        { name: 'YAML Files (*.yaml)', extensions: ['yaml', 'yml'] }
-      ]);
-
-      if (result && !result.canceled && result.filePaths && result.filePaths.length > 0) {
-        const filePath = result.filePaths[0];
-        const res = await this.electronService.readFile(filePath);
-        if (res.success && res.content) {
-          try {
-            this.service.loadTemplate(res.content);
-            this.electronService.currentFilePath.set(filePath);
-            this.electronService.isDirty.set(false);
-          } catch (err) {
-            alert('Failed to parse selected template file.');
-          }
-        } else {
-          alert('Could not read selected file: ' + (res.error || 'Unknown error'));
-        }
-      }
-    } else {
-      // Browser fallback file prompt
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json,.yaml,.yml';
-      input.onchange = (e: any) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (evt) => {
-            if (evt.target?.result) {
-              this.service.loadTemplate(evt.target.result as string);
-              this.electronService.isDirty.set(false);
-            }
-          };
-          reader.readAsText(file);
-        }
-      };
-      input.click();
-    }
-  }
-
-  async saveTemplate() {
-    const currentPath = this.electronService.currentFilePath();
-    if (!currentPath) {
-      await this.saveTemplateAs();
-      return;
-    }
-    await this.writeToFile(currentPath);
-  }
-
-  async saveTemplateAs() {
-    if (this.electronService.isElectron) {
-      try {
-        const suggestedName = (this.service.templateName() || 'template')
-          .toLowerCase()
-          .replace(/[^a-z0-9_-]/g, '_') + '.json';
-
-        const result = await this.electronService.showSaveDialog(suggestedName, [
-          { name: 'CEDAR JSON Model (*.json)', extensions: ['json'] },
-          { name: 'CEDAR YAML Model (*.yaml)', extensions: ['yaml', 'yml'] }
-        ]);
-
-        if (result && !result.canceled && result.filePath) {
-          await this.writeToFile(result.filePath);
-        }
-      } catch (err: any) {
-        console.error('Error in saveTemplateAs:', err);
-        alert('Failed to save file: ' + (err?.message || err));
-      }
-    } else {
-      // Web fallback download
-      try {
-        const cedarJson = toCedarJson(
-          this.service.templateName(),
-          this.service.templateDesc(),
-          this.service.fields(),
-          this.service.templateIdentifier(),
-          this.service.templateVersion()
-        );
-        const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(cedarJson, null, 2));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute('href', dataStr);
-        downloadAnchor.setAttribute('download', `${this.service.templateName() || 'template'}.json`);
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-        this.electronService.isDirty.set(false);
-      } catch (err: any) {
-        console.error('Error generating web template download:', err);
-        alert('Failed to generate template download: ' + (err?.message || err));
-      }
-    }
-  }
-
-  private async writeToFile(filePath: string) {
-    try {
-      const isYaml = filePath.endsWith('.yaml') || filePath.endsWith('.yml');
-      const cedarJson = toCedarJson(
-        this.service.templateName(),
-        this.service.templateDesc(),
-        this.service.fields(),
-        this.service.templateIdentifier(),
-        this.service.templateVersion()
-      );
-
-      const fileContent = isYaml
-        ? toCedarYaml(cedarJson)
-        : JSON.stringify(cedarJson, null, 2);
-
-      const res = await this.electronService.writeFile(filePath, fileContent);
-      if (res.success) {
-        this.electronService.currentFilePath.set(filePath);
-        this.electronService.isDirty.set(false);
-      } else {
-        alert('Failed to save file: ' + (res.error || 'Unknown error'));
-      }
-    } catch (err: any) {
-      console.error('Error writing file:', err);
-      alert('Failed to write file: ' + (err?.message || err));
+    if (this.showProfileMenu() && !within('.profile-menu-container')) {
+      this.showProfileMenu.set(false);
     }
   }
 }

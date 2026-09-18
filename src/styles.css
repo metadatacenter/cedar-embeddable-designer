@@ -1,0 +1,385 @@
+@import 'tailwindcss';
+/*
+  CEDAR's design values, from the package that holds them for every component that
+  draws CEDAR. The file is the Sass partial compiled to custom properties, because
+  Tailwind's `@theme` reads properties and not Sass variables. It declares them on
+  `:root` and `:host` both, which is what this file needs: the designer renders
+  inside a shadow root when it is embedded, and `:root` matches the document
+  element, outside it.
+*/
+@import '@org.metadatacenter/cedar-design-tokens/custom-properties.css';
+@source "./app/**/*.{html,ts}";
+
+@theme inline {
+  --spacing: var(--cedar-space-1);
+  /*
+    The font and the type scale, so `text-sm` and friends emit CEDAR's px values
+    rather than Tailwind's rem defaults. `CEE Roboto` is the namespaced family the
+    embedded faces declare; the fallbacks are CEE's.
+  */
+  --font-sans: var(--cedar-font-family);
+  --text-xs: var(--text-xs);
+  --text-sm: var(--text-sm);
+  --text-base: var(--text-base);
+  --text-lg: var(--text-lg);
+  --text-xl: var(--text-xl);
+  --text-2xl: var(--text-2xl);
+
+  /*
+    The teal in this application is CEDAR's, not Tailwind's.
+
+    Roughly thirty markup sites reach for `text-teal-600`, `bg-teal-50` and their
+    neighbours, and Tailwind's teal is a different hue from the brand's. Rather
+    than rewrite each to an arbitrary-value class, the scale itself is redefined:
+    a `teal-*` utility anywhere in this application emits CEDAR's palette, and one
+    written tomorrow is on brand without anyone remembering to check.
+  */
+  --color-teal-50: var(--cedar-primary-50);
+  --color-teal-100: var(--cedar-primary-100);
+  --color-teal-200: var(--cedar-primary-200);
+  --color-teal-300: var(--cedar-primary-300);
+  --color-teal-400: var(--cedar-primary-400);
+  --color-teal-500: var(--cedar-primary-500);
+  --color-teal-600: var(--cedar-primary-600);
+  --color-teal-700: var(--cedar-primary-700);
+  --color-teal-800: var(--cedar-primary-800);
+  --color-teal-900: var(--cedar-primary-900);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/*
+  What this application is built from, on top of the shared values imported above.
+
+  The palettes, the type scale and the neutrals are no longer stated here. They
+  were copied from the term picker, which had copied them from the editor, and
+  three copies of one palette drifted exactly as three copies do: this file still
+  said #856404 for the advisory colour a month after the editor chose #b45309.
+  What remains below is this application's own — the semantic names its utility
+  layer is built from, and the radius and weights that go with them.
+
+  What was here before all of that was shadcn's default theme, shipped by the
+  Figma Make export: a near-black `--primary`, a lavender-grey scale, and five
+  chart colours for charts this application does not draw.
+
+  `:host` as well as `:root`, because the designer renders inside a shadow root
+  when it is embedded and `:root` matches the document element, which is outside
+  it. Without the first selector every token below resolves to nothing and the
+  component renders unstyled.
+*/
+:host,
+:root {
+  /*
+    The type scale, in px, and px is the point of it.
+
+    The designer is a web component in someone else's page, and `rem` resolves
+    against that page's root element — which the designer neither sets nor can
+    see. A host with `html { font-size: 62.5% }`, a common reset idiom, would
+    render every rem-sized thing here at 62.5% of the size it was drawn at. Type
+    stated in rem is not the designer's type; it is a ratio applied to a number
+    the embedder chose, possibly by accident.
+
+    Tailwind's own scale is in rem, so these override it through the `@theme`
+    block below rather than sitting beside it.
+
+    Five steps, and they are CEE's: 12px small, 14px body, 15px lead, 18px for a
+    nested element's heading and 20px above it. The designer once ran a step
+    below them — 11px controls under 10px labels — and the seam showed wherever
+    the two met, most plainly around an embedded `<cedar-embeddable-term-picker>`
+    whose own text is CEE's 14px. `--text-xs` and `--text-sm` therefore name one
+    size: the step below the body is 12px, and there is nothing under it. A size
+    that is not prose is not on this scale — the count badge in its pill and the
+    Material icons are glyphs, and they keep their own.
+  */
+  --text-xs: var(--cedar-font-size-small);
+  --text-sm: var(--cedar-font-size-small);
+  --text-base: var(--cedar-font-size);
+  --text-lg: var(--cedar-font-size-lead);
+  --text-xl: var(--cedar-font-size-element-heading);
+  --text-2xl: var(--cedar-font-size-heading);
+
+  --font-size: var(--cedar-font-size);
+  --font-weight-normal: var(--cedar-font-weight-regular, 400);
+  --font-weight-medium: var(--cedar-font-weight-medium, 500);
+
+  /*
+    Declared here as well as in the `@theme` block, because `@theme inline`
+    inlines its values into the utilities it generates rather than emitting the
+    custom property — so `var(--font-sans)`, which the component stylesheets use
+    directly, would fall through to Tailwind's default stack and render the
+    designer in the system font.
+
+    `CEE Roboto` is the namespaced family the embedded faces declare; the
+    fallbacks are CEE's.
+  */
+  --font-sans: var(--cedar-font-family);
+
+  /*
+    Four names this application already used, each now resolving to the shared
+    property that carries the value. Kept as aliases rather than rewritten at
+    every site, because a hue is referred to by the name the utility layer was
+    built from; the value itself is stated once, in the package.
+
+    The advisory colour is the one that makes the point. It read #856404 here,
+    which is what the editor's token file said when these were copied from it.
+    The editor moved to #b45309 and this copy did not, so the designer marked an
+    advisory in a colour no other CEDAR surface drew.
+  */
+  --cedar-accent-a200: var(--cedar-accent-A200);
+  --cedar-heading: var(--cedar-color-component-title);
+  --cedar-warn: var(--cedar-color-warn);
+  --cedar-warning: var(--cedar-color-warning);
+
+  /* The names the utility layer below is built from, resolved to the values above. */
+  --background: #ffffff;
+  --foreground: var(--cedar-text-primary);
+  --card: #ffffff;
+  --card-foreground: var(--cedar-text-primary);
+  --popover: #ffffff;
+  --popover-foreground: var(--cedar-text-primary);
+  --primary: var(--cedar-primary-500);
+  --primary-foreground: #ffffff;
+  --secondary: var(--cedar-surface-tinted);
+  --secondary-foreground: var(--cedar-heading);
+  --muted: var(--cedar-surface-panel);
+  --muted-foreground: var(--cedar-text-muted);
+  --accent: var(--cedar-surface-tinted);
+  --accent-foreground: var(--cedar-heading);
+  --destructive: var(--cedar-warn);
+  --destructive-foreground: #ffffff;
+  --border: var(--cedar-border-rule);
+  --input: transparent;
+  --input-background: var(--cedar-surface-panel);
+  --switch-background: #cbced4;
+  --ring: var(--cedar-primary-300);
+  --radius: 4px;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    height: 100%;
+    margin: 0;
+  }
+
+  html {
+    height: 100%;
+  }
+
+  h1 {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h2 {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h3 {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h4 {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  label {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  button {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  input {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
+    line-height: 1.5;
+  }
+
+  input[type='checkbox'],
+  input[type='radio'] {
+    accent-color: var(--cedar-color-primary);
+  }
+
+  /* Custom checkbox styling for white background */
+  input[type='checkbox'].checkbox-white {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #ffffff;
+    border: 1.5px solid #d1d5db;
+    border-radius: 3px;
+    cursor: pointer;
+    position: relative;
+  }
+
+  input[type='checkbox'].checkbox-white:checked {
+    background-color: var(--cedar-color-primary);
+    border-color: var(--cedar-color-primary);
+  }
+
+  input[type='checkbox'].checkbox-white:checked::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: translate(-50%, -60%) rotate(45deg);
+  }
+
+  input[type='checkbox'].checkbox-white:hover {
+    border-color: var(--cedar-color-primary);
+  }
+
+  /* Radio button white styling */
+  input[type='radio'].radio-white {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #ffffff;
+    border: 1.5px solid #d1d5db;
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+  }
+
+  input[type='radio'].radio-white:checked {
+    background-color: #ffffff;
+    border-color: var(--cedar-color-primary);
+    border-width: 2px;
+  }
+
+  input[type='radio'].radio-white:checked::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--cedar-color-primary);
+    transform: translate(-50%, -50%);
+  }
+
+  input[type='radio'].radio-white:hover {
+    border-color: var(--cedar-color-primary);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+@keyframes backdrop-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-backdrop-fade-in {
+  animation: backdrop-fade-in 0.15s ease-out;
+}
+
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -55%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.animate-modal-fade-in {
+  animation: modal-fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #fafafa;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db;
+}

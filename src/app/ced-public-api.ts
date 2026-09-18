@@ -1,0 +1,217 @@
+/**
+ * The contract an embedding page programs against.
+ *
+ * Everything here is deliberately self-contained: no imports, and no reference to
+ * a type declared elsewhere in the designer. That is not tidiness — it is what
+ * lets `tsc --emitDeclarationOnly` turn this one file into the `.d.ts` the npm
+ * package ships, without dragging in paths that exist only in this repository.
+ *
+ * Types only, with no runtime values, and that is a constraint rather than a
+ * style. The shipped bundle is a script that registers a custom element and
+ * exports nothing at all, so a `const` declared here would satisfy a host's
+ * compiler and then be `undefined` at runtime.
+ */
+
+/** A configuration key, as a type. */
+export type CedConfigKey = keyof CedConfig;
+
+/**
+ * The configuration the designer accepts.
+ *
+ * Every key is optional, and an omitted key takes its default.
+ */
+export interface CedConfig {
+  /**
+   * Base for controlled-term search. A missing trailing slash is normalized.
+   *
+   * Identifies the CEDAR terminology server, and nothing below it: the search
+   * path hangs off this and is the designer's own. Unset, the controlled-term
+   * panel offers no terms, and the designer says so once.
+   *
+   * There is no default. A hardcoded production endpoint is one an embedder
+   * reaches without asking and without knowing.
+   */
+  terminologyBaseUrl?: string;
+  /** Base URL for external-authority default lookups through CEF. A missing trailing slash is normalized. */
+  bridgeBaseUrl?: string;
+}
+
+/** A JSON-serialisable value, as it appears in a CEDAR artifact. */
+export type CedJsonValue = string | number | boolean | null | CedJsonObject | CedJsonValue[];
+
+export interface CedJsonObject {
+  [key: string]: CedJsonValue;
+}
+
+/**
+ * What the change events carry: the complete template or element as CEDAR JSON-LD.
+ *
+ * The same document the CEDAR artifact server accepts, written by the CEDAR
+ * model library rather than by the designer.
+ */
+export type CedTemplate = CedJsonObject;
+
+/**
+ * The element, as a host sees it.
+ *
+ * `artifact` (and its legacy alias `template`) takes CEDAR JSON-LD or CEDAR YAML — an object, or a string in
+ * either serialization. A source that cannot be read is reported to the console
+ * rather than thrown, because assigning a property should not fail inside the
+ * host's own code.
+ */
+export interface CedarEmbeddableDesignerElement extends HTMLElement {
+  config: CedConfig | null;
+  /** Host-owned repository search and artifact retrieval. Replaceable between documents. */
+  childSource: CedChildSource | null;
+  /** A template or element document. The legacy property name remains supported. */
+  template: CedJsonObject | string | null;
+  artifact: CedJsonObject | string | null;
+  /** Load a document synchronously; throws if it cannot be read. */
+  loadArtifact(source: CedJsonObject | string): void;
+  /** Start an empty template or element, without the demo's starter fields. */
+  newArtifact(kind: 'template' | 'element'): void;
+  /** Includes invalid, uncommitted setting edits. Reset by loading a saved document. */
+  readonly isDirty: boolean;
+  addEventListener(
+    type: 'dirtyChange',
+    listener: (event: CustomEvent<boolean>) => void,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  readonly validationReport: CedValidationReport;
+  readonly canSave: boolean;
+  validate(): CedValidationReport;
+  addEventListener(
+    type: 'validationChange',
+    listener: (event: CustomEvent<CedValidationReport>) => void,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  readonly currentArtifact: CedJsonObject;
+  readonly currentTemplate: CedTemplate;
+  addEventListener(
+    type: 'templateChange' | 'artifactChange',
+    listener: (event: CustomEvent<CedTemplate>) => void,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'cedar-embeddable-designer': CedarEmbeddableDesignerElement;
+  }
+}
+
+/** Settings validation includes unsaved edits; IDs are stable within this document session. */
+export interface CedValidationIssue {
+  nodeId: number;
+  path: number[];
+  label: string;
+  setting: string;
+  tab: string;
+  code: string;
+  message: string;
+  severity: 'error';
+  source: 'model' | 'draft';
+}
+export interface CedValidationReport {
+  valid: boolean;
+  canSave: boolean;
+  issues: CedValidationIssue[];
+}
+
+/** A permission-filtered first-class artifact returned by the embedding host. */
+export interface CedChildResult {
+  id: string;
+  name: string;
+  type: 'field' | 'element';
+  createdOn?: string | null;
+  modifiedOn?: string | null;
+  version?: string | null;
+  status?: string | null;
+}
+export interface CedChildSource {
+  /** Return one page. Omit nextCursor on the final page; honor the abort signal. */
+  search(
+    query: string,
+    options: { signal: AbortSignal; cursor?: string },
+  ): Promise<{
+    results: CedChildResult[];
+    nextCursor?: string;
+  }>;
+  /** Fetch the complete JSON-LD artifact, using the host's authentication. */
+  load(result: CedChildResult, options: { signal: AbortSignal }): Promise<CedJsonObject>;
+}
+
+/** CED field kinds, including the temporal subtypes accepted when creating a definition. */
+export type CedFieldType =
+  | 'text'
+  | 'paragraph'
+  | 'multipleChoice'
+  | 'checkboxes'
+  | 'singleChoiceList'
+  | 'multipleChoiceList'
+  | 'date'
+  | 'time'
+  | 'email'
+  | 'link'
+  | 'phone'
+  | 'number'
+  | 'controlledTerms'
+  | 'attributeValue'
+  | 'orcid'
+  | 'ror'
+  | 'pfas'
+  | 'rrid'
+  | 'pubmed'
+  | 'nihGrantId'
+  | 'doi'
+  | 'image'
+  | 'richText'
+  | 'youtube'
+  | 'sectionBreak'
+  | 'pageBreak';
+
+/**
+ * <cedar-embeddable-field-designer>, registered by the same bundle as CED.
+ * Designs a field definition; placement, persistence and lifecycle decisions belong to its host.
+ */
+export interface CedarEmbeddableFieldDesignerElement extends HTMLElement {
+  config: CedConfig | null;
+  artifact: CedJsonObject | string | null;
+  /** Host read-only mode; published definitions are always read only. */
+  readOnly: boolean;
+  /** Throws on invalid input, preserving the currently open document. */
+  loadArtifact(source: CedJsonObject | string): void;
+  /** Omit the type to show the field-type chooser. Resets the dirty baseline. */
+  newArtifact(type?: CedFieldType): void;
+  /** Null before choosing a type. May throw for an invalid draft; check canSave first. */
+  readonly currentArtifact: CedJsonObject | null;
+  readonly isDirty: boolean;
+  readonly canSave: boolean;
+  readonly validationReport: CedValidationReport;
+  validate(): CedValidationReport;
+  addEventListener(
+    type: 'artifactChange',
+    listener: (event: CustomEvent<CedJsonObject>) => void,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  addEventListener(
+    type: 'dirtyChange',
+    listener: (event: CustomEvent<boolean>) => void,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  addEventListener(
+    type: 'validationChange',
+    listener: (event: CustomEvent<CedValidationReport>) => void,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject | null,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+}

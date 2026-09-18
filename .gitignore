@@ -2,12 +2,16 @@
 
 # Compiled output
 /dist
+/dist-bundle
+/dist-npm
+/dist-types
 /tmp
 /out-tsc
 /bazel-out
 
-# Node
-/node_modules
+# Node. Unanchored, so a nested project's modules are ignored too — `/node_modules`
+# matched only the root, and 18 MB of Playwright went into a commit because of it.
+node_modules/
 npm-debug.log
 yarn-error.log
 
@@ -40,3 +44,12 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Browser test output
+/browser/test-results
+/browser/playwright-report
+
+# Sibling web components, staged into the development host by `npm start`.
+# Build output of neighbouring repositories, not of this one.
+/public/cedar-embeddable-term-picker.js
+/public/cedar-embeddable-editor.js

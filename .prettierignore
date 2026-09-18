@@ -1,0 +1,8 @@
+# Vendored artifacts, copied verbatim from `metadatacenter/cedar-test-artifacts`.
+#
+# Reformatting them would make them no longer the files upstream holds, and the whole
+# value of this corpus is that CED is checked against production's own bytes rather
+# than against something a model library produced. The provenance note beside them
+# says to copy the files; this is what makes that instruction survive a `npm run
+# format`.
+src/app/core/model/fixtures/corpus/

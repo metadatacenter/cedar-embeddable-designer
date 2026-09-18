@@ -1,75 +1,93 @@
 {
-  "name": "metadata-template-designer",
-  "version": "0.1.0",
-  "main": "electron/main.js",
+  "name": "cedar-embeddable-designer",
+  "description": "A reusable Web Component for designing CEDAR metadata templates.",
+  "license": "BSD-2-Clause",
+  "version": "0.1.0-dev.20260917.d79431e0",
+  "engines": {
+    "node": "^24.15.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/metadatacenter/cedar-embeddable-designer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/metadatacenter/cedar-embeddable-designer/issues"
+  },
+  "homepage": "https://github.com/metadatacenter/cedar-embeddable-designer#readme",
   "scripts": {
     "ng": "ng",
+    "demo:prepare": "npm run dist && node scripts/stage-siblings.mjs --bundle-demo",
+    "prestart": "node scripts/stage-siblings.mjs",
     "start": "ng serve",
     "build": "ng build",
-    "build:element": "ng build --configuration production",
-    "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "electron:start": "electron .",
-    "electron:dev": "concurrently \"npm run start\" \"wait-on http-get://localhost:4200 && cross-env ELECTRON_START_URL=http://localhost:4200 electron .\"",
-    "electron:build": "ng build --base-href ./",
-    "electron:dist": "npm run electron:build && electron-builder"
-  },
-  "build": {
-    "appId": "org.cedar.metadata-template-designer",
-    "productName": "Cedar Embeddable Template Designer",
-    "directories": {
-      "output": "dist-electron"
-    },
-    "files": [
-      "dist/metadata-template-designer/**/*",
-      "electron/**/*",
-      "package.json"
-    ],
-    "mac": {
-      "category": "public.app-category.developer-tools",
-      "target": ["dmg", "zip"]
-    },
-    "win": {
-      "target": ["nsis", "portable"]
-    },
-    "linux": {
-      "target": ["AppImage", "deb"]
-    }
+    "lint": "ng lint",
+    "typecheck": "tsc -p tsconfig.eslint.json --noEmit",
+    "test:watch": "ng test --watch",
+    "test:unit:coverage": "ng test --coverage",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "audit:prod": "npm audit --omit=dev --audit-level=high",
+    "build:app": "ng run cedar-embeddable-designer:build-app",
+    "types:public": "tsc -p tsconfig.public-api.json",
+    "bundle": "node scripts/make-bundle.mjs",
+    "check:size": "node scripts/check-bundle-size.mjs",
+    "package:npm": "npm run types:public && node scripts/stage-npm-package.mjs && npm run check:npm-package && npm run check:readme",
+    "check:fresh": "node scripts/check-bundle-fresh.mjs",
+    "check:npm-package": "node scripts/check-npm-package.mjs",
+    "check:readme": "node scripts/check-readme-examples.mjs",
+    "dist": "npm run build && npm run bundle && npm run check:size && npm run package:npm",
+    "test:boundaries": "node --test scripts/import-boundaries.test.mjs",
+    "test:packaging": "node --test scripts/npm-package.test.mjs",
+    "test:browser": "npm run dist && npm --prefix browser test",
+    "test:browser:prebuilt": "npm run check:fresh && npm --prefix browser test",
+    "test:ci": "npm run lint && npm run typecheck && npm test && npm run test:boundaries && npm run test:packaging && npm run dist && npm run test:browser:prebuilt",
+    "test:visual": "npm run check:fresh && ./browser/run-in-container.sh",
+    "test:visual:update": "npm run check:fresh && ./browser/run-in-container.sh --update-snapshots",
+    "test:browser:flake-hunt": "npm run check:fresh && for i in $(seq 1 ${RUNS:-20}); do echo \"--- run $i\"; npm --prefix browser test -- --retries=0 --reporter=line || exit 1; done",
+    "demo:serve": "node scripts/serve-demo.mjs"
   },
   "private": true,
   "dependencies": {
-    "@angular/cdk": "^19.2.19",
-    "@angular/common": "^19.2.0",
-    "@angular/compiler": "^19.2.0",
-    "@angular/core": "^19.2.0",
-    "@angular/elements": "^19.2.25",
-    "@angular/forms": "^19.2.0",
-    "@angular/platform-browser": "^19.2.0",
-    "@angular/platform-browser-dynamic": "^19.2.0",
-    "@angular/router": "^19.2.0",
+    "@angular/cdk": "^22.1.6",
+    "@angular/common": "^22.1.6",
+    "@angular/compiler": "^22.1.6",
+    "@angular/core": "^22.1.6",
+    "@angular/elements": "^22.1.6",
+    "@angular/forms": "^22.1.6",
+    "@angular/platform-browser": "^22.1.6",
     "@tailwindcss/postcss": "^4.3.3",
-    "postcss": "^8.5.19",
+    "cedar-model-typescript-library": "npm:@org.metadatacenter/cedar-model-typescript-library@1.0.13-dev.20260915.757d636",
     "rxjs": "~7.8.0",
     "tailwindcss": "^4.3.3",
     "tslib": "^2.3.0",
-    "zone.js": "~0.15.0"
+    "zone.js": "~0.16.3"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^19.2.27",
-    "@angular/cli": "^19.2.27",
-    "@angular/compiler-cli": "^19.2.0",
-    "@types/jasmine": "~5.1.0",
-    "concurrently": "^10.0.4",
-    "cross-env": "^10.1.0",
-    "electron": "^43.3.0",
-    "electron-builder": "^26.15.3",
-    "jasmine-core": "~5.6.0",
-    "karma": "~6.4.0",
-    "karma-chrome-launcher": "~3.2.0",
-    "karma-coverage": "~2.2.0",
-    "karma-jasmine": "~5.1.0",
-    "karma-jasmine-html-reporter": "~2.1.0",
-    "typescript": "~5.7.2",
-    "wait-on": "^9.1.0"
+    "@angular/build": "^22.1.8",
+    "@angular/cli": "^22.1.8",
+    "@angular/compiler-cli": "^22.1.6",
+    "@eslint/js": "^10.0.1",
+    "@org.metadatacenter/cedar-design-tokens": "0.1.0-dev.20260917.156f7425",
+    "@types/node": "^24.13.3",
+    "@vitest/coverage-v8": "^4.1.11",
+    "angular-eslint": "^22.1.0",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.10.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^17.12.0",
+    "jsdom": "^30.0.1",
+    "prettier": "^3.9.6",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.68.0",
+    "vitest": "^4.0.8"
+  },
+  "allowScripts": {
+    "@parcel/watcher@2.6.0": true,
+    "esbuild@0.28.2": true,
+    "fsevents@2.3.3": true,
+    "lmdb@3.5.6": true,
+    "msgpackr-extract@3.0.4": true
   }
 }
