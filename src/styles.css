@@ -176,11 +176,11 @@
   --popover-foreground: var(--cedar-text-primary);
   --primary: var(--cedar-primary-500);
   --primary-foreground: #ffffff;
-  --secondary: var(--cedar-surface-tinted);
+  --secondary: var(--cedar-surface-selected);
   --secondary-foreground: var(--cedar-heading);
   --muted: var(--cedar-surface-panel);
   --muted-foreground: var(--cedar-text-muted);
-  --accent: var(--cedar-surface-tinted);
+  --accent: var(--cedar-surface-selected);
   --accent-foreground: var(--cedar-heading);
   --destructive: var(--cedar-warn);
   --destructive-foreground: #ffffff;
