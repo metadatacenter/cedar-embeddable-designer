@@ -148,13 +148,6 @@
       "value": "3px var(--cedar-space-2)",
       "count": 1
     },
-    "1fcb697fc9e5109c5e70": {
-      "file": "src/app/shared/_field-error.scss",
-      "rule": "typography",
-      "property": "line-height",
-      "value": "1.3",
-      "count": 2
-    },
     "22f3de528764945fcb69": {
       "file": "src/app/features/annotations-editor/annotations-editor.component.scss",
       "rule": "geometry",
@@ -832,13 +825,6 @@
       "rule": "spacing",
       "property": "gap",
       "value": "0.5rem",
-      "count": 1
-    },
-    "905f55ba82ba73b3a483": {
-      "file": "src/app/features/annotations-editor/annotations-editor.component.scss",
-      "rule": "spacing",
-      "property": "padding",
-      "value": "2px var(--cedar-space-1)",
       "count": 1
     },
     "94d9540b5204003d7880": {

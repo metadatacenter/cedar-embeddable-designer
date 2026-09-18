@@ -8,6 +8,7 @@ async function addRows(editor: Locator) {
   await editor.getByRole('textbox', { name: 'New annotation value', exact: true }).fill('Reviewed');
   await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();
   await expect(editor.locator('textarea').first()).toHaveCSS('resize', 'none');
+  await expect(editor.locator('tbody td').first()).toHaveCSS('padding', '4px 8px');
   await expect(editor.getByRole('button', { name: 'Remove annotation 1', exact: true }).locator('svg')).toBeVisible();
   await expect(editor.getByRole('textbox', { name: 'New annotation name', exact: true })).toHaveValue('');
   await editor.getByRole('textbox', { name: 'New annotation name', exact: true }).fill('source');
