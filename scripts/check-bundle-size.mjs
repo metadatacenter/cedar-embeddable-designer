@@ -37,7 +37,10 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // 2026-09-16: adding CEFD in the same package, sharing field controls and model,
 // measures 1,357,497 raw / 423,495 gzip-9 bytes. Allow modest headroom for both
 // public elements; no second framework or model bundle is shipped.
-const RAW_LIMIT = 1_390_000;
+// 2026-09-18: shared states, surfaces, density, motion and overlay roles measure
+// 1,390,721 raw / 429,452 gzip-9 bytes. Keep the gzip ceiling; allow 4 KB raw
+// headroom for these shared recipes and their accessibility labels.
+const RAW_LIMIT = 1_395_000;
 const GZIP_LIMIT = 435_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;

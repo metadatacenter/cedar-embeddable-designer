@@ -8,6 +8,7 @@
   element, outside it.
 */
 @import '@org.metadatacenter/cedar-design-tokens/custom-properties.css';
+@import '@org.metadatacenter/cedar-design-tokens/motion.css';
 @source "./app/**/*.{html,ts}";
 
 @theme inline {
@@ -334,7 +335,7 @@
 }
 
 .animate-fade-in {
-  animation: fade-in 0.2s ease-out;
+  animation: fade-in var(--cedar-motion-duration-normal) var(--cedar-motion-ease-enter);
 }
 
 @keyframes backdrop-fade-in {
@@ -347,7 +348,7 @@
 }
 
 .animate-backdrop-fade-in {
-  animation: backdrop-fade-in 0.15s ease-out;
+  animation: backdrop-fade-in var(--cedar-motion-duration-fast) var(--cedar-motion-ease-standard);
 }
 
 @keyframes modal-fade-in {
@@ -362,7 +363,7 @@
 }
 
 .animate-modal-fade-in {
-  animation: modal-fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: modal-fade-in var(--cedar-motion-duration-normal) var(--cedar-motion-ease-enter);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -398,3 +399,5 @@ input:disabled, select:disabled, textarea:disabled { opacity: var(--cedar-contro
 
 .cedar-modal-backdrop { background: var(--cedar-dialog-backdrop); }
 .cedar-modal-surface { background: var(--cedar-overlay-surface); border: 1px solid var(--cedar-overlay-border); border-radius: var(--cedar-dialog-radius); box-shadow: var(--cedar-dialog-shadow); }
+
+.cedar-modal-backdrop, .cedar-modal-surface { z-index: var(--cedar-layer-modal); }

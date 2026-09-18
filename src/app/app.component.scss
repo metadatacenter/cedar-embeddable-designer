@@ -62,13 +62,14 @@
 }
 
 .user-menu-dropdown {
-  @apply absolute right-0 mt-2 w-56 border z-50 overflow-hidden;
+  @apply absolute right-0 mt-2 w-56 border overflow-hidden;
+  z-index: var(--cedar-layer-menu);
   background: var(--cedar-overlay-surface);
   border-color: var(--cedar-overlay-border);
   border-radius: var(--cedar-menu-radius);
   box-shadow: var(--cedar-menu-shadow);
   padding: var(--cedar-menu-padding);
-  animation: fade-in 0.2s ease-out;
+  animation: fade-in var(--cedar-motion-duration-normal) var(--cedar-motion-ease-enter);
 }
 
 .user-menu-item {
