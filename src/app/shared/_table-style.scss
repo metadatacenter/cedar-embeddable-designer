@@ -8,8 +8,11 @@
   td {
     box-sizing: border-box;
     height: auto;
-    padding-block: calc(var(--cedar-table-cell-padding-block-authoring) / 2);
+    padding-block: var(--cedar-table-cell-padding-block-authoring);
     line-height: var(--cedar-form-help-line-height);
     vertical-align: middle;
+  }
+  td {
+    height: var(--cedar-table-row-height-authoring);
   }
 }
