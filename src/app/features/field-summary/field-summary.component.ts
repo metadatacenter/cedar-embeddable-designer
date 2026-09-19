@@ -16,7 +16,10 @@ import { TemplateService } from '../../core/services/template.service';
 @Component({
   selector: 'app-field-summary',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  host: { '[style.display]': "field().type === 'controlledTerms' && (!available() || !artifact()) ? 'none' : null" },
+  host: {
+    '[class.checkbox-preview]': "field().type === 'checkboxes'",
+    '[style.display]': "field().type === 'controlledTerms' && (!available() || !artifact()) ? 'none' : null",
+  },
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (available() && artifact(); as definition) {
@@ -29,6 +32,12 @@ import { TemplateService } from '../../core/services/template.service';
     :host {
       display: block;
       min-width: 0;
+    }
+    :host(.checkbox-preview) {
+      border: 1px solid var(--cedar-border-control);
+      border-radius: var(--cedar-control-radius-default);
+      padding: var(--cedar-space-1) var(--cedar-space-2);
+      background: var(--cedar-surface-raised);
     }
     cedar-embeddable-field {
       display: block;

@@ -102,3 +102,44 @@ for (const width of [1280, 375]) {
     expect(await boxes.first().evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
   });
 }
+
+for (const type of ['singleChoiceList', 'multipleChoiceList', 'multipleChoice', 'checkboxes']) {
+  test(`${type} shows its options in a summary box and follows edits`, async ({ page }) => {
+    test.skip(!process.env.CEF_BUNDLE, 'Requires the real CEE/CEF distribution');
+    const designer = await openDesigner(page);
+    await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
+    const artifact = templateToJson(
+      buildTemplate({
+        name: 'Choice summary',
+        description: '',
+        identifier: '',
+        version: '0.0.1',
+        fields: [
+          {
+            id: 1,
+            type,
+            name: 'Choices',
+            status: 'optional',
+            allowMultiple: false,
+            options: ['Option A', 'Option B'],
+            defaultValue: { kind: 'none' },
+          },
+        ],
+      }),
+    );
+    await page.evaluate((template) => {
+      (document.querySelector('cedar-embeddable-designer') as any).template = template;
+    }, artifact);
+    const card = designer.locator('app-field-card').first();
+    const box = card.locator('app-field-summary');
+    await expect(box).toBeVisible();
+    await expect(box).toContainText('Option A');
+    await expect(box).toContainText('Option B');
+    expect(await currentTemplate(page)).toEqual(artifact);
+    await openSettings(card, 'Constraints');
+    await card.getByRole('textbox', { name: 'Option 2', exact: true }).fill('Changed option');
+    await card.getByRole('textbox', { name: 'Option 2', exact: true }).press('Tab');
+    await expect(box).toContainText('Changed option');
+    await expect(box).not.toContainText('Option B');
+  });
+}

@@ -107,7 +107,7 @@
       </div>
     </fieldset>
     <!-- Reuse CEE's read-only specification; options remain editable below. -->
-    @if (!allowsOptions(field.type) && !contentLabel(field.type)) {
+    @if (!contentLabel(field.type)) {
       <app-field-summary class="mt-1 px-1" [field]="field" />
     }
 
