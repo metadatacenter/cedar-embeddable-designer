@@ -184,3 +184,48 @@ test('occurrence ranges follow limits and repetition beside the field name', asy
   await card.getByLabel('Allow multiple', { exact: true }).uncheck();
   await expect(range).toHaveCount(0);
 });
+
+test('toggling repetition keeps the field header and preview stationary', async ({ page }) => {
+  test.skip(!process.env.CEF_BUNDLE, 'Requires the real CEE/CEF distribution');
+  const designer = await openDesigner(page);
+  await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
+  await page.evaluate(
+    (template) => {
+      (document.querySelector('cedar-embeddable-designer') as any).template = template;
+    },
+    templateToJson(
+      buildTemplate({
+        name: 'Stable layout',
+        description: '',
+        identifier: '',
+        version: '0.0.1',
+        fields: [{ ...fields[0], type: 'phone', numeric: undefined, defaultValue: { kind: 'none' } }],
+      }),
+    ),
+  );
+  const card = designer.locator('app-field-card').first();
+  await openSettings(card, 'Constraints');
+  await page.evaluate(() => {
+    document.body.style.setProperty('--cedar-font-size', '16px');
+    document.body.style.setProperty('--cedar-font-size-small', '14px');
+  });
+  const targets = [
+    card.getByRole('textbox', { name: 'Field name', exact: true }),
+    card.locator('app-field-summary'),
+    card.locator('.field-header'),
+    card.locator('.field-type-icon'),
+    card.locator('.field-actions'),
+  ];
+  const previewInput = card.locator('app-field-summary .cee-spec-box').first();
+  await expect(previewInput).toBeVisible();
+  const mounted = await previewInput.elementHandle();
+  const before = await Promise.all(targets.map((target) => target.boundingBox()));
+  await card.getByLabel('Allow multiple', { exact: true }).check();
+  await expect(card.getByLabel('Occurrence range')).toBeVisible();
+  expect(await mounted!.evaluate((el) => el.isConnected)).toBe(true);
+  for (let i = 0; i < targets.length; i++) {
+    const after = (await targets[i].boundingBox())!;
+    expect(after.y).toBe(before[i]!.y);
+    expect(after.height).toBeCloseTo(before[i]!.height, 0);
+  }
+});

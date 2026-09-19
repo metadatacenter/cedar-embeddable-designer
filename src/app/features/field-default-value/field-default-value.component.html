@@ -96,7 +96,7 @@
   @if (checking() && !pickerOpen()) {
     <p role="status" class="text-sm text-gray-500">Checking default term…</p>
   }
-  @if (error() && !pickerOpen()) {
+  @if (error() && !pickerOpen() && !editorReportsError()) {
     <p role="alert" class="ced-field-error">{{ error() }}</p>
   }
 } @else {

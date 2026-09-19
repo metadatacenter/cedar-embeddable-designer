@@ -128,3 +128,9 @@ app-icon {
 .field-heading > .occurrence-range {
   align-self: baseline;
 }
+
+.content-label {
+  color: var(--cedar-text-authoring);
+  font-size: var(--cedar-font-size-small);
+  font-weight: var(--cedar-font-weight-regular);
+}

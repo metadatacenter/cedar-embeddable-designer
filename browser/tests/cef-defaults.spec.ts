@@ -55,6 +55,9 @@ for (const [type, text, stored] of [
     await input.fill(text);
     await expect.poll(async () => (await constraints(page))['defaultValue']).toBe(stored);
     await input.press('Tab');
+    const summary = page.locator('app-field-summary .cee-spec-box');
+    await expect(summary).toContainText('default');
+    await expect(summary).toContainText(text.replace(/\s+/g, ' '));
     await expect(input).toHaveValue(text);
     const saved = await currentTemplate(page);
     await page.evaluate((template) => {
@@ -68,6 +71,7 @@ for (const [type, text, stored] of [
     await expect(input).toHaveValue(text);
     await input.fill('');
     await expect.poll(async () => (await constraints(page))['defaultValue']).toBeUndefined();
+    await expect(summary).not.toContainText('default');
   });
 }
 
@@ -105,6 +109,7 @@ for (const type of ['multipleChoice', 'checkboxes', 'singleChoiceList', 'multipl
           .map((x) => x.label),
       )
       .toEqual(wanted);
+    await expect(page.locator('app-field-summary .cee-spec-box')).toContainText('default ' + wanted.join(' · '));
   });
 }
 
@@ -114,6 +119,7 @@ test('time default comes from time segments and restores on reopen', async ({ pa
   await control.getByRole('textbox', { name: 'Minute', exact: true }).fill('30');
   await control.getByRole('textbox', { name: 'Minute', exact: true }).press('Tab');
   await expect.poll(async () => (await constraints(page))['defaultValue']).toBe('14:30');
+  await expect(page.locator('app-field-summary .cee-spec-box')).toContainText('default 14:30');
   const saved = await currentTemplate(page);
   await page.evaluate((template) => {
     (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
@@ -160,6 +166,7 @@ for (const [type, iri] of authorities) {
     await page.keyboard.type('Sample');
     await page.getByRole('option', { name: /Sample record/ }).click();
     await expect.poll(async () => (await constraints(page))['defaultValue']).toBe(iri);
+    await expect(page.locator('app-field-summary .cee-spec-box')).toContainText('default ' + iri);
   });
 }
 
@@ -192,6 +199,7 @@ test('controlled default uses the term picker and verifies field membership', as
   await expect
     .poll(async () => (await constraints(page))['defaultValue'])
     .toEqual({ termUri: 'http://purl.obolibrary.org/obo/DOID_162', 'rdfs:label': 'cancer' });
+  await expect(page.locator('app-field-summary .cee-spec-box')).toContainText(/default.*cancer/i);
   expect(checked).toBe(true);
   await page.setViewportSize({ width: 375, height: 900 });
   const narrowValue = (await control.locator('.default-value-control').boundingBox())!;
@@ -454,5 +462,51 @@ for (const host of ['CED', 'CEFD']) {
     await page.evaluate(() => document.body.removeAttribute('style'));
     await expect(native).toHaveCSS('height', '32px');
     await expect.poll(async () => (await cefBox.boundingBox())!.height).toBe(32);
+  });
+}
+
+for (const [type, invalid] of [
+  ['email', 'e'],
+  ['link', 'not a URL'],
+] as const) {
+  test(`${type} default reports one specific validation error`, async ({ page }) => {
+    const control = await openField(page, type);
+    const input = control.locator('input').first();
+    if (type === 'email') expect((await input.getAttribute('placeholder')) || '').toBe('');
+    await input.fill(invalid);
+    await input.press('Tab');
+    await expect(control).not.toContainText('Enter a valid default value.');
+    await expect(control.locator('mat-error, .ced-field-error')).toHaveCount(1);
+    expect((await constraints(page))['defaultValue']).toBeUndefined();
+    await input.fill(type === 'email' ? 'person@example.org' : 'https://example.org');
+    await input.press('Tab');
+    await expect(control.locator('mat-error, .ced-field-error')).toHaveCount(0);
+  });
+}
+
+for (const [type, granularity] of [
+  ['xsd:date', 'year'],
+  ['xsd:date', 'month'],
+  ['xsd:date', 'day'],
+  ['xsd:dateTime', 'minute'],
+  ['xsd:dateTime', 'second'],
+  ['xsd:dateTime', 'decimalSecond'],
+  ['xsd:time', 'minute'],
+  ['xsd:time', 'second'],
+  ['xsd:time', 'decimalSecond'],
+] as const) {
+  test(`${type} ${granularity} default controls center their icons`, async ({ page }) => {
+    const control = await openField(page, type === 'xsd:time' ? 'time' : 'date', {
+      temporal: { type, granularity, timezoneEnabled: true, inputTimeFormat: '24h' },
+    });
+    for (const width of [1280, 375]) {
+      await page.setViewportSize({ width, height: 1000 });
+      const toggle = control.locator('mat-datepicker-toggle');
+      if (type !== 'xsd:time') {
+        const box = (await control.locator('.cee-temporal-date .mat-mdc-text-field-wrapper').boundingBox())!;
+        const icon = (await toggle.locator('mat-icon').boundingBox())!;
+        expect(Math.abs(icon.y + icon.height / 2 - box.y - box.height / 2)).toBeLessThanOrEqual(1);
+      } else await expect(toggle).toHaveCount(0);
+    }
   });
 }

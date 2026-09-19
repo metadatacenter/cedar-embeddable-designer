@@ -9,7 +9,7 @@ import {
   signal,
 } from '@angular/core';
 import { fieldToJson } from '../../core/model/cedar-template';
-import { Field, FIELD_TYPES } from '../../core/models/types';
+import { Field, FIELD_TYPES, FieldDefaultValue } from '../../core/models/types';
 import { TemplateService } from '../../core/services/template.service';
 
 /** CEF owns the specification wording and appearance, just as it does in read-only CEE. */
@@ -22,7 +22,7 @@ import { TemplateService } from '../../core/services/template.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (available() && artifact(); as definition) {
-      <cedar-embeddable-field density="authoring" [config]="config()" [fieldObject]="definition" />
+      <cedar-embeddable-field density="authoring" [config]="config()" [fieldObject]="definition" [value]="emptyValue" />
     } @else {
       <input class="field-preview" spellcheck="false" type="text" disabled [placeholder]="placeholder()" />
     }
@@ -52,31 +52,35 @@ import { TemplateService } from '../../core/services/template.service';
 })
 export class FieldSummaryComponent {
   readonly field = input.required<Field>();
+  readonly emptyValue: FieldDefaultValue = { kind: 'none' };
   private readonly service = inject(TemplateService);
   readonly available = signal(!!customElements.get('cedar-embeddable-field'));
   readonly config = computed(() => ({ ...this.service.fieldEditorConfig(), readOnlyMode: true }));
   readonly placeholder = computed(() =>
     this.field().temporal?.type === 'xsd:dateTime' ? 'Date and time' : FIELD_TYPES[this.field().type]?.preview || '',
   );
-  readonly artifact = computed(() => {
-    // Attribute-value fields describe a collection rather than one scalar value.
-    if (this.field().type === 'attributeValue') return null;
-    try {
-      // A specification describes constraints, not a populated value or a declared default.
-      const field = this.field();
-      // Only the disposable summary uses a list renderer. The authored field retains its type.
-      const type =
-        field.type === 'multipleChoice'
-          ? 'singleChoiceList'
-          : field.type === 'checkboxes'
-            ? 'multipleChoiceList'
-            : field.type;
-      return fieldToJson({ ...field, type, defaultValue: { kind: 'none' }, importedChoiceDefault: undefined });
-    } catch {
-      // Incomplete constraints remain editable; do not feed an invalid draft to CEF.
-      return null;
-    }
-  });
+  readonly artifact = computed(
+    () => {
+      // Attribute-value fields describe a collection rather than one scalar value.
+      if (this.field().type === 'attributeValue') return null;
+      try {
+        // Keep declared defaults as specification facts, while the instance value stays empty.
+        const field = this.field();
+        // Only the disposable summary uses a list renderer. The authored field retains its type.
+        const type =
+          field.type === 'multipleChoice'
+            ? 'singleChoiceList'
+            : field.type === 'checkboxes'
+              ? 'multipleChoiceList'
+              : field.type;
+        return fieldToJson({ ...field, type });
+      } catch {
+        // Incomplete constraints remain editable; do not feed an invalid draft to CEF.
+        return null;
+      }
+    },
+    { equal: (previous, next) => JSON.stringify(previous) === JSON.stringify(next) },
+  );
 
   constructor() {
     const destroyRef = inject(DestroyRef);
