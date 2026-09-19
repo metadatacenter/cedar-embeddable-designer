@@ -45,6 +45,11 @@ export class FieldCardComponent {
     settings?.toggleExpanded();
   }
 
+  get occurrenceRange(): string {
+    if (!this.field.allowMultiple || allowsOptions(this.field.type)) return '';
+    return `(${this.field.minItems ?? 0} .. ${this.field.maxItems ?? '∞'})`;
+  }
+
   get identityLabel(): string {
     const metadata = fieldArtifactMetadata(this.field);
     return [metadata.version, publicationStatusLabel(metadata.publicationStatus)].filter(Boolean).join(' · ');

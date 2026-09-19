@@ -17,7 +17,6 @@ import { TemplateService } from '../../core/services/template.service';
   selector: 'app-field-summary',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   host: {
-    '[class.checkbox-preview]': "field().type === 'checkboxes'",
     '[style.display]': "field().type === 'controlledTerms' && (!available() || !artifact()) ? 'none' : null",
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,12 +31,6 @@ import { TemplateService } from '../../core/services/template.service';
     :host {
       display: block;
       min-width: 0;
-    }
-    :host(.checkbox-preview) {
-      border: 1px solid var(--cedar-border-control);
-      border-radius: var(--cedar-control-radius-default);
-      padding: var(--cedar-space-1) var(--cedar-space-2);
-      background: var(--cedar-surface-raised);
     }
     cedar-embeddable-field {
       display: block;
@@ -70,7 +63,15 @@ export class FieldSummaryComponent {
     if (this.field().type === 'attributeValue') return null;
     try {
       // A specification describes constraints, not a populated value or a declared default.
-      return fieldToJson({ ...this.field(), defaultValue: { kind: 'none' }, importedChoiceDefault: undefined });
+      const field = this.field();
+      // Only the disposable summary uses a list renderer. The authored field retains its type.
+      const type =
+        field.type === 'multipleChoice'
+          ? 'singleChoiceList'
+          : field.type === 'checkboxes'
+            ? 'multipleChoiceList'
+            : field.type;
+      return fieldToJson({ ...field, type, defaultValue: { kind: 'none' }, importedChoiceDefault: undefined });
     } catch {
       // Incomplete constraints remain editable; do not feed an invalid draft to CEF.
       return null;

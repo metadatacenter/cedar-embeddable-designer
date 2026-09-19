@@ -61,6 +61,16 @@ for (const width of [1280, 375]) {
     await expect(boxes.nth(1)).toContainText('20');
     await expect(boxes.nth(1)).toContainText('^ABC');
     await expect(boxes.nth(2)).toContainText('HH:MM:SS');
+    // The shared summary must not acquire a second horizontal inset inside the card.
+    for (let index = 0; index < (await boxes.count()); index++) {
+      const box = boxes.nth(index);
+      const card = designer.locator('app-field-card').nth(index);
+      const body = card.locator('.field-card-body');
+      const expectedLeft = await body.evaluate(
+        (el) => el.getBoundingClientRect().left + parseFloat(getComputedStyle(el).paddingLeft),
+      );
+      expect(Math.abs((await box.boundingBox())!.x - expectedLeft)).toBeLessThanOrEqual(1);
+    }
     await designer.screenshot({ path: testInfo.outputPath(`constraint-summary-${width}.png`) });
     const saved = await currentTemplate(page);
     expect(saved).toEqual(artifact);
@@ -131,10 +141,14 @@ for (const type of ['singleChoiceList', 'multipleChoiceList', 'multipleChoice', 
       (document.querySelector('cedar-embeddable-designer') as any).template = template;
     }, artifact);
     const card = designer.locator('app-field-card').first();
-    const box = card.locator('app-field-summary');
+    const box = card.locator('app-field-summary .cee-spec-box');
+    await expect(card.getByLabel('Occurrence range')).toHaveCount(0);
     await expect(box).toBeVisible();
     await expect(box).toContainText('Option A');
     await expect(box).toContainText('Option B');
+    await expect(
+      card.locator('app-field-summary input[type=radio], app-field-summary input[type=checkbox]'),
+    ).toHaveCount(0);
     expect(await currentTemplate(page)).toEqual(artifact);
     await openSettings(card, 'Constraints');
     await card.getByRole('textbox', { name: 'Option 2', exact: true }).fill('Changed option');
@@ -143,3 +157,30 @@ for (const type of ['singleChoiceList', 'multipleChoiceList', 'multipleChoice', 
     await expect(box).not.toContainText('Option B');
   });
 }
+
+test('occurrence ranges follow limits and repetition beside the field name', async ({ page }) => {
+  const designer = await openDesigner(page);
+  const artifact = templateToJson(
+    buildTemplate({
+      name: 'Ranges',
+      description: '',
+      identifier: '',
+      version: '0.0.1',
+      fields: [{ ...fields[0], allowMultiple: true, minItems: 3, maxItems: 4 }],
+    }),
+  );
+  await page.evaluate((template) => {
+    (document.querySelector('cedar-embeddable-designer') as any).template = template;
+  }, artifact);
+  const card = designer.locator('app-field-card').first();
+  const range = card.getByLabel('Occurrence range');
+  await expect(range).toHaveText('(3 .. 4)');
+  await expect(range).toHaveCSS('align-self', 'baseline');
+  await expect(card.getByRole('textbox', { name: 'Field name', exact: true })).toHaveCSS('align-self', 'baseline');
+  await openSettings(card, 'Occurrences');
+  await card.getByLabel('Maximum', { exact: true }).fill('');
+  await card.getByLabel('Maximum', { exact: true }).press('Tab');
+  await expect(range).toHaveText('(3 .. ∞)');
+  await card.getByLabel('Allow multiple', { exact: true }).uncheck();
+  await expect(range).toHaveCount(0);
+});

@@ -28,6 +28,9 @@
             placeholder="Enter field name"
             aria-label="Field name"
           />
+          @if (occurrenceRange; as range) {
+            <span class="occurrence-range" aria-label="Occurrence range">{{ range }}</span>
+          }
           @if (service.issuesFor(field.id).length; as count) {
             <button
               type="button"
@@ -108,7 +111,7 @@
     </fieldset>
     <!-- Reuse CEE's read-only specification; options remain editable below. -->
     @if (!contentLabel(field.type)) {
-      <app-field-summary class="mt-1 px-1" [field]="field" />
+      <app-field-summary class="mt-1" [field]="field" />
     }
 
     <app-field-settings

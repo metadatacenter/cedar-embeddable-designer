@@ -114,3 +114,17 @@ app-icon {
 .choice-options {
   padding-block: var(--cedar-space-2);
 }
+
+.occurrence-range {
+  flex: 0 0 auto;
+  color: var(--cedar-text-muted);
+  font-size: var(--cedar-font-size);
+  font-weight: var(--cedar-font-weight-regular);
+  white-space: nowrap;
+}
+
+/* Align text baselines rather than centering the name input's padded box. */
+.field-heading > input,
+.field-heading > .occurrence-range {
+  align-self: baseline;
+}

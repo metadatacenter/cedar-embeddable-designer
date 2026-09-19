@@ -37,7 +37,7 @@ export class ElementCardComponent {
   readonly error = signal<string | null>(null);
   expanded = false;
   activeTab = 'Display';
-  readonly tabs = ['Display', 'Annotations', 'Occurrences', 'Element metadata'];
+  readonly tabs = ['Display', 'Occurrences', 'Annotations', 'Element metadata'];
   readonly artifact = computed(() => containerArtifactMetadata(this.node().definition));
   readonly publicationStatus = computed(() => publicationStatusLabel(this.artifact().publicationStatus));
   tabId(tab: string): string {

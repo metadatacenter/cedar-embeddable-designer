@@ -255,7 +255,7 @@ export const FIELD_TYPES: Record<string, { label: string; preview: string }> = {
   phone: { label: 'Phone', preview: 'Phone number' },
   number: { label: 'Number', preview: 'Numeric value' },
   controlledTerms: { label: 'Controlled Terms', preview: 'Controlled vocabulary' },
-  attributeValue: { label: 'Attribute Value', preview: 'User-supplied attribute-value pairs' },
+  attributeValue: { label: 'Attribute Value', preview: '' },
 
   // External authorities: an identifier resolved against a register.
   orcid: { label: 'ORCID', preview: 'Researcher identifier' },
