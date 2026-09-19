@@ -386,23 +386,59 @@
 }
 
 /* Shared focus geometry also covers toolbar and dialog actions. */
-button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
+button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
   outline: var(--cedar-focus-ring-width) solid var(--cedar-control-focus, var(--cedar-focus-ring-color));
   outline-offset: var(--cedar-focus-ring-offset);
 }
 
-input[aria-invalid='true'], select[aria-invalid='true'], textarea[aria-invalid='true'] {
+input[aria-invalid='true'],
+select[aria-invalid='true'],
+textarea[aria-invalid='true'] {
   border-color: var(--cedar-control-error, var(--cedar-control-invalid-border));
 }
-input[readonly], textarea[readonly] { background: var(--cedar-control-readonly-surface); }
-input:disabled, select:disabled, textarea:disabled { opacity: var(--cedar-control-disabled-opacity); }
+input[readonly],
+textarea[readonly] {
+  background: var(--cedar-control-readonly-surface);
+}
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: var(--cedar-control-disabled-opacity);
+}
 
-.cedar-modal-backdrop { background: var(--cedar-dialog-backdrop); }
-.cedar-modal-surface { background: var(--cedar-overlay-surface); border: 1px solid var(--cedar-overlay-border); border-radius: var(--cedar-dialog-radius); box-shadow: var(--cedar-dialog-shadow); }
+.cedar-modal-backdrop {
+  background: var(--cedar-dialog-backdrop);
+}
+.cedar-modal-surface {
+  background: var(--cedar-overlay-surface);
+  border: 1px solid var(--cedar-overlay-border);
+  border-radius: var(--cedar-dialog-radius);
+  box-shadow: var(--cedar-dialog-shadow);
+}
 
-.cedar-modal-backdrop, .cedar-modal-surface { z-index: var(--cedar-layer-modal); }
+.cedar-modal-backdrop,
+.cedar-modal-surface {
+  z-index: var(--cedar-layer-modal);
+}
 
 /* Manual field resizing is forbidden; automatic content sizing remains available. */
 textarea {
   resize: none;
+}
+
+/* Inline authoring actions share typography, independent of the surrounding panel. */
+.ced-text-action {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: var(--cedar-primary-700);
+  font-family: inherit;
+  font-size: var(--cedar-control-font-size, var(--cedar-control-font-size-authoring));
+  font-weight: var(--cedar-font-weight-regular, 400);
+  line-height: var(--cedar-line-height-normal, 1.5);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
 }

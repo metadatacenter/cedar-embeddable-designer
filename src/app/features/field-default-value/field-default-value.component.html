@@ -51,12 +51,7 @@
         } @else if (!pickerAvailable() || !terminologyBaseUrl()) {
           <p role="status" class="text-sm text-gray-500">Term picker is unavailable.</p>
         } @else {
-          <button
-            type="button"
-            class="text-sm text-teal-700 underline"
-            aria-label="Edit default term"
-            (click)="openPicker()"
-          >
+          <button type="button" class="ced-text-action" aria-label="Edit default term" (click)="openPicker()">
             Edit
           </button>
           @if (pickerOpen()) {
@@ -88,7 +83,7 @@
           }
         }
         @if (field().defaultValue.kind !== 'none') {
-          <button type="button" class="text-sm text-gray-600 underline" (click)="clear()">Clear default</button>
+          <button type="button" class="ced-text-action" (click)="clear()">Clear default</button>
         }
       </div>
     }

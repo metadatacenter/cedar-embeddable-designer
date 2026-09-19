@@ -3,6 +3,7 @@
     <span class="empty-constraint">Choose a vocabulary constraint</span>
   } @else if (summaryAvailable) {
     <cedar-embeddable-field
+      density="authoring"
       [config]="summaryConfig"
       [fieldObject]="summaryArtifact"
       [value]="summaryValue"
@@ -11,7 +12,15 @@
     <span role="status">Constraint preview needs the field editor.</span>
   }
   @if (pickerAvailable && terminologyBaseUrl()) {
-    <button #editButton type="button" (click)="openPicker()" aria-label="Edit controlled-term constraints">Edit</button>
+    <button
+      #editButton
+      class="ced-text-action"
+      type="button"
+      (click)="openPicker()"
+      aria-label="Edit controlled-term constraints"
+    >
+      Edit
+    </button>
   }
 </div>
 @if (!pickerAvailable || !terminologyBaseUrl()) {
@@ -38,7 +47,7 @@
         <p role="alert" class="p-3 ced-field-error">{{ error() }}</p>
       }
       @if (invalidDefault()) {
-        <button type="button" class="p-3 underline" (click)="clearDefaultAndApply()">
+        <button type="button" class="ced-text-action p-3" (click)="clearDefaultAndApply()">
           Clear default and apply constraints
         </button>
       }

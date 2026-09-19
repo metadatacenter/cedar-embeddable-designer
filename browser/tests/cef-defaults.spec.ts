@@ -110,6 +110,10 @@ for (const type of ['multipleChoice', 'checkboxes', 'singleChoiceList', 'multipl
       )
       .toEqual(wanted);
     await expect(page.locator('app-field-summary .cee-spec-box')).toContainText('default ' + wanted.join(' · '));
+    if (type === 'singleChoiceList' || type === 'multipleChoiceList') {
+      await expect(control.getByRole('button', { name: 'Clear', exact: true }))
+        .toHaveCount(type === 'singleChoiceList' ? 1 : 0);
+    }
   });
 }
 
@@ -190,6 +194,17 @@ test('controlled default uses the term picker and verifies field membership', as
     '?picker=stub',
   );
   const chooser = control.getByRole('button', { name: 'Edit default term' });
+  const constraintEdit = page.getByRole('button', { name: 'Edit controlled-term constraints' });
+  for (const property of ['fontSize', 'fontWeight', 'color', 'lineHeight', 'textUnderlineOffset'] as const) {
+    const expected = await constraintEdit.evaluate((node, key) => getComputedStyle(node)[key], property);
+    await expect.poll(() => chooser.evaluate((node, key) => getComputedStyle(node)[key], property)).toBe(expected);
+  }
+  const constraintBox = page.locator('app-controlled-term-config .cee-spec-box');
+  const previewBox = page.locator('app-field-summary .cee-spec-box');
+  for (const property of ['fontSize', 'minHeight', 'borderRadius'] as const) {
+    const expected = await previewBox.evaluate((node, key) => getComputedStyle(node)[key], property);
+    await expect.poll(() => constraintBox.evaluate((node, key) => getComputedStyle(node)[key], property)).toBe(expected);
+  }
   const valueBox = (await control.locator('.default-value-control').boundingBox())!;
   const actionBox = (await chooser.boundingBox())!;
   expect(actionBox.x).toBeGreaterThanOrEqual(valueBox.x + valueBox.width);
@@ -510,3 +525,19 @@ for (const [type, granularity] of [
     }
   });
 }
+
+test('radio default selection and clearing keep every option stationary', async ({ page }) => {
+  const control = await openField(page, 'multipleChoice');
+  const rows = control.locator('.choice-option-row');
+  const geometry = () => rows.evaluateAll(nodes => nodes.map(node => {
+    const { y, height } = node.getBoundingClientRect();
+    return { y, height };
+  }));
+  const before = await geometry();
+  for (const name of ['A', 'B']) {
+    await control.getByRole('radio', { name, exact: true }).check();
+    await expect.poll(geometry).toEqual(before);
+  }
+  await control.getByRole('button', { name: 'Clear', exact: true }).click();
+  await expect.poll(geometry).toEqual(before);
+});

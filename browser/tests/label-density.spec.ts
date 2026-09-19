@@ -85,6 +85,10 @@ for (const type of ['checkboxes', 'multipleChoice', 'singleChoiceList', 'multipl
     await expect(card.locator('.choice-options app-icon svg').first()).toHaveAttribute('width', '20');
     await expect(card.locator('.choice-options')).toHaveCSS('padding-top', '8px');
     await expect(card.locator('.choice-options')).toHaveCSS('padding-bottom', '8px');
+    const optionIcon = await card.locator('.choice-options app-icon svg').first().boundingBox();
+    const addIcon = await card.getByRole('button', { name: 'Add option', exact: true }).locator('svg').boundingBox();
+    expect(addIcon!.x).toBe(optionIcon!.x);
+    expect(addIcon!.width).toBe(optionIcon!.width);
     await expect(card.getByLabel('Help text', { exact: true })).toBeHidden();
     await openSettings(card, 'Display');
     const help = card.getByLabel('Help text', { exact: true });

@@ -39,13 +39,13 @@ import { TemplateService } from '../../core/services/template.service';
     input {
       box-sizing: border-box;
       width: 100%;
-      height: var(--cedar-control-height-default);
+      height: var(--cedar-control-height, var(--cedar-control-height-authoring));
       border: 1px solid var(--cedar-border-control);
-      border-radius: var(--cedar-control-radius-default);
+      border-radius: var(--cedar-control-radius, var(--cedar-control-radius-authoring));
       padding: var(--cedar-space-1) var(--cedar-space-2);
       background: var(--cedar-surface-raised);
       color: var(--cedar-text-muted);
-      font-size: var(--cedar-font-size);
+      font-size: var(--cedar-control-font-size, var(--cedar-control-font-size-authoring));
       opacity: 1;
     }
   `,
