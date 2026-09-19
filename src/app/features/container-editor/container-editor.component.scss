@@ -1,8 +1,10 @@
 :host {
+  --element-child-inset: var(--cedar-space-3);
   display: block;
   min-width: 0;
 }
 .template-header-card {
+  position: relative;
   scroll-margin-top: var(--cedar-space-4);
   border: 1px solid var(--cedar-border-rule);
   border-radius: var(--cedar-control-radius-default);
@@ -84,7 +86,7 @@
 .template-field-label {
   margin-bottom: 0;
   font-weight: var(--cedar-font-weight-medium);
-  text-transform: uppercase;
+  text-transform: none;
   line-height: var(--cedar-form-help-line-height);
 }
 .template-input {
@@ -136,9 +138,18 @@
   display: none !important;
 }
 .nested-content {
-  padding: 0 var(--cedar-space-3) var(--cedar-space-2);
+  padding: 0 var(--element-child-inset) var(--cedar-space-2);
+}
+.nested-header {
+  margin-inline: calc(var(--element-child-inset) / 2);
+}
+.nested-header .template-header-card__body {
+  padding-right: calc(var(--cedar-space-3) + var(--cedar-space-6));
 }
 .element-toggle {
+  position: absolute;
+  top: var(--cedar-space-1);
+  right: var(--cedar-space-1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -163,7 +174,11 @@
 }
 @container (max-width: 400px) {
   .nested-content {
-    padding: 0 6px 6px;
+    --element-child-inset: calc(var(--cedar-space-3) / 2);
+    padding-bottom: calc(var(--cedar-space-3) / 2);
+  }
+  .nested-header {
+    --element-child-inset: calc(var(--cedar-space-3) / 2);
   }
 }
 

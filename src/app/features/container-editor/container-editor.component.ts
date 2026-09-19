@@ -29,6 +29,19 @@ import { ElementCardComponent } from '../element-card/element-card.component';
   styleUrls: ['../../app.component.scss', './container-editor.component.scss'],
 })
 export class ContainerEditorComponent {
+  selectCard(event: MouseEvent, id: number): void {
+    event.stopPropagation();
+    this.activate();
+    this.service.selectedField.set(id);
+    // Clicking card chrome enables arrows without stealing focus from editing controls.
+    const target = event.target;
+    if (
+      target instanceof Element &&
+      !target.closest('input, textarea, select, button, a, label, [contenteditable], [role="tab"], [role="combobox"]')
+    ) {
+      (event.currentTarget as HTMLElement).focus({ preventScroll: true });
+    }
+  }
   private readonly templateSettings = viewChild(ContainerSettingsComponent);
   private readonly elementSettings = viewChild(ElementCardComponent);
   toggleSettings(): void {

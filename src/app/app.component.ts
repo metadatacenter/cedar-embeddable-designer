@@ -170,6 +170,29 @@ export class AppComponent {
     }, 3000);
   }
 
+  /** Arrow navigation belongs to cards, never to controls editing their contents. */
+  @HostListener('keydown', ['$event'])
+  navigateCards(event: KeyboardEvent): void {
+    if (event.defaultPrevented || event.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey)
+      return;
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    const origin = event.composedPath()[0];
+    if (!(origin instanceof HTMLElement) || !origin.matches('.field-drag-container')) return;
+    const host = this.host.nativeElement as HTMLElement;
+    const cards = Array.from(host.querySelectorAll<HTMLElement>('.field-drag-container')).filter(
+      (card) => card.getClientRects().length > 0 && !card.closest('dialog'),
+    );
+    const index = cards.indexOf(origin);
+    if (index < 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const next = cards[index + (event.key === 'ArrowDown' ? 1 : -1)];
+    if (!next) return; // Stop at the boundary rather than wrapping to the other end.
+    next.focus({ preventScroll: true });
+    const header = next.querySelector('.field-header, .template-header-card') ?? next;
+    header.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+  }
+
   @HostListener('document:mousedown', ['$event'])
   handleClickOutside(event: MouseEvent) {
     /*

@@ -181,8 +181,11 @@ test('element metadata shows provenance without changing the artifact and hides 
   for (const key of ['pav:version', 'bibo:status', 'pav:derivedFrom', 'pav:previousVersion']) delete element[key];
   const empty = await load();
   await expect(
-    designer.locator('app-container-editor').nth(1).getByPlaceholder('Version', { exact: true }),
+    designer.locator('app-container-editor').nth(1).getByRole('textbox', { name: 'Version', exact: true }),
   ).toHaveValue('');
+  await expect(
+    designer.locator('app-container-editor').nth(1).getByRole('textbox', { name: 'Version', exact: true }),
+  ).toHaveAttribute('placeholder', 'Not specified');
   await expect(empty.locator('dd').filter({ hasText: /^Draft$/ })).toHaveCount(0);
   for (const label of ['Version', 'Publication status', 'Derived from', 'Previous version']) {
     await expect(empty.locator('dt').filter({ hasText: new RegExp('^' + label + '$') })).toHaveCount(0);
@@ -222,5 +225,39 @@ for (const width of [1280, 375]) {
       expect(Math.max(...tops) - Math.min(...tops)).toBeLessThanOrEqual(1);
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+}
+
+for (const width of [1280, 375]) {
+  test(`nested element header has half the child inset and a top-corner toggle at ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    const designer = await openDesigner(page);
+    await designer.getByRole('button', { name: 'Basic', exact: true }).click();
+    await designer.getByRole('button', { name: /Modular/ }).click();
+    await addElementFixture(page);
+    await nestFixtureFields(page, ['Element']);
+    const element = designer.locator('app-container-editor').nth(1);
+    const header = directHeader(element);
+    const geometry = await element.evaluate((node) => {
+      const outer = node.parentElement!;
+      const edge = outer.getBoundingClientRect().left + parseFloat(getComputedStyle(outer).borderLeftWidth);
+      const header = node.querySelector(':scope > .template-header-card')!.getBoundingClientRect();
+      const child = node.querySelector('.nested-content .field-drag-container')!.getBoundingClientRect();
+      const toggle = node.querySelector('.element-toggle')!.getBoundingClientRect();
+      return {
+        headerInset: header.left - edge,
+        childInset: child.left - edge,
+        toggleTop: toggle.top - header.top,
+        toggleRight: header.right - toggle.right,
+      };
+    });
+    expect(geometry.headerInset).toBeGreaterThan(0);
+    expect(geometry.headerInset * 2).toBeCloseTo(geometry.childInset, 1);
+    expect(geometry.toggleTop).toBeLessThanOrEqual(6);
+    expect(geometry.toggleRight).toBeLessThanOrEqual(6);
+    await header.getByRole('button', { name: 'Collapse Element', exact: true }).click();
+    await expect(directContent(element)).toBeHidden();
+    await header.getByRole('button', { name: 'Expand Element', exact: true }).click();
+    await expect(directContent(element)).toBeVisible();
   });
 }
