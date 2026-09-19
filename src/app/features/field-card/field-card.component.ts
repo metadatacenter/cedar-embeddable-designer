@@ -1,3 +1,4 @@
+import { FieldSummaryComponent } from '../field-summary/field-summary.component';
 import { HeaderToggleDirective } from '../../shared/header-toggle.directive';
 import { publicationStatusLabel } from '../../shared/publication-status';
 import { FieldSettingsComponent } from '../field-settings/field-settings.component';
@@ -25,6 +26,7 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
   standalone: true,
   imports: [
     CommonModule,
+    FieldSummaryComponent,
     HeaderToggleDirective,
     FieldSettingsComponent,
     FormsModule,

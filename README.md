@@ -133,6 +133,13 @@ drawing of a form of the designer's own. It is asked for a read-only form with n
 instance behind it, which is how CEE reads a template as a statement of what each
 field will accept. Without it the preview panel says so.
 
+Field cards also reuse CEF's read-only specification box for numeric, text,
+temporal and terminology constraints. Summaries update as constraints change and
+use CEE's own wording and styles; declared defaults remain separate. Choice lists
+and attribute-value placeholders retain their authoring presentation. If the CEE
+script is not loaded, cards keep their existing placeholders; loading it later
+activates the summaries without reloading the document.
+
 All default-capable fields use `<cedar-embeddable-field>` (CEF), registered by
 that same CEE script. Choose the **semantic** preset in Preferences to show Default
 Value. Defaults are written through the TypeScript model library and restored on

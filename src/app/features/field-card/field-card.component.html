@@ -106,19 +106,9 @@
         </div>
       </div>
     </fieldset>
-    <!-- Static placeholder text preview for standard types -->
-    @if (!allowsOptions(field.type) && field.type !== 'controlledTerms' && !contentLabel(field.type)) {
-      <div class="mt-1 px-1">
-        <input
-          spellcheck="false"
-          type="text"
-          disabled
-          [placeholder]="
-            field.temporal?.type === 'xsd:dateTime' ? 'Date and time' : FIELD_TYPES_LIST[field.type]?.preview || ''
-          "
-          class="field-preview"
-        />
-      </div>
+    <!-- Reuse CEE's read-only specification; options remain editable below. -->
+    @if (!allowsOptions(field.type) && !contentLabel(field.type)) {
+      <app-field-summary class="mt-1 px-1" [field]="field" />
     }
 
     <app-field-settings

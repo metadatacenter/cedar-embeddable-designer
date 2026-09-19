@@ -100,17 +100,6 @@ app-icon {
   color: var(--cedar-text-muted);
   font-size: var(--cedar-font-size-small);
 }
-.field-preview {
-  width: 100%;
-  height: var(--cedar-control-height-default);
-  border: 1px solid var(--cedar-border-control);
-  border-radius: var(--cedar-control-radius-default);
-  padding: var(--cedar-space-1) var(--cedar-space-2);
-  background: var(--cedar-surface-raised);
-  color: var(--cedar-text-muted);
-  font-size: var(--cedar-font-size);
-  opacity: 1;
-}
 
 .field-heading > input {
   font-size: var(--cedar-font-size);

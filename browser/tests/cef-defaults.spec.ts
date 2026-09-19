@@ -406,7 +406,7 @@ for (const host of ['CED', 'CEFD']) {
       await openSettings(page.locator('app-field-card'), 'Constraints');
     }
     const native = page.getByRole('combobox', { name: 'Temporal type', exact: true });
-    const cef = page.locator('cedar-embeddable-field');
+    const cef = page.locator('app-field-default-value cedar-embeddable-field');
     const cefBox = cef.locator('.mat-mdc-text-field-wrapper').first();
     await expect.poll(async () => (await cefBox.boundingBox())!.height).toBe(32);
     await page.evaluate(() => {

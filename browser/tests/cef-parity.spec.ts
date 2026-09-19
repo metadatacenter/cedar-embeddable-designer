@@ -106,7 +106,7 @@ async function bothControls(page: Page, type: string) {
   return page.evaluate(
     async ({ artifact, value, inherited, box }) => {
       const root = document.querySelector('cedar-embeddable-designer')!.shadowRoot!;
-      const inCard = root.querySelector('cedar-embeddable-field') as HTMLElement | null;
+      const inCard = root.querySelector('app-field-default-value cedar-embeddable-field') as HTMLElement | null;
       if (!inCard) return { error: 'the card mounted no cedar-embeddable-field' };
 
       const reference = document.createElement('cedar-embeddable-field') as HTMLElement & {
