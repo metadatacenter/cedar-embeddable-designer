@@ -374,6 +374,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
   {
     control: 'help text',
     paletteType: 'text',
+    prepare: (page) => open(page, 'Display'),
     set: async (page) => putValue(card(page).getByLabel('Help text', { exact: true }), 'Some help'),
     restore: async (page) => putValue(card(page).getByLabel('Help text', { exact: true }), ''),
     read: (template) => property(template, 'Text')['schema:description'],

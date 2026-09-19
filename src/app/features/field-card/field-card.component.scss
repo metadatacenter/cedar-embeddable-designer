@@ -106,3 +106,11 @@ app-icon {
   font-weight: var(--cedar-font-weight-medium);
   color: var(--cedar-text-primary);
 }
+
+.choice-options input {
+  font-size: var(--cedar-font-size);
+}
+
+.choice-options {
+  padding-block: var(--cedar-space-2);
+}

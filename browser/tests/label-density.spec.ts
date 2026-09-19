@@ -30,13 +30,15 @@ for (const width of [1280, 375]) {
     }, template);
     await applyPreset(page, 'semantic');
     const card = designer.locator('app-field-card').first();
-    await openSettings(card);
+    await openSettings(card, 'Display');
     const help = card.getByText('Help text', { exact: true });
     await expect(help).toBeVisible();
     await expect(help).toHaveCSS('text-transform', 'none');
     for (const label of await designer.locator('.template-field-label').all()) {
       await expect(label).toHaveCSS('text-transform', 'none');
     }
+    await openSettings(card, 'Constraints');
+    await expect(help).toBeHidden();
     const value = card.getByRole('textbox', { name: 'Default value', exact: true });
     await expect(value).toHaveAttribute('rows', '1');
     await expect(value).toHaveCSS('height', '32px');
@@ -48,5 +50,48 @@ for (const width of [1280, 375]) {
     ).toBe('First line\nSecond line');
     await designer.evaluate((node) => (node as HTMLElement).style.setProperty('--cedar-control-height', '40px'));
     await expect(value).toHaveCSS('height', '40px');
+  });
+}
+
+for (const type of ['checkboxes', 'multipleChoice', 'singleChoiceList', 'multipleChoiceList']) {
+  test(`${type} authoring uses consistent spacing and keeps help in Display`, async ({ page }) => {
+    const designer = await openDesigner(page);
+    const template = templateToJson(
+      buildTemplate({
+        name: 'Choices',
+        description: '',
+        identifier: '',
+        version: '0.0.1',
+        fields: [
+          {
+            id: 1,
+            type,
+            name: 'Choices',
+            status: 'optional',
+            allowMultiple: false,
+            options: ['Option A', 'Option B'],
+            defaultValue: { kind: 'none' },
+          },
+        ],
+      }),
+    );
+    await page.evaluate((template) => {
+      (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
+    }, template);
+    await applyPreset(page, 'semantic');
+    const card = designer.locator('app-field-card').first();
+    await openSettings(card, 'Constraints');
+    await expect(card.getByRole('textbox', { name: 'Option 1', exact: true })).toHaveCSS('font-size', '14px');
+    await expect(card.locator('.choice-options app-icon svg').first()).toHaveAttribute('width', '20');
+    await expect(card.locator('.choice-options')).toHaveCSS('padding-top', '8px');
+    await expect(card.locator('.choice-options')).toHaveCSS('padding-bottom', '8px');
+    await expect(card.getByLabel('Help text', { exact: true })).toBeHidden();
+    await openSettings(card, 'Display');
+    const help = card.getByLabel('Help text', { exact: true });
+    await expect(help).toHaveCount(1);
+    await help.fill('Choose an option.');
+    expect(child(await currentTemplate(page), 'Choices')['schema:description']).toBe('Choose an option.');
+    await openSettings(card, 'Constraints');
+    await expect(help).toBeHidden();
   });
 }
