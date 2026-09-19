@@ -103,6 +103,11 @@ async function everyTypeOnPage(page: Page): Promise<string[]> {
 
 test('the whole palette lays out without clipping, escaping or drifting', async ({ page }) => {
   const labels = await everyTypeOnPage(page);
+  const textareas = page.locator('cedar-embeddable-designer textarea');
+  expect(await textareas.count()).toBeGreaterThan(0);
+  for (const textarea of await textareas.all()) {
+    await expect(textarea).toHaveCSS('resize', 'none');
+  }
   const { clipped, escaped, geometry } = await auditLayout(page);
   const misaligned = await misalignedRows(page);
 

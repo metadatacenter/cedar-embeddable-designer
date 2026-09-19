@@ -59,7 +59,7 @@
   }
 
   textarea {
-    resize: vertical;
+    resize: none;
   }
   [aria-invalid='true'] {
     border-color: var(--cedar-control-error, var(--cedar-color-error));
