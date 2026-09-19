@@ -60,6 +60,7 @@ for (const [type, text, stored] of [
     await page.evaluate((template) => {
       (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
     }, saved);
+    await expect(page.locator('app-field-card').first().locator('.settings-toggle')).toHaveAttribute('aria-expanded', 'false');
     await openSettings(page.locator('app-field-card').first());
     await expect(input).toHaveValue(text);
     await input.fill('');
@@ -114,6 +115,7 @@ test('time default comes from time segments and restores on reopen', async ({ pa
   await page.evaluate((template) => {
     (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
   }, saved);
+  await expect(page.locator('app-field-card').first().locator('.settings-toggle')).toHaveAttribute('aria-expanded', 'false');
   await openSettings(page.locator('app-field-card').first());
   await expect(control.getByRole('textbox', { name: 'Hour', exact: true })).toHaveValue('14');
   await expect(control.getByRole('textbox', { name: 'Minute', exact: true })).toHaveValue('30');
