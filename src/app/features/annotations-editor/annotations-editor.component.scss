@@ -50,15 +50,10 @@ td {
   vertical-align: top;
 }
 input,
-select,
-textarea {
+select {
   @include control-style.compact-control;
   width: 100%;
   box-sizing: border-box;
-}
-textarea {
-  resize: none;
-  min-height: 28px;
 }
 button {
   font: inherit;

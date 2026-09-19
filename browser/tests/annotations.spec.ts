@@ -36,10 +36,23 @@ async function addRows(editor: Locator) {
   if (controls[0].bottom === controls[2].bottom) {
     for (const control of controls) expect(control.bottom).toBeCloseTo(controls[0].bottom, 1);
   }
+  // Both controls must reject typed and pasted line breaks on every authoring surface.
+  for (const [label, value] of [
+    ['New annotation name', 'note'],
+    ['New annotation value', 'Reviewed'],
+  ]) {
+    const input = editor.getByRole('textbox', { name: label, exact: true });
+    await input.fill(value);
+    await input.press('End');
+    await input.press('Enter');
+    await expect(input).toHaveValue(value);
+    await input.fill(value + '\r\n');
+    await expect(input).toHaveValue(value);
+  }
   await editor.getByRole('textbox', { name: 'New annotation name', exact: true }).fill('note');
   await editor.getByRole('textbox', { name: 'New annotation value', exact: true }).fill('Reviewed');
   await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();
-  await expect(editor.locator('textarea').first()).toHaveCSS('resize', 'none');
+  await expect(editor.locator('textarea')).toHaveCount(0);
   await expect(editor.locator('tbody td').first()).toHaveCSS('padding', '2px 8px');
   await expect(editor.getByRole('button', { name: 'Remove annotation 1', exact: true }).locator('svg')).toBeVisible();
   await expect(editor.getByRole('textbox', { name: 'New annotation name', exact: true })).toHaveValue('');
@@ -157,4 +170,17 @@ test('the add row validates only on Add and keeps rejected drafts outside the ta
   await expect(editor.getByRole('alert')).toHaveCount(0);
   await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();
   await expect(editor.getByRole('button', { name: 'Remove annotation 1', exact: true })).toBeVisible();
+});
+
+test('existing multiline annotation literals survive opening and saving', async ({ page }) => {
+  const designer = await openDesigner(page);
+  const artifact = await currentTemplate(page);
+  const field = child(artifact, 'Title');
+  field._annotations = { note: { '@value': 'First line\nSecond line' } };
+  await reloadArtifact(page, artifact);
+  const card = designer.locator('app-field-card').first();
+  await openSettings(card, 'Annotations');
+  const value = card.locator('app-annotations-editor .annotation-value');
+  await expect(value).toHaveText('First line\nSecond line');
+  expect(child(await currentTemplate(page), 'Title')._annotations).toEqual(field._annotations);
 });

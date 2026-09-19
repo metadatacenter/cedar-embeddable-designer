@@ -18,13 +18,13 @@
       </select></label
     >
     <label
-      >Value<textarea
+      >Value<input
         spellcheck="false"
-        rows="1"
+        type="text"
         aria-label="New annotation value"
         [ngModel]="draft().value"
         (ngModelChange)="editDraft({ value: $event })"
-      ></textarea>
+      />
     </label>
     <button type="button" class="add" (click)="add()">Add annotation</button>
   </div>
