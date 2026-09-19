@@ -50,6 +50,8 @@ for (const width of [1280, 375]) {
     await expect(placement.getByRole('tablist')).toBeVisible();
     await placement.getByRole('tab', { name: 'Display', exact: true }).focus();
     await page.keyboard.press('ArrowRight');
+    await expect(placement.getByRole('tab', { name: 'Occurrences', exact: true })).toBeFocused();
+    await page.keyboard.press('ArrowRight');
     await expect(placement.getByRole('tab', { name: 'Annotations', exact: true })).toBeFocused();
     await placement.getByRole('button', { name: 'Collapse element settings', exact: true }).click();
     await expect(placement.getByRole('tablist')).toBeHidden();

@@ -40,7 +40,10 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // 2026-09-18: shared states, surfaces, density, motion and overlay roles measure
 // 1,390,721 raw / 429,452 gzip-9 bytes. Keep the gzip ceiling; allow 4 KB raw
 // headroom for these shared recipes and their accessibility labels.
-const RAW_LIMIT = 1_395_000;
+// 2026-09-19: current-sibling reactor composition with shared choice summaries,
+// occurrence headings and shadow-root focus handling measures 1,396,958 raw /
+// 431,352 gzip-9 bytes. Allow 8 KB raw headroom; retain the compressed ceiling.
+const RAW_LIMIT = 1_405_000;
 const GZIP_LIMIT = 435_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
