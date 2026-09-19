@@ -28,6 +28,9 @@
             placeholder="Enter field name"
             aria-label="Field name"
           />
+          @if (field.status === 'required' && allowsStatus(field.type)) {
+            <sup class="required-mark" aria-label="Required">*</sup>
+          }
           @if (occurrenceRange; as range) {
             <span class="occurrence-range" aria-label="Occurrence range">{{ range }}</span>
           }

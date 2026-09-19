@@ -132,7 +132,9 @@ for (const type of ['singleChoiceList', 'multipleChoiceList', 'multipleChoice', 
             status: 'optional',
             allowMultiple: false,
             options: ['Option A', 'Option B'],
-            defaultValue: { kind: 'none' },
+            defaultValue: type === 'checkboxes' || type === 'multipleChoiceList'
+              ? { kind: 'literals', values: ['Option B'] }
+              : { kind: 'literal', value: 'Option B' },
           },
         ],
       }),
@@ -146,6 +148,7 @@ for (const type of ['singleChoiceList', 'multipleChoiceList', 'multipleChoice', 
     await expect(box).toBeVisible();
     await expect(box).toContainText('Option A');
     await expect(box).toContainText('Option B');
+    await expect(box).toHaveText(/values\s*Option A · Option B\s*default\s*Option B/);
     await expect(
       card.locator('app-field-summary input[type=radio], app-field-summary input[type=checkbox]'),
     ).toHaveCount(0);
@@ -174,6 +177,15 @@ test('occurrence ranges follow limits and repetition beside the field name', asy
   }, artifact);
   const card = designer.locator('app-field-card').first();
   const range = card.getByLabel('Occurrence range');
+  const required = card.getByLabel('Required', { exact: true });
+  await expect(required).toHaveCount(0);
+  await card.getByLabel('Requirement', { exact: true }).selectOption('required');
+  await expect(required).toHaveText('*');
+  await expect(card.locator('.field-heading > input + .required-mark + .occurrence-range')).toHaveText('(3 .. 4)');
+  await card.getByLabel('Requirement', { exact: true }).selectOption('recommended');
+  await expect(required).toHaveCount(0);
+  await card.getByLabel('Requirement', { exact: true }).selectOption('optional');
+  await expect(required).toHaveCount(0);
   await expect(range).toHaveText('(3 .. 4)');
   await expect(range).toHaveCSS('align-self', 'baseline');
   await expect(card.getByRole('textbox', { name: 'Field name', exact: true })).toHaveCSS('align-self', 'baseline');

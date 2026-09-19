@@ -132,7 +132,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: metadatacenter/cedar-embeddable-editor
-          ref: 0819df713d8bbd768dbc7554e7be79c2511166ed
+          ref: f180b2a63a386efa8f46a927c9f10f7565e849a5
           path: cedar-embeddable-editor
 
       - name: Use Node.js 24

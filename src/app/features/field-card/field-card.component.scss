@@ -123,6 +123,15 @@ app-icon {
   white-space: nowrap;
 }
 
+.required-mark {
+  flex: 0 0 auto;
+  align-self: baseline;
+  margin-left: calc(-1 * var(--cedar-space-1));
+  color: var(--cedar-text-primary);
+  font-size: var(--cedar-font-size);
+  font-weight: var(--cedar-font-weight-medium);
+}
+
 /* Align text baselines rather than centering the name input's padded box. */
 .field-heading > input,
 .field-heading > .occurrence-range {

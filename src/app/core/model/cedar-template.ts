@@ -879,7 +879,7 @@ function buildField(field: Field): TemplateField {
       [minLength, maxLength].some((n) => n !== null && (!Number.isInteger(n) || n < 0)) ||
       (minLength !== null && maxLength !== null && minLength > maxLength)
     ) {
-      throw new Error('Text lengths must be nonnegative whole numbers, with minimum no greater than maximum.');
+      throw new Error('Text lengths must be nonnegative numbers, with minimum no greater than maximum.');
     }
     const pattern = accepts(field.type, 'textPattern') && regex ? new RegExp(regex) : null;
     if (field.defaultValue.kind === 'literal') {
@@ -915,7 +915,7 @@ function buildField(field: Field): TemplateField {
   if (accepts(field.type, 'mediaDimensions')) {
     for (const dimension of [field.width, field.height]) {
       if (dimension != null && (!Number.isInteger(dimension) || dimension <= 0))
-        throw new Error('Media dimensions must be positive whole numbers.');
+        throw new Error('Media dimensions must be positive numbers.');
     }
     (builder as StaticImageFieldBuilder | StaticYoutubeFieldBuilder)
       .withWidth(field.width ?? null)
