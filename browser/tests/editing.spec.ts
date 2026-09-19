@@ -251,13 +251,16 @@ for (const width of [1440, 1024, 640]) {
     async function checkWidths() {
       const preview = designer.locator('app-cee-preview');
       await expect(preview).toBeVisible();
-      const editingWidth = await designer.locator('.designer-workspace').evaluate((node) => {
-        const css = getComputedStyle(node);
-        return node.getBoundingClientRect().width - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight);
-      });
-      const previewWidth = (await preview.boundingBox())!.width;
-      expect(previewWidth).toBeGreaterThan(0);
-      expect(previewWidth).toBeLessThanOrEqual(editingWidth + 1);
+      // Sidebar changes animate the designer width; compare the settled layout.
+      await expect.poll(async () => {
+        const editingWidth = await designer.locator('.designer-workspace').evaluate((node) => {
+          const css = getComputedStyle(node);
+          return node.getBoundingClientRect().width - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight);
+        });
+        const previewWidth = (await preview.boundingBox())!.width;
+        expect(previewWidth).toBeGreaterThan(0);
+        return previewWidth - editingWidth;
+      }).toBeLessThanOrEqual(1);
     }
     await checkWidths();
     const closeOverview = header.getByRole('button', { name: 'Close Overview', exact: true });
