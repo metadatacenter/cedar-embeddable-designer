@@ -9,6 +9,7 @@ import { FormsModule } from '@angular/forms';
       <label
         >IRI
         <input
+          spellcheck="false"
           #control
           type="text"
           [disabled]="disabled()"

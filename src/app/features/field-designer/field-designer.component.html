@@ -15,8 +15,8 @@
   <details class="library-create">
     <summary>Create library</summary>
     <div class="row">
-      <label>Library name<input [(ngModel)]="libraryName" /></label>
-      <label>Description<input [(ngModel)]="libraryDescription" /></label>
+      <label>Library name<input spellcheck="false" [(ngModel)]="libraryName" /></label>
+      <label>Description<input spellcheck="false" [(ngModel)]="libraryDescription" /></label>
       <button type="button" (click)="createLibrary()">Create library</button>
     </div>
   </details>

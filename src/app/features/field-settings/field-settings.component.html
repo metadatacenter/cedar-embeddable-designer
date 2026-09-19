@@ -42,6 +42,7 @@
             >
               <label
                 >Minimum length<input
+                  spellcheck="false"
                   name="minLength"
                   type="number"
                   min="0"
@@ -51,6 +52,7 @@
               /></label>
               <label
                 >Maximum length<input
+                  spellcheck="false"
                   name="maxLength"
                   type="number"
                   min="0"
@@ -61,6 +63,7 @@
               @if (accepts('textPattern')) {
                 <label
                   >Regular expression<input
+                    spellcheck="false"
                     class="wide"
                     name="regex"
                     [(ngModel)]="text.regex"
@@ -97,6 +100,7 @@
               >
               <label
                 >Minimum value<input
+                  spellcheck="false"
                   name="numericMin"
                   type="number"
                   step="any"
@@ -105,6 +109,7 @@
               /></label>
               <label
                 >Maximum value<input
+                  spellcheck="false"
                   name="numericMax"
                   type="number"
                   step="any"
@@ -117,6 +122,7 @@
               </div>
               <label
                 >Decimal places<input
+                  spellcheck="false"
                   name="decimalPlaces"
                   type="number"
                   min="0"
@@ -126,6 +132,7 @@
               /></label>
               <label
                 >Unit of measure<input
+                  spellcheck="false"
                   name="unit"
                   [(ngModel)]="numeric.unit"
                   (ngModelChange)="saveNumeric(numericForm)"
@@ -181,6 +188,7 @@
                 >
                 <label class="check"
                   ><input
+                    spellcheck="false"
                     type="checkbox"
                     name="timezone"
                     [(ngModel)]="temporal.timezoneEnabled"
@@ -208,6 +216,7 @@
             <fieldset [attr.aria-invalid]="!!error" [disabled]="!!field.publishedDefinition" class="settings-fields">
               <label
                 >Width<input
+                  spellcheck="false"
                   type="number"
                   name="width"
                   min="1"
@@ -218,6 +227,7 @@
               /></label>
               <label
                 >Height<input
+                  spellcheck="false"
                   type="number"
                   name="height"
                   min="1"
@@ -247,6 +257,7 @@
         <fieldset [attr.aria-invalid]="!!error" [disabled]="!!field.publishedDefinition" class="settings-fields">
           <label
             >Minimum<input
+              spellcheck="false"
               type="number"
               name="min"
               min="0"
@@ -257,6 +268,7 @@
           /></label>
           <label
             >Maximum<input
+              spellcheck="false"
               type="number"
               name="max"
               min="0"
@@ -288,6 +300,7 @@
       >
         <label
           >Display label<input
+            spellcheck="false"
             name="displayLabel"
             [(ngModel)]="displayLabel"
             (ngModelChange)="saveLayout()"
@@ -295,6 +308,7 @@
         /></label>
         <label
           >Display description<input
+            spellcheck="false"
             name="displayDescription"
             [(ngModel)]="displayDescription"
             (ngModelChange)="saveLayout()"
@@ -302,11 +316,18 @@
         /></label>
         <div class="display-flags">
           <label class="check"
-            ><input type="checkbox" name="hidden" [(ngModel)]="hidden" (ngModelChange)="saveLayout()" />Hidden</label
+            ><input
+              spellcheck="false"
+              type="checkbox"
+              name="hidden"
+              [(ngModel)]="hidden"
+              (ngModelChange)="saveLayout()"
+            />Hidden</label
           >
           @if (dynamic) {
             <label class="check"
               ><input
+                spellcheck="false"
                 type="checkbox"
                 name="continue"
                 [(ngModel)]="continuePreviousLine"
@@ -322,6 +343,7 @@
     }
     <label class="preferred-label"
       >Preferred name<input
+        spellcheck="false"
         name="preferredLabel"
         [(ngModel)]="preferredLabel"
         (ngModelChange)="savePreferredLabel()"
@@ -368,6 +390,7 @@
       <dt class="editable"><label [for]="'field-identifier-' + field.id">Identifier</label></dt>
       <dd>
         <input
+          spellcheck="false"
           [id]="'field-identifier-' + field.id"
           name="schemaIdentifier"
           [(ngModel)]="schemaIdentifier"

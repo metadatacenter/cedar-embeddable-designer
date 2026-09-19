@@ -36,6 +36,7 @@
         <label
           >Header
           <textarea
+            spellcheck="false"
             rows="1"
             [ngModel]="container().metadata?.header ?? ''"
             (ngModelChange)="update('header', $event)"
@@ -44,6 +45,7 @@
         <label
           >Footer
           <textarea
+            spellcheck="false"
             rows="1"
             [ngModel]="container().metadata?.footer ?? ''"
             (ngModelChange)="update('footer', $event)"

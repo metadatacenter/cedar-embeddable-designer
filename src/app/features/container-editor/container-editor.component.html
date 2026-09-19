@@ -28,6 +28,7 @@
         <div class="template-field-group flex-1">
           <label class="template-field-label">Name</label>
           <input
+            spellcheck="false"
             type="text"
             [ngModel]="container().name"
             (ngModelChange)="update({ name: $event })"
@@ -39,6 +40,7 @@
         <div class="template-field-group w-44">
           <label class="template-field-label">Identifier</label>
           <input
+            spellcheck="false"
             type="text"
             [ngModel]="container().schemaIdentifier"
             (ngModelChange)="update({ schemaIdentifier: $event })"
@@ -50,6 +52,7 @@
         <div class="template-field-group w-24 text-right">
           <label class="template-field-label">Version</label>
           <input
+            spellcheck="false"
             type="text"
             [ngModel]="container().version"
             (ngModelChange)="update({ version: $event })"
@@ -71,6 +74,7 @@
       <div class="template-field-group template-description">
         <label class="template-field-label">Description</label>
         <textarea
+          spellcheck="false"
           rows="1"
           [ngModel]="container().description"
           (ngModelChange)="update({ description: $event })"

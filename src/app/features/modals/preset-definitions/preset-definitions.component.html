@@ -1,9 +1,6 @@
 @if (service.showPresetDefinitionsModal()) {
   <!-- Backdrop -->
-  <div
-    class="cedar-modal-backdrop fixed inset-0 z-50 animate-backdrop-fade-in"
-    (click)="close()"
-  ></div>
+  <div class="cedar-modal-backdrop fixed inset-0 z-50 animate-backdrop-fade-in" (click)="close()"></div>
   <!-- Modal -->
   <div
     class="cedar-modal-surface fixed z-50 w-full max-h-[85vh] overflow-hidden animate-modal-fade-in"
@@ -52,6 +49,7 @@
                   @for (preset of presets; track preset) {
                     <td class="py-3 px-3 text-center">
                       <input
+                        spellcheck="false"
                         type="checkbox"
                         [ngModel]="service.presetDefinitions()[preset].showRequired"
                         (ngModelChange)="updateDef(preset, 'showRequired', $event)"
@@ -65,6 +63,7 @@
                   @for (preset of presets; track preset) {
                     <td class="py-3 px-3 text-center">
                       <input
+                        spellcheck="false"
                         type="checkbox"
                         [ngModel]="service.presetDefinitions()[preset].showAllowMultiple"
                         (ngModelChange)="updateDef(preset, 'showAllowMultiple', $event)"
@@ -78,6 +77,7 @@
                   @for (preset of presets; track preset) {
                     <td class="py-3 px-3 text-center">
                       <input
+                        spellcheck="false"
                         type="checkbox"
                         [ngModel]="service.presetDefinitions()[preset].showHelpText"
                         (ngModelChange)="updateDef(preset, 'showHelpText', $event)"
@@ -91,6 +91,7 @@
                   @for (preset of presets; track preset) {
                     <td class="py-3 px-3 text-center">
                       <input
+                        spellcheck="false"
                         type="checkbox"
                         [ngModel]="service.presetDefinitions()[preset].showDefaultValue"
                         (ngModelChange)="updateDef(preset, 'showDefaultValue', $event)"
@@ -122,6 +123,7 @@
                   @for (preset of presets; track preset) {
                     <td class="py-3 px-3 text-center">
                       <input
+                        spellcheck="false"
                         type="checkbox"
                         [ngModel]="service.presetDefinitions()[preset].showFieldDesigner"
                         (ngModelChange)="updateDef(preset, 'showFieldDesigner', $event)"
@@ -135,6 +137,7 @@
                   @for (preset of presets; track preset) {
                     <td class="py-3 px-3 text-center">
                       <input
+                        spellcheck="false"
                         type="checkbox"
                         [ngModel]="service.presetDefinitions()[preset].showElements"
                         (ngModelChange)="updateDef(preset, 'showElements', $event)"
@@ -172,6 +175,7 @@
                     @for (preset of presets; track preset) {
                       <td class="py-3 px-3 text-center">
                         <input
+                          spellcheck="false"
                           type="checkbox"
                           [checked]="!service.presetDefinitions()[preset].hiddenFieldTypes.includes(item.key)"
                           (change)="toggleFieldType(preset, item.key)"

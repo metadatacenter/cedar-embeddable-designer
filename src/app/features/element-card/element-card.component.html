@@ -64,9 +64,12 @@
           }
           @case ('Display') {
             <div class="settings-fields display-fields">
-              <label>Display label <input [(ngModel)]="draft().displayLabel" (ngModelChange)="apply()" /></label>
               <label
-                >Display description <input [(ngModel)]="draft().displayDescription" (ngModelChange)="apply()"
+                >Display label <input spellcheck="false" [(ngModel)]="draft().displayLabel" (ngModelChange)="apply()"
+              /></label>
+              <label
+                >Display description
+                <input spellcheck="false" [(ngModel)]="draft().displayDescription" (ngModelChange)="apply()"
               /></label>
             </div>
             <app-language-selector [container]="node().definition" />
@@ -75,13 +78,19 @@
           @case ('Occurrences') {
             <div class="settings-fields occurrence-fields">
               <label class="check"
-                ><input type="checkbox" [(ngModel)]="draft().allowMultiple" (ngModelChange)="apply()" /> Allow
-                multiple</label
+                ><input
+                  spellcheck="false"
+                  type="checkbox"
+                  [(ngModel)]="draft().allowMultiple"
+                  (ngModelChange)="apply()"
+                />
+                Allow multiple</label
               >
               @if (draft().allowMultiple) {
                 <label
                   >Minimum occurrences
                   <input
+                    spellcheck="false"
                     type="number"
                     min="0"
                     step="1"
@@ -92,6 +101,7 @@
                 <label
                   >Maximum occurrences
                   <input
+                    spellcheck="false"
                     type="number"
                     min="0"
                     step="1"

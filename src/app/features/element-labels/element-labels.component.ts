@@ -10,7 +10,7 @@ import { AlternateQuestionsComponent } from '../alternate-questions/alternate-qu
   template: `
     <label
       >Preferred name
-      <input [ngModel]="container().preferredLabel ?? ''" (ngModelChange)="change($event)" />
+      <input spellcheck="false" [ngModel]="container().preferredLabel ?? ''" (ngModelChange)="change($event)" />
     </label>
     <app-alternate-questions [container]="container()" />
   `,
