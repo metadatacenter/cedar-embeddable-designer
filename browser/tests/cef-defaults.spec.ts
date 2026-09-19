@@ -154,7 +154,10 @@ for (const [type, iri] of authorities) {
       route.fulfill({ json: { found: true, results: { [iri]: { name: 'Sample record' } } } }),
     );
     const control = await openField(page, type);
-    await control.locator('input').first().fill('Sample');
+    const input = control.locator('input').first();
+    await input.click();
+    await expect(input).toBeFocused();
+    await page.keyboard.type('Sample');
     await page.getByRole('option', { name: /Sample record/ }).click();
     await expect.poll(async () => (await constraints(page))['defaultValue']).toBe(iri);
   });

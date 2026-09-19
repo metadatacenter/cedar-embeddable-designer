@@ -34,11 +34,18 @@ export class ContainerEditorComponent {
     this.activate();
     this.service.selectedField.set(id);
     // Clicking card chrome enables arrows without stealing focus from editing controls.
-    const target = event.target;
-    if (
-      target instanceof Element &&
-      !target.closest('input, textarea, select, button, a, label, [contenteditable], [role="tab"], [role="combobox"]')
-    ) {
+    // Embedded CEF controls live in a shadow root: event.target is retargeted to
+    // their host. Inspect the original path so clicking an input keeps its focus.
+    const interactive = event
+      .composedPath()
+      .some(
+        (node) =>
+          node instanceof Element &&
+          node.matches(
+            'input, textarea, select, button, a, label, [contenteditable], [role="tab"], [role="combobox"], [role="option"], [role="checkbox"], [role="radio"]',
+          ),
+      );
+    if (!interactive) {
       (event.currentTarget as HTMLElement).focus({ preventScroll: true });
     }
   }
