@@ -60,7 +60,10 @@ for (const [type, text, stored] of [
     await page.evaluate((template) => {
       (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
     }, saved);
-    await expect(page.locator('app-field-card').first().locator('.settings-toggle')).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.locator('app-field-card').first().locator('.settings-toggle')).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
     await openSettings(page.locator('app-field-card').first());
     await expect(input).toHaveValue(text);
     await input.fill('');
@@ -115,7 +118,10 @@ test('time default comes from time segments and restores on reopen', async ({ pa
   await page.evaluate((template) => {
     (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
   }, saved);
-  await expect(page.locator('app-field-card').first().locator('.settings-toggle')).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator('app-field-card').first().locator('.settings-toggle')).toHaveAttribute(
+    'aria-expanded',
+    'false',
+  );
   await openSettings(page.locator('app-field-card').first());
   await expect(control.getByRole('textbox', { name: 'Hour', exact: true })).toHaveValue('14');
   await expect(control.getByRole('textbox', { name: 'Minute', exact: true })).toHaveValue('30');
@@ -173,12 +179,23 @@ test('controlled default uses the term picker and verifies field membership', as
     },
     '?picker=stub',
   );
-  await control.getByRole('button', { name: 'Choose default term' }).click();
+  const chooser = control.getByRole('button', { name: 'Edit default term' });
+  const valueBox = (await control.locator('.default-value-control').boundingBox())!;
+  const actionBox = (await chooser.boundingBox())!;
+  expect(actionBox.x).toBeGreaterThanOrEqual(valueBox.x + valueBox.width);
+  expect(Math.abs(actionBox.y + actionBox.height / 2 - valueBox.y - valueBox.height / 2)).toBeLessThan(2);
+  await control.getByRole('button', { name: 'Edit default term' }).click();
   await control.locator('#stub-pick').click();
   await expect
     .poll(async () => (await constraints(page))['defaultValue'])
     .toEqual({ termUri: 'http://purl.obolibrary.org/obo/DOID_162', 'rdfs:label': 'cancer' });
   expect(checked).toBe(true);
+  await page.setViewportSize({ width: 375, height: 900 });
+  const narrowValue = (await control.locator('.default-value-control').boundingBox())!;
+  const narrowActions = (await control.locator('.default-value-actions').boundingBox())!;
+  expect(narrowActions.y).toBeGreaterThanOrEqual(narrowValue.y + narrowValue.height);
+  expect(narrowActions.x + narrowActions.width).toBeCloseTo(narrowValue.x + narrowValue.width, 0);
+
   await control.getByRole('button', { name: 'Clear default' }).click();
   await expect.poll(async () => (await constraints(page))['defaultValue']).toBeUndefined();
 });
@@ -276,7 +293,7 @@ test('the real picker selects a default within the field vocabulary', async ({ p
     },
   });
   await page.addScriptTag({ path: process.env.PICKER_BUNDLE! });
-  await control.getByRole('button', { name: 'Choose default term' }).click();
+  await control.getByRole('button', { name: 'Edit default term' }).click();
   const picker = control.locator('cedar-embeddable-term-picker');
   await expect(control.getByRole('dialog', { name: 'Choose default term' })).toBeVisible();
   await expect(picker.getByLabel('Search vocabulary and release').locator('option')).toHaveCount(2);
