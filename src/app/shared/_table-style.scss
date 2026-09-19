@@ -1,0 +1,15 @@
+// Authoring tables follow content height, not the taller workspace listing rows.
+// Keep action controls at their normal size; long values can still wrap naturally.
+@mixin compact-table {
+  table {
+    border-collapse: collapse;
+  }
+  th,
+  td {
+    box-sizing: border-box;
+    height: auto;
+    padding-block: calc(var(--cedar-table-cell-padding-block-authoring) / 2);
+    line-height: var(--cedar-form-help-line-height);
+    vertical-align: middle;
+  }
+}

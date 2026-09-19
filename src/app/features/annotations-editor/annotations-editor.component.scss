@@ -1,3 +1,4 @@
+@use '../../shared/table-style';
 @use '../../shared/control-style';
 :host {
   display: block;
@@ -139,3 +140,5 @@ td {
 .annotation-value {
   white-space: pre-wrap;
 }
+
+@include table-style.compact-table;

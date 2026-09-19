@@ -1,3 +1,4 @@
+@use '../../../shared/table-style';
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
@@ -12,3 +13,5 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #d1d5db;
 }
+
+@include table-style.compact-table;

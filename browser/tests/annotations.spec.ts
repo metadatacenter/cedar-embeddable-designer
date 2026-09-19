@@ -40,7 +40,7 @@ async function addRows(editor: Locator) {
   await editor.getByRole('textbox', { name: 'New annotation value', exact: true }).fill('Reviewed');
   await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();
   await expect(editor.locator('textarea').first()).toHaveCSS('resize', 'none');
-  await expect(editor.locator('tbody td').first()).toHaveCSS('padding', '4px 8px');
+  await expect(editor.locator('tbody td').first()).toHaveCSS('padding', '2px 8px');
   await expect(editor.getByRole('button', { name: 'Remove annotation 1', exact: true }).locator('svg')).toBeVisible();
   await expect(editor.getByRole('textbox', { name: 'New annotation name', exact: true })).toHaveValue('');
   await editor.getByRole('textbox', { name: 'New annotation name', exact: true }).fill('source');
@@ -48,6 +48,20 @@ async function addRows(editor: Locator) {
   await editor.getByRole('textbox', { name: 'New annotation value', exact: true }).fill('urn:source');
   await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();
   await expectValueTypeFits(editor);
+  const headerContentHeight = await editor.locator('thead th').evaluateAll((cells) =>
+    Math.max(
+      ...cells.slice(0, 3).map((cell) => {
+        const range = document.createRange();
+        range.selectNodeContents(cell);
+        return range.getClientRects().length * parseFloat(getComputedStyle(cell).lineHeight);
+      }),
+    ),
+  );
+  // Wrapped headings may grow; padding must not impose an additional empty row.
+  expect((await editor.locator('thead tr').boundingBox())!.height).toBeLessThanOrEqual(headerContentHeight + 5);
+  for (const row of await editor.locator('tbody tr').all()) {
+    expect((await row.boundingBox())!.height).toBeLessThanOrEqual(32);
+  }
 }
 async function reloadArtifact(page: Page, artifact: object) {
   const previousCard = await page.locator('cedar-embeddable-designer app-field-card').first().elementHandle();

@@ -1,3 +1,4 @@
+@use '../../shared/table-style';
 :host {
   display: contents;
 }
@@ -138,3 +139,5 @@ input {
 .result-row[aria-disabled='true'] {
   cursor: default;
 }
+
+@include table-style.compact-table;

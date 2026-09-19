@@ -1,3 +1,4 @@
+@use '../../shared/table-style';
 @use '../../shared/control-style';
 :host {
   display: block;
@@ -85,3 +86,5 @@ p[role='alert'] {
   overflow: hidden;
   clip-path: inset(50%);
 }
+
+@include table-style.compact-table;

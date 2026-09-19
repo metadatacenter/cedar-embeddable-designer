@@ -1,3 +1,4 @@
+@use '../../shared/table-style';
 @use '../../shared/field-error';
 :host {
   display: block;
@@ -108,3 +109,5 @@ tbody tr:nth-child(even) {
 .actions button {
   margin: 2px;
 }
+
+@include table-style.compact-table;

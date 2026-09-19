@@ -240,6 +240,12 @@ test('CED identifies its build beneath the logo', async ({ page }) => {
   const versionBox = await version.boundingBox();
   expect(nameBox!.y).toBeGreaterThanOrEqual(logoBox!.y + logoBox!.height);
   expect(versionBox!.y).toBeGreaterThanOrEqual(nameBox!.y + nameBox!.height);
+  expect(logoBox!.width).toBe(40);
+  expect(logoBox!.height).toBe(40);
+  expect(nameBox!.x + nameBox!.width / 2).toBeCloseTo(logoBox!.x + logoBox!.width / 2, 0);
+  expect(nameBox!.y - logoBox!.y - logoBox!.height).toBe(4);
+  expect(versionBox!.y - nameBox!.y - nameBox!.height).toBe(2);
+  expect(versionBox!.width).toBeLessThanOrEqual(72);
 });
 
 for (const width of [1440, 1024, 640]) {
