@@ -13,7 +13,7 @@ test('comparison page renders the four real components and applies host profiles
     await expect(page.locator(`#${id} input`).first()).toBeVisible();
   }
   await page.screenshot({ path: testInfo.outputPath('comparison.png'), fullPage: true });
-  const email = page.locator('#cef').getByPlaceholder('example@domain.com');
+  const email = page.locator('#cef app-cedar-input-email input');
   await email.fill('not-an-email');
   await email.press('Tab');
   await expect(email).toHaveAttribute('aria-invalid', 'true');
