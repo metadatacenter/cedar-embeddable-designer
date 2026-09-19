@@ -3,7 +3,26 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { openDesigner, openSettings, currentTemplate, child } from './support';
 import type { CedarEmbeddableDesignerElement } from '../../src/app/ced-public-api';
 
+async function expectValueTypeFits(editor: Locator) {
+  const heading = editor.getByRole('columnheader', { name: 'Value type', exact: true });
+  await expect(heading).toHaveCSS('white-space', 'nowrap');
+  const geometry = await heading.evaluate((node) => {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const text = range.getBoundingClientRect();
+    const cell = node.getBoundingClientRect();
+    const style = getComputedStyle(node);
+    return {
+      lines: range.getClientRects().length,
+      textRight: text.right,
+      contentRight: cell.right - parseFloat(style.paddingRight),
+    };
+  });
+  expect(geometry.lines).toBe(1);
+  expect(geometry.textRight).toBeLessThanOrEqual(geometry.contentRight);
+}
 async function addRows(editor: Locator) {
+  await expectValueTypeFits(editor);
   await editor.getByRole('textbox', { name: 'New annotation name', exact: true }).fill('note');
   await editor.getByRole('textbox', { name: 'New annotation value', exact: true }).fill('Reviewed');
   await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();
@@ -15,6 +34,7 @@ async function addRows(editor: Locator) {
   await editor.getByRole('combobox', { name: 'New annotation value type', exact: true }).selectOption('iri');
   await editor.getByRole('textbox', { name: 'New annotation value', exact: true }).fill('urn:source');
   await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();
+  await expectValueTypeFits(editor);
 }
 async function reloadArtifact(page: Page, artifact: object) {
   const previousCard = await page.locator('cedar-embeddable-designer app-field-card').first().elementHandle();

@@ -37,7 +37,8 @@ th:nth-child(1) {
   width: 28%;
 }
 th:nth-child(2) {
-  width: 72px;
+  width: calc(10 * var(--cedar-space-2));
+  white-space: nowrap;
 }
 th:nth-child(4) {
   width: calc(var(--cedar-control-height-authoring) + 2 * var(--cedar-table-cell-padding-inline-authoring));

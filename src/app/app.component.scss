@@ -250,10 +250,29 @@
   padding: var(--cedar-space-4) var(--cedar-space-3);
 }
 
-.designer-scroll--split,
+// Divide the space left after navigation equally between editing and preview.
+.main-content {
+  --overview-width: 0px;
+  --library-width: 0px;
+}
+.main-content.has-overview {
+  --overview-width: 224px;
+}
+.main-content.has-library {
+  --library-width: calc(72 * var(--cedar-space-1));
+}
+.main-content.has-library.library-collapsed {
+  --library-width: calc(12 * var(--cedar-space-1));
+}
+.designer-scroll--split {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.designer-scroll--split .designer-workspace {
+  max-width: none;
+}
 .preview-panel {
-  flex: 0 0 50%;
-  width: 50%;
+  flex: 0 0 max(0px, calc((100% - var(--overview-width) - var(--library-width) - 2 * var(--cedar-space-3)) / 2));
   min-width: 0;
   box-sizing: border-box;
 }
@@ -311,6 +330,9 @@
 .field-drop-item {
   @apply relative;
 }
+.field-drop-item + .field-drop-item {
+  margin-top: var(--cedar-space-2);
+}
 
 /* ─── Insert Zone ─────────────────────────────────────────────────────────── */
 .insert-zone {
@@ -328,7 +350,7 @@
 .field-drag-container {
   @apply relative;
   background: var(--cedar-surface-raised);
-  border-bottom: 1px solid var(--cedar-border-rule);
+  border: 1px solid var(--cedar-border-rule);
   padding-block: var(--cedar-space-2);
 
   &:hover {
@@ -336,6 +358,7 @@
   }
 
   &.selected {
+    border-color: var(--cedar-border-selected);
     outline: 1px solid var(--cedar-border-selected);
     outline-offset: -1px;
   }
@@ -390,8 +413,11 @@
 
 .designer-identity {
   display: flex;
-  align-items: center;
-  gap: var(--cedar-space-2);
+  flex-direction: column;
+  align-items: flex-start;
+  width: calc(6 * var(--cedar-space-4));
+  min-width: 0;
+  gap: var(--cedar-space-1);
 }
 .designer-identity > svg {
   width: var(--cedar-control-height-default);
@@ -400,13 +426,26 @@
   box-shadow: none;
 }
 .designer-identity__name {
-  font-size: var(--cedar-font-size);
+  font-size: var(--cedar-font-size-small);
   font-weight: var(--cedar-font-weight-medium);
   color: var(--cedar-color-component-title);
 }
 
+.designer-identity__version {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--cedar-font-size-small);
+  line-height: var(--cedar-form-help-line-height);
+  color: var(--cedar-text-muted);
+}
+
 /* Embedders decide the available width, independently of the browser viewport. */
 @container (max-width: 767px) {
+  .main-content.has-overview {
+    --overview-width: 0px;
+  }
   .overview-panel,
   .overview-toggle {
     display: none;

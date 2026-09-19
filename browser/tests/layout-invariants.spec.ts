@@ -108,6 +108,26 @@ test('the whole palette lays out without clipping, escaping or drifting', async 
   for (const textarea of await textareas.all()) {
     await expect(textarea).toHaveCSS('resize', 'none');
   }
+  const cards = page.locator('cedar-embeddable-designer .field-drag-container');
+  expect(await cards.count()).toBeGreaterThan(0);
+  for (const card of await cards.all()) {
+    for (const edge of ['top', 'right', 'bottom', 'left']) {
+      await expect(card).toHaveCSS(`border-${edge}-width`, '1px');
+      await expect(card).toHaveCSS(`border-${edge}-style`, 'solid');
+    }
+    const colors = await card.evaluate((node) => {
+      const css = getComputedStyle(node);
+      const expected = css.getPropertyValue(node.classList.contains('selected')
+        ? '--cedar-border-selected' : '--cedar-border-rule').trim();
+      const probe = document.createElement('span');
+      probe.style.color = expected;
+      node.appendChild(probe);
+      const tokenColor = getComputedStyle(probe).color;
+      probe.remove();
+      return { actual: css.borderTopColor, expected: tokenColor };
+    });
+    expect(colors.actual).toBe(colors.expected);
+  }
   const { clipped, escaped, geometry } = await auditLayout(page);
   const misaligned = await misalignedRows(page);
 

@@ -114,7 +114,10 @@ test.describe('the designer', () => {
   for (const [group, labels] of Object.entries(GROUPS)) {
     test(`shows ${group} fields`, async ({ page }) => {
       const designer = await designerShowing(page, labels);
-      await expect(designer).toHaveScreenshot(`${group}.png`, { ...SHOT });
+      await expect(designer).toHaveScreenshot(`${group}.png`, {
+        ...SHOT,
+        mask: [designer.locator('.designer-identity__version')],
+      });
     });
   }
 
@@ -126,7 +129,10 @@ test.describe('the designer', () => {
   for (const preset of ['basic', 'semantic', 'modular'] as const) {
     test(`shows a text field under the ${preset} profile`, async ({ page }) => {
       const designer = await designerShowing(page, ['Text'], preset);
-      await expect(designer).toHaveScreenshot(`profile-${preset}.png`, { ...SHOT });
+      await expect(designer).toHaveScreenshot(`profile-${preset}.png`, {
+        ...SHOT,
+        mask: [designer.locator('.designer-identity__version')],
+      });
     });
   }
 
@@ -162,7 +168,10 @@ test.describe('the designer', () => {
     await page.setViewportSize({ width: 768, height: 900 });
     const designer = await designerShowing(page, GROUPS['simple-inputs']);
 
-    await expect(designer).toHaveScreenshot('narrow.png', { ...SHOT });
+    await expect(designer).toHaveScreenshot('narrow.png', {
+      ...SHOT,
+      mask: [designer.locator('.designer-identity__version')],
+    });
   });
   for (const width of [1280, 375]) {
     test(`shows inline elements expanded and collapsed at ${width}`, async ({ page }) => {

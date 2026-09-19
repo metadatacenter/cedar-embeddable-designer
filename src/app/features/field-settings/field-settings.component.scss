@@ -294,3 +294,9 @@ fieldset[aria-invalid='true'] {
 .identity dt.editable {
   align-self: center;
 }
+
+// Twice the default 125px control width, bounded by the metadata column.
+.identity input[name='schemaIdentifier'] {
+  width: 250px;
+  max-width: 100%;
+}

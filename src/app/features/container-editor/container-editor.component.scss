@@ -4,6 +4,15 @@
 }
 .template-header-card {
   scroll-margin-top: var(--cedar-space-4);
+  border: 1px solid var(--cedar-border-rule);
+  border-radius: var(--cedar-control-radius-default);
+  overflow: hidden;
+}
+.template-header-card::before {
+  content: '';
+  display: block;
+  height: var(--cedar-space-1);
+  background: linear-gradient(90deg, var(--cedar-color-primary), var(--cedar-surface-tinted));
 }
 .template-header-card__body {
   padding-bottom: var(--cedar-space-1);
@@ -39,17 +48,22 @@
   text-align: right;
 }
 
-/* Title and provenance share CEE's hierarchy at every host width. */
+/* Compact authoring header: preserve the name/identifier/version row where it fits. */
 :host {
   container-type: inline-size;
 }
 .template-header-card__icon {
-  display: none;
+  display: flex;
+  width: var(--cedar-control-height-default);
+  height: var(--cedar-control-height-default);
+  border-radius: var(--cedar-control-radius-default);
+  background: var(--cedar-surface-tinted);
+  color: var(--cedar-color-primary);
 }
 .template-header-card__inputs {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--cedar-space-2) var(--cedar-space-3);
+  gap: var(--cedar-space-1) var(--cedar-space-3);
 }
 .template-header-row {
   display: contents;
@@ -68,6 +82,9 @@
   max-width: 6rem;
 }
 .template-field-label {
+  margin-bottom: 0;
+  font-weight: var(--cedar-font-weight-medium);
+  text-transform: uppercase;
   line-height: var(--cedar-form-help-line-height);
 }
 .template-input {
@@ -80,9 +97,9 @@
   color: var(--cedar-text-primary);
 }
 .template-header-row > .template-field-group.flex-1 .template-input {
-  font-size: var(--cedar-font-size-artifact-title);
+  font-size: var(--cedar-font-size);
   color: var(--cedar-color-artifact-title);
-  line-height: var(--cedar-line-height-artifact-title);
+  line-height: var(--cedar-control-line-height-default);
 }
 .template-description {
   grid-column: 1;
@@ -91,6 +108,28 @@
 .publication-status {
   color: var(--cedar-text-muted);
   line-height: var(--cedar-form-help-line-height);
+}
+
+@container (min-width: 680px) {
+  .template-header-card__inputs {
+    grid-template-columns: minmax(0, 1fr) minmax(0, calc(11 * var(--cedar-space-4))) auto;
+  }
+  .template-header-row > .template-field-group.w-44 {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .template-header-row > .template-field-group.w-24 {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+  .template-description {
+    grid-column: 1 / span 2;
+  }
+}
+@container (max-width: 400px) {
+  .template-header-card__icon {
+    display: none;
+  }
 }
 
 [hidden] {
@@ -159,4 +198,6 @@ textarea.template-input {
   overflow: hidden;
 }
 
-.template-header-card__icon:has(.element-drag-handle) { display: flex; }
+.template-header-card__icon:has(.element-drag-handle) {
+  display: flex;
+}

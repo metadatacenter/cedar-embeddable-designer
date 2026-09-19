@@ -201,3 +201,26 @@ async function loadStandalone(page: import('@playwright/test').Page, kind: strin
     (document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object }).artifact = artifact;
   }, element);
 }
+
+for (const width of [1280, 375]) {
+  test(`standalone element uses the compact shared authoring header at ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    const designer = await openDesigner(page);
+    await loadStandalone(page, 'Element');
+    const header = directHeader(designer.locator('app-container-editor').first());
+    const name = header.getByPlaceholder('Element name', { exact: true });
+    await name.fill('Study element');
+    await expect(name).toHaveCSS('font-size', '14px');
+    await expect(header).toHaveCSS('border-top-width', '1px');
+    await expect(header.locator('textarea.template-input')).toHaveCSS('resize', 'none');
+    const box = (await header.boundingBox())!;
+    expect(box.height).toBeLessThanOrEqual(width === 1280 ? 140 : 200);
+    if (width === 1280) {
+      await expect(header.locator('.template-header-card__icon')).toBeVisible();
+      const groups = header.locator('.template-header-row > .template-field-group input');
+      const tops = await groups.evaluateAll((inputs) => inputs.map((input) => input.getBoundingClientRect().top));
+      expect(Math.max(...tops) - Math.min(...tops)).toBeLessThanOrEqual(1);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+}
