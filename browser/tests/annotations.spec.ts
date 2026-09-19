@@ -23,6 +23,19 @@ async function expectValueTypeFits(editor: Locator) {
 }
 async function addRows(editor: Locator) {
   await expectValueTypeFits(editor);
+  const controls = await editor
+    .locator('.add-row input, .add-row select, .add-row textarea, .add-row button')
+    .evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const rect = node.getBoundingClientRect();
+        return { height: rect.height, bottom: rect.bottom };
+      }),
+    );
+  for (const control of controls) expect(control.height).toBeCloseTo(controls[0].height, 1);
+  // On wide hosts all four controls share the same baseline; narrow hosts stack the value and button.
+  if (controls[0].bottom === controls[2].bottom) {
+    for (const control of controls) expect(control.bottom).toBeCloseTo(controls[0].bottom, 1);
+  }
   await editor.getByRole('textbox', { name: 'New annotation name', exact: true }).fill('note');
   await editor.getByRole('textbox', { name: 'New annotation value', exact: true }).fill('Reviewed');
   await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();

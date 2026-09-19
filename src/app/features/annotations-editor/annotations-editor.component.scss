@@ -87,7 +87,8 @@ button:disabled {
   min-width: 0;
 }
 .add-row button {
-  min-height: 28px;
+  box-sizing: border-box;
+  min-height: var(--cedar-control-height, var(--cedar-control-height-authoring));
 }
 :host {
   container-type: inline-size;
