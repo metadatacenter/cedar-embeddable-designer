@@ -46,7 +46,11 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // Current sibling reactor with container actions, move/collapse controls and shared
 // handle tokens measures 1,405,040 raw bytes. Allow 5 KB for that composition;
 // retain the compressed ceiling.
-const RAW_LIMIT = 1_410_000;
+// 2026-09-20: editable placement keys, unnamed drafts, shared validation summaries,
+// persistent tab errors and guarded header clicks measure 1,410,072 raw / 434,203
+// gzip-9 bytes against current siblings. Restore 5 KB raw headroom for this
+// authoring surface; retain the compressed ceiling.
+const RAW_LIMIT = 1_415_000;
 const GZIP_LIMIT = 435_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
