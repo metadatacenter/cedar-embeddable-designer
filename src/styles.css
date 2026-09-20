@@ -437,7 +437,7 @@ textarea {
   font-family: inherit;
   font-size: var(--cedar-control-font-size, var(--cedar-control-font-size-authoring));
   font-weight: var(--cedar-font-weight-regular, 400);
-  line-height: var(--cedar-line-height-normal, 1.5);
+  line-height: var(--cedar-control-line-height, var(--cedar-control-line-height-authoring));
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
