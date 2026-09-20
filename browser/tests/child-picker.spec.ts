@@ -95,10 +95,15 @@ test('creates an editable element at the insertion position and adds a nested fi
     .toBe(true);
   await expect(designer.locator('app-container-editor app-container-editor input').first()).toBeFocused();
   const nested = designer.locator('app-container-editor app-container-editor').first();
+  await expect(nested.locator('.element-toggle')).toHaveCount(0);
   await nested.getByRole('button', { name: 'Add field', exact: true }).click();
   await nested.getByRole('button', { name: 'Text', exact: true }).click();
   const document = await currentTemplate(page);
   expect(fieldOrder((document['properties'] as CedJsonObject)['Element'] as CedJsonObject)).toHaveLength(1);
+  await nested.getByRole('button', { name: 'Delete field', exact: true }).click();
+  await expect(nested.locator('.element-toggle')).toHaveCount(0);
+  await nested.getByRole('button', { name: 'Add field', exact: true }).click();
+  await nested.getByRole('button', { name: 'Text', exact: true }).click();
   await nested.getByRole('button', { name: 'Collapse Element', exact: true }).click();
   await nested.getByRole('button', { name: 'Delete element Element', exact: true }).click();
   expect(fieldOrder(await currentTemplate(page))).toEqual(['Title', 'Category', 'Publication Date']);

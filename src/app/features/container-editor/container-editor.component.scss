@@ -183,8 +183,15 @@
 }
 
 .element-drag-handle {
+  position: absolute;
+  top: var(--cedar-space-3);
+  left: 50%;
+  transform: translateX(-50%);
   display: inline-flex;
+  padding: 2px;
+  color: #9ca3af;
   cursor: grab;
+  z-index: 1;
 }
 
 .container-content > .add-field-section {
@@ -213,20 +220,17 @@ textarea.template-input {
   overflow: hidden;
 }
 
-.template-header-card__icon:has(.element-drag-handle) {
-  display: flex;
-}
-
-.version-value-row {
+.version-group {
   position: relative;
+}
+.version-value-row {
   display: flex;
   justify-content: flex-end;
   align-items: center;
 }
 .element-delete {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 0;
   left: calc(100% + var(--cedar-space-3));
   display: inline-flex;
   align-items: center;

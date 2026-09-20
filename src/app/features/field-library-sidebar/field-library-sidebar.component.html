@@ -1,14 +1,14 @@
-<app-insertion-actions [targetId]="service.session.active().id" [position]="service.children().length" />
-@if (service.showPicker() !== null) {
-  <app-field-type-picker [containerId]="service.session.active().id" [insertPosition]="service.showPicker()!" />
-}
-
 <div
   class="sidebar-container"
   [style.width]="service.sidebarCollapsed() ? '48px' : '288px'"
   style="top: 0; height: 100%; max-height: 100%"
 >
   @if (!service.sidebarCollapsed()) {
+    <app-insertion-actions [targetId]="service.session.active().id" [position]="service.children().length" />
+    @if (service.showPicker() !== null) {
+      <app-field-type-picker [containerId]="service.session.active().id" [insertPosition]="service.showPicker()!" />
+    }
+
     <!-- Field List Section -->
     <div class="sidebar-section" [style.height.%]="fieldListHeight">
       <!-- Field List Header -->

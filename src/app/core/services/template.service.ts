@@ -291,18 +291,27 @@ export class TemplateService {
     this.collapsedElements.set(
       new Set(
         this.containerChoices()
-          .filter((choice) => choice.id !== this.session.document().id)
+          .filter((choice) => choice.id !== this.session.document().id && this.hasChildren(choice.id))
           .map((choice) => choice.id),
       ),
     );
   }
   toggleElement(id: number): void {
+    if (!this.hasChildren(id)) return;
     this.collapsedElements.update((previous) => {
       const next = new Set(previous);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+  }
+
+  private hasChildren(id: number): boolean {
+    return !!findContainer(this.session.document(), id)?.children.length;
+  }
+
+  private pruneCollapsed(): void {
+    this.collapsedElements.update((ids) => new Set([...ids].filter((id) => this.hasChildren(id))));
   }
 
   // Field manipulation methods
@@ -353,6 +362,7 @@ export class TemplateService {
   deleteField(id: number) {
     if (this.isPublished(id)) return;
     this.fieldsFor(id).update((prev) => prev.filter((f) => f.id !== id));
+    this.pruneCollapsed();
     if (this.selectedField() === id) {
       this.selectedField.set(null);
     }
@@ -781,11 +791,13 @@ export class TemplateService {
         children: container.children.filter((node) => node.id !== id),
       })),
     );
+    this.pruneCollapsed();
     if (!this.containerChoices().some((choice) => choice.id === this.session.activeId())) this.openContainer(parent.id);
   }
   moveChild(id: number, targetId: number, index = Number.MAX_SAFE_INTEGER): void {
     try {
       this.session.document.update((root) => moveChild(root, id, targetId, index));
+      this.pruneCollapsed();
       this.loadError.set(null);
     } catch (error) {
       this.loadError.set(error instanceof Error ? error.message : String(error));

@@ -1,4 +1,4 @@
-import { addElementFixture } from './support';
+import { addElementFixture, child } from './support';
 import { expect, test } from '@playwright/test';
 import { openSettings, openDesigner, currentTemplate, nestFixtureFields } from './support';
 
@@ -38,11 +38,12 @@ for (const width of [1280, 375]) {
     await addElementFixture(page, root);
     const parent = nestedEditors(root).first();
     await directHeader(parent).getByPlaceholder('Element name').fill('Samples');
+    await expect(directHeader(parent).getByRole('button', { name: 'Collapse Samples', exact: true })).toHaveCount(0);
+    await addElementFixture(page, directContent(parent));
     await expect(directHeader(parent).getByRole('button', { name: 'Collapse Samples', exact: true })).toHaveAttribute(
       'aria-expanded',
       'true',
     );
-    await addElementFixture(page, directContent(parent));
     const nested = nestedEditors(parent).first();
     await directHeader(nested).getByPlaceholder('Element name').fill('Sample');
     const placement = directHeader(nested).locator(':scope > app-element-card');
@@ -247,11 +248,11 @@ for (const width of [1280, 375]) {
       const child = node.querySelector('.nested-content .field-drag-container')!.getBoundingClientRect();
       const toggle = node.querySelector('.element-toggle')!.getBoundingClientRect();
       const bin = node.querySelector('.element-delete')!.getBoundingClientRect();
-      const version = node.querySelector('input[aria-label="Version"]')!.getBoundingClientRect();
+      const version = node.querySelector('.version-group .template-field-label')!.getBoundingClientRect();
       return {
         headerInset: header.left - edge,
         childInset: child.left - edge,
-        binAlignment: Math.abs(bin.y + bin.height / 2 - version.y - version.height / 2),
+        binAlignment: Math.abs(bin.top - version.top),
         toggleBottom: header.bottom - toggle.bottom,
         toggleRight: header.right - toggle.right,
       };
@@ -265,5 +266,61 @@ for (const width of [1280, 375]) {
     await expect(directContent(element)).toBeHidden();
     await header.getByRole('button', { name: 'Expand Element', exact: true }).click();
     await expect(directContent(element)).toBeVisible();
+  });
+}
+
+for (const collapsed of [false, true]) {
+  test(`element move handle preserves children when collapsed=${collapsed}`, async ({ page }) => {
+    const designer = await openDesigner(page);
+    await page.setViewportSize({ width: 1280, height: 1400 });
+    await page.getByRole('button', { name: 'Basic', exact: true }).click();
+    await page.getByRole('button', { name: /Modular/ }).click();
+    await addElementFixture(page, designer);
+    await nestFixtureFields(page, ['Element'], 2);
+    const root = designer.locator('app-container-editor').first();
+    const element = nestedEditors(root).first();
+    if (collapsed) await directHeader(element).locator('.element-toggle').click();
+    const before = await currentTemplate(page);
+    const handle = directHeader(element).getByLabel('Drag element to reorder', { exact: true });
+    await handle.scrollIntoViewIfNeeded();
+    const from = (await handle.boundingBox())!;
+    const first = root.locator(':scope > .container-content > .fields-drop-list > .field-drop-item').first();
+    const to = (await first.boundingBox())!;
+    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(from.x + from.width / 2, from.y - 10, { steps: 3 });
+    await page.mouse.move(from.x + from.width / 2, to.y + 5, { steps: 20 });
+    await page.mouse.up();
+    await expect
+      .poll(async () => (await currentTemplate(page))._ui)
+      .toMatchObject({
+        order: ['Element', ...(before._ui as { order: string[] }).order.filter((name) => name !== 'Element')],
+      });
+    expect(child(await currentTemplate(page), 'Element')).toEqual(child(before, 'Element'));
+  });
+}
+
+for (const width of [1280, 375]) {
+  test(`template children collapse independently of settings at ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    const designer = await openDesigner(page);
+    const root = designer.locator('app-container-editor').first();
+    const toggle = directHeader(root).locator('.element-toggle');
+    const before = await currentTemplate(page);
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await toggle.click();
+    await expect(directContent(root)).toBeHidden();
+    await expect(directHeader(root)).toBeVisible();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(await currentTemplate(page)).toEqual(before);
+    await toggle.click();
+    await expect(directContent(root)).toBeVisible();
+    const cards = root.locator('app-field-card');
+    for (let remaining = await cards.count(); remaining > 0; remaining--) {
+      await cards.first().getByRole('button', { name: 'Delete field', exact: true }).click();
+      await expect(cards).toHaveCount(remaining - 1);
+    }
+    await expect(toggle).toHaveCount(0);
+    await expect(directContent(root)).toBeVisible();
   });
 }

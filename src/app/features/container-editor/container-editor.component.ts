@@ -68,7 +68,7 @@ export class ContainerEditorComponent {
       this.service.session.document(),
   );
   readonly collapsed = computed(
-    () => !!this.placementNode() && this.service.collapsedElements().has(this.container().id),
+    () => this.container().children.length > 0 && this.service.collapsedElements().has(this.container().id),
   );
   readonly dismissedInsertion = signal<number | null>(null);
   readonly fieldView = fieldView;

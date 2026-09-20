@@ -3,24 +3,23 @@
   @if (placementNode() && service.issuesFor(container().id).length; as count) {
     <span class="validation-badge">⚠ {{ count }} {{ count === 1 ? 'error' : 'errors' }}</span>
   }
+  @if (placementNode()) {
+    <span
+      cdkDragHandle
+      class="element-drag-handle"
+      title="Drag element to reorder"
+      aria-label="Drag element to reorder"
+    >
+      <app-icon key="list" size="small" />
+    </span>
+  }
   <div class="template-header-card__body" appHeaderToggle (headerToggle)="toggleSettings()">
     <div class="template-header-card__icon">
-      @if (placementNode()) {
-        <span
-          cdkDragHandle
-          class="element-drag-handle"
-          title="Drag element to reorder"
-          aria-label="Drag element to reorder"
-        >
-          <app-icon key="artifact-element" size="large" [style.color]="'var(--cedar-color-primary)'" />
-        </span>
-      } @else {
-        <app-icon
-          [key]="container().kind === 'element' ? 'artifact-element' : 'artifact-template'"
-          size="large"
-          [style.color]="'var(--cedar-color-primary)'"
-        />
-      }
+      <app-icon
+        [key]="container().kind === 'element' ? 'artifact-element' : 'artifact-template'"
+        size="large"
+        [style.color]="'var(--cedar-color-primary)'"
+      />
     </div>
     <div class="template-header-card__inputs">
       <!-- Top Row: Name, Identifier, Version -->
@@ -49,7 +48,7 @@
           />
         </div>
 
-        <div class="template-field-group w-24 text-right">
+        <div class="template-field-group version-group w-24 text-right">
           <label class="template-field-label">Version</label>
           <div class="version-value-row">
             <input
@@ -97,7 +96,7 @@
         ></textarea>
       </div>
     </div>
-    @if (placementNode()) {
+    @if (container().children.length) {
       <button
         type="button"
         class="element-toggle"
