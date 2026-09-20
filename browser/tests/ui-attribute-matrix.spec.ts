@@ -233,10 +233,11 @@ for (const width of WIDTHS) {
             await expectLaidOut(page, `${paletteType} ${await tabs.nth(index).textContent()}`);
             const leadingGap = await settings(page).evaluate((el) => {
               const panel = el.querySelector<HTMLElement>('[role="tabpanel"]:not([hidden])')!;
-              // An empty choice list starts with Add option, not an input.
+              // Measure the choice row, not the text centered inside its shared minimum height.
+              // An empty choice list starts with Add option, not a row.
               const first = [
                 ...panel.querySelectorAll<HTMLElement>(
-                  'label, dt, .default-label, app-controlled-term-config, [field-values] input, [field-values] textarea, [field-values] button',
+                  'label, dt, .default-label, app-controlled-term-config, .choice-option-row, [field-values] input, [field-values] textarea, [field-values] button',
                 ),
               ]
                 .filter((node) => node.getClientRects().length > 0)
