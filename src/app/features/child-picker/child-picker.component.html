@@ -1,5 +1,5 @@
 <dialog #dialog aria-labelledby="child-picker-title" (cancel)="$event.preventDefault(); close()">
-  <h2 id="child-picker-title">Select fields and elements</h2>
+  <h2 id="child-picker-title">Import {{ kindLabel }}</h2>
   <div class="selection-heading">
     <h3>Selected children ({{ selected().length }})</h3>
     <div class="actions">
@@ -44,7 +44,7 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="7" class="empty">Select fields and elements from the results below.</td>
+            <td colspan="7" class="empty">Select {{ kindLabel }} from the results below.</td>
           </tr>
         }
       </tbody>
@@ -54,7 +54,7 @@
     <p role="status">Repository search is unavailable in this host.</p>
   } @else {
     <form (ngSubmit)="search()" class="search">
-      <label for="child-search">Search fields and elements</label>
+      <label for="child-search">Search {{ kindLabel }}</label>
       <div>
         <input
           spellcheck="false"
@@ -111,10 +111,10 @@
                   searching()
                     ? 'Searching…'
                     : searched()
-                      ? 'No fields or elements found.'
+                      ? 'No ' + kindLabel + ' found.'
                       : error()
                         ? 'Results could not be loaded.'
-                        : 'Enter a search to find reusable fields and elements.'
+                        : 'Enter a search to find reusable ' + kindLabel + '.'
                 }}
               </td>
             </tr>

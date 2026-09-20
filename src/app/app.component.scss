@@ -341,6 +341,10 @@
   top: -17px;
 }
 
+.insert-zone:focus-within {
+  opacity: 1;
+}
+
 .btn-insert-here {
   @apply text-white rounded-full px-3 py-1 shadow-md font-medium border-none cursor-pointer;
   font-size: var(--cedar-font-size-small);
@@ -461,4 +465,20 @@
   .designer-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+// Hidden insertion actions must not intercept the neighboring card's controls.
+.insert-zone app-insertion-actions {
+  pointer-events: none;
+}
+.insert-zone:hover app-insertion-actions,
+.insert-zone:focus-within app-insertion-actions {
+  pointer-events: auto;
+}
+
+.insert-zone.dismissed {
+  opacity: 0;
+}
+.insert-zone.dismissed app-insertion-actions {
+  pointer-events: none;
 }

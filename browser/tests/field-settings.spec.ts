@@ -116,7 +116,7 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
   const designer = await openDesigner(page);
   await applyPreset(page, 'modular');
   await designer
-    .getByRole('button', { name: /Add Child/ })
+    .getByRole('button', { name: /^Add field$/ })
     .last()
     .click();
   await designer.locator('app-field-type-picker').getByRole('button', { name: 'Image', exact: true }).click();
@@ -131,7 +131,7 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
     .poll(async () => ((await currentTemplate(page)).properties as any).Picture._ui._size)
     .toEqual({ width: 640, height: 360 });
   await designer
-    .getByRole('button', { name: /Add Child/ })
+    .getByRole('button', { name: /^Add field$/ })
     .last()
     .click();
   await designer.locator('app-field-type-picker').getByRole('button', { name: 'Rich Text', exact: true }).click();
@@ -160,7 +160,7 @@ test('one Temporal palette entry supports date, time and date-time without chang
 }) => {
   const designer = await openDesigner(page);
   await designer
-    .getByRole('button', { name: /Add Child/ })
+    .getByRole('button', { name: /^Add field$/ })
     .last()
     .click();
   const picker = designer.locator('app-field-type-picker');

@@ -161,7 +161,7 @@ test('brand tokens reach template bindings and native choice controls', async ({
     host.style.setProperty('--cedar-color-primary', 'rgb(80, 20, 120)');
     host.style.setProperty('--cedar-primary-50', 'rgb(240, 220, 250)');
   });
-  await expect(designer.getByRole('button', { name: /Add Child/ }).first()).toHaveCSS(
+  await expect(designer.getByRole('button', { name: /^Add field$/ }).first()).toHaveCSS(
     'background-color',
     'rgb(80, 20, 120)',
   );

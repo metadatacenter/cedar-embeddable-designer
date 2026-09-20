@@ -13,7 +13,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 })
 export class ChildPickerComponent implements OnDestroy {
   readonly service = inject(TemplateService);
-  readonly target = input.required<{ targetId: number; position: number }>();
+  readonly target = input.required<{ targetId: number; position: number; type?: 'field' | 'element' }>();
   readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
   readonly selected = signal<CedChildResult[]>([]);
   readonly results = signal<CedChildResult[]>([]);
@@ -22,6 +22,13 @@ export class ChildPickerComponent implements OnDestroy {
   readonly error = signal('');
   readonly searched = signal(false);
   readonly nextCursor = signal<string | undefined>(undefined);
+  get kindLabel(): string {
+    return this.target().type === 'field'
+      ? 'fields'
+      : this.target().type === 'element'
+        ? 'elements'
+        : 'fields and elements';
+  }
   query = '';
   private lastQuery = '';
   private request?: AbortController;
@@ -72,7 +79,12 @@ export class ChildPickerComponent implements OnDestroy {
       this.results.set([
         ...new Map(
           rows
-            .filter((row) => row.id && (row.type === 'field' || row.type === 'element'))
+            .filter(
+              (row) =>
+                row.id &&
+                (row.type === 'field' || row.type === 'element') &&
+                (!this.target().type || row.type === this.target().type),
+            )
             .map((row) => [this.key(row), row]),
         ).values(),
       ]);

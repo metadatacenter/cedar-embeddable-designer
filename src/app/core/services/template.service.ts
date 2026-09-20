@@ -649,10 +649,14 @@ export class TemplateService {
   }
 
   readonly childSource = signal<CedChildSource | null>(null);
-  readonly childPicker = signal<{ targetId: number; position: number } | null>(null);
-  openChildPicker(targetId = this.session.active().id, position = this.session.active().children.length): void {
+  readonly childPicker = signal<{ targetId: number; position: number; type?: 'field' | 'element' } | null>(null);
+  openChildPicker(
+    targetId = this.session.active().id,
+    position = this.session.active().children.length,
+    type?: 'field' | 'element',
+  ): void {
     this.showPicker.set(null);
-    this.childPicker.set({ targetId, position });
+    this.childPicker.set({ targetId, position, type });
   }
 
   /** Parse the complete batch before changing the document. Source definitions keep their identity. */
@@ -693,7 +697,7 @@ export class TemplateService {
     }
   }
 
-  addElement(targetId = this.session.active().id): void {
+  addElement(targetId = this.session.active().id, position = Number.MAX_SAFE_INTEGER): number {
     const definition = newContainer('element', 'Element');
     this.insertNode(
       {
@@ -702,9 +706,10 @@ export class TemplateService {
         definition,
         placement: { allowMultiple: false, propertyIri: newFieldIdentity().propertyIri },
       },
-      Number.MAX_SAFE_INTEGER,
+      position,
       targetId,
     );
+    return definition.id;
   }
   importElement(source: string | object, targetId = this.session.active().id): void {
     const definition = readContainer(source);

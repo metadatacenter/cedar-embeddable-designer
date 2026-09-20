@@ -51,15 +51,28 @@
 
         <div class="template-field-group w-24 text-right">
           <label class="template-field-label">Version</label>
-          <input
-            spellcheck="false"
-            type="text"
-            [ngModel]="container().version"
-            (ngModelChange)="update({ version: $event })"
-            class="template-input font-medium text-sm text-gray-800 text-right"
-            aria-label="Version"
-            placeholder="Not specified"
-          />
+          <div class="version-value-row">
+            <input
+              spellcheck="false"
+              type="text"
+              [ngModel]="container().version"
+              (ngModelChange)="update({ version: $event })"
+              class="template-input font-medium text-sm text-gray-800 text-right"
+              aria-label="Version"
+              placeholder="Not specified"
+            />
+            @if (placementNode()) {
+              <button
+                type="button"
+                class="element-delete"
+                [attr.aria-label]="'Delete element ' + container().name"
+                title="Delete element"
+                (click)="$event.stopPropagation(); service.deleteChild(container().id)"
+              >
+                <app-icon key="trash" />
+              </button>
+            }
+          </div>
           @if (
             publicationStatusLabel(
               container().metadata ? container().metadata?.artifact?.publicationStatus : 'bibo:draft'
@@ -116,10 +129,18 @@
       <div class="field-drop-item" [id]="'field-card-' + node.id">
         <!-- Insert Zone (modal style) -->
         @if (service.preferences().fieldSelectionStyle === 'modal') {
-          <div class="insert-zone" (click)="chooseField(idx)">
-            <button class="btn-insert-here" [style.backgroundColor]="'var(--cedar-color-primary)'">
-              <app-icon key="add" size="small" /> Add child here
-            </button>
+          <div
+            class="insert-zone"
+            [class.dismissed]="dismissedInsertion() === node.id"
+            (mouseleave)="dismissedInsertion.set(null)"
+            (focusin)="dismissedInsertion.set(null)"
+          >
+            <app-insertion-actions
+              [targetId]="container().id"
+              [position]="idx"
+              [here]="true"
+              (used)="dismissedInsertion.set(node.id)"
+            />
           </div>
           @if (pickerAt(idx)) {
             <div class="my-3">
@@ -161,17 +182,12 @@
     }
   </div>
 
-  <!-- Bottom Add Child Section (modal style) -->
+  <!-- Bottom insertion zone (modal style) -->
   @if (service.preferences().fieldSelectionStyle === 'modal') {
     <div class="add-field-section">
-      <button
-        (click)="chooseField(container().children.length)"
-        class="btn-add-field"
-        [style.backgroundColor]="'var(--cedar-color-primary)'"
-      >
-        <span class="text-base font-medium"><app-icon key="add" size="small" /></span>
-        Add Child
-      </button>
+      <div class="bottom-insert-zone">
+        <app-insertion-actions [targetId]="container().id" [position]="container().children.length" />
+      </div>
       @if (pickerAt(container().children.length)) {
         <div class="add-field-section__picker">
           <app-field-type-picker

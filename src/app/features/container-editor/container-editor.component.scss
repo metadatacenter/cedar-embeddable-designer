@@ -148,7 +148,7 @@
 }
 .element-toggle {
   position: absolute;
-  top: var(--cedar-space-1);
+  bottom: var(--cedar-space-1);
   right: var(--cedar-space-1);
   display: inline-flex;
   align-items: center;
@@ -215,4 +215,42 @@ textarea.template-input {
 
 .template-header-card__icon:has(.element-drag-handle) {
   display: flex;
+}
+
+.version-value-row {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+.element-delete {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: calc(100% + var(--cedar-space-3));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cedar-space-6);
+  height: var(--cedar-space-6);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--cedar-text-primary);
+  cursor: pointer;
+}
+
+.bottom-insert-zone {
+  width: 100%;
+}
+// Keep the hit area stable so revealing the controls does not move the document.
+// Touch users always see the actions; keyboard focus reveals them on desktop.
+@media (hover: hover) and (pointer: fine) {
+  .bottom-insert-zone > app-insertion-actions {
+    opacity: 0;
+  }
+  .bottom-insert-zone:hover > app-insertion-actions,
+  .bottom-insert-zone:focus-within > app-insertion-actions {
+    opacity: 1;
+  }
 }

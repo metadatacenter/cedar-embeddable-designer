@@ -6,15 +6,11 @@ test('local test1 can search and insert a reusable element in the default Modula
   await page.goto('http://localhost:4599/');
   const designer = page.locator('cedar-embeddable-designer');
   await expect(designer.getByRole('button', { name: 'Modular', exact: true })).toBeVisible();
-  await expect(designer.getByRole('button', { name: /^(Add Element|Import Element|Download as JSON)$/ })).toHaveCount(
-    0,
-  );
   await expect(designer.locator('input[type="file"]')).toHaveCount(0);
-  await designer.getByRole('button', { name: /Add Child/ }).click();
-  await designer.getByRole('button', { name: 'Select existing fields and elements' }).click();
+  await designer.getByRole('button', { name: 'Import element', exact: true }).click();
   await designer.getByRole('searchbox').fill('Study');
   await designer.getByRole('button', { name: 'Search', exact: true }).click();
-  await expect(designer.getByRole('table', { name: 'Search results' })).toContainText('No fields or elements found.');
+  await expect(designer.getByRole('table', { name: 'Search results' })).toContainText('No elements found.');
   await expect(designer.getByRole('alert')).toHaveCount(0);
   for (const query of ['Princ', 'princ', 'Princ Inv', 'Principal Investigator']) {
     await designer.getByRole('searchbox').fill(query);

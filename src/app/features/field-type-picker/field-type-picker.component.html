@@ -1,7 +1,7 @@
 <div class="picker-container animate-fade-in" [style.border]="'2px solid ' + 'var(--cedar-primary-100)'">
   <div class="picker-header">
     <div class="picker-header-left">
-      <h3 class="picker-title">Chose child</h3>
+      <h3 class="picker-title">Choose field</h3>
 
       <!-- Library Dropdown with Autocomplete -->
       @if (service.libraries().length > 0) {
@@ -82,18 +82,6 @@
           <span class="field-item-label">{{ customField.definition.name }}</span>
         </button>
       }
-    }
-    @if (service.getActivePreset() !== 'basic') {
-      <button
-        type="button"
-        class="btn-field-item btn-existing-child"
-        (click)="service.openChildPicker(containerId() ?? service.session.active().id, insertPosition)"
-      >
-        <div class="field-item-icon">
-          <app-icon key="library" size="default"></app-icon>
-        </div>
-        <span class="field-item-label">Select existing fields and elements</span>
-      </button>
     }
   </div>
 

@@ -91,7 +91,7 @@ async function designerShowing(
 
   for (const label of labels) {
     await designer
-      .getByRole('button', { name: /Add Child/ })
+      .getByRole('button', { name: /^Add field$/ })
       .first()
       .click();
     await designer.getByRole('button', { name: label, exact: true }).click();
@@ -139,7 +139,7 @@ test.describe('the designer', () => {
   test('shows the field type palette', async ({ page }) => {
     const designer = await designerShowing(page, ['Text']);
     await designer
-      .getByRole('button', { name: /Add Child/ })
+      .getByRole('button', { name: /^Add field$/ })
       .first()
       .click();
     const picker = designer.locator('app-field-type-picker');

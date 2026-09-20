@@ -231,7 +231,7 @@ for (const width of [1280, 375]) {
 }
 
 for (const width of [1280, 375]) {
-  test(`nested element header has half the child inset and a top-corner toggle at ${width}`, async ({ page }) => {
+  test(`nested element header has half the child inset and a bottom-corner toggle at ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
     const designer = await openDesigner(page);
     await designer.getByRole('button', { name: 'Basic', exact: true }).click();
@@ -246,16 +246,20 @@ for (const width of [1280, 375]) {
       const header = node.querySelector(':scope > .template-header-card')!.getBoundingClientRect();
       const child = node.querySelector('.nested-content .field-drag-container')!.getBoundingClientRect();
       const toggle = node.querySelector('.element-toggle')!.getBoundingClientRect();
+      const bin = node.querySelector('.element-delete')!.getBoundingClientRect();
+      const version = node.querySelector('input[aria-label="Version"]')!.getBoundingClientRect();
       return {
         headerInset: header.left - edge,
         childInset: child.left - edge,
-        toggleTop: toggle.top - header.top,
+        binAlignment: Math.abs(bin.y + bin.height / 2 - version.y - version.height / 2),
+        toggleBottom: header.bottom - toggle.bottom,
         toggleRight: header.right - toggle.right,
       };
     });
     expect(geometry.headerInset).toBeGreaterThan(0);
     expect(geometry.headerInset * 2).toBeCloseTo(geometry.childInset, 1);
-    expect(geometry.toggleTop).toBeLessThanOrEqual(6);
+    expect(geometry.binAlignment).toBeLessThan(1);
+    expect(geometry.toggleBottom).toBeLessThanOrEqual(6);
     expect(geometry.toggleRight).toBeLessThanOrEqual(6);
     await header.getByRole('button', { name: 'Collapse Element', exact: true }).click();
     await expect(directContent(element)).toBeHidden();

@@ -147,7 +147,7 @@ test('adding a field scrolls to it without reaching for the document', async ({ 
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
 
-  await designer.getByRole('button', { name: /Add Child/ }).click();
+  await designer.getByRole('button', { name: /^Add field$/ }).click();
   await designer.getByRole('button', { name: 'Text', exact: true }).first().click();
 
   await expect(designer.locator('[id^=field-card-]')).toHaveCount(4);
@@ -212,7 +212,7 @@ test('the field picker scrolls into a short designer and keeps its last option r
   const designer = await openDesigner(page);
   await designer.getByRole('button', { name: 'Basic', exact: true }).click();
   await designer.getByRole('button', { name: /Modular/ }).click();
-  await designer.getByRole('button', { name: /Add Child/ }).click();
+  await designer.getByRole('button', { name: /^Add field$/ }).click();
   const picker = designer.locator('.picker-container');
   await expect
     .poll(() =>
@@ -258,15 +258,17 @@ for (const width of [1440, 1024, 640]) {
       const preview = designer.locator('app-cee-preview');
       await expect(preview).toBeVisible();
       // Sidebar changes animate the designer width; compare the settled layout.
-      await expect.poll(async () => {
-        const editingWidth = await designer.locator('.designer-workspace').evaluate((node) => {
-          const css = getComputedStyle(node);
-          return node.getBoundingClientRect().width - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight);
-        });
-        const previewWidth = (await preview.boundingBox())!.width;
-        expect(previewWidth).toBeGreaterThan(0);
-        return previewWidth - editingWidth;
-      }).toBeLessThanOrEqual(1);
+      await expect
+        .poll(async () => {
+          const editingWidth = await designer.locator('.designer-workspace').evaluate((node) => {
+            const css = getComputedStyle(node);
+            return node.getBoundingClientRect().width - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight);
+          });
+          const previewWidth = (await preview.boundingBox())!.width;
+          expect(previewWidth).toBeGreaterThan(0);
+          return previewWidth - editingWidth;
+        })
+        .toBeLessThanOrEqual(1);
     }
     await checkWidths();
     const closeOverview = header.getByRole('button', { name: 'Close Overview', exact: true });

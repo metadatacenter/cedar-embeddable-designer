@@ -1,7 +1,8 @@
+import { InsertionActionsComponent } from '../insertion-actions/insertion-actions.component';
 import { HeaderToggleDirective } from '../../shared/header-toggle.directive';
 import { ContainerSettingsComponent } from '../container-settings/container-settings.component';
 import { publicationStatusLabel } from '../../shared/publication-status';
-import { Component, inject, input, computed, viewChild } from '@angular/core';
+import { Component, inject, input, computed, viewChild, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService } from '../../core/services/template.service';
@@ -16,6 +17,7 @@ import { ElementCardComponent } from '../element-card/element-card.component';
   selector: 'app-container-editor',
   host: { '(click)': '$event.stopPropagation()' },
   imports: [
+    InsertionActionsComponent,
     FormsModule,
     HeaderToggleDirective,
     DragDropModule,
@@ -68,6 +70,7 @@ export class ContainerEditorComponent {
   readonly collapsed = computed(
     () => !!this.placementNode() && this.service.collapsedElements().has(this.container().id),
   );
+  readonly dismissedInsertion = signal<number | null>(null);
   readonly fieldView = fieldView;
   update(
     changes: Partial<

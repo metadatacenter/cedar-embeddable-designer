@@ -1,0 +1,19 @@
+:host {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--cedar-space-2);
+}
+button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cedar-space-1);
+  padding: var(--cedar-space-1) var(--cedar-space-3);
+  min-height: var(--cedar-control-height-authoring);
+  border: 0;
+  border-radius: var(--cedar-control-height-authoring);
+  background: var(--cedar-color-primary);
+  color: var(--cedar-color-on-primary);
+  font-size: var(--cedar-font-size-small);
+  cursor: pointer;
+}

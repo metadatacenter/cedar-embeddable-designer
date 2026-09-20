@@ -63,7 +63,7 @@ const HEIGHT_BUDGET = 420;
 async function paletteLabels(page: Page): Promise<string[]> {
   const designer = page.locator(DESIGNER);
   await designer
-    .getByRole('button', { name: /Add Child/ })
+    .getByRole('button', { name: /^Add field$/ })
     .first()
     .click();
   const picker = designer.locator('app-field-type-picker');
@@ -90,7 +90,7 @@ async function everyTypeOnPage(page: Page): Promise<string[]> {
 
   for (const label of labels) {
     await designer
-      .getByRole('button', { name: /Add Child/ })
+      .getByRole('button', { name: /^Add field$/ })
       .first()
       .click();
     await designer.getByRole('button', { name: label, exact: true }).click();
@@ -117,8 +117,9 @@ test('the whole palette lays out without clipping, escaping or drifting', async 
     }
     const colors = await card.evaluate((node) => {
       const css = getComputedStyle(node);
-      const expected = css.getPropertyValue(node.classList.contains('selected')
-        ? '--cedar-border-selected' : '--cedar-border-rule').trim();
+      const expected = css
+        .getPropertyValue(node.classList.contains('selected') ? '--cedar-border-selected' : '--cedar-border-rule')
+        .trim();
       const probe = document.createElement('span');
       probe.style.color = expected;
       node.appendChild(probe);

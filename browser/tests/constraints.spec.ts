@@ -15,7 +15,7 @@ import { openSettings, applyPreset, child, clickCentred, currentTemplate, openDe
 async function openConstraintPanel(page: import('@playwright/test').Page) {
   const designer = await openDesigner(page, '?picker=stub');
   await applyPreset(page, 'semantic');
-  await designer.getByRole('button', { name: /Add Child/ }).click();
+  await designer.getByRole('button', { name: /^Add field$/ }).click();
   await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
   await expect(designer.locator('app-controlled-term-config')).toBeAttached();
   await openSettings(designer.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') }));
@@ -31,7 +31,7 @@ test('offers term search when the host has loaded the picker', async ({ page }) 
 test('says what is missing when the host has not loaded the picker', async ({ page }) => {
   const designer = await openDesigner(page);
   await applyPreset(page, 'semantic');
-  await designer.getByRole('button', { name: /Add Child/ }).click();
+  await designer.getByRole('button', { name: /^Add field$/ }).click();
   await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
 
   await expect(designer.locator('app-controlled-term-config')).toBeAttached();
@@ -46,7 +46,7 @@ test('says what is missing when the host has not loaded the picker', async ({ pa
 test('says what is missing when no terminology server is configured', async ({ page }) => {
   const designer = await openDesigner(page, '?picker=stub&terminology=none');
   await applyPreset(page, 'semantic');
-  await designer.getByRole('button', { name: /Add Child/ }).click();
+  await designer.getByRole('button', { name: /^Add field$/ }).click();
   await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
 
   await expect(designer.locator('app-controlled-term-config')).toContainText('terminologyBaseUrl');

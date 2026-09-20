@@ -1,7 +1,6 @@
-@if (service.getActivePreset() !== 'basic') {
-  <button type="button" class="btn-add-item" (click)="service.openChildPicker()">
-    Select existing fields and elements
-  </button>
+<app-insertion-actions [targetId]="service.session.active().id" [position]="service.children().length" />
+@if (service.showPicker() !== null) {
+  <app-field-type-picker [containerId]="service.session.active().id" [insertPosition]="service.showPicker()!" />
 }
 
 <div
