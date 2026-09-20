@@ -111,8 +111,9 @@ for (const type of ['multipleChoice', 'checkboxes', 'singleChoiceList', 'multipl
       .toEqual(wanted);
     await expect(page.locator('app-field-summary .cee-spec-box')).toContainText('default ' + wanted.join(' · '));
     if (type === 'singleChoiceList' || type === 'multipleChoiceList') {
-      await expect(control.getByRole('button', { name: 'Clear', exact: true }))
-        .toHaveCount(type === 'singleChoiceList' ? 1 : 0);
+      await expect(control.getByRole('button', { name: 'Clear', exact: true })).toHaveCount(
+        type === 'singleChoiceList' ? 1 : 0,
+      );
     }
   });
 }
@@ -203,7 +204,9 @@ test('controlled default uses the term picker and verifies field membership', as
   const previewBox = page.locator('app-field-summary .cee-spec-box');
   for (const property of ['fontSize', 'minHeight', 'borderRadius'] as const) {
     const expected = await previewBox.evaluate((node, key) => getComputedStyle(node)[key], property);
-    await expect.poll(() => constraintBox.evaluate((node, key) => getComputedStyle(node)[key], property)).toBe(expected);
+    await expect
+      .poll(() => constraintBox.evaluate((node, key) => getComputedStyle(node)[key], property))
+      .toBe(expected);
   }
   const valueBox = (await control.locator('.default-value-control').boundingBox())!;
   const actionBox = (await chooser.boundingBox())!;
@@ -526,10 +529,13 @@ for (const [type, granularity] of [
 test('radio default selection and clearing keep every option stationary', async ({ page }) => {
   const control = await openField(page, 'multipleChoice');
   const rows = control.locator('.choice-option-row');
-  const geometry = () => rows.evaluateAll(nodes => nodes.map(node => {
-    const { y, height } = node.getBoundingClientRect();
-    return { y, height };
-  }));
+  const geometry = () =>
+    rows.evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const { y, height } = node.getBoundingClientRect();
+        return { y, height };
+      }),
+    );
   const before = await geometry();
   for (const name of ['A', 'B']) {
     await control.getByRole('radio', { name, exact: true }).check();
@@ -538,3 +544,63 @@ test('radio default selection and clearing keep every option stationary', async 
   await control.getByRole('button', { name: 'Clear', exact: true }).click();
   await expect.poll(geometry).toEqual(before);
 });
+
+for (const type of ['checkboxes', 'multipleChoice', 'singleChoiceList', 'multipleChoiceList']) {
+  test(`${type} option text and row spacing match default choices and host overrides`, async ({ page }) => {
+    await openField(page, type);
+    const card = page.locator('app-field-card').first();
+    await openSettings(card, 'Constraints');
+    if (type === 'checkboxes') await expect(card.getByRole('tab', { name: 'Occurrences' })).toHaveCount(0);
+    const option = card.getByRole('textbox', { name: 'Option 1', exact: true });
+    const isList = type.endsWith('List');
+    if (isList) await card.locator('app-field-default-value').getByRole('combobox').click();
+    const labels = isList
+      ? page.locator('.mat-mdc-option .mdc-list-item__primary-text')
+      : card.locator('app-field-default-value .mdc-label');
+    await expect(labels.first()).toBeVisible();
+    for (const override of [false, true]) {
+      if (override) {
+        await page.locator('cedar-embeddable-designer').evaluate((host) => {
+          const style = (host as HTMLElement).style;
+          style.setProperty('--cedar-control-font-size', '16px');
+          style.setProperty('--cedar-control-line-height', '28px');
+          style.setProperty('--cedar-choice-row-height', '36px');
+        });
+      }
+      for (const property of ['font-family', 'font-size', 'font-weight', 'line-height', 'letter-spacing', 'color']) {
+        await expect(option).toHaveCSS(
+          property,
+          await labels.first().evaluate((el, p) => getComputedStyle(el).getPropertyValue(p), property),
+        );
+      }
+      await expect(option).toHaveCSS('font-size', override ? '16px' : '14px');
+      const rows = card.locator('.choice-option-row');
+      const a = (await rows.nth(0).boundingBox())!;
+      const b = (await rows.nth(1).boundingBox())!;
+      expect(b.y - a.y).toBe(override ? 36 : 28);
+      // Overlay opening animates its scale; wait for the settled row geometry.
+      await expect
+        .poll(async () => {
+          const x = (await labels.nth(0).boundingBox())!;
+          const y = (await labels.nth(1).boundingBox())!;
+          return Math.abs(b.y - a.y - (y.y - x.y));
+        })
+        .toBeLessThan(0.1);
+    }
+  });
+}
+
+for (const type of ['singleChoiceList', 'multipleChoiceList']) {
+  test(`${type} long default labels grow beyond the shared minimum without clipping`, async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 1000 });
+    const label = 'An option with a long descriptive label that must wrap onto several lines';
+    const control = await openField(page, type, { options: [label, 'Short'] });
+    await control.getByRole('combobox').click();
+    const option = page.getByRole('option', { name: label, exact: true });
+    const text = option.locator('.mdc-list-item__primary-text');
+    await expect(option).toBeVisible();
+    const metrics = await text.evaluate((el) => ({ height: el.clientHeight, content: el.scrollHeight }));
+    expect(metrics.height).toBeGreaterThan(28);
+    expect(metrics.content).toBeLessThanOrEqual(metrics.height);
+  });
+}

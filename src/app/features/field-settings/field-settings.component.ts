@@ -69,7 +69,9 @@ export class FieldSettingsComponent implements OnChanges {
     return [
       'Display',
       ...(this.hasValues || this.hasConstraints ? [this.valuesTab] : []),
-      ...(!this.service.fieldDocumentMode() && this.multiple ? ['Occurrences'] : []),
+      ...(!this.service.fieldDocumentMode() && this.multiple && this.field.type !== 'checkboxes'
+        ? ['Occurrences']
+        : []),
       'Annotations',
       'Field metadata',
     ];

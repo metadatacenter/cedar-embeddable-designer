@@ -116,16 +116,16 @@
         <!-- Field Preview / Options Editing Inside Card -->
         <!-- Option Editing for Multiple Choice / Checkboxes -->
         @if (allowsOptions(field.type)) {
-          <div class="choice-options space-y-0.5 px-1">
+          <div class="choice-options px-1">
             @for (option of field.options; track $index; let optIdx = $index) {
-              <div class="flex items-center gap-3 group/option px-1">
+              <div class="choice-option-row flex items-center gap-3 group/option px-1">
                 <app-icon [key]="field.type" size="default" className="text-gray-400"></app-icon>
                 <input
                   spellcheck="false"
                   type="text"
                   [ngModel]="option"
                   (ngModelChange)="service.updateOption(field.id, optIdx, $event)"
-                  class="text-sm text-gray-700 border-none outline-none bg-transparent flex-1 min-w-0 border-b border-gray-200 focus:border-teal-500 pb-0.5"
+                  class="border-none outline-none bg-transparent flex-1 min-w-0 border-b border-gray-200 focus:border-teal-500"
                   (focus)="service.selectedField.set(field.id)"
                   [placeholder]="'Option ' + (optIdx + 1)"
                   [attr.aria-label]="'Option ' + (optIdx + 1)"

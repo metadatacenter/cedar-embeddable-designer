@@ -184,11 +184,15 @@
 
 .element-drag-handle {
   position: absolute;
-  top: var(--cedar-space-3);
+  top: calc(var(--cedar-space-3) + var(--cedar-space-1));
   left: 50%;
   transform: translateX(-50%);
   display: inline-flex;
-  padding: calc(var(--cedar-space-1) / 2);
+  align-items: center;
+  justify-content: center;
+  width: var(--cedar-space-6);
+  height: var(--cedar-space-6);
+  padding: 0;
   color: var(--cedar-text-muted);
   cursor: grab;
   z-index: var(--cedar-layer-sticky);

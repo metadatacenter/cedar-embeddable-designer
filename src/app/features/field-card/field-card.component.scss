@@ -1,3 +1,5 @@
+@use '@org.metadatacenter/cedar-design-tokens/controls';
+
 .field-drag-handle {
   display: inline-flex;
   align-items: center;
@@ -108,7 +110,11 @@ app-icon {
 }
 
 .choice-options input {
-  font-size: var(--cedar-font-size);
+  @include controls.choice-text;
+  padding-block: 0;
+}
+.choice-option-row {
+  @include controls.choice-row;
 }
 
 .choice-options {

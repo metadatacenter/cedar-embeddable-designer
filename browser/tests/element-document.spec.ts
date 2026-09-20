@@ -284,6 +284,8 @@ for (const collapsed of [false, true]) {
     const handle = directHeader(element).getByLabel('Drag element to reorder', { exact: true });
     await handle.scrollIntoViewIfNeeded();
     const from = (await handle.boundingBox())!;
+    const bin = (await directHeader(element).locator('.element-delete').boundingBox())!;
+    expect(from.y + from.height / 2).toBe(bin.y + bin.height / 2);
     const first = root.locator(':scope > .container-content > .fields-drop-list > .field-drop-item').first();
     const to = (await first.boundingBox())!;
     await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
