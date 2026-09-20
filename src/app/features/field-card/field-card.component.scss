@@ -136,6 +136,7 @@ app-icon {
 .field-heading > input,
 .field-heading > .occurrence-range {
   align-self: baseline;
+  line-height: var(--cedar-control-line-height-default);
 }
 
 .content-label {
