@@ -1,6 +1,5 @@
 import { FieldSummaryComponent } from '../field-summary/field-summary.component';
 import { HeaderToggleDirective } from '../../shared/header-toggle.directive';
-import { publicationStatusLabel } from '../../shared/publication-status';
 import { FieldSettingsComponent } from '../field-settings/field-settings.component';
 import { Component, Input, inject, ChangeDetectionStrategy, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -9,7 +8,6 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService, FIELD_TYPES } from '../../core/services/template.service';
 import { Field } from '../../core/models/types';
 import {
-  fieldArtifactMetadata,
   choiceDefaultConflict,
   accepts,
   allowsDefault,
@@ -50,10 +48,6 @@ export class FieldCardComponent {
     return `(${this.field.minItems ?? 0} .. ${this.field.maxItems ?? '∞'})`;
   }
 
-  get identityLabel(): string {
-    const metadata = fieldArtifactMetadata(this.field);
-    return [metadata.version, publicationStatusLabel(metadata.publicationStatus)].filter(Boolean).join(' · ');
-  }
   @Input() field!: Field;
   @Input() standalone = false;
 
@@ -67,7 +61,6 @@ export class FieldCardComponent {
    * lies: a page break has no required value, and a radio's cardinality is
    * decided by its type rather than by its author.
    */
-  fieldArtifactMetadata = fieldArtifactMetadata;
   choiceDefaultConflict = choiceDefaultConflict;
   allowsDefault = allowsDefault;
 

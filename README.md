@@ -370,7 +370,7 @@ registration reports an upgrade error rather than waiting indefinitely.
 
 CED/CEFD use the shared 14px body type and standard 36px CEE control profile.
 Control labels use regular weight; section headings and tabs use medium weight.
-Only secondary version metadata uses the 12px small type token. Native controls and
+CED has no separate small-text exception. Native controls and
 embedded CEF both honor inherited `--cedar-control-*` overrides. Service bases
 are normalized once and forwarded identically to terminology and CEF; unknown
 keys and wrong value types produce diagnostics without disabling valid siblings.

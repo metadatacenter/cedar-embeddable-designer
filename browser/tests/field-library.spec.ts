@@ -12,7 +12,7 @@ test('saves complete fields, edits isolated copies, and restores the library aft
   await designer.evaluate((node, template) => {
     (node as unknown as { template: unknown }).template = template;
   }, source);
-  await expect(designer.getByLabel('Field version and publication status').first()).toContainText('2.3.4');
+  await expect(designer.getByLabel('Field version and publication status')).toHaveCount(0);
   await expect(designer.getByRole('button', { name: 'Save field to library', exact: true })).toHaveCount(0);
   await applyPreset(page, 'semantic');
   await designer.getByRole('button', { name: 'Field Designer', exact: true }).click();
@@ -53,8 +53,7 @@ test('published first-class fields show lifecycle information while their defini
   await designer.evaluate((node, template) => {
     (node as unknown as { template: unknown }).template = template;
   }, source);
-  await expect(designer.getByLabel('Field version and publication status').first()).toContainText('1.2.0');
-  await expect(designer.getByLabel('Field version and publication status').first()).toContainText('Published');
+  await expect(designer.getByLabel('Field version and publication status')).toHaveCount(0);
   await expect(designer.getByPlaceholder('Enter field name').first()).toBeDisabled();
   await openSettings(designer.locator('app-field-card').first(), 'Field metadata');
   await expect(designer.locator('app-field-settings').first()).toContainText('1.2.0');

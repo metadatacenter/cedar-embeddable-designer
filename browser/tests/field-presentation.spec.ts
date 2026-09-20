@@ -104,13 +104,13 @@ test('template header shows stored publication status beside the version', async
   }
 });
 
-test('field identity omits absent values and separators', async ({ page }) => {
+test('field headers omit version and publication status', async ({ page }) => {
   const designer = await openDesigner(page);
-  for (const [version, status, label] of [
-    [null, null, ''],
-    ['1.2.0', null, '1.2.0'],
-    [null, 'bibo:published', 'Published'],
-    ['1.2.0', 'bibo:draft', '1.2.0 · Draft'],
+  for (const [version, status] of [
+    [null, null],
+    ['1.2.0', null],
+    [null, 'bibo:published'],
+    ['1.2.0', 'bibo:draft'],
   ]) {
     await page.evaluate(
       ({ version, status }) => {
@@ -123,8 +123,7 @@ test('field identity omits absent values and separators', async ({ page }) => {
       { version, status },
     );
     const identity = designer.locator('app-field-card').first().getByLabel('Field version and publication status');
-    if (label) await expect(identity).toHaveText(label);
-    else await expect(identity).toHaveCount(0);
+    await expect(identity).toHaveCount(0);
   }
 });
 

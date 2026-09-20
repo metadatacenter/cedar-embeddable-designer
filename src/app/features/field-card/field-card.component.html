@@ -52,15 +52,6 @@
 
         <div class="field-controls">
           <div class="field-summary">
-            @if (identityLabel; as label) {
-              <span
-                class="field-identity text-gray-500"
-                [title]="field.atId"
-                aria-label="Field version and publication status"
-              >
-                {{ label }}
-              </span>
-            }
             <!-- Label Badge details -->
             <div class="field-type-label">
               {{ getFieldTypeName(field) }}
