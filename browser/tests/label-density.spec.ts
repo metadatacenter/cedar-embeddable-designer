@@ -34,6 +34,11 @@ for (const width of [1280, 375]) {
     const help = card.getByText('Help text', { exact: true });
     await expect(help).toBeVisible();
     await expect(help).toHaveCSS('text-transform', 'none');
+    for (const label of [help, card.locator('app-language-selector label')]) {
+      await expect(label).toHaveCSS('font-size', '14px');
+      await expect(label).toHaveCSS('font-weight', '400');
+    }
+    await expect(card.getByLabel('Language', { exact: true })).toHaveCSS('font-size', '14px');
     for (const label of await designer.locator('.template-field-label').all()) {
       await expect(label).toHaveCSS('text-transform', 'none');
     }
@@ -41,7 +46,7 @@ for (const width of [1280, 375]) {
     await expect(help).toBeHidden();
     const value = card.getByRole('textbox', { name: 'Default value', exact: true });
     await expect(value).toHaveAttribute('rows', '1');
-    await expect(value).toHaveCSS('height', '32px');
+    await expect(value).toHaveCSS('height', '36px');
     await expect(value).toHaveCSS('resize', 'none');
     await value.fill('First line\nSecond line');
     await expect(value).toHaveValue('First line\nSecond line');

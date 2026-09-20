@@ -80,7 +80,6 @@ for (const width of [1280, 375]) {
         const reference = document.createElement('cedar-embeddable-field') as any;
         reference.id = 'summary-reference';
         reference.config = { readOnlyMode: true };
-        reference.setAttribute('density', 'authoring');
         reference.fieldObject = definition;
         document.body.append(reference);
       },

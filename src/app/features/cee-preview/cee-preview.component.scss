@@ -28,7 +28,7 @@
   align-items: center;
   margin: 0;
   line-height: 1;
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-medium, 500);
   letter-spacing: 0.04em;
   text-transform: none;
@@ -45,12 +45,12 @@
   border-radius: 3px;
   background: white;
   font: inherit;
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
 }
 .cee-preview__notice {
   margin: 0;
   padding: var(--cedar-space-1) var(--cedar-space-3);
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   color: #64748b;
 }
 
@@ -97,6 +97,6 @@
 
   code {
     font-family: var(--cedar-font-family-monospace, ui-monospace, SFMono-Regular, Menlo, monospace);
-    font-size: var(--cedar-font-size-small);
+    font-size: var(--cedar-font-size);
   }
 }

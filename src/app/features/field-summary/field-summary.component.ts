@@ -22,7 +22,7 @@ import { TemplateService } from '../../core/services/template.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (available() && artifact(); as definition) {
-      <cedar-embeddable-field density="authoring" [config]="config()" [fieldObject]="definition" [value]="emptyValue" />
+      <cedar-embeddable-field [config]="config()" [fieldObject]="definition" [value]="emptyValue" />
     } @else {
       <input class="field-preview" spellcheck="false" type="text" disabled [placeholder]="placeholder()" />
     }
@@ -39,13 +39,13 @@ import { TemplateService } from '../../core/services/template.service';
     input {
       box-sizing: border-box;
       width: 100%;
-      height: var(--cedar-control-height, var(--cedar-control-height-authoring));
-      border: 1px solid var(--cedar-border-control);
-      border-radius: var(--cedar-control-radius, var(--cedar-control-radius-authoring));
+      height: var(--cedar-control-height, var(--cedar-control-height-default));
+      border: 1px solid var(--cedar-control-border, var(--cedar-control-border-default));
+      border-radius: var(--cedar-control-radius, var(--cedar-control-radius-default));
       padding: var(--cedar-space-1) var(--cedar-space-2);
       background: var(--cedar-surface-raised);
       color: var(--cedar-text-muted);
-      font-size: var(--cedar-control-font-size, var(--cedar-control-font-size-authoring));
+      font-size: var(--cedar-control-font-size, var(--cedar-font-size));
       opacity: 1;
     }
   `,

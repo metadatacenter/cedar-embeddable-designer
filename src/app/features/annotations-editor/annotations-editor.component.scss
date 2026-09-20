@@ -3,7 +3,7 @@
 :host {
   display: block;
   min-width: 0;
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
 }
 fieldset {
   border: 0;
@@ -27,7 +27,7 @@ caption {
 }
 .add-row label,
 th {
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-medium, 500);
 }
 th {
@@ -38,11 +38,11 @@ th:nth-child(1) {
   width: 28%;
 }
 th:nth-child(2) {
-  width: calc(10 * var(--cedar-space-2));
+  width: calc(12 * var(--cedar-space-2));
   white-space: nowrap;
 }
 th:nth-child(4) {
-  width: calc(var(--cedar-control-height-authoring) + 2 * var(--cedar-table-cell-padding-inline-authoring));
+  width: calc(var(--cedar-control-height-default) + 2 * var(--cedar-table-cell-padding-inline-authoring));
 }
 th,
 td {
@@ -70,12 +70,13 @@ button:disabled {
 }
 .add-row {
   display: grid;
-  grid-template-columns: minmax(100px, 1fr) 80px minmax(100px, 2fr) auto;
+  grid-template-columns: minmax(100px, 1fr) calc(12 * var(--cedar-space-2)) minmax(100px, 2fr) auto;
   gap: var(--cedar-space-2);
   align-items: end;
   margin-bottom: var(--cedar-space-2);
 }
 .add-row label {
+  font-weight: var(--cedar-font-weight-regular);
   display: flex;
   flex-direction: column;
   gap: var(--cedar-form-label-gap);
@@ -83,14 +84,14 @@ button:disabled {
 }
 .add-row button {
   box-sizing: border-box;
-  min-height: var(--cedar-control-height, var(--cedar-control-height-authoring));
+  min-height: var(--cedar-control-height, var(--cedar-control-height-default));
 }
 :host {
   container-type: inline-size;
 }
 @container (max-width: 500px) {
   .add-row {
-    grid-template-columns: minmax(0, 1fr) 80px;
+    grid-template-columns: minmax(0, 1fr) calc(12 * var(--cedar-space-2));
   }
   .add-row label:nth-child(3) {
     grid-column: 1 / -1;

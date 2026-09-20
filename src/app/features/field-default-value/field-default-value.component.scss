@@ -24,7 +24,7 @@
     justify-content: space-between;
     padding: 6px var(--cedar-space-3);
     background: var(--cedar-surface-authoring);
-    font-size: var(--cedar-font-size-small);
+    font-size: var(--cedar-font-size);
     color: var(--cedar-text-muted);
   }
   i {
@@ -39,7 +39,7 @@
   }
   p {
     margin: 6px var(--cedar-space-3);
-    font-size: var(--cedar-font-size-small);
+    font-size: var(--cedar-font-size);
   }
 }
 
@@ -69,7 +69,7 @@
     background: transparent;
     color: #64748b;
     font-size: 18px;
-    line-height: var(--cedar-control-height, var(--cedar-control-height-authoring));
+    line-height: var(--cedar-control-height, var(--cedar-control-height-default));
     min-width: 24px;
     cursor: pointer;
   }

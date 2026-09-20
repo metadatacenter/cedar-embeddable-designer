@@ -27,7 +27,7 @@ import { TypesPickerComponent } from '../types-picker/types-picker.component';
     textarea {
       width: 100%;
       box-sizing: border-box;
-      height: var(--cedar-control-height, 28px);
+      height: var(--cedar-control-height, var(--cedar-control-height-default));
       resize: none;
     }
     .display-fields {

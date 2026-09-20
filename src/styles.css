@@ -107,17 +107,11 @@
     Tailwind's own scale is in rem, so these override it through the `@theme`
     block below rather than sitting beside it.
 
-    Five steps, and they are CEE's: 12px small, 14px body, 15px lead, 18px for a
-    nested element's heading and 20px above it. The designer once ran a step
-    below them — 11px controls under 10px labels — and the seam showed wherever
-    the two met, most plainly around an embedded `<cedar-embeddable-term-picker>`
-    whose own text is CEE's 14px. `--text-xs` and `--text-sm` therefore name one
-    size: the step below the body is 12px, and there is nothing under it. A size
-    that is not prose is not on this scale — the count badge in its pill and the
-    Material icons are glyphs, and they keep their own.
+    Authoring text uses the shared 14px body size, including legacy small-text
+    utilities. Secondary metadata opts into the shared small token explicitly.
   */
-  --text-xs: var(--cedar-font-size-small);
-  --text-sm: var(--cedar-font-size-small);
+  --text-xs: var(--cedar-font-size);
+  --text-sm: var(--cedar-font-size);
   --text-base: var(--cedar-font-size);
   --text-lg: var(--cedar-font-size-lead);
   --text-xl: var(--cedar-font-size-element-heading);
@@ -221,7 +215,7 @@
 
   label {
     font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
+    font-weight: var(--font-weight-normal);
     line-height: 1.5;
   }
 
@@ -422,9 +416,9 @@ textarea {
   background: transparent;
   color: var(--cedar-primary-700);
   font-family: inherit;
-  font-size: var(--cedar-control-font-size, var(--cedar-control-font-size-authoring));
+  font-size: var(--cedar-control-font-size, var(--cedar-font-size));
   font-weight: var(--cedar-font-weight-regular, 400);
-  line-height: var(--cedar-control-line-height, var(--cedar-control-line-height-authoring));
+  line-height: var(--cedar-control-line-height, var(--cedar-control-line-height-default));
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;

@@ -9,7 +9,7 @@
   max-width: 1050px;
   margin: 0 auto;
   padding: var(--cedar-space-4);
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   color: var(--cedar-text-authoring);
 }
 header,
@@ -35,7 +35,7 @@ h2 {
 .hint,
 small {
   color: var(--cedar-text-muted);
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   font-style: italic;
 }
 small {
@@ -56,7 +56,7 @@ label {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
 }
 input,
 select {
@@ -98,7 +98,7 @@ td {
 th {
   background: #e9eeee;
   font-weight: var(--cedar-font-weight-medium, 500);
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
 }
 tbody tr {
   background: white;

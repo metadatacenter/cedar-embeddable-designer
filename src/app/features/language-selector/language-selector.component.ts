@@ -41,7 +41,7 @@ import { LANGUAGES } from './languages';
       display: flex;
       flex-direction: column;
       gap: 4px;
-      font-size: var(--cedar-font-size-small);
+      font-size: var(--cedar-font-size);
     }
     select {
       @include control-style.compact-control;

@@ -407,7 +407,7 @@ for (const type of ['number', 'date']) {
     const defaultBox =
       type === 'number' ? control.locator('input').first() : control.locator('.mat-mdc-text-field-wrapper').first();
     await expect(defaultBox).toBeVisible();
-    await expect.poll(async () => (await defaultBox.boundingBox())!.height).toBe(32);
+    await expect.poll(async () => (await defaultBox.boundingBox())!.height).toBe(36);
     await expect
       .poll(async () => (await defaultBox.boundingBox())!.height)
       .toBe((await neighbor.boundingBox())!.height);
@@ -424,16 +424,13 @@ for (const type of ['number', 'date']) {
   });
 }
 
-test('Display controls retain the compact authoring scale', async ({ page }) => {
+test('Display controls use the standard CEE scale', async ({ page }) => {
   await openField(page, 'number');
   const panel = await openSettings(page.locator('app-field-card').first(), 'Display');
   for (const input of await panel.locator('input:not([type="checkbox"])').all()) {
-    await expect(input).toHaveCSS('height', '32px');
-    // The step below the body, which is what compact means here: an authoring
-    // control is smaller than the form text it is describing. 11px until the
-    // designer joined the scale the editor and the term picker share, whose
-    // smallest step is 12px and which has nothing under it.
-    await expect(input).toHaveCSS('font-size', '12px');
+    await expect(input).toHaveCSS('height', '36px');
+    // Authoring and CEE use the same readable body scale.
+    await expect(input).toHaveCSS('font-size', '14px');
   }
 });
 
@@ -451,7 +448,7 @@ for (const host of ['CED', 'CEFD']) {
     const native = page.getByRole('combobox', { name: 'Temporal type', exact: true });
     const cef = page.locator('app-field-default-value cedar-embeddable-field');
     const cefBox = cef.locator('.mat-mdc-text-field-wrapper').first();
-    await expect.poll(async () => (await cefBox.boundingBox())!.height).toBe(32);
+    await expect.poll(async () => (await cefBox.boundingBox())!.height).toBe(36);
     await page.evaluate(() => {
       document.body.style.setProperty('--cedar-control-height', '44px');
       document.body.style.setProperty('--cedar-control-font-size', '16px');
@@ -475,8 +472,8 @@ for (const host of ['CED', 'CEFD']) {
     await expect(native).toBeVisible();
     await expect(cefBox).toBeVisible();
     await page.evaluate(() => document.body.removeAttribute('style'));
-    await expect(native).toHaveCSS('height', '32px');
-    await expect.poll(async () => (await cefBox.boundingBox())!.height).toBe(32);
+    await expect(native).toHaveCSS('height', '36px');
+    await expect.poll(async () => (await cefBox.boundingBox())!.height).toBe(36);
   });
 }
 

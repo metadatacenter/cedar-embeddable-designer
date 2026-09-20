@@ -24,7 +24,7 @@ import { AlternateQuestionsComponent } from '../alternate-questions/alternate-qu
       display: flex;
       flex-direction: column;
       gap: 4px;
-      font-size: var(--cedar-font-size-small);
+      font-size: var(--cedar-font-size);
     }
     input {
       @include control-style.compact-control;

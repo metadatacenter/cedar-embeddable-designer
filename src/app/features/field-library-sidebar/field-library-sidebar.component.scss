@@ -207,7 +207,7 @@
 }
 
 .library-toggle-icon {
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   color: #6b7280;
   transition-property: transform;
   transition-duration: var(--cedar-motion-duration-fast);
@@ -223,7 +223,7 @@
 
 .library-empty-state {
   padding: 0.5rem 1rem;
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   color: #6b7280;
   font-style: italic;
 }
@@ -266,7 +266,7 @@
 }
 
 .add-item-desc {
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   color: #6b7280;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -338,7 +338,7 @@
   justify-content: center;
   font-weight: var(--cedar-font-weight-medium, 500);
   color: #ffffff;
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
 }
 
 .plus-indicator {

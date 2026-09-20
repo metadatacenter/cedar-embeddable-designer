@@ -45,7 +45,7 @@
 }
 .publication-status {
   color: #64748b;
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   line-height: 18px;
   text-align: right;
 }
@@ -204,7 +204,7 @@
 }
 .validation-badge {
   color: var(--cedar-control-error, var(--cedar-color-error));
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   padding: var(--cedar-space-1) var(--cedar-space-3);
   display: block;
 }

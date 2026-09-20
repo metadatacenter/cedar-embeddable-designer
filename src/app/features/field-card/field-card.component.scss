@@ -29,7 +29,7 @@ app-icon {
 }
 
 .field-card-body {
-  padding: 6px var(--cedar-space-4) 0;
+  padding: var(--cedar-space-1) var(--cedar-space-4) 0;
 }
 
 .field-header {
@@ -84,7 +84,7 @@ app-icon {
 
 .validation-badge {
   color: var(--cedar-control-error, var(--cedar-color-error));
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   white-space: nowrap;
   cursor: pointer;
 }
@@ -98,7 +98,7 @@ app-icon {
 
 .field-type-label {
   color: var(--cedar-text-muted);
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
 }
 
 .field-heading > input {
@@ -141,10 +141,14 @@ app-icon {
 
 .content-label {
   color: var(--cedar-text-authoring);
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-regular);
 }
 
 .choice-add-action {
   gap: var(--cedar-space-3);
+}
+
+.field-identity {
+  font-size: var(--cedar-font-size-small);
 }

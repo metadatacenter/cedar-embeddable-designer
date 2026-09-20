@@ -22,6 +22,10 @@
   border-bottom: 1px solid var(--cedar-border-rule);
 }
 
+.app-header:has(.profile-menu-dropdown, .user-menu-dropdown) {
+  z-index: var(--cedar-layer-menu);
+}
+
 .app-header__inner {
   /*
    * Wraps below roughly 900px. Without it the action group is pushed past the right
@@ -312,7 +316,7 @@
 }
 
 .template-field-label {
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-regular);
   color: var(--cedar-text-muted);
   margin-bottom: var(--cedar-space-1);
@@ -347,7 +351,7 @@
 
 .btn-insert-here {
   @apply text-white rounded-full px-3 py-1 shadow-md font-medium border-none cursor-pointer;
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
 }
 
 /* ─── Field Drag Container ────────────────────────────────────────────────── */
@@ -366,6 +370,11 @@
     outline: 1px solid var(--cedar-border-selected);
     outline-offset: -1px;
   }
+}
+
+/* Keep the summary at CEE’s readable size; reclaim space inside field cards. */
+.field-drag-container:has(> app-field-card) {
+  padding-block: var(--cedar-space-1);
 }
 
 .field-selection-bar {
@@ -401,7 +410,7 @@
   color: var(--cedar-control-error, var(--cedar-color-error));
   background: #fff4f2;
   padding: 6px var(--cedar-space-4);
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   flex: none;
   max-height: 25vh;
   overflow: auto;
@@ -434,11 +443,11 @@
   min-width: calc(10 * var(--cedar-space-1));
   max-width: 100%;
   text-align: center;
-  line-height: var(--cedar-font-size-small);
+  line-height: var(--cedar-font-size);
 }
 .designer-identity__name {
   margin-top: var(--cedar-space-1);
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-medium);
   color: var(--cedar-color-component-title);
 }

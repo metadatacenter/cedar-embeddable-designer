@@ -100,7 +100,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
       }
       .validation-badge {
         color: #b42318;
-        font-size: var(--cedar-font-size-small);
+        font-size: var(--cedar-font-size);
       }
       .outline-row:hover {
         background: #f9fafb;
@@ -123,7 +123,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
         padding: 2px 0;
         color: #374151;
         text-align: left;
-        font-size: var(--cedar-font-size-small);
+        font-size: var(--cedar-font-size);
       }
       .select-node app-icon {
         flex: none;
