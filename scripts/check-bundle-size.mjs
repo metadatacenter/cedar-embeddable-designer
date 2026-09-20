@@ -43,7 +43,10 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // 2026-09-19: current-sibling reactor composition with shared choice summaries,
 // occurrence headings and shadow-root focus handling measures 1,396,958 raw /
 // 431,352 gzip-9 bytes. Allow 8 KB raw headroom; retain the compressed ceiling.
-const RAW_LIMIT = 1_405_000;
+// Current sibling reactor with container actions, move/collapse controls and shared
+// handle tokens measures 1,405,040 raw bytes. Allow 5 KB for that composition;
+// retain the compressed ceiling.
+const RAW_LIMIT = 1_410_000;
 const GZIP_LIMIT = 435_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;

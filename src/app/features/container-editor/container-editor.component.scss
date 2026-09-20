@@ -189,7 +189,7 @@
   transform: translateX(-50%);
   display: inline-flex;
   padding: calc(var(--cedar-space-1) / 2);
-  color: var(--color-gray-400);
+  color: var(--cedar-text-muted);
   cursor: grab;
   z-index: var(--cedar-layer-sticky);
 }
