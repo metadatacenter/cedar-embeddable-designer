@@ -188,10 +188,10 @@
   left: 50%;
   transform: translateX(-50%);
   display: inline-flex;
-  padding: 2px;
-  color: #9ca3af;
+  padding: calc(var(--cedar-space-1) / 2);
+  color: var(--color-gray-400);
   cursor: grab;
-  z-index: 1;
+  z-index: var(--cedar-layer-sticky);
 }
 
 .container-content > .add-field-section {
