@@ -29,11 +29,21 @@
           <input
             spellcheck="false"
             type="text"
+            [appArtifactName]="container().id"
+            [attr.aria-label]="container().kind === 'element' ? 'Element name' : 'Template name'"
+            aria-required="true"
+            [attr.aria-invalid]="!!artifactNameError(container().name, container().kind)"
+            [attr.aria-describedby]="
+              artifactNameError(container().name, container().kind) ? 'name-error-' + container().id : null
+            "
             [ngModel]="container().name"
             (ngModelChange)="update({ name: $event })"
             class="template-input font-medium text-base text-gray-900"
             [placeholder]="container().kind === 'element' ? 'Element name' : 'Template name'"
           />
+          @if (artifactNameError(container().name, container().kind); as error) {
+            <p class="ced-field-error" [id]="'name-error-' + container().id">{{ error }}</p>
+          }
         </div>
 
         <div class="template-field-group w-44">

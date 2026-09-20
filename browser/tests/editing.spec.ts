@@ -289,6 +289,7 @@ for (const width of [1440, 1024, 640]) {
 test('template identity keeps the compact authoring header layout', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   const designer = await openDesigner(page);
+  await designer.getByRole('textbox', { name: 'Template name', exact: true }).fill('Named template');
   const header = designer.locator('app-container-editor > .template-header-card').first();
   const inputs = header.locator('.template-header-row > .template-field-group input');
   const boxes = await inputs.evaluateAll((nodes) =>

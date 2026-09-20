@@ -51,7 +51,7 @@ export class ContainerSettingsComponent {
   constructor() {
     effect(() => {
       const issue = this.service.validationTarget();
-      if (issue?.nodeId === this.container().id) {
+      if (issue?.setting !== 'name' && issue?.nodeId === this.container().id) {
         this.expanded = true;
         this.activeTab = issue.tab;
         this.changeDetector.markForCheck();

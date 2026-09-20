@@ -119,20 +119,6 @@
               </thead>
               <tbody>
                 <tr class="border-t border-gray-200">
-                  <td class="py-3 pr-4 text-sm text-gray-900">Show "Field Designer" button</td>
-                  @for (preset of presets; track preset) {
-                    <td class="py-3 px-3 text-center">
-                      <input
-                        spellcheck="false"
-                        type="checkbox"
-                        [ngModel]="service.presetDefinitions()[preset].showFieldDesigner"
-                        (ngModelChange)="updateDef(preset, 'showFieldDesigner', $event)"
-                        class="w-4 h-4 checkbox-white cursor-pointer"
-                      />
-                    </td>
-                  }
-                </tr>
-                <tr class="border-t border-gray-200">
                   <td class="py-3 pr-4 text-sm text-gray-900">Enable Elements</td>
                   @for (preset of presets; track preset) {
                     <td class="py-3 px-3 text-center">

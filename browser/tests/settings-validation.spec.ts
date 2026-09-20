@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openDesigner, openSettings, currentTemplate, child } from './support';
+import { openDesigner, openSettings, currentTemplate, child, applyPreset, addElementFixture } from './support';
 import type { CedarEmbeddableDesignerElement } from '../../src/app/ced-public-api';
 
 const report = (page: import('@playwright/test').Page) =>
@@ -9,6 +9,7 @@ const report = (page: import('@playwright/test').Page) =>
 
 test('invalid edits reach wrappers, cards and overview; summary opens the affected setting', async ({ page }) => {
   const designer = await openDesigner(page);
+  await designer.getByRole('textbox', { name: 'Template name', exact: true }).fill('Test template');
   const source = await currentTemplate(page);
   child(source, 'Title')._valueConstraints = { minLength: 2, maxLength: 8, regex: '^[A-Z]+$' };
   await page.evaluate((artifact) => {
@@ -66,6 +67,7 @@ test('invalid edits reach wrappers, cards and overview; summary opens the affect
 
 test('settings and default errors coexist and malformed occurrence input blocks saving', async ({ page }) => {
   const designer = await openDesigner(page);
+  await designer.getByRole('textbox', { name: 'Template name', exact: true }).fill('Test template');
   const card = designer.locator('app-field-card').first();
   const panel = await openSettings(card, 'Constraints');
   await panel.getByLabel('Minimum length', { exact: true }).fill('8');
@@ -87,6 +89,7 @@ test('settings and default errors coexist and malformed occurrence input blocks 
 
 test('CEF invalid events block saving without replacing the last valid default', async ({ page }) => {
   const designer = await openDesigner(page);
+  await designer.getByRole('textbox', { name: 'Template name', exact: true }).fill('Test template');
   await page.evaluate(() => {
     if (!customElements.get('cedar-embeddable-field'))
       customElements.define(
@@ -117,4 +120,30 @@ test('CEF invalid events block saving without replacing the last valid default',
     element.dispatchEvent(new CustomEvent('valueChange', { detail: { valid: true, value: { kind: 'none' } } })),
   );
   await expect.poll(async () => (await report(page)).canSave).toBe(true);
+});
+
+test('blank and whitespace names block saving and summary navigation focuses the name', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await designer.getByRole('textbox', { name: 'Template name', exact: true }).fill('Test template');
+  await applyPreset(page, 'modular');
+  await addElementFixture(page, designer);
+  for (const name of [
+    designer.getByRole('textbox', { name: 'Template name', exact: true }),
+    designer.getByRole('textbox', { name: 'Element name', exact: true }).first(),
+    designer.getByRole('textbox', { name: 'Field name', exact: true }).first(),
+  ]) {
+    const original = await name.inputValue();
+    for (const blank of ['', '   ']) {
+      await name.fill(blank);
+      await expect(name).toHaveAttribute('aria-invalid', 'true');
+      await expect.poll(async () => (await report(page)).canSave).toBe(false);
+      expect((await report(page)).issues.some((issue) => issue.setting === 'name')).toBe(true);
+    }
+    await designer.locator('.validation-summary summary').click();
+    await designer.locator('.validation-summary button').filter({ hasText: 'name is required' }).first().click();
+    await expect(name).toBeFocused();
+    await name.fill(original);
+    await expect(name).toHaveAttribute('aria-invalid', 'false');
+    await expect.poll(async () => (await report(page)).canSave).toBe(true);
+  }
 });

@@ -9,6 +9,7 @@ function setup() {
   TestBed.configureTestingModule({});
   const fixture = TestBed.createComponent(FieldDefaultValueComponent);
   const service = TestBed.inject(TemplateService);
+  service.templateName.set('Test template');
   const field: Field = {
     id: 1,
     type: 'controlledTerms',

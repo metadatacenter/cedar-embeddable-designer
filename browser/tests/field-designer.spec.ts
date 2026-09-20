@@ -134,3 +134,22 @@ test('keeps invalid numeric settings dirty and unsaveable until corrected', asyn
   );
   expect(constraints).toMatchObject({ minValue: 10, maxValue: 15 });
 });
+
+test('standalone fields cannot be saved with an empty or whitespace name', async ({ page }) => {
+  await page.getByRole('button', { name: 'Text', exact: true }).click();
+  const name = page.getByRole('textbox', { name: 'Field name', exact: true });
+  for (const blank of ['', '   ']) {
+    await name.fill(blank);
+    await expect(name).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.getByText('Field name is required.', { exact: true }).first()).toBeVisible();
+    await expect
+      .poll(() =>
+        page.evaluate(() => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).canSave),
+      )
+      .toBe(false);
+  }
+  await name.fill('Named field');
+  await expect
+    .poll(() => page.evaluate(() => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).canSave))
+    .toBe(true);
+});

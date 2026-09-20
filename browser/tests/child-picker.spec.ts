@@ -116,6 +116,7 @@ test('bottom insertion actions reveal on hover and keyboard focus without shifti
   const actions = zone.locator('app-insertion-actions');
   await page.mouse.move(0, 0);
   await expect(actions).toHaveCSS('opacity', '0');
+  await zone.scrollIntoViewIfNeeded();
   const before = await zone.boundingBox();
   await zone.hover();
   await expect(actions).toHaveCSS('opacity', '1');

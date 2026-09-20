@@ -62,7 +62,7 @@ export class ElementCardComponent {
   constructor() {
     effect(() => {
       const issue = this.service.validationTarget();
-      if (issue?.nodeId === this.node().id) {
+      if (issue?.setting !== 'name' && issue?.nodeId === this.node().id) {
         this.expanded = true;
         this.activeTab = issue.tab;
         this.changeDetector.markForCheck();

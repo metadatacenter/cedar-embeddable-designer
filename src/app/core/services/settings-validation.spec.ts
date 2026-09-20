@@ -7,6 +7,7 @@ describe('settings validation report', () => {
   beforeEach(() => {
     localStorage.clear();
     service = TestBed.inject(TemplateService);
+    service.templateName.set('Test template');
   });
   it('reports independent pending settings without changing the exported model', () => {
     const id = service.fields()[0].id;
@@ -74,11 +75,43 @@ describe('settings validation report', () => {
     const original = service.templateJson();
     service.setSettingsError(id, 'defaultValue', 'Invalid default.');
     const other = TestBed.runInInjectionContext(() => new TemplateService());
+    expect(other.validationReport().canSave).toBe(false);
+    other.templateName.set('Other template');
     expect(other.validationReport().valid).toBe(true);
     service.loadTemplate(original);
     expect(service.validationReport().valid).toBe(true);
     service.setSettingsError(service.fields()[0].id, 'defaultValue', 'Invalid default.');
     service.resetTemplate();
-    expect(service.validationReport().valid).toBe(true);
+    expect(service.validationReport().issues.map((issue) => issue.setting)).toEqual(['name']);
+  });
+});
+
+describe('required artifact names', () => {
+  it('rejects empty and whitespace names through the entire nested document and recovers', () => {
+    const service = TestBed.inject(TemplateService);
+    service.templateName.set('Template');
+    const root = service.session.document().id;
+    service.addElement(root);
+    const element = service.session.document().children.find((node) => node.kind === 'element')!;
+    service.addField('text', 0, element.id);
+    const field = findContainer(service.session.document(), element.id)!.children[0];
+    for (const blank of ['', '  \t ']) {
+      service.updateContainerDefinition(root, { name: blank });
+      service.updateContainerDefinition(element.id, { name: blank });
+      service.updateFieldName(field.id, blank);
+      const report = service.validationReport();
+      expect(report.canSave).toBe(false);
+      expect(report.issues.filter((issue) => issue.setting === 'name').map((issue) => issue.nodeId)).toEqual([
+        root,
+        element.id,
+        field.id,
+      ]);
+      expect(report.issues.find((issue) => issue.nodeId === field.id)?.path).toEqual([root, element.id, field.id]);
+      expect(() => service.templateJson()).not.toThrow();
+    }
+    service.updateContainerDefinition(root, { name: 'Template' });
+    service.updateContainerDefinition(element.id, { name: 'Element' });
+    service.updateFieldName(field.id, 'Field');
+    expect(service.validationReport().canSave).toBe(true);
   });
 });

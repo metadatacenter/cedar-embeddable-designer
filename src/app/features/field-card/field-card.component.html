@@ -20,6 +20,10 @@
           <input
             spellcheck="false"
             type="text"
+            [appArtifactName]="field.id"
+            aria-required="true"
+            [attr.aria-invalid]="!!artifactNameError(field.name, 'field')"
+            [attr.aria-describedby]="artifactNameError(field.name, 'field') ? 'name-error-' + field.id : null"
             [ngModel]="field.name"
             (ngModelChange)="service.updateFieldName(field.id, $event)"
             class="text-sm font-medium text-gray-900 border-none outline-none pb-0.5 flex-1 min-w-0 bg-transparent border-b-2"
@@ -103,6 +107,9 @@
         </div>
       </div>
     </fieldset>
+    @if (artifactNameError(field.name, 'field'); as error) {
+      <p class="ced-field-error" [id]="'name-error-' + field.id">{{ error }}</p>
+    }
     <!-- Reuse CEE's read-only specification; options remain editable below. -->
     @if (!contentLabel(field.type)) {
       <app-field-summary class="mt-1" [field]="field" />
@@ -198,11 +205,7 @@
   @if (choiceDefaultConflict(field); as conflict) {
     <div class="mt-1 px-1">
       <p role="alert" class="ced-field-error">{{ conflict }}</p>
-      <button
-        type="button"
-        class="ced-text-action"
-        (click)="service.updateDefaultValue(field.id, { kind: 'none' })"
-      >
+      <button type="button" class="ced-text-action" (click)="service.updateDefaultValue(field.id, { kind: 'none' })">
         Clear conflicting default
       </button>
     </div>

@@ -115,14 +115,6 @@
       </div>
 
       <div class="app-header__actions">
-        <!-- Field Designer Button -->
-        @if (service.preferences().showFieldDesigner) {
-          <button (click)="service.showFieldDesigner.set(true)" class="btn-header btn-header--secondary">
-            <app-icon key="library" size="small"></app-icon>
-            Field Designer
-          </button>
-        }
-
         <!-- User Menu -->
         <div class="relative user-menu-container">
           <button

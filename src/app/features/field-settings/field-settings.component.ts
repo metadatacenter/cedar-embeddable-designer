@@ -165,7 +165,7 @@ export class FieldSettingsComponent implements OnChanges {
     let focused: unknown;
     afterRenderEffect(() => {
       const issue = this.service.validationTarget();
-      if (!issue || issue === focused || issue.nodeId !== this.field?.id) return;
+      if (!issue || issue.setting === 'name' || issue === focused || issue.nodeId !== this.field?.id) return;
       focused = issue;
       const panel = this.host.nativeElement.querySelector<HTMLElement>('[role="tabpanel"]:not([hidden])');
       const control =
@@ -178,7 +178,7 @@ export class FieldSettingsComponent implements OnChanges {
     });
     effect(() => {
       const issue = this.service.validationTarget();
-      if (issue?.nodeId === this.field?.id) {
+      if (issue?.setting !== 'name' && issue?.nodeId === this.field?.id) {
         this.expanded = true;
         this.activeTab = issue.tab;
         this.changeDetector.markForCheck();

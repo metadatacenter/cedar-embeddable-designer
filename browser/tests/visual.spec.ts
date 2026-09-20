@@ -153,6 +153,14 @@ test.describe('the designer', () => {
    * and the only shot where the settings panels are visible at all.
    */
   test('shows a text field with metadata settings expanded', async ({ page }) => {
+    // Masking metadata hides pixels, but random UUID glyph widths can still wrap
+    // its IRI onto another line and change the height of the whole card.
+    await page.addInitScript(() => {
+      let sequence = 0;
+      Object.defineProperty(crypto, 'randomUUID', {
+        value: () => `00000000-0000-4000-8000-${String(++sequence).padStart(12, '0')}`,
+      });
+    });
     const designer = await designerShowing(page, ['Text']);
     const card = designer.locator('[id^=field-card-]').first();
     await openSettings(card, 'Field metadata');

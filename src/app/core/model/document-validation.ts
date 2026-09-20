@@ -5,6 +5,11 @@ import { buildContainer, buildTemplate, fieldToJson, choiceDefaultConflict, defa
 
 export type DraftIssues = Readonly<Record<string, { message: string; tab: string }>>;
 
+/** Names are required independently of the generated property key used by a draft. */
+export function artifactNameError(name: string, kind: 'field' | 'element' | 'template'): string | null {
+  return name.trim() ? null : `${kind[0].toUpperCase()}${kind.slice(1)} name is required.`;
+}
+
 /** Validate one document snapshot, including unsaved settings drafts, without UI state. */
 export function validateDocument(document: ContainerDraft, drafts: DraftIssues): CedValidationReport {
   const issues: CedValidationIssue[] = [];
@@ -38,6 +43,8 @@ export function validateDocument(document: ContainerDraft, drafts: DraftIssues):
           add(id, label, nodePath, key.slice(key.indexOf(':') + 1), value.message, value.tab, 'draft');
       }
     };
+    const nameError = artifactNameError(container.name, container.kind);
+    if (nameError) add(container.id, `Unnamed ${container.kind}`, path, 'name', nameError, 'Display', 'model');
     pending(container.id, container.name, path);
     for (const node of container.children) {
       if (node.kind === 'element') {
@@ -59,6 +66,8 @@ export function validateDocument(document: ContainerDraft, drafts: DraftIssues):
       }
       const field = fieldView(node);
       const nodePath = [...path, node.id];
+      const nameError = artifactNameError(field.name, 'field');
+      if (nameError) add(node.id, 'Unnamed field', nodePath, 'name', nameError, 'Display', 'model');
       pending(node.id, childName(node), nodePath);
       const settingsField: Field = { ...field, defaultValue: { kind: 'none' }, importedChoiceDefault: undefined };
       let settingsValid = true;
