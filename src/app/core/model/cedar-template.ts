@@ -628,16 +628,21 @@ export function contentKindOf(paletteType: string): 'markup' | 'url' | 'videoId'
  * numeric suffix: the serializer used the raw name and two fields called "Title"
  * silently became one.
  */
-function deploymentKeys(fields: Field[]): string[] {
+export function deploymentKeys(fields: Pick<Field, 'name' | 'deploymentName'>[]): string[] {
   const used = new Set<string>();
+  for (const field of fields) {
+    if (field.deploymentName === undefined) continue;
+    const key = field.deploymentName;
+    if (!key.trim()) throw new Error('Key is required.');
+    if (used.has(key)) throw new Error('Another child in this container already uses that key.');
+    used.add(key);
+  }
   return fields.map((field, index) => {
-    const base = field.deploymentName ?? (field.name.trim() || `field_${index + 1}`);
+    if (field.deploymentName !== undefined) return field.deploymentName;
+    const base = field.name.trim() || `field_${index + 1}`;
     let key = base;
     let suffix = 2;
-    while (used.has(key)) {
-      key = `${base} ${suffix}`;
-      suffix += 1;
-    }
+    while (used.has(key)) key = `${base} ${suffix++}`;
     used.add(key);
     return key;
   });

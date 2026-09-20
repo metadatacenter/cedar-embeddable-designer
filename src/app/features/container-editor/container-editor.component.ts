@@ -1,5 +1,4 @@
 import { ArtifactNameDirective } from '../../shared/artifact-name.directive';
-import { artifactNameError } from '../../core/model/document-validation';
 import { InsertionActionsComponent } from '../insertion-actions/insertion-actions.component';
 import { HeaderToggleDirective } from '../../shared/header-toggle.directive';
 import { ContainerSettingsComponent } from '../container-settings/container-settings.component';
@@ -34,7 +33,6 @@ import { ElementCardComponent } from '../element-card/element-card.component';
   styleUrls: ['../../shared/_field-error.scss', '../../app.component.scss', './container-editor.component.scss'],
 })
 export class ContainerEditorComponent {
-  readonly artifactNameError = artifactNameError;
   selectCard(event: MouseEvent, id: number): void {
     event.stopPropagation();
     this.activate();

@@ -1,5 +1,4 @@
 import { ArtifactNameDirective } from '../../shared/artifact-name.directive';
-import { artifactNameError } from '../../core/model/document-validation';
 import { FieldSummaryComponent } from '../field-summary/field-summary.component';
 import { HeaderToggleDirective } from '../../shared/header-toggle.directive';
 import { FieldSettingsComponent } from '../field-settings/field-settings.component';
@@ -40,7 +39,6 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
   styleUrls: ['../../shared/_field-error.scss', './field-card.component.scss'],
 })
 export class FieldCardComponent {
-  readonly artifactNameError = artifactNameError;
   private readonly settings = viewChild(FieldSettingsComponent);
   toggleSettings(): void {
     const settings = this.settings();

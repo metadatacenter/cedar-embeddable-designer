@@ -140,6 +140,7 @@ test('standalone fields cannot be saved with an empty or whitespace name', async
   const name = page.getByRole('textbox', { name: 'Field name', exact: true });
   for (const blank of ['', '   ']) {
     await name.fill(blank);
+    await name.blur();
     await expect(name).toHaveAttribute('aria-invalid', 'true');
     await expect(page.getByText('Field name is required.', { exact: true }).first()).toBeVisible();
     await expect

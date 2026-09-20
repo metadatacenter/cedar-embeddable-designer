@@ -71,7 +71,7 @@ for (const width of [1280, 375]) {
     await expect(elementToggle).toHaveAttribute('aria-expanded', 'false');
     await element.locator('.template-field-label').first().click();
     await expect(elementToggle).toHaveAttribute('aria-expanded', 'true');
-    await element.getByPlaceholder('Element name').click();
+    await element.getByPlaceholder('Enter element name').click();
     await expect(elementToggle).toHaveAttribute('aria-expanded', 'true');
     await element.locator('.element-toggle').click();
     await expect(elementToggle).toHaveAttribute('aria-expanded', 'true');
@@ -80,3 +80,28 @@ for (const width of [1280, 375]) {
     await page.screenshot({ path: testInfo.outputPath('headers.png') });
   });
 }
+
+test('an unnamed field keeps its expanded tabs while its name is edited', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await designer.getByRole('button', { name: /^Add field$/ }).click();
+  await designer.locator('app-field-type-picker').getByRole('button', { name: 'Text', exact: true }).click();
+  const card = designer.locator('app-field-card').last();
+  const name = card.getByRole('textbox', { name: 'Field name', exact: true });
+  const toggle = card.getByRole('button', { name: /field settings/ });
+  await expect(name).toBeFocused();
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await name.click();
+  await expect(name).toBeFocused();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  const bounds = (await name.boundingBox())!;
+  // A small release outside the input must not become a header-toggle click.
+  await page.mouse.move(bounds.x + 1, bounds.y + bounds.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(bounds.x - 1, bounds.y + bounds.height / 2);
+  await page.mouse.up();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await name.click();
+  await page.keyboard.type('New field');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+});

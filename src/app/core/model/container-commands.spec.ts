@@ -52,6 +52,9 @@ describe('container mutations', () => {
     expect(() => moveChild(root, a.id, b.id, 0)).toThrow(/descendants/);
     expect(() => moveChild(root, leaf.id, -1, 0)).toThrow(/no longer/);
     b.children.push({ ...leaf, id: newNodeId() });
+    expect(findContainer(moveChild(root, leaf.id, b.id, 0), b.id)?.children).toHaveLength(2);
+    leaf.placement.deploymentName = 'value';
+    b.children[0].placement = { ...b.children[0].placement, deploymentName: 'value' };
     expect(() => moveChild(root, leaf.id, b.id, 0)).toThrow(/property name/);
     expect(a.children[0]).toBe(leaf);
   });

@@ -3,8 +3,16 @@
     <p class="ced-field-error" role="alert">{{ service.loadError() }}</p>
   }
   @if (service.validationReport().issues.length; as count) {
-    <details class="validation-summary">
-      <summary>⚠ {{ count }} settings {{ count === 1 ? 'error' : 'errors' }} — review before saving</summary>
+    <details class="validation-summary" [class.validation-summary--pending]="!service.visibleIssues().length">
+      <summary>
+        <app-icon key="chevron-down" size="small" class="validation-disclosure" />
+        @if (service.visibleIssues().length) {
+          <app-icon key="warning" size="small" />
+          <span>{{ count }} settings {{ count === 1 ? 'error' : 'errors' }} — review before saving</span>
+        } @else {
+          Enter missing names before saving.
+        }
+      </summary>
       <ul>
         @for (issue of service.validationReport().issues; track $index) {
           <li>

@@ -85,10 +85,19 @@ app-icon {
 }
 
 .validation-badge {
+  display: inline-flex;
+  align-items: baseline;
+  align-self: baseline;
+  gap: var(--cedar-space-1);
+  line-height: var(--cedar-control-line-height-default);
   color: var(--cedar-control-error, var(--cedar-color-error));
   font-size: var(--cedar-font-size);
   white-space: nowrap;
   cursor: pointer;
+}
+
+.validation-badge > app-icon {
+  align-self: center;
 }
 
 /* Leave header space after the editable name available for toggling settings. */

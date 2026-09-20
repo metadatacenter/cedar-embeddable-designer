@@ -1,4 +1,4 @@
-import { validateDocument } from '../model/document-validation';
+import { artifactNameError, validateDocument } from '../model/document-validation';
 import { CedChildSource, CedJsonObject, CedValidationIssue } from '../../ced-public-api';
 import { EditorSession } from './editor-session';
 import {
@@ -19,17 +19,11 @@ import {
 } from '../model/container-draft';
 import { FieldLibraryService } from './field-library.service';
 import { Injectable, signal, computed, inject } from '@angular/core';
-import {
-  Field,
-  FieldDefaultValue,
-  CustomField,
-  ControlledTermSet,
-  UserPreferences,
-  FIELD_TYPES,
-} from '../models/types';
+import { Field, FieldDefaultValue, CustomField, ControlledTermSet, UserPreferences } from '../models/types';
 import { PreferencesService } from './preferences.service';
 import {
   DesignerTemplate,
+  deploymentKeys,
   buildTemplate,
   newFieldIdentity,
   newTemplateIdentifier,
@@ -128,6 +122,23 @@ export class TemplateService {
   readonly templateVersion = this.session.property('version');
   readonly loadError = signal<string | null>(null);
   private readonly draftIssues = signal<Record<string, { message: string; tab: string }>>({});
+  readonly nameFocusRequest = signal<number | null>(null);
+  private readonly touchedNames = signal<ReadonlySet<number>>(new Set());
+  touchName(id: number): void {
+    this.touchedNames.update((ids) => new Set([...ids, id]));
+  }
+  nameError(id: number, name: string, kind: 'field' | 'element' | 'template'): string | null {
+    return this.touchedNames().has(id) ? artifactNameError(name, kind) : null;
+  }
+  readonly visibleIssues = computed(() =>
+    this.validationReport().issues.filter((issue) => issue.setting !== 'name' || this.touchedNames().has(issue.nodeId)),
+  );
+  visibleIssuesFor(id: number): CedValidationIssue[] {
+    return this.visibleIssues().filter((issue) => issue.path.includes(id));
+  }
+  tabHasErrors(id: number, tab: string): boolean {
+    return this.visibleIssues().some((issue) => issue.nodeId === id && issue.setting !== 'name' && issue.tab === tab);
+  }
   readonly validationTarget = signal<CedValidationIssue | null>(null);
   setSettingsError(id: number, setting: string, message: string | null, tab = 'Constraints'): void {
     const key = `${id}:${setting}`;
@@ -145,6 +156,7 @@ export class TemplateService {
     return this.validationReport().issues.filter((issue) => issue.path.includes(id));
   }
   revealIssue(issue: CedValidationIssue): void {
+    if (issue.setting === 'name') this.touchName(issue.nodeId);
     this.openContainer(this.parentContainerId(issue.nodeId));
     this.selectedField.set(issue.nodeId);
     this.scrollRequest.set(issue.nodeId);
@@ -324,14 +336,15 @@ export class TemplateService {
       id: newNodeId(),
       ...newFieldIdentity(),
       type,
-      name: type === 'date' || type === 'time' ? 'Temporal' : FIELD_TYPES[type].label,
+      name: '',
       status: 'optional',
       options: type === 'multipleChoice' || type === 'checkboxes' ? [''] : [],
       defaultValue: { kind: 'none' },
       allowMultiple: false,
     };
 
-    this.insertNode(fieldNode(newField), position, targetId);
+    this.insertNode(fieldNode(newField), position, targetId, false);
+    this.nameFocusRequest.set(newField.id);
 
     this.showPicker.set(null);
     this.selectedField.set(newField.id);
@@ -451,15 +464,33 @@ export class TemplateService {
     return !!this.fieldsFor(id)().find((field) => field.id === id)?.publishedDefinition;
   }
 
+  childKey(id: number): string {
+    const siblings = parentOf(this.session.document(), id)?.children ?? [];
+    const keys = deploymentKeys(
+      siblings.map((node) => ({
+        name: node.definition.name,
+        deploymentName: node.placement.deploymentName,
+      })),
+    );
+    return keys[siblings.findIndex((node) => node.id === id)] ?? '';
+  }
+
+  private keyError(id: number, value: string): string | null {
+    const key = value.trim();
+    if (!key) return 'Key is required.';
+    const siblings = parentOf(this.session.document(), id)?.children ?? [];
+    return siblings.some((node) => node.id !== id && this.childKey(node.id) === key)
+      ? 'Another child in this container already uses that key.'
+      : null;
+  }
+
   updateFieldSettings(id: number, changes: Partial<Field>): string | null {
     if (this.isPublished(id)) return 'Published fields are read-only. Editing a draft version is not available yet.';
-    if (
-      changes.deploymentName !== undefined &&
-      (findContainer(this.session.document(), this.parentContainerId(id))?.children ?? []).some(
-        (node) => node.id !== id && childName(node) === changes.deploymentName?.trim(),
-      )
-    )
-      return 'Another child already uses that property name.';
+    if (changes.deploymentName !== undefined) {
+      const error = this.keyError(id, changes.deploymentName);
+      if (error) return error;
+      changes = { ...changes, deploymentName: changes.deploymentName.trim() };
+    }
     const current = this.fieldsFor(id)().find((field) => field.id === id);
     if (current && !this.canAddField(changes.type ?? current.type, this.parentContainerId(id)))
       return 'Page breaks can only be placed in templates.';
@@ -557,6 +588,8 @@ export class TemplateService {
       document.children = withStarterFields ? containerFromFlat({ ...document, fields: starterFields() }).children : [];
     }
     this.draftIssues.set({});
+    this.touchedNames.set(new Set());
+    this.nameFocusRequest.set(null);
     this.childPicker.set(null);
     this.session.replace(document);
     this.collapsedElements.set(new Set());
@@ -588,6 +621,8 @@ export class TemplateService {
     this.loadError.set(null);
 
     this.draftIssues.set({});
+    this.touchedNames.set(new Set());
+    this.nameFocusRequest.set(null);
     this.childPicker.set(null);
     this.session.replace(state);
     this.collapsedElements.set(new Set());
@@ -631,23 +666,27 @@ export class TemplateService {
     this.showPicker.set(null);
     this.selectedField.set(null);
   }
-  private insertNode(node: ChildNode, position: number, targetId = this.session.active().id): void {
+  private insertNode(
+    node: ChildNode,
+    position: number,
+    targetId = this.session.active().id,
+    namePlacement = true,
+  ): void {
     const target = findContainer(this.session.document(), targetId);
     if (!target) throw new Error('The import destination no longer exists.');
     this.loadError.set(null);
-    const used = new Set(target.children.map(childName));
-    const base = childName(node).trim() || (node.kind === 'element' ? 'Element' : 'Field');
-    let name = base;
-    for (let suffix = 2; used.has(name); suffix++) name = `${base} ${suffix}`;
-    if (node.kind === 'field') {
-      node =
-        node.placement.deploymentName === undefined && node.definition.customFieldId === undefined
-          ? { ...node, definition: { ...node.definition, name } }
-          : { ...node, placement: { ...node.placement, deploymentName: name } };
-    } else {
-      // Branching on the kind keeps each placement its own type; one spread over the union loses
-      // which of the two it is, and an element's placement is the narrower of them.
-      node = { ...node, placement: { ...node.placement, deploymentName: name } };
+    if (namePlacement) {
+      const used = new Set(target.children.map((child) => this.childKey(child.id)));
+      const base = childName(node).trim() || (node.kind === 'element' ? 'Element' : 'Field');
+      let name = base;
+      for (let suffix = 2; used.has(name); suffix++) name = `${base} ${suffix}`;
+      if (node.kind === 'field') {
+        node = { ...node, placement: { ...node.placement, deploymentName: name } };
+      } else {
+        // Branching on the kind keeps each placement its own type; one spread over the union loses
+        // which of the two it is, and an element's placement is the narrower of them.
+        node = { ...node, placement: { ...node.placement, deploymentName: name } };
+      }
     }
     this.session.document.update((root) =>
       updateContainer(root, targetId, (container) => {
@@ -708,7 +747,7 @@ export class TemplateService {
   }
 
   addElement(targetId = this.session.active().id, position = Number.MAX_SAFE_INTEGER): number {
-    const definition = newContainer('element', 'Element');
+    const definition = newContainer('element');
     this.insertNode(
       {
         kind: 'element',
@@ -718,7 +757,11 @@ export class TemplateService {
       },
       position,
       targetId,
+      false,
     );
+    this.openContainer(targetId);
+    this.scrollRequest.set(definition.id);
+    this.nameFocusRequest.set(definition.id);
     return definition.id;
   }
   importElement(source: string | object, targetId = this.session.active().id): void {
@@ -807,9 +850,10 @@ export class TemplateService {
     const parent = parentOf(this.session.document(), id);
     if (!parent) return 'The element no longer exists.';
     const name = placement.deploymentName?.trim();
-    if (!name) return 'A property name is required.';
-    if (parent.children.some((node) => node.id !== id && childName(node) === name))
-      return 'Another child already uses that property name.';
+    if (name !== undefined) {
+      const error = this.keyError(id, name);
+      if (error) return error;
+    }
     const next = updateContainer(this.session.document(), parent.id, (container) => ({
       ...container,
       children: container.children.map((node) =>

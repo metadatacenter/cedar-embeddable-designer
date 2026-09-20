@@ -10,7 +10,8 @@ for (const kind of ['field', 'template', 'element'] as const) {
       const service = TestBed.inject(TemplateService);
       service.templateName.set('Study');
       const fixture = TestBed.createComponent(AnnotationsEditorComponent);
-      if (kind === 'element') service.addElement(service.document().id);
+      if (kind === 'element')
+        service.updateContainerDefinition(service.addElement(service.document().id), { name: 'Element' });
       const element = service.document().children.find((node) => node.kind === 'element');
       const container = kind === 'element' && element?.kind === 'element' ? element.definition : service.document();
       const owner = kind === 'field' ? service.fields()[0] : container;

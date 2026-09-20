@@ -3,10 +3,11 @@ import { FieldSettingsComponent } from './field-settings.component';
 import { TemplateService } from '../../core/services/template.service';
 import { readContainer } from '../../core/model/cedar-template';
 
-it('edits field identifier and preferred name, retains them on reload, and permits clearing', async () => {
+it('edits identifier and key while preserving a hidden preferred label', async () => {
   localStorage.clear();
   const service = TestBed.inject(TemplateService);
   service.templateName.set('Study');
+  service.updateFieldSettings(service.fields()[0].id, { preferredLabel: 'Study subject' });
   const fixture = TestBed.createComponent(FieldSettingsComponent);
   fixture.componentRef.setInput('field', service.fields()[0]);
   fixture.detectChanges();
@@ -19,7 +20,8 @@ it('edits field identifier and preferred name, retains them on reload, and permi
     await fixture.whenStable();
   };
   await edit('schemaIdentifier', 'local field 42');
-  await edit('preferredLabel', 'Study subject');
+  await edit('deploymentName', 'subject');
+  expect(fixture.nativeElement.querySelector('input[name="preferredLabel"]')).toBeNull();
   const field = service.fields()[0];
   expect(field.schemaIdentifier).toBe('local field 42');
   expect(field.preferredLabel).toBe('Study subject');
@@ -31,7 +33,7 @@ it('edits field identifier and preferred name, retains them on reload, and permi
     expect(restored.definition.preferredLabel).toBe('Study subject');
   }
   await edit('schemaIdentifier', '');
-  await edit('preferredLabel', '');
+  expect(service.fields()[0].deploymentName).toBe('subject');
   expect(service.fields()[0].schemaIdentifier).toBeUndefined();
-  expect(service.fields()[0].preferredLabel).toBeUndefined();
+  expect(service.fields()[0].preferredLabel).toBe('Study subject');
 });

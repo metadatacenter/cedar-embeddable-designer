@@ -95,6 +95,7 @@ async function designerShowing(
       .first()
       .click();
     await designer.getByRole('button', { name: label, exact: true }).click();
+    await designer.locator('input[aria-label="Field name"]:focus').fill(label);
   }
   await expect.poll(async () => starting.count(), { timeout: 15_000 }).toBe(labels.length);
   // Field insertion scrolls the designer's own viewport. Reset that viewport,
@@ -168,7 +169,7 @@ test.describe('the designer', () => {
     await expect(card).toHaveScreenshot('card-expanded.png', {
       ...SHOT,
       // Field identities and provenance vary between runs.
-      mask: [card.locator('dl.identity')],
+      mask: [card.locator('dl.identity dd:not(:first-of-type)')],
     });
   });
 
@@ -188,7 +189,7 @@ test.describe('the designer', () => {
       await applyPreset(page, 'modular');
       await addElementFixture(page, designer);
       const element = designer.locator('app-container-editor').nth(1);
-      await element.getByPlaceholder('Element name').fill('Study details');
+      await element.getByPlaceholder('Enter element name').fill('Study details');
       await nestFixtureFields(page, ['Element']);
       await expect(element.locator('app-field-card')).toHaveCount(1);
       await page.mouse.move(0, 0);
@@ -199,7 +200,39 @@ test.describe('the designer', () => {
       await expect(element).toHaveScreenshot(`element-settings-${width}.png`, SHOT);
       await settings.getByRole('button', { name: 'Collapse element settings', exact: true }).click();
       await element.locator(':scope > .template-header-card .element-toggle').click();
+      await page.mouse.move(0, 0);
       await expect(element).toHaveScreenshot(`element-collapsed-${width}.png`, SHOT);
     });
   }
+});
+
+test('an unnamed field is quiet until the author leaves its name empty', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await designer.getByRole('textbox', { name: 'Template name', exact: true }).fill('Study');
+  await designer.getByRole('button', { name: 'Add field', exact: true }).first().click();
+  await designer.getByRole('button', { name: 'Text', exact: true }).click();
+  const name = designer.locator('input[aria-label="Field name"]:focus');
+  await expect(name).toHaveValue('');
+  const card = name.locator('xpath=ancestor::app-field-card');
+  await page.mouse.move(0, 0);
+  await expect(card).toHaveScreenshot('unnamed-field-editing.png', SHOT);
+  await name.blur();
+  const added = designer.locator('app-field-card').filter({ hasText: 'Field name is required.' });
+  await expect(added).toHaveScreenshot('unnamed-field-required.png', SHOT);
+  const summary = designer.locator('.validation-summary');
+  await summary.locator('summary').click();
+  await expect(summary).toHaveScreenshot('validation-summary-expanded.png', SHOT);
+});
+
+test('an inactive settings tab still shows its error', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await designer.getByLabel('Template name', { exact: true }).fill('Study');
+  const card = designer.locator('app-field-card').first();
+  await card.getByLabel('Allow multiple', { exact: true }).check();
+  const panel = await openSettings(card, 'Occurrences');
+  await panel.getByLabel('Minimum', { exact: true }).fill('2');
+  await panel.getByLabel('Maximum', { exact: true }).fill('1');
+  await card.getByRole('tab', { name: 'Display', exact: true }).click();
+  await page.mouse.move(0, 0);
+  await expect(card).toHaveScreenshot('inactive-tab-error.png', SHOT);
 });

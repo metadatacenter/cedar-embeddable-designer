@@ -1,4 +1,4 @@
-import { Component, ElementRef, Injector, afterNextRender, inject, input, output } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import { TemplateService } from '../../core/services/template.service';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 
@@ -33,24 +33,15 @@ export class InsertionActionsComponent {
   readonly position = input.required<number>();
   readonly here = input(false);
   readonly used = output<void>();
-  private readonly host = inject(ElementRef<HTMLElement>);
-  private readonly injector = inject(Injector);
   importChild(type: 'field' | 'element'): void {
     this.used.emit();
     this.service.openChildPicker(this.targetId(), this.position(), type);
   }
   addElement(): void {
     this.used.emit();
-    const root = this.host.nativeElement.getRootNode() as Document | ShadowRoot;
     const id = this.service.addElement(this.targetId(), this.position());
     this.service.openContainer(id);
     this.service.selectedField.set(id);
-    afterNextRender(
-      () => {
-        root.querySelector<HTMLInputElement>(`#field-card-${id} input`)?.focus({ preventScroll: true });
-      },
-      { injector: this.injector },
-    );
   }
   addField(): void {
     this.used.emit();

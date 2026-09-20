@@ -135,6 +135,7 @@ test('blank and whitespace names block saving and summary navigation focuses the
     const original = await name.inputValue();
     for (const blank of ['', '   ']) {
       await name.fill(blank);
+      await name.blur();
       await expect(name).toHaveAttribute('aria-invalid', 'true');
       await expect.poll(async () => (await report(page)).canSave).toBe(false);
       expect((await report(page)).issues.some((issue) => issue.setting === 'name')).toBe(true);
@@ -146,4 +147,124 @@ test('blank and whitespace names block saving and summary navigation focuses the
     await expect(name).toHaveAttribute('aria-invalid', 'false');
     await expect.poll(async () => (await report(page)).canSave).toBe(true);
   }
+});
+
+test('new fields and elements focus an unnamed draft and defer errors until blur', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await designer.getByRole('textbox', { name: 'Template name', exact: true }).fill('Study');
+  await applyPreset(page, 'modular');
+  await designer.getByRole('button', { name: 'Add field', exact: true }).first().click();
+  await designer.getByRole('button', { name: 'Text', exact: true }).click();
+  const field = designer.getByRole('textbox', { name: 'Field name', exact: true }).last();
+  await expect(field).toBeFocused();
+  await expect(field).toHaveValue('');
+  await expect(field).toHaveAttribute('aria-invalid', 'false');
+  await expect(designer.locator('.validation-summary')).toContainText('Enter missing names before saving.');
+  await expect.poll(async () => (await report(page)).canSave).toBe(false);
+  await field.blur();
+  await expect(field).toHaveAttribute('aria-invalid', 'true');
+  await field.fill('Study title');
+  await expect.poll(async () => (await report(page)).canSave).toBe(true);
+  await designer.getByRole('button', { name: 'Add element', exact: true }).first().click();
+  const element = designer.getByRole('textbox', { name: 'Element name', exact: true }).last();
+  await expect(element).toBeFocused();
+  await expect(element).toHaveValue('');
+  await expect(element).toHaveAttribute('aria-invalid', 'false');
+  await expect.poll(async () => (await report(page)).canSave).toBe(false);
+  await element.fill('   ');
+  await element.blur();
+  await expect(element).toHaveAttribute('aria-invalid', 'true');
+  await element.fill('Study details');
+  await expect.poll(async () => (await report(page)).canSave).toBe(true);
+});
+
+test('field error badge aligns its icon and text with the field name', async ({ page }) => {
+  const designer = await openDesigner(page);
+  const card = designer.locator('app-field-card').first();
+  const name = card.getByRole('textbox', { name: 'Field name', exact: true });
+  await name.fill('');
+  await name.blur();
+  const badge = card.locator('.validation-badge');
+  await expect(badge).toContainText('1 error');
+  for (const width of [1280, 700]) {
+    await page.setViewportSize({ width, height: 900 });
+    const alignment = await card.evaluate((element) => {
+      const input = element.querySelector<HTMLInputElement>('.field-heading > input')!;
+      const text = element.querySelector('.validation-badge > span')!.getBoundingClientRect();
+      const icon = element.querySelector('.validation-badge svg')!.getBoundingClientRect();
+      const style = getComputedStyle(input);
+      const nameCenter =
+        input.getBoundingClientRect().top +
+        parseFloat(style.borderTopWidth) +
+        parseFloat(style.paddingTop) +
+        parseFloat(style.lineHeight) / 2;
+      return { nameCenter, textCenter: text.top + text.height / 2, iconCenter: icon.top + icon.height / 2 };
+    });
+    expect(Math.abs(alignment.textCenter - alignment.nameCenter)).toBeLessThanOrEqual(1);
+    expect(Math.abs(alignment.iconCenter - alignment.textCenter)).toBeLessThanOrEqual(1);
+  }
+});
+
+test('validation summary centers its heading and indents expanded issues', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await designer.getByLabel('Template name', { exact: true }).fill('Study');
+  const name = designer.getByLabel('Field name', { exact: true }).first();
+  await name.fill('');
+  await name.blur();
+  const notice = designer.locator('.validation-summary');
+  await notice.locator('summary').click();
+  await expect(notice.locator('li').first()).toBeVisible();
+  const layout = await notice.evaluate((el) => {
+    const summary = el.querySelector('summary')!;
+    const box = summary.getBoundingClientRect();
+    const children = [...summary.children].map((child) => child.getBoundingClientRect());
+    const left = Math.min(...children.map((child) => child.left));
+    const right = Math.max(...children.map((child) => child.right));
+    return {
+      delta: Math.abs((left + right) / 2 - (box.left + box.right) / 2),
+      indent: parseFloat(getComputedStyle(el.querySelector('ul')!).paddingInlineStart),
+    };
+  });
+  expect(layout.delta).toBeLessThanOrEqual(1);
+  expect(layout.indent).toBeGreaterThan(0);
+});
+
+test('an invalid blank field name remains editable with real keystrokes', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await designer.getByLabel('Template name', { exact: true }).fill('Study');
+  const card = designer.locator('app-field-card').first();
+  const name = card.getByLabel('Field name', { exact: true });
+  await name.fill('');
+  await name.blur();
+  await expect(name).toHaveAttribute('aria-invalid', 'true');
+  await openSettings(card, 'Display');
+  const bounds = (await name.boundingBox())!;
+  // Hit the top edge physically: locator.click() would retry around an overlay.
+  await page.mouse.click(bounds.x + 30, bounds.y + 2);
+  await expect(name).toBeFocused();
+  await page.keyboard.type('Study title', { delay: 80 });
+  await expect(name).toHaveValue('Study title');
+  await expect(name).toBeFocused();
+  await expect(name).toHaveAttribute('aria-invalid', 'false');
+});
+
+test('tabs retain their error marker when another tab is selected', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await designer.getByLabel('Template name', { exact: true }).fill('Study');
+  const card = designer.locator('app-field-card').first();
+  await card.getByLabel('Allow multiple', { exact: true }).check();
+  const panel = await openSettings(card, 'Occurrences');
+  await panel.getByLabel('Minimum', { exact: true }).fill('2');
+  await panel.getByLabel('Maximum', { exact: true }).fill('1');
+  const tab = card.getByRole('tab', { name: 'Occurrences', exact: true });
+  await expect(tab).toHaveAttribute('aria-description', 'Contains errors');
+  await expect(tab).toHaveCSS('border-bottom-color', 'rgb(180, 35, 24)');
+  await card.getByRole('tab', { name: 'Display', exact: true }).click();
+  await expect(tab).toHaveAttribute('aria-selected', 'false');
+  await expect(tab).toHaveCSS('border-bottom-color', 'rgb(180, 35, 24)');
+  await expect(card.getByRole('tab', { name: 'Display', exact: true })).not.toHaveAttribute('aria-description');
+  await tab.click();
+  await panel.getByLabel('Maximum', { exact: true }).fill('3');
+  await expect(tab).not.toHaveAttribute('aria-description');
+  await expect(tab).not.toHaveCSS('border-bottom-color', 'rgb(180, 35, 24)');
 });

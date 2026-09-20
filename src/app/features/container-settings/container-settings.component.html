@@ -4,6 +4,8 @@
       <button
         type="button"
         role="tab"
+        [class.has-errors]="service.tabHasErrors(container().id, tab)"
+        [attr.aria-description]="service.tabHasErrors(container().id, tab) ? 'Contains errors' : null"
         [id]="tabId(tab)"
         [attr.aria-selected]="selected() === tab"
         [attr.aria-controls]="tabId(tab) + '-panel'"

@@ -179,7 +179,12 @@ export function moveChild(root: ContainerDraft, childId: number, targetId: numbe
     throw new Error('An element cannot be moved into itself or one of its descendants.');
   if (node.kind === 'field' && !allowedInContainer(node.definition.type, target.kind))
     throw new Error('Page breaks can only be placed in templates.');
-  if (target.children.some((child) => child.id !== childId && childName(child) === childName(node)))
+  if (
+    node.placement.deploymentName !== undefined &&
+    target.children.some(
+      (child) => child.id !== childId && child.placement.deploymentName === node.placement.deploymentName,
+    )
+  )
     throw new Error('The destination already has a child with that property name. Rename the placement first.');
   const removed = updateContainer(root, parent.id, (container) => ({
     ...container,

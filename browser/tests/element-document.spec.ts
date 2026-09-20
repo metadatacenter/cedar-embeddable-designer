@@ -5,7 +5,7 @@ import { openSettings, openDesigner, currentTemplate, nestFixtureFields } from '
 test('creates, edits, exports and reopens a standalone element through the public API', async ({ page }) => {
   await openDesigner(page);
   await loadStandalone(page, 'Element');
-  const name = page.getByPlaceholder('Element name');
+  const name = page.getByPlaceholder('Enter element name');
   await name.fill('Study element');
   const element = await currentTemplate(page);
   expect(element['@type']).toBe('https://schema.metadatacenter.org/core/TemplateElement');
@@ -37,7 +37,7 @@ for (const width of [1280, 375]) {
     await page.getByRole('button', { name: /Modular/ }).click();
     await addElementFixture(page, root);
     const parent = nestedEditors(root).first();
-    await directHeader(parent).getByPlaceholder('Element name').fill('Samples');
+    await directHeader(parent).getByPlaceholder('Enter element name').fill('Samples');
     await expect(directHeader(parent).getByRole('button', { name: 'Collapse Samples', exact: true })).toHaveCount(0);
     await addElementFixture(page, directContent(parent));
     await expect(directHeader(parent).getByRole('button', { name: 'Collapse Samples', exact: true })).toHaveAttribute(
@@ -45,7 +45,7 @@ for (const width of [1280, 375]) {
       'true',
     );
     const nested = nestedEditors(parent).first();
-    await directHeader(nested).getByPlaceholder('Element name').fill('Sample');
+    await directHeader(nested).getByPlaceholder('Enter element name').fill('Sample');
     const placement = directHeader(nested).locator(':scope > app-element-card');
     await placement.getByRole('button', { name: 'Expand element settings', exact: true }).click();
     await expect(placement.getByRole('tablist')).toBeVisible();
@@ -102,7 +102,7 @@ for (const width of [1280, 375]) {
     await expect(moved.getByRole('textbox', { name: 'Field name', exact: true })).toHaveValue('Nested title');
     expect(await currentTemplate(page)).toEqual(collapsed);
     // Root fields still respond while a different element is selected.
-    await directHeader(nested).getByPlaceholder('Element name').click();
+    await directHeader(nested).getByPlaceholder('Enter element name').click();
     const rootCategory = root
       .locator(':scope > .container-content > .fields-drop-list > .field-drop-item app-field-card')
       .first();
@@ -214,7 +214,7 @@ for (const width of [1280, 375]) {
     const designer = await openDesigner(page);
     await loadStandalone(page, 'Element');
     const header = directHeader(designer.locator('app-container-editor').first());
-    const name = header.getByPlaceholder('Element name', { exact: true });
+    const name = header.getByPlaceholder('Enter element name', { exact: true });
     await name.fill('Study element');
     await expect(name).toHaveCSS('font-size', '14px');
     await expect(header).toHaveCSS('border-top-width', '1px');
@@ -326,3 +326,21 @@ for (const width of [1280, 375]) {
     await expect(directContent(root)).toBeVisible();
   });
 }
+
+test('edits a nested element key and rejects keys used by sibling fields', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await page.getByRole('button', { name: 'Basic', exact: true }).click();
+  await page.getByRole('button', { name: /Modular/ }).click();
+  await addElementFixture(page, designer);
+  const settings = designer.locator('app-element-card').first();
+  const expand = settings.getByRole('button', { name: 'Expand element settings', exact: true });
+  await expand.click();
+  await settings.getByRole('tab', { name: 'Element metadata', exact: true }).click();
+  const key = settings.getByLabel('Key', { exact: true });
+  await key.fill('Title');
+  await expect(settings.getByRole('alert')).toContainText('already uses that key');
+  await key.fill('details');
+  await expect(settings.getByRole('alert')).toHaveCount(0);
+  expect((await currentTemplate(page)).properties).toHaveProperty('details');
+  expect(((await currentTemplate(page)).properties as any).details['schema:name']).toBe('Element');
+});

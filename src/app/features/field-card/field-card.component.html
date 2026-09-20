@@ -22,8 +22,8 @@
             type="text"
             [appArtifactName]="field.id"
             aria-required="true"
-            [attr.aria-invalid]="!!artifactNameError(field.name, 'field')"
-            [attr.aria-describedby]="artifactNameError(field.name, 'field') ? 'name-error-' + field.id : null"
+            [attr.aria-invalid]="!!service.nameError(field.id, field.name, 'field')"
+            [attr.aria-describedby]="service.nameError(field.id, field.name, 'field') ? 'name-error-' + field.id : null"
             [ngModel]="field.name"
             (ngModelChange)="service.updateFieldName(field.id, $event)"
             class="text-sm font-medium text-gray-900 border-none outline-none pb-0.5 flex-1 min-w-0 bg-transparent border-b-2"
@@ -38,13 +38,14 @@
           @if (occurrenceRange; as range) {
             <span class="occurrence-range" aria-label="Occurrence range">{{ range }}</span>
           }
-          @if (service.issuesFor(field.id).length; as count) {
+          @if (service.visibleIssuesFor(field.id).length; as count) {
             <button
               type="button"
               class="validation-badge"
-              (click)="service.revealIssue(service.issuesFor(field.id)[0])"
+              (click)="service.revealIssue(service.visibleIssuesFor(field.id)[0])"
             >
-              ⚠ {{ count }} {{ count === 1 ? 'error' : 'errors' }}
+              <app-icon key="warning" size="small" />
+              <span>{{ count }} {{ count === 1 ? 'error' : 'errors' }}</span>
             </button>
           }
         </div>
@@ -107,7 +108,7 @@
         </div>
       </div>
     </fieldset>
-    @if (artifactNameError(field.name, 'field'); as error) {
+    @if (service.nameError(field.id, field.name, 'field'); as error) {
       <p class="ced-field-error" [id]="'name-error-' + field.id">{{ error }}</p>
     }
     <!-- Reuse CEE's read-only specification; options remain editable below. -->

@@ -161,6 +161,10 @@ p[role='alert'] {
   border-bottom-color: var(--cedar-color-primary);
   font-weight: var(--cedar-font-weight-medium, 500);
 }
+.tabs button.has-errors {
+  color: var(--cedar-control-error, var(--cedar-color-error));
+  border-bottom-color: var(--cedar-control-error, var(--cedar-color-error));
+}
 button:focus-visible {
   outline: 2px solid var(--cedar-color-primary);
   outline-offset: 2px;
@@ -296,7 +300,8 @@ fieldset[aria-invalid='true'] {
 }
 
 // Twice the default 125px control width, bounded by the metadata column.
-.identity input[name='schemaIdentifier'] {
+.identity input[name='schemaIdentifier'],
+.identity input[name='deploymentName'] {
   width: 250px;
   max-width: 100%;
 }

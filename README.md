@@ -50,8 +50,6 @@ property IRI, requirement, cardinality and layout. Its move control transfers
 whole element subtrees between containers. Cycles and conflicting property
 names are refused; page breaks are offered only in templates.
 
-
-
 The public `currentArtifact` and change events always contain the complete root
 document, including while a nested element is selected. CEE preview wraps a root
 element in a temporary template; host-facing documents retain their element type.
@@ -306,8 +304,7 @@ The picker automatically matches word prefixes: `Princ` and `Princ Inv` both
 match `Principal Investigator`. Every entered word must match; no wildcard is needed.
 This translation belongs to the demo host adapter and leaves the REST API unchanged.
 The loopback-only demo server signs in to local Keycloak on port 8080 as
-`test1@test.com` and reads fields and elements through the resource server on port
-9007. It caches and renews the short-lived token in server memory. Only search and
+`test1@test.com` and reads fields and elements through the resource server on port 9007. It caches and renews the short-lived token in server memory. Only search and
 artifact reads are exposed; adding children changes the designer document locally.
 The fixed test account and endpoints belong to this development server, not the
 published CED component. The component's `childSource` input still belongs to its host.
@@ -335,10 +332,10 @@ const field = document.createElement('cedar-embeddable-field-designer') as Cedar
 document.body.append(field);
 field.config = { terminologyBaseUrl: 'https://terminology.example.org' };
 field.newArtifact('number'); // Omit the argument to show the field-type chooser.
-field.addEventListener('artifactChange', event => {
+field.addEventListener('artifactChange', (event) => {
   console.log('Current valid field definition', event.detail);
 });
-field.addEventListener('validationChange', event => {
+field.addEventListener('validationChange', (event) => {
   console.log('Host Save enabled:', event.detail.canSave);
 });
 ```

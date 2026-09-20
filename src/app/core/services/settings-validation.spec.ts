@@ -29,6 +29,8 @@ describe('settings validation report', () => {
     const element = service.session.document().children.find((node) => node.kind === 'element')!;
     service.addField('text', 0, element.id);
     const id = findContainer(service.session.document(), element.id)!.children[0].id;
+    service.updateContainerDefinition(element.id, { name: 'Element' });
+    service.updateFieldName(id, 'Field');
     service.setSettingsError(id, 'defaultValue', 'Invalid default.');
     expect(service.issuesFor(element.id)).toHaveLength(1);
     expect(service.validationReport().issues[0].path).toEqual([root, element.id, id]);
@@ -114,4 +116,59 @@ describe('required artifact names', () => {
     service.updateFieldName(field.id, 'Field');
     expect(service.validationReport().canSave).toBe(true);
   });
+});
+
+it('keeps unnamed siblings independent and editable while saving is disabled', () => {
+  const service = TestBed.inject(TemplateService);
+  service.templateName.set('Study');
+  service.addField('text', 0);
+  service.addField('text', 1);
+  const [first, second] = service.children();
+  expect(first.definition.name).toBe('');
+  expect(second.definition.name).toBe('');
+  expect(first.id).not.toBe(second.id);
+  expect(service.validationReport().canSave).toBe(false);
+  expect(service.visibleIssues()).toHaveLength(0);
+  service.touchName(first.id);
+  expect(service.visibleIssues().map((issue) => issue.nodeId)).toEqual([first.id]);
+  service.moveChild(second.id, service.document().id, 0);
+  expect(service.children()[0].id).toBe(second.id);
+  service.updateFieldName(first.id, 'First');
+  service.updateFieldName(second.id, 'Second');
+  expect(service.validationReport().canSave).toBe(true);
+  const element = service.addElement(service.document().id);
+  expect(findContainer(service.document(), element)!.name).toBe('');
+  expect(service.updateElementPlacement(element, { allowMultiple: true, minItems: 0 })).toBeNull();
+  expect(service.validationReport().canSave).toBe(false);
+  service.updateContainerDefinition(element, { name: 'Details' });
+  expect(service.validationReport().canSave).toBe(true);
+});
+
+it('keys are unique across sibling fields and elements, independently of names and display labels', () => {
+  localStorage.clear();
+  const service = TestBed.inject(TemplateService);
+  const [first, second] = service.fields();
+  service.updateFieldName(second.id, first.name);
+  expect(service.childKey(first.id)).toBe('Title');
+  expect(service.childKey(second.id)).toBe('Title 2');
+  expect(service.updateFieldSettings(first.id, { deploymentName: 'subject', displayLabel: 'Label' })).toBeNull();
+  expect(service.updateFieldSettings(second.id, { deploymentName: 'subject' })).toContain('already uses');
+  expect(service.updateFieldSettings(second.id, { deploymentName: '   ' })).toBe('Key is required.');
+  expect(service.updateFieldSettings(second.id, { deploymentName: 'other', displayLabel: 'Label' })).toBeNull();
+  const root = service.document().id;
+  service.addElement(root);
+  const element = service.document().children.find((node) => node.kind === 'element')!;
+  service.updateContainerDefinition(element.id, { name: first.name });
+  expect(service.updateElementPlacement(element.id, { deploymentName: 'subject', allowMultiple: false })).toContain(
+    'already uses',
+  );
+  expect(service.updateElementPlacement(element.id, { deploymentName: 'nested', allowMultiple: false })).toBeNull();
+  service.addField('text', 0, element.id);
+  const nested = findContainer(service.document(), element.id)!.children[0];
+  service.updateFieldName(nested.id, first.name);
+  expect(service.updateFieldSettings(nested.id, { deploymentName: 'subject' })).toBeNull();
+  service.updateFieldName(first.id, 'Renamed');
+  expect(service.childKey(first.id)).toBe('subject');
+  service.loadTemplate(service.templateJson());
+  expect(service.document().children.map((node) => node.placement.deploymentName)).toContain('subject');
 });

@@ -25,11 +25,9 @@ for (const standalone of [false, true]) {
       await fixture.whenStable();
     };
     await refresh();
-    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
-    input.value = 'Study participant';
-    input.dispatchEvent(new Event('input'));
+    service.updateContainerDefinition(element().id, { preferredLabel: 'Study participant' });
     await refresh();
-    expect(element().preferredLabel).toBe('Study participant');
+    expect(fixture.nativeElement.textContent).not.toContain('Preferred name');
     const names = fixture.debugElement.query(By.directive(AlternateQuestionsComponent))
       .componentInstance as AlternateQuestionsComponent;
     names.edit('  ');
@@ -54,9 +52,8 @@ for (const standalone of [false, true]) {
     expect(savedElement?.preferredLabel).toBe('Study participant');
     expect(savedElement?.alternateLabels).toEqual(['Subject', 'Participant']);
     names.remove(0);
-    fixture.componentInstance.change('');
     await refresh();
-    expect(element().preferredLabel).toBeNull();
+    expect(element().preferredLabel).toBe('Study participant');
     expect(element().alternateLabels).toEqual(['Participant']);
   });
 }

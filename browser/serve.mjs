@@ -30,7 +30,9 @@ createServer(async (request, response) => {
   const file = path === '/' ? 'host.html' : path.replace(/^\/+/, '');
 
   if (file === 'design-tokens.css') {
-    const body = await readFile(new URL('../node_modules/@org.metadatacenter/cedar-design-tokens/dist/custom-properties.css', import.meta.url));
+    const body = await readFile(
+      new URL('../node_modules/@org.metadatacenter/cedar-design-tokens/dist/custom-properties.css', import.meta.url),
+    );
     response.writeHead(200, { 'Content-Type': types['.css'], 'Cache-Control': 'no-store' });
     response.end(body);
     return;

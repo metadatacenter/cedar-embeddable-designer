@@ -363,7 +363,7 @@ describe('default editing', () => {
     expect(() => service.templateJson()).not.toThrow();
   });
   it('duplicates element subtrees with fresh identities and source provenance', () => {
-    service.addElement();
+    service.updateContainerDefinition(service.addElement(), { name: 'Element' });
     const original = service.children().find((node) => node.kind === 'element')!;
     if (original.kind !== 'element') throw new Error('Expected element');
     service.openContainer(original.id);
@@ -385,7 +385,7 @@ describe('default editing', () => {
     expect(copiedField.placement.propertyIri).not.toBe(field.propertyIri);
   });
   it('rejects invalid element cardinality without modifying the document', () => {
-    service.addElement();
+    service.updateContainerDefinition(service.addElement(), { name: 'Element' });
     const node = service.children().find((child) => child.kind === 'element')!;
     const before = service.templateJson();
     expect(
@@ -394,7 +394,7 @@ describe('default editing', () => {
     expect(service.templateJson()).toEqual(before);
   });
   it('inserts an imported element into the captured parent even after navigation', () => {
-    service.addElement();
+    service.updateContainerDefinition(service.addElement(), { name: 'Element' });
     const parent = service.children().find((node) => node.kind === 'element')!;
     if (parent.kind !== 'element') throw new Error('Expected element');
     const source = templateToJson(buildContainer(parent.definition));
@@ -416,10 +416,10 @@ describe('default editing', () => {
     expect(service.templateJson()).toEqual(before);
   });
   it('rejects property-name collisions between fields and elements', () => {
-    service.addElement();
+    service.updateContainerDefinition(service.addElement(), { name: 'Element' });
     const before = service.templateJson();
     const field = service.fields()[0];
-    expect(service.updateFieldSettings(field.id, { deploymentName: 'Element' })).toMatch(/property name/);
+    expect(service.updateFieldSettings(field.id, { deploymentName: 'Element' })).toMatch(/key/);
     expect(service.templateJson()).toEqual(before);
   });
 });

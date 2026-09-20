@@ -4,6 +4,8 @@
       <button
         type="button"
         role="tab"
+        [class.has-errors]="service.tabHasErrors(field.id, tab)"
+        [attr.aria-description]="service.tabHasErrors(field.id, tab) ? 'Contains errors' : null"
         [id]="'field-tab-' + field.id + '-' + tab.replaceAll(' ', '-')"
         [attr.aria-controls]="'field-panel-' + field.id + '-' + tab.replaceAll(' ', '-')"
         [attr.aria-selected]="selectedTab === tab"
@@ -304,7 +306,7 @@
             name="displayLabel"
             [(ngModel)]="displayLabel"
             (ngModelChange)="saveLayout()"
-            placeholder="Field name"
+            placeholder="Field display name"
         /></label>
         <label
           >Display description<input
@@ -354,14 +356,6 @@
         />
       </label>
     }
-    <label class="preferred-label"
-      >Preferred name<input
-        spellcheck="false"
-        name="preferredLabel"
-        [(ngModel)]="preferredLabel"
-        (ngModelChange)="savePreferredLabel()"
-        [disabled]="!!field.publishedDefinition"
-    /></label>
     <app-language-selector [field]="field" />
     @if (dynamic) {
       <app-alternate-questions [field]="field" />
@@ -376,6 +370,19 @@
     [attr.aria-labelledby]="'field-tab-' + field.id + '-Field-metadata'"
   >
     <dl class="identity">
+      @if (!service.fieldDocumentMode()) {
+        <dt class="editable"><label [for]="'field-key-' + field.id">Key</label></dt>
+        <dd>
+          <input
+            spellcheck="false"
+            [id]="'field-key-' + field.id"
+            name="deploymentName"
+            [(ngModel)]="deploymentName"
+            (ngModelChange)="saveKey()"
+            [disabled]="!!field.publishedDefinition"
+          />
+        </dd>
+      }
       <dt>Field IRI</dt>
       <dd>{{ field.atId || 'Not yet assigned' }}</dd>
       @if (artifact.version) {
@@ -422,6 +429,9 @@
         </dd>
       }
     </dl>
+    @if (error) {
+      <p role="alert">{{ error }}</p>
+    }
   </section>
 </div>
 <button

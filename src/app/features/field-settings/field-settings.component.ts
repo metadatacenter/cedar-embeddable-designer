@@ -99,7 +99,7 @@ export class FieldSettingsComponent implements OnChanges {
   get artifact() {
     return fieldArtifactMetadata(this.field);
   }
-  preferredLabel = '';
+  deploymentName = '';
   schemaIdentifier = '';
   displayLabel = '';
   displayDescription = '';
@@ -191,7 +191,11 @@ export class FieldSettingsComponent implements OnChanges {
         this.service
           .validationReport()
           .issues.filter(
-            (issue) => issue.nodeId === this.field.id && issue.source === 'model' && issue.tab === this.selectedTab,
+            (issue) =>
+              issue.nodeId === this.field.id &&
+              issue.source === 'model' &&
+              issue.setting !== 'name' &&
+              issue.tab === this.selectedTab,
           )
           .map((issue) => issue.message)
           .join(' ')) ||
@@ -219,13 +223,20 @@ export class FieldSettingsComponent implements OnChanges {
       this.loaded = {};
       this.loadedFieldId = this.field.id;
     }
-    const take = <T>(key: string, current: T, incoming: T): T =>
-      first ? incoming : this.adopt(key, current, incoming);
+    const take = <T>(key: string, current: T, incoming: T): T => {
+      if (!first) return this.adopt(key, current, incoming);
+      this.loaded[key] = incoming;
+      return incoming;
+    };
     if (first) this.loaded = {};
 
-    this.preferredLabel = take('preferredLabel', this.preferredLabel, this.field.preferredLabel ?? '');
+    this.deploymentName = take('deploymentName', this.deploymentName, this.service.childKey(this.field.id));
     this.schemaIdentifier = take('schemaIdentifier', this.schemaIdentifier, this.field.schemaIdentifier ?? '');
-    this.displayLabel = take('displayLabel', this.displayLabel, this.field.displayLabel ?? '');
+    // Writers may populate a fallback equal to the artifact name or placement key.
+    // As in CEE, that is not an authored display override.
+    const label = this.field.displayLabel;
+    const override = label === this.field.name || label === this.service.childKey(this.field.id) ? '' : (label ?? '');
+    this.displayLabel = take('displayLabel', this.displayLabel, override);
     this.displayDescription = take('displayDescription', this.displayDescription, this.field.displayDescription ?? '');
     this.hidden = take('hidden', this.hidden, this.field.hidden ?? false);
     this.continuePreviousLine = take(
@@ -268,12 +279,10 @@ export class FieldSettingsComponent implements OnChanges {
       }),
     );
   }
-  savePreferredLabel(): void {
+  saveKey(): void {
     this.report(
-      'Display',
-      this.service.updateFieldSettings(this.field.id, {
-        preferredLabel: this.preferredLabel || undefined,
-      }),
+      'Field metadata',
+      this.service.updateFieldSettings(this.field.id, { deploymentName: this.deploymentName }),
     );
   }
   saveProperty(iri: string): void {

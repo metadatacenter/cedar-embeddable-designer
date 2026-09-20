@@ -1,6 +1,6 @@
 <!-- Template Header Card -->
 <div class="template-header-card" [class.nested-header]="!!placementNode()" (focusin)="activate()">
-  @if (placementNode() && service.issuesFor(container().id).length; as count) {
+  @if (placementNode() && service.visibleIssuesFor(container().id).length; as count) {
     <span class="validation-badge">⚠ {{ count }} {{ count === 1 ? 'error' : 'errors' }}</span>
   }
   @if (placementNode()) {
@@ -11,6 +11,7 @@
       aria-label="Drag element to reorder"
     >
       <app-icon key="list" size="small" />
+      <span class="element-type-label">Element</span>
     </span>
   }
   <div class="template-header-card__body" appHeaderToggle (headerToggle)="toggleSettings()">
@@ -32,16 +33,18 @@
             [appArtifactName]="container().id"
             [attr.aria-label]="container().kind === 'element' ? 'Element name' : 'Template name'"
             aria-required="true"
-            [attr.aria-invalid]="!!artifactNameError(container().name, container().kind)"
+            [attr.aria-invalid]="!!service.nameError(container().id, container().name, container().kind)"
             [attr.aria-describedby]="
-              artifactNameError(container().name, container().kind) ? 'name-error-' + container().id : null
+              service.nameError(container().id, container().name, container().kind)
+                ? 'name-error-' + container().id
+                : null
             "
             [ngModel]="container().name"
             (ngModelChange)="update({ name: $event })"
             class="template-input font-medium text-base text-gray-900"
-            [placeholder]="container().kind === 'element' ? 'Element name' : 'Template name'"
+            [placeholder]="container().kind === 'element' ? 'Enter element name' : 'Template name'"
           />
-          @if (artifactNameError(container().name, container().kind); as error) {
+          @if (service.nameError(container().id, container().name, container().kind); as error) {
             <p class="ced-field-error" [id]="'name-error-' + container().id">{{ error }}</p>
           }
         </div>
@@ -170,15 +173,15 @@
           aria-keyshortcuts="ArrowUp ArrowDown"
           class="field-drag-container"
           [class.selected]="service.selectedField() === node.id"
-          [class.invalid]="service.issuesFor(node.id).length > 0"
-          [style.outline-color]="service.issuesFor(node.id).length ? '#b42318' : null"
-          [style.--tw-ring-color]="service.issuesFor(node.id).length ? '#b42318' : null"
-          [style.border-color]="service.issuesFor(node.id).length ? '#b42318' : null"
+          [class.invalid]="service.visibleIssuesFor(node.id).length > 0"
+          [style.outline-color]="service.visibleIssuesFor(node.id).length ? '#b42318' : null"
+          [style.--tw-ring-color]="service.visibleIssuesFor(node.id).length ? '#b42318' : null"
+          [style.border-color]="service.visibleIssuesFor(node.id).length ? '#b42318' : null"
         >
           @if (service.selectedField() === node.id) {
             <div
               class="field-selection-bar"
-              [style.background-color]="service.issuesFor(node.id).length ? '#b42318' : null"
+              [style.background-color]="service.visibleIssuesFor(node.id).length ? '#b42318' : null"
             ></div>
           }
           @if (node.kind === 'field') {

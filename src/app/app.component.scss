@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
 @reference "tailwindcss";
 
 /* ─── App Shell ───────────────────────────────────────────────────────────── */
@@ -341,8 +342,9 @@
 /* ─── Insert Zone ─────────────────────────────────────────────────────────── */
 .insert-zone {
   @apply flex justify-center items-center absolute w-full opacity-0 hover:opacity-100 transition-opacity z-10 cursor-pointer;
-  height: 30px;
-  top: -17px;
+  // The hover target belongs to the gap, never to the next card's name input.
+  height: var(--cedar-space-2);
+  top: calc(-1 * var(--cedar-space-2));
 }
 
 .insert-zone:focus-within {
@@ -407,21 +409,7 @@
 }
 
 .validation-summary {
-  color: var(--cedar-control-error, var(--cedar-color-error));
-  background: #fff4f2;
-  padding: 6px var(--cedar-space-4);
-  font-size: var(--cedar-font-size);
-  flex: none;
-  max-height: 25vh;
-  overflow: auto;
-}
-.validation-summary summary,
-.validation-summary button {
-  cursor: pointer;
-}
-.validation-summary button {
-  text-align: left;
-  text-decoration: underline;
+  @include patterns.validation-summary;
 }
 
 .designer-identity {
@@ -490,4 +478,9 @@
 }
 .insert-zone.dismissed app-insertion-actions {
   pointer-events: none;
+}
+
+.validation-summary--pending {
+  color: var(--cedar-text-muted);
+  background: var(--cedar-surface-authoring);
 }

@@ -5,6 +5,8 @@
         <button
           type="button"
           role="tab"
+          [class.has-errors]="service.tabHasErrors(node().id, tab)"
+          [attr.aria-description]="service.tabHasErrors(node().id, tab) ? 'Contains errors' : null"
           [id]="tabId(tab)"
           [attr.aria-selected]="activeTab === tab"
           [attr.aria-controls]="tabId(tab) + '-panel'"
@@ -30,6 +32,16 @@
           }
           @case ('Element metadata') {
             <dl class="identity">
+              <dt class="editable"><label [for]="'element-key-' + node().id">Key</label></dt>
+              <dd>
+                <input
+                  spellcheck="false"
+                  [id]="'element-key-' + node().id"
+                  name="deploymentName"
+                  [ngModel]="draft().deploymentName ?? service.childKey(node().id)"
+                  (ngModelChange)="draft().deploymentName = $event; apply()"
+                />
+              </dd>
               <dt>Element IRI</dt>
               <dd>{{ node().definition.identifier || 'Not yet assigned' }}</dd>
               @if (node().definition.version) {

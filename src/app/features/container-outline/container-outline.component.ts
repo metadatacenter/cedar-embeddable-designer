@@ -13,7 +13,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
         <div
           class="outline-row"
           [class.active]="service.selectedField() === node.id"
-          [class.invalid]="service.issuesFor(node.id).length > 0"
+          [class.invalid]="service.visibleIssuesFor(node.id).length > 0"
         >
           @if (node.kind === 'element') {
             <button
@@ -33,8 +33,10 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
           }
           <button type="button" class="select-node" (click)="select(node)">
             <app-icon [key]="node.kind === 'field' ? node.definition.type : 'folder'" className="w-4 h-4" />
-            <span class="node-name">{{ childName(node) }}</span>
-            @if (service.issuesFor(node.id).length; as count) {
+            <span class="node-name">{{
+              childName(node) || (node.kind === 'field' ? 'Unnamed field' : 'Unnamed element')
+            }}</span>
+            @if (service.visibleIssuesFor(node.id).length; as count) {
               <span class="validation-badge" [attr.aria-label]="count + ' errors'" [title]="count + ' errors'"
                 >⚠ {{ count }}</span
               >

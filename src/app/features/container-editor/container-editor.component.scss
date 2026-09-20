@@ -202,6 +202,16 @@
   margin-top: var(--cedar-space-2);
 }
 
+.element-type-label {
+  position: absolute;
+  left: 100%;
+  margin-left: var(--cedar-space-2);
+  color: var(--cedar-text-muted);
+  font-size: var(--cedar-font-size);
+  font-weight: var(--cedar-font-weight-regular);
+  line-height: var(--cedar-control-line-height-default);
+}
+
 .field-drag-container.invalid {
   outline: 2px solid var(--cedar-control-error, var(--cedar-color-error));
   outline-offset: 1px;

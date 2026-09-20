@@ -187,6 +187,7 @@ async function oneCardOf(
       exact: true,
     })
     .click();
+  await designer.getByRole('textbox', { name: 'Field name', exact: true }).fill(LABEL_OF[paletteType]);
   if (paletteType === 'time') {
     await openSettings(card(page), 'Constraints');
     await card(page).getByLabel('Temporal type', { exact: true }).selectOption('xsd:time');
@@ -237,7 +238,7 @@ for (const width of WIDTHS) {
               // An empty choice list starts with Add option, not a row.
               const first = [
                 ...panel.querySelectorAll<HTMLElement>(
-                  'label, dt, .default-label, app-controlled-term-config, .choice-option-row, [field-values] input, [field-values] textarea, [field-values] button',
+                  'label, dt, input[name="deploymentName"], .default-label, app-controlled-term-config, .choice-option-row, [field-values] input, [field-values] textarea, [field-values] button',
                 ),
               ]
                 .filter((node) => node.getClientRects().length > 0)

@@ -85,7 +85,12 @@ test('creates an editable element at the insertion position and adds a nested fi
   const insert = designer.getByRole('button', { name: 'Add element here', exact: true }).first();
   await insert.focus();
   await insert.click();
+  const name = designer.getByRole('textbox', { name: 'Element name', exact: true }).first();
+  await expect(name).toBeFocused();
+  await expect(name).toHaveValue('');
+  await name.fill('Element');
   expect(fieldOrder(await currentTemplate(page))[0]).toBe('Element');
+  await page.mouse.move(0, 0);
   await expect
     .poll(() =>
       designer

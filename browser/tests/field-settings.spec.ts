@@ -167,6 +167,7 @@ test('one Temporal palette entry supports date, time and date-time without chang
   await expect(picker.getByRole('button', { name: 'Temporal', exact: true })).toHaveCount(1);
   await expect(picker.getByRole('button', { name: /^(Date|Time|Date and time)$/ })).toHaveCount(0);
   await picker.getByRole('button', { name: 'Temporal', exact: true }).click();
+  await designer.locator('input[aria-label="Field name"]:focus').fill('Temporal');
   await expect(designer.locator('app-field-card')).toHaveCount(4);
   const card = designer.locator('app-field-card').last();
   const settings = await openSettings(card, 'Constraints');
@@ -185,4 +186,56 @@ test('one Temporal palette entry supports date, time and date-time without chang
       })
       .toEqual([original, type]);
   }
+});
+
+test('metadata keys are editable and unique within their parent while names and labels may repeat', async ({
+  page,
+}) => {
+  const designer = await openDesigner(page);
+  const cards = designer.locator('app-field-card');
+  const first = cards.nth(0);
+  const second = cards.nth(1);
+  await first.getByLabel('Field name', { exact: true }).fill('Repeated');
+  await second.getByLabel('Field name', { exact: true }).fill('Repeated');
+  const display = await openSettings(first, 'Display');
+  await expect(display.getByLabel('Preferred name', { exact: true })).toHaveCount(0);
+  await display.getByLabel('Display label', { exact: true }).fill('Same label');
+  const otherDisplay = await openSettings(second, 'Display');
+  await otherDisplay.getByLabel('Display label', { exact: true }).fill('Same label');
+  const metadata = await openSettings(first, 'Field metadata');
+  await expect(metadata.getByLabel('Key', { exact: true })).toHaveValue('Repeated');
+  await metadata.getByLabel('Key', { exact: true }).fill('subject');
+  const otherMetadata = await openSettings(second, 'Field metadata');
+  const key = otherMetadata.getByLabel('Key', { exact: true });
+  await key.fill('subject');
+  await expect(otherMetadata.getByRole('alert')).toContainText('already uses that key');
+  await key.fill('');
+  await expect(otherMetadata.getByRole('alert')).toContainText('Key is required');
+  await key.fill('category');
+  await expect(otherMetadata.getByRole('alert')).toHaveCount(0);
+  const saved = await currentTemplate(page);
+  expect((saved.properties as any).subject['schema:name']).toBe('Repeated');
+  expect((saved.properties as any).category['schema:name']).toBe('Repeated');
+  expect((saved._ui as any).propertyLabels).toMatchObject({ subject: 'Same label', category: 'Same label' });
+});
+
+test('display label starts unset and distinguishes a copied fallback from an authored override', async ({ page }) => {
+  const designer = await openDesigner(page);
+  const card = designer.locator('app-field-card').first();
+  let display = await openSettings(card, 'Display');
+  await expect(display.getByLabel('Display label', { exact: true })).toHaveValue('');
+  await expect(display.getByLabel('Display label', { exact: true })).toHaveAttribute(
+    'placeholder',
+    'Field display name',
+  );
+  const artifact = await currentTemplate(page);
+  await page.evaluate((value) => {
+    (document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object }).artifact = value;
+  }, artifact);
+  display = await openSettings(designer.locator('app-field-card').first(), 'Display');
+  await expect(display.getByLabel('Display label', { exact: true })).toHaveValue('');
+  await display.getByLabel('Display label', { exact: true }).fill('Study title');
+  await expect
+    .poll(async () => (await currentTemplate(page))._ui)
+    .toMatchObject({ propertyLabels: { Title: 'Study title' } });
 });

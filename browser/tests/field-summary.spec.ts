@@ -131,9 +131,10 @@ for (const type of ['singleChoiceList', 'multipleChoiceList', 'multipleChoice', 
             status: 'optional',
             allowMultiple: false,
             options: ['Option A', 'Option B'],
-            defaultValue: type === 'checkboxes' || type === 'multipleChoiceList'
-              ? { kind: 'literals', values: ['Option B'] }
-              : { kind: 'literal', value: 'Option B' },
+            defaultValue:
+              type === 'checkboxes' || type === 'multipleChoiceList'
+                ? { kind: 'literals', values: ['Option B'] }
+                : { kind: 'literal', value: 'Option B' },
           },
         ],
       }),
