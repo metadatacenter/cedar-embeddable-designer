@@ -99,6 +99,15 @@ function choiceDefault(field: Field, options: string[], renamed?: { from: string
   providedIn: 'root',
 })
 export class TemplateService {
+  private readonly automaticKeys = new Set<number>();
+
+  private generatedKey(id: number, name: string): string {
+    const base = name.trim().toLowerCase().replace(/\s+/g, '_') || 'field';
+    let key = base;
+    for (let suffix = 2; this.keyError(id, key); suffix++) key = `${base}_${suffix}`;
+    return key;
+  }
+
   // Inject PreferencesService
   readonly preferencesService = inject(PreferencesService);
 
@@ -293,6 +302,22 @@ export class TemplateService {
       >
     >,
   ): void {
+    if (changes.name !== undefined && this.automaticKeys.has(id)) {
+      const parent = parentOf(this.session.document(), id);
+      if (parent) {
+        const deploymentName = this.generatedKey(id, changes.name);
+        this.session.document.update((root) =>
+          updateContainer(root, parent.id, (container) => ({
+            ...container,
+            children: container.children.map((child) =>
+              child.id === id && child.kind === 'element'
+                ? { ...child, placement: { ...child.placement, deploymentName } }
+                : child,
+            ),
+          })),
+        );
+      }
+    }
     this.session.document.update((root) => updateContainer(root, id, (container) => ({ ...container, ...changes })));
   }
   readonly collapsedElements = signal<ReadonlySet<number>>(new Set());
@@ -343,6 +368,7 @@ export class TemplateService {
       allowMultiple: false,
     };
 
+    this.automaticKeys.add(newField.id);
     this.insertNode(fieldNode(newField), position, targetId, false);
     this.nameFocusRequest.set(newField.id);
 
@@ -383,7 +409,10 @@ export class TemplateService {
 
   updateFieldName(id: number, name: string) {
     if (this.isPublished(id)) return;
-    this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, name } : f)));
+    const deploymentName = this.automaticKeys.has(id) ? this.generatedKey(id, name) : undefined;
+    this.fieldsFor(id).update((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, name, ...(deploymentName ? { deploymentName } : {}) } : f)),
+    );
   }
 
   updateCustomField(updated: CustomField) {
@@ -489,11 +518,18 @@ export class TemplateService {
     if (changes.deploymentName !== undefined) {
       const error = this.keyError(id, changes.deploymentName);
       if (error) return error;
+      this.automaticKeys.delete(id);
       changes = { ...changes, deploymentName: changes.deploymentName.trim() };
     }
     const current = this.fieldsFor(id)().find((field) => field.id === id);
     if (current && !this.canAddField(changes.type ?? current.type, this.parentContainerId(id)))
       return 'Page breaks can only be placed in templates.';
+    if (current && changes.temporal?.timezoneEnabled === false) {
+      const value = changes.defaultValue ?? current.defaultValue;
+      if (value.kind === 'temporal') {
+        changes = { ...changes, defaultValue: { ...value, value: value.value.replace(/(?:Z|[+-]\d{2}:\d{2})$/, '') } };
+      }
+    }
     if (current) {
       const error = defaultValueError({ ...current, ...changes }, changes.defaultValue ?? current.defaultValue);
       if (error) return error;
@@ -677,9 +713,10 @@ export class TemplateService {
     this.loadError.set(null);
     if (namePlacement) {
       const used = new Set(target.children.map((child) => this.childKey(child.id)));
-      const base = childName(node).trim() || (node.kind === 'element' ? 'Element' : 'Field');
+      const base =
+        childName(node).trim().toLowerCase().replace(/\s+/g, '_') || (node.kind === 'element' ? 'element' : 'field');
       let name = base;
-      for (let suffix = 2; used.has(name); suffix++) name = `${base} ${suffix}`;
+      for (let suffix = 2; used.has(name); suffix++) name = `${base}_${suffix}`;
       if (node.kind === 'field') {
         node = { ...node, placement: { ...node.placement, deploymentName: name } };
       } else {
@@ -748,6 +785,7 @@ export class TemplateService {
 
   addElement(targetId = this.session.active().id, position = Number.MAX_SAFE_INTEGER): number {
     const definition = newContainer('element');
+    this.automaticKeys.add(definition.id);
     this.insertNode(
       {
         kind: 'element',
@@ -853,6 +891,7 @@ export class TemplateService {
     if (name !== undefined) {
       const error = this.keyError(id, name);
       if (error) return error;
+      this.automaticKeys.delete(id);
     }
     const next = updateContainer(this.session.document(), parent.id, (container) => ({
       ...container,

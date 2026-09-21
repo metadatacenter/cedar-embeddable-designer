@@ -478,11 +478,19 @@
   cursor: col-resize;
   touch-action: none;
   user-select: none;
-  border-radius: var(--cedar-space-1);
+  background: transparent;
 }
-.overview-panel__resize:hover,
-.overview-panel__resize:focus-visible {
+.overview-panel__resize::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: calc(var(--cedar-space-1) / 4);
   background: var(--cedar-border-rule);
+}
+.overview-panel__resize:hover::after,
+.overview-panel__resize:focus-visible::after {
+  background: var(--cedar-color-primary);
 }
 .overview-panel__resize:focus-visible {
   outline: 2px solid var(--cedar-color-primary);

@@ -73,7 +73,6 @@ export class AppComponent {
     if (event.button !== 0) return;
     event.preventDefault();
     const handle = event.currentTarget as HTMLElement;
-    handle.focus();
     handle.setPointerCapture(event.pointerId);
     this.overviewDrag = { x: event.clientX, width: this.overviewWidth() };
   }

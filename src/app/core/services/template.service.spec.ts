@@ -44,13 +44,13 @@ describe('TemplateService', () => {
     expect(inserted[0]).toMatchObject({
       kind: 'field',
       definition: { name: 'Title', atId: field['@id'] },
-      placement: { deploymentName: 'Title 2' },
+      placement: { deploymentName: 'title' },
     });
     expect(inserted[1]).toMatchObject({ kind: 'element', definition: { identifier: element['@id'], name: 'Section' } });
     expect(((service.templateJson() as CedJsonObject)['_ui'] as CedJsonObject)['order']).toEqual([
       'Title',
-      'Title 2',
-      'Section',
+      'title',
+      'section',
       'Category',
       'Publication Date',
     ]);
@@ -112,7 +112,7 @@ describe('TemplateService', () => {
     const copy = service.fields()[0];
     expect({ ...copy, id: definition.id, customFieldId: undefined, libraryId: undefined }).toEqual({
       ...definition,
-      deploymentName: 'Title 2',
+      deploymentName: 'title',
       customFieldId: undefined,
       libraryId: undefined,
     });
@@ -377,7 +377,7 @@ describe('default editing', () => {
     expect(copy.definition.identifier).not.toBe(original.definition.identifier);
     expect(copy.definition.metadata?.artifact.derivedFrom).toBe(original.definition.identifier);
     expect(copy.definition.metadata?.artifact.publicationStatus).toBe('bibo:draft');
-    expect(copy.placement.deploymentName).toBe('Element 2');
+    expect(copy.placement.deploymentName).toBe('element_2');
     const copiedField = copy.definition.children[0];
     if (copiedField.kind !== 'field') throw new Error('Expected field');
     expect(copiedField.definition.atId).not.toBe(field.atId);
@@ -419,7 +419,7 @@ describe('default editing', () => {
     service.updateContainerDefinition(service.addElement(), { name: 'Element' });
     const before = service.templateJson();
     const field = service.fields()[0];
-    expect(service.updateFieldSettings(field.id, { deploymentName: 'Element' })).toMatch(/key/);
+    expect(service.updateFieldSettings(field.id, { deploymentName: 'element' })).toMatch(/key/);
     expect(service.templateJson()).toEqual(before);
   });
 });

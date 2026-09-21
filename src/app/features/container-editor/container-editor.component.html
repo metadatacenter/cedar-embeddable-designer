@@ -118,7 +118,7 @@
         [attr.aria-controls]="'element-content-' + container().id"
         (click)="$event.stopPropagation(); service.toggleElement(container().id)"
       >
-        <app-icon key="chevron-down" size="small" [class.collapsed]="collapsed()" />
+        <app-icon [key]="collapsed() ? 'expand-all' : 'collapse-all'" size="small" />
       </button>
     }
   </div>

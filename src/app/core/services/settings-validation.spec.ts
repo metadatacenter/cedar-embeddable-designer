@@ -172,3 +172,45 @@ it('keys are unique across sibling fields and elements, independently of names a
   service.loadTemplate(service.templateJson());
   expect(service.document().children.map((node) => node.placement.deploymentName)).toContain('subject');
 });
+
+it('generates lowercase sibling-unique keys for newly named fields and preserves explicit keys', () => {
+  const service = TestBed.inject(TemplateService);
+  const root = service.document().id;
+  service.addField('text', 0, root);
+  const first = service.document().children[0].id;
+  service.updateFieldName(first, 'Sample Name');
+  expect(service.childKey(first)).toBe('sample_name');
+  service.addField('text', 1, root);
+  const second = service.document().children[1].id;
+  service.updateFieldName(second, 'Sample Name');
+  expect(service.childKey(second)).toBe('sample_name_2');
+  expect(service.updateFieldSettings(first, { deploymentName: 'custom_key' })).toBeNull();
+  service.updateFieldName(first, 'Renamed');
+  expect(service.childKey(first)).toBe('custom_key');
+  const field = service.fields().find((field) => field.id === first)!;
+  expect(field.propertyIri).toMatch(/\/properties\/[0-9a-f]{8}-[0-9a-f-]{27}$/);
+});
+
+it('removes only the offset when timezone is disabled on a complete default', () => {
+  const service = TestBed.inject(TemplateService);
+  service.addField('date', 0);
+  const id = service.document().children[0].id;
+  service.updateFieldName(id, 'Date');
+  const temporal = {
+    type: 'xsd:dateTime',
+    granularity: 'decimalSecond',
+    timezoneEnabled: true,
+    inputTimeFormat: '24h',
+  } as const;
+  expect(
+    service.updateFieldSettings(id, {
+      temporal,
+      defaultValue: { kind: 'temporal', value: '2026-09-08T02:02:02.222-10:00' },
+    }),
+  ).toBeNull();
+  expect(service.updateFieldSettings(id, { temporal: { ...temporal, timezoneEnabled: false } })).toBeNull();
+  expect(service.fields().find((field) => field.id === id)?.defaultValue).toEqual({
+    kind: 'temporal',
+    value: '2026-09-08T02:02:02.222',
+  });
+});

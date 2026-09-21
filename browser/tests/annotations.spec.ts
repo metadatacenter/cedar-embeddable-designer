@@ -112,7 +112,7 @@ for (const width of [1280, 375]) {
     await elementSettings.getByRole('tab', { name: 'Annotations', exact: true }).click();
     await addRows(elementSettings.locator('app-annotations-editor'));
     const saved = await currentTemplate(page);
-    expect(child(saved, 'Element')._annotations).toEqual(annotations);
+    expect(child(saved, 'element')._annotations).toEqual(annotations);
     await reloadArtifact(page, saved);
     await openSettings(designer.locator('app-field-card').first(), 'Annotations');
     await expect(
@@ -120,7 +120,7 @@ for (const width of [1280, 375]) {
     ).toHaveText('Reviewed');
     expect(await currentTemplate(page)).toEqual(saved);
     // The same element metadata editor is available when an element is opened as its own document.
-    await reloadArtifact(page, child(saved, 'Element'));
+    await reloadArtifact(page, child(saved, 'element'));
     const standalone = designer.locator('app-container-settings');
     await standalone.getByRole('button', { name: 'Expand element settings' }).click();
     await standalone.getByRole('tab', { name: 'Annotations', exact: true }).click();

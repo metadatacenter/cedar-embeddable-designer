@@ -61,7 +61,7 @@ for (const width of [1280, 375]) {
     await page.getByRole('button', { name: 'Basic', exact: true }).click();
     await page.getByRole('button', { name: /Modular/ }).click();
     await addElementFixture(page, root);
-    await nestFixtureFields(page, ['Element']);
+    await nestFixtureFields(page, ['element']);
     const element = root.locator('.template-header-card').nth(1);
     const elementBody = element.locator('.template-header-card__body');
     const elementToggle = element.getByRole('button', { name: /element settings/ });

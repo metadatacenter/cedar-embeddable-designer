@@ -12,6 +12,9 @@ test('Overview resizes within bounds without changing the artifact', async ({ pa
   await page.mouse.down();
   await page.mouse.move(box.x + 120, box.y + 30, { steps: 8 });
   await page.mouse.up();
+  await page.mouse.move(800, 50);
+  await expect(handle).not.toBeFocused();
+  expect(await handle.evaluate((el) => getComputedStyle(el, '::after').width)).toBe('1px');
   const width = Number(await handle.getAttribute('aria-valuenow'));
   expect(width).toBeGreaterThan(350);
   expect((await panel.boundingBox())!.width).toBe(width);

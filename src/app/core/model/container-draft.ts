@@ -163,7 +163,7 @@ export function parentOf(root: ContainerDraft, childId: number): ContainerDraft 
   return undefined;
 }
 export function childName(node: ChildNode): string {
-  return node.placement.deploymentName ?? node.definition.name;
+  return node.definition.name;
 }
 
 /** Page breaks divide a template form into pages; the production palette excludes them from elements. */

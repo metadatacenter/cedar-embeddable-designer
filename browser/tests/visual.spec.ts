@@ -190,7 +190,7 @@ test.describe('the designer', () => {
       await addElementFixture(page, designer);
       const element = designer.locator('app-container-editor').nth(1);
       await element.getByPlaceholder('Enter element name').fill('Study details');
-      await nestFixtureFields(page, ['Element']);
+      await nestFixtureFields(page, ['element']);
       await expect(element.locator('app-field-card')).toHaveCount(1);
       await page.mouse.move(0, 0);
       await expect(element).toHaveScreenshot(`element-expanded-${width}.png`, SHOT);

@@ -604,3 +604,15 @@ for (const type of ['singleChoiceList', 'multipleChoiceList']) {
     expect(metrics.content).toBeLessThanOrEqual(metrics.height);
   });
 }
+
+test('disabling timezone removes the offset and hides its control without rejecting the default', async ({ page }) => {
+  const control = await openField(page, 'date', {
+    temporal: { type: 'xsd:dateTime', granularity: 'decimalSecond', timezoneEnabled: true, inputTimeFormat: '24h' },
+    defaultValue: { kind: 'temporal', value: '2026-09-08T02:02:02.222-10:00' },
+  });
+  await page.getByLabel('Show timezone', { exact: true }).uncheck();
+  await expect.poll(async () => (await constraints(page))['defaultValue']).toBe('2026-09-08T02:02:02.222');
+  await expect(control.locator('.cee-temporal-offset')).toHaveCount(0);
+  await expect(page.getByText('Enable Show timezone or remove the timezone from the default.')).toHaveCount(0);
+  await expect(control.getByRole('textbox', { name: 'Hour', exact: true })).toHaveValue('02');
+});

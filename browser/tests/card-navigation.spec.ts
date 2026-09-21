@@ -66,7 +66,7 @@ test('navigation includes elements but skips children of collapsed elements', as
   await designer.getByRole('button', { name: 'Basic', exact: true }).click();
   await designer.getByRole('button', { name: /Modular/ }).click();
   await addElementFixture(page);
-  await nestFixtureFields(page, ['Element']);
+  await nestFixtureFields(page, ['element']);
   const cards = designer.locator('.field-drag-container');
   const element = cards.filter({ has: page.locator(':scope > app-container-editor') }).first();
   await element.focus();

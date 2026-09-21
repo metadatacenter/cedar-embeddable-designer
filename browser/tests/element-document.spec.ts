@@ -80,7 +80,7 @@ for (const width of [1280, 375]) {
     expect(colors.accent).toBe(colors.primary);
     await placement.getByLabel('Minimum occurrences', { exact: true }).fill('2');
     await placement.getByLabel('Maximum occurrences', { exact: true }).fill('4');
-    await nestFixtureFields(page, ['Element', 'Element']);
+    await nestFixtureFields(page, ['element', 'element']);
     await placement.getByRole('button', { name: 'Expand element settings', exact: true }).click();
     await placement.getByRole('tab', { name: 'Occurrences', exact: true }).click();
     const moved = nested.locator('app-field-card').first();
@@ -109,10 +109,10 @@ for (const width of [1280, 375]) {
     await rootCategory.getByRole('textbox', { name: 'Field name', exact: true }).fill('Root category');
     const saved = await currentTemplate(page);
     const properties = saved.properties as Record<string, any>;
-    expect(properties.Element.properties.Element.minItems).toBe(2);
-    expect(properties.Element.properties.Element.maxItems).toBe(4);
-    expect(properties.Element.properties.Element.items['schema:name']).toBe('Sample');
-    expect(properties.Element.properties.Element.items._ui.propertyLabels.Title).toBe('Nested display');
+    expect(properties.element.properties.element.minItems).toBe(2);
+    expect(properties.element.properties.element.maxItems).toBe(4);
+    expect(properties.element.properties.element.items['schema:name']).toBe('Sample');
+    expect(properties.element.properties.element.items._ui.propertyLabels.Title).toBe('Nested display');
     expect(
       Object.values(properties).some((field: any) => (field.items ?? field)['schema:name'] === 'Root category'),
     ).toBe(true);
@@ -156,7 +156,7 @@ test('element metadata shows provenance without changing the artifact and hides 
   await page.getByRole('button', { name: /Modular/ }).click();
   await addElementFixture(page, designer);
   const artifact = await currentTemplate(page);
-  const element = (artifact.properties as Record<string, any>).Element;
+  const element = (artifact.properties as Record<string, any>).element;
   element['pav:createdOn'] = '2026-08-18T16:07:23-07:00';
   element['pav:lastUpdatedOn'] = '2026-09-11T07:27:46-07:00';
   element['pav:derivedFrom'] = 'https://example.org/elements/source';
@@ -202,7 +202,7 @@ async function loadStandalone(page: import('@playwright/test').Page, kind: strin
   await page.getByRole('button', { name: /Modular/ }).click();
   await addElementFixture(page);
   const template = await currentTemplate(page);
-  const element = (template.properties as Record<string, any>).Element;
+  const element = (template.properties as Record<string, any>).element;
   await page.evaluate((artifact) => {
     (document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object }).artifact = artifact;
   }, element);
@@ -238,7 +238,7 @@ for (const width of [1280, 375]) {
     await designer.getByRole('button', { name: 'Basic', exact: true }).click();
     await designer.getByRole('button', { name: /Modular/ }).click();
     await addElementFixture(page);
-    await nestFixtureFields(page, ['Element']);
+    await nestFixtureFields(page, ['element']);
     const element = designer.locator('app-container-editor').nth(1);
     const header = directHeader(element);
     const geometry = await element.evaluate((node) => {
@@ -276,7 +276,7 @@ for (const collapsed of [false, true]) {
     await page.getByRole('button', { name: 'Basic', exact: true }).click();
     await page.getByRole('button', { name: /Modular/ }).click();
     await addElementFixture(page, designer);
-    await nestFixtureFields(page, ['Element'], 2);
+    await nestFixtureFields(page, ['element'], 2);
     const root = designer.locator('app-container-editor').first();
     const element = nestedEditors(root).first();
     if (collapsed) await directHeader(element).locator('.element-toggle').click();
@@ -296,9 +296,9 @@ for (const collapsed of [false, true]) {
     await expect
       .poll(async () => (await currentTemplate(page))._ui)
       .toMatchObject({
-        order: ['Element', ...(before._ui as { order: string[] }).order.filter((name) => name !== 'Element')],
+        order: ['element', ...(before._ui as { order: string[] }).order.filter((name) => name !== 'element')],
       });
-    expect(child(await currentTemplate(page), 'Element')).toEqual(child(before, 'Element'));
+    expect(child(await currentTemplate(page), 'element')).toEqual(child(before, 'element'));
   });
 }
 

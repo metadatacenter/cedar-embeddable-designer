@@ -364,7 +364,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
     paletteType: 'text',
     set: async (page) => card(page).getByLabel('Requirement', { exact: true }).selectOption('required'),
     restore: async (page) => card(page).getByLabel('Requirement', { exact: true }).selectOption('optional'),
-    read: (template) => constraints(template, 'Text')['requiredValue'],
+    read: (template) => constraints(template, 'text')['requiredValue'],
     whenSet: true,
   },
   {
@@ -379,7 +379,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
     prepare: (page) => open(page, 'Display'),
     set: async (page) => putValue(card(page).getByLabel('Help text', { exact: true }), 'Some help'),
     restore: async (page) => putValue(card(page).getByLabel('Help text', { exact: true }), ''),
-    read: (template) => property(template, 'Text')['schema:description'],
+    read: (template) => property(template, 'text')['schema:description'],
     whenSet: 'Some help',
   },
 
@@ -438,7 +438,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
     prepare: (page) => open(page, 'Display'),
     set: async (page) => setIn(page, 'Display', 'Display label', 'Shown'),
     restore: async (page) => setIn(page, 'Display', 'Display label', ''),
-    read: (template) => (template['_ui'] as { propertyLabels?: Record<string, string> }).propertyLabels?.['Text'],
+    read: (template) => (template['_ui'] as { propertyLabels?: Record<string, string> }).propertyLabels?.['text'],
     whenSet: 'Shown',
   },
   {
@@ -470,7 +470,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
     prepare: (page) => open(page, 'Constraints'),
     set: async (page) => setIn(page, 'Constraints', 'Minimum length', '4'),
     restore: async (page) => setIn(page, 'Constraints', 'Minimum length', ''),
-    read: (template) => constraints(template, 'Text')['minLength'],
+    read: (template) => constraints(template, 'text')['minLength'],
     whenSet: 4,
   },
   {
@@ -509,7 +509,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
     prepare: (page) => open(page, 'Constraints'),
     set: async (page) => setIn(page, 'Constraints', 'Maximum value', '99'),
     restore: async (page) => setIn(page, 'Constraints', 'Maximum value', ''),
-    read: (template) => constraints(template, 'Number')['maxValue'],
+    read: (template) => constraints(template, 'number')['maxValue'],
     whenSet: 99,
   },
   {
@@ -621,7 +621,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
     paletteType: 'text',
     set: async (page) => card(page).locator('app-field-default-value input').first().fill('Example'),
     restore: async (page) => card(page).locator('app-field-default-value input').first().fill(''),
-    read: (template) => constraints(template, 'Text')['defaultValue'],
+    read: (template) => constraints(template, 'text')['defaultValue'],
     whenSet: 'Example',
   },
 ];

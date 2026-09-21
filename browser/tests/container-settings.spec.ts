@@ -54,7 +54,7 @@ test('template settings preserve header, footer and multiple types, and element 
   await element.getByRole('button', { name: 'Add types' }).click();
   await pick(['urn:element-one', 'urn:element-two']);
   artifact = await currentTemplate(page);
-  expect(artifact.properties.Element.properties['@type'].oneOf[0].enum).toEqual(['urn:element-one', 'urn:element-two']);
+  expect(artifact.properties.element.properties['@type'].oneOf[0].enum).toEqual(['urn:element-one', 'urn:element-two']);
   expect(artifact.properties['@type'].oneOf[0].enum).toEqual(['urn:one', 'urn:two']);
   await page.evaluate((artifact) => {
     (document.querySelector('cedar-embeddable-designer') as any).artifact = artifact;

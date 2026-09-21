@@ -53,7 +53,7 @@ test('field and element property choices update only their parent context and ca
   await element.getByRole('button', { name: 'Replace property IRI', exact: true }).click();
   await emit([{ sourceType: 'ontology-property', sourceId: 'urn:element-property' }]);
   const saved = await currentTemplate(page);
-  expect((saved.properties as any)['@context'].properties.Element.enum).toEqual(['urn:element-property']);
+  expect((saved.properties as any)['@context'].properties.element.enum).toEqual(['urn:element-property']);
   await page.evaluate((artifact) => {
     (document.querySelector('cedar-embeddable-designer') as any).artifact = artifact;
   }, saved);

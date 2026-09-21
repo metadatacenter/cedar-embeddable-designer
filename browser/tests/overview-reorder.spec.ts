@@ -10,7 +10,7 @@ for (const nested of [false, true]) {
     if (nested) {
       await applyPreset(page, 'modular');
       await addElementFixture(page, designer);
-      await nestFixtureFields(page, ['Element'], 2);
+      await nestFixtureFields(page, ['element'], 2);
       await designer.locator('.overview-panel').getByRole('button', { name: 'Element', exact: true }).click();
       editor = designer.locator('app-container-editor').last();
       await expect(editor.locator('app-field-card input[aria-label="Field name"]').first()).toHaveValue('Title');
@@ -49,7 +49,7 @@ for (const nested of [false, true]) {
     const expected = [...names.slice(1), names[0]];
     await expect
       .poll(async () =>
-        fieldOrder(nested ? child(await currentTemplate(page), 'Element') : await currentTemplate(page)),
+        fieldOrder(nested ? child(await currentTemplate(page), 'element') : await currentTemplate(page)),
       )
       .toEqual(expected);
     await expect
@@ -66,7 +66,7 @@ test('Overview elements collapse individually and together without changing the 
   const designer = await openDesigner(page);
   await applyPreset(page, 'modular');
   await addElementFixture(page, designer);
-  await nestFixtureFields(page, ['Element'], 2);
+  await nestFixtureFields(page, ['element'], 2);
   const overview = designer.locator('.overview-panel');
   const before = await currentTemplate(page);
   const toggle = overview.getByRole('button', { name: 'Collapse Element', exact: true });

@@ -62,7 +62,7 @@ test('a chosen term becomes a constraint on the field', async ({ page }) => {
   await expect(page.locator('cedar-embeddable-term-picker')).toBeVisible();
   await page.locator('#stub-pick').click();
 
-  const constraints = child(await currentTemplate(page), 'Controlled Terms')['_valueConstraints'] as {
+  const constraints = child(await currentTemplate(page), 'controlled_terms')['_valueConstraints'] as {
     classes: Array<Record<string, unknown>>;
   };
   expect(constraints.classes).toHaveLength(1);
@@ -76,7 +76,7 @@ test('a chosen term keeps the version the author pinned', async ({ page }) => {
   await clickCentred(panel.getByRole('button', { name: /Edit controlled-term constraints/ }));
   await page.locator('#stub-pick').click();
 
-  const constraints = child(await currentTemplate(page), 'Controlled Terms')['_valueConstraints'] as {
+  const constraints = child(await currentTemplate(page), 'controlled_terms')['_valueConstraints'] as {
     classes: Array<Record<string, unknown>>;
   };
   // Without this the constraint resolves against whatever the terminology server
@@ -113,7 +113,7 @@ test('reopening passes the existing set and additions preserve it', async ({ pag
     await clickCentred(panel.getByRole('button', { name: 'Edit controlled-term constraints' }));
     await page.locator('#stub-pick').click();
   }
-  const constraints = child(await currentTemplate(page), 'Controlled Terms')['_valueConstraints'] as {
+  const constraints = child(await currentTemplate(page), 'controlled_terms')['_valueConstraints'] as {
     classes: unknown[];
   };
   expect(constraints.classes).toHaveLength(2);

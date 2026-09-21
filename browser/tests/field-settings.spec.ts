@@ -125,10 +125,10 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
   await card.getByRole('textbox', { name: 'Field name', exact: true }).fill('Picture');
   const section = await openSettings(card, 'Content');
   await section.getByLabel('Width').fill('640');
-  await expect.poll(async () => ((await currentTemplate(page)).properties as any).Picture._ui._size?.width).toBe(640);
+  await expect.poll(async () => ((await currentTemplate(page)).properties as any).picture._ui._size?.width).toBe(640);
   await section.getByLabel('Height').fill('360');
   await expect
-    .poll(async () => ((await currentTemplate(page)).properties as any).Picture._ui._size)
+    .poll(async () => ((await currentTemplate(page)).properties as any).picture._ui._size)
     .toEqual({ width: 640, height: 360 });
   await designer
     .getByRole('button', { name: /^Add field$/ })
@@ -141,7 +141,7 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
   await expect(card.getByRole('tab').first()).toHaveText('Display');
   await card.getByRole('textbox', { name: 'Content', exact: true }).fill('<p>First</p>\n<p>Second</p>');
   await expect
-    .poll(async () => ((await currentTemplate(page)).properties as any)['Rich content']._ui._content)
+    .poll(async () => ((await currentTemplate(page)).properties as any)['rich_content']._ui._content)
     .toBe('<p>First</p>\n<p>Second</p>');
 });
 
@@ -171,7 +171,7 @@ test('one Temporal palette entry supports date, time and date-time without chang
   await expect(designer.locator('app-field-card')).toHaveCount(4);
   const card = designer.locator('app-field-card').last();
   const settings = await openSettings(card, 'Constraints');
-  const original = ((await currentTemplate(page)).properties as any).Temporal['@id'];
+  const original = ((await currentTemplate(page)).properties as any).temporal['@id'];
   for (const [type, preview] of [
     ['xsd:time', 'Time'],
     ['xsd:dateTime', 'Date and time'],
@@ -181,7 +181,7 @@ test('one Temporal palette entry supports date, time and date-time without chang
     await expect(card.getByPlaceholder(preview, { exact: true })).toBeVisible();
     await expect
       .poll(async () => {
-        const field = ((await currentTemplate(page)).properties as any).Temporal;
+        const field = ((await currentTemplate(page)).properties as any).temporal;
         return [field['@id'], field._valueConstraints.temporalType];
       })
       .toEqual([original, type]);
