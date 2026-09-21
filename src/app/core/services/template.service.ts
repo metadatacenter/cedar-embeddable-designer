@@ -1,3 +1,4 @@
+import { childKeyError } from '../model/child-key-policy';
 import { reducePrecision } from '../model/precision-change';
 import { artifactNameError, validateDocument } from '../model/document-validation';
 import { CedChildSource, CedJsonObject, CedValidationIssue } from '../../ced-public-api';
@@ -10,6 +11,7 @@ import {
   ChildNode,
   ElementNode,
   fieldNode,
+  fieldView,
   containers,
   childName,
   moveChild,
@@ -507,8 +509,10 @@ export class TemplateService {
 
   private keyError(id: number, value: string): string | null {
     const key = value.trim();
-    if (!key) return 'Key is required.';
     const siblings = parentOf(this.session.document(), id)?.children ?? [];
+    const node = siblings.find((child) => child.id === id);
+    const invalid = childKeyError(key, node?.kind === 'field' && fieldView(node).type === 'attributeValue');
+    if (invalid) return invalid;
     return siblings.some((node) => node.id !== id && this.childKey(node.id) === key)
       ? 'Another child in this container already uses that key.'
       : null;

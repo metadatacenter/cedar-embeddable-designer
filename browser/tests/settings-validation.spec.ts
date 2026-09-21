@@ -307,3 +307,28 @@ for (const inputType of ['radio', 'checkbox', 'list']) {
     await expect.poll(async () => (await report(page)).canSave).toBe(true);
   });
 }
+
+test('key errors are attached directly below the key and preserve the previous schema', async ({ page }) => {
+  const designer = await openDesigner(page);
+  const card = designer.locator('app-field-card').first();
+  await openSettings(card);
+  await card.getByRole('tab', { name: 'Field metadata', exact: true }).click();
+  const key = card.getByLabel('Key', { exact: true });
+  const before = await currentTemplate(page);
+  for (const invalid of ['', '@context', '__proto__', 'Category']) {
+    await key.fill(invalid);
+    await expect(key).toHaveAttribute('aria-invalid', 'true');
+    const error = card
+      .locator('dd')
+      .filter({ has: page.locator('input[name="deploymentName"]') })
+      .getByRole('alert');
+    await expect(error).toBeVisible();
+    const inputBox = (await key.boundingBox())!;
+    const errorBox = (await error.boundingBox())!;
+    expect(errorBox.y).toBeGreaterThanOrEqual(inputBox.y + inputBox.height);
+    expect(await currentTemplate(page)).toEqual(before);
+  }
+  await key.fill('type');
+  await expect(key).toHaveAttribute('aria-invalid', 'false');
+  expect((await currentTemplate(page)).properties).toHaveProperty('type');
+});

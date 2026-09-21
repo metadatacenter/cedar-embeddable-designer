@@ -376,11 +376,16 @@
           <input
             spellcheck="false"
             [id]="'field-key-' + field.id"
+            [attr.aria-invalid]="!!keyError"
+            [attr.aria-describedby]="keyError ? 'field-key-error-' + field.id : null"
             name="deploymentName"
             [(ngModel)]="deploymentName"
             (ngModelChange)="saveKey()"
             [disabled]="!!field.publishedDefinition"
           />
+          @if (keyError) {
+            <p role="alert" class="ced-field-error" [id]="'field-key-error-' + field.id">{{ keyError }}</p>
+          }
         </dd>
       }
       <dt>Field IRI</dt>
@@ -426,12 +431,12 @@
             [disabled]="!!field.publishedDefinition"
             (propertySelected)="saveProperty($event)"
           />
+          @if (error) {
+            <p role="alert" class="ced-field-error">{{ error }}</p>
+          }
         </dd>
       }
     </dl>
-    @if (error) {
-      <p role="alert">{{ error }}</p>
-    }
   </section>
 </div>
 <button

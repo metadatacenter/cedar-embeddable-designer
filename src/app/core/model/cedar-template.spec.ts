@@ -1123,3 +1123,14 @@ describe('paragraph length constraints', () => {
     }
   });
 });
+
+it.each(['type', 'properties', 'required', 'name', 'true', 'null', 'yes'])(
+  'preserves child key %s through JSON and YAML schemas',
+  (key) => {
+    const model = buildTemplate(templateOf(field({ deploymentName: key })));
+    for (const source of [templateToJson(model), templateToYaml(model)]) {
+      const rendered = templateToJson(readTemplate(source));
+      expect(rendered['properties']).toHaveProperty(key);
+    }
+  },
+);

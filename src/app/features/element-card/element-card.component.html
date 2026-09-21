@@ -38,9 +38,14 @@
                   spellcheck="false"
                   [id]="'element-key-' + node().id"
                   name="deploymentName"
-                  [ngModel]="draft().deploymentName ?? service.childKey(node().id)"
-                  (ngModelChange)="draft().deploymentName = $event; apply()"
+                  [ngModel]="keyDraft() ?? service.childKey(node().id)"
+                  (ngModelChange)="saveKey($event)"
+                  [attr.aria-invalid]="!!keyError()"
+                  [attr.aria-describedby]="keyError() ? 'element-key-error-' + node().id : null"
                 />
+                @if (keyError()) {
+                  <p role="alert" class="ced-field-error" [id]="'element-key-error-' + node().id">{{ keyError() }}</p>
+                }
               </dd>
               <dt>Element IRI</dt>
               <dd>{{ node().definition.identifier || 'Not yet assigned' }}</dd>
@@ -69,6 +74,9 @@
               <dt class="editable">Property IRI</dt>
               <dd>
                 <app-property-picker [iri]="node().placement.propertyIri" (propertySelected)="saveProperty($event)" />
+                @if (error()) {
+                  <p role="alert" class="ced-field-error">{{ error() }}</p>
+                }
               </dd>
               <dt class="editable">Types</dt>
               <dd><app-types-picker [container]="node().definition" /></dd>
@@ -127,7 +135,7 @@
         }
       </div>
     }
-    @if (error()) {
+    @if (error() && activeTab !== 'Element metadata') {
       <p role="alert">{{ error() }}</p>
     }
   </div>

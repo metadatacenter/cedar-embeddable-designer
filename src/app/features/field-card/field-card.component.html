@@ -127,7 +127,15 @@
           <div class="choice-options px-1">
             @for (option of field.options; track $index; let optIdx = $index) {
               <div class="choice-option-row flex items-center gap-3 group/option px-1">
-                <app-icon [key]="field.type" size="default" className="text-gray-400"></app-icon>
+                <app-icon
+                  [key]="
+                    field.type === 'singleChoiceList' || field.type === 'multipleChoice'
+                      ? 'multipleChoice'
+                      : 'checkboxes'
+                  "
+                  size="default"
+                  className="text-gray-400"
+                ></app-icon>
                 <input
                   spellcheck="false"
                   type="text"

@@ -35,6 +35,17 @@ export class ElementCardComponent {
   readonly service = inject(TemplateService);
   readonly draft = signal<ElementPlacement>({ allowMultiple: false });
   readonly error = signal<string | null>(null);
+  readonly keyDraft = signal<string | null>(null);
+  private readonly keyDraftError = signal<string | null>(null);
+  readonly keyError = computed(
+    () =>
+      this.keyDraftError() ??
+      this.service
+        .validationReport()
+        .issues.find((issue) => issue.nodeId === this.node().id && issue.setting === 'key' && issue.source === 'model')
+        ?.message ??
+      null,
+  );
   expanded = false;
   activeTab = 'Display';
   readonly tabs = ['Display', 'Occurrences', 'Annotations', 'Element metadata'];
@@ -82,6 +93,16 @@ export class ElementCardComponent {
     const error = this.service.updateElementPlacement(this.node().id, { ...this.node().placement, propertyIri: iri });
     this.error.set(error);
     this.service.setSettingsError(this.node().id, 'propertyIri', error, 'Element metadata');
+  }
+  saveKey(value: string): void {
+    this.keyDraft.set(value);
+    this.keyDraftError.set(
+      this.service.updateElementPlacement(this.node().id, {
+        ...this.node().placement,
+        deploymentName: value,
+      }),
+    );
+    this.service.setSettingsError(this.node().id, 'key', this.keyDraftError(), 'Element metadata');
   }
   apply(): void {
     const invalid = Array.from(this.host.nativeElement.querySelectorAll('input')).find(

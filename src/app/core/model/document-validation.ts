@@ -1,7 +1,9 @@
+import { childKeyError } from './child-key-policy';
 import type { CedValidationIssue, CedValidationReport } from '../../ced-public-api';
 import { ContainerDraft, childName, fieldView } from './container-draft';
 import type { Field } from '../models/types';
 import {
+  deploymentKeys,
   buildContainer,
   buildTemplate,
   fieldToJson,
@@ -53,7 +55,33 @@ export function validateDocument(document: ContainerDraft, drafts: DraftIssues):
     const nameError = artifactNameError(container.name, container.kind);
     if (nameError) add(container.id, `Unnamed ${container.kind}`, path, 'name', nameError, 'Display', 'model');
     pending(container.id, container.name, path);
+    const keyFields = container.children.map((node) => ({
+      name: node.definition.name,
+      deploymentName: node.placement.deploymentName,
+    }));
+    let keys: string[];
+    try {
+      keys = deploymentKeys(keyFields);
+    } catch {
+      keys = keyFields.map((field, index) => field.deploymentName ?? (field.name.trim() || `field_${index + 1}`));
+    }
     for (const node of container.children) {
+      const key = keys[container.children.indexOf(node)];
+      const keyError =
+        childKeyError(key, node.kind === 'field' && fieldView(node).type === 'attributeValue') ??
+        (keys.filter((candidate) => candidate === key).length > 1
+          ? 'Another child in this container already uses that key.'
+          : null);
+      if (keyError)
+        add(
+          node.id,
+          childName(node),
+          [...path, node.id],
+          'key',
+          keyError,
+          node.kind === 'field' ? 'Field metadata' : 'Element metadata',
+          'model',
+        );
       if (node.kind === 'element') {
         visit(node.definition, path);
         try {

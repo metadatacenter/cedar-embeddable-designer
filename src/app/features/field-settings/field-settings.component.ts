@@ -197,6 +197,7 @@ export class FieldSettingsComponent implements OnChanges {
               issue.nodeId === this.field.id &&
               issue.source === 'model' &&
               issue.setting !== 'name' &&
+              issue.setting !== 'key' &&
               issue.tab === this.selectedTab,
           )
           .map((issue) => issue.message)
@@ -223,6 +224,7 @@ export class FieldSettingsComponent implements OnChanges {
     if (first) {
       // A different field: the previous draft belonged to the previous card.
       this.loaded = {};
+      this.keyDraftError = null;
       this.loadedFieldId = this.field.id;
     }
     const take = <T>(key: string, current: T, incoming: T): T => {
@@ -281,12 +283,22 @@ export class FieldSettingsComponent implements OnChanges {
       }),
     );
   }
-  saveKey(): void {
-    this.report(
-      'Field metadata',
-      this.service.updateFieldSettings(this.field.id, { deploymentName: this.deploymentName }),
+  private keyDraftError: string | null = null;
+  get keyError(): string | null {
+    return (
+      this.keyDraftError ??
+      this.service
+        .validationReport()
+        .issues.find((issue) => issue.nodeId === this.field.id && issue.setting === 'key' && issue.source === 'model')
+        ?.message ??
+      null
     );
   }
+  saveKey(): void {
+    this.keyDraftError = this.service.updateFieldSettings(this.field.id, { deploymentName: this.deploymentName });
+    this.service.setSettingsError(this.field.id, 'key', this.keyDraftError, 'Field metadata');
+  }
+
   saveProperty(iri: string): void {
     this.report('Field metadata', this.service.updateFieldSettings(this.field.id, { propertyIri: iri }));
   }
