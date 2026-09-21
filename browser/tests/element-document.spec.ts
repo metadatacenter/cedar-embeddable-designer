@@ -344,3 +344,37 @@ test('edits a nested element key and rejects keys used by sibling fields', async
   expect((await currentTemplate(page)).properties).toHaveProperty('details');
   expect(((await currentTemplate(page)).properties as any).details['schema:name']).toBe('Element');
 });
+
+test('confirms deletion of an element subtree, but deletes empty elements immediately', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await page.getByRole('button', { name: 'Basic', exact: true }).click();
+  await page.getByRole('button', { name: /Modular/ }).click();
+  const root = designer.locator('app-container-editor').first();
+  await addElementFixture(page, root);
+  const parent = nestedEditors(root).first();
+  await addElementFixture(page, directContent(parent));
+  const bin = directHeader(parent).getByRole('button', { name: 'Delete element Element', exact: true });
+  const before = await currentTemplate(page);
+  await bin.click();
+  const dialog = page.getByRole('dialog', { name: 'Delete element?' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
+  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(dialog).toBeHidden();
+  await expect(bin).toBeFocused();
+  expect(await currentTemplate(page)).toEqual(before);
+  await bin.click();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  expect(await currentTemplate(page)).toEqual(before);
+  await bin.click();
+  await dialog.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect(nestedEditors(root)).toHaveCount(0);
+  expect((await currentTemplate(page)).properties).toHaveProperty('Title');
+  await addElementFixture(page, root);
+  await directHeader(nestedEditors(root).first())
+    .getByRole('button', { name: 'Delete element Element', exact: true })
+    .click();
+  await expect(nestedEditors(root)).toHaveCount(0);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});

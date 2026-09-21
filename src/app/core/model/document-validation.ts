@@ -1,7 +1,14 @@
 import type { CedValidationIssue, CedValidationReport } from '../../ced-public-api';
 import { ContainerDraft, childName, fieldView } from './container-draft';
 import type { Field } from '../models/types';
-import { buildContainer, buildTemplate, fieldToJson, choiceDefaultConflict, defaultValueError } from './cedar-template';
+import {
+  buildContainer,
+  buildTemplate,
+  fieldToJson,
+  choiceDefaultConflict,
+  defaultValueError,
+  allowsOptions,
+} from './cedar-template';
 
 export type DraftIssues = Readonly<Record<string, { message: string; tab: string }>>;
 
@@ -69,6 +76,20 @@ export function validateDocument(document: ContainerDraft, drafts: DraftIssues):
       const nameError = artifactNameError(field.name, 'field');
       if (nameError) add(node.id, 'Unnamed field', nodePath, 'name', nameError, 'Display', 'model');
       pending(node.id, childName(node), nodePath);
+      if (allowsOptions(field.type)) {
+        field.options.forEach((option, index) => {
+          if (!option.trim())
+            add(
+              node.id,
+              childName(node),
+              nodePath,
+              `option-${index}`,
+              `Option ${index + 1} needs a name.`,
+              'Constraints',
+              'model',
+            );
+        });
+      }
       const settingsField: Field = { ...field, defaultValue: { kind: 'none' }, importedChoiceDefault: undefined };
       let settingsValid = true;
       try {

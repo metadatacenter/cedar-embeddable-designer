@@ -132,6 +132,8 @@
                   spellcheck="false"
                   type="text"
                   [ngModel]="option"
+                  [attr.aria-invalid]="!option.trim()"
+                  [attr.aria-describedby]="!option.trim() ? 'option-error-' + field.id + '-' + optIdx : null"
                   (ngModelChange)="service.updateOption(field.id, optIdx, $event)"
                   class="border-none outline-none bg-transparent flex-1 min-w-0 border-b border-gray-200 focus:border-teal-500"
                   (focus)="service.selectedField.set(field.id)"
@@ -139,7 +141,7 @@
                   [attr.aria-label]="'Option ' + (optIdx + 1)"
                 />
                 <!-- Delete option button -->
-                @if (field.options.length > 1) {
+                @if (field.options.length > 0) {
                   <button
                     (click)="service.deleteOption(field.id, optIdx)"
                     class="text-black disabled:text-gray-400 transition-colors cursor-pointer border-none bg-transparent flex items-center justify-center p-0.5"
@@ -150,6 +152,11 @@
                   </button>
                 }
               </div>
+              @if (!option.trim()) {
+                <p class="ced-field-error" [id]="'option-error-' + field.id + '-' + optIdx" role="alert">
+                  Option {{ optIdx + 1 }} needs a name.
+                </p>
+              }
             }
             <!-- Add Option Button -->
             <button

@@ -1,3 +1,4 @@
+import { reducePrecision } from '../model/precision-change';
 import { artifactNameError, validateDocument } from '../model/document-validation';
 import { CedChildSource, CedJsonObject, CedValidationIssue } from '../../ced-public-api';
 import { EditorSession } from './editor-session';
@@ -65,7 +66,7 @@ function starterFields(): Field[] {
       type: 'multipleChoice',
       name: 'Category',
       status: 'optional',
-      options: ['', ''],
+      options: ['Option A', 'Option B'],
       defaultValue: { kind: 'none' },
       allowMultiple: false,
     },
@@ -478,7 +479,7 @@ export class TemplateService {
           const newOptions = f.options.filter((_, index) => index !== optionIndex);
           return {
             ...f,
-            options: newOptions.length > 0 ? newOptions : [''],
+            options: newOptions,
             defaultValue: choiceDefault(f, newOptions),
             importedChoiceDefault:
               f.importedChoiceDefault === f.options[optionIndex] ? undefined : f.importedChoiceDefault,
@@ -524,6 +525,7 @@ export class TemplateService {
     const current = this.fieldsFor(id)().find((field) => field.id === id);
     if (current && !this.canAddField(changes.type ?? current.type, this.parentContainerId(id)))
       return 'Page breaks can only be placed in templates.';
+    if (current) changes = reducePrecision(current, changes);
     if (current && changes.temporal?.timezoneEnabled === false) {
       const value = changes.defaultValue ?? current.defaultValue;
       if (value.kind === 'temporal') {

@@ -616,3 +616,14 @@ test('disabling timezone removes the offset and hides its control without reject
   await expect(page.getByText('Enable Show timezone or remove the timezone from the default.')).toHaveCount(0);
   await expect(control.getByRole('textbox', { name: 'Hour', exact: true })).toHaveValue('02');
 });
+
+test('reducing date precision trims the default and updates the editor without an error', async ({ page }) => {
+  const control = await openField(page, 'date', {
+    temporal: { type: 'xsd:date', granularity: 'month', timezoneEnabled: false, inputTimeFormat: null },
+    defaultValue: { kind: 'temporal', value: '2021-11' },
+  });
+  await page.getByLabel('Precision', { exact: true }).selectOption('year');
+  await expect.poll(async () => (await constraints(page))['defaultValue']).toBe('2021');
+  await expect(control.getByRole('alert')).toHaveCount(0);
+  await expect(page.getByText('The default must match the selected precision.')).toHaveCount(0);
+});

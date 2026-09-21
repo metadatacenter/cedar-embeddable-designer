@@ -1,5 +1,13 @@
 import { expect, test } from '@playwright/test';
-import { openDesigner, openSettings, currentTemplate, child, applyPreset, addElementFixture } from './support';
+import {
+  clickCentred,
+  openDesigner,
+  openSettings,
+  currentTemplate,
+  child,
+  applyPreset,
+  addElementFixture,
+} from './support';
 import type { CedarEmbeddableDesignerElement } from '../../src/app/ced-public-api';
 
 const report = (page: import('@playwright/test').Page) =>
@@ -268,3 +276,34 @@ test('tabs retain their error marker when another tab is selected', async ({ pag
   await expect(tab).not.toHaveAttribute('aria-description');
   await expect(tab).not.toHaveCSS('border-bottom-color', 'rgb(180, 35, 24)');
 });
+
+for (const inputType of ['radio', 'checkbox', 'list']) {
+  test(`unnamed ${inputType} options remain invalid when settings close and recover when named or removed`, async ({
+    page,
+  }) => {
+    const designer = await openDesigner(page);
+    const template = await currentTemplate(page);
+    const choice = child(template, 'Category');
+    (choice._ui as Record<string, unknown>).inputType = inputType;
+    choice._valueConstraints = { literals: [{ label: 'First' }] };
+    template['schema:name'] = 'Choices';
+    await page.evaluate((artifact) => {
+      (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).artifact =
+        artifact as never;
+    }, template);
+    const card = designer.locator('app-field-card').nth(1);
+    await openSettings(card, 'Constraints');
+    await clickCentred(card.getByRole('button', { name: 'Add option', exact: true }));
+    await expect(card.getByLabel('Option 2', { exact: true })).toHaveAttribute('aria-invalid', 'true');
+    await expect.poll(async () => (await report(page)).canSave).toBe(false);
+    await clickCentred(card.getByRole('button', { name: 'Collapse field settings', exact: true }));
+    await expect(card).toContainText('1 error');
+    await expect.poll(async () => (await report(page)).canSave).toBe(false);
+    await openSettings(card, 'Constraints');
+    await card.getByLabel('Option 2', { exact: true }).fill('Second');
+    await expect.poll(async () => (await report(page)).canSave).toBe(true);
+    await clickCentred(card.getByRole('button', { name: 'Add option', exact: true }));
+    await card.getByRole('button', { name: 'Delete option', exact: true }).last().click();
+    await expect.poll(async () => (await report(page)).canSave).toBe(true);
+  });
+}

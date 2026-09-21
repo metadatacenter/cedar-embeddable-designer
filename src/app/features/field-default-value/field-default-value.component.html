@@ -29,9 +29,6 @@
     <p role="alert" class="ced-field-error">{{ error() }}</p>
   }
 } @else if (available()) {
-  @if (field().temporal?.timezoneEnabled) {
-    <p class="default-offset-help">UTC offset for the default value. Leave unselected for no offset.</p>
-  }
   <div class="default-value-row">
     @if (!allowsControlledTerms() || field().controlledTermConstraints?.constraints?.length) {
       <div class="default-value-control" #mount (focusin)="service.selectedField.set(field().id)"></div>

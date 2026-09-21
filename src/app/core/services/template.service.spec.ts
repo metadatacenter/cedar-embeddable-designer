@@ -338,14 +338,15 @@ describe('default editing', () => {
     expect(service.fields()[0].numeric?.max).toBe(100);
   });
 
-  it('rejects invalid temporal defaults and incompatible precision changes', () => {
+  it('rejects invalid temporal defaults but trims reduced precision', () => {
     const temporal = { type: 'xsd:date', granularity: 'day', timezoneEnabled: false, inputTimeFormat: null } as const;
     service.fields.set([{ ...service.fields()[0], type: 'date', temporal }]);
     service.updateDefaultValue(1, { kind: 'temporal', value: '2024-02-29' });
     service.updateDefaultValue(1, { kind: 'temporal', value: '2025-02-29' });
     expect(service.fields()[0].defaultValue).toEqual({ kind: 'temporal', value: '2024-02-29' });
-    expect(service.updateFieldSettings(1, { temporal: { ...temporal, granularity: 'year' } })).not.toBeNull();
-    expect(service.fields()[0].temporal?.granularity).toBe('day');
+    expect(service.updateFieldSettings(1, { temporal: { ...temporal, granularity: 'year' } })).toBeNull();
+    expect(service.fields()[0].temporal?.granularity).toBe('year');
+    expect(service.fields()[0].defaultValue).toEqual({ kind: 'temporal', value: '2024' });
   });
 
   it('renames selected defaults and removes them when their options are deleted', () => {

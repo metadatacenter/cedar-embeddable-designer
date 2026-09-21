@@ -214,3 +214,42 @@ it('removes only the offset when timezone is disabled on a complete default', ()
     value: '2026-09-08T02:02:02.222',
   });
 });
+
+it('accepts reduced numeric precision and truncates defaults and bounds together', () => {
+  const service = TestBed.inject(TemplateService);
+  service.addField('number', 0);
+  const id = service.document().children[0].id;
+  service.updateFieldName(id, 'Decimal');
+  const numeric = { type: 'xsd:decimal', decimalPlaces: 3, min: -1.239, max: 9.999, unit: null } as const;
+  expect(service.updateFieldSettings(id, { numeric, defaultValue: { kind: 'number', value: -1.238 } })).toBeNull();
+  expect(service.updateFieldSettings(id, { numeric: { ...numeric, decimalPlaces: 2 } })).toBeNull();
+  expect(service.fields().find((field) => field.id === id)).toMatchObject({
+    numeric: { decimalPlaces: 2, min: -1.23, max: 9.99 },
+    defaultValue: { kind: 'number', value: -1.23 },
+  });
+});
+
+it.each(['multipleChoice', 'checkboxes', 'singleChoiceList', 'multipleChoiceList'])(
+  'an unnamed %s option blocks saving until named or deleted',
+  (type) => {
+    const service = TestBed.inject(TemplateService);
+    service.templateName.set('Choices');
+    service.addField(type, 0);
+    const id = service.document().children[0].id;
+    service.updateFieldName(id, 'Choices');
+    service.fields.set(service.fields().map((field) => (field.id === id ? { ...field, options: ['First'] } : field)));
+    expect(service.validationReport().canSave).toBe(true);
+    service.addOption(id);
+    expect(service.validationReport().canSave).toBe(false);
+    expect(service.visibleIssuesFor(id)).toContainEqual(
+      expect.objectContaining({ setting: 'option-1', tab: 'Constraints' }),
+    );
+    service.updateOption(id, 1, '   ');
+    expect(service.validationReport().canSave).toBe(false);
+    service.updateOption(id, 1, 'Second');
+    expect(service.validationReport().canSave).toBe(true);
+    service.addOption(id);
+    service.deleteOption(id, 2);
+    expect(service.validationReport().canSave).toBe(true);
+  },
+);

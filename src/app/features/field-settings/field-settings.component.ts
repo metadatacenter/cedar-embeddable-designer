@@ -173,7 +173,9 @@ export class FieldSettingsComponent implements OnChanges {
           ? panel?.querySelector<HTMLElement>(
               'app-field-default-value input, app-field-default-value textarea, app-field-default-value button',
             )
-          : panel?.querySelector<HTMLElement>('input, select, textarea, button');
+          : /^option-\d+$/.test(issue.setting)
+            ? panel?.querySelector<HTMLElement>(`input[aria-label="Option ${Number(issue.setting.slice(7)) + 1}"]`)
+            : panel?.querySelector<HTMLElement>('input, select, textarea, button');
       control?.focus({ preventScroll: true });
     });
     effect(() => {

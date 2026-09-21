@@ -74,12 +74,29 @@
               placeholder="Not specified"
             />
             @if (placementNode()) {
+              <dialog
+                #deleteDialog
+                class="delete-dialog"
+                [attr.aria-labelledby]="'delete-title-' + container().id"
+                [attr.aria-describedby]="'delete-description-' + container().id"
+              >
+                <h2 [id]="'delete-title-' + container().id">Delete element?</h2>
+                <p [id]="'delete-description-' + container().id">
+                  {{ container().name || 'This element' }} and all its children will be deleted.
+                </p>
+                <form method="dialog">
+                  <button autofocus>Cancel</button>
+                  <button type="button" (click)="deleteDialog.close(); service.deleteChild(container().id)">
+                    Delete
+                  </button>
+                </form>
+              </dialog>
               <button
                 type="button"
                 class="element-delete"
                 [attr.aria-label]="'Delete element ' + container().name"
                 title="Delete element"
-                (click)="$event.stopPropagation(); service.deleteChild(container().id)"
+                (click)="container().children.length ? deleteDialog.showModal() : service.deleteChild(container().id)"
               >
                 <app-icon key="trash" />
               </button>
