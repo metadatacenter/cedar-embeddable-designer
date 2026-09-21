@@ -53,8 +53,12 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // Bounded, keyboard-accessible Overview resizing and deferred name validation
 // measure 1,414,603 raw / 435,422 gzip-9 bytes in the current-sibling reactor.
 // Retain the raw ceiling; add 1 KB compressed capacity for these interactions.
-const RAW_LIMIT = 1_415_000;
-const GZIP_LIMIT = 436_000;
+// 2026-09-21: precision normalization, blank-option validation and accessible
+// subtree deletion confirmation measure 1,415,548 raw / 436,359 gzip-9 bytes
+// in the current-sibling reactor (CI gzip: 436,335). No dependency was added.
+// Allow 4.5 KB raw and 1.6 KB compressed headroom for this authoring surface.
+const RAW_LIMIT = 1_420_000;
+const GZIP_LIMIT = 438_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
 
