@@ -107,10 +107,11 @@ jobs:
         run: npm run audit:prod
 
   cef-integration:
-    name: CED with real CEE and CEF
+    name: CED with real CEE, CEF and CETP
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
     env:
+      PICKER_BUNDLE: ${{ github.workspace }}/cedar-embeddable-term-picker/dist-bundle/cedar-embeddable-term-picker.js
       CEF_BUNDLE: ${{ github.workspace }}/cedar-embeddable-editor/visual/public/cedar-embeddable-editor.js
     steps:
       - name: Check out CED
@@ -135,6 +136,13 @@ jobs:
           ref: 794cb6b4888f6c556c98709198d89cd6f03c416f
           path: cedar-embeddable-editor
 
+      - name: Check out the supported term picker revision
+        uses: actions/checkout@v4
+        with:
+          repository: metadatacenter/cedar-embeddable-term-picker
+          ref: 009a10a333e04c152612b464aed33edd9d2c3d70
+          path: cedar-embeddable-term-picker
+
       - name: Use Node.js 24
         uses: actions/setup-node@v4
         with:
@@ -155,6 +163,12 @@ jobs:
           npm --prefix visual run bundle
           npm --prefix visual run check:fresh
 
+      - name: Build the real term picker
+        working-directory: cedar-embeddable-term-picker
+        run: |
+          npm ci
+          npm run dist
+
       - name: Build CED and install Chromium
         working-directory: cedar-embeddable-designer
         run: |
@@ -167,6 +181,9 @@ jobs:
         run: |
           git -C cedar-embeddable-designer rev-parse HEAD
           git -C cedar-embeddable-editor rev-parse HEAD
+          git -C cedar-embeddable-term-picker rev-parse HEAD
+          test -s "$PICKER_BUNDLE"
+          sha256sum "$PICKER_BUNDLE"
           test -s "$CEF_BUNDLE"
           sha256sum "$CEF_BUNDLE" cedar-embeddable-designer/dist-bundle/cedar-embeddable-designer.js
 
@@ -181,3 +198,27 @@ jobs:
           name: cef-integration-traces
           path: cedar-embeddable-designer/browser/test-results
           if-no-files-found: ignore
+
+  webkit-interactions:
+    name: WebKit focus and pointer interactions
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    env:
+      CED_WEBKIT: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+          cache: npm
+      - run: |
+          npm ci
+          npm --prefix browser ci
+          ./browser/node_modules/.bin/playwright install --with-deps webkit
+          npm run dist
+          npm run test:browser:prebuilt -- --project=webkit
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: webkit-interaction-traces
+          path: browser/test-results

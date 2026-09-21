@@ -201,26 +201,6 @@
   @apply divide-y divide-gray-100;
 }
 
-.overview-panel__item {
-  @apply w-full flex items-center gap-2 px-3 py-1.5 hover:bg-gray-50 transition-colors text-left cursor-pointer border-none bg-transparent;
-
-  &.active {
-    @apply bg-emerald-50;
-  }
-}
-
-.overview-panel__item-icon {
-  @apply text-gray-500 flex-shrink-0;
-}
-
-.overview-panel__item-name {
-  @apply text-xs font-medium text-gray-700 truncate flex-1;
-}
-
-.overview-panel__badge-required {
-  @apply text-sm leading-none text-gray-900 font-medium;
-}
-
 /* Header panel controls mirror the side they open. */
 .panel-toggle {
   display: inline-flex;

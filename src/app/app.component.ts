@@ -12,8 +12,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TemplateService, FIELD_TYPES } from './core/services/template.service';
-import { Field } from './core/models/types';
+import { TemplateService } from './core/services/template.service';
 import { CED_VERSION } from './version';
 
 // Custom components
@@ -206,29 +205,6 @@ export class AppComponent {
       return `${this.overviewWidth()}px minmax(0, 1fr)`;
     }
     return 'minmax(0, 1fr)';
-  }
-
-  get FIELD_TYPES_LIST() {
-    return FIELD_TYPES;
-  }
-
-  getFieldIcon(field: Field): string {
-    return field.type;
-  }
-
-  getFieldTypeName(field: Field): string {
-    return FIELD_TYPES[field.type]?.label || field.type;
-  }
-
-  scrollToField(fieldId: number) {
-    this.service.selectedField.set(fieldId);
-    this.scrollToCard(fieldId);
-
-    setTimeout(() => {
-      if (this.service.selectedField() === fieldId) {
-        this.service.selectedField.set(null);
-      }
-    }, 3000);
   }
 
   /** Arrow navigation belongs to cards, never to controls editing their contents. */

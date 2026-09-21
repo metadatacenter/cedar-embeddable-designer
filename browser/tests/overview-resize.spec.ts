@@ -34,3 +34,16 @@ test('Overview resizes within bounds without changing the artifact', async ({ pa
   await expect(handle).toHaveAttribute('aria-valuenow', '256');
   expect(await currentTemplate(page)).toEqual(before);
 });
+
+test('Overview heading and rows follow the same shared spacing and color tokens', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const designer = await openDesigner(page);
+  await designer.evaluate((el) => {
+    el.style.setProperty('--cedar-space-2', '12px');
+    el.style.setProperty('--cedar-text-authoring', 'rgb(30, 40, 50)');
+  });
+  const header = designer.locator('.overview-panel__header-left app-icon');
+  const row = designer.locator('.select-node').first();
+  expect((await header.boundingBox())!.x).toBe((await row.locator('app-icon').first().boundingBox())!.x);
+  await expect(row).toHaveCSS('color', 'rgb(30, 40, 50)');
+});

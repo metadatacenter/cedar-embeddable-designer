@@ -15,7 +15,7 @@
   max-width: 896px;
   max-height: 90vh;
   overflow: auto;
-  background: white;
+  background: var(--cedar-overlay-surface);
   border-radius: 6px;
   box-shadow: 0 12px 28px rgb(0 0 0 / 20%);
   header {
@@ -35,7 +35,7 @@
     background: none;
     border: 0;
     cursor: pointer;
-    font-size: 20px;
+    font-size: var(--cedar-font-size-heading);
   }
   p {
     margin: 6px var(--cedar-space-3);

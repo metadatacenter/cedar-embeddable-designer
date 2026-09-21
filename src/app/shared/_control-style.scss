@@ -7,7 +7,7 @@
   padding: var(--cedar-space-1) var(--cedar-space-2);
   border: 1px solid var(--cedar-control-border, var(--cedar-control-border-default));
   border-radius: var(--cedar-control-radius, var(--cedar-control-radius-default));
-  background: white;
+  background: var(--cedar-surface-raised);
   color: var(--cedar-text-authoring);
   font-family: inherit;
   font-size: var(--cedar-control-font-size, var(--cedar-font-size));

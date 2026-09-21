@@ -11,7 +11,7 @@
  * and then fails inside Angular, because two modules that never shared a scope
  * are suddenly sharing one. Each is flattened to its own IIFE instead.
  */
-import { existsSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -58,10 +58,4 @@ export function resolveBuildOutput(dist = DEFAULT_DIST) {
   }
 
   return { dir, inputs, entry: inputs.find((input) => input.role === 'entry').path };
-}
-
-/** The most recent modification time across the build's inputs. */
-export function newestInput(dist = DEFAULT_DIST) {
-  const { inputs } = resolveBuildOutput(dist);
-  return Math.max(...inputs.map((input) => statSync(input.path).mtimeMs));
 }

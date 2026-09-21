@@ -156,7 +156,22 @@ To run the browser integration tests against real sibling bundles after building
 ```bash
 CEF_BUNDLE="$PWD/../cedar-embeddable-editor/visual/public/cedar-embeddable-editor.js" \
 PICKER_BUNDLE="$PWD/../cedar-embeddable-term-picker/dist-bundle/cedar-embeddable-term-picker.js" \
-npm --prefix browser test
+npm run test:browser:prebuilt
+```
+
+`npm run build` records content fingerprints for the source, build configuration,
+lockfile, installed CEDAR token/model packages and compiled output. `npm run bundle`
+and `npm run check:fresh` reject any mismatch, including edits with unchanged file
+timestamps. Rebuild with `npm run dist`; an old bundle without provenance is rejected.
+Browser tests start their own server. Use `PORT=4600` if the default port is occupied.
+
+CI builds pinned real CEE/CEF and CETP sources for the integration suite. A separate
+WebKit job exercises header focus, blank-name validation, card navigation, Overview
+resizing and native defaults. Run it locally after installing WebKit:
+
+```bash
+./browser/node_modules/.bin/playwright install webkit
+CED_WEBKIT=1 npm run test:browser:prebuilt -- --project=webkit
 ```
 
 To try all three scripts together from source:

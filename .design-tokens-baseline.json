@@ -50,13 +50,6 @@
       "value": "4px",
       "count": 1
     },
-    "05fe24c5503d8fe485f1": {
-      "file": "src/app/features/container-outline/container-outline.component.ts",
-      "rule": "spacing",
-      "property": "padding",
-      "value": "0 8px",
-      "count": 1
-    },
     "06886ec67196cf781969": {
       "file": "src/app/features/types-picker/types-picker.component.ts",
       "rule": "spacing",
@@ -97,7 +90,7 @@
       "rule": "utility-style",
       "property": "utility-style",
       "value": "font-medium",
-      "count": 16
+      "count": 15
     },
     "0b799b913931045577b8": {
       "file": "src/app/app.component.html",
@@ -183,13 +176,6 @@
       "value": "py-2",
       "count": 2
     },
-    "120bd7dee01317f0a51d": {
-      "file": "src/app/features/container-outline/container-outline.component.ts",
-      "rule": "color",
-      "property": "box-shadow",
-      "value": "inset 3px 0 #b42318",
-      "count": 1
-    },
     "1257eedae8fac66e9b10": {
       "file": "src/app/shared/_code-highlight.scss",
       "rule": "color",
@@ -239,13 +225,6 @@
       "value": "shadow-xs",
       "count": 1
     },
-    "165b3b70485e96678d43": {
-      "file": "src/app/app.component.scss",
-      "rule": "color",
-      "property": "background",
-      "value": "#fff4f2",
-      "count": 1
-    },
     "167ffe15639811d6cf4e": {
       "file": "src/app/features/field-card/field-card.component.html",
       "rule": "utility-style",
@@ -286,13 +265,6 @@
       "rule": "color",
       "property": "color",
       "value": "#0b6570",
-      "count": 1
-    },
-    "18e6fc942dbc4ff410d7": {
-      "file": "src/app/features/field-default-value/field-default-value.component.scss",
-      "rule": "typography",
-      "property": "font-size",
-      "value": "20px",
       "count": 1
     },
     "195aa9462875b5b6c166": {
@@ -350,13 +322,6 @@
       "property": "utility-style",
       "value": "p-4",
       "count": 3
-    },
-    "1ea0589d829ec81f91b1": {
-      "file": "src/app/features/container-outline/container-outline.component.ts",
-      "rule": "color",
-      "property": "background",
-      "value": "#f9fafb",
-      "count": 1
     },
     "1f41df56fa729191ce14": {
       "file": "src/app/features/container-editor/container-editor.component.html",
@@ -447,7 +412,7 @@
       "rule": "utility-style",
       "property": "utility-style",
       "value": "border-t",
-      "count": 8
+      "count": 7
     },
     "2750d50a09ee7bffc110": {
       "file": "src/app/features/modals/preferences/preferences.component.html",
@@ -490,13 +455,6 @@
       "property": "utility-style",
       "value": "text-xs",
       "count": 3
-    },
-    "2a0bcf58eb985d2ca637": {
-      "file": "src/app/shared/_control-style.scss",
-      "rule": "color",
-      "property": "background",
-      "value": "white",
-      "count": 1
     },
     "2aef1ac82bafc5c0a9ce": {
       "file": "src/app/features/field-designer/field-designer.component.scss",
@@ -608,7 +566,7 @@
       "rule": "utility-style",
       "property": "utility-style",
       "value": "text-sm",
-      "count": 12
+      "count": 11
     },
     "3378fe0a0e805fd8f6fc": {
       "file": "src/app/shared/_code-highlight.scss",
@@ -720,7 +678,7 @@
       "rule": "utility-style",
       "property": "utility-style",
       "value": "text-gray-900",
-      "count": 11
+      "count": 10
     },
     "3c632bf885c0cf51587c": {
       "file": "src/app/features/field-type-picker/field-type-picker.component.scss",
@@ -804,7 +762,7 @@
       "rule": "utility-style",
       "property": "utility-style",
       "value": "text-sm",
-      "count": 11
+      "count": 10
     },
     "43c0a7dd339af4f72760": {
       "file": "src/app/features/modals/preferences/preferences.component.html",
@@ -960,20 +918,6 @@
       "value": "#fafafa",
       "count": 1
     },
-    "4e777768fac68317a922": {
-      "file": "src/app/features/container-outline/container-outline.component.ts",
-      "rule": "spacing",
-      "property": "padding",
-      "value": "2px 0",
-      "count": 1
-    },
-    "4ef45bc54e25482bee74": {
-      "file": "src/app/features/container-outline/container-outline.component.ts",
-      "rule": "color",
-      "property": "background",
-      "value": "white",
-      "count": 2
-    },
     "500913018ca7f5065f6d": {
       "file": "src/app/features/field-card/field-card.component.html",
       "rule": "utility-style",
@@ -1072,19 +1016,12 @@
       "value": "font-medium",
       "count": 5
     },
-    "567ac68ae7ea5ee1b5f9": {
-      "file": "src/app/app.component.scss",
-      "rule": "spacing",
-      "property": "padding",
-      "value": "6px var(--cedar-space-4)",
-      "count": 1
-    },
     "56c510ab1439561d5f18": {
       "file": "src/app/features/modals/preferences/preferences.component.html",
       "rule": "utility-style",
       "property": "utility-style",
       "value": "text-xs",
-      "count": 17
+      "count": 16
     },
     "56cb6ae8ce117feb9611": {
       "file": "src/app/features/annotations-editor/annotations-editor.component.scss",
@@ -1119,7 +1056,7 @@
       "rule": "utility-style",
       "property": "utility-style",
       "value": "text-gray-900",
-      "count": 10
+      "count": 9
     },
     "596903e0b3b81aff22b4": {
       "file": "src/app/features/container-editor/container-editor.component.html",
@@ -1224,7 +1161,7 @@
       "rule": "utility-style",
       "property": "utility-style",
       "value": "h-4",
-      "count": 9
+      "count": 8
     },
     "651cbb9265fd889e7813": {
       "file": "src/app/features/controlled-term-config/controlled-term-config.component.html",
@@ -1317,13 +1254,6 @@
       "value": "#79c0ff",
       "count": 1
     },
-    "6a6c7b8b807836af0392": {
-      "file": "src/app/app.component.scss",
-      "rule": "geometry",
-      "property": "height",
-      "value": "30px",
-      "count": 1
-    },
     "6ac6762cb376359988b1": {
       "file": "src/app/features/modals/preferences/preferences.component.html",
       "rule": "utility-style",
@@ -1364,14 +1294,7 @@
       "rule": "utility-style",
       "property": "utility-style",
       "value": "pr-4",
-      "count": 10
-    },
-    "71926cb66f8534ac70fe": {
-      "file": "src/app/features/container-outline/container-outline.component.ts",
-      "rule": "color",
-      "property": "color",
-      "value": "#374151",
-      "count": 1
+      "count": 9
     },
     "71b302e8dfdfe524e195": {
       "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
@@ -1449,13 +1372,6 @@
       "property": "utility-style",
       "value": "pb-2",
       "count": 1
-    },
-    "75076e7ea4ec96d52f3c": {
-      "file": "src/app/features/container-outline/container-outline.component.ts",
-      "rule": "geometry",
-      "property": "height",
-      "value": "24px",
-      "count": 2
     },
     "759ec955e0bafa6892ff": {
       "file": "src/app/features/child-picker/child-picker.component.scss",
@@ -1681,13 +1597,6 @@
       "value": "text-left",
       "count": 2
     },
-    "878f5dbf4329319cc994": {
-      "file": "src/app/features/container-outline/container-outline.component.ts",
-      "rule": "color",
-      "property": "color",
-      "value": "#64748b",
-      "count": 3
-    },
     "887b606dc0d8ae65784a": {
       "file": "src/app/features/child-picker/child-picker.component.scss",
       "rule": "geometry",
@@ -1786,13 +1695,6 @@
       "value": "gap-1",
       "count": 1
     },
-    "92686a3413c6cc35cd4b": {
-      "file": "src/app/features/container-outline/container-outline.component.ts",
-      "rule": "spacing",
-      "property": "margin-left",
-      "value": "12px",
-      "count": 1
-    },
     "92f755a751ef71d8c9f4": {
       "file": "src/app/features/field-card/field-card.component.html",
       "rule": "utility-style",
@@ -1863,20 +1765,6 @@
       "value": "px-2",
       "count": 1
     },
-    "979ba45074c9ffde8322": {
-      "file": "src/app/features/field-default-value/field-default-value.component.scss",
-      "rule": "typography",
-      "property": "font-size",
-      "value": "18px",
-      "count": 1
-    },
-    "985bc50fcabcd4185767": {
-      "file": "src/app/features/container-outline/container-outline.component.ts",
-      "rule": "color",
-      "property": "background",
-      "value": "#ecfdf5",
-      "count": 1
-    },
     "98ac8e986b67f3dd2a6d": {
       "file": "src/app/features/annotations-editor/annotations-editor.component.scss",
       "rule": "geometry",
@@ -1924,7 +1812,7 @@
       "rule": "utility-style",
       "property": "utility-style",
       "value": "text-center",
-      "count": 10
+      "count": 9
     },
     "9b76f1810ada68b9dce4": {
       "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
@@ -2141,7 +2029,7 @@
       "rule": "utility-style",
       "property": "utility-style",
       "value": "group-hover:text-gray-700",
-      "count": 9
+      "count": 8
     },
     "ac0afb58ef593fbd6bfa": {
       "file": "src/app/app.component.dev.ts",
@@ -2386,7 +2274,7 @@
       "rule": "utility-style",
       "property": "utility-style",
       "value": "h-4",
-      "count": 7
+      "count": 6
     },
     "c578d542c31a4762be0d": {
       "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
@@ -2528,13 +2416,6 @@
       "value": "1.5rem",
       "count": 1
     },
-    "cc420287d4c635bc2cce": {
-      "file": "src/app/features/container-outline/container-outline.component.ts",
-      "rule": "spacing",
-      "property": "gap",
-      "value": "4px",
-      "count": 1
-    },
     "cd1e3d653eec410be56c": {
       "file": "src/app/features/field-card/field-card.component.html",
       "rule": "utility-style",
@@ -2624,14 +2505,14 @@
       "rule": "utility-style",
       "property": "utility-style",
       "value": "border-gray-200",
-      "count": 9
+      "count": 8
     },
     "d4706590f159b16c4ea1": {
       "file": "src/app/features/modals/preferences/preferences.component.html",
       "rule": "utility-style",
       "property": "utility-style",
       "value": "gap-3",
-      "count": 11
+      "count": 10
     },
     "d5e48ae7a92e81439784": {
       "file": "src/app/features/manual-iri/manual-iri.component.ts",
@@ -2682,13 +2563,6 @@
       "value": "0.75rem",
       "count": 1
     },
-    "d90249ea22cd29ae171a": {
-      "file": "src/app/features/field-default-value/field-default-value.component.scss",
-      "rule": "color",
-      "property": "color",
-      "value": "#64748b",
-      "count": 1
-    },
     "da282e30769bdaf9fdf3": {
       "file": "src/app/features/controlled-term-config/controlled-term-config.component.html",
       "rule": "utility-style",
@@ -2701,13 +2575,6 @@
       "rule": "geometry",
       "property": "z-index",
       "value": "50",
-      "count": 1
-    },
-    "dab92087bb984cf9b455": {
-      "file": "src/app/features/container-outline/container-outline.component.ts",
-      "rule": "color",
-      "property": "box-shadow",
-      "value": "0 3px 10px #0003",
       "count": 1
     },
     "dafc613f46a833b98d06": {
@@ -2792,7 +2659,7 @@
       "rule": "utility-style",
       "property": "utility-style",
       "value": "py-3",
-      "count": 14
+      "count": 12
     },
     "e2b2f83f1db640a58957": {
       "file": "src/app/features/field-type-picker/field-type-picker.component.scss",
@@ -2820,7 +2687,7 @@
       "rule": "utility-style",
       "property": "utility-style",
       "value": "px-3",
-      "count": 10
+      "count": 9
     },
     "e40b296e9a18d81e00b3": {
       "file": "src/app/features/types-picker/types-picker.component.ts",
@@ -2869,7 +2736,7 @@
       "rule": "utility-style",
       "property": "utility-style",
       "value": "text-gray-500",
-      "count": 10
+      "count": 9
     },
     "e6d6e0e1bb43b8a30f60": {
       "file": "src/app/app.component.html",
@@ -2990,13 +2857,6 @@
       "value": "3px 5px",
       "count": 1
     },
-    "f360c39a250c4e6a2bbc": {
-      "file": "src/app/features/field-default-value/field-default-value.component.scss",
-      "rule": "color",
-      "property": "background",
-      "value": "white",
-      "count": 1
-    },
     "f367f6a0e8eec5434b05": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
       "rule": "color",
@@ -3023,13 +2883,6 @@
       "rule": "geometry",
       "property": "height",
       "value": "24px",
-      "count": 1
-    },
-    "f48de68d2be4960ab8a4": {
-      "file": "src/app/features/container-outline/container-outline.component.ts",
-      "rule": "spacing",
-      "property": "gap",
-      "value": "8px",
       "count": 1
     },
     "f5126dc05a617654fd23": {
@@ -3156,13 +3009,6 @@
       "rule": "geometry",
       "property": "z-index",
       "value": "11",
-      "count": 1
-    },
-    "fd1bcec1f89fd785cbfa": {
-      "file": "src/app/features/container-outline/container-outline.component.ts",
-      "rule": "color",
-      "property": "color",
-      "value": "#b42318",
       "count": 1
     },
     "fd7daa2db59022adaa4a": {
