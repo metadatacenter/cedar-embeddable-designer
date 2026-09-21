@@ -50,8 +50,11 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // persistent tab errors and guarded header clicks measure 1,410,072 raw / 434,203
 // gzip-9 bytes against current siblings. Restore 5 KB raw headroom for this
 // authoring surface; retain the compressed ceiling.
+// Bounded, keyboard-accessible Overview resizing and deferred name validation
+// measure 1,414,603 raw / 435,422 gzip-9 bytes in the current-sibling reactor.
+// Retain the raw ceiling; add 1 KB compressed capacity for these interactions.
 const RAW_LIMIT = 1_415_000;
-const GZIP_LIMIT = 435_000;
+const GZIP_LIMIT = 436_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
 

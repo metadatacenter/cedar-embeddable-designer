@@ -167,6 +167,7 @@
 /* ─── Fields Overview Sidebar ─────────────────────────────────────────────── */
 .overview-panel {
   @apply p-3 hidden md:block;
+  position: relative;
 }
 
 .overview-panel__card {
@@ -181,6 +182,7 @@
 
 .overview-panel__header {
   @apply px-3 py-2 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10;
+  padding-left: var(--cedar-space-2);
 }
 
 .overview-panel__header-left {
@@ -261,7 +263,7 @@
   --library-width: 0px;
 }
 .main-content.has-overview {
-  --overview-width: 224px;
+  --overview-width: var(--preferred-overview-width, 224px);
 }
 .main-content.has-library {
   --library-width: calc(72 * var(--cedar-space-1));
@@ -483,4 +485,25 @@
 .validation-summary--pending {
   color: var(--cedar-text-muted);
   background: var(--cedar-surface-authoring);
+}
+
+.overview-panel__resize {
+  position: absolute;
+  top: var(--cedar-space-3);
+  bottom: var(--cedar-space-3);
+  right: 0;
+  width: var(--cedar-space-2);
+  min-height: var(--cedar-control-height-default);
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+  z-index: 11;
+  border-radius: var(--cedar-space-1);
+}
+.overview-panel__resize:hover,
+.overview-panel__resize:focus-visible {
+  background: var(--cedar-border-rule);
+}
+.overview-panel__resize:focus-visible {
+  outline: 2px solid var(--cedar-color-primary);
 }

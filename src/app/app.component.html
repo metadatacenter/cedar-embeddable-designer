@@ -173,6 +173,7 @@
   <!-- Main Content Area -->
   <div
     class="main-content"
+    [style.--preferred-overview-width]="overviewWidth() + 'px'"
     [class.has-overview]="service.session.document().children.length > 0 && showFieldsOverview()"
     [class.has-library]="service.preferences().fieldSelectionStyle === 'sidebar'"
     [class.library-collapsed]="service.sidebarCollapsed()"
@@ -188,6 +189,26 @@
         <!-- Fields Overview Panel -->
         @if (service.session.document().children.length > 0 && showFieldsOverview()) {
           <div class="overview-panel" id="ced-overview">
+            <div
+              class="overview-panel__resize"
+              role="separator"
+              tabindex="0"
+              aria-label="Resize Overview"
+              aria-orientation="vertical"
+              aria-controls="ced-overview"
+              [attr.aria-valuemin]="overviewMinWidth"
+              [attr.aria-valuemax]="overviewMaxWidth()"
+              [attr.aria-valuenow]="overviewWidth()"
+              [attr.aria-valuetext]="overviewWidth() + ' pixels'"
+              title="Drag to resize Overview. Arrow keys resize; Home and End set limits. Double-click to reset."
+              (pointerdown)="startOverviewResize($event)"
+              (pointermove)="resizeOverview($event)"
+              (pointerup)="endOverviewResize()"
+              (pointercancel)="endOverviewResize()"
+              (lostpointercapture)="endOverviewResize()"
+              (keydown)="resizeOverviewWithKeyboard($event)"
+              (dblclick)="resetOverviewWidth()"
+            ></div>
             <div class="overview-panel__card">
               <div class="overview-panel__header">
                 <div class="overview-panel__header-left">

@@ -24,17 +24,6 @@
         (input)="editNative(control.value)"
       />
     }
-    @if (draft()) {
-      <button
-        type="button"
-        aria-label="Clear default"
-        title="Clear default"
-        [disabled]="!!field().publishedDefinition"
-        (click)="clear()"
-      >
-        <app-icon key="close" size="small" />
-      </button>
-    }
   </div>
   @if (error()) {
     <p role="alert" class="ced-field-error">{{ error() }}</p>

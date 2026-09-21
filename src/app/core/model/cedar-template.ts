@@ -536,18 +536,15 @@ function validateNumericSettings(field: Field): void {
     if (range) {
       if (!Number.isInteger(value)) throw new Error(`${label} cannot have decimal places for ${typeLabel}.`);
       if (value < range[0] || value > range[1]) {
-        const limit = type === 'xsd:long' ? 'supported long range' : `${typeLabel} range`;
-        throw new Error(`${label} must be between ${range[0]} and ${range[1]} (${limit}).`);
+        throw new Error(`Value must be between ${range[0]} and ${range[1]}.`);
       }
     }
     if (type === 'xsd:float') {
       const magnitude = Math.abs(value);
       if (magnitude > 3.4028234663852886e38)
-        throw new Error(`${label} must be between -3.4028234663852886e38 and 3.4028234663852886e38 (float range).`);
+        throw new Error('Value must be between -3.4028234663852886e38 and 3.4028234663852886e38.');
       if (magnitude !== 0 && magnitude < 1.401298464324817e-45)
-        throw new Error(
-          `${label} is too close to zero for the float range. Use 0 or a number at least 1.401298464324817e-45 away from zero.`,
-        );
+        throw new Error('Value is too close to zero. Use 0 or a number at least 1.401298464324817e-45 away from zero.');
     }
   }
   if (min !== null && max !== null && min > max) throw new Error('Minimum must not be greater than maximum.');

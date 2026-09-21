@@ -71,7 +71,8 @@ test('native text defaults evaluate regex and length constraints without saving 
   await input.fill('XYZ');
   await expect(input).toHaveAttribute('aria-invalid', 'false');
   await expect.poll(async () => defaultOf(await currentTemplate(page))).toBe('XYZ');
-  await card.getByRole('button', { name: 'Clear default', exact: true }).click();
+  await expect(card.getByRole('button', { name: 'Clear default', exact: true })).toHaveCount(0);
+  await input.fill('');
   await expect(input).toHaveValue('');
   await expect.poll(async () => defaultOf(await currentTemplate(page))).toBeUndefined();
 });

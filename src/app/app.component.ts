@@ -1,6 +1,8 @@
 import { ChildPickerComponent } from './features/child-picker/child-picker.component';
 import {
   Component,
+  DestroyRef,
+  afterNextRender,
   ElementRef,
   HostListener,
   ChangeDetectionStrategy,
@@ -52,6 +54,60 @@ export class AppComponent {
   // Layout & UI states
   readonly showFieldsOverview = signal(true);
   readonly showProfileMenu = signal(false);
+  readonly overviewMinWidth = 224;
+  private readonly overviewRequestedWidth = signal<number | null>(null);
+  private readonly availableWidth = signal(1280);
+  readonly overviewMaxWidth = computed(() => {
+    const library =
+      this.service.preferences().fieldSelectionStyle === 'sidebar' ? (this.service.sidebarCollapsed() ? 48 : 288) : 0;
+    return Math.max(this.overviewMinWidth, Math.min(480, Math.floor((this.availableWidth() - library) * 0.4)));
+  });
+  readonly overviewWidth = computed(() =>
+    Math.min(
+      this.overviewMaxWidth(),
+      Math.max(this.overviewMinWidth, this.overviewRequestedWidth() ?? (this.service.showPreview() ? 224 : 256)),
+    ),
+  );
+  private overviewDrag: { x: number; width: number } | null = null;
+
+  startOverviewResize(event: PointerEvent): void {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    const handle = event.currentTarget as HTMLElement;
+    handle.focus();
+    handle.setPointerCapture(event.pointerId);
+    this.overviewDrag = { x: event.clientX, width: this.overviewWidth() };
+  }
+
+  resizeOverview(event: PointerEvent): void {
+    if (!this.overviewDrag) return;
+    this.setOverviewWidth(this.overviewDrag.width + event.clientX - this.overviewDrag.x);
+  }
+
+  endOverviewResize(): void {
+    this.overviewDrag = null;
+  }
+
+  resizeOverviewWithKeyboard(event: KeyboardEvent): void {
+    const step = event.shiftKey ? 32 : 16;
+    const widths: Record<string, number> = {
+      ArrowLeft: this.overviewWidth() - step,
+      ArrowRight: this.overviewWidth() + step,
+      Home: this.overviewMinWidth,
+      End: this.overviewMaxWidth(),
+    };
+    if (!(event.key in widths)) return;
+    event.preventDefault();
+    this.setOverviewWidth(widths[event.key]);
+  }
+
+  resetOverviewWidth(): void {
+    this.overviewRequestedWidth.set(null);
+  }
+
+  private setOverviewWidth(width: number): void {
+    this.overviewRequestedWidth.set(Math.max(this.overviewMinWidth, Math.min(this.overviewMaxWidth(), width)));
+  }
 
   /**
    * The profiles, and what each one is for.
@@ -79,6 +135,12 @@ export class AppComponent {
   });
 
   constructor() {
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
+      const observer = new ResizeObserver(([entry]) => this.availableWidth.set(entry.contentRect.width));
+      observer.observe(this.host.nativeElement);
+      destroyRef.onDestroy(() => observer.disconnect());
+    });
     // A newly added field asks to be scrolled to; the component owns the DOM, so
     // it is the component that finds the card. `afterNextRender` is not enough on
     // its own here — the request outlives the render that satisfies it — so the
@@ -140,9 +202,8 @@ export class AppComponent {
   getGridTemplateColumns(): string {
     const fieldsCount = this.service.session.document().children.length;
     const overview = this.showFieldsOverview();
-    const preview = this.service.showPreview();
     if (fieldsCount > 0 && overview) {
-      return preview ? '224px minmax(0, 1fr)' : '256px minmax(0, 1fr)';
+      return `${this.overviewWidth()}px minmax(0, 1fr)`;
     }
     return 'minmax(0, 1fr)';
   }

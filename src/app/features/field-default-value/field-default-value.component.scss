@@ -64,15 +64,6 @@
   [aria-invalid='true'] {
     border-color: var(--cedar-control-error, var(--cedar-color-error));
   }
-  button {
-    border: 0;
-    background: transparent;
-    color: #64748b;
-    font-size: 18px;
-    line-height: var(--cedar-control-height, var(--cedar-control-height-default));
-    min-width: 24px;
-    cursor: pointer;
-  }
 }
 
 .native-default input[aria-invalid='true'],
