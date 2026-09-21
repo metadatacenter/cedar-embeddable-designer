@@ -1,4 +1,4 @@
-import { AttributeValueNamePolicy } from 'cedar-model-typescript-library';
+import { isReservedInstanceName } from './cedar-template';
 
 // Attribute-value groups sit beside (rather than inside) `children` in CEDAR YAML.
 const yamlEnvelope = new Set([
@@ -20,7 +20,7 @@ export function childKeyError(value: string, attributeValue = false): string | n
   const key = value.trim();
   if (!key) return 'Key is required.';
   if (['__proto__', 'prototype', 'constructor'].includes(key)) return 'This key is reserved for object internals.';
-  if (AttributeValueNamePolicy.isReserved(key)) return 'This key is reserved for CEDAR metadata.';
+  if (isReservedInstanceName(key)) return 'This key is reserved for CEDAR metadata.';
   if ([...key].some((character) => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127))
     return 'Key must not contain control characters.';
   if (attributeValue && yamlEnvelope.has(key)) return 'This key is reserved for CEDAR YAML metadata.';

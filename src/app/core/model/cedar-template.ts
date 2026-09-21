@@ -1,3 +1,4 @@
+import { AttributeValueNamePolicy } from 'cedar-model-typescript-library';
 import { temporalDefaultError } from './field-default';
 import {
   ContainerDraft,
@@ -1732,4 +1733,8 @@ export function containerPreview(draft: ContainerDraft): Template {
     .withStatus(BiboStatus.DRAFT)
     .addChild(model, model.createDeploymentBuilder(draft.name || 'Element').build())
     .build();
+}
+
+export function isReservedInstanceName(name: string): boolean {
+  return AttributeValueNamePolicy.isReserved(name);
 }
