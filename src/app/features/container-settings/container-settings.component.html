@@ -103,6 +103,7 @@
   [attr.aria-expanded]="expanded"
   [attr.aria-controls]="'container-settings-' + container().id"
   [attr.aria-label]="(expanded ? 'Collapse ' : 'Expand ') + container().kind + ' settings'"
+  [title]="(expanded ? 'Collapse ' : 'Expand ') + container().kind + ' settings'"
   (click)="toggleExpanded()"
 >
   <app-icon key="chevron-down" size="small" [class.expanded]="expanded" />

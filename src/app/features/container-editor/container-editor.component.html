@@ -131,6 +131,7 @@
         type="button"
         class="element-toggle"
         [attr.aria-expanded]="!collapsed()"
+        [title]="collapsed() ? 'Expand children' : 'Collapse children'"
         [attr.aria-label]="(collapsed() ? 'Expand ' : 'Collapse ') + container().name"
         [attr.aria-controls]="'element-content-' + container().id"
         (click)="$event.stopPropagation(); service.toggleElement(container().id)"

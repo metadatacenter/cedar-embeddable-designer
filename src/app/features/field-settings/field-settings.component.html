@@ -445,6 +445,7 @@
   [attr.aria-expanded]="expanded"
   [attr.aria-controls]="'field-settings-' + field.id"
   [attr.aria-label]="expanded ? 'Collapse field settings' : 'Expand field settings'"
+  [title]="expanded ? 'Collapse field settings' : 'Expand field settings'"
   (click)="toggleExpanded()"
 >
   <app-icon key="chevron-down" size="small" [class.expanded]="expanded" />

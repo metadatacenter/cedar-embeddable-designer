@@ -145,6 +145,7 @@
     [attr.aria-expanded]="expanded"
     [attr.aria-controls]="'element-settings-' + node().id"
     [attr.aria-label]="expanded ? 'Collapse element settings' : 'Expand element settings'"
+    [title]="expanded ? 'Collapse element settings' : 'Expand element settings'"
     (click)="toggleExpanded()"
   >
     <app-icon key="chevron-down" size="small" [class.expanded]="expanded" />

@@ -108,12 +108,12 @@
         </div>
       </div>
     </fieldset>
-    @if (service.nameError(field.id, field.name, 'field'); as error) {
-      <p class="ced-field-error" [id]="'name-error-' + field.id">{{ error }}</p>
-    }
     <!-- Reuse CEE's read-only specification; options remain editable below. -->
     @if (!contentLabel(field.type)) {
       <app-field-summary class="mt-1" [field]="field" />
+    }
+    @if (service.nameError(field.id, field.name, 'field'); as error) {
+      <p class="ced-field-error" [id]="'name-error-' + field.id">{{ error }}</p>
     }
 
     <app-field-settings
