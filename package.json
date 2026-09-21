@@ -2,7 +2,7 @@
   "name": "cedar-embeddable-designer",
   "description": "A reusable Web Component for designing CEDAR metadata templates.",
   "license": "BSD-2-Clause",
-  "version": "0.1.0-dev.20260920.c2a9fdd6",
+  "version": "0.1.0-dev.20260921.7e6695de",
   "engines": {
     "node": "^24.15.0"
   },
@@ -68,7 +68,7 @@
     "@angular/cli": "^22.1.8",
     "@angular/compiler-cli": "^22.1.6",
     "@eslint/js": "^10.0.1",
-    "@org.metadatacenter/cedar-design-tokens": "0.1.0-dev.20260920.d00906bf",
+    "@org.metadatacenter/cedar-design-tokens": "0.1.0-dev.20260921.3ae5f78b",
     "@types/node": "^24.13.3",
     "@vitest/coverage-v8": "^4.1.11",
     "angular-eslint": "^22.1.0",
