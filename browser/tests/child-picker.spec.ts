@@ -111,6 +111,10 @@ test('creates an editable element at the insertion position and adds a nested fi
   await nested.getByRole('button', { name: 'Text', exact: true }).click();
   await nested.getByRole('button', { name: 'Collapse Element', exact: true }).click();
   await nested.getByRole('button', { name: 'Delete element Element', exact: true }).click();
+  await page
+    .getByRole('dialog', { name: 'Delete element?' })
+    .getByRole('button', { name: 'Delete', exact: true })
+    .click();
   expect(fieldOrder(await currentTemplate(page))).toEqual(['Title', 'Category', 'Publication Date']);
   await expect(designer.getByRole('button', { name: /^Delete element/ })).toHaveCount(0);
 });
