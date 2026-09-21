@@ -8,7 +8,7 @@
         <app-icon key="chevron-down" size="small" class="validation-disclosure" />
         @if (service.visibleIssues().length) {
           <app-icon key="warning" size="small" />
-          <span>{{ count }} settings {{ count === 1 ? 'error' : 'errors' }} — review before saving</span>
+          <span>{{ count }} {{ count === 1 ? 'error' : 'errors' }} — fix before saving</span>
         } @else {
           Enter missing names before saving.
         }
