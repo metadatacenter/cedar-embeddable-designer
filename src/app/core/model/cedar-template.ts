@@ -858,13 +858,7 @@ function buildField(field: Field): TemplateField {
     .withAlternateLabels(field.alternateLabels?.length ? field.alternateLabels : null)
     .withSchemaIdentifier(field.schemaIdentifier || null)
     .withSchemaName(field.name)
-    /*
-     * Null rather than an empty string when there is no help text. The two mean
-     * the same thing, but only one survives both serializations: the YAML writer
-     * omits an empty description and the YAML reader returns null for a missing
-     * one, so writing `''` made a template read back differently depending on
-     * which format it had been written in.
-     */
+    // Let the installed model supply its canonical default for an absent description.
     .withSchemaDescription(field.helpText || null)
     .withSchemaVersion(SchemaVersion.CURRENT)
     .withStatus(BiboStatus.DRAFT);
@@ -1040,13 +1034,6 @@ function buildContainerArtifact(
     .withTitle(derivedTitle(state.name, kind))
     .withDescription(derivedDescription(state.name, kind))
     .withSchemaName(state.name)
-    /*
-     * Null rather than an empty string, for the reason the field description is:
-     * the YAML writer omits an empty description and the YAML reader returns null
-     * for a missing one, so a template with no description read back differently
-     * depending on which format it had been written in. Fields were fixed when the
-     * library took over serialization; the template's own description was not.
-     */
     .withSchemaDescription(state.description || null)
     .withSchemaVersion(SchemaVersion.CURRENT)
     .withVersion(state.version || '0.0.1')
@@ -1064,7 +1051,7 @@ function buildContainerArtifact(
     const deployment = built
       .createDeploymentBuilder(keys[index])
       .withLabel(field.displayLabel ?? (field.artifact ? null : field.name))
-      .withDescription(field.displayDescription ?? (field.artifact ? null : field.helpText || null));
+      .withDescription(field.displayDescription ?? (field.artifact ? null : built.schema_description));
 
     /*
      * A static field's deployment builder does not extend the dynamic one, so it has no property

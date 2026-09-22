@@ -559,6 +559,11 @@ describe('identity', () => {
 });
 
 describe('round trips', () => {
+  it('preserves a new field with no help text through YAML without reporting data loss', () => {
+    const built = buildTemplate(templateOf(field({ name: 'No help', helpText: '' })));
+    expect(templateToJson(readTemplate(templateToYaml(built)))).toEqual(templateToJson(built));
+  });
+
   const state = templateOf(
     field({ id: 1, name: 'Title', status: 'required', helpText: 'The title' }),
     field({ id: 2, type: 'multipleChoice', name: 'Category', options: ['A', 'B'], status: 'recommended' }),
