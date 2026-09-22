@@ -236,3 +236,15 @@ test('an inactive settings tab still shows its error', async ({ page }) => {
   await page.mouse.move(0, 0);
   await expect(card).toHaveScreenshot('inactive-tab-error.png', SHOT);
 });
+
+test('element deletion confirmation uses the shared dialog actions', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await designer.getByRole('button', { name: 'Basic', exact: true }).click();
+  await designer.getByRole('button', { name: /Modular/ }).click();
+  await addElementFixture(page);
+  await nestFixtureFields(page, ['element']);
+  await designer.getByRole('button', { name: 'Delete element Element', exact: true }).click();
+  const dialog = designer.getByRole('dialog', { name: 'Delete element?' });
+  await expect(dialog.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
+  await expect(dialog).toHaveScreenshot('delete-element.png', SHOT);
+});

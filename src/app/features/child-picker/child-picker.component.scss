@@ -1,3 +1,4 @@
+@use '../../shared/dialog-style';
 @use '../../shared/table-style';
 :host {
   display: contents;
@@ -6,19 +7,11 @@ dialog {
   margin: auto;
   width: min(1000px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
-  padding: var(--cedar-space-6);
-  border: 1px solid var(--cedar-overlay-border);
-  border-radius: var(--cedar-dialog-radius);
-  color: var(--cedar-text-primary);
-  background: var(--cedar-overlay-surface);
+  @include dialog-style.surface;
   box-sizing: border-box;
 }
-dialog::backdrop {
-  background: var(--cedar-dialog-backdrop);
-}
 h2 {
-  font-size: var(--cedar-font-size-heading);
-  margin: 0 0 var(--cedar-space-6);
+  @include dialog-style.heading;
 }
 h3 {
   font-size: var(--cedar-font-size-lead);
@@ -37,21 +30,10 @@ h3 {
   flex-wrap: wrap;
 }
 button {
-  min-height: 36px;
-  padding: 6px var(--cedar-space-3);
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-button:disabled {
-  opacity: 0.5;
-  cursor: default;
+  @include dialog-style.button;
 }
 .primary {
-  background: var(--cedar-color-primary);
-  color: white;
-  border-color: transparent;
+  @include dialog-style.primary;
 }
 .table-scroll {
   overflow: auto;

@@ -86,7 +86,11 @@
                 </p>
                 <form method="dialog">
                   <button autofocus>Cancel</button>
-                  <button type="button" (click)="deleteDialog.close(); service.deleteChild(container().id)">
+                  <button
+                    type="button"
+                    class="primary"
+                    (click)="deleteDialog.close(); service.deleteChild(container().id)"
+                  >
                     Delete
                   </button>
                 </form>

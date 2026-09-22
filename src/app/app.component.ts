@@ -132,12 +132,39 @@ export class AppComponent {
     return this.profiles.find((profile) => profile.key === active)?.label ?? 'Custom';
   });
 
+  private scrollAnchor: number | null = null;
+
   constructor() {
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
       const observer = new ResizeObserver(([entry]) => this.availableWidth.set(entry.contentRect.width));
       observer.observe(this.host.nativeElement);
-      destroyRef.onDestroy(() => observer.disconnect());
+      const workspace = this.host.nativeElement.querySelector('.designer-workspace');
+      const scroller = this.host.nativeElement.querySelector('.designer-scroll');
+      let width = workspace?.getBoundingClientRect().width;
+      const layoutObserver = new ResizeObserver(([entry]) => {
+        if (entry.contentRect.width === width) return;
+        width = entry.contentRect.width;
+        if (this.scrollAnchor !== null) this.scrollToCard(this.scrollAnchor, 'instant');
+      });
+      if (workspace) layoutObserver.observe(workspace);
+      // Stop preserving the insertion position once the author scrolls elsewhere.
+      const releaseAnchor = () => {
+        this.scrollAnchor = null;
+      };
+      scroller?.addEventListener('wheel', releaseAnchor, { passive: true });
+      scroller?.addEventListener('touchstart', releaseAnchor, { passive: true });
+      const releaseScrollbarAnchor = (event: Event) => {
+        if (event.target === scroller) releaseAnchor();
+      };
+      scroller?.addEventListener('pointerdown', releaseScrollbarAnchor);
+      destroyRef.onDestroy(() => {
+        observer.disconnect();
+        layoutObserver.disconnect();
+        scroller?.removeEventListener('wheel', releaseAnchor);
+        scroller?.removeEventListener('touchstart', releaseAnchor);
+        scroller?.removeEventListener('pointerdown', releaseScrollbarAnchor);
+      });
     });
     // A newly added field asks to be scrolled to; the component owns the DOM, so
     // it is the component that finds the card. `afterNextRender` is not enough on
@@ -160,22 +187,25 @@ export class AppComponent {
    * element's shadow root when it is embedded, and a document-wide lookup finds
    * nothing there.
    */
-  private scrollToCard(fieldId: number): void {
+  private scrollToCard(fieldId: number, behavior: ScrollBehavior = 'smooth'): void {
     const root = this.host.nativeElement.getRootNode() as Document | ShadowRoot;
     const card = root.querySelector(`#field-card-${fieldId}`);
     const elementHeader = card?.querySelector(
       ':scope > .field-drag-container > app-container-editor > .template-header-card',
     );
     if (elementHeader) {
+      this.scrollAnchor = fieldId;
       const scroller = elementHeader.closest<HTMLElement>('.designer-scroll');
       if (scroller) {
+        const gap = parseFloat(getComputedStyle(scroller).getPropertyValue('--cedar-space-6')) || 24;
         scroller.scrollTo({
           top:
-            scroller.scrollTop + elementHeader.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 16,
-          behavior: 'smooth',
+            scroller.scrollTop + elementHeader.getBoundingClientRect().top - scroller.getBoundingClientRect().top - gap,
+          behavior,
         });
       }
     } else {
+      this.scrollAnchor = null;
       card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }

@@ -1,3 +1,4 @@
+@use '../../shared/dialog-style';
 :host {
   --element-child-inset: var(--cedar-space-3);
   display: block;
@@ -138,7 +139,7 @@
   display: none !important;
 }
 .nested-content {
-  padding: 0 var(--element-child-inset) var(--cedar-space-2);
+  padding: 0 var(--element-child-inset);
 }
 .nested-header {
   margin-inline: calc(var(--element-child-inset) / 2);
@@ -193,7 +194,8 @@
 }
 
 .container-content > .add-field-section {
-  margin-top: var(--cedar-space-2);
+  margin-top: 0;
+  padding-block: var(--cedar-space-4);
 }
 
 .element-type-label {
@@ -268,36 +270,25 @@ textarea.template-input {
 }
 
 .delete-dialog {
-  margin: auto;
+  @include dialog-style.surface;
   max-width: calc(100vw - var(--cedar-space-6));
-  padding: var(--cedar-space-6);
-  border: 1px solid var(--cedar-overlay-border);
-  border-radius: var(--cedar-dialog-radius);
-  color: var(--cedar-text-primary);
-  background: var(--cedar-overlay-surface);
   text-align: left;
   white-space: normal;
   overflow-wrap: anywhere;
 
-  &::backdrop {
-    background: var(--cedar-dialog-backdrop);
-  }
   h2 {
-    font-size: var(--cedar-font-size-heading);
-    font-weight: var(--cedar-font-weight-medium);
+    @include dialog-style.heading;
   }
   p {
     margin-block: var(--cedar-space-4);
   }
   form {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--cedar-space-3);
+    @include dialog-style.actions;
   }
   button {
-    padding: var(--cedar-space-2) var(--cedar-space-3);
-    border: 1px solid var(--cedar-overlay-border);
-    border-radius: var(--cedar-control-radius-default);
-    cursor: pointer;
+    @include dialog-style.button;
+  }
+  .primary {
+    @include dialog-style.primary;
   }
 }

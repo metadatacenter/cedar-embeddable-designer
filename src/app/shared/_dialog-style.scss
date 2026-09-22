@@ -1,0 +1,39 @@
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
+@use '@org.metadatacenter/cedar-design-tokens/controls';
+
+@mixin surface {
+  @include patterns.dialog-surface;
+  margin: auto;
+}
+
+@mixin heading {
+  font-size: var(--cedar-font-size-heading);
+  font-weight: var(--cedar-font-weight-medium);
+  margin: 0 0 var(--cedar-space-6);
+}
+
+@mixin actions {
+  @include patterns.dialog-actions;
+}
+
+@mixin button {
+  @include controls.action-states;
+  min-height: var(--cedar-control-height-default);
+  padding: var(--cedar-space-2) var(--cedar-space-3);
+  border: 1px solid var(--cedar-control-border-default);
+  border-radius: var(--cedar-control-radius-default);
+  font: inherit;
+  color: var(--cedar-text-primary);
+  background: var(--cedar-surface-raised);
+  cursor: pointer;
+  white-space: nowrap;
+  &:disabled {
+    opacity: var(--cedar-control-disabled-opacity);
+    cursor: default;
+  }
+}
+
+@mixin primary {
+  @include controls.primary-action;
+  border-color: transparent;
+}

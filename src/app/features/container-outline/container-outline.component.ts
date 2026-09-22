@@ -15,6 +15,20 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
           [class.active]="service.selectedField() === node.id"
           [class.invalid]="service.visibleIssuesFor(node.id).length > 0"
         >
+          <button type="button" class="select-node" (click)="select(node)">
+            <app-icon [key]="node.kind === 'field' ? node.definition.type : 'folder'" className="w-4 h-4" />
+            <span class="node-name">{{
+              childName(node) || (node.kind === 'field' ? 'Unnamed field' : 'Unnamed element')
+            }}</span>
+            @if (service.visibleIssuesFor(node.id).length; as count) {
+              <span class="validation-badge" [attr.aria-label]="count + ' errors'" [title]="count + ' errors'"
+                ><app-icon key="warning" size="small" /> {{ count }}</span
+              >
+            }
+            @if (node.kind === 'field' && node.placement.status === 'required') {
+              <span aria-label="Required">*</span>
+            }
+          </button>
           @if (node.kind === 'element') {
             <button
               type="button"
@@ -31,20 +45,6 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
               />
             </button>
           }
-          <button type="button" class="select-node" (click)="select(node)">
-            <app-icon [key]="node.kind === 'field' ? node.definition.type : 'folder'" className="w-4 h-4" />
-            <span class="node-name">{{
-              childName(node) || (node.kind === 'field' ? 'Unnamed field' : 'Unnamed element')
-            }}</span>
-            @if (service.visibleIssuesFor(node.id).length; as count) {
-              <span class="validation-badge" [attr.aria-label]="count + ' errors'" [title]="count + ' errors'"
-                ><app-icon key="warning" size="small" /> {{ count }}</span
-              >
-            }
-            @if (node.kind === 'field' && node.placement.status === 'required') {
-              <span aria-label="Required">*</span>
-            }
-          </button>
           <button
             type="button"
             class="outline-drag-handle"
@@ -121,7 +121,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
       }
       .select-node {
         display: flex;
-        flex: 1;
+        flex: 0 1 auto;
         align-items: center;
         gap: var(--cedar-space-2);
         min-width: 0;
@@ -139,6 +139,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
         overflow-wrap: anywhere;
       }
       .outline-drag-handle {
+        margin-left: auto;
         display: inline-flex;
         align-items: center;
         justify-content: center;
