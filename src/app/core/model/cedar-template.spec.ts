@@ -559,6 +559,11 @@ describe('identity', () => {
 });
 
 describe('round trips', () => {
+  it('preserves a new field with no help text through YAML without reporting data loss', () => {
+    const built = buildTemplate(templateOf(field({ name: 'No help', helpText: '' })));
+    expect(templateToJson(readTemplate(templateToYaml(built)))).toEqual(templateToJson(built));
+  });
+
   const state = templateOf(
     field({ id: 1, name: 'Title', status: 'required', helpText: 'The title' }),
     field({ id: 2, type: 'multipleChoice', name: 'Category', options: ['A', 'B'], status: 'recommended' }),
@@ -1021,7 +1026,7 @@ for (const [type, min, max] of [
     expect(() => buildTemplate(numericField({ type, min, max, decimalPlaces: 0 }, max))).not.toThrow();
     for (const changes of [{ min: min - 1 }, { max: max + 1 }, { min: 1.5 }, { max: 1.5 }, { decimalPlaces: 2 }])
       expect(() => buildTemplate(numericField({ type, ...changes }))).toThrow();
-    expect(() => buildTemplate(numericField({ type }, max + 1))).toThrow(/range/);
+    expect(() => buildTemplate(numericField({ type }, max + 1))).toThrow(`Value must be between ${min} and ${max}.`);
   });
 }
 
@@ -1042,8 +1047,12 @@ it('rejects invalid datatypes, nonfinite bounds, ordering and decimal-place sett
 
 it('checks float range including overflow and underflow, while double allows smaller magnitudes', () => {
   for (const value of [3.5e38, -3.5e38, 1e-46, -1e-46]) {
-    expect(() => buildTemplate(numericField({ type: 'xsd:float', min: value }))).toThrow(/range/);
-    expect(() => buildTemplate(numericField({ type: 'xsd:float', max: value }))).toThrow(/range/);
+    const message =
+      Math.abs(value) > 1
+        ? 'Value must be between -3.4028234663852886e38 and 3.4028234663852886e38.'
+        : 'Value is too close to zero. Use 0 or a number at least 1.401298464324817e-45 away from zero.';
+    expect(() => buildTemplate(numericField({ type: 'xsd:float', min: value }))).toThrow(message);
+    expect(() => buildTemplate(numericField({ type: 'xsd:float', max: value }))).toThrow(message);
   }
   for (const value of [0, 1.401298464324817e-45, 3.4028234663852886e38])
     expect(() => buildTemplate(numericField({ type: 'xsd:float', min: value, max: value }))).not.toThrow();
@@ -1119,3 +1128,14 @@ describe('paragraph length constraints', () => {
     }
   });
 });
+
+it.each(['type', 'properties', 'required', 'name', 'true', 'null', 'yes'])(
+  'preserves child key %s through JSON and YAML schemas',
+  (key) => {
+    const model = buildTemplate(templateOf(field({ deploymentName: key })));
+    for (const source of [templateToJson(model), templateToYaml(model)]) {
+      const rendered = templateToJson(readTemplate(source));
+      expect(rendered['properties']).toHaveProperty(key);
+    }
+  },
+);

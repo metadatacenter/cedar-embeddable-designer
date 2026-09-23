@@ -1,3 +1,5 @@
+@use '../../shared/dialog-style';
+@use '../../shared/table-style';
 :host {
   display: contents;
 }
@@ -5,19 +7,11 @@ dialog {
   margin: auto;
   width: min(1000px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
-  padding: var(--cedar-space-6);
-  border: 1px solid var(--cedar-neutral-200, #ddd);
-  border-radius: 12px;
-  color: var(--cedar-color-text, #262626);
-  background: white;
+  @include dialog-style.surface;
   box-sizing: border-box;
 }
-dialog::backdrop {
-  background: rgb(0 0 0 / 35%);
-}
 h2 {
-  font-size: var(--cedar-font-size-heading);
-  margin: 0 0 var(--cedar-space-6);
+  @include dialog-style.heading;
 }
 h3 {
   font-size: var(--cedar-font-size-lead);
@@ -36,21 +30,10 @@ h3 {
   flex-wrap: wrap;
 }
 button {
-  min-height: 36px;
-  padding: 6px var(--cedar-space-3);
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-button:disabled {
-  opacity: 0.5;
-  cursor: default;
+  @include dialog-style.button;
 }
 .primary {
-  background: var(--cedar-color-primary);
-  color: white;
-  border-color: transparent;
+  @include dialog-style.primary;
 }
 .table-scroll {
   overflow: auto;
@@ -116,7 +99,7 @@ input {
 .selected-table td:last-child {
   position: sticky;
   right: 0;
-  background: white;
+  background: var(--cedar-overlay-surface);
 }
 .selected-table th:last-child {
   z-index: 1;
@@ -138,3 +121,5 @@ input {
 .result-row[aria-disabled='true'] {
   cursor: default;
 }
+
+@include table-style.compact-table;

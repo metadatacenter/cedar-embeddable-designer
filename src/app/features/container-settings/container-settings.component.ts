@@ -1,3 +1,4 @@
+import { IconComponent } from '../../shared/components/icon/icon.component';
 import { ElementLabelsComponent } from '../element-labels/element-labels.component';
 import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 import { AnnotationsEditorComponent } from '../annotations-editor/annotations-editor.component';
@@ -13,6 +14,7 @@ import { TypesPickerComponent } from '../types-picker/types-picker.component';
 @Component({
   selector: 'app-container-settings',
   imports: [
+    IconComponent,
     ElementLabelsComponent,
     LanguageSelectorComponent,
     AnnotationsEditorComponent,
@@ -25,7 +27,7 @@ import { TypesPickerComponent } from '../types-picker/types-picker.component';
     textarea {
       width: 100%;
       box-sizing: border-box;
-      height: var(--cedar-control-height, 28px);
+      height: var(--cedar-control-height, var(--cedar-control-height-default));
       resize: none;
     }
     .display-fields {
@@ -49,7 +51,7 @@ export class ContainerSettingsComponent {
   constructor() {
     effect(() => {
       const issue = this.service.validationTarget();
-      if (issue?.nodeId === this.container().id) {
+      if (issue?.setting !== 'name' && issue?.nodeId === this.container().id) {
         this.expanded = true;
         this.activeTab = issue.tab;
         this.changeDetector.markForCheck();

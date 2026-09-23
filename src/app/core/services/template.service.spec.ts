@@ -44,13 +44,13 @@ describe('TemplateService', () => {
     expect(inserted[0]).toMatchObject({
       kind: 'field',
       definition: { name: 'Title', atId: field['@id'] },
-      placement: { deploymentName: 'Title 2' },
+      placement: { deploymentName: 'title' },
     });
     expect(inserted[1]).toMatchObject({ kind: 'element', definition: { identifier: element['@id'], name: 'Section' } });
     expect(((service.templateJson() as CedJsonObject)['_ui'] as CedJsonObject)['order']).toEqual([
       'Title',
-      'Title 2',
-      'Section',
+      'title',
+      'section',
       'Category',
       'Publication Date',
     ]);
@@ -112,7 +112,7 @@ describe('TemplateService', () => {
     const copy = service.fields()[0];
     expect({ ...copy, id: definition.id, customFieldId: undefined, libraryId: undefined }).toEqual({
       ...definition,
-      deploymentName: 'Title 2',
+      deploymentName: 'title',
       customFieldId: undefined,
       libraryId: undefined,
     });
@@ -338,14 +338,15 @@ describe('default editing', () => {
     expect(service.fields()[0].numeric?.max).toBe(100);
   });
 
-  it('rejects invalid temporal defaults and incompatible precision changes', () => {
+  it('rejects invalid temporal defaults but trims reduced precision', () => {
     const temporal = { type: 'xsd:date', granularity: 'day', timezoneEnabled: false, inputTimeFormat: null } as const;
     service.fields.set([{ ...service.fields()[0], type: 'date', temporal }]);
     service.updateDefaultValue(1, { kind: 'temporal', value: '2024-02-29' });
     service.updateDefaultValue(1, { kind: 'temporal', value: '2025-02-29' });
     expect(service.fields()[0].defaultValue).toEqual({ kind: 'temporal', value: '2024-02-29' });
-    expect(service.updateFieldSettings(1, { temporal: { ...temporal, granularity: 'year' } })).not.toBeNull();
-    expect(service.fields()[0].temporal?.granularity).toBe('day');
+    expect(service.updateFieldSettings(1, { temporal: { ...temporal, granularity: 'year' } })).toBeNull();
+    expect(service.fields()[0].temporal?.granularity).toBe('year');
+    expect(service.fields()[0].defaultValue).toEqual({ kind: 'temporal', value: '2024' });
   });
 
   it('renames selected defaults and removes them when their options are deleted', () => {
@@ -363,7 +364,7 @@ describe('default editing', () => {
     expect(() => service.templateJson()).not.toThrow();
   });
   it('duplicates element subtrees with fresh identities and source provenance', () => {
-    service.addElement();
+    service.updateContainerDefinition(service.addElement(), { name: 'Element' });
     const original = service.children().find((node) => node.kind === 'element')!;
     if (original.kind !== 'element') throw new Error('Expected element');
     service.openContainer(original.id);
@@ -377,7 +378,7 @@ describe('default editing', () => {
     expect(copy.definition.identifier).not.toBe(original.definition.identifier);
     expect(copy.definition.metadata?.artifact.derivedFrom).toBe(original.definition.identifier);
     expect(copy.definition.metadata?.artifact.publicationStatus).toBe('bibo:draft');
-    expect(copy.placement.deploymentName).toBe('Element 2');
+    expect(copy.placement.deploymentName).toBe('element_2');
     const copiedField = copy.definition.children[0];
     if (copiedField.kind !== 'field') throw new Error('Expected field');
     expect(copiedField.definition.atId).not.toBe(field.atId);
@@ -385,7 +386,7 @@ describe('default editing', () => {
     expect(copiedField.placement.propertyIri).not.toBe(field.propertyIri);
   });
   it('rejects invalid element cardinality without modifying the document', () => {
-    service.addElement();
+    service.updateContainerDefinition(service.addElement(), { name: 'Element' });
     const node = service.children().find((child) => child.kind === 'element')!;
     const before = service.templateJson();
     expect(
@@ -394,7 +395,7 @@ describe('default editing', () => {
     expect(service.templateJson()).toEqual(before);
   });
   it('inserts an imported element into the captured parent even after navigation', () => {
-    service.addElement();
+    service.updateContainerDefinition(service.addElement(), { name: 'Element' });
     const parent = service.children().find((node) => node.kind === 'element')!;
     if (parent.kind !== 'element') throw new Error('Expected element');
     const source = templateToJson(buildContainer(parent.definition));
@@ -416,10 +417,10 @@ describe('default editing', () => {
     expect(service.templateJson()).toEqual(before);
   });
   it('rejects property-name collisions between fields and elements', () => {
-    service.addElement();
+    service.updateContainerDefinition(service.addElement(), { name: 'Element' });
     const before = service.templateJson();
     const field = service.fields()[0];
-    expect(service.updateFieldSettings(field.id, { deploymentName: 'Element' })).toMatch(/property name/);
+    expect(service.updateFieldSettings(field.id, { deploymentName: 'element' })).toMatch(/key/);
     expect(service.templateJson()).toEqual(before);
   });
 });

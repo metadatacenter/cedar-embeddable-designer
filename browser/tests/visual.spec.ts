@@ -67,17 +67,6 @@ const SHOT = {
 } as const;
 
 /**
- * The version stamp in the header, which no baseline can hold.
- *
- * It comes from package.json and therefore changes on every dev build, so left
- * visible every shot showing the header would go red for a reason no diff image could
- * tell apart from a real one — which is exactly what teaches people to reach for
- * --update-snapshots. CEE hides its own version stamp for the same reason. Masked
- * rather than hidden, so the header keeps the space it occupies.
- */
-const maskVersion = (page: Page) => [page.locator(DESIGNER).locator('.ced-version')];
-
-/**
  * A designer holding one card of each named type, and nothing else.
  *
  * The three starting fields are removed first, so each group's photograph is of that
@@ -102,10 +91,11 @@ async function designerShowing(
 
   for (const label of labels) {
     await designer
-      .getByRole('button', { name: /Add Child/ })
+      .getByRole('button', { name: /^Add field$/ })
       .first()
       .click();
     await designer.getByRole('button', { name: label, exact: true }).click();
+    await designer.locator('input[aria-label="Field name"]:focus').fill(label);
   }
   await expect.poll(async () => starting.count(), { timeout: 15_000 }).toBe(labels.length);
   // Field insertion scrolls the designer's own viewport. Reset that viewport,
@@ -125,7 +115,10 @@ test.describe('the designer', () => {
   for (const [group, labels] of Object.entries(GROUPS)) {
     test(`shows ${group} fields`, async ({ page }) => {
       const designer = await designerShowing(page, labels);
-      await expect(designer).toHaveScreenshot(`${group}.png`, { ...SHOT, mask: maskVersion(page) });
+      await expect(designer).toHaveScreenshot(`${group}.png`, {
+        ...SHOT,
+        mask: [designer.locator('.designer-identity__version')],
+      });
     });
   }
 
@@ -137,14 +130,17 @@ test.describe('the designer', () => {
   for (const preset of ['basic', 'semantic', 'modular'] as const) {
     test(`shows a text field under the ${preset} profile`, async ({ page }) => {
       const designer = await designerShowing(page, ['Text'], preset);
-      await expect(designer).toHaveScreenshot(`profile-${preset}.png`, { ...SHOT, mask: maskVersion(page) });
+      await expect(designer).toHaveScreenshot(`profile-${preset}.png`, {
+        ...SHOT,
+        mask: [designer.locator('.designer-identity__version')],
+      });
     });
   }
 
   test('shows the field type palette', async ({ page }) => {
     const designer = await designerShowing(page, ['Text']);
     await designer
-      .getByRole('button', { name: /Add Child/ })
+      .getByRole('button', { name: /^Add field$/ })
       .first()
       .click();
     const picker = designer.locator('app-field-type-picker');
@@ -158,6 +154,14 @@ test.describe('the designer', () => {
    * and the only shot where the settings panels are visible at all.
    */
   test('shows a text field with metadata settings expanded', async ({ page }) => {
+    // Masking metadata hides pixels, but random UUID glyph widths can still wrap
+    // its IRI onto another line and change the height of the whole card.
+    await page.addInitScript(() => {
+      let sequence = 0;
+      Object.defineProperty(crypto, 'randomUUID', {
+        value: () => `00000000-0000-4000-8000-${String(++sequence).padStart(12, '0')}`,
+      });
+    });
     const designer = await designerShowing(page, ['Text']);
     const card = designer.locator('[id^=field-card-]').first();
     await openSettings(card, 'Field metadata');
@@ -165,7 +169,7 @@ test.describe('the designer', () => {
     await expect(card).toHaveScreenshot('card-expanded.png', {
       ...SHOT,
       // Field identities and provenance vary between runs.
-      mask: [card.locator('dl.identity')],
+      mask: [card.locator('dl.identity dd:not(:first-of-type)')],
     });
   });
 
@@ -173,7 +177,10 @@ test.describe('the designer', () => {
     await page.setViewportSize({ width: 768, height: 900 });
     const designer = await designerShowing(page, GROUPS['simple-inputs']);
 
-    await expect(designer).toHaveScreenshot('narrow.png', { ...SHOT, mask: maskVersion(page) });
+    await expect(designer).toHaveScreenshot('narrow.png', {
+      ...SHOT,
+      mask: [designer.locator('.designer-identity__version')],
+    });
   });
   for (const width of [1280, 375]) {
     test(`shows inline elements expanded and collapsed at ${width}`, async ({ page }) => {
@@ -182,8 +189,8 @@ test.describe('the designer', () => {
       await applyPreset(page, 'modular');
       await addElementFixture(page, designer);
       const element = designer.locator('app-container-editor').nth(1);
-      await element.getByPlaceholder('Element name').fill('Study details');
-      await nestFixtureFields(page, ['Element']);
+      await element.getByPlaceholder('Enter element name').fill('Study details');
+      await nestFixtureFields(page, ['element']);
       await expect(element.locator('app-field-card')).toHaveCount(1);
       await page.mouse.move(0, 0);
       await expect(element).toHaveScreenshot(`element-expanded-${width}.png`, SHOT);
@@ -193,7 +200,51 @@ test.describe('the designer', () => {
       await expect(element).toHaveScreenshot(`element-settings-${width}.png`, SHOT);
       await settings.getByRole('button', { name: 'Collapse element settings', exact: true }).click();
       await element.locator(':scope > .template-header-card .element-toggle').click();
+      await page.mouse.move(0, 0);
       await expect(element).toHaveScreenshot(`element-collapsed-${width}.png`, SHOT);
     });
   }
+});
+
+test('an unnamed field is quiet until the author leaves its name empty', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await designer.getByRole('textbox', { name: 'Template name', exact: true }).fill('Study');
+  await designer.getByRole('button', { name: 'Add field', exact: true }).first().click();
+  await designer.getByRole('button', { name: 'Text', exact: true }).click();
+  const name = designer.locator('input[aria-label="Field name"]:focus');
+  await expect(name).toHaveValue('');
+  const card = name.locator('xpath=ancestor::app-field-card');
+  await page.mouse.move(0, 0);
+  await expect(card).toHaveScreenshot('unnamed-field-editing.png', SHOT);
+  await name.blur();
+  const added = designer.locator('app-field-card').filter({ hasText: 'Field name is required.' });
+  await expect(added).toHaveScreenshot('unnamed-field-required.png', SHOT);
+  const summary = designer.locator('.validation-summary');
+  await summary.locator('summary').click();
+  await expect(summary).toHaveScreenshot('validation-summary-expanded.png', SHOT);
+});
+
+test('an inactive settings tab still shows its error', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await designer.getByLabel('Template name', { exact: true }).fill('Study');
+  const card = designer.locator('app-field-card').first();
+  await card.getByLabel('Allow multiple', { exact: true }).check();
+  const panel = await openSettings(card, 'Occurrences');
+  await panel.getByLabel('Minimum', { exact: true }).fill('2');
+  await panel.getByLabel('Maximum', { exact: true }).fill('1');
+  await card.getByRole('tab', { name: 'Display', exact: true }).click();
+  await page.mouse.move(0, 0);
+  await expect(card).toHaveScreenshot('inactive-tab-error.png', SHOT);
+});
+
+test('element deletion confirmation uses the shared dialog actions', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await designer.getByRole('button', { name: 'Basic', exact: true }).click();
+  await designer.getByRole('button', { name: /Modular/ }).click();
+  await addElementFixture(page);
+  await nestFixtureFields(page, ['element']);
+  await designer.getByRole('button', { name: 'Delete element Element', exact: true }).click();
+  const dialog = designer.getByRole('dialog', { name: 'Delete element?' });
+  await expect(dialog.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
+  await expect(dialog).toHaveScreenshot('delete-element.png', SHOT);
 });

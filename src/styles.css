@@ -8,6 +8,7 @@
   element, outside it.
 */
 @import '@org.metadatacenter/cedar-design-tokens/custom-properties.css';
+@import '@org.metadatacenter/cedar-design-tokens/motion.css';
 @source "./app/**/*.{html,ts}";
 
 @theme inline {
@@ -66,23 +67,10 @@
   --color-input-background: var(--input-background);
   --color-switch-background: var(--switch-background);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 /*
@@ -119,17 +107,11 @@
     Tailwind's own scale is in rem, so these override it through the `@theme`
     block below rather than sitting beside it.
 
-    Five steps, and they are CEE's: 12px small, 14px body, 15px lead, 18px for a
-    nested element's heading and 20px above it. The designer once ran a step
-    below them — 11px controls under 10px labels — and the seam showed wherever
-    the two met, most plainly around an embedded `<cedar-embeddable-term-picker>`
-    whose own text is CEE's 14px. `--text-xs` and `--text-sm` therefore name one
-    size: the step below the body is 12px, and there is nothing under it. A size
-    that is not prose is not on this scale — the count badge in its pill and the
-    Material icons are glyphs, and they keep their own.
+    Authoring text uses the shared 14px body size, including legacy small-text
+    utilities. Secondary metadata opts into the shared small token explicitly.
   */
-  --text-xs: var(--cedar-font-size-small);
-  --text-sm: var(--cedar-font-size-small);
+  --text-xs: var(--cedar-font-size);
+  --text-sm: var(--cedar-font-size);
   --text-base: var(--cedar-font-size);
   --text-lg: var(--cedar-font-size-lead);
   --text-xl: var(--cedar-font-size-element-heading);
@@ -176,20 +158,20 @@
   --popover-foreground: var(--cedar-text-primary);
   --primary: var(--cedar-primary-500);
   --primary-foreground: #ffffff;
-  --secondary: var(--cedar-surface-tinted);
-  --secondary-foreground: var(--cedar-heading);
+  --secondary: var(--cedar-surface-selected);
+  --secondary-foreground: var(--cedar-color-component-title);
   --muted: var(--cedar-surface-panel);
   --muted-foreground: var(--cedar-text-muted);
-  --accent: var(--cedar-surface-tinted);
-  --accent-foreground: var(--cedar-heading);
-  --destructive: var(--cedar-warn);
+  --accent: var(--cedar-surface-selected);
+  --accent-foreground: var(--cedar-color-component-title);
+  --destructive: var(--cedar-color-warn);
   --destructive-foreground: #ffffff;
   --border: var(--cedar-border-rule);
   --input: transparent;
   --input-background: var(--cedar-surface-panel);
   --switch-background: #cbced4;
   --ring: var(--cedar-primary-300);
-  --radius: 4px;
+  --radius: var(--cedar-control-radius-default);
 }
 
 @layer base {
@@ -233,7 +215,7 @@
 
   label {
     font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
+    font-weight: var(--font-weight-normal);
     line-height: 1.5;
   }
 
@@ -334,7 +316,7 @@
 }
 
 .animate-fade-in {
-  animation: fade-in 0.2s ease-out;
+  animation: fade-in var(--cedar-motion-duration-normal) var(--cedar-motion-ease-enter);
 }
 
 @keyframes backdrop-fade-in {
@@ -347,7 +329,7 @@
 }
 
 .animate-backdrop-fade-in {
-  animation: backdrop-fade-in 0.15s ease-out;
+  animation: backdrop-fade-in var(--cedar-motion-duration-fast) var(--cedar-motion-ease-standard);
 }
 
 @keyframes modal-fade-in {
@@ -362,7 +344,7 @@
 }
 
 .animate-modal-fade-in {
-  animation: modal-fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: modal-fade-in var(--cedar-motion-duration-normal) var(--cedar-motion-ease-enter);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -382,4 +364,62 @@
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #d1d5db;
+}
+
+/* Shared focus geometry also covers toolbar and dialog actions. */
+button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: var(--cedar-focus-ring-width) solid var(--cedar-control-focus, var(--cedar-focus-ring-color));
+  outline-offset: var(--cedar-focus-ring-offset);
+}
+
+input[aria-invalid='true'],
+select[aria-invalid='true'],
+textarea[aria-invalid='true'] {
+  border-color: var(--cedar-control-error, var(--cedar-control-invalid-border));
+}
+input[readonly],
+textarea[readonly] {
+  background: var(--cedar-control-readonly-surface);
+}
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: var(--cedar-control-disabled-opacity);
+}
+
+.cedar-modal-backdrop {
+  background: var(--cedar-dialog-backdrop);
+}
+.cedar-modal-surface {
+  background: var(--cedar-overlay-surface);
+  border: 1px solid var(--cedar-overlay-border);
+  border-radius: var(--cedar-dialog-radius);
+  box-shadow: var(--cedar-dialog-shadow);
+}
+
+.cedar-modal-backdrop,
+.cedar-modal-surface {
+  z-index: var(--cedar-layer-modal);
+}
+
+/* Manual field resizing is forbidden; automatic content sizing remains available. */
+textarea {
+  resize: none;
+}
+
+/* Inline authoring actions share typography, independent of the surrounding panel. */
+.ced-text-action {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: var(--cedar-primary-700);
+  font-family: inherit;
+  font-size: var(--cedar-control-font-size, var(--cedar-font-size));
+  font-weight: var(--cedar-font-weight-regular, 400);
+  line-height: var(--cedar-control-line-height, var(--cedar-control-line-height-default));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
 }

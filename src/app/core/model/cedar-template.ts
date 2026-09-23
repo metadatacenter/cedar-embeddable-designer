@@ -1,3 +1,4 @@
+import { AttributeValueNamePolicy } from 'cedar-model-typescript-library';
 import { temporalDefaultError } from './field-default';
 import {
   ContainerDraft,
@@ -536,18 +537,15 @@ function validateNumericSettings(field: Field): void {
     if (range) {
       if (!Number.isInteger(value)) throw new Error(`${label} cannot have decimal places for ${typeLabel}.`);
       if (value < range[0] || value > range[1]) {
-        const limit = type === 'xsd:long' ? 'supported long range' : `${typeLabel} range`;
-        throw new Error(`${label} must be between ${range[0]} and ${range[1]} (${limit}).`);
+        throw new Error(`Value must be between ${range[0]} and ${range[1]}.`);
       }
     }
     if (type === 'xsd:float') {
       const magnitude = Math.abs(value);
       if (magnitude > 3.4028234663852886e38)
-        throw new Error(`${label} must be between -3.4028234663852886e38 and 3.4028234663852886e38 (float range).`);
+        throw new Error('Value must be between -3.4028234663852886e38 and 3.4028234663852886e38.');
       if (magnitude !== 0 && magnitude < 1.401298464324817e-45)
-        throw new Error(
-          `${label} is too close to zero for the float range. Use 0 or a number at least 1.401298464324817e-45 away from zero.`,
-        );
+        throw new Error('Value is too close to zero. Use 0 or a number at least 1.401298464324817e-45 away from zero.');
     }
   }
   if (min !== null && max !== null && min > max) throw new Error('Minimum must not be greater than maximum.');
@@ -628,16 +626,21 @@ export function contentKindOf(paletteType: string): 'markup' | 'url' | 'videoId'
  * numeric suffix: the serializer used the raw name and two fields called "Title"
  * silently became one.
  */
-function deploymentKeys(fields: Field[]): string[] {
+export function deploymentKeys(fields: Pick<Field, 'name' | 'deploymentName'>[]): string[] {
   const used = new Set<string>();
+  for (const field of fields) {
+    if (field.deploymentName === undefined) continue;
+    const key = field.deploymentName;
+    if (!key.trim()) throw new Error('Key is required.');
+    if (used.has(key)) throw new Error('Another child in this container already uses that key.');
+    used.add(key);
+  }
   return fields.map((field, index) => {
-    const base = field.deploymentName ?? (field.name.trim() || `field_${index + 1}`);
+    if (field.deploymentName !== undefined) return field.deploymentName;
+    const base = field.name.trim() || `field_${index + 1}`;
     let key = base;
     let suffix = 2;
-    while (used.has(key)) {
-      key = `${base} ${suffix}`;
-      suffix += 1;
-    }
+    while (used.has(key)) key = `${base} ${suffix++}`;
     used.add(key);
     return key;
   });
@@ -855,13 +858,7 @@ function buildField(field: Field): TemplateField {
     .withAlternateLabels(field.alternateLabels?.length ? field.alternateLabels : null)
     .withSchemaIdentifier(field.schemaIdentifier || null)
     .withSchemaName(field.name)
-    /*
-     * Null rather than an empty string when there is no help text. The two mean
-     * the same thing, but only one survives both serializations: the YAML writer
-     * omits an empty description and the YAML reader returns null for a missing
-     * one, so writing `''` made a template read back differently depending on
-     * which format it had been written in.
-     */
+    // Let the installed model supply its canonical default for an absent description.
     .withSchemaDescription(field.helpText || null)
     .withSchemaVersion(SchemaVersion.CURRENT)
     .withStatus(BiboStatus.DRAFT);
@@ -879,7 +876,7 @@ function buildField(field: Field): TemplateField {
       [minLength, maxLength].some((n) => n !== null && (!Number.isInteger(n) || n < 0)) ||
       (minLength !== null && maxLength !== null && minLength > maxLength)
     ) {
-      throw new Error('Text lengths must be nonnegative whole numbers, with minimum no greater than maximum.');
+      throw new Error('Text lengths must be nonnegative numbers, with minimum no greater than maximum.');
     }
     const pattern = accepts(field.type, 'textPattern') && regex ? new RegExp(regex) : null;
     if (field.defaultValue.kind === 'literal') {
@@ -915,7 +912,7 @@ function buildField(field: Field): TemplateField {
   if (accepts(field.type, 'mediaDimensions')) {
     for (const dimension of [field.width, field.height]) {
       if (dimension != null && (!Number.isInteger(dimension) || dimension <= 0))
-        throw new Error('Media dimensions must be positive whole numbers.');
+        throw new Error('Media dimensions must be positive numbers.');
     }
     (builder as StaticImageFieldBuilder | StaticYoutubeFieldBuilder)
       .withWidth(field.width ?? null)
@@ -1037,13 +1034,6 @@ function buildContainerArtifact(
     .withTitle(derivedTitle(state.name, kind))
     .withDescription(derivedDescription(state.name, kind))
     .withSchemaName(state.name)
-    /*
-     * Null rather than an empty string, for the reason the field description is:
-     * the YAML writer omits an empty description and the YAML reader returns null
-     * for a missing one, so a template with no description read back differently
-     * depending on which format it had been written in. Fields were fixed when the
-     * library took over serialization; the template's own description was not.
-     */
     .withSchemaDescription(state.description || null)
     .withSchemaVersion(SchemaVersion.CURRENT)
     .withVersion(state.version || '0.0.1')
@@ -1061,7 +1051,7 @@ function buildContainerArtifact(
     const deployment = built
       .createDeploymentBuilder(keys[index])
       .withLabel(field.displayLabel ?? (field.artifact ? null : field.name))
-      .withDescription(field.displayDescription ?? (field.artifact ? null : field.helpText || null));
+      .withDescription(field.displayDescription ?? (field.artifact ? null : built.schema_description));
 
     /*
      * A static field's deployment builder does not extend the dynamic one, so it has no property
@@ -1730,4 +1720,8 @@ export function containerPreview(draft: ContainerDraft): Template {
     .withStatus(BiboStatus.DRAFT)
     .addChild(model, model.createDeploymentBuilder(draft.name || 'Element').build())
     .build();
+}
+
+export function isReservedInstanceName(name: string): boolean {
+  return AttributeValueNamePolicy.isReserved(name);
 }

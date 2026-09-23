@@ -29,6 +29,15 @@ createServer(async (request, response) => {
   const path = normalize(decodeURIComponent(new URL(request.url, 'http://localhost').pathname));
   const file = path === '/' ? 'host.html' : path.replace(/^\/+/, '');
 
+  if (file === 'design-tokens.css') {
+    const body = await readFile(
+      new URL('../node_modules/@org.metadatacenter/cedar-design-tokens/dist/custom-properties.css', import.meta.url),
+    );
+    response.writeHead(200, { 'Content-Type': types['.css'], 'Cache-Control': 'no-store' });
+    response.end(body);
+    return;
+  }
+
   // Fixtures first, then the distribution, so a host page can sit beside the
   // bundle it loads without either directory being copied into the other.
   for (const root of [FIXTURES, BUNDLE]) {

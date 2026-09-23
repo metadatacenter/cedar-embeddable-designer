@@ -1,6 +1,20 @@
 {
   "schema": 1,
   "findings": {
+    "0058f4f4596dc25d64c6": {
+      "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
+      "rule": "spacing",
+      "property": "padding",
+      "value": "0 3px",
+      "count": 1
+    },
+    "02a52e9880a4a6736a37": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "rounded-full",
+      "count": 1
+    },
     "02bcc7a24429a8b9491f": {
       "file": "src/app/features/field-designer/field-designer.component.scss",
       "rule": "spacing",
@@ -22,6 +36,41 @@
       "value": "10px 0",
       "count": 2
     },
+    "04e6cb4852e94a6c92ea": {
+      "file": "src/app/features/property-picker/property-picker.component.ts",
+      "rule": "spacing",
+      "property": "padding",
+      "value": "3px 6px",
+      "count": 1
+    },
+    "05d096fa81ead04c92f0": {
+      "file": "src/app/features/language-selector/language-selector.component.ts",
+      "rule": "spacing",
+      "property": "gap",
+      "value": "4px",
+      "count": 1
+    },
+    "06886ec67196cf781969": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "spacing",
+      "property": "padding",
+      "value": "1.5rem",
+      "count": 1
+    },
+    "07bd89eea8132e549884": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "border-gray-200",
+      "count": 2
+    },
+    "08bc44ac709bbcc7f17f": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "spacing",
+      "property": "margin",
+      "value": "3px 0 0",
+      "count": 1
+    },
     "09a9ba2602b5700151d4": {
       "file": "src/app/features/field-type-picker/field-type-picker.component.scss",
       "rule": "color",
@@ -34,6 +83,20 @@
       "rule": "spacing",
       "property": "padding",
       "value": "1rem",
+      "count": 1
+    },
+    "0b59a0b3cafe4492f023": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "font-medium",
+      "count": 15
+    },
+    "0b799b913931045577b8": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "rounded-full",
       "count": 1
     },
     "0bae82e539be23764749": {
@@ -57,12 +120,12 @@
       "value": "#f9fafb",
       "count": 4
     },
-    "0e504516b4bf1da1354b": {
-      "file": "src/app/features/container-editor/container-editor.component.scss",
-      "rule": "typography",
-      "property": "line-height",
-      "value": "16px",
-      "count": 2
+    "0d6738fa8297eeb3aeb7": {
+      "file": "src/app/features/property-picker/property-picker.component.ts",
+      "rule": "geometry",
+      "property": "border-radius",
+      "value": "2px",
+      "count": 1
     },
     "0e7bb7e7a5dfc92a50d2": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
@@ -71,6 +134,48 @@
       "value": "1px solid #d1d5db",
       "count": 1
     },
+    "0eedc9f4c90de4d0632c": {
+      "file": "src/app/features/controlled-term-config/controlled-term-config.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "bg-black/40",
+      "count": 1
+    },
+    "0eef15ef04d1b604cea3": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "rounded-full",
+      "count": 1
+    },
+    "11081b8960d773403234": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "gap-2",
+      "count": 1
+    },
+    "11b14262799a1573bff2": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "color",
+      "property": "color",
+      "value": "#4b5563",
+      "count": 1
+    },
+    "11bd20e67a7bfe495334": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "z-10",
+      "count": 2
+    },
+    "11d1069a6dc4ad19f194": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "py-2",
+      "count": 2
+    },
     "1257eedae8fac66e9b10": {
       "file": "src/app/shared/_code-highlight.scss",
       "rule": "color",
@@ -78,12 +183,54 @@
       "value": "#8b949e",
       "count": 3
     },
-    "165b3b70485e96678d43": {
-      "file": "src/app/app.component.scss",
-      "rule": "color",
-      "property": "background",
-      "value": "#fff4f2",
+    "126a459640c5a9d3b62e": {
+      "file": "src/app/features/container-editor/container-editor.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "font-medium",
+      "count": 3
+    },
+    "1378d75d59f77450cefa": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "hover:text-gray-900",
       "count": 1
+    },
+    "13e6f6d9ae28b126d4fb": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "border-b-2",
+      "count": 1
+    },
+    "141531cb6a5aab9a9a23": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-xs",
+      "count": 4
+    },
+    "1470ea1325eee72d6cf2": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "space-y-6",
+      "count": 1
+    },
+    "155cb65ee2a9e6ee57e4": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "shadow-xs",
+      "count": 1
+    },
+    "167ffe15639811d6cf4e": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "border-gray-300",
+      "count": 2
     },
     "168b59559d2344497422": {
       "file": "src/app/features/annotations-editor/annotations-editor.component.scss",
@@ -92,18 +239,32 @@
       "value": "var(--cedar-space-1) 6px",
       "count": 1
     },
+    "1718fca8dabc8b5fe0e0": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-sm",
+      "count": 3
+    },
+    "17fe69cf2070fe2a24ce": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "spacing",
+      "property": "gap",
+      "value": "8px",
+      "count": 1
+    },
+    "182cbb77006c0f62f6fe": {
+      "file": "src/app/features/container-editor/container-editor.component.html",
+      "rule": "dynamic-style",
+      "property": "background-color",
+      "value": "uninspectable-binding",
+      "count": 1
+    },
     "18c6037676f65164e368": {
       "file": "src/app/features/field-designer/field-designer.component.scss",
       "rule": "color",
       "property": "color",
       "value": "#0b6570",
-      "count": 1
-    },
-    "18e6fc942dbc4ff410d7": {
-      "file": "src/app/features/field-default-value/field-default-value.component.scss",
-      "rule": "typography",
-      "property": "font-size",
-      "value": "20px",
       "count": 1
     },
     "195aa9462875b5b6c166": {
@@ -127,6 +288,13 @@
       "value": "2px",
       "count": 1
     },
+    "1a326b2b99bddb03642e": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "py-2",
+      "count": 1
+    },
     "1b19fbfc9a0599fd794a": {
       "file": "src/app/features/field-designer/field-designer.component.scss",
       "rule": "color",
@@ -148,18 +316,25 @@
       "value": "3px var(--cedar-space-2)",
       "count": 1
     },
-    "1fcb697fc9e5109c5e70": {
-      "file": "src/app/shared/_field-error.scss",
-      "rule": "typography",
-      "property": "line-height",
-      "value": "1.3",
-      "count": 2
+    "1e9008095efeed00c83a": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "p-4",
+      "count": 3
     },
-    "22f3de528764945fcb69": {
-      "file": "src/app/features/annotations-editor/annotations-editor.component.scss",
-      "rule": "geometry",
-      "property": "min-height",
-      "value": "28px",
+    "1f41df56fa729191ce14": {
+      "file": "src/app/features/container-editor/container-editor.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-gray-600",
+      "count": 1
+    },
+    "212e0b83e5cc2f149d51": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "py-1",
       "count": 2
     },
     "23a510a7a1f7daf60235": {
@@ -190,11 +365,25 @@
       "value": "#64748b",
       "count": 1
     },
+    "25354506107dc681a32b": {
+      "file": "src/app/features/controlled-term-config/controlled-term-config.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "z-50",
+      "count": 1
+    },
     "257166e4b58e796054f1": {
       "file": "src/app/features/field-designer/field-designer.component.scss",
       "rule": "spacing",
       "property": "margin",
       "value": "2px",
+      "count": 1
+    },
+    "25f18d0b3eb7af85b3d3": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "spacing",
+      "property": "gap",
+      "value": "12px",
       "count": 1
     },
     "2618584b089ce8f7cb1d": {
@@ -204,6 +393,34 @@
       "value": "0.5rem",
       "count": 2
     },
+    "268117fbaa68f880ebc0": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-left",
+      "count": 3
+    },
+    "26df980f8ce4f59d5183": {
+      "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
+      "rule": "geometry",
+      "property": "z-index",
+      "value": "30",
+      "count": 1
+    },
+    "270069a6ff35d4eb8c05": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "border-t",
+      "count": 7
+    },
+    "2750d50a09ee7bffc110": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "p-1",
+      "count": 1
+    },
     "283cea65b1fb024c3470": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
       "rule": "color",
@@ -211,19 +428,33 @@
       "value": "1px solid #e5e7eb",
       "count": 6
     },
-    "29f79a7398dcd134d6de": {
-      "file": "src/app/features/child-picker/child-picker.component.scss",
-      "rule": "color",
-      "property": "border",
-      "value": "1px solid var(--cedar-neutral-200, #ddd)",
+    "2855734c4d8b92ce3095": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "px-4",
       "count": 1
     },
-    "2a0bcf58eb985d2ca637": {
-      "file": "src/app/shared/_control-style.scss",
-      "rule": "color",
-      "property": "background",
-      "value": "white",
-      "count": 1
+    "296182286cea3b337de5": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "hover:bg-gray-50",
+      "count": 2
+    },
+    "29bc6c68ef8220f7fc65": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "hover:bg-gray-100",
+      "count": 2
+    },
+    "29db538aaf7c2eb96e79": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-xs",
+      "count": 3
     },
     "2aef1ac82bafc5c0a9ce": {
       "file": "src/app/features/field-designer/field-designer.component.scss",
@@ -237,13 +468,6 @@
       "rule": "spacing",
       "property": "margin",
       "value": "var(--cedar-space-4) 0 2px",
-      "count": 1
-    },
-    "2b25f7b64922c4366798": {
-      "file": "src/app/features/field-card/field-card.component.scss",
-      "rule": "spacing",
-      "property": "padding",
-      "value": "6px var(--cedar-space-4) 0",
       "count": 1
     },
     "2c023eeb849831dec6f3": {
@@ -260,6 +484,34 @@
       "value": "1px solid #b8cdcf",
       "count": 1
     },
+    "2eacdeef533b147c98a6": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "color",
+      "property": "border",
+      "value": "1px solid #ccc",
+      "count": 1
+    },
+    "2f8f733c2a7815f5cad3": {
+      "file": "src/app/features/field-type-picker/field-type-picker.component.scss",
+      "rule": "geometry",
+      "property": "z-index",
+      "value": "20",
+      "count": 1
+    },
+    "2f941cabbce8bef65d82": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "border-b",
+      "count": 1
+    },
+    "2f9d0d4c0ccb6450ab1a": {
+      "file": "src/app/features/container-settings/container-settings.component.ts",
+      "rule": "spacing",
+      "property": "gap",
+      "value": "6px",
+      "count": 1
+    },
     "2fc5cf6f13b83646f665": {
       "file": "src/app/features/modals/preferences/preferences.component.scss",
       "rule": "color",
@@ -267,12 +519,12 @@
       "value": "#fafafa",
       "count": 1
     },
-    "30385689c863daea704e": {
-      "file": "src/app/features/child-picker/child-picker.component.scss",
+    "3031cbca8d11cffc1edb": {
+      "file": "src/app/features/property-picker/property-picker.component.ts",
       "rule": "color",
-      "property": "background",
-      "value": "white",
-      "count": 2
+      "property": "color",
+      "value": "#4b5563",
+      "count": 1
     },
     "304aeb4d62f704889f9c": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
@@ -288,12 +540,33 @@
       "value": "#9ca3af",
       "count": 2
     },
+    "317ebc81ad1ec863e8b9": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "pl-5",
+      "count": 1
+    },
     "3185696304d11999af15": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
       "rule": "color",
       "property": "background-color",
       "value": "#ffffff",
       "count": 1
+    },
+    "31d33ecfba3ce14809bd": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "rounded-lg",
+      "count": 4
+    },
+    "335754088b099ec65a0c": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-sm",
+      "count": 11
     },
     "3378fe0a0e805fd8f6fc": {
       "file": "src/app/shared/_code-highlight.scss",
@@ -309,11 +582,32 @@
       "value": "#f5f7f7",
       "count": 1
     },
+    "34a9a90a54db08c519d1": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "border-0",
+      "count": 2
+    },
+    "3530bd82dd5b8b0453fd": {
+      "file": "src/app/features/property-picker/property-picker.component.ts",
+      "rule": "color",
+      "property": "color",
+      "value": "#317c85",
+      "count": 1
+    },
     "35b54492847861dc840c": {
       "file": "src/app/features/field-designer/field-designer.component.scss",
       "rule": "color",
       "property": "border-bottom",
       "value": "1px solid #e1e6e5",
+      "count": 1
+    },
+    "3622b35eafaa4786a16f": {
+      "file": "src/app/features/manual-iri/manual-iri.component.ts",
+      "rule": "spacing",
+      "property": "margin-top",
+      "value": "8px",
       "count": 1
     },
     "36cc4962592554e7a6a3": {
@@ -351,11 +645,11 @@
       "value": "0.375rem 0.75rem",
       "count": 1
     },
-    "3a0ddffa6a32f392f1bd": {
-      "file": "src/app/features/controlled-term-config/controlled-term-config.component.scss",
-      "rule": "spacing",
-      "property": "padding",
-      "value": "6px var(--cedar-space-2)",
+    "3a2403c81dd8595e4fc1": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "group-hover:text-gray-900",
       "count": 1
     },
     "3a2996145ba01ca4fb05": {
@@ -379,6 +673,13 @@
       "value": "3px",
       "count": 2
     },
+    "3bf6405d7b6cca68f6c6": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-gray-900",
+      "count": 10
+    },
     "3c632bf885c0cf51587c": {
       "file": "src/app/features/field-type-picker/field-type-picker.component.scss",
       "rule": "spacing",
@@ -386,11 +687,39 @@
       "value": "2px",
       "count": 1
     },
+    "3c8f27375ce269e48e5d": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "hover:shadow-md",
+      "count": 1
+    },
+    "3cd1fb4948900e935c98": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "h-7",
+      "count": 1
+    },
     "3d7b977f529f78db3e59": {
       "file": "src/app/features/field-type-picker/field-type-picker.component.scss",
       "rule": "color",
       "property": "box-shadow",
       "value": "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+      "count": 1
+    },
+    "3e2d121ef19ebd7d2f2c": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "mb-6",
+      "count": 1
+    },
+    "3f264d923175cc10b439": {
+      "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
+      "rule": "geometry",
+      "property": "height",
+      "value": "22px",
       "count": 1
     },
     "3fe85e2f15849d3445a2": {
@@ -414,11 +743,88 @@
       "value": "5px",
       "count": 1
     },
+    "41048e6128c226d8d5f3": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "bg-transparent",
+      "count": 5
+    },
+    "41860af2c34b53ec7ae0": {
+      "file": "src/app/features/manual-iri/manual-iri.component.ts",
+      "rule": "color",
+      "property": "color",
+      "value": "#b42318",
+      "count": 1
+    },
+    "431a8bbd1072ce18f7fd": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-sm",
+      "count": 10
+    },
+    "43c0a7dd339af4f72760": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "hover:shadow-md",
+      "count": 1
+    },
+    "442ff2bdf5d6fe200f40": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "z-10",
+      "count": 2
+    },
+    "44785d4057ceb55dcf94": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "border-gray-300",
+      "count": 1
+    },
+    "44ea72b5a5bc0de16938": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-gray-700",
+      "count": 6
+    },
+    "4521fead5e6fafa908e8": {
+      "file": "src/app/features/element-labels/element-labels.component.ts",
+      "rule": "spacing",
+      "property": "margin-top",
+      "value": "8px",
+      "count": 1
+    },
+    "4541b08fe1625a10690a": {
+      "file": "src/app/features/field-default-value/field-default-value.component.scss",
+      "rule": "geometry",
+      "property": "z-index",
+      "value": "50",
+      "count": 1
+    },
     "4646e962ff9a84b10eba": {
       "file": "src/styles.css",
       "rule": "color",
       "property": "background",
       "value": "#fafafa",
+      "count": 1
+    },
+    "469b0f8224f613880369": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "py-0.5",
+      "count": 1
+    },
+    "46ccc7760574252467ba": {
+      "file": "src/app/features/property-picker/property-picker.component.ts",
+      "rule": "spacing",
+      "property": "padding",
+      "value": "0.75rem",
       "count": 1
     },
     "4714c3dbc7af7d7d0347": {
@@ -449,11 +855,11 @@
       "value": "#f3f4f6",
       "count": 1
     },
-    "4a2ec852fb40097a7c3f": {
-      "file": "src/app/features/container-editor/container-editor.component.scss",
-      "rule": "typography",
-      "property": "line-height",
-      "value": "20px",
+    "49c36e298c1ad9f268ef": {
+      "file": "src/app/features/manual-iri/manual-iri.component.ts",
+      "rule": "spacing",
+      "property": "gap",
+      "value": "8px",
       "count": 1
     },
     "4b268602800460668e6b": {
@@ -463,6 +869,13 @@
       "value": "6px var(--cedar-space-3)",
       "count": 1
     },
+    "4b706317e5bdc81be9e3": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-gray-400",
+      "count": 1
+    },
     "4b86efb75115d5920be9": {
       "file": "src/app/features/alternate-questions/alternate-questions.component.scss",
       "rule": "geometry",
@@ -470,11 +883,18 @@
       "value": "3px",
       "count": 1
     },
-    "4c05ab8ad793d3e26891": {
-      "file": "src/app/features/field-card/field-card.component.scss",
-      "rule": "color",
-      "property": "color",
-      "value": "#9ca3af",
+    "4c6d3afe518ca558b199": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "hover:bg-gray-100/80",
+      "count": 1
+    },
+    "4cbc9485e82ad3566658": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "pb-0.5",
       "count": 1
     },
     "4d7722e7723d87e55a5a": {
@@ -484,6 +904,13 @@
       "value": "36px",
       "count": 1
     },
+    "4e2f804a7a975d203ed7": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "h-10",
+      "count": 1
+    },
     "4e6bfccaabd03a7e395d": {
       "file": "src/app/features/modals/preset-definitions/preset-definitions.component.scss",
       "rule": "color",
@@ -491,12 +918,12 @@
       "value": "#fafafa",
       "count": 1
     },
-    "4e7b9da1bf81b1d3f8db": {
-      "file": "src/app/features/controlled-term-config/controlled-term-config.component.scss",
-      "rule": "color",
-      "property": "color",
-      "value": "#317c85",
-      "count": 1
+    "500913018ca7f5065f6d": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "p-0",
+      "count": 2
     },
     "506495e35ad7a71f07c7": {
       "file": "src/app/features/modals/preferences/preferences.component.scss",
@@ -517,6 +944,20 @@
       "rule": "geometry",
       "property": "height",
       "value": "14px",
+      "count": 1
+    },
+    "515ddb2cbada83b118b1": {
+      "file": "src/app/app.component.dev.ts",
+      "rule": "spacing",
+      "property": "padding",
+      "value": "4px 12px",
+      "count": 1
+    },
+    "527dd1ed34a429acb45a": {
+      "file": "src/app/features/controlled-term-config/controlled-term-config.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-amber-800",
       "count": 1
     },
     "534a4279d9f0d888d773": {
@@ -540,6 +981,27 @@
       "value": "black",
       "count": 1
     },
+    "546077b9f6c1d142727c": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "z-50",
+      "count": 2
+    },
+    "548af19562648d1e83f7": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "hover:text-gray-600",
+      "count": 1
+    },
+    "5495412658c49c853a2e": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "p-6",
+      "count": 1
+    },
     "54dde2d06cf1d8f6fd8d": {
       "file": "src/app/features/field-type-picker/field-type-picker.component.scss",
       "rule": "color",
@@ -547,12 +1009,19 @@
       "value": "1px solid #d1d5db",
       "count": 3
     },
-    "567ac68ae7ea5ee1b5f9": {
-      "file": "src/app/app.component.scss",
-      "rule": "spacing",
-      "property": "padding",
-      "value": "6px var(--cedar-space-4)",
-      "count": 1
+    "553244b652ab42ff276f": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "font-medium",
+      "count": 5
+    },
+    "56c510ab1439561d5f18": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-xs",
+      "count": 16
     },
     "56cb6ae8ce117feb9611": {
       "file": "src/app/features/annotations-editor/annotations-editor.component.scss",
@@ -568,6 +1037,41 @@
       "value": "1rem",
       "count": 1
     },
+    "57b11040b82c71896cce": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "px-3",
+      "count": 1
+    },
+    "57b8c0e5b01e624cd2c2": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "pb-3",
+      "count": 6
+    },
+    "58b9ef18d3d9dc22fef6": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-gray-900",
+      "count": 9
+    },
+    "596903e0b3b81aff22b4": {
+      "file": "src/app/features/container-editor/container-editor.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-base",
+      "count": 1
+    },
+    "5a0aa52ad46fc90b7ad0": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "z-50",
+      "count": 2
+    },
     "5aef387fdb216dac4c64": {
       "file": "src/styles.css",
       "rule": "geometry",
@@ -575,11 +1079,18 @@
       "value": "8px",
       "count": 2
     },
-    "5b0d04385dc004e408dc": {
-      "file": "src/app/shared/_control-style.scss",
-      "rule": "spacing",
-      "property": "padding",
-      "value": "calc( ( var(--cedar-control-height, var(--cedar-control-height-authoring)) - var( --cedar-control-line-height, var(--cedar-control-line-height-authoring) ) ) / 2 - 1px ) 5px",
+    "5b7f1b48705ca3f5aaa6": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "py-4",
+      "count": 2
+    },
+    "5d795b765dc66b2e2f88": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "mb-0.5",
       "count": 1
     },
     "5e40eee676fb6a03de76": {
@@ -589,11 +1100,53 @@
       "value": "2px",
       "count": 1
     },
+    "5eb16280c1b1966cee4f": {
+      "file": "src/app/features/property-picker/property-picker.component.ts",
+      "rule": "spacing",
+      "property": "gap",
+      "value": "12px",
+      "count": 1
+    },
     "5eb336ea5bee024d72a9": {
       "file": "src/app/shared/_code-highlight.scss",
       "rule": "color",
       "property": "color",
       "value": "#f2cc60",
+      "count": 1
+    },
+    "61e4a2335a0cbeb4a3fb": {
+      "file": "src/app/features/manual-iri/manual-iri.component.ts",
+      "rule": "spacing",
+      "property": "margin",
+      "value": "4px 0 0",
+      "count": 1
+    },
+    "61e4eb8af426f437a167": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-black",
+      "count": 2
+    },
+    "62136d483c08892f1385": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-gray-600",
+      "count": 5
+    },
+    "624d6a1116b2c91924b6": {
+      "file": "src/app/features/field-default-value/field-default-value.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-gray-500",
+      "count": 4
+    },
+    "62923a9f073f64458003": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "color",
+      "property": "color",
+      "value": "#317c85",
       "count": 1
     },
     "62bb25776334be091a9e": {
@@ -603,11 +1156,67 @@
       "value": "1px solid #e5e7eb",
       "count": 1
     },
+    "648c1930dc8b40dca412": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "h-4",
+      "count": 8
+    },
+    "651cbb9265fd889e7813": {
+      "file": "src/app/features/controlled-term-config/controlled-term-config.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-xs",
+      "count": 1
+    },
+    "6543c24ed02a1d9a22e8": {
+      "file": "src/app/features/container-editor/container-editor.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "my-3",
+      "count": 1
+    },
+    "6546ce697cda807aca67": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "dynamic-style",
+      "property": "color",
+      "value": "uninspectable-binding",
+      "count": 1
+    },
+    "6633459a3aa45bef30d3": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "p-1",
+      "count": 1
+    },
+    "665a5f43c5e491bfdb45": {
+      "file": "src/app/app.component.dev.ts",
+      "rule": "color",
+      "property": "background",
+      "value": "#0f172a",
+      "count": 1
+    },
     "67a374e50315465830a6": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
       "rule": "geometry",
       "property": "border-radius",
       "value": "0.25rem",
+      "count": 1
+    },
+    "67b38ddde87572023a60": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "font-medium",
+      "count": 8
+    },
+    "68bd80c5e3f210e20f8a": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "gap-3",
       "count": 1
     },
     "6907ac132535a8373c42": {
@@ -617,12 +1226,26 @@
       "value": "var(--cedar-text-muted, #6b7280)",
       "count": 3
     },
+    "69a9d89950b25978a24b": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "px-1",
+      "count": 6
+    },
     "69da16d3f022ca8d9ae7": {
       "file": "src/styles.css",
       "rule": "color",
       "property": "--destructive-foreground",
       "value": "#ffffff",
       "count": 1
+    },
+    "6a26e7bfe1935b0103ef": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-xs",
+      "count": 3
     },
     "6a6a06334cb800c18955": {
       "file": "src/app/shared/_code-highlight.scss",
@@ -631,12 +1254,12 @@
       "value": "#79c0ff",
       "count": 1
     },
-    "6a6c7b8b807836af0392": {
-      "file": "src/app/app.component.scss",
-      "rule": "geometry",
-      "property": "height",
-      "value": "30px",
-      "count": 1
+    "6ac6762cb376359988b1": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "py-4",
+      "count": 2
     },
     "6d2dce88e5a53cc9d923": {
       "file": "src/app/features/field-type-picker/field-type-picker.component.scss",
@@ -652,12 +1275,117 @@
       "value": "#d1d5db",
       "count": 1
     },
+    "6eb8451c35b0a03a3449": {
+      "file": "src/app/features/field-type-picker/field-type-picker.component.html",
+      "rule": "dynamic-style",
+      "property": "border",
+      "value": "uninspectable-binding",
+      "count": 1
+    },
+    "6f67fcdb69251d1d74ca": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "p-0.5",
+      "count": 2
+    },
+    "6fdd708fcaed97558e91": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "pr-4",
+      "count": 9
+    },
+    "71b302e8dfdfe524e195": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "bg-gray-50",
+      "count": 3
+    },
+    "71bd21cd5e2ad8002009": {
+      "file": "src/app/features/controlled-term-config/controlled-term-config.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "p-3",
+      "count": 3
+    },
+    "71cc0df83ffc0ada700f": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "bg-gray-200",
+      "count": 1
+    },
+    "7264f7c94e917661bee8": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "px-6",
+      "count": 2
+    },
+    "7302f0bc9694821d73b2": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "bg-white",
+      "count": 2
+    },
+    "738fa74eee02eabfc4cd": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "px-6",
+      "count": 2
+    },
+    "739e74345c573c16340e": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "space-y-6",
+      "count": 1
+    },
+    "73b06b8b388ec21f278a": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "bg-gray-50",
+      "count": 4
+    },
+    "7447bb14f5546aae4fc6": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "border-t",
+      "count": 1
+    },
+    "74e87052d95cc583dba8": {
+      "file": "src/app/features/element-labels/element-labels.component.ts",
+      "rule": "spacing",
+      "property": "gap",
+      "value": "4px",
+      "count": 1
+    },
+    "74f2490ab29438cbd83f": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "pb-2",
+      "count": 1
+    },
     "759ec955e0bafa6892ff": {
       "file": "src/app/features/child-picker/child-picker.component.scss",
       "rule": "color",
       "property": "border",
       "value": "1px solid #ccc",
       "count": 1
+    },
+    "75dbf33d0328abd361bb": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "font-medium",
+      "count": 2
     },
     "76050b9a59b7aabeb6bc": {
       "file": "src/app/features/field-default-value/field-default-value.component.scss",
@@ -687,6 +1415,13 @@
       "value": "3px",
       "count": 3
     },
+    "795bf857af546609be17": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "z-50",
+      "count": 2
+    },
     "7a74cde0dee1b5ba3d4c": {
       "file": "src/app/features/cee-preview/cee-preview.component.scss",
       "rule": "spacing",
@@ -700,6 +1435,13 @@
       "property": "border-radius",
       "value": "0.25rem",
       "count": 1
+    },
+    "7bdd97ba7e68e71eb226": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "py-2",
+      "count": 2
     },
     "7c138d41ce2825eea621": {
       "file": "src/app/features/annotations-editor/annotations-editor.component.scss",
@@ -722,12 +1464,40 @@
       "value": "6px",
       "count": 1
     },
+    "7c9b86ba52e1a9ef9e02": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "border-b",
+      "count": 1
+    },
+    "7cb9f588a17058b29f82": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-sm",
+      "count": 1
+    },
+    "7d06fa4cc36a8b0fc649": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "mb-4",
+      "count": 3
+    },
     "7d62ad66de4cf302b687": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
       "rule": "color",
       "property": "background",
       "value": "#9ca3af",
       "count": 1
+    },
+    "7d83cabfca7713a36325": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "rounded-md",
+      "count": 2
     },
     "7d985ba0c017b54a0964": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
@@ -750,11 +1520,25 @@
       "value": "0.5rem",
       "count": 3
     },
+    "7ec8799452b91de39081": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-gray-700",
+      "count": 3
+    },
     "809ceeb7c4f9fc537a66": {
       "file": "src/styles.css",
       "rule": "color",
       "property": "--popover",
       "value": "#ffffff",
+      "count": 1
+    },
+    "81c3620936d3e9bb3039": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "geometry",
+      "property": "height",
+      "value": "24px",
       "count": 1
     },
     "822d463b1164876fd1ab": {
@@ -771,11 +1555,60 @@
       "value": "32px",
       "count": 1
     },
+    "828a0735381452bd8310": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "spacing",
+      "property": "margin-top",
+      "value": "4px",
+      "count": 1
+    },
+    "83b08d597072f7e63ac9": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "geometry",
+      "property": "border-radius",
+      "value": "0.5rem",
+      "count": 1
+    },
+    "8466c63be75db9a5522d": {
+      "file": "src/app/features/language-selector/language-selector.component.ts",
+      "rule": "spacing",
+      "property": "margin",
+      "value": "4px 0",
+      "count": 1
+    },
+    "84810e1834989b1610c3": {
+      "file": "src/app/features/child-picker/child-picker.component.scss",
+      "rule": "geometry",
+      "property": "z-index",
+      "value": "1",
+      "count": 1
+    },
+    "857761fa955500c3667f": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "geometry",
+      "property": "z-index",
+      "value": "50",
+      "count": 1
+    },
+    "85f18848e92cb856c64d": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-left",
+      "count": 2
+    },
     "887b606dc0d8ae65784a": {
       "file": "src/app/features/child-picker/child-picker.component.scss",
       "rule": "geometry",
       "property": "height",
       "value": "1px",
+      "count": 1
+    },
+    "8900374db8d5c70718e5": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "px-4",
       "count": 1
     },
     "89403fdabaa8992d9613": {
@@ -785,11 +1618,25 @@
       "value": "#f9fafb",
       "count": 1
     },
+    "897c10f2eecfffba865f": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "color",
+      "property": "color",
+      "value": "#777",
+      "count": 1
+    },
     "89dc1d6d6be5e2178688": {
       "file": "src/app/features/field-type-picker/field-type-picker.component.scss",
       "rule": "color",
       "property": "border-color",
       "value": "#3b7a5d !important",
+      "count": 1
+    },
+    "8b4d5f3d1a7a9b21b140": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "bg-gray-50",
       "count": 1
     },
     "8ba7a72c9ead73d8bbb3": {
@@ -827,6 +1674,13 @@
       "value": "0.75rem 1rem",
       "count": 2
     },
+    "8fb4fc95a079dd586ceb": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "border-gray-200",
+      "count": 2
+    },
     "8fe220d60210722d44e7": {
       "file": "src/app/features/field-type-picker/field-type-picker.component.scss",
       "rule": "spacing",
@@ -834,11 +1688,25 @@
       "value": "0.5rem",
       "count": 1
     },
-    "905f55ba82ba73b3a483": {
-      "file": "src/app/features/annotations-editor/annotations-editor.component.scss",
-      "rule": "spacing",
-      "property": "padding",
-      "value": "2px var(--cedar-space-1)",
+    "90598568caa3f7b954a7": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "gap-1",
+      "count": 1
+    },
+    "92f755a751ef71d8c9f4": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "hover:text-teal-600",
+      "count": 1
+    },
+    "93ae786cc5987212f870": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-lg",
       "count": 1
     },
     "94d9540b5204003d7880": {
@@ -862,6 +1730,13 @@
       "value": "28px",
       "count": 2
     },
+    "95e20069cf6ad1800339": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "border-gray-200",
+      "count": 2
+    },
     "95e30963b2a086a68359": {
       "file": "src/app/features/alternate-questions/alternate-questions.component.scss",
       "rule": "geometry",
@@ -869,11 +1744,25 @@
       "value": "1px",
       "count": 1
     },
-    "979ba45074c9ffde8322": {
-      "file": "src/app/features/field-default-value/field-default-value.component.scss",
-      "rule": "typography",
-      "property": "font-size",
-      "value": "18px",
+    "9675f38ec58b30c5bef3": {
+      "file": "src/app/features/property-picker/property-picker.component.ts",
+      "rule": "color",
+      "property": "background",
+      "value": "#0006",
+      "count": 1
+    },
+    "96a3cee64c0324b43381": {
+      "file": "src/app/features/container-editor/container-editor.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-right",
+      "count": 2
+    },
+    "9738ae1ee47e68ffde26": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "px-2",
       "count": 1
     },
     "98ac8e986b67f3dd2a6d": {
@@ -897,8 +1786,15 @@
       "value": "0.5rem",
       "count": 5
     },
-    "99b790ec2a3caea5f4b5": {
-      "file": "src/app/features/controlled-term-config/controlled-term-config.component.scss",
+    "9a874546bfced18622f5": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "px-2",
+      "count": 2
+    },
+    "9ac9e0bb4474123d4ea9": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
       "rule": "geometry",
       "property": "border-radius",
       "value": "2px",
@@ -909,6 +1805,20 @@
       "rule": "spacing",
       "property": "padding",
       "value": "10px var(--cedar-space-3)",
+      "count": 1
+    },
+    "9b6de007825c299744c7": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-center",
+      "count": 9
+    },
+    "9b76f1810ada68b9dce4": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-white",
       "count": 1
     },
     "9c171bfa460cc271379e": {
@@ -974,18 +1884,53 @@
       "value": "0.3rem",
       "count": 1
     },
-    "a5a72aa5c30bccf0ce85": {
-      "file": "src/app/features/child-picker/child-picker.component.scss",
-      "rule": "color",
-      "property": "background",
-      "value": "rgb(0 0 0 / 35%)",
+    "a3a0cf48a2f0d20cff08": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-white",
       "count": 1
+    },
+    "a458f8e6a12274b85385": {
+      "file": "src/app/features/container-editor/container-editor.component.html",
+      "rule": "dynamic-style",
+      "property": "border-color",
+      "value": "uninspectable-binding",
+      "count": 1
+    },
+    "a4d30fc3ff8b4420f716": {
+      "file": "src/app/features/container-editor/container-editor.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-gray-800",
+      "count": 2
+    },
+    "a4e75e90339805f037ee": {
+      "file": "src/app/features/property-picker/property-picker.component.ts",
+      "rule": "geometry",
+      "property": "border-radius",
+      "value": "0.5rem",
+      "count": 1
+    },
+    "a52701918a4be253df8d": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "gap-2",
+      "count": 4
     },
     "a5aacb777c744ac058cf": {
       "file": "src/app/features/container-editor/container-editor.component.scss",
       "rule": "color",
       "property": "background",
       "value": "white",
+      "count": 1
+    },
+    "a60ec064d1fe10145af5": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-lg",
       "count": 1
     },
     "a6212eae79c34923300f": {
@@ -995,18 +1940,46 @@
       "value": "3px 6px",
       "count": 1
     },
+    "a662dee0cdcfefe2a388": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "border-none",
+      "count": 5
+    },
+    "a68276631bc8463265ec": {
+      "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.html",
+      "rule": "dynamic-style",
+      "property": "height",
+      "value": "uninspectable-binding",
+      "count": 2
+    },
+    "a688531d398449137dea": {
+      "file": "src/app/features/manual-iri/manual-iri.component.ts",
+      "rule": "spacing",
+      "property": "gap",
+      "value": "4px",
+      "count": 1
+    },
+    "a7af9e17a402cb646f8e": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "hover:text-gray-600",
+      "count": 1
+    },
+    "a7f9dc3a72cddd102d0d": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "hover:bg-gray-300",
+      "count": 1
+    },
     "a8c8cdce4b5229e33980": {
       "file": "src/styles.css",
       "rule": "color",
       "property": "--switch-background",
       "value": "#cbced4",
-      "count": 1
-    },
-    "a92358566f79a16499b1": {
-      "file": "src/app/features/controlled-term-config/controlled-term-config.component.scss",
-      "rule": "color",
-      "property": "border",
-      "value": "1px solid #ccc",
       "count": 1
     },
     "aa1477756192311f89fc": {
@@ -1037,12 +2010,40 @@
       "value": "#374151",
       "count": 1
     },
+    "aaf0076c5933ef1af263": {
+      "file": "src/app/features/field-default-value/field-default-value.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-sm",
+      "count": 4
+    },
     "abc4de5433b7c2d7240b": {
       "file": "src/app/shared/_code-highlight.scss",
       "rule": "color",
       "property": "color",
       "value": "#ff7b72",
       "count": 1
+    },
+    "abfd3f60f0993099d933": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "group-hover:text-gray-700",
+      "count": 8
+    },
+    "ac0afb58ef593fbd6bfa": {
+      "file": "src/app/app.component.dev.ts",
+      "rule": "color",
+      "property": "color",
+      "value": "#94a3b8",
+      "count": 1
+    },
+    "ac19664e2632ed8652a1": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "px-3",
+      "count": 2
     },
     "ac2046a8cc45056c7a00": {
       "file": "src/app/features/annotations-editor/annotations-editor.component.scss",
@@ -1051,12 +2052,26 @@
       "value": "white",
       "count": 1
     },
+    "aca9b8edb4d0b303f70e": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "border-b",
+      "count": 1
+    },
     "ae9bd4aeba22c245c431": {
       "file": "src/app/features/alternate-questions/alternate-questions.component.scss",
       "rule": "spacing",
       "property": "padding",
       "value": "2px var(--cedar-space-1)",
       "count": 1
+    },
+    "b012a621608852b33475": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "p-4",
+      "count": 4
     },
     "b08c689ed5fe6648051e": {
       "file": "src/app/features/field-type-picker/field-type-picker.component.scss",
@@ -1072,6 +2087,27 @@
       "value": "2px",
       "count": 2
     },
+    "b1dfc981d6e4b6112816": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "shadow-lg",
+      "count": 1
+    },
+    "b378fe702f49cfd9fd75": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "bg-white",
+      "count": 2
+    },
+    "b38a66d35638e8819c4d": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "pt-0.5",
+      "count": 1
+    },
     "b5bcd20df9992a71e30c": {
       "file": "src/app/features/alternate-questions/alternate-questions.component.scss",
       "rule": "spacing",
@@ -1086,6 +2122,13 @@
       "value": "6px var(--cedar-space-2) 0",
       "count": 1
     },
+    "b69e46627256a763162c": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "p-2",
+      "count": 2
+    },
     "b71f288d44dd337a5047": {
       "file": "src/styles.css",
       "rule": "typography",
@@ -1099,6 +2142,13 @@
       "property": "background-color",
       "value": "#ffffff",
       "count": 4
+    },
+    "b86c00def7306c785fbf": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "h-3.5",
+      "count": 1
     },
     "b8e7223696cd1dc2d2db": {
       "file": "src/app/features/field-default-value/field-default-value.component.scss",
@@ -1121,6 +2171,13 @@
       "value": "4px",
       "count": 1
     },
+    "ba16615657f56dc66a4f": {
+      "file": "src/app/features/container-editor/container-editor.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-gray-900",
+      "count": 1
+    },
     "bbf3d233d19905e33ca5": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
       "rule": "color",
@@ -1128,11 +2185,32 @@
       "value": "#d1d5db",
       "count": 1
     },
+    "bc243151ee8485419e69": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "bg-white",
+      "count": 4
+    },
     "bdfc32f6dd0cc875fddc": {
       "file": "src/styles.css",
       "rule": "geometry",
       "property": "height",
       "value": "6px",
+      "count": 1
+    },
+    "be614cc84851a13f9dbd": {
+      "file": "src/app/features/controlled-term-config/controlled-term-config.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "mb-3",
+      "count": 1
+    },
+    "beae7a3dec75c7935302": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "p-6",
       "count": 1
     },
     "befe296a76d91ecaeb45": {
@@ -1142,11 +2220,18 @@
       "value": "1px solid #e5e7eb",
       "count": 1
     },
-    "c0630b00fadc07213687": {
-      "file": "src/app/features/child-picker/child-picker.component.scss",
-      "rule": "geometry",
-      "property": "border-radius",
-      "value": "12px",
+    "c089a2c6bbc3e911857b": {
+      "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-xs",
+      "count": 2
+    },
+    "c0d6b12becaaea4842e1": {
+      "file": "src/app/features/language-selector/language-selector.component.ts",
+      "rule": "spacing",
+      "property": "margin-top",
+      "value": "8px",
       "count": 1
     },
     "c0ff86d67f2d0e5ab914": {
@@ -1156,12 +2241,47 @@
       "value": "#ffffff",
       "count": 1
     },
+    "c1ee62434e662abb93f5": {
+      "file": "src/app/features/field-settings/field-settings.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-constraint-fields",
+      "count": 1
+    },
     "c2d8b2aaad8df6a9a7a2": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
       "rule": "color",
       "property": "color",
       "value": "#6b7280",
       "count": 6
+    },
+    "c34b8a747c49eb5bd107": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "color",
+      "property": "background",
+      "value": "white",
+      "count": 1
+    },
+    "c4f95ee6bd50251d2d3e": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "border-t",
+      "count": 1
+    },
+    "c56e7aa039953b0835d4": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "h-4",
+      "count": 6
+    },
+    "c578d542c31a4762be0d": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "gap-2",
+      "count": 1
     },
     "c702e122e0d1e50aa494": {
       "file": "src/app/app.component.scss",
@@ -1176,6 +2296,13 @@
       "property": "height",
       "value": "1px",
       "count": 1
+    },
+    "c7414d773adbe8dee631": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-gray-600",
+      "count": 2
     },
     "c77391226797a45c2fc9": {
       "file": "src/app/features/field-designer/field-designer.component.scss",
@@ -1212,6 +2339,13 @@
       "value": "0.5rem",
       "count": 1
     },
+    "ca4fa0a241be12aaee29": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "m-0",
+      "count": 2
+    },
     "ca5cb8d848b5490f87d1": {
       "file": "src/app/features/field-settings/field-settings.component.scss",
       "rule": "geometry",
@@ -1233,12 +2367,33 @@
       "value": "var(--cedar-space-1) 6px",
       "count": 1
     },
+    "cad9e3dbdeb86ab4af89": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "pr-2",
+      "count": 1
+    },
     "cb0a615a3c420ae7e305": {
       "file": "src/app/features/field-default-value/field-default-value.component.scss",
       "rule": "color",
       "property": "background",
       "value": "rgb(0 0 0 / 40%)",
       "count": 1
+    },
+    "cb23b996303b4476e54e": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "space-y-2",
+      "count": 1
+    },
+    "cb8454e44141aeae2428": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "mb-3",
+      "count": 7
     },
     "cc0670378253df89b8d3": {
       "file": "src/app/features/field-settings/field-settings.component.scss",
@@ -1252,6 +2407,48 @@
       "rule": "spacing",
       "property": "padding",
       "value": "5px var(--cedar-space-2)",
+      "count": 1
+    },
+    "cc383808ab34bdb7209f": {
+      "file": "src/app/features/property-picker/property-picker.component.ts",
+      "rule": "spacing",
+      "property": "padding",
+      "value": "1.5rem",
+      "count": 1
+    },
+    "cd1e3d653eec410be56c": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "disabled:text-gray-400",
+      "count": 2
+    },
+    "ce97bf1ed7a796cee15d": {
+      "file": "src/app/features/property-picker/property-picker.component.ts",
+      "rule": "color",
+      "property": "background",
+      "value": "white",
+      "count": 1
+    },
+    "cf2f1a895746fc41d2cb": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "h-10",
+      "count": 1
+    },
+    "cf3a42b0278a37b30d8d": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-gray-900",
+      "count": 1
+    },
+    "cffbdb9a1e0b1e8b3307": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-gray-600",
       "count": 1
     },
     "d0038325ec4adf211f9e": {
@@ -1268,6 +2465,20 @@
       "value": "3px",
       "count": 1
     },
+    "d02ea4eb397aa02125ec": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "rounded-lg",
+      "count": 5
+    },
+    "d164e5938fe0f8a2b0fd": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "gap-3",
+      "count": 2
+    },
     "d2adee3332862017824e": {
       "file": "src/app/features/field-type-picker/field-type-picker.component.scss",
       "rule": "color",
@@ -1275,11 +2486,39 @@
       "value": "#111827",
       "count": 1
     },
+    "d3a5f014f4d8140420e0": {
+      "file": "src/app/features/property-picker/property-picker.component.ts",
+      "rule": "color",
+      "property": "color",
+      "value": "#777",
+      "count": 1
+    },
     "d3b91e001d0b68fc178c": {
       "file": "src/app/features/field-designer/field-designer.component.scss",
       "rule": "color",
       "property": "background",
       "value": "#f7f9f9",
+      "count": 1
+    },
+    "d441123e095c7ae82367": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "border-gray-200",
+      "count": 8
+    },
+    "d4706590f159b16c4ea1": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "gap-3",
+      "count": 10
+    },
+    "d5e48ae7a92e81439784": {
+      "file": "src/app/features/manual-iri/manual-iri.component.ts",
+      "rule": "color",
+      "property": "color",
+      "value": "var(--cedar-color-primary, #117b89)",
       "count": 1
     },
     "d6c7210089435900ceb5": {
@@ -1310,6 +2549,13 @@
       "value": "4px",
       "count": 1
     },
+    "d7d25857ad6497d79f2a": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "py-1",
+      "count": 2
+    },
     "d89d411a80bfa7096c37": {
       "file": "src/app/features/field-type-picker/field-type-picker.component.scss",
       "rule": "spacing",
@@ -1317,11 +2563,18 @@
       "value": "0.75rem",
       "count": 1
     },
-    "d90249ea22cd29ae171a": {
-      "file": "src/app/features/field-default-value/field-default-value.component.scss",
-      "rule": "color",
-      "property": "color",
-      "value": "#64748b",
+    "da282e30769bdaf9fdf3": {
+      "file": "src/app/features/controlled-term-config/controlled-term-config.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "p-6",
+      "count": 1
+    },
+    "daa6fc7a003b3be042a0": {
+      "file": "src/app/features/property-picker/property-picker.component.ts",
+      "rule": "geometry",
+      "property": "z-index",
+      "value": "50",
       "count": 1
     },
     "dafc613f46a833b98d06": {
@@ -1331,12 +2584,40 @@
       "value": "#4b5563",
       "count": 4
     },
+    "db412843e0daa5c372f9": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "focus:border-teal-600",
+      "count": 2
+    },
+    "db4443cca4a2e141ef15": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "mt-1",
+      "count": 3
+    },
+    "db54d1923b4faa17936f": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "color",
+      "property": "color",
+      "value": "#991b1b",
+      "count": 1
+    },
     "dc63227faffdc416c6ba": {
       "file": "src/app/features/field-settings/field-settings.component.scss",
       "rule": "typography",
       "property": "line-height",
       "value": "1.3",
       "count": 1
+    },
+    "dc84ca872fbd9733c83c": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "space-y-3",
+      "count": 2
     },
     "dce555b01c95581dd342": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
@@ -1345,6 +2626,13 @@
       "value": "#111827",
       "count": 4
     },
+    "dd9e71267e1338ce811e": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-gray-500",
+      "count": 1
+    },
     "dda4304cd3f618e0233a": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
       "rule": "geometry",
@@ -1352,19 +2640,26 @@
       "value": "9999px",
       "count": 2
     },
-    "debccab6d4443a347666": {
-      "file": "src/app/features/container-editor/container-editor.component.scss",
-      "rule": "spacing",
-      "property": "margin-top",
-      "value": "2px",
-      "count": 1
-    },
     "e1740c6e7463044f5287": {
       "file": "src/app/features/cee-preview/cee-preview.component.scss",
       "rule": "typography",
       "property": "line-height",
       "value": "1",
       "count": 2
+    },
+    "e1fa667fc4a8ee8c4ce4": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "my-1",
+      "count": 1
+    },
+    "e27a2fe2b507706cbe1d": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "py-3",
+      "count": 12
     },
     "e2b2f83f1db640a58957": {
       "file": "src/app/features/field-type-picker/field-type-picker.component.scss",
@@ -1378,6 +2673,34 @@
       "rule": "typography",
       "property": "line-height",
       "value": "18px",
+      "count": 1
+    },
+    "e3c62856cc38b401c20c": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-gray-400",
+      "count": 1
+    },
+    "e3c7c932df03382900cf": {
+      "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "px-3",
+      "count": 9
+    },
+    "e40b296e9a18d81e00b3": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "spacing",
+      "property": "padding",
+      "value": "0.75rem",
+      "count": 1
+    },
+    "e4602bae0f903d5a9f74": {
+      "file": "src/app/app.component.dev.ts",
+      "rule": "typography",
+      "property": "font",
+      "value": "12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace",
       "count": 1
     },
     "e4fd15c32c1dcd0ae1c9": {
@@ -1394,11 +2717,32 @@
       "value": "6px",
       "count": 1
     },
+    "e5c7efa99968092b9b76": {
+      "file": "src/app/features/property-picker/property-picker.component.ts",
+      "rule": "spacing",
+      "property": "margin",
+      "value": "3px 0 0",
+      "count": 1
+    },
     "e6ccb57e88afca47d46d": {
       "file": "src/app/features/child-picker/child-picker.component.scss",
       "rule": "color",
       "property": "color",
       "value": "#666",
+      "count": 1
+    },
+    "e6d0888d93721308bce2": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-gray-500",
+      "count": 9
+    },
+    "e6d6e0e1bb43b8a30f60": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "border-l",
       "count": 1
     },
     "e7465f39f0cca8a58008": {
@@ -1415,11 +2759,25 @@
       "value": "#ffffff",
       "count": 1
     },
+    "e817a919d3080c029ddd": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "gap-3",
+      "count": 1
+    },
     "e8577d571a14d4d43940": {
       "file": "src/app/features/field-settings/field-settings.component.scss",
       "rule": "spacing",
       "property": "padding-bottom",
       "value": "3px",
+      "count": 1
+    },
+    "ea4665ea47f444269334": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "focus:border-teal-500",
       "count": 1
     },
     "eab968ec965ded35bf0f": {
@@ -1436,6 +2794,20 @@
       "value": "1px solid #e5e7eb",
       "count": 2
     },
+    "eb2825da809e983b32c0": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "spacing",
+      "property": "padding",
+      "value": "3px 6px",
+      "count": 1
+    },
+    "eb43ca4adae1a8e01654": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "color",
+      "property": "color",
+      "value": "black",
+      "count": 1
+    },
     "ed3fc3a2b3c4c72c7d04": {
       "file": "src/app/features/field-default-value/field-default-value.component.scss",
       "rule": "spacing",
@@ -1443,11 +2815,39 @@
       "value": "6px var(--cedar-space-3)",
       "count": 1
     },
-    "f027c49ccd1d3c78aac9": {
-      "file": "src/app/features/container-editor/container-editor.component.scss",
-      "rule": "spacing",
-      "property": "padding",
-      "value": "0 6px 6px",
+    "ed536dbbcda60750c45e": {
+      "file": "src/app/features/modals/preferences/preferences.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-emerald-700",
+      "count": 2
+    },
+    "ed57a16e63bad63d4851": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "rounded-lg",
+      "count": 1
+    },
+    "ed92b21106e766965982": {
+      "file": "src/app/features/property-picker/property-picker.component.ts",
+      "rule": "color",
+      "property": "border",
+      "value": "1px solid #ccc",
+      "count": 1
+    },
+    "ef8c3a038d7ff19e444d": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "py-1.5",
+      "count": 2
+    },
+    "f0943bb54e0819f0e92b": {
+      "file": "src/app/features/controlled-term-config/controlled-term-config.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "rounded-lg",
       "count": 1
     },
     "f29ca37f053eddd57087": {
@@ -1455,13 +2855,6 @@
       "rule": "spacing",
       "property": "padding",
       "value": "3px 5px",
-      "count": 1
-    },
-    "f360c39a250c4e6a2bbc": {
-      "file": "src/app/features/field-default-value/field-default-value.component.scss",
-      "rule": "color",
-      "property": "background",
-      "value": "white",
       "count": 1
     },
     "f367f6a0e8eec5434b05": {
@@ -1492,6 +2885,27 @@
       "value": "24px",
       "count": 1
     },
+    "f5126dc05a617654fd23": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "ml-2",
+      "count": 1
+    },
+    "f5a49d80ae2f1f779982": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "mt-1",
+      "count": 1
+    },
+    "f5f2064936260023e31b": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "gap-1",
+      "count": 1
+    },
     "f5ff05bf342ee55005f9": {
       "file": "src/app/features/field-designer/field-designer.component.scss",
       "rule": "color",
@@ -1506,11 +2920,60 @@
       "value": "0.04em",
       "count": 1
     },
+    "f6ceca77aa932fd6a82c": {
+      "file": "src/app/features/language-selector/language-selector.component.ts",
+      "rule": "color",
+      "property": "color",
+      "value": "#b42318",
+      "count": 1
+    },
+    "f7875568db5384e058ac": {
+      "file": "src/app/app.component.dev.ts",
+      "rule": "color",
+      "property": "color",
+      "value": "#a5dce3",
+      "count": 1
+    },
+    "f799b466759f011c68f8": {
+      "file": "src/app/features/field-card/field-card.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-gray-500",
+      "count": 1
+    },
+    "f7f0f529f3050f6d1cf2": {
+      "file": "src/app/features/controlled-term-config/controlled-term-config.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "shadow-xl",
+      "count": 1
+    },
+    "f82d4a5b334821f5b76d": {
+      "file": "src/app/features/container-editor/container-editor.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "text-sm",
+      "count": 3
+    },
     "f98b241b285faf6ee76f": {
       "file": "src/app/features/field-settings/field-settings.component.scss",
       "rule": "spacing",
       "property": "gap",
       "value": "3px var(--cedar-space-3)",
+      "count": 1
+    },
+    "fa34a0bb479db7e05e3f": {
+      "file": "src/app/features/controlled-term-config/controlled-term-config.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "bg-white",
+      "count": 1
+    },
+    "fa91dc667ac4132e1298": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "color",
+      "property": "background",
+      "value": "#0006",
       "count": 1
     },
     "faccfea8eaeb945bd8e5": {
@@ -1541,12 +3004,26 @@
       "value": "#6b7280",
       "count": 2
     },
-    "fc7023fe4a1ad16d6459": {
-      "file": "src/app/features/child-picker/child-picker.component.scss",
+    "fd1bbd3d0ee3ccef3ce7": {
+      "file": "src/app/features/field-settings/field-settings.component.scss",
+      "rule": "geometry",
+      "property": "z-index",
+      "value": "11",
+      "count": 1
+    },
+    "fd7daa2db59022adaa4a": {
+      "file": "src/app/features/property-picker/property-picker.component.ts",
       "rule": "color",
       "property": "color",
-      "value": "var(--cedar-color-text, #262626)",
+      "value": "#991b1b",
       "count": 1
+    },
+    "fdcc9066ea800d327b34": {
+      "file": "src/app/app.component.html",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "px-3.5",
+      "count": 2
     },
     "ff74d0ce95cbe43672f0": {
       "file": "src/app/features/container-editor/container-editor.component.scss",
@@ -1556,5 +3033,6 @@
       "count": 1
     }
   },
-  "exceptions": {}
+  "exceptions": {},
+  "policy": 2
 }

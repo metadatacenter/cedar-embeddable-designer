@@ -3,17 +3,78 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { openDesigner, openSettings, currentTemplate, child } from './support';
 import type { CedarEmbeddableDesignerElement } from '../../src/app/ced-public-api';
 
+async function expectValueTypeFits(editor: Locator) {
+  const heading = editor.getByRole('columnheader', { name: 'Value type', exact: true });
+  await expect(heading).toHaveCSS('white-space', 'nowrap');
+  const geometry = await heading.evaluate((node) => {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const text = range.getBoundingClientRect();
+    const cell = node.getBoundingClientRect();
+    const style = getComputedStyle(node);
+    return {
+      lines: range.getClientRects().length,
+      textRight: text.right,
+      contentRight: cell.right - parseFloat(style.paddingRight),
+    };
+  });
+  expect(geometry.lines).toBe(1);
+  expect(geometry.textRight).toBeLessThanOrEqual(geometry.contentRight);
+}
 async function addRows(editor: Locator) {
+  await expectValueTypeFits(editor);
+  const controls = await editor
+    .locator('.add-row input, .add-row select, .add-row textarea, .add-row button')
+    .evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const rect = node.getBoundingClientRect();
+        return { height: rect.height, bottom: rect.bottom };
+      }),
+    );
+  for (const control of controls) expect(control.height).toBeCloseTo(controls[0].height, 1);
+  // On wide hosts all four controls share the same baseline; narrow hosts stack the value and button.
+  if (controls[0].bottom === controls[2].bottom) {
+    for (const control of controls) expect(control.bottom).toBeCloseTo(controls[0].bottom, 1);
+  }
+  // Both controls must reject typed and pasted line breaks on every authoring surface.
+  for (const [label, value] of [
+    ['New annotation name', 'note'],
+    ['New annotation value', 'Reviewed'],
+  ]) {
+    const input = editor.getByRole('textbox', { name: label, exact: true });
+    await input.fill(value);
+    await input.press('End');
+    await input.press('Enter');
+    await expect(input).toHaveValue(value);
+    await input.fill(value + '\r\n');
+    await expect(input).toHaveValue(value);
+  }
   await editor.getByRole('textbox', { name: 'New annotation name', exact: true }).fill('note');
   await editor.getByRole('textbox', { name: 'New annotation value', exact: true }).fill('Reviewed');
   await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();
-  await expect(editor.locator('textarea').first()).toHaveCSS('resize', 'none');
+  await expect(editor.locator('textarea')).toHaveCount(0);
+  await expect(editor.locator('tbody td').first()).toHaveCSS('padding', '2px 8px');
   await expect(editor.getByRole('button', { name: 'Remove annotation 1', exact: true }).locator('svg')).toBeVisible();
   await expect(editor.getByRole('textbox', { name: 'New annotation name', exact: true })).toHaveValue('');
   await editor.getByRole('textbox', { name: 'New annotation name', exact: true }).fill('source');
   await editor.getByRole('combobox', { name: 'New annotation value type', exact: true }).selectOption('iri');
   await editor.getByRole('textbox', { name: 'New annotation value', exact: true }).fill('urn:source');
   await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();
+  await expectValueTypeFits(editor);
+  const headerContentHeight = await editor.locator('thead th').evaluateAll((cells) =>
+    Math.max(
+      ...cells.slice(0, 3).map((cell) => {
+        const range = document.createRange();
+        range.selectNodeContents(cell);
+        return range.getClientRects().length * parseFloat(getComputedStyle(cell).lineHeight);
+      }),
+    ),
+  );
+  // Wrapped headings may grow; padding must not impose an additional empty row.
+  expect((await editor.locator('thead tr').boundingBox())!.height).toBeLessThanOrEqual(headerContentHeight + 5);
+  for (const row of await editor.locator('tbody tr').all()) {
+    expect((await row.boundingBox())!.height).toBeLessThanOrEqual(32);
+  }
 }
 async function reloadArtifact(page: Page, artifact: object) {
   const previousCard = await page.locator('cedar-embeddable-designer app-field-card').first().elementHandle();
@@ -51,7 +112,7 @@ for (const width of [1280, 375]) {
     await elementSettings.getByRole('tab', { name: 'Annotations', exact: true }).click();
     await addRows(elementSettings.locator('app-annotations-editor'));
     const saved = await currentTemplate(page);
-    expect(child(saved, 'Element')._annotations).toEqual(annotations);
+    expect(child(saved, 'element')._annotations).toEqual(annotations);
     await reloadArtifact(page, saved);
     await openSettings(designer.locator('app-field-card').first(), 'Annotations');
     await expect(
@@ -59,7 +120,7 @@ for (const width of [1280, 375]) {
     ).toHaveText('Reviewed');
     expect(await currentTemplate(page)).toEqual(saved);
     // The same element metadata editor is available when an element is opened as its own document.
-    await reloadArtifact(page, child(saved, 'Element'));
+    await reloadArtifact(page, child(saved, 'element'));
     const standalone = designer.locator('app-container-settings');
     await standalone.getByRole('button', { name: 'Expand element settings' }).click();
     await standalone.getByRole('tab', { name: 'Annotations', exact: true }).click();
@@ -109,4 +170,17 @@ test('the add row validates only on Add and keeps rejected drafts outside the ta
   await expect(editor.getByRole('alert')).toHaveCount(0);
   await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();
   await expect(editor.getByRole('button', { name: 'Remove annotation 1', exact: true })).toBeVisible();
+});
+
+test('existing multiline annotation literals survive opening and saving', async ({ page }) => {
+  const designer = await openDesigner(page);
+  const artifact = await currentTemplate(page);
+  const field = child(artifact, 'Title');
+  field._annotations = { note: { '@value': 'First line\nSecond line' } };
+  await reloadArtifact(page, artifact);
+  const card = designer.locator('app-field-card').first();
+  await openSettings(card, 'Annotations');
+  const value = card.locator('app-annotations-editor .annotation-value');
+  await expect(value).toHaveText('First line\nSecond line');
+  expect(child(await currentTemplate(page), 'Title')._annotations).toEqual(field._annotations);
 });

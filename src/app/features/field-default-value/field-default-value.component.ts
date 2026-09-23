@@ -1,3 +1,4 @@
+import { IconComponent } from '../../shared/components/icon/icon.component';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -10,6 +11,7 @@ import {
   input,
   signal,
   viewChild,
+  untracked,
 } from '@angular/core';
 import { defaultFromCef, defaultToCef } from '../../core/model/field-default';
 import { accepts, defaultValueError, fieldToJson } from '../../core/model/cedar-template';
@@ -30,6 +32,7 @@ interface FieldElement extends HTMLElement {
 }
 
 @Component({
+  imports: [IconComponent],
   selector: 'app-field-default-value',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './field-default-value.component.html',
@@ -72,6 +75,7 @@ export class FieldDefaultValueComponent {
   readonly pickerAvailable = signal(customElements.get('cedar-embeddable-term-picker') !== undefined);
   readonly pickerOpen = signal(false);
   readonly error = signal<string | null>(null);
+  readonly editorReportsError = signal(false);
   private readonly mount = viewChild<ElementRef<HTMLDivElement>>('mount');
   private pending: object | null = null;
   private editor: FieldElement | null = null;
@@ -85,13 +89,14 @@ export class FieldDefaultValueComponent {
       this.error() ?? (this.checking() ? 'Checking the default against the constraints…' : null),
     );
   }
-  private setError(message: string | null): void {
+  private setError(message: string | null, editorReportsError = false): void {
+    this.editorReportsError.set(editorReportsError);
     this.error.set(message);
-    this.reportValidation();
+    untracked(() => this.reportValidation());
   }
   private setChecking(checking: boolean): void {
     this.checking.set(checking);
-    this.reportValidation();
+    untracked(() => this.reportValidation());
   }
 
   constructor() {
@@ -129,7 +134,6 @@ export class FieldDefaultValueComponent {
       if (!this.editor || this.configKey !== JSON.stringify(config)) {
         this.editor?.removeEventListener('valueChange', this.acceptValue);
         this.editor = document.createElement(FIELD_TAG) as FieldElement;
-        this.editor.setAttribute('density', 'authoring');
         this.editor.config = config;
         this.configKey = JSON.stringify(config);
         this.artifactKey = null;
@@ -156,7 +160,7 @@ export class FieldDefaultValueComponent {
     const detail = (event as CustomEvent<{ value: FieldDefaultValue; valid: boolean }>).detail;
     if (this.allowsControlledTerms() || this.field().publishedDefinition) return;
     if (detail?.valid === true) this.save(defaultFromCef(this.field(), detail.value));
-    else this.setError('Enter a valid default value.');
+    else this.setError('Enter a valid default value.', true);
   };
 
   editNative(text: string): void {

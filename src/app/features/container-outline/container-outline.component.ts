@@ -13,8 +13,22 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
         <div
           class="outline-row"
           [class.active]="service.selectedField() === node.id"
-          [class.invalid]="service.issuesFor(node.id).length > 0"
+          [class.invalid]="service.visibleIssuesFor(node.id).length > 0"
         >
+          <button type="button" class="select-node" (click)="select(node)">
+            <app-icon [key]="node.kind === 'field' ? node.definition.type : 'folder'" className="w-4 h-4" />
+            <span class="node-name">{{
+              childName(node) || (node.kind === 'field' ? 'Unnamed field' : 'Unnamed element')
+            }}</span>
+            @if (service.visibleIssuesFor(node.id).length; as count) {
+              <span class="validation-badge" [attr.aria-label]="count + ' errors'" [title]="count + ' errors'"
+                ><app-icon key="warning" size="small" /> {{ count }}</span
+              >
+            }
+            @if (node.kind === 'field' && node.placement.status === 'required') {
+              <span aria-label="Required">*</span>
+            }
+          </button>
           @if (node.kind === 'element') {
             <button
               type="button"
@@ -31,18 +45,6 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
               />
             </button>
           }
-          <button type="button" class="select-node" (click)="select(node)">
-            <app-icon [key]="node.kind === 'field' ? node.definition.type : 'folder'" className="w-4 h-4" />
-            <span class="node-name">{{ childName(node) }}</span>
-            @if (service.issuesFor(node.id).length; as count) {
-              <span class="validation-badge" [attr.aria-label]="count + ' errors'" [title]="count + ' errors'"
-                >⚠ {{ count }}</span
-              >
-            }
-            @if (node.kind === 'field' && node.placement.status === 'required') {
-              <span aria-label="Required">*</span>
-            }
-          </button>
           <button
             type="button"
             class="outline-drag-handle"
@@ -75,10 +77,10 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
         align-items: center;
         justify-content: center;
         flex: none;
-        width: 16px;
-        height: 24px;
+        width: var(--cedar-icon-size-small);
+        height: var(--cedar-icon-size-large);
         padding: 0;
-        color: #64748b;
+        color: var(--cedar-text-muted);
       }
       ul {
         list-style: none;
@@ -87,26 +89,29 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
       }
       li {
         min-width: 0;
-        background: white;
+        background: var(--cedar-surface-raised);
       }
       .outline-row {
         display: flex;
         align-items: center;
-        gap: 4px;
-        padding: 0 8px;
+        gap: var(--cedar-space-1);
+        padding: 0 var(--cedar-space-2);
       }
       .outline-row.invalid {
-        box-shadow: inset 3px 0 #b42318;
+        box-shadow: inset calc(var(--cedar-space-1) * 0.75) 0 var(--cedar-status-error-text);
       }
       .validation-badge {
-        color: #b42318;
-        font-size: var(--cedar-font-size-small);
+        display: inline-flex;
+        align-items: center;
+        gap: var(--cedar-space-1);
+        color: var(--cedar-status-error-text);
+        font-size: var(--cedar-font-size);
       }
       .outline-row:hover {
-        background: #f9fafb;
+        background: var(--cedar-surface-row-hover);
       }
       .outline-row.active {
-        background: #ecfdf5;
+        background: var(--cedar-surface-selected);
       }
       button {
         border: 0;
@@ -116,48 +121,49 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
       }
       .select-node {
         display: flex;
-        flex: 1;
+        flex: 0 1 auto;
         align-items: center;
-        gap: 8px;
+        gap: var(--cedar-space-2);
         min-width: 0;
-        padding: 2px 0;
-        color: #374151;
+        padding: calc(var(--cedar-space-1) / 2) 0;
+        color: var(--cedar-text-authoring);
         text-align: left;
-        font-size: var(--cedar-font-size-small);
+        font-size: var(--cedar-font-size);
       }
       .select-node app-icon {
         flex: none;
-        color: #64748b;
+        color: var(--cedar-text-muted);
       }
       .node-name {
         min-width: 0;
         overflow-wrap: anywhere;
       }
       .outline-drag-handle {
+        margin-left: auto;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         flex: none;
-        width: 24px;
-        height: 24px;
+        width: var(--cedar-icon-size-large);
+        height: var(--cedar-icon-size-large);
         padding: 0;
-        color: #64748b;
+        color: var(--cedar-text-muted);
         cursor: grab;
       }
       .outline-drag-handle:disabled {
-        opacity: 0.4;
+        opacity: var(--cedar-control-disabled-opacity);
         cursor: default;
       }
       app-container-outline {
-        margin-left: 12px;
+        margin-left: var(--cedar-space-3);
       }
       .cdk-drag-placeholder {
         opacity: 0.25;
       }
       .cdk-drag-preview {
         box-sizing: border-box;
-        background: white;
-        box-shadow: 0 3px 10px #0003;
+        background: var(--cedar-surface-raised);
+        box-shadow: var(--cedar-menu-shadow);
         list-style: none;
       }
       button:focus-visible {

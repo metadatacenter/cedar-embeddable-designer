@@ -1,9 +1,10 @@
+@use '../../shared/table-style';
 @use '../../shared/control-style';
 :host {
   display: block;
   margin-top: var(--cedar-space-3);
   min-width: 0;
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
 }
 fieldset {
   border: 0;
@@ -85,3 +86,5 @@ p[role='alert'] {
   overflow: hidden;
   clip-path: inset(50%);
 }
+
+@include table-style.compact-table;

@@ -1,4 +1,6 @@
-import { validateDocument } from '../model/document-validation';
+import { childKeyError } from '../model/child-key-policy';
+import { reducePrecision } from '../model/precision-change';
+import { artifactNameError, validateDocument } from '../model/document-validation';
 import { CedChildSource, CedJsonObject, CedValidationIssue } from '../../ced-public-api';
 import { EditorSession } from './editor-session';
 import {
@@ -9,6 +11,7 @@ import {
   ChildNode,
   ElementNode,
   fieldNode,
+  fieldView,
   containers,
   childName,
   moveChild,
@@ -19,17 +22,11 @@ import {
 } from '../model/container-draft';
 import { FieldLibraryService } from './field-library.service';
 import { Injectable, signal, computed, inject } from '@angular/core';
-import {
-  Field,
-  FieldDefaultValue,
-  CustomField,
-  ControlledTermSet,
-  UserPreferences,
-  FIELD_TYPES,
-} from '../models/types';
+import { Field, FieldDefaultValue, CustomField, ControlledTermSet, UserPreferences } from '../models/types';
 import { PreferencesService } from './preferences.service';
 import {
   DesignerTemplate,
+  deploymentKeys,
   buildTemplate,
   newFieldIdentity,
   newTemplateIdentifier,
@@ -71,7 +68,7 @@ function starterFields(): Field[] {
       type: 'multipleChoice',
       name: 'Category',
       status: 'optional',
-      options: ['', ''],
+      options: ['Option A', 'Option B'],
       defaultValue: { kind: 'none' },
       allowMultiple: false,
     },
@@ -105,6 +102,15 @@ function choiceDefault(field: Field, options: string[], renamed?: { from: string
   providedIn: 'root',
 })
 export class TemplateService {
+  private readonly automaticKeys = new Set<number>();
+
+  private generatedKey(id: number, name: string): string {
+    const base = name.trim().toLowerCase().replace(/\s+/g, '_') || 'field';
+    let key = base;
+    for (let suffix = 2; this.keyError(id, key); suffix++) key = `${base}_${suffix}`;
+    return key;
+  }
+
   // Inject PreferencesService
   readonly preferencesService = inject(PreferencesService);
 
@@ -128,6 +134,23 @@ export class TemplateService {
   readonly templateVersion = this.session.property('version');
   readonly loadError = signal<string | null>(null);
   private readonly draftIssues = signal<Record<string, { message: string; tab: string }>>({});
+  readonly nameFocusRequest = signal<number | null>(null);
+  private readonly touchedNames = signal<ReadonlySet<number>>(new Set());
+  touchName(id: number): void {
+    this.touchedNames.update((ids) => new Set([...ids, id]));
+  }
+  nameError(id: number, name: string, kind: 'field' | 'element' | 'template'): string | null {
+    return this.touchedNames().has(id) ? artifactNameError(name, kind) : null;
+  }
+  readonly visibleIssues = computed(() =>
+    this.validationReport().issues.filter((issue) => issue.setting !== 'name' || this.touchedNames().has(issue.nodeId)),
+  );
+  visibleIssuesFor(id: number): CedValidationIssue[] {
+    return this.visibleIssues().filter((issue) => issue.path.includes(id));
+  }
+  tabHasErrors(id: number, tab: string): boolean {
+    return this.visibleIssues().some((issue) => issue.nodeId === id && issue.setting !== 'name' && issue.tab === tab);
+  }
   readonly validationTarget = signal<CedValidationIssue | null>(null);
   setSettingsError(id: number, setting: string, message: string | null, tab = 'Constraints'): void {
     const key = `${id}:${setting}`;
@@ -145,6 +168,7 @@ export class TemplateService {
     return this.validationReport().issues.filter((issue) => issue.path.includes(id));
   }
   revealIssue(issue: CedValidationIssue): void {
+    if (issue.setting === 'name') this.touchName(issue.nodeId);
     this.openContainer(this.parentContainerId(issue.nodeId));
     this.selectedField.set(issue.nodeId);
     this.scrollRequest.set(issue.nodeId);
@@ -281,6 +305,22 @@ export class TemplateService {
       >
     >,
   ): void {
+    if (changes.name !== undefined && this.automaticKeys.has(id)) {
+      const parent = parentOf(this.session.document(), id);
+      if (parent) {
+        const deploymentName = this.generatedKey(id, changes.name);
+        this.session.document.update((root) =>
+          updateContainer(root, parent.id, (container) => ({
+            ...container,
+            children: container.children.map((child) =>
+              child.id === id && child.kind === 'element'
+                ? { ...child, placement: { ...child.placement, deploymentName } }
+                : child,
+            ),
+          })),
+        );
+      }
+    }
     this.session.document.update((root) => updateContainer(root, id, (container) => ({ ...container, ...changes })));
   }
   readonly collapsedElements = signal<ReadonlySet<number>>(new Set());
@@ -291,18 +331,27 @@ export class TemplateService {
     this.collapsedElements.set(
       new Set(
         this.containerChoices()
-          .filter((choice) => choice.id !== this.session.document().id)
+          .filter((choice) => choice.id !== this.session.document().id && this.hasChildren(choice.id))
           .map((choice) => choice.id),
       ),
     );
   }
   toggleElement(id: number): void {
+    if (!this.hasChildren(id)) return;
     this.collapsedElements.update((previous) => {
       const next = new Set(previous);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+  }
+
+  private hasChildren(id: number): boolean {
+    return !!findContainer(this.session.document(), id)?.children.length;
+  }
+
+  private pruneCollapsed(): void {
+    this.collapsedElements.update((ids) => new Set([...ids].filter((id) => this.hasChildren(id))));
   }
 
   // Field manipulation methods
@@ -315,14 +364,16 @@ export class TemplateService {
       id: newNodeId(),
       ...newFieldIdentity(),
       type,
-      name: type === 'date' || type === 'time' ? 'Temporal' : FIELD_TYPES[type].label,
+      name: '',
       status: 'optional',
       options: type === 'multipleChoice' || type === 'checkboxes' ? [''] : [],
       defaultValue: { kind: 'none' },
       allowMultiple: false,
     };
 
-    this.insertNode(fieldNode(newField), position, targetId);
+    this.automaticKeys.add(newField.id);
+    this.insertNode(fieldNode(newField), position, targetId, false);
+    this.nameFocusRequest.set(newField.id);
 
     this.showPicker.set(null);
     this.selectedField.set(newField.id);
@@ -353,6 +404,7 @@ export class TemplateService {
   deleteField(id: number) {
     if (this.isPublished(id)) return;
     this.fieldsFor(id).update((prev) => prev.filter((f) => f.id !== id));
+    this.pruneCollapsed();
     if (this.selectedField() === id) {
       this.selectedField.set(null);
     }
@@ -360,7 +412,10 @@ export class TemplateService {
 
   updateFieldName(id: number, name: string) {
     if (this.isPublished(id)) return;
-    this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, name } : f)));
+    const deploymentName = this.automaticKeys.has(id) ? this.generatedKey(id, name) : undefined;
+    this.fieldsFor(id).update((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, name, ...(deploymentName ? { deploymentName } : {}) } : f)),
+    );
   }
 
   updateCustomField(updated: CustomField) {
@@ -426,7 +481,7 @@ export class TemplateService {
           const newOptions = f.options.filter((_, index) => index !== optionIndex);
           return {
             ...f,
-            options: newOptions.length > 0 ? newOptions : [''],
+            options: newOptions,
             defaultValue: choiceDefault(f, newOptions),
             importedChoiceDefault:
               f.importedChoiceDefault === f.options[optionIndex] ? undefined : f.importedChoiceDefault,
@@ -441,18 +496,46 @@ export class TemplateService {
     return !!this.fieldsFor(id)().find((field) => field.id === id)?.publishedDefinition;
   }
 
+  childKey(id: number): string {
+    const siblings = parentOf(this.session.document(), id)?.children ?? [];
+    const keys = deploymentKeys(
+      siblings.map((node) => ({
+        name: node.definition.name,
+        deploymentName: node.placement.deploymentName,
+      })),
+    );
+    return keys[siblings.findIndex((node) => node.id === id)] ?? '';
+  }
+
+  private keyError(id: number, value: string): string | null {
+    const key = value.trim();
+    const siblings = parentOf(this.session.document(), id)?.children ?? [];
+    const node = siblings.find((child) => child.id === id);
+    const invalid = childKeyError(key, node?.kind === 'field' && fieldView(node).type === 'attributeValue');
+    if (invalid) return invalid;
+    return siblings.some((node) => node.id !== id && this.childKey(node.id) === key)
+      ? 'Another child in this container already uses that key.'
+      : null;
+  }
+
   updateFieldSettings(id: number, changes: Partial<Field>): string | null {
     if (this.isPublished(id)) return 'Published fields are read-only. Editing a draft version is not available yet.';
-    if (
-      changes.deploymentName !== undefined &&
-      (findContainer(this.session.document(), this.parentContainerId(id))?.children ?? []).some(
-        (node) => node.id !== id && childName(node) === changes.deploymentName?.trim(),
-      )
-    )
-      return 'Another child already uses that property name.';
+    if (changes.deploymentName !== undefined) {
+      const error = this.keyError(id, changes.deploymentName);
+      if (error) return error;
+      this.automaticKeys.delete(id);
+      changes = { ...changes, deploymentName: changes.deploymentName.trim() };
+    }
     const current = this.fieldsFor(id)().find((field) => field.id === id);
     if (current && !this.canAddField(changes.type ?? current.type, this.parentContainerId(id)))
       return 'Page breaks can only be placed in templates.';
+    if (current) changes = reducePrecision(current, changes);
+    if (current && changes.temporal?.timezoneEnabled === false) {
+      const value = changes.defaultValue ?? current.defaultValue;
+      if (value.kind === 'temporal') {
+        changes = { ...changes, defaultValue: { ...value, value: value.value.replace(/(?:Z|[+-]\d{2}:\d{2})$/, '') } };
+      }
+    }
     if (current) {
       const error = defaultValueError({ ...current, ...changes }, changes.defaultValue ?? current.defaultValue);
       if (error) return error;
@@ -547,6 +630,8 @@ export class TemplateService {
       document.children = withStarterFields ? containerFromFlat({ ...document, fields: starterFields() }).children : [];
     }
     this.draftIssues.set({});
+    this.touchedNames.set(new Set());
+    this.nameFocusRequest.set(null);
     this.childPicker.set(null);
     this.session.replace(document);
     this.collapsedElements.set(new Set());
@@ -578,6 +663,8 @@ export class TemplateService {
     this.loadError.set(null);
 
     this.draftIssues.set({});
+    this.touchedNames.set(new Set());
+    this.nameFocusRequest.set(null);
     this.childPicker.set(null);
     this.session.replace(state);
     this.collapsedElements.set(new Set());
@@ -621,23 +708,28 @@ export class TemplateService {
     this.showPicker.set(null);
     this.selectedField.set(null);
   }
-  private insertNode(node: ChildNode, position: number, targetId = this.session.active().id): void {
+  private insertNode(
+    node: ChildNode,
+    position: number,
+    targetId = this.session.active().id,
+    namePlacement = true,
+  ): void {
     const target = findContainer(this.session.document(), targetId);
     if (!target) throw new Error('The import destination no longer exists.');
     this.loadError.set(null);
-    const used = new Set(target.children.map(childName));
-    const base = childName(node).trim() || (node.kind === 'element' ? 'Element' : 'Field');
-    let name = base;
-    for (let suffix = 2; used.has(name); suffix++) name = `${base} ${suffix}`;
-    if (node.kind === 'field') {
-      node =
-        node.placement.deploymentName === undefined && node.definition.customFieldId === undefined
-          ? { ...node, definition: { ...node.definition, name } }
-          : { ...node, placement: { ...node.placement, deploymentName: name } };
-    } else {
-      // Branching on the kind keeps each placement its own type; one spread over the union loses
-      // which of the two it is, and an element's placement is the narrower of them.
-      node = { ...node, placement: { ...node.placement, deploymentName: name } };
+    if (namePlacement) {
+      const used = new Set(target.children.map((child) => this.childKey(child.id)));
+      const base =
+        childName(node).trim().toLowerCase().replace(/\s+/g, '_') || (node.kind === 'element' ? 'element' : 'field');
+      let name = base;
+      for (let suffix = 2; used.has(name); suffix++) name = `${base}_${suffix}`;
+      if (node.kind === 'field') {
+        node = { ...node, placement: { ...node.placement, deploymentName: name } };
+      } else {
+        // Branching on the kind keeps each placement its own type; one spread over the union loses
+        // which of the two it is, and an element's placement is the narrower of them.
+        node = { ...node, placement: { ...node.placement, deploymentName: name } };
+      }
     }
     this.session.document.update((root) =>
       updateContainer(root, targetId, (container) => {
@@ -649,10 +741,14 @@ export class TemplateService {
   }
 
   readonly childSource = signal<CedChildSource | null>(null);
-  readonly childPicker = signal<{ targetId: number; position: number } | null>(null);
-  openChildPicker(targetId = this.session.active().id, position = this.session.active().children.length): void {
+  readonly childPicker = signal<{ targetId: number; position: number; type?: 'field' | 'element' } | null>(null);
+  openChildPicker(
+    targetId = this.session.active().id,
+    position = this.session.active().children.length,
+    type?: 'field' | 'element',
+  ): void {
     this.showPicker.set(null);
-    this.childPicker.set({ targetId, position });
+    this.childPicker.set({ targetId, position, type });
   }
 
   /** Parse the complete batch before changing the document. Source definitions keep their identity. */
@@ -693,8 +789,9 @@ export class TemplateService {
     }
   }
 
-  addElement(targetId = this.session.active().id): void {
-    const definition = newContainer('element', 'Element');
+  addElement(targetId = this.session.active().id, position = Number.MAX_SAFE_INTEGER): number {
+    const definition = newContainer('element');
+    this.automaticKeys.add(definition.id);
     this.insertNode(
       {
         kind: 'element',
@@ -702,9 +799,14 @@ export class TemplateService {
         definition,
         placement: { allowMultiple: false, propertyIri: newFieldIdentity().propertyIri },
       },
-      Number.MAX_SAFE_INTEGER,
+      position,
       targetId,
+      false,
     );
+    this.openContainer(targetId);
+    this.scrollRequest.set(definition.id);
+    this.nameFocusRequest.set(definition.id);
+    return definition.id;
   }
   importElement(source: string | object, targetId = this.session.active().id): void {
     const definition = readContainer(source);
@@ -776,11 +878,13 @@ export class TemplateService {
         children: container.children.filter((node) => node.id !== id),
       })),
     );
+    this.pruneCollapsed();
     if (!this.containerChoices().some((choice) => choice.id === this.session.activeId())) this.openContainer(parent.id);
   }
   moveChild(id: number, targetId: number, index = Number.MAX_SAFE_INTEGER): void {
     try {
       this.session.document.update((root) => moveChild(root, id, targetId, index));
+      this.pruneCollapsed();
       this.loadError.set(null);
     } catch (error) {
       this.loadError.set(error instanceof Error ? error.message : String(error));
@@ -790,9 +894,11 @@ export class TemplateService {
     const parent = parentOf(this.session.document(), id);
     if (!parent) return 'The element no longer exists.';
     const name = placement.deploymentName?.trim();
-    if (!name) return 'A property name is required.';
-    if (parent.children.some((node) => node.id !== id && childName(node) === name))
-      return 'Another child already uses that property name.';
+    if (name !== undefined) {
+      const error = this.keyError(id, name);
+      if (error) return error;
+      this.automaticKeys.delete(id);
+    }
     const next = updateContainer(this.session.document(), parent.id, (container) => ({
       ...container,
       children: container.children.map((node) =>

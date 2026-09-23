@@ -183,7 +183,7 @@ for (const type of ['text', 'number', 'date', 'controlledTerms'] as CedFieldType
       identifier: '',
       version: '0.0.1',
       fields: [editor.field()!],
-    }).getField('YAML field')!;
+    }).getField('yaml_field')!;
     const writer = CedarWriters.yaml().getStrict().getFieldWriterForField(built);
     editor.loadArtifact(writer.getAsYamlString(built, false));
     expect(editor.field()!.name).toBe('YAML field');

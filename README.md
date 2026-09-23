@@ -50,8 +50,6 @@ property IRI, requirement, cardinality and layout. Its move control transfers
 whole element subtrees between containers. Cycles and conflicting property
 names are refused; page breaks are offered only in templates.
 
-
-
 The public `currentArtifact` and change events always contain the complete root
 document, including while a nested element is selected. CEE preview wraps a root
 element in a temporary template; host-facing documents retain their element type.
@@ -133,6 +131,13 @@ drawing of a form of the designer's own. It is asked for a read-only form with n
 instance behind it, which is how CEE reads a template as a statement of what each
 field will accept. Without it the preview panel says so.
 
+Field cards also reuse CEF's read-only specification box for numeric, text,
+temporal and terminology constraints. Summaries update as constraints change and
+use CEE's own wording and styles; declared defaults remain separate. Choice lists
+and attribute-value placeholders retain their authoring presentation. If the CEE
+script is not loaded, cards keep their existing placeholders; loading it later
+activates the summaries without reloading the document.
+
 All default-capable fields use `<cedar-embeddable-field>` (CEF), registered by
 that same CEE script. Choose the **semantic** preset in Preferences to show Default
 Value. Defaults are written through the TypeScript model library and restored on
@@ -151,7 +156,22 @@ To run the browser integration tests against real sibling bundles after building
 ```bash
 CEF_BUNDLE="$PWD/../cedar-embeddable-editor/visual/public/cedar-embeddable-editor.js" \
 PICKER_BUNDLE="$PWD/../cedar-embeddable-term-picker/dist-bundle/cedar-embeddable-term-picker.js" \
-npm --prefix browser test
+npm run test:browser:prebuilt
+```
+
+`npm run build` records content fingerprints for the source, build configuration,
+lockfile, installed CEDAR token/model packages and compiled output. `npm run bundle`
+and `npm run check:fresh` reject any mismatch, including edits with unchanged file
+timestamps. Rebuild with `npm run dist`; an old bundle without provenance is rejected.
+Browser tests start their own server. Use `PORT=4600` if the default port is occupied.
+
+CI builds pinned real CEE/CEF and CETP sources for the integration suite. A separate
+WebKit job exercises header focus, blank-name validation, card navigation, Overview
+resizing and native defaults. Run it locally after installing WebKit:
+
+```bash
+./browser/node_modules/.bin/playwright install webkit
+CED_WEBKIT=1 npm run test:browser:prebuilt -- --project=webkit
 ```
 
 To try all three scripts together from source:
@@ -299,8 +319,7 @@ The picker automatically matches word prefixes: `Princ` and `Princ Inv` both
 match `Principal Investigator`. Every entered word must match; no wildcard is needed.
 This translation belongs to the demo host adapter and leaves the REST API unchanged.
 The loopback-only demo server signs in to local Keycloak on port 8080 as
-`test1@test.com` and reads fields and elements through the resource server on port
-9007. It caches and renews the short-lived token in server memory. Only search and
+`test1@test.com` and reads fields and elements through the resource server on port 9007. It caches and renews the short-lived token in server memory. Only search and
 artifact reads are exposed; adding children changes the designer document locally.
 The fixed test account and endpoints belong to this development server, not the
 published CED component. The component's `childSource` input still belongs to its host.
@@ -328,10 +347,10 @@ const field = document.createElement('cedar-embeddable-field-designer') as Cedar
 document.body.append(field);
 field.config = { terminologyBaseUrl: 'https://terminology.example.org' };
 field.newArtifact('number'); // Omit the argument to show the field-type chooser.
-field.addEventListener('artifactChange', event => {
+field.addEventListener('artifactChange', (event) => {
   console.log('Current valid field definition', event.detail);
 });
-field.addEventListener('validationChange', event => {
+field.addEventListener('validationChange', (event) => {
   console.log('Host Save enabled:', event.detail.canSave);
 });
 ```
@@ -361,7 +380,9 @@ registration reports an upgrade error rather than waiting indefinitely.
 
 ### Shared defaults during development
 
-CED/CEFD settings use the shared 32px authoring profile. Native controls and
+CED/CEFD use the shared 14px body type and standard 36px CEE control profile.
+Control labels use regular weight; section headings and tabs use medium weight.
+CED has no separate small-text exception. Native controls and
 embedded CEF both honor inherited `--cedar-control-*` overrides. Service bases
 are normalized once and forwarded identically to terminology and CEF; unknown
 keys and wrong value types produce diagnostics without disabling valid siblings.

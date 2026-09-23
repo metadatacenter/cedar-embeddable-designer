@@ -15,8 +15,9 @@ import { openSettings, applyPreset, child, clickCentred, currentTemplate, openDe
 async function openConstraintPanel(page: import('@playwright/test').Page) {
   const designer = await openDesigner(page, '?picker=stub');
   await applyPreset(page, 'semantic');
-  await designer.getByRole('button', { name: /Add Child/ }).click();
+  await designer.getByRole('button', { name: /^Add field$/ }).click();
   await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
+  await designer.locator('input[aria-label="Field name"]:focus').fill('Controlled Terms');
   await expect(designer.locator('app-controlled-term-config')).toBeAttached();
   await openSettings(designer.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') }));
   return designer.locator('app-controlled-term-config');
@@ -31,8 +32,9 @@ test('offers term search when the host has loaded the picker', async ({ page }) 
 test('says what is missing when the host has not loaded the picker', async ({ page }) => {
   const designer = await openDesigner(page);
   await applyPreset(page, 'semantic');
-  await designer.getByRole('button', { name: /Add Child/ }).click();
+  await designer.getByRole('button', { name: /^Add field$/ }).click();
   await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
+  await designer.locator('input[aria-label="Field name"]:focus').fill('Controlled Terms');
 
   await expect(designer.locator('app-controlled-term-config')).toBeAttached();
   await openSettings(designer.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') }));
@@ -46,8 +48,9 @@ test('says what is missing when the host has not loaded the picker', async ({ pa
 test('says what is missing when no terminology server is configured', async ({ page }) => {
   const designer = await openDesigner(page, '?picker=stub&terminology=none');
   await applyPreset(page, 'semantic');
-  await designer.getByRole('button', { name: /Add Child/ }).click();
+  await designer.getByRole('button', { name: /^Add field$/ }).click();
   await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
+  await designer.locator('input[aria-label="Field name"]:focus').fill('Controlled Terms');
 
   await expect(designer.locator('app-controlled-term-config')).toContainText('terminologyBaseUrl');
 });
@@ -59,7 +62,7 @@ test('a chosen term becomes a constraint on the field', async ({ page }) => {
   await expect(page.locator('cedar-embeddable-term-picker')).toBeVisible();
   await page.locator('#stub-pick').click();
 
-  const constraints = child(await currentTemplate(page), 'Controlled Terms')['_valueConstraints'] as {
+  const constraints = child(await currentTemplate(page), 'controlled_terms')['_valueConstraints'] as {
     classes: Array<Record<string, unknown>>;
   };
   expect(constraints.classes).toHaveLength(1);
@@ -73,7 +76,7 @@ test('a chosen term keeps the version the author pinned', async ({ page }) => {
   await clickCentred(panel.getByRole('button', { name: /Edit controlled-term constraints/ }));
   await page.locator('#stub-pick').click();
 
-  const constraints = child(await currentTemplate(page), 'Controlled Terms')['_valueConstraints'] as {
+  const constraints = child(await currentTemplate(page), 'controlled_terms')['_valueConstraints'] as {
     classes: Array<Record<string, unknown>>;
   };
   // Without this the constraint resolves against whatever the terminology server
@@ -110,7 +113,7 @@ test('reopening passes the existing set and additions preserve it', async ({ pag
     await clickCentred(panel.getByRole('button', { name: 'Edit controlled-term constraints' }));
     await page.locator('#stub-pick').click();
   }
-  const constraints = child(await currentTemplate(page), 'Controlled Terms')['_valueConstraints'] as {
+  const constraints = child(await currentTemplate(page), 'controlled_terms')['_valueConstraints'] as {
     classes: unknown[];
   };
   expect(constraints.classes).toHaveLength(2);

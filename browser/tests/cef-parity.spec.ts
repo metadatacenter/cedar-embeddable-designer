@@ -13,8 +13,8 @@
  * reaching into CEF, but it stops nothing that inherits. `font-size`, `font-weight`,
  * `line-height`, `letter-spacing`, `color` and `text-align` all cross a shadow
  * boundary, so a card that sets any of them on a container silently resizes the
- * control inside it. CED's own inputs sit at 12px and weight 600 while CEF's sit at
- * 14px and weight 400, which is exactly the gap an inherited rule would close.
+ * control inside it. Both surfaces now use the same shared control defaults,
+ * and neither may accidentally alter the other's inherited presentation.
  *
  * So the reference is the same element, given the same configuration, mounted in the
  * bare page beside the designer. Nothing is hardcoded: no expected font, no expected
@@ -106,7 +106,7 @@ async function bothControls(page: Page, type: string) {
   return page.evaluate(
     async ({ artifact, value, inherited, box }) => {
       const root = document.querySelector('cedar-embeddable-designer')!.shadowRoot!;
-      const inCard = root.querySelector('cedar-embeddable-field') as HTMLElement | null;
+      const inCard = root.querySelector('app-field-default-value cedar-embeddable-field') as HTMLElement | null;
       if (!inCard) return { error: 'the card mounted no cedar-embeddable-field' };
 
       const reference = document.createElement('cedar-embeddable-field') as HTMLElement & {
@@ -117,8 +117,7 @@ async function bothControls(page: Page, type: string) {
       // Off to one side and out of the flow, so it cannot disturb what is being measured.
       reference.style.cssText = 'position:absolute;left:0;top:2000px;width:530px';
       document.body.appendChild(reference);
-      reference.setAttribute('density', 'authoring');
-      // The public authoring profile is intentional; compare the same tokens.
+      // Both surfaces use the standard CEE control tokens.
       for (const token of ['height', 'font-size', 'line-height', 'radius', 'border']) {
         const name = `--cedar-control-${token}`;
         reference.style.setProperty(name, getComputedStyle(inCard).getPropertyValue(name));

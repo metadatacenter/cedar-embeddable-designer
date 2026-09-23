@@ -1,3 +1,4 @@
+import { IconComponent } from '../../shared/components/icon/icon.component';
 import { ChangeDetectionStrategy, Component, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 
 import { TemplateService } from '../../core/services/template.service';
@@ -28,6 +29,7 @@ const REBUILD_QUIET_MS = 200;
 @Component({
   selector: 'app-cee-preview',
   standalone: true,
+  imports: [IconComponent],
   templateUrl: './cee-preview.component.html',
   styleUrls: ['./cee-preview.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

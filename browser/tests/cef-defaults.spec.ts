@@ -55,15 +55,23 @@ for (const [type, text, stored] of [
     await input.fill(text);
     await expect.poll(async () => (await constraints(page))['defaultValue']).toBe(stored);
     await input.press('Tab');
+    const summary = page.locator('app-field-summary .cee-spec-box');
+    await expect(summary).toContainText('default');
+    await expect(summary).toContainText(text.replace(/\s+/g, ' '));
     await expect(input).toHaveValue(text);
     const saved = await currentTemplate(page);
     await page.evaluate((template) => {
       (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
     }, saved);
+    await expect(page.locator('app-field-card').first().locator('.settings-toggle')).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
     await openSettings(page.locator('app-field-card').first());
     await expect(input).toHaveValue(text);
     await input.fill('');
     await expect.poll(async () => (await constraints(page))['defaultValue']).toBeUndefined();
+    await expect(summary).not.toContainText('default');
   });
 }
 
@@ -101,6 +109,12 @@ for (const type of ['multipleChoice', 'checkboxes', 'singleChoiceList', 'multipl
           .map((x) => x.label),
       )
       .toEqual(wanted);
+    await expect(page.locator('app-field-summary .cee-spec-box')).toContainText('default ' + wanted.join(' · '));
+    if (type === 'singleChoiceList' || type === 'multipleChoiceList') {
+      await expect(control.getByRole('button', { name: 'Clear', exact: true })).toHaveCount(
+        type === 'singleChoiceList' ? 1 : 0,
+      );
+    }
   });
 }
 
@@ -110,10 +124,15 @@ test('time default comes from time segments and restores on reopen', async ({ pa
   await control.getByRole('textbox', { name: 'Minute', exact: true }).fill('30');
   await control.getByRole('textbox', { name: 'Minute', exact: true }).press('Tab');
   await expect.poll(async () => (await constraints(page))['defaultValue']).toBe('14:30');
+  await expect(page.locator('app-field-summary .cee-spec-box')).toContainText('default 14:30');
   const saved = await currentTemplate(page);
   await page.evaluate((template) => {
     (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
   }, saved);
+  await expect(page.locator('app-field-card').first().locator('.settings-toggle')).toHaveAttribute(
+    'aria-expanded',
+    'false',
+  );
   await openSettings(page.locator('app-field-card').first());
   await expect(control.getByRole('textbox', { name: 'Hour', exact: true })).toHaveValue('14');
   await expect(control.getByRole('textbox', { name: 'Minute', exact: true })).toHaveValue('30');
@@ -146,9 +165,13 @@ for (const [type, iri] of authorities) {
       route.fulfill({ json: { found: true, results: { [iri]: { name: 'Sample record' } } } }),
     );
     const control = await openField(page, type);
-    await control.locator('input').first().fill('Sample');
+    const input = control.locator('input').first();
+    await input.click();
+    await expect(input).toBeFocused();
+    await page.keyboard.type('Sample');
     await page.getByRole('option', { name: /Sample record/ }).click();
     await expect.poll(async () => (await constraints(page))['defaultValue']).toBe(iri);
+    await expect(page.locator('app-field-summary .cee-spec-box')).toContainText('default ' + iri);
   });
 }
 
@@ -171,12 +194,37 @@ test('controlled default uses the term picker and verifies field membership', as
     },
     '?picker=stub',
   );
-  await control.getByRole('button', { name: 'Choose default term' }).click();
+  const chooser = control.getByRole('button', { name: 'Edit default term' });
+  const constraintEdit = page.getByRole('button', { name: 'Edit controlled-term constraints' });
+  for (const property of ['fontSize', 'fontWeight', 'color', 'lineHeight', 'textUnderlineOffset'] as const) {
+    const expected = await constraintEdit.evaluate((node, key) => getComputedStyle(node)[key], property);
+    await expect.poll(() => chooser.evaluate((node, key) => getComputedStyle(node)[key], property)).toBe(expected);
+  }
+  const constraintBox = page.locator('app-controlled-term-config .cee-spec-box');
+  const previewBox = page.locator('app-field-summary .cee-spec-box');
+  for (const property of ['fontSize', 'minHeight', 'borderRadius'] as const) {
+    const expected = await previewBox.evaluate((node, key) => getComputedStyle(node)[key], property);
+    await expect
+      .poll(() => constraintBox.evaluate((node, key) => getComputedStyle(node)[key], property))
+      .toBe(expected);
+  }
+  const valueBox = (await control.locator('.default-value-control').boundingBox())!;
+  const actionBox = (await chooser.boundingBox())!;
+  expect(actionBox.x).toBeGreaterThanOrEqual(valueBox.x + valueBox.width);
+  expect(Math.abs(actionBox.y + actionBox.height / 2 - valueBox.y - valueBox.height / 2)).toBeLessThan(2);
+  await control.getByRole('button', { name: 'Edit default term' }).click();
   await control.locator('#stub-pick').click();
   await expect
     .poll(async () => (await constraints(page))['defaultValue'])
     .toEqual({ termUri: 'http://purl.obolibrary.org/obo/DOID_162', 'rdfs:label': 'cancer' });
+  await expect(page.locator('app-field-summary .cee-spec-box')).toContainText(/default.*cancer/i);
   expect(checked).toBe(true);
+  await page.setViewportSize({ width: 375, height: 900 });
+  const narrowValue = (await control.locator('.default-value-control').boundingBox())!;
+  const narrowActions = (await control.locator('.default-value-actions').boundingBox())!;
+  expect(narrowActions.y).toBeGreaterThanOrEqual(narrowValue.y + narrowValue.height);
+  expect(narrowActions.x + narrowActions.width).toBeCloseTo(narrowValue.x + narrowValue.width, 0);
+
   await control.getByRole('button', { name: 'Clear default' }).click();
   await expect.poll(async () => (await constraints(page))['defaultValue']).toBeUndefined();
 });
@@ -274,7 +322,7 @@ test('the real picker selects a default within the field vocabulary', async ({ p
     },
   });
   await page.addScriptTag({ path: process.env.PICKER_BUNDLE! });
-  await control.getByRole('button', { name: 'Choose default term' }).click();
+  await control.getByRole('button', { name: 'Edit default term' }).click();
   const picker = control.locator('cedar-embeddable-term-picker');
   await expect(control.getByRole('dialog', { name: 'Choose default term' })).toBeVisible();
   await expect(picker.getByLabel('Search vocabulary and release').locator('option')).toHaveCount(2);
@@ -362,7 +410,7 @@ for (const type of ['number', 'date']) {
     const defaultBox =
       type === 'number' ? control.locator('input').first() : control.locator('.mat-mdc-text-field-wrapper').first();
     await expect(defaultBox).toBeVisible();
-    await expect.poll(async () => (await defaultBox.boundingBox())!.height).toBe(32);
+    await expect.poll(async () => (await defaultBox.boundingBox())!.height).toBe(36);
     await expect
       .poll(async () => (await defaultBox.boundingBox())!.height)
       .toBe((await neighbor.boundingBox())!.height);
@@ -379,16 +427,13 @@ for (const type of ['number', 'date']) {
   });
 }
 
-test('Display controls retain the compact authoring scale', async ({ page }) => {
+test('Display controls use the standard CEE scale', async ({ page }) => {
   await openField(page, 'number');
   const panel = await openSettings(page.locator('app-field-card').first(), 'Display');
   for (const input of await panel.locator('input:not([type="checkbox"])').all()) {
-    await expect(input).toHaveCSS('height', '32px');
-    // The step below the body, which is what compact means here: an authoring
-    // control is smaller than the form text it is describing. 11px until the
-    // designer joined the scale the editor and the term picker share, whose
-    // smallest step is 12px and which has nothing under it.
-    await expect(input).toHaveCSS('font-size', '12px');
+    await expect(input).toHaveCSS('height', '36px');
+    // Authoring and CEE use the same readable body scale.
+    await expect(input).toHaveCSS('font-size', '14px');
   }
 });
 
@@ -404,9 +449,9 @@ for (const host of ['CED', 'CEFD']) {
       await openSettings(page.locator('app-field-card'), 'Constraints');
     }
     const native = page.getByRole('combobox', { name: 'Temporal type', exact: true });
-    const cef = page.locator('cedar-embeddable-field');
+    const cef = page.locator('app-field-default-value cedar-embeddable-field');
     const cefBox = cef.locator('.mat-mdc-text-field-wrapper').first();
-    await expect.poll(async () => (await cefBox.boundingBox())!.height).toBe(32);
+    await expect.poll(async () => (await cefBox.boundingBox())!.height).toBe(36);
     await page.evaluate(() => {
       document.body.style.setProperty('--cedar-control-height', '44px');
       document.body.style.setProperty('--cedar-control-font-size', '16px');
@@ -419,15 +464,166 @@ for (const host of ['CED', 'CEFD']) {
     await expect(native).toHaveCSS('font-size', '16px');
     await expect(native).toHaveCSS('border-radius', '9px');
     await expect(native).toHaveCSS('border-top-color', 'rgb(101, 67, 33)');
+    await page.keyboard.press('Tab');
     await native.focus();
     await expect(native).toHaveCSS('outline-color', 'rgb(102, 51, 153)');
+    await expect(native).toHaveCSS('outline-width', '2px');
+    await expect(native).toHaveCSS('outline-offset', '2px');
     await expect.poll(async () => (await cefBox.boundingBox())!.height).toBe(44);
     await expect(cef.locator('input').first()).toHaveCSS('font-size', '16px');
     await page.setViewportSize({ width: 375, height: 800 });
     await expect(native).toBeVisible();
     await expect(cefBox).toBeVisible();
     await page.evaluate(() => document.body.removeAttribute('style'));
-    await expect(native).toHaveCSS('height', '32px');
-    await expect.poll(async () => (await cefBox.boundingBox())!.height).toBe(32);
+    await expect(native).toHaveCSS('height', '36px');
+    await expect.poll(async () => (await cefBox.boundingBox())!.height).toBe(36);
   });
 }
+
+for (const [type, invalid] of [
+  ['email', 'e'],
+  ['link', 'not a URL'],
+] as const) {
+  test(`${type} default reports one specific validation error`, async ({ page }) => {
+    const control = await openField(page, type);
+    const input = control.locator('input').first();
+    if (type === 'email') expect((await input.getAttribute('placeholder')) || '').toBe('');
+    await input.fill(invalid);
+    await input.press('Tab');
+    await expect(control).not.toContainText('Enter a valid default value.');
+    await expect(control.locator('mat-error, .ced-field-error')).toHaveCount(1);
+    expect((await constraints(page))['defaultValue']).toBeUndefined();
+    await input.fill(type === 'email' ? 'person@example.org' : 'https://example.org');
+    await input.press('Tab');
+    await expect(control.locator('mat-error, .ced-field-error')).toHaveCount(0);
+  });
+}
+
+for (const [type, granularity] of [
+  ['xsd:date', 'year'],
+  ['xsd:date', 'month'],
+  ['xsd:date', 'day'],
+  ['xsd:dateTime', 'minute'],
+  ['xsd:dateTime', 'second'],
+  ['xsd:dateTime', 'decimalSecond'],
+  ['xsd:time', 'minute'],
+  ['xsd:time', 'second'],
+  ['xsd:time', 'decimalSecond'],
+] as const) {
+  test(`${type} ${granularity} default controls center their icons`, async ({ page }) => {
+    const control = await openField(page, type === 'xsd:time' ? 'time' : 'date', {
+      temporal: { type, granularity, timezoneEnabled: true, inputTimeFormat: '24h' },
+    });
+    for (const width of [1280, 375]) {
+      await page.setViewportSize({ width, height: 1000 });
+      const toggle = control.locator('mat-datepicker-toggle');
+      if (type !== 'xsd:time') {
+        const box = (await control.locator('.cee-temporal-date .mat-mdc-text-field-wrapper').boundingBox())!;
+        const icon = (await toggle.locator('mat-icon').boundingBox())!;
+        expect(Math.abs(icon.y + icon.height / 2 - box.y - box.height / 2)).toBeLessThanOrEqual(1);
+      } else await expect(toggle).toHaveCount(0);
+    }
+  });
+}
+
+test('radio default selection and clearing keep every option stationary', async ({ page }) => {
+  const control = await openField(page, 'multipleChoice');
+  const rows = control.locator('.choice-option-row');
+  const geometry = () =>
+    rows.evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const { y, height } = node.getBoundingClientRect();
+        return { y, height };
+      }),
+    );
+  const before = await geometry();
+  for (const name of ['A', 'B']) {
+    await control.getByRole('radio', { name, exact: true }).check();
+    await expect.poll(geometry).toEqual(before);
+  }
+  await control.getByRole('button', { name: 'Clear', exact: true }).click();
+  await expect.poll(geometry).toEqual(before);
+});
+
+for (const type of ['checkboxes', 'multipleChoice', 'singleChoiceList', 'multipleChoiceList']) {
+  test(`${type} option text and row spacing match default choices and host overrides`, async ({ page }) => {
+    await openField(page, type);
+    const card = page.locator('app-field-card').first();
+    await openSettings(card, 'Constraints');
+    if (type === 'checkboxes') await expect(card.getByRole('tab', { name: 'Occurrences' })).toHaveCount(0);
+    const option = card.getByRole('textbox', { name: 'Option 1', exact: true });
+    const isList = type.endsWith('List');
+    if (isList) await card.locator('app-field-default-value').getByRole('combobox').click();
+    const labels = isList
+      ? page.locator('.mat-mdc-option .mdc-list-item__primary-text')
+      : card.locator('app-field-default-value .mdc-label');
+    await expect(labels.first()).toBeVisible();
+    for (const override of [false, true]) {
+      if (override) {
+        await page.locator('cedar-embeddable-designer').evaluate((host) => {
+          const style = (host as HTMLElement).style;
+          style.setProperty('--cedar-control-font-size', '16px');
+          style.setProperty('--cedar-control-line-height', '28px');
+          style.setProperty('--cedar-choice-row-height', '36px');
+        });
+      }
+      for (const property of ['font-family', 'font-size', 'font-weight', 'line-height', 'letter-spacing', 'color']) {
+        await expect(option).toHaveCSS(
+          property,
+          await labels.first().evaluate((el, p) => getComputedStyle(el).getPropertyValue(p), property),
+        );
+      }
+      await expect(option).toHaveCSS('font-size', override ? '16px' : '14px');
+      const rows = card.locator('.choice-option-row');
+      const a = (await rows.nth(0).boundingBox())!;
+      const b = (await rows.nth(1).boundingBox())!;
+      expect(b.y - a.y).toBe(override ? 36 : 28);
+      // Overlay opening animates its scale; wait for the settled row geometry.
+      await expect
+        .poll(async () => {
+          const x = (await labels.nth(0).boundingBox())!;
+          const y = (await labels.nth(1).boundingBox())!;
+          return Math.abs(b.y - a.y - (y.y - x.y));
+        })
+        .toBeLessThan(0.1);
+    }
+  });
+}
+
+for (const type of ['singleChoiceList', 'multipleChoiceList']) {
+  test(`${type} long default labels grow beyond the shared minimum without clipping`, async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 1000 });
+    const label = 'An option with a long descriptive label that must wrap onto several lines';
+    const control = await openField(page, type, { options: [label, 'Short'] });
+    await control.getByRole('combobox').click();
+    const option = page.getByRole('option', { name: label, exact: true });
+    const text = option.locator('.mdc-list-item__primary-text');
+    await expect(option).toBeVisible();
+    const metrics = await text.evaluate((el) => ({ height: el.clientHeight, content: el.scrollHeight }));
+    expect(metrics.height).toBeGreaterThan(28);
+    expect(metrics.content).toBeLessThanOrEqual(metrics.height);
+  });
+}
+
+test('disabling timezone removes the offset and hides its control without rejecting the default', async ({ page }) => {
+  const control = await openField(page, 'date', {
+    temporal: { type: 'xsd:dateTime', granularity: 'decimalSecond', timezoneEnabled: true, inputTimeFormat: '24h' },
+    defaultValue: { kind: 'temporal', value: '2026-09-08T02:02:02.222-10:00' },
+  });
+  await page.getByLabel('Show timezone', { exact: true }).uncheck();
+  await expect.poll(async () => (await constraints(page))['defaultValue']).toBe('2026-09-08T02:02:02.222');
+  await expect(control.locator('.cee-temporal-offset')).toHaveCount(0);
+  await expect(page.getByText('Enable Show timezone or remove the timezone from the default.')).toHaveCount(0);
+  await expect(control.getByRole('textbox', { name: 'Hour', exact: true })).toHaveValue('02');
+});
+
+test('reducing date precision trims the default and updates the editor without an error', async ({ page }) => {
+  const control = await openField(page, 'date', {
+    temporal: { type: 'xsd:date', granularity: 'month', timezoneEnabled: false, inputTimeFormat: null },
+    defaultValue: { kind: 'temporal', value: '2021-11' },
+  });
+  await page.getByLabel('Precision', { exact: true }).selectOption('year');
+  await expect.poll(async () => (await constraints(page))['defaultValue']).toBe('2021');
+  await expect(control.getByRole('alert')).toHaveCount(0);
+  await expect(page.getByText('The default must match the selected precision.')).toHaveCount(0);
+});

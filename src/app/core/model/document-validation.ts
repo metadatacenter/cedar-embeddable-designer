@@ -1,9 +1,23 @@
+import { childKeyError } from './child-key-policy';
 import type { CedValidationIssue, CedValidationReport } from '../../ced-public-api';
 import { ContainerDraft, childName, fieldView } from './container-draft';
 import type { Field } from '../models/types';
-import { buildContainer, buildTemplate, fieldToJson, choiceDefaultConflict, defaultValueError } from './cedar-template';
+import {
+  deploymentKeys,
+  buildContainer,
+  buildTemplate,
+  fieldToJson,
+  choiceDefaultConflict,
+  defaultValueError,
+  allowsOptions,
+} from './cedar-template';
 
 export type DraftIssues = Readonly<Record<string, { message: string; tab: string }>>;
+
+/** Names are required independently of the generated property key used by a draft. */
+export function artifactNameError(name: string, kind: 'field' | 'element' | 'template'): string | null {
+  return name.trim() ? null : `${kind[0].toUpperCase()}${kind.slice(1)} name is required.`;
+}
 
 /** Validate one document snapshot, including unsaved settings drafts, without UI state. */
 export function validateDocument(document: ContainerDraft, drafts: DraftIssues): CedValidationReport {
@@ -38,8 +52,36 @@ export function validateDocument(document: ContainerDraft, drafts: DraftIssues):
           add(id, label, nodePath, key.slice(key.indexOf(':') + 1), value.message, value.tab, 'draft');
       }
     };
+    const nameError = artifactNameError(container.name, container.kind);
+    if (nameError) add(container.id, `Unnamed ${container.kind}`, path, 'name', nameError, 'Display', 'model');
     pending(container.id, container.name, path);
+    const keyFields = container.children.map((node) => ({
+      name: node.definition.name,
+      deploymentName: node.placement.deploymentName,
+    }));
+    let keys: string[];
+    try {
+      keys = deploymentKeys(keyFields);
+    } catch {
+      keys = keyFields.map((field, index) => field.deploymentName ?? (field.name.trim() || `field_${index + 1}`));
+    }
     for (const node of container.children) {
+      const key = keys[container.children.indexOf(node)];
+      const keyError =
+        childKeyError(key, node.kind === 'field' && fieldView(node).type === 'attributeValue') ??
+        (keys.filter((candidate) => candidate === key).length > 1
+          ? 'Another child in this container already uses that key.'
+          : null);
+      if (keyError)
+        add(
+          node.id,
+          childName(node),
+          [...path, node.id],
+          'key',
+          keyError,
+          node.kind === 'field' ? 'Field metadata' : 'Element metadata',
+          'model',
+        );
       if (node.kind === 'element') {
         visit(node.definition, path);
         try {
@@ -59,7 +101,23 @@ export function validateDocument(document: ContainerDraft, drafts: DraftIssues):
       }
       const field = fieldView(node);
       const nodePath = [...path, node.id];
+      const nameError = artifactNameError(field.name, 'field');
+      if (nameError) add(node.id, 'Unnamed field', nodePath, 'name', nameError, 'Display', 'model');
       pending(node.id, childName(node), nodePath);
+      if (allowsOptions(field.type)) {
+        field.options.forEach((option, index) => {
+          if (!option.trim())
+            add(
+              node.id,
+              childName(node),
+              nodePath,
+              `option-${index}`,
+              `Option ${index + 1} needs a name.`,
+              'Constraints',
+              'model',
+            );
+        });
+      }
       const settingsField: Field = { ...field, defaultValue: { kind: 'none' }, importedChoiceDefault: undefined };
       let settingsValid = true;
       try {

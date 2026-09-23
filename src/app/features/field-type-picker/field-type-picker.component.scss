@@ -54,7 +54,7 @@
   min-width: 140px;
   color: #374151;
   cursor: pointer;
-  transition: border-color 150ms;
+  transition: border-color var(--cedar-motion-duration-fast);
 
   &:hover {
     border-color: #9ca3af;
@@ -66,7 +66,7 @@
 }
 
 .dropdown-arrow {
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   color: #6b7280;
 }
 
@@ -114,7 +114,7 @@
   cursor: pointer;
   border: none;
   background: transparent;
-  transition: background-color 150ms;
+  transition: background-color var(--cedar-motion-duration-fast);
 
   &:hover {
     background-color: #f9fafb;
@@ -154,7 +154,7 @@
 }
 
 .custom-fields-empty-text {
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   color: #4b5563;
   text-align: center;
 }
@@ -180,7 +180,7 @@
   border: 1px solid #e5e7eb;
   background-color: #ffffff;
   cursor: pointer;
-  transition: all 150ms;
+  transition: all var(--cedar-motion-duration-fast);
 
   &:hover {
     background-color: #e8f3f0 !important;
@@ -193,7 +193,7 @@
 }
 
 .field-item-label {
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   color: #374151;
   text-align: center;
   word-break: break-word;

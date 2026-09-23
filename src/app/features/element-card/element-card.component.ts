@@ -1,3 +1,4 @@
+import { IconComponent } from '../../shared/components/icon/icon.component';
 import { ElementLabelsComponent } from '../element-labels/element-labels.component';
 import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 import { AnnotationsEditorComponent } from '../annotations-editor/annotations-editor.component';
@@ -13,6 +14,7 @@ import { TemplateService } from '../../core/services/template.service';
 @Component({
   selector: 'app-element-card',
   imports: [
+    IconComponent,
     ElementLabelsComponent,
     LanguageSelectorComponent,
     AnnotationsEditorComponent,
@@ -33,9 +35,20 @@ export class ElementCardComponent {
   readonly service = inject(TemplateService);
   readonly draft = signal<ElementPlacement>({ allowMultiple: false });
   readonly error = signal<string | null>(null);
+  readonly keyDraft = signal<string | null>(null);
+  private readonly keyDraftError = signal<string | null>(null);
+  readonly keyError = computed(
+    () =>
+      this.keyDraftError() ??
+      this.service
+        .validationReport()
+        .issues.find((issue) => issue.nodeId === this.node().id && issue.setting === 'key' && issue.source === 'model')
+        ?.message ??
+      null,
+  );
   expanded = false;
   activeTab = 'Display';
-  readonly tabs = ['Display', 'Annotations', 'Occurrences', 'Element metadata'];
+  readonly tabs = ['Display', 'Occurrences', 'Annotations', 'Element metadata'];
   readonly artifact = computed(() => containerArtifactMetadata(this.node().definition));
   readonly publicationStatus = computed(() => publicationStatusLabel(this.artifact().publicationStatus));
   tabId(tab: string): string {
@@ -60,7 +73,7 @@ export class ElementCardComponent {
   constructor() {
     effect(() => {
       const issue = this.service.validationTarget();
-      if (issue?.nodeId === this.node().id) {
+      if (issue?.setting !== 'name' && issue?.nodeId === this.node().id) {
         this.expanded = true;
         this.activeTab = issue.tab;
         this.changeDetector.markForCheck();
@@ -80,6 +93,16 @@ export class ElementCardComponent {
     const error = this.service.updateElementPlacement(this.node().id, { ...this.node().placement, propertyIri: iri });
     this.error.set(error);
     this.service.setSettingsError(this.node().id, 'propertyIri', error, 'Element metadata');
+  }
+  saveKey(value: string): void {
+    this.keyDraft.set(value);
+    this.keyDraftError.set(
+      this.service.updateElementPlacement(this.node().id, {
+        ...this.node().placement,
+        deploymentName: value,
+      }),
+    );
+    this.service.setSettingsError(this.node().id, 'key', this.keyDraftError(), 'Element metadata');
   }
   apply(): void {
     const invalid = Array.from(this.host.nativeElement.querySelectorAll('input')).find(

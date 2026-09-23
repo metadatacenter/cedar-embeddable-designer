@@ -12,13 +12,18 @@
           <app-icon
             [key]="getFieldIcon(field)"
             class="field-type-icon flex-shrink-0"
-            className="w-5 h-5"
+            size="default"
             [style.color]="'var(--cedar-color-primary)'"
           />
 
           <!-- Field Title Name editing -->
           <input
+            spellcheck="false"
             type="text"
+            [appArtifactName]="field.id"
+            aria-required="true"
+            [attr.aria-invalid]="!!service.nameError(field.id, field.name, 'field')"
+            [attr.aria-describedby]="service.nameError(field.id, field.name, 'field') ? 'name-error-' + field.id : null"
             [ngModel]="field.name"
             (ngModelChange)="service.updateFieldName(field.id, $event)"
             class="text-sm font-medium text-gray-900 border-none outline-none pb-0.5 flex-1 min-w-0 bg-transparent border-b-2"
@@ -27,35 +32,33 @@
             placeholder="Enter field name"
             aria-label="Field name"
           />
-          @if (service.issuesFor(field.id).length; as count) {
+          @if (field.status === 'required' && allowsStatus(field.type)) {
+            <sup class="required-mark" aria-label="Required">*</sup>
+          }
+          @if (occurrenceRange; as range) {
+            <span class="occurrence-range" aria-label="Occurrence range">{{ range }}</span>
+          }
+          @if (service.visibleIssuesFor(field.id).length; as count) {
             <button
               type="button"
               class="validation-badge"
-              (click)="service.revealIssue(service.issuesFor(field.id)[0])"
+              (click)="service.revealIssue(service.visibleIssuesFor(field.id)[0])"
             >
-              ⚠ {{ count }} {{ count === 1 ? 'error' : 'errors' }}
+              <app-icon key="warning" size="small" />
+              <span>{{ count }} {{ count === 1 ? 'error' : 'errors' }}</span>
             </button>
           }
         </div>
         @if (!standalone) {
           <span class="field-drag-handle" cdkDragHandle title="Drag to reorder" aria-label="Drag to reorder">
-            <app-icon key="list" className="w-5 h-4"></app-icon>
+            <app-icon key="list" size="small"></app-icon>
           </span>
         }
 
         <div class="field-controls">
           <div class="field-summary">
-            @if (identityLabel; as label) {
-              <span
-                class="text-xs text-gray-500"
-                [title]="field.atId"
-                aria-label="Field version and publication status"
-              >
-                {{ label }}
-              </span>
-            }
             <!-- Label Badge details -->
-            <div class="text-xs bg-gray-100 border text-gray-600 font-medium px-2 py-0.5 rounded-full capitalize">
+            <div class="field-type-label">
               {{ getFieldTypeName(field) }}
             </div>
           </div>
@@ -77,9 +80,12 @@
                 <option value="required">Required</option>
               </select>
             }
-            @if (!service.fieldDocumentMode() && service.preferences().showAllowMultiple && allowsMultiple(field.type)) {
+            @if (
+              !service.fieldDocumentMode() && service.preferences().showAllowMultiple && allowsMultiple(field.type)
+            ) {
               <label class="flex items-center gap-1 cursor-pointer group shrink-0">
                 <input
+                  spellcheck="false"
                   type="checkbox"
                   [checked]="field.allowMultiple"
                   (change)="service.toggleAllowMultiple(field.id)"
@@ -95,72 +101,77 @@
                 title="Delete field"
                 aria-label="Delete field"
               >
-                <app-icon key="trash" className="w-4 h-4"></app-icon>
+                <app-icon key="trash" size="small"></app-icon>
               </button>
             }
           </div>
         </div>
       </div>
     </fieldset>
-    <!-- Static placeholder text preview for standard types -->
-    @if (!allowsOptions(field.type) && field.type !== 'controlledTerms' && !contentLabel(field.type)) {
-      <div class="mt-1 px-1">
-        <input
-          type="text"
-          disabled
-          [placeholder]="
-            field.temporal?.type === 'xsd:dateTime' ? 'Date and time' : FIELD_TYPES_LIST[field.type]?.preview || ''
-          "
-          class="text-sm text-gray-500 w-full bg-gray-50 border border-gray-200 rounded-md px-3 py-1.5 cursor-not-allowed"
-        />
-      </div>
+    <!-- Reuse CEE's read-only specification; options remain editable below. -->
+    @if (!contentLabel(field.type)) {
+      <app-field-summary class="mt-1" [field]="field" />
+    }
+    @if (service.nameError(field.id, field.name, 'field'); as error) {
+      <p class="ced-field-error" [id]="'name-error-' + field.id">{{ error }}</p>
     }
 
     <app-field-settings
       [field]="field"
-      [hasValues]="
-        allowsOptions(field.type) ||
-        allowsControlledTerms(field.type) ||
-        !!contentLabel(field.type) ||
-        service.preferences().showHelpText
-      "
+      [hasValues]="allowsOptions(field.type) || allowsControlledTerms(field.type) || !!contentLabel(field.type)"
     >
       <fieldset field-values [disabled]="!!field.publishedDefinition" class="border-0 m-0 p-0 min-w-0">
         <!-- Field Preview / Options Editing Inside Card -->
         <!-- Option Editing for Multiple Choice / Checkboxes -->
         @if (allowsOptions(field.type)) {
-          <div class="space-y-0.5 mt-1 px-1">
+          <div class="choice-options px-1">
             @for (option of field.options; track $index; let optIdx = $index) {
-              <div class="flex items-center gap-3 group/option px-1">
-                <app-icon [key]="field.type" className="w-4 h-4 text-gray-400"></app-icon>
+              <div class="choice-option-row flex items-center gap-3 group/option px-1">
+                <app-icon
+                  [key]="
+                    field.type === 'singleChoiceList' || field.type === 'multipleChoice'
+                      ? 'multipleChoice'
+                      : 'checkboxes'
+                  "
+                  size="default"
+                  className="text-gray-400"
+                ></app-icon>
                 <input
+                  spellcheck="false"
                   type="text"
                   [ngModel]="option"
+                  [attr.aria-invalid]="!option.trim()"
+                  [attr.aria-describedby]="!option.trim() ? 'option-error-' + field.id + '-' + optIdx : null"
                   (ngModelChange)="service.updateOption(field.id, optIdx, $event)"
-                  class="text-sm text-gray-700 border-none outline-none bg-transparent flex-1 min-w-0 border-b border-gray-200 focus:border-teal-500 pb-0.5"
+                  class="border-none outline-none bg-transparent flex-1 min-w-0 border-b border-gray-200 focus:border-teal-500"
                   (focus)="service.selectedField.set(field.id)"
                   [placeholder]="'Option ' + (optIdx + 1)"
                   [attr.aria-label]="'Option ' + (optIdx + 1)"
                 />
                 <!-- Delete option button -->
-                @if (field.options.length > 1) {
+                @if (field.options.length > 0) {
                   <button
                     (click)="service.deleteOption(field.id, optIdx)"
                     class="text-black disabled:text-gray-400 transition-colors cursor-pointer border-none bg-transparent flex items-center justify-center p-0.5"
                     title="Delete option"
                     aria-label="Delete option"
                   >
-                    <app-icon key="trash" className="w-3.5 h-3.5"></app-icon>
+                    <app-icon key="trash" size="small"></app-icon>
                   </button>
                 }
               </div>
+              @if (!option.trim()) {
+                <p class="ced-field-error" [id]="'option-error-' + field.id + '-' + optIdx" role="alert">
+                  Option {{ optIdx + 1 }} needs a name.
+                </p>
+              }
             }
             <!-- Add Option Button -->
             <button
               (click)="service.addOption(field.id); service.selectedField.set(field.id)"
-              class="flex items-center gap-1.5 ml-7 text-xs text-gray-500 hover:text-teal-600 transition-colors border-none bg-transparent cursor-pointer font-medium mt-0.5"
+              class="choice-add-action flex items-center px-1 text-xs text-gray-500 hover:text-teal-600 transition-colors border-none bg-transparent cursor-pointer font-medium"
             >
-              <span class="text-sm font-medium">＋</span> Add option
+              <app-icon key="add" size="default" /> Add option
             </button>
           </div>
         }
@@ -180,13 +191,10 @@
   -->
         @if (contentLabel(field.type); as label) {
           <div class="mt-1 px-1">
-            <label
-              [for]="'field-content-' + field.id"
-              class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5 block"
-              >{{ label }}</label
-            >
+            <label [for]="'field-content-' + field.id" class="content-label mb-0.5 block">{{ label }}</label>
             @if (hasMarkupContent(field.type)) {
               <textarea
+                spellcheck="false"
                 [id]="'field-content-' + field.id"
                 rows="4"
                 [ngModel]="field.content || ''"
@@ -195,6 +203,7 @@
               ></textarea>
             } @else {
               <input
+                spellcheck="false"
                 [id]="'field-content-' + field.id"
                 type="text"
                 [ngModel]="field.content || ''"
@@ -205,30 +214,6 @@
             }
           </div>
         }
-
-        <!-- Help Text and Default Value editing (Only if configured in preferences) -->
-        @if (service.preferences().showHelpText) {
-          <div class="space-y-2 mt-1 px-1">
-            @if (service.preferences().showHelpText) {
-              <div>
-                <label
-                  [for]="'field-help-' + field.id"
-                  class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5 block"
-                  >Help Text</label
-                >
-                <input
-                  [id]="'field-help-' + field.id"
-                  type="text"
-                  [ngModel]="field.helpText || ''"
-                  (ngModelChange)="service.updateHelpText(field.id, $event)"
-                  placeholder="Add helper instructions for users..."
-                  class="text-sm text-gray-700 w-full bg-white border border-gray-300 rounded-md px-3 py-1.5 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                  (focus)="service.selectedField.set(field.id)"
-                />
-              </div>
-            }
-          </div>
-        }
       </fieldset>
     </app-field-settings>
   </div>
@@ -236,11 +221,7 @@
   @if (choiceDefaultConflict(field); as conflict) {
     <div class="mt-1 px-1">
       <p role="alert" class="ced-field-error">{{ conflict }}</p>
-      <button
-        type="button"
-        class="text-xs text-teal-700 underline"
-        (click)="service.updateDefaultValue(field.id, { kind: 'none' })"
-      >
+      <button type="button" class="ced-text-action" (click)="service.updateDefaultValue(field.id, { kind: 'none' })">
         Clear conflicting default
       </button>
     </div>

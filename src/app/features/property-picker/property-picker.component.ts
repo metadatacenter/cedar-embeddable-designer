@@ -80,11 +80,11 @@ import { trapTab } from '../../shared/focus-trap';
       display: flex;
       align-items: center;
       gap: 12px;
-      font-size: var(--cedar-font-size-small);
+      font-size: var(--cedar-font-size);
     }
     .unavailable {
       margin: 3px 0 0;
-      font-size: var(--cedar-font-size-small);
+      font-size: var(--cedar-font-size);
       overflow-wrap: anywhere;
     }
     .iri {

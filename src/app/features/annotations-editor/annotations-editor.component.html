@@ -2,6 +2,7 @@
   <div class="add-row">
     <label
       >Annotation name<input
+        spellcheck="false"
         aria-label="New annotation name"
         [ngModel]="draft().name"
         (ngModelChange)="editDraft({ name: $event })"
@@ -17,12 +18,13 @@
       </select></label
     >
     <label
-      >Value<textarea
-        rows="1"
+      >Value<input
+        spellcheck="false"
+        type="text"
         aria-label="New annotation value"
         [ngModel]="draft().value"
         (ngModelChange)="editDraft({ value: $event })"
-      ></textarea>
+      />
     </label>
     <button type="button" class="add" (click)="add()">Add annotation</button>
   </div>
@@ -57,7 +59,7 @@
                 [attr.aria-label]="'Remove annotation ' + (i + 1)"
                 (click)="remove(i)"
               >
-                <app-icon key="trash" className="w-4 h-4" />
+                <app-icon key="trash" size="small" />
               </button>
             </td>
           </tr>

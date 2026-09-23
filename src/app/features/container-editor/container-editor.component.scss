@@ -1,9 +1,21 @@
+@use '../../shared/dialog-style';
 :host {
+  --element-child-inset: var(--cedar-space-3);
   display: block;
   min-width: 0;
 }
 .template-header-card {
+  position: relative;
   scroll-margin-top: var(--cedar-space-4);
+  border: 1px solid var(--cedar-border-rule);
+  border-radius: var(--cedar-control-radius-default);
+  overflow: hidden;
+}
+.template-header-card::before {
+  content: '';
+  display: block;
+  height: var(--cedar-space-1);
+  background: linear-gradient(90deg, var(--cedar-color-primary), var(--cedar-surface-tinted));
 }
 .template-header-card__body {
   padding-bottom: var(--cedar-space-1);
@@ -25,23 +37,6 @@
   overflow-wrap: anywhere;
 }
 
-@media (max-width: 767px) {
-  .template-header-card__icon {
-    display: none;
-  }
-  .template-header-row > .template-field-group {
-    width: 100%;
-    flex: none;
-  }
-}
-
-.template-header-row > .template-field-group.flex-1 {
-  min-width: min(100%, 14rem);
-}
-.template-header-row > .template-field-group.w-24 {
-  margin-left: auto;
-}
-
 .element-child-move {
   padding: 6px var(--cedar-space-4);
 }
@@ -51,55 +46,92 @@
 }
 .publication-status {
   color: #64748b;
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   line-height: 18px;
   text-align: right;
 }
 
-/* Keep the version/status stack independent of the description's vertical position. */
+/* Compact authoring header: preserve the name/identifier/version row where it fits. */
 :host {
   container-type: inline-size;
 }
+.template-header-card__icon {
+  display: flex;
+  width: var(--cedar-control-height-default);
+  height: var(--cedar-control-height-default);
+  border-radius: var(--cedar-control-radius-default);
+  background: var(--cedar-surface-tinted);
+  color: var(--cedar-color-primary);
+}
+.template-header-card__inputs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--cedar-space-1) var(--cedar-space-3);
+}
+.template-header-row {
+  display: contents;
+}
+.template-header-row > .template-field-group {
+  min-width: 0;
+  width: auto;
+}
+.template-header-row > .template-field-group.w-44 {
+  grid-column: 1;
+  grid-row: 2;
+}
+.template-header-row > .template-field-group.w-24 {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  max-width: 6rem;
+}
 .template-field-label {
   margin-bottom: 0;
-  line-height: 16px;
+  font-weight: var(--cedar-font-weight-medium);
+  text-transform: none;
+  line-height: var(--cedar-form-help-line-height);
 }
 .template-input {
-  field-sizing: content;
   width: auto;
   max-width: 100%;
+  field-sizing: content;
   align-self: flex-start;
-  padding-top: 0;
-  padding-bottom: 0;
-  line-height: 20px;
+  line-height: var(--cedar-control-line-height-default);
+  padding: 0;
+  color: var(--cedar-text-primary);
 }
-.publication-status {
-  line-height: 16px;
+.template-header-row > .template-field-group.flex-1 .template-input {
+  font-size: var(--cedar-font-size);
+  color: var(--cedar-color-artifact-title);
+  line-height: var(--cedar-control-line-height-default);
 }
 .template-description {
-  margin-top: 2px;
+  grid-column: 1;
+  margin: 0;
 }
+.publication-status {
+  color: var(--cedar-text-muted);
+  line-height: var(--cedar-form-help-line-height);
+}
+
 @container (min-width: 680px) {
   .template-header-card__inputs {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 11rem 6rem;
-    gap: var(--cedar-space-1) var(--cedar-space-4);
+    grid-template-columns: minmax(0, 1fr) minmax(0, calc(11 * var(--cedar-space-4))) auto;
   }
-  .template-header-row {
-    display: contents;
-  }
-  .template-header-row > .template-field-group {
-    min-width: 0;
-    width: auto;
+  .template-header-row > .template-field-group.w-44 {
+    grid-column: 2;
+    grid-row: 1;
   }
   .template-header-row > .template-field-group.w-24 {
     grid-column: 3;
     grid-row: 1 / span 2;
-    margin-left: 0;
   }
   .template-description {
     grid-column: 1 / span 2;
-    margin-top: 0;
+  }
+}
+@container (max-width: 400px) {
+  .template-header-card__icon {
+    display: none;
   }
 }
 
@@ -107,9 +139,18 @@
   display: none !important;
 }
 .nested-content {
-  padding: 0 var(--cedar-space-3) var(--cedar-space-2);
+  padding: 0 var(--element-child-inset);
+}
+.nested-header {
+  margin-inline: calc(var(--element-child-inset) / 2);
+}
+.nested-header .template-header-card__body {
+  padding-right: calc(var(--cedar-space-3) + var(--cedar-space-6));
 }
 .element-toggle {
+  position: absolute;
+  bottom: var(--cedar-space-1);
+  right: var(--cedar-space-1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -122,29 +163,49 @@
   color: #64748b;
   cursor: pointer;
 }
-.element-toggle svg {
-  transform: rotate(180deg);
-}
-.element-toggle svg.collapsed {
-  transform: none;
-}
 .container-content > app-element-card {
   display: block;
   margin-bottom: var(--cedar-space-2);
 }
 @container (max-width: 400px) {
   .nested-content {
-    padding: 0 6px 6px;
+    --element-child-inset: calc(var(--cedar-space-3) / 2);
+    padding-bottom: calc(var(--cedar-space-3) / 2);
+  }
+  .nested-header {
+    --element-child-inset: calc(var(--cedar-space-3) / 2);
   }
 }
 
 .element-drag-handle {
+  position: absolute;
+  top: calc(var(--cedar-space-3) + var(--cedar-space-1));
+  left: 50%;
+  transform: translateX(-50%);
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cedar-space-6);
+  height: var(--cedar-space-6);
+  padding: 0;
+  color: var(--cedar-text-muted);
   cursor: grab;
+  z-index: var(--cedar-layer-sticky);
 }
 
 .container-content > .add-field-section {
-  margin-top: var(--cedar-space-2);
+  margin-top: 0;
+  padding-block: var(--cedar-space-4);
+}
+
+.element-type-label {
+  position: absolute;
+  left: 100%;
+  margin-left: var(--cedar-space-2);
+  color: var(--cedar-text-muted);
+  font-size: var(--cedar-font-size);
+  font-weight: var(--cedar-font-weight-regular);
+  line-height: var(--cedar-control-line-height-default);
 }
 
 .field-drag-container.invalid {
@@ -153,11 +214,81 @@
 }
 .validation-badge {
   color: var(--cedar-control-error, var(--cedar-color-error));
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   padding: var(--cedar-space-1) var(--cedar-space-3);
   display: block;
 }
 
 .template-field-group.text-right .template-input {
   align-self: flex-end;
+}
+
+textarea.template-input {
+  width: 100%;
+  field-sizing: content;
+  resize: none;
+  overflow: hidden;
+}
+
+.version-group {
+  position: relative;
+}
+.version-value-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+.element-delete {
+  position: absolute;
+  top: 0;
+  left: calc(100% + var(--cedar-space-3));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cedar-space-6);
+  height: var(--cedar-space-6);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--cedar-text-primary);
+  cursor: pointer;
+}
+
+.bottom-insert-zone {
+  width: 100%;
+}
+// Keep the hit area stable so revealing the controls does not move the document.
+// Touch users always see the actions; keyboard focus reveals them on desktop.
+@media (hover: hover) and (pointer: fine) {
+  .bottom-insert-zone > app-insertion-actions {
+    opacity: 0;
+  }
+  .bottom-insert-zone:hover > app-insertion-actions,
+  .bottom-insert-zone:focus-within > app-insertion-actions {
+    opacity: 1;
+  }
+}
+
+.delete-dialog {
+  @include dialog-style.surface;
+  max-width: calc(100vw - var(--cedar-space-6));
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+
+  h2 {
+    @include dialog-style.heading;
+  }
+  p {
+    margin-block: var(--cedar-space-4);
+  }
+  form {
+    @include dialog-style.actions;
+  }
+  button {
+    @include dialog-style.button;
+  }
+  .primary {
+    @include dialog-style.primary;
+  }
 }

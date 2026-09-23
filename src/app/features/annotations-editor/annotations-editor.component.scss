@@ -1,8 +1,9 @@
+@use '../../shared/table-style';
 @use '../../shared/control-style';
 :host {
   display: block;
   min-width: 0;
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
 }
 fieldset {
   border: 0;
@@ -26,7 +27,7 @@ caption {
 }
 .add-row label,
 th {
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-medium, 500);
 }
 th {
@@ -37,26 +38,22 @@ th:nth-child(1) {
   width: 28%;
 }
 th:nth-child(2) {
-  width: 72px;
+  width: calc(12 * var(--cedar-space-2));
+  white-space: nowrap;
 }
 th:nth-child(4) {
-  width: 32px;
+  width: calc(var(--cedar-control-height-default) + 2 * var(--cedar-table-cell-padding-inline-authoring));
 }
 th,
 td {
-  padding: var(--cedar-space-1);
+  padding: var(--cedar-table-cell-padding-block-authoring) var(--cedar-table-cell-padding-inline-authoring);
   vertical-align: top;
 }
 input,
-select,
-textarea {
+select {
   @include control-style.compact-control;
   width: 100%;
   box-sizing: border-box;
-}
-textarea {
-  resize: none;
-  min-height: 28px;
 }
 button {
   font: inherit;
@@ -73,26 +70,28 @@ button:disabled {
 }
 .add-row {
   display: grid;
-  grid-template-columns: minmax(100px, 1fr) 80px minmax(100px, 2fr) auto;
+  grid-template-columns: minmax(100px, 1fr) calc(12 * var(--cedar-space-2)) minmax(100px, 2fr) auto;
   gap: var(--cedar-space-2);
   align-items: end;
   margin-bottom: var(--cedar-space-2);
 }
 .add-row label {
+  font-weight: var(--cedar-font-weight-regular);
   display: flex;
   flex-direction: column;
-  gap: var(--cedar-space-1);
+  gap: var(--cedar-form-label-gap);
   min-width: 0;
 }
 .add-row button {
-  min-height: 28px;
+  box-sizing: border-box;
+  min-height: var(--cedar-control-height, var(--cedar-control-height-default));
 }
 :host {
   container-type: inline-size;
 }
 @container (max-width: 500px) {
   .add-row {
-    grid-template-columns: minmax(0, 1fr) 80px;
+    grid-template-columns: minmax(0, 1fr) calc(12 * var(--cedar-space-2));
   }
   .add-row label:nth-child(3) {
     grid-column: 1 / -1;
@@ -130,10 +129,11 @@ p[role='alert'] {
 }
 
 td {
-  padding: 2px var(--cedar-space-1);
   vertical-align: middle;
   overflow-wrap: anywhere;
 }
 .annotation-value {
   white-space: pre-wrap;
 }
+
+@include table-style.compact-table;

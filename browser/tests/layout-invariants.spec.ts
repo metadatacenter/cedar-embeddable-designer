@@ -63,7 +63,7 @@ const HEIGHT_BUDGET = 420;
 async function paletteLabels(page: Page): Promise<string[]> {
   const designer = page.locator(DESIGNER);
   await designer
-    .getByRole('button', { name: /Add Child/ })
+    .getByRole('button', { name: /^Add field$/ })
     .first()
     .click();
   const picker = designer.locator('app-field-type-picker');
@@ -90,10 +90,11 @@ async function everyTypeOnPage(page: Page): Promise<string[]> {
 
   for (const label of labels) {
     await designer
-      .getByRole('button', { name: /Add Child/ })
+      .getByRole('button', { name: /^Add field$/ })
       .first()
       .click();
     await designer.getByRole('button', { name: label, exact: true }).click();
+    await designer.locator('input[aria-label="Field name"]:focus').fill(label);
   }
   await expect
     .poll(async () => designer.locator('[id^=field-card-]').count(), { timeout: 15_000 })
@@ -103,6 +104,38 @@ async function everyTypeOnPage(page: Page): Promise<string[]> {
 
 test('the whole palette lays out without clipping, escaping or drifting', async ({ page }) => {
   const labels = await everyTypeOnPage(page);
+  const textareas = page.locator('cedar-embeddable-designer textarea');
+  expect(await textareas.count()).toBeGreaterThan(0);
+  for (const textarea of await textareas.all()) {
+    await expect(textarea).toHaveCSS('resize', 'none');
+  }
+  const cards = page.locator('cedar-embeddable-designer .field-drag-container');
+  expect(await cards.count()).toBeGreaterThan(0);
+  for (const card of await cards.all()) {
+    for (const edge of ['top', 'right', 'bottom', 'left']) {
+      await expect(card).toHaveCSS(`border-${edge}-width`, '1px');
+      await expect(card).toHaveCSS(`border-${edge}-style`, 'solid');
+    }
+    const colors = await card.evaluate((node) => {
+      const css = getComputedStyle(node);
+      const expected = css
+        .getPropertyValue(
+          node.classList.contains('invalid')
+            ? '--cedar-status-error-text'
+            : node.classList.contains('selected')
+              ? '--cedar-border-selected'
+              : '--cedar-border-rule',
+        )
+        .trim();
+      const probe = document.createElement('span');
+      probe.style.color = expected;
+      node.appendChild(probe);
+      const tokenColor = getComputedStyle(probe).color;
+      probe.remove();
+      return { actual: css.borderTopColor, expected: tokenColor };
+    });
+    expect(colors.actual).toBe(colors.expected);
+  }
   const { clipped, escaped, geometry } = await auditLayout(page);
   const misaligned = await misalignedRows(page);
 

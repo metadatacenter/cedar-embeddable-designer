@@ -147,7 +147,7 @@ test('adding a field scrolls to it without reaching for the document', async ({ 
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
 
-  await designer.getByRole('button', { name: /Add Child/ }).click();
+  await designer.getByRole('button', { name: /^Add field$/ }).click();
   await designer.getByRole('button', { name: 'Text', exact: true }).first().click();
 
   await expect(designer.locator('[id^=field-card-]')).toHaveCount(4);
@@ -212,7 +212,7 @@ test('the field picker scrolls into a short designer and keeps its last option r
   const designer = await openDesigner(page);
   await designer.getByRole('button', { name: 'Basic', exact: true }).click();
   await designer.getByRole('button', { name: /Modular/ }).click();
-  await designer.getByRole('button', { name: /Add Child/ }).click();
+  await designer.getByRole('button', { name: /^Add field$/ }).click();
   const picker = designer.locator('.picker-container');
   await expect
     .poll(() =>
@@ -227,3 +227,101 @@ test('the field picker scrolls into a short designer and keeps its last option r
   await picker.getByRole('button', { name: 'YouTube', exact: true }).click();
   await expect(designer.locator('app-field-card')).toHaveCount(count + 1);
 });
+
+test('CED identifies its build beneath the logo', async ({ page }) => {
+  const designer = await openDesigner(page);
+  const identity = designer.locator('.designer-identity');
+  await expect(identity.locator('.designer-identity__name')).toHaveText('CED');
+  const version = identity.locator('.designer-identity__version');
+  await expect(version).toHaveText(/\d+\.\d+\.\d+/);
+  expect(await version.getAttribute('title')).toBe(await version.textContent());
+  const logoBox = await identity.locator('svg').boundingBox();
+  const nameBox = await identity.locator('.designer-identity__name').boundingBox();
+  const versionBox = await version.boundingBox();
+  expect(nameBox!.y).toBeGreaterThanOrEqual(logoBox!.y + logoBox!.height);
+  expect(versionBox!.y).toBeGreaterThanOrEqual(nameBox!.y + nameBox!.height);
+  expect(logoBox!.width).toBe(40);
+  expect(logoBox!.height).toBe(40);
+  expect(nameBox!.x + nameBox!.width / 2).toBeCloseTo(logoBox!.x + logoBox!.width / 2, 0);
+  expect(nameBox!.y - logoBox!.y - logoBox!.height).toBe(4);
+  expect(versionBox!.y - nameBox!.y - nameBox!.height).toBe(2);
+  expect(versionBox!.width).toBeLessThanOrEqual(72);
+});
+
+for (const width of [1440, 1024, 640]) {
+  test(`preview is no wider than template editing at ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const designer = await openDesigner(page);
+    const header = designer.locator('.app-header');
+    await header.getByRole('button', { name: 'Open Preview', exact: true }).click();
+    async function checkWidths() {
+      const preview = designer.locator('app-cee-preview');
+      await expect(preview).toBeVisible();
+      // Sidebar changes animate the designer width; compare the settled layout.
+      await expect
+        .poll(async () => {
+          const editingWidth = await designer.locator('.designer-workspace').evaluate((node) => {
+            const css = getComputedStyle(node);
+            return node.getBoundingClientRect().width - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight);
+          });
+          const previewWidth = (await preview.boundingBox())!.width;
+          expect(previewWidth).toBeGreaterThan(0);
+          return previewWidth - editingWidth;
+        })
+        .toBeLessThanOrEqual(1);
+    }
+    await checkWidths();
+    const closeOverview = header.getByRole('button', { name: 'Close Overview', exact: true });
+    if (await closeOverview.isVisible()) {
+      await closeOverview.click();
+      await checkWidths();
+    }
+    await designer.locator('.user-menu-container button').first().click();
+    await designer.getByRole('button', { name: 'Preferences', exact: true }).click();
+    await designer.getByRole('radio', { name: /Library Sidebar/ }).check();
+    await designer.getByRole('button', { name: 'Done', exact: true }).click();
+    await checkWidths();
+    await designer.getByTitle('Collapse sidebar', { exact: true }).click();
+    await checkWidths();
+  });
+}
+
+test('template identity keeps the compact authoring header layout', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const designer = await openDesigner(page);
+  await designer.getByRole('textbox', { name: 'Template name', exact: true }).fill('Named template');
+  const header = designer.locator('app-container-editor > .template-header-card').first();
+  const inputs = header.locator('.template-header-row > .template-field-group input');
+  const boxes = await inputs.evaluateAll((nodes) =>
+    nodes.map((node) => {
+      const box = node.getBoundingClientRect();
+      return { top: box.top, right: box.right, left: box.left };
+    }),
+  );
+  expect(boxes).toHaveLength(3);
+  expect(Math.max(...boxes.map((box) => box.top)) - Math.min(...boxes.map((box) => box.top))).toBeLessThanOrEqual(1);
+  expect(boxes[0].right).toBeLessThanOrEqual(boxes[1].left);
+  expect(boxes[1].right).toBeLessThanOrEqual(boxes[2].left);
+  await expect(inputs.first()).toHaveCSS('font-size', '14px');
+  await expect(header.locator('.template-header-card__icon')).toBeVisible();
+  await expect(header).toHaveCSS('border-top-width', '1px');
+  expect((await header.boundingBox())!.height).toBeLessThanOrEqual(140);
+  await expect(header.locator('textarea.template-input')).toHaveCSS('resize', 'none');
+});
+
+for (const width of [1280, 375]) {
+  test(`field identifier has a wider bounded input at ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    const designer = await openDesigner(page);
+    const card = designer.locator('app-field-card').first();
+    await openSettings(card, 'Field metadata');
+    const identifier = card.getByLabel('Identifier', { exact: true });
+    await expect(identifier).toBeVisible();
+    const geometry = await identifier.evaluate((input) => ({
+      width: input.getBoundingClientRect().width,
+      available: input.parentElement!.getBoundingClientRect().width,
+    }));
+    expect(geometry.width).toBeCloseTo(Math.min(250, geometry.available), 0);
+    expect(geometry.width).toBeLessThanOrEqual(geometry.available);
+  });
+}

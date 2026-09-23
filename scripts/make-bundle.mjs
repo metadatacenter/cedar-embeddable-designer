@@ -14,6 +14,8 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { DEFAULT_DIST, ROOT, resolveBuildOutput } from './build-output.mjs';
 
+import { PROVENANCE, verifyProvenance } from './build-provenance.mjs';
+
 export const OUT_DIR = join(ROOT, 'dist-bundle');
 export const OUT = join(OUT_DIR, 'cedar-embeddable-designer.js');
 export const MANIFEST = join(OUT_DIR, 'bundle-manifest.json');
@@ -62,8 +64,7 @@ export async function produceBundle(dist = DEFAULT_DIST) {
     /*
      * No timestamp. A build time here would make the manifest differ on every
      * rebuild even when the bundle was byte-identical, so a staged copy could
-     * never be verified by comparison. The freshness guard takes its timestamps
-     * from the filesystem instead.
+     * never be verified by comparison. The freshness guard uses content fingerprints instead.
      */
     manifest: {
       bytes: bundle.length,
@@ -74,7 +75,10 @@ export async function produceBundle(dist = DEFAULT_DIST) {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
+  const provenance = JSON.parse(readFileSync(PROVENANCE, 'utf8'));
+  verifyProvenance(provenance);
   const { bundle, manifest } = await produceBundle();
+  manifest.provenance = provenance;
   mkdirSync(dirname(OUT), { recursive: true });
   writeFileSync(OUT, bundle);
   writeFileSync(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);

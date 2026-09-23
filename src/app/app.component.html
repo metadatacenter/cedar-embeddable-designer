@@ -3,8 +3,16 @@
     <p class="ced-field-error" role="alert">{{ service.loadError() }}</p>
   }
   @if (service.validationReport().issues.length; as count) {
-    <details class="validation-summary">
-      <summary>⚠ {{ count }} settings {{ count === 1 ? 'error' : 'errors' }} — review before saving</summary>
+    <details class="validation-summary" [class.validation-summary--pending]="!service.visibleIssues().length">
+      <summary>
+        <app-icon key="chevron-down" size="small" class="validation-disclosure" />
+        @if (service.visibleIssues().length) {
+          <app-icon key="warning" size="small" />
+          <span>{{ count }} {{ count === 1 ? 'error' : 'errors' }} — fix before saving</span>
+        } @else {
+          Enter missing names before saving.
+        }
+      </summary>
       <ul>
         @for (issue of service.validationReport().issues; track $index) {
           <li>
@@ -27,9 +35,9 @@
           [attr.aria-label]="showFieldsOverview() ? 'Close Overview' : 'Open Overview'"
           [title]="showFieldsOverview() ? 'Close Overview' : 'Open Overview'"
         >
-          <app-icon key="panelLeft" className="w-5 h-5" />
+          <app-icon key="panelLeft" size="default" />
         </button>
-        <div class="flex flex-col items-center justify-center text-center cursor-default group">
+        <div class="designer-identity">
           <!--
             Inline, not <img src="cedar-logo.png">. The element ships as one
             script with no asset directory beside it, so a relative image is a
@@ -58,10 +66,8 @@
             </g>
             <path d="M 24 78 C 24 90 96 90 96 78 C 96 85.5 24 85.5 24 78 Z" fill="#ffffff" />
           </svg>
-          <span class="font-medium text-xs text-gray-900 tracking-wider leading-none mt-0.5">CED</span>
-          <span class="ced-version text-xs font-medium text-gray-500 leading-none scale-90" [title]="version">{{
-            version
-          }}</span>
+          <span class="designer-identity__name">CED</span>
+          <span class="designer-identity__version" [title]="version">{{ version }}</span>
         </div>
 
         <!--
@@ -81,12 +87,12 @@
             title="The field types and controls this profile offers"
           >
             <span>{{ activeProfileLabel() }}</span>
-            <app-icon key="chevronDown" className="w-3.5 h-3.5 text-gray-500"></app-icon>
+            <app-icon key="chevronDown" size="small" className="text-gray-500"></app-icon>
           </button>
 
           @if (showProfileMenu()) {
             <div
-              class="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50 animate-in fade-in zoom-in-95 duration-100"
+              class="profile-menu-dropdown absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50 animate-in fade-in zoom-in-95 duration-100"
             >
               @for (profile of profiles; track profile.key) {
                 <button
@@ -95,7 +101,7 @@
                 >
                   <span class="w-3.5 pt-0.5 shrink-0">
                     @if (activeProfileLabel() === profile.label) {
-                      <app-icon key="check" className="w-3.5 h-3.5 text-teal-600"></app-icon>
+                      <app-icon key="check" size="small" className="text-teal-600"></app-icon>
                     }
                   </span>
                   <span class="min-w-0">
@@ -117,18 +123,6 @@
       </div>
 
       <div class="app-header__actions">
-        <!-- Field Designer Button -->
-        @if (service.preferences().showFieldDesigner) {
-          <button
-            (click)="service.showFieldDesigner.set(true)"
-            class="btn-header btn-header--primary"
-            [style.backgroundColor]="'var(--cedar-color-primary)'"
-          >
-            <app-icon key="library" className="w-4 h-4"></app-icon>
-            Field Designer
-          </button>
-        }
-
         <!-- User Menu -->
         <div class="relative user-menu-container">
           <button
@@ -136,8 +130,8 @@
             class="user-menu-trigger"
             title="User Menu"
           >
-            <div class="user-menu-avatar" [style.backgroundColor]="'var(--cedar-color-primary)'">
-              <app-icon key="user" className="w-4 h-4"></app-icon>
+            <div class="user-menu-avatar">
+              <app-icon key="user" size="small"></app-icon>
             </div>
           </button>
 
@@ -148,14 +142,14 @@
                 (click)="service.showPreferencesModal.set(true); service.showUserMenu.set(false)"
                 class="user-menu-item"
               >
-                <app-icon key="settings" className="w-4 h-4"></app-icon>
+                <app-icon key="settings" size="small"></app-icon>
                 <span class="font-medium">Preferences</span>
               </button>
               <button
                 (click)="service.showPresetDefinitionsModal.set(true); service.showUserMenu.set(false)"
                 class="user-menu-item"
               >
-                <app-icon key="library" className="w-4 h-4"></app-icon>
+                <app-icon key="library" size="small"></app-icon>
                 <span class="font-medium">Define Presets</span>
               </button>
             </div>
@@ -170,14 +164,20 @@
           [attr.aria-label]="service.showPreview() ? 'Close Preview' : 'Open Preview'"
           [title]="service.showPreview() ? 'Close CEE preview' : 'Open CEE preview'"
         >
-          <app-icon key="panelRight" className="w-5 h-5" />
+          <app-icon key="panelRight" size="default" />
         </button>
       </div>
     </div>
   </header>
 
   <!-- Main Content Area -->
-  <div class="main-content">
+  <div
+    class="main-content"
+    [style.--preferred-overview-width]="overviewWidth() + 'px'"
+    [class.has-overview]="service.session.document().children.length > 0 && showFieldsOverview()"
+    [class.has-library]="service.preferences().fieldSelectionStyle === 'sidebar'"
+    [class.library-collapsed]="service.sidebarCollapsed()"
+  >
     <!-- Field Library Sidebar -->
     @if (service.preferences().fieldSelectionStyle === 'sidebar') {
       <app-field-library-sidebar></app-field-library-sidebar>
@@ -189,10 +189,30 @@
         <!-- Fields Overview Panel -->
         @if (service.session.document().children.length > 0 && showFieldsOverview()) {
           <div class="overview-panel" id="ced-overview">
+            <div
+              class="overview-panel__resize"
+              role="separator"
+              tabindex="0"
+              aria-label="Resize Overview"
+              aria-orientation="vertical"
+              aria-controls="ced-overview"
+              [attr.aria-valuemin]="overviewMinWidth"
+              [attr.aria-valuemax]="overviewMaxWidth()"
+              [attr.aria-valuenow]="overviewWidth()"
+              [attr.aria-valuetext]="overviewWidth() + ' pixels'"
+              title="Drag to resize Overview. Arrow keys resize; Home and End set limits. Double-click to reset."
+              (pointerdown)="startOverviewResize($event)"
+              (pointermove)="resizeOverview($event)"
+              (pointerup)="endOverviewResize()"
+              (pointercancel)="endOverviewResize()"
+              (lostpointercapture)="endOverviewResize()"
+              (keydown)="resizeOverviewWithKeyboard($event)"
+              (dblclick)="resetOverviewWidth()"
+            ></div>
             <div class="overview-panel__card">
               <div class="overview-panel__header">
                 <div class="overview-panel__header-left">
-                  <app-icon key="list" className="w-4 h-4 text-gray-600"></app-icon>
+                  <app-icon key="list" size="small" className="text-gray-600"></app-icon>
                   <h3 class="overview-panel__title">Overview ({{ service.session.document().children.length }})</h3>
                 </div>
                 @if (service.hasElements()) {
@@ -203,17 +223,7 @@
                       aria-label="Expand all elements"
                       (click)="service.expandAllElements()"
                     >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        aria-hidden="true"
-                      >
-                        <path d="m7 9 5-5 5 5M7 15l5 5 5-5" />
-                      </svg>
+                      <app-icon key="expand-all" size="small" />
                     </button>
                     <button
                       type="button"
@@ -221,17 +231,7 @@
                       aria-label="Collapse all elements"
                       (click)="service.collapseAllElements()"
                     >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        aria-hidden="true"
-                      >
-                        <path d="m7 4 5 5 5-5M7 20l5-5 5 5" />
-                      </svg>
+                      <app-icon key="collapse-all" size="small" />
                     </button>
                   </div>
                 }
@@ -241,7 +241,7 @@
                   title="Close Overview"
                   (click)="showFieldsOverview.set(false)"
                 >
-                  <span class="text-xs">×</span>
+                  <span class="text-xs"><app-icon key="close" size="small" /></span>
                 </button>
               </div>
               <div class="overview-panel__list">

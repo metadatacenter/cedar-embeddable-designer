@@ -1,7 +1,12 @@
 <fieldset [disabled]="disabled()">
   <legend>{{ heading() }}</legend>
   <div class="add-row">
-    <input [attr.aria-label]="'New alternate ' + noun()" [ngModel]="question()" (ngModelChange)="edit($event)" />
+    <input
+      spellcheck="false"
+      [attr.aria-label]="'New alternate ' + noun()"
+      [ngModel]="question()"
+      (ngModelChange)="edit($event)"
+    />
     <button type="button" (click)="add()">Add {{ noun() }}</button>
   </div>
   @if (error(); as message) {
@@ -26,7 +31,7 @@
               [title]="'Remove ' + noun()"
               (click)="remove(i)"
             >
-              <app-icon key="trash" className="w-4 h-4" />
+              <app-icon key="trash" size="small" />
             </button>
           </td>
         </tr>

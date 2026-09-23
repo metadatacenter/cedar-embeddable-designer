@@ -9,6 +9,7 @@ import { FormsModule } from '@angular/forms';
       <label
         >IRI
         <input
+          spellcheck="false"
           #control
           type="text"
           [disabled]="disabled()"
@@ -31,7 +32,7 @@ import { FormsModule } from '@angular/forms';
     :host {
       display: block;
       margin-top: 8px;
-      font-size: var(--cedar-font-size-small);
+      font-size: var(--cedar-font-size);
     }
     .entry {
       display: flex;

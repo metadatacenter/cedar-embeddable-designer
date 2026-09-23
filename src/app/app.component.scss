@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
 @reference "tailwindcss";
 
 /* ─── App Shell ───────────────────────────────────────────────────────────── */
@@ -8,12 +9,22 @@
   columns below could never scroll within it however much their own rules said so.
 */
 .app-shell {
-  @apply h-full min-h-0 bg-gray-100 relative flex flex-col font-sans;
+  container-type: inline-size;
+  @apply h-full min-h-0 relative flex flex-col font-sans;
+  background: var(--cedar-surface-raised);
+  color: var(--cedar-text-primary);
 }
 
 /* ─── Header ──────────────────────────────────────────────────────────────── */
 .app-header {
-  @apply bg-white border-b border-gray-300 sticky top-0 z-40;
+  @apply sticky top-0;
+  z-index: var(--cedar-layer-sticky);
+  background: var(--cedar-surface-raised);
+  border-bottom: 1px solid var(--cedar-border-rule);
+}
+
+.app-header:has(.profile-menu-dropdown, .user-menu-dropdown) {
+  z-index: var(--cedar-layer-menu);
 }
 
 .app-header__inner {
@@ -22,7 +33,9 @@
    * edge and takes the whole page with it, so the document scrolls sideways and the
    * fields below become unreachable at their right edge.
    */
-  @apply w-full px-3 py-1.5 flex flex-wrap items-center justify-between gap-y-1;
+  @apply w-full flex flex-wrap items-center justify-between;
+  padding: var(--cedar-space-3);
+  gap: var(--cedar-space-2);
 }
 
 .app-header__brand {
@@ -35,12 +48,20 @@
 
 .app-header__actions {
   /* `min-w-0` so the group may shrink rather than insisting on its content's width. */
-  @apply flex min-w-0 flex-wrap items-center gap-4;
+  @apply flex min-w-0 flex-wrap items-center;
+  gap: var(--cedar-space-2);
 }
 
 /* ─── Header Buttons ──────────────────────────────────────────────────────── */
 .btn-header {
-  @apply flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all cursor-pointer text-sm font-medium;
+  @apply flex items-center cursor-pointer;
+  gap: var(--cedar-space-2);
+  padding: var(--cedar-space-1) var(--cedar-space-2);
+  min-height: var(--cedar-control-height-default);
+  font-size: var(--cedar-font-size);
+  font-weight: var(--cedar-font-weight-medium);
+  border-radius: var(--cedar-control-radius-default);
+  border: 0;
 }
 
 .btn-header--primary {
@@ -49,12 +70,19 @@
 }
 
 .btn-header--secondary {
-  @apply bg-white text-gray-700 border-gray-300 hover:border-gray-400;
+  background: transparent;
+  color: var(--cedar-text-primary);
+  &:hover {
+    background: var(--cedar-action-hover-surface);
+  }
 }
 
 /* ─── User Menu ───────────────────────────────────────────────────────────── */
 .user-menu-avatar {
-  @apply w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-white;
+  @apply flex items-center justify-center cursor-pointer;
+  width: var(--cedar-control-height-default);
+  height: var(--cedar-control-height-default);
+  color: var(--cedar-text-primary);
 }
 
 .user-menu-trigger {
@@ -62,15 +90,26 @@
 }
 
 .user-menu-dropdown {
-  @apply absolute right-0 mt-2 w-56 bg-white rounded-lg border border-gray-300 shadow-lg z-50 overflow-hidden;
-  animation: fade-in 0.2s ease-out;
+  @apply absolute right-0 mt-2 w-56 border overflow-hidden;
+  z-index: var(--cedar-layer-menu);
+  background: var(--cedar-overlay-surface);
+  border-color: var(--cedar-overlay-border);
+  border-radius: var(--cedar-menu-radius);
+  box-shadow: var(--cedar-menu-shadow);
+  padding: var(--cedar-menu-padding);
+  animation: fade-in var(--cedar-motion-duration-normal) var(--cedar-motion-ease-enter);
 }
 
 .user-menu-item {
-  @apply w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3 cursor-pointer border-none bg-transparent;
+  @apply w-full text-left text-sm text-gray-700 transition-colors flex items-center gap-3 cursor-pointer border-none bg-transparent;
 
+  min-height: var(--cedar-menu-item-height);
+  padding: var(--cedar-menu-item-padding-block) var(--cedar-menu-item-padding-inline);
+  &:hover {
+    background: var(--cedar-action-hover-surface);
+  }
   & + & {
-    @apply border-t border-gray-200;
+    border-top: 1px solid var(--cedar-overlay-border);
   }
 }
 
@@ -128,10 +167,13 @@
 /* ─── Fields Overview Sidebar ─────────────────────────────────────────────── */
 .overview-panel {
   @apply p-3 hidden md:block;
+  position: relative;
 }
 
 .overview-panel__card {
-  @apply bg-white rounded-lg border border-gray-300 shadow-md flex flex-col sticky;
+  @apply flex flex-col sticky;
+  background: var(--cedar-surface-raised);
+  border: 1px solid var(--cedar-border-rule);
   top: 24px;
   width: 100%;
   max-height: calc(100vh - 150px);
@@ -140,6 +182,7 @@
 
 .overview-panel__header {
   @apply px-3 py-2 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10;
+  padding-left: var(--cedar-space-2);
 }
 
 .overview-panel__header-left {
@@ -156,26 +199,6 @@
 
 .overview-panel__list {
   @apply divide-y divide-gray-100;
-}
-
-.overview-panel__item {
-  @apply w-full flex items-center gap-2 px-3 py-1.5 hover:bg-gray-50 transition-colors text-left cursor-pointer border-none bg-transparent;
-
-  &.active {
-    @apply bg-emerald-50;
-  }
-}
-
-.overview-panel__item-icon {
-  @apply text-gray-500 flex-shrink-0;
-}
-
-.overview-panel__item-name {
-  @apply text-xs font-medium text-gray-700 truncate flex-1;
-}
-
-.overview-panel__badge-required {
-  @apply text-sm leading-none text-gray-900 font-medium;
 }
 
 /* Header panel controls mirror the side they open. */
@@ -210,32 +233,56 @@
 
 /* ─── Designer Workspace ──────────────────────────────────────────────────── */
 .designer-workspace {
-  @apply relative py-5 px-6 max-w-4xl mx-auto w-full;
+  @apply relative max-w-4xl mx-auto w-full;
+  padding: var(--cedar-space-4) var(--cedar-space-3);
 }
 
-.designer-scroll--split,
+// Divide the space left after navigation equally between editing and preview.
+.main-content {
+  --overview-width: 0px;
+  --preferred-overview-width: calc(56 * var(--cedar-space-1));
+  --library-width: 0px;
+}
+.main-content.has-overview {
+  --overview-width: var(--preferred-overview-width, 224px);
+}
+.main-content.has-library {
+  --library-width: calc(72 * var(--cedar-space-1));
+}
+.main-content.has-library.library-collapsed {
+  --library-width: calc(12 * var(--cedar-space-1));
+}
+.designer-scroll--split {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.designer-scroll--split .designer-workspace {
+  max-width: none;
+}
 .preview-panel {
-  flex: 0 0 50%;
-  width: 50%;
+  flex: 0 0 max(0px, calc((100% - var(--overview-width) - var(--library-width) - 2 * var(--cedar-space-3)) / 2));
   min-width: 0;
   box-sizing: border-box;
 }
 
 /* ─── Template Header Card ────────────────────────────────────────────────── */
 .template-header-card {
-  @apply bg-white rounded-lg border border-gray-300 mb-3 overflow-hidden shadow-sm relative;
-}
-
-.template-header-card__gradient {
-  @apply absolute top-0 left-0 right-0 h-1.5;
+  @apply relative;
+  background: var(--cedar-surface-raised);
+  border-bottom: 1px solid var(--cedar-border-rule);
+  padding-bottom: var(--cedar-space-2);
+  margin-bottom: var(--cedar-space-3);
 }
 
 .template-header-card__body {
-  @apply px-4 py-3 flex items-start gap-4;
+  @apply flex items-start;
+  padding: var(--cedar-space-3);
+  gap: var(--cedar-space-3);
 }
 
 .template-header-card__icon {
-  @apply flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center mt-0.5;
+  @apply flex-shrink-0 flex items-center justify-center;
+  color: var(--cedar-text-muted);
 }
 
 .template-header-card__inputs {
@@ -253,7 +300,10 @@
 }
 
 .template-field-label {
-  @apply text-xs font-medium text-gray-500 uppercase tracking-wider mb-1;
+  font-size: var(--cedar-font-size);
+  font-weight: var(--cedar-font-weight-regular);
+  color: var(--cedar-text-muted);
+  margin-bottom: var(--cedar-space-1);
 }
 
 .template-input {
@@ -262,40 +312,60 @@
 
 /* ─── Fields Drop List ────────────────────────────────────────────────────── */
 .fields-drop-list {
-  @apply space-y-2;
+  display: block;
 }
 
 .field-drop-item {
   @apply relative;
 }
+.field-drop-item + .field-drop-item {
+  margin-top: var(--cedar-space-2);
+}
 
 /* ─── Insert Zone ─────────────────────────────────────────────────────────── */
 .insert-zone {
   @apply flex justify-center items-center absolute w-full opacity-0 hover:opacity-100 transition-opacity z-10 cursor-pointer;
-  height: 30px;
-  top: -17px;
+  // The hover target belongs to the gap, never to the next card's name input.
+  height: var(--cedar-space-2);
+  top: calc(-1 * var(--cedar-space-2));
+}
+
+.insert-zone:focus-within {
+  opacity: 1;
 }
 
 .btn-insert-here {
   @apply text-white rounded-full px-3 py-1 shadow-md font-medium border-none cursor-pointer;
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
 }
 
 /* ─── Field Drag Container ────────────────────────────────────────────────── */
 .field-drag-container {
-  @apply bg-white rounded-lg border border-gray-300 shadow-sm relative transition-colors;
+  @apply relative;
+  background: var(--cedar-surface-raised);
+  border: 1px solid var(--cedar-border-rule);
+  padding-block: var(--cedar-space-2);
 
   &:hover {
-    @apply border-gray-400;
+    border-color: var(--cedar-border-rule);
   }
 
   &.selected {
-    @apply ring-2 ring-teal-600;
+    border-color: var(--cedar-border-selected);
+    outline: 1px solid var(--cedar-border-selected);
+    outline-offset: -1px;
   }
 }
 
+/* Keep the summary at CEE’s readable size; reclaim space inside field cards. */
+.field-drag-container:has(> app-field-card) {
+  padding-block: var(--cedar-space-1);
+}
+
 .field-selection-bar {
-  @apply absolute -left-0.5 top-2 bottom-2 w-1 rounded bg-teal-600;
+  @apply absolute left-0 top-0 bottom-0;
+  width: 2px;
+  background: var(--cedar-border-selected);
 }
 
 /* ─── Add Field Section ───────────────────────────────────────────────────── */
@@ -304,10 +374,16 @@
 }
 
 .btn-add-field {
-  @apply text-white rounded-full p-3 shadow-md transition-all flex items-center gap-3 px-6 cursor-pointer border-none;
+  @apply flex items-center cursor-pointer;
+  gap: var(--cedar-space-2);
+  min-height: var(--cedar-control-height-default);
+  padding: var(--cedar-space-2) var(--cedar-space-3);
+  border-radius: var(--cedar-control-radius-default);
+  border: 0;
+  color: var(--cedar-color-on-primary);
 
   &:hover {
-    @apply scale-105;
+    filter: brightness(0.95);
   }
 }
 
@@ -316,19 +392,106 @@
 }
 
 .validation-summary {
-  color: var(--cedar-control-error, var(--cedar-color-error));
-  background: #fff4f2;
-  padding: 6px var(--cedar-space-4);
-  font-size: var(--cedar-font-size-small);
+  @include patterns.validation-summary;
+}
+
+.designer-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: calc(18 * var(--cedar-space-1));
+  min-width: 0;
+  gap: 0;
+}
+.designer-identity > svg {
+  width: calc(10 * var(--cedar-space-1));
+  height: calc(10 * var(--cedar-space-1));
   flex: none;
-  max-height: 25vh;
-  overflow: auto;
+  box-shadow: none;
 }
-.validation-summary summary,
-.validation-summary button {
-  cursor: pointer;
+.designer-identity__name,
+.designer-identity__version {
+  min-width: calc(10 * var(--cedar-space-1));
+  max-width: 100%;
+  text-align: center;
+  line-height: var(--cedar-font-size);
 }
-.validation-summary button {
-  text-align: left;
-  text-decoration: underline;
+.designer-identity__name {
+  margin-top: var(--cedar-space-1);
+  font-size: var(--cedar-font-size);
+  font-weight: var(--cedar-font-weight-medium);
+  color: var(--cedar-color-component-title);
+}
+
+.designer-identity__version {
+  margin-top: calc(var(--cedar-space-1) / 2);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--cedar-font-size);
+  color: var(--cedar-text-muted);
+}
+
+/* Embedders decide the available width, independently of the browser viewport. */
+@container (max-width: 767px) {
+  .main-content.has-overview {
+    --overview-width: 0px;
+  }
+  .overview-panel,
+  .overview-toggle {
+    display: none;
+  }
+  .designer-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+// Hidden insertion actions must not intercept the neighboring card's controls.
+.insert-zone app-insertion-actions {
+  pointer-events: none;
+}
+.insert-zone:hover app-insertion-actions,
+.insert-zone:focus-within app-insertion-actions {
+  pointer-events: auto;
+}
+
+.insert-zone.dismissed {
+  opacity: 0;
+}
+.insert-zone.dismissed app-insertion-actions {
+  pointer-events: none;
+}
+
+.validation-summary--pending {
+  color: var(--cedar-text-muted);
+  background: var(--cedar-surface-authoring);
+}
+
+.overview-panel__resize {
+  position: absolute;
+  top: var(--cedar-space-3);
+  bottom: var(--cedar-space-3);
+  right: 0;
+  width: var(--cedar-space-2);
+  min-height: var(--cedar-control-height-default);
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+  background: transparent;
+}
+.overview-panel__resize::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: calc(var(--cedar-space-1) / 4);
+  background: var(--cedar-border-rule);
+}
+.overview-panel__resize:hover::after,
+.overview-panel__resize:focus-visible::after {
+  background: var(--cedar-color-primary);
+}
+.overview-panel__resize:focus-visible {
+  outline: 2px solid var(--cedar-color-primary);
 }

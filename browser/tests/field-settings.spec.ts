@@ -101,7 +101,7 @@ test('authors datetime precision timezone and time format', async ({ page }) => 
   await expect
     .poll(async () => ((await currentTemplate(page)).properties as any)['Publication Date']._ui)
     .toMatchObject({ temporalGranularity: 'second', timezoneEnabled: true, inputTimeFormat: '12h' });
-  await expect(card.locator('div.rounded-full').filter({ hasText: 'Date and time' })).toBeVisible();
+  await expect(card.locator('.field-type-label').filter({ hasText: 'Date and time' })).toBeVisible();
   await page.screenshot({ path: '/tmp/ced-temporal-settings.png' });
   await section.getByLabel('Temporal type').selectOption('xsd:time');
   await expect(section.getByLabel('Precision').locator('option')).toHaveText([
@@ -116,7 +116,7 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
   const designer = await openDesigner(page);
   await applyPreset(page, 'modular');
   await designer
-    .getByRole('button', { name: /Add Child/ })
+    .getByRole('button', { name: /^Add field$/ })
     .last()
     .click();
   await designer.locator('app-field-type-picker').getByRole('button', { name: 'Image', exact: true }).click();
@@ -125,13 +125,13 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
   await card.getByRole('textbox', { name: 'Field name', exact: true }).fill('Picture');
   const section = await openSettings(card, 'Content');
   await section.getByLabel('Width').fill('640');
-  await expect.poll(async () => ((await currentTemplate(page)).properties as any).Picture._ui._size?.width).toBe(640);
+  await expect.poll(async () => ((await currentTemplate(page)).properties as any).picture._ui._size?.width).toBe(640);
   await section.getByLabel('Height').fill('360');
   await expect
-    .poll(async () => ((await currentTemplate(page)).properties as any).Picture._ui._size)
+    .poll(async () => ((await currentTemplate(page)).properties as any).picture._ui._size)
     .toEqual({ width: 640, height: 360 });
   await designer
-    .getByRole('button', { name: /Add Child/ })
+    .getByRole('button', { name: /^Add field$/ })
     .last()
     .click();
   await designer.locator('app-field-type-picker').getByRole('button', { name: 'Rich Text', exact: true }).click();
@@ -141,7 +141,7 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
   await expect(card.getByRole('tab').first()).toHaveText('Display');
   await card.getByRole('textbox', { name: 'Content', exact: true }).fill('<p>First</p>\n<p>Second</p>');
   await expect
-    .poll(async () => ((await currentTemplate(page)).properties as any)['Rich content']._ui._content)
+    .poll(async () => ((await currentTemplate(page)).properties as any)['rich_content']._ui._content)
     .toBe('<p>First</p>\n<p>Second</p>');
 });
 
@@ -160,17 +160,18 @@ test('one Temporal palette entry supports date, time and date-time without chang
 }) => {
   const designer = await openDesigner(page);
   await designer
-    .getByRole('button', { name: /Add Child/ })
+    .getByRole('button', { name: /^Add field$/ })
     .last()
     .click();
   const picker = designer.locator('app-field-type-picker');
   await expect(picker.getByRole('button', { name: 'Temporal', exact: true })).toHaveCount(1);
   await expect(picker.getByRole('button', { name: /^(Date|Time|Date and time)$/ })).toHaveCount(0);
   await picker.getByRole('button', { name: 'Temporal', exact: true }).click();
+  await designer.locator('input[aria-label="Field name"]:focus').fill('Temporal');
   await expect(designer.locator('app-field-card')).toHaveCount(4);
   const card = designer.locator('app-field-card').last();
   const settings = await openSettings(card, 'Constraints');
-  const original = ((await currentTemplate(page)).properties as any).Temporal['@id'];
+  const original = ((await currentTemplate(page)).properties as any).temporal['@id'];
   for (const [type, preview] of [
     ['xsd:time', 'Time'],
     ['xsd:dateTime', 'Date and time'],
@@ -180,9 +181,61 @@ test('one Temporal palette entry supports date, time and date-time without chang
     await expect(card.getByPlaceholder(preview, { exact: true })).toBeVisible();
     await expect
       .poll(async () => {
-        const field = ((await currentTemplate(page)).properties as any).Temporal;
+        const field = ((await currentTemplate(page)).properties as any).temporal;
         return [field['@id'], field._valueConstraints.temporalType];
       })
       .toEqual([original, type]);
   }
+});
+
+test('metadata keys are editable and unique within their parent while names and labels may repeat', async ({
+  page,
+}) => {
+  const designer = await openDesigner(page);
+  const cards = designer.locator('app-field-card');
+  const first = cards.nth(0);
+  const second = cards.nth(1);
+  await first.getByLabel('Field name', { exact: true }).fill('Repeated');
+  await second.getByLabel('Field name', { exact: true }).fill('Repeated');
+  const display = await openSettings(first, 'Display');
+  await expect(display.getByLabel('Preferred name', { exact: true })).toHaveCount(0);
+  await display.getByLabel('Display label', { exact: true }).fill('Same label');
+  const otherDisplay = await openSettings(second, 'Display');
+  await otherDisplay.getByLabel('Display label', { exact: true }).fill('Same label');
+  const metadata = await openSettings(first, 'Field metadata');
+  await expect(metadata.getByLabel('Key', { exact: true })).toHaveValue('Repeated');
+  await metadata.getByLabel('Key', { exact: true }).fill('subject');
+  const otherMetadata = await openSettings(second, 'Field metadata');
+  const key = otherMetadata.getByLabel('Key', { exact: true });
+  await key.fill('subject');
+  await expect(otherMetadata.getByRole('alert')).toContainText('already uses that key');
+  await key.fill('');
+  await expect(otherMetadata.getByRole('alert')).toContainText('Key is required');
+  await key.fill('category');
+  await expect(otherMetadata.getByRole('alert')).toHaveCount(0);
+  const saved = await currentTemplate(page);
+  expect((saved.properties as any).subject['schema:name']).toBe('Repeated');
+  expect((saved.properties as any).category['schema:name']).toBe('Repeated');
+  expect((saved._ui as any).propertyLabels).toMatchObject({ subject: 'Same label', category: 'Same label' });
+});
+
+test('display label starts unset and distinguishes a copied fallback from an authored override', async ({ page }) => {
+  const designer = await openDesigner(page);
+  const card = designer.locator('app-field-card').first();
+  let display = await openSettings(card, 'Display');
+  await expect(display.getByLabel('Display label', { exact: true })).toHaveValue('');
+  await expect(display.getByLabel('Display label', { exact: true })).toHaveAttribute(
+    'placeholder',
+    'Field display name',
+  );
+  const artifact = await currentTemplate(page);
+  await page.evaluate((value) => {
+    (document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object }).artifact = value;
+  }, artifact);
+  display = await openSettings(designer.locator('app-field-card').first(), 'Display');
+  await expect(display.getByLabel('Display label', { exact: true })).toHaveValue('');
+  await display.getByLabel('Display label', { exact: true }).fill('Study title');
+  await expect
+    .poll(async () => (await currentTemplate(page))._ui)
+    .toMatchObject({ propertyLabels: { Title: 'Study title' } });
 });

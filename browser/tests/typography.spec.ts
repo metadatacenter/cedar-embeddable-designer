@@ -24,6 +24,6 @@ for (const width of [375, 1280]) {
         inside: box.left >= container.left && box.right <= container.right && box.bottom <= container.bottom,
       };
     });
-    expect(geometry).toEqual({ size: '12px', weight: '500', fits: true, belowIcon: true, inside: true });
+    expect(geometry).toEqual({ size: '14px', weight: '500', fits: true, belowIcon: true, inside: true });
   });
 }

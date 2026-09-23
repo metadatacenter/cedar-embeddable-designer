@@ -9,6 +9,8 @@ import { join } from 'node:path';
 import { ROOT } from './build-output.mjs';
 import { MANIFEST, OUT, sha256 } from './make-bundle.mjs';
 
+import { verifyProvenance } from './build-provenance.mjs';
+
 export const TYPES = join(ROOT, 'dist-types/ced-public-api.d.ts');
 export const TARGET = join(ROOT, 'dist-npm/cedar-embeddable-designer');
 
@@ -67,6 +69,7 @@ export function assertSourceBundle() {
   }
   const bundle = readFileSync(OUT);
   const manifest = readJson(MANIFEST);
+  verifyProvenance(manifest.provenance);
   if (sha256(bundle) !== manifest.sha256) {
     throw new Error('the bundle does not match its manifest digest.\n  Run: npm run bundle');
   }

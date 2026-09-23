@@ -26,9 +26,7 @@
           "options": {
             "outputPath": "dist/cedar-embeddable-designer",
             "browser": "src/main.ts",
-            "polyfills": [
-              "zone.js"
-            ],
+            "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -46,7 +44,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumError": "1390000"
+                  "maximumError": "1427000"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -64,10 +62,7 @@
               "aot": false,
               "optimization": false,
               "extractLicenses": false,
-              "polyfills": [
-                "zone.js",
-                "zone.js/testing"
-              ]
+              "polyfills": ["zone.js", "zone.js/testing"]
             }
           },
           "defaultConfiguration": "production"
@@ -93,18 +88,13 @@
             "tsConfig": "tsconfig.spec.json",
             "buildTarget": ":build:testing",
             "runner": "vitest",
-            "setupFiles": [
-              "src/test-setup.ts"
-            ]
+            "setupFiles": ["src/test-setup.ts"]
           }
         },
         "lint": {
           "builder": "@angular-eslint/builder:lint",
           "options": {
-            "lintFilePatterns": [
-              "src/**/*.ts",
-              "src/**/*.html"
-            ]
+            "lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]
           }
         },
         "build-app": {
@@ -112,9 +102,7 @@
           "options": {
             "outputPath": "dist/cedar-embeddable-designer-dev",
             "browser": "src/main.dev.ts",
-            "polyfills": [
-              "zone.js"
-            ],
+            "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -132,7 +120,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumError": "1390000"
+                  "maximumError": "1427000"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -150,10 +138,7 @@
               "aot": false,
               "optimization": false,
               "extractLicenses": false,
-              "polyfills": [
-                "zone.js",
-                "zone.js/testing"
-              ]
+              "polyfills": ["zone.js", "zone.js/testing"]
             }
           },
           "defaultConfiguration": "production"

@@ -26,7 +26,7 @@ test('numeric constraints reject invalid drafts and preserve saved settings unti
   await minimum.fill('-128');
   await expect(error).toHaveCount(0);
   await maximum.fill('128');
-  await expect(error).toContainText('range');
+  await expect(error).toHaveText('Value must be between -128 and 127.');
   await maximum.fill('127');
   await expect(error).toHaveCount(0);
   const places = panel.getByLabel('Decimal places', { exact: true });
@@ -54,7 +54,10 @@ test('native numeric defaults validate numbers, bounds and integer datatype with
   const input = panel.getByRole('textbox', { name: 'Default value', exact: true });
   const value = async () =>
     (child(await currentTemplate(page), 'Title')._valueConstraints as Record<string, unknown>).defaultValue;
+  const width = (await input.boundingBox())!.width;
   await input.fill('0');
+  await expect(panel.getByRole('button', { name: 'Clear default', exact: true })).toHaveCount(0);
+  expect((await input.boundingBox())!.width).toBe(width);
   await expect.poll(value).toBe('0');
   for (const text of ['abc', '1e', '-1', '101', '22222', '1.5']) {
     await input.fill(text);

@@ -1,9 +1,11 @@
+@use '@org.metadatacenter/cedar-design-tokens/controls';
+
 .field-drag-handle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   align-self: center;
-  color: #9ca3af;
+  color: var(--cedar-text-muted);
   cursor: grab;
   padding: 2px;
 }
@@ -29,7 +31,7 @@ app-icon {
 }
 
 .field-card-body {
-  padding: 6px var(--cedar-space-4) 0;
+  padding: var(--cedar-space-1) var(--cedar-space-4) 0;
 }
 
 .field-header {
@@ -83,10 +85,19 @@ app-icon {
 }
 
 .validation-badge {
+  display: inline-flex;
+  align-items: baseline;
+  align-self: baseline;
+  gap: var(--cedar-space-1);
+  line-height: var(--cedar-control-line-height-default);
   color: var(--cedar-control-error, var(--cedar-color-error));
-  font-size: var(--cedar-font-size-small);
+  font-size: var(--cedar-font-size);
   white-space: nowrap;
   cursor: pointer;
+}
+
+.validation-badge > app-icon {
+  align-self: center;
 }
 
 /* Leave header space after the editable name available for toggling settings. */
@@ -94,4 +105,61 @@ app-icon {
   field-sizing: content;
   flex: 0 1 auto;
   max-width: 100%;
+}
+
+.field-type-label {
+  color: var(--cedar-text-muted);
+  font-size: var(--cedar-font-size);
+}
+
+.field-heading > input {
+  font-size: var(--cedar-font-size);
+  font-weight: var(--cedar-font-weight-medium);
+  color: var(--cedar-text-primary);
+}
+
+.choice-options input {
+  @include controls.choice-text;
+  padding-block: 0;
+}
+.choice-option-row {
+  @include controls.choice-row;
+}
+
+.choice-options {
+  padding-block: var(--cedar-space-2);
+}
+
+.occurrence-range {
+  flex: 0 0 auto;
+  color: var(--cedar-text-muted);
+  font-size: var(--cedar-font-size);
+  font-weight: var(--cedar-font-weight-regular);
+  white-space: nowrap;
+}
+
+.required-mark {
+  flex: 0 0 auto;
+  align-self: baseline;
+  margin-left: calc(-1 * var(--cedar-space-1));
+  color: var(--cedar-text-primary);
+  font-size: var(--cedar-font-size);
+  font-weight: var(--cedar-font-weight-medium);
+}
+
+/* Align text baselines rather than centering the name input's padded box. */
+.field-heading > input,
+.field-heading > .occurrence-range {
+  align-self: baseline;
+  line-height: var(--cedar-control-line-height-default);
+}
+
+.content-label {
+  color: var(--cedar-text-authoring);
+  font-size: var(--cedar-font-size);
+  font-weight: var(--cedar-font-weight-regular);
+}
+
+.choice-add-action {
+  gap: var(--cedar-space-3);
 }

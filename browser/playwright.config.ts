@@ -37,11 +37,22 @@ export default defineConfig({
     baseURL: `http://localhost:${port}`,
     trace: 'on-first-retry',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    ...(process.env.CED_WEBKIT
+      ? [
+          {
+            name: 'webkit',
+            use: { ...devices['Desktop Safari'] },
+            testMatch: /(?:header-toggle|overview-resize|card-navigation|text-default)\.spec\.ts/,
+          },
+        ]
+      : []),
+  ],
   webServer: {
     command: 'node serve.mjs',
     url: `http://localhost:${port}`,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 30_000,
   },
 });

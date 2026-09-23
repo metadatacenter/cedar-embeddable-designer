@@ -1,3 +1,5 @@
+import { InsertionActionsComponent } from '../insertion-actions/insertion-actions.component';
+import { FieldTypePickerComponent } from '../field-type-picker/field-type-picker.component';
 import { PALETTE_FIELD_TYPES } from '../../core/models/types';
 import { Component, ElementRef, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 
@@ -9,7 +11,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 @Component({
   selector: 'app-field-library-sidebar',
   standalone: true,
-  imports: [DragDropModule, IconComponent],
+  imports: [DragDropModule, IconComponent, InsertionActionsComponent, FieldTypePickerComponent],
   templateUrl: './field-library-sidebar.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./field-library-sidebar.component.scss'],

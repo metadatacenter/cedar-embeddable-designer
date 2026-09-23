@@ -9,7 +9,8 @@
   },
   "scripts": {
     "test": "playwright test",
-    "report": "playwright show-report"
+    "report": "playwright show-report",
+    "pretest": "node ../scripts/check-bundle-fresh.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0"

@@ -14,13 +14,9 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation } from '@angular/
  * anything for the designer, and a component that renders in a different typeface
  * depending on whether a font request succeeded is not one typeface.
  *
- * That makes this the largest stylesheet in the build by a wide margin: three embedded
- * Roboto weights from the design tokens' `fonts/` partials, about 184 kB compiled, and no
- * selectors at all. `angular.json`'s `anyComponentStyle` error is set for exactly that and
- * carries no warning band, because the size is a property of the decision above rather
- * than something a change here would drift into. Dropping a weight or fetching the faces
- * is what would move it; the term picker carries the same threshold for the same
- * stylesheet. Total shipped bytes stay gated by `scripts/check-bundle-size.mjs`.
+ * Only the regular (400) and medium (500) weights used by the designer are
+ * embedded. This stylesheet contains no selectors. Angular's component-style
+ * budget and the shipped raw/gzip budgets still gate the embedded font bytes.
  */
 @Component({
   selector: 'ced-font-registrar',

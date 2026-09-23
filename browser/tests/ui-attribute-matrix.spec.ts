@@ -178,7 +178,7 @@ async function oneCardOf(
   }
   await expect.poll(async () => cards.count(), { timeout: SETTLE }).toBe(0);
   await designer
-    .getByRole('button', { name: /Add Child/ })
+    .getByRole('button', { name: /^Add field$/ })
     .first()
     .click();
   await designer
@@ -187,6 +187,7 @@ async function oneCardOf(
       exact: true,
     })
     .click();
+  await designer.getByRole('textbox', { name: 'Field name', exact: true }).fill(LABEL_OF[paletteType]);
   if (paletteType === 'time') {
     await openSettings(card(page), 'Constraints');
     await card(page).getByLabel('Temporal type', { exact: true }).selectOption('xsd:time');
@@ -233,10 +234,11 @@ for (const width of WIDTHS) {
             await expectLaidOut(page, `${paletteType} ${await tabs.nth(index).textContent()}`);
             const leadingGap = await settings(page).evaluate((el) => {
               const panel = el.querySelector<HTMLElement>('[role="tabpanel"]:not([hidden])')!;
-              // An empty choice list starts with Add option, not an input.
+              // Measure the choice row, not the text centered inside its shared minimum height.
+              // An empty choice list starts with Add option, not a row.
               const first = [
                 ...panel.querySelectorAll<HTMLElement>(
-                  'label, dt, .default-label, app-controlled-term-config, [field-values] input, [field-values] textarea, [field-values] button',
+                  'label, dt, input[name="deploymentName"], .default-label, app-controlled-term-config, .choice-option-row, [field-values] input, [field-values] textarea, [field-values] button',
                 ),
               ]
                 .filter((node) => node.getClientRects().length > 0)
@@ -362,7 +364,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
     paletteType: 'text',
     set: async (page) => card(page).getByLabel('Requirement', { exact: true }).selectOption('required'),
     restore: async (page) => card(page).getByLabel('Requirement', { exact: true }).selectOption('optional'),
-    read: (template) => constraints(template, 'Text')['requiredValue'],
+    read: (template) => constraints(template, 'text')['requiredValue'],
     whenSet: true,
   },
   {
@@ -374,9 +376,10 @@ const LIFECYCLES: readonly Lifecycle[] = [
   {
     control: 'help text',
     paletteType: 'text',
-    set: async (page) => putValue(card(page).getByLabel('Help Text', { exact: true }), 'Some help'),
-    restore: async (page) => putValue(card(page).getByLabel('Help Text', { exact: true }), ''),
-    read: (template) => property(template, 'Text')['schema:description'],
+    prepare: (page) => open(page, 'Display'),
+    set: async (page) => putValue(card(page).getByLabel('Help text', { exact: true }), 'Some help'),
+    restore: async (page) => putValue(card(page).getByLabel('Help text', { exact: true }), ''),
+    read: (template) => property(template, 'text')['schema:description'],
     whenSet: 'Some help',
   },
 
@@ -435,7 +438,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
     prepare: (page) => open(page, 'Display'),
     set: async (page) => setIn(page, 'Display', 'Display label', 'Shown'),
     restore: async (page) => setIn(page, 'Display', 'Display label', ''),
-    read: (template) => (template['_ui'] as { propertyLabels?: Record<string, string> }).propertyLabels?.['Text'],
+    read: (template) => (template['_ui'] as { propertyLabels?: Record<string, string> }).propertyLabels?.['text'],
     whenSet: 'Shown',
   },
   {
@@ -467,7 +470,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
     prepare: (page) => open(page, 'Constraints'),
     set: async (page) => setIn(page, 'Constraints', 'Minimum length', '4'),
     restore: async (page) => setIn(page, 'Constraints', 'Minimum length', ''),
-    read: (template) => constraints(template, 'Text')['minLength'],
+    read: (template) => constraints(template, 'text')['minLength'],
     whenSet: 4,
   },
   {
@@ -506,7 +509,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
     prepare: (page) => open(page, 'Constraints'),
     set: async (page) => setIn(page, 'Constraints', 'Maximum value', '99'),
     restore: async (page) => setIn(page, 'Constraints', 'Maximum value', ''),
-    read: (template) => constraints(template, 'Number')['maxValue'],
+    read: (template) => constraints(template, 'number')['maxValue'],
     whenSet: 99,
   },
   {
@@ -618,7 +621,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
     paletteType: 'text',
     set: async (page) => card(page).locator('app-field-default-value input').first().fill('Example'),
     restore: async (page) => card(page).locator('app-field-default-value input').first().fill(''),
-    read: (template) => constraints(template, 'Text')['defaultValue'],
+    read: (template) => constraints(template, 'text')['defaultValue'],
     whenSet: 'Example',
   },
 ];
@@ -729,7 +732,7 @@ test.describe('what a sibling component contributes', () => {
       await applyPreset(page, 'modular');
       const designer = page.locator(DESIGNER);
       await designer
-        .getByRole('button', { name: /Add Child/ })
+        .getByRole('button', { name: /^Add field$/ })
         .first()
         .click();
       await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
