@@ -463,11 +463,6 @@
   pointer-events: none;
 }
 
-.validation-summary--pending {
-  color: var(--cedar-text-muted);
-  background: var(--cedar-surface-authoring);
-}
-
 .overview-panel__resize {
   position: absolute;
   top: var(--cedar-space-3);

@@ -3,7 +3,7 @@
     <p class="ced-field-error" role="alert">{{ service.loadError() }}</p>
   }
   @if (service.validationReport().issues.length; as count) {
-    <details class="validation-summary" [class.validation-summary--pending]="!service.visibleIssues().length">
+    <details class="validation-summary">
       <summary>
         <app-icon key="chevron-down" size="small" class="validation-disclosure" />
         @if (service.visibleIssues().length) {

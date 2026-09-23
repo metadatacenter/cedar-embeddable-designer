@@ -168,6 +168,15 @@ test('new fields and elements focus an unnamed draft and defer errors until blur
   await expect(field).toHaveValue('');
   await expect(field).toHaveAttribute('aria-invalid', 'false');
   await expect(designer.locator('.validation-summary')).toContainText('Enter missing names before saving.');
+  expect(await designer.locator('.validation-summary').evaluate((el) => {
+    const style = getComputedStyle(el);
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--cedar-status-error-text)';
+    el.append(probe);
+    const errorColor = getComputedStyle(probe).color;
+    probe.remove();
+    return style.color === errorColor;
+  })).toBe(true);
   await expect.poll(async () => (await report(page)).canSave).toBe(false);
   await field.blur();
   await expect(field).toHaveAttribute('aria-invalid', 'true');
