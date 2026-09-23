@@ -135,6 +135,7 @@ export class TemplateService {
   readonly loadError = signal<string | null>(null);
   private readonly draftIssues = signal<Record<string, { message: string; tab: string }>>({});
   readonly nameFocusRequest = signal<number | null>(null);
+  readonly initialInsertionId = signal<number | null>(null);
   private readonly touchedNames = signal<ReadonlySet<number>>(new Set());
   touchName(id: number): void {
     this.touchedNames.update((ids) => new Set([...ids, id]));
@@ -625,6 +626,7 @@ export class TemplateService {
     this.loadError.set(null);
     this.mintedIdentifier.set(newTemplateIdentifier());
     const document = newContainer(kind);
+    this.initialInsertionId.set(kind === 'template' && !withStarterFields ? document.id : null);
     if (kind === 'template') {
       document.identifier = '';
       document.children = withStarterFields ? containerFromFlat({ ...document, fields: starterFields() }).children : [];
@@ -662,6 +664,7 @@ export class TemplateService {
     }
     this.loadError.set(null);
 
+    this.initialInsertionId.set(null);
     this.draftIssues.set({});
     this.touchedNames.set(new Set());
     this.nameFocusRequest.set(null);

@@ -219,8 +219,16 @@
   <!-- Bottom insertion zone (modal style) -->
   @if (service.preferences().fieldSelectionStyle === 'modal') {
     <div class="add-field-section">
-      <div class="bottom-insert-zone">
-        <app-insertion-actions [targetId]="container().id" [position]="container().children.length" />
+      <div
+        class="bottom-insert-zone"
+        [class.initially-visible]="service.initialInsertionId() === container().id && !container().children.length"
+        (mouseleave)="service.initialInsertionId.set(null)"
+      >
+        <app-insertion-actions
+          [targetId]="container().id"
+          [position]="container().children.length"
+          (used)="service.initialInsertionId.set(null)"
+        />
       </div>
       @if (pickerAt(container().children.length)) {
         <div class="add-field-section__picker">
