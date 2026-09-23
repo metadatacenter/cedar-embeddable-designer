@@ -57,7 +57,11 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // subtree deletion confirmation measure 1,415,548 raw / 436,359 gzip-9 bytes
 // in the current-sibling reactor (CI gzip: 436,335). No dependency was added.
 // Allow 4.5 KB raw and 1.6 KB compressed headroom for this authoring surface.
-const RAW_LIMIT = 1_420_000;
+// 2026-09-22: element navigation, insertion positioning and shared confirmation
+// dialogs, composed with the current shared tokens, measure 1,422,484 raw /
+// 437,851 gzip-9 bytes. No dependency was added. Preserve roughly 4.5 KB of raw
+// headroom; the compressed artifact remains within its existing ceiling.
+const RAW_LIMIT = 1_427_000;
 const GZIP_LIMIT = 438_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
