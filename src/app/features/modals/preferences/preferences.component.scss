@@ -29,7 +29,8 @@
 .preferences-surface {
   background: var(--cedar-overlay-surface);
 }
-.preferences-secondary:hover {
+.preferences-secondary:hover,
+.preferences-choice:hover {
   background: var(--cedar-action-hover-surface);
 }
 .custom-scrollbar {
