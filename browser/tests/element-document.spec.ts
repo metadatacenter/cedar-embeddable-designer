@@ -15,7 +15,7 @@ test('creates, edits, exports and reopens a standalone element through the publi
     designer.artifact = artifact;
   }, element);
   await expect(name).toHaveValue('Study element');
-  expect(await currentTemplate(page)).toEqual(element);
+  expect(await currentTemplate(page)).toEqual({ ...element, title: 'Study element element schema' });
 });
 
 const nestedEditors = (editor: import('@playwright/test').Locator) =>
@@ -121,7 +121,12 @@ for (const width of [1280, 375]) {
     await page.evaluate((artifact) => {
       (document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object }).artifact = artifact;
     }, saved);
-    expect(await currentTemplate(page)).toEqual(saved);
+    // Reopening derives schema titles from the edited names, preserving every other property.
+    const expected = structuredClone(saved);
+    const expectedProperties = expected.properties as Record<string, any>;
+    expectedProperties.Category.title = 'Root category field schema';
+    expectedProperties.element.properties.element.items.properties.Title.title = 'Nested title field schema';
+    expect(await currentTemplate(page)).toEqual(expected);
     await expect(nestedEditors(root).first().locator(':scope > .container-content')).toBeVisible();
   });
 }

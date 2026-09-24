@@ -222,7 +222,14 @@ possible, loading the distribution and nothing else.
 | `npm run test:packaging` | the publish-channel rule, under `node --test`                        |
 | `npm run test:browser`   | builds the distribution, then drives it in a real browser            |
 | `npm run test:visual`    | the screenshot baselines, in the container they are taken in         |
-| `npm run test:ci`        | the gate, in the order a cheaper check should report a failure first |
+| `npm run test:ci`        | bounded parallel checks, then distribution and browser verification |
+
+`test:ci` overlaps unit, lint, type, boundary and packaging checks within
+`CEDAR_TEST_WORKERS` (1–16; by default half the available CPUs, capped at 8).
+The distribution waits for every check, so Angular builds and unit tests never
+share a live cache. Browser tests then use the full budget. A failed stage blocks
+the distribution and browser stages; each stage prints its elapsed time.
+`test:visual` remains a separate required gate in the frontend reactor.
 
 The browser suite is the one that matters most, because it is the only one that
 can see the failures this component has actually had: an element that never

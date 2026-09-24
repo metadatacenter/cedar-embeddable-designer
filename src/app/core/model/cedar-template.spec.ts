@@ -996,7 +996,12 @@ describe('complete field specification transfer', () => {
         'pav:previousVersion': 'https://example.org/fields/previous',
       });
       const imported = toDesignerTemplate(readTemplate(JSON.stringify(original)));
-      expect(json(imported)).toEqual(original);
+      const expected = structuredClone(original);
+      const expectedProperty = (expected['properties'] as Record<string, Record<string, unknown>>)['property-key'];
+      const expectedDefinition = (expectedProperty['items'] ?? expectedProperty) as Record<string, unknown>;
+      // The schema name determines the title, not the deployment key or display label.
+      expectedDefinition['title'] = 'Original field schema';
+      expect(json(imported)).toEqual(expected);
       expect(imported.fields[0].artifact?.version).toBe('2.3.4');
       expect(() => templateToYaml(buildTemplate(imported))).toThrow(/Export JSON/);
     });

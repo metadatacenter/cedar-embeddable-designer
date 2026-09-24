@@ -11,7 +11,8 @@
  *
  * Preservation says the value comes back. Its failure is a designer that silently
  * discards what an author typed — the worst kind, because the artifact looks fine
- * until someone compares it to what they meant.
+ * until someone compares it to what they meant. Schema titles are the exception:
+ * the model derives them from the artifact name; descriptions remain authored text.
  *
  * Settling says a second write changes nothing. Its failure is drift: a template
  * that shifts a little on every open-and-save, which is how a time field became a
@@ -280,12 +281,26 @@ const lossless = cells.filter((cell) => (cell.parameter.yaml ?? 'lossless') === 
 const refused = cells.filter((cell) => cell.parameter.yaml === 'refused');
 
 describe('through json', () => {
-  it.each(named(cells))('%s keeps its %s', (_paletteType, _name, cell) => {
-    const original = fieldFor(cell.paletteType, cell.parameter);
-    const readBack = afterRoundTrip(templateOf(original), 'json').fields[0];
+  it.each(named(cells.filter((cell) => cell.parameter.name !== 'schemaText')))(
+    '%s keeps its %s',
+    (_paletteType, _name, cell) => {
+      const original = fieldFor(cell.paletteType, cell.parameter);
+      const readBack = afterRoundTrip(templateOf(original), 'json').fields[0];
 
-    expect(cell.parameter.read(readBack)).toEqual(cell.parameter.read(original));
-  });
+      expect(cell.parameter.read(readBack)).toEqual(cell.parameter.read(original));
+    },
+  );
+
+  it.each(named(cells.filter((cell) => cell.parameter.name === 'schemaText')))(
+    '%s derives its title from its name and keeps its schema description',
+    (_paletteType, _name, cell) => {
+      const original = fieldFor(cell.paletteType, cell.parameter);
+      const readBack = afterRoundTrip(templateOf(original), 'json').fields[0];
+
+      expect(original.artifact?.title).toBe('Custom schema title');
+      expect(cell.parameter.read(readBack)).toEqual(['F field schema', 'Custom schema description']);
+    },
+  );
 
   it.each(named(cells))('%s settles its %s after one write', (_paletteType, _name, cell) => {
     const original = fieldFor(cell.paletteType, cell.parameter);
