@@ -167,19 +167,12 @@ test('new fields and elements focus an unnamed draft and defer errors until blur
   await expect(field).toBeFocused();
   await expect(field).toHaveValue('');
   await expect(field).toHaveAttribute('aria-invalid', 'false');
-  await expect(designer.locator('.validation-summary')).toContainText('Enter missing names before saving.');
-  expect(await designer.locator('.validation-summary').evaluate((el) => {
-    const style = getComputedStyle(el);
-    const probe = document.createElement('span');
-    probe.style.color = 'var(--cedar-status-error-text)';
-    el.append(probe);
-    const errorColor = getComputedStyle(probe).color;
-    probe.remove();
-    return style.color === errorColor;
-  })).toBe(true);
+  await expect(designer.locator('.validation-summary')).toHaveCount(0);
   await expect.poll(async () => (await report(page)).canSave).toBe(false);
   await field.blur();
   await expect(field).toHaveAttribute('aria-invalid', 'true');
+  await expect(designer.locator('.validation-summary')).toContainText('1 error — fix before saving');
+  await expect(designer.locator('.validation-summary')).toHaveCSS('color', 'rgb(180, 35, 24)');
   await field.fill('Study title');
   await expect.poll(async () => (await report(page)).canSave).toBe(true);
   await designer.getByRole('button', { name: 'Add element', exact: true }).first().click();
@@ -340,4 +333,52 @@ test('key errors are attached directly below the key and preserve the previous s
   await key.fill('type');
   await expect(key).toHaveAttribute('aria-invalid', 'false');
   expect((await currentTemplate(page)).properties).toHaveProperty('type');
+});
+
+for (const kind of ['template', 'element'] as const) {
+  test(`new ${kind} names stay quiet until blur while saving remains blocked`, async ({ page }) => {
+    const designer = await openDesigner(page);
+    const start = () =>
+      page.evaluate((kind) => {
+        (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).newArtifact(kind);
+      }, kind);
+    await start();
+    const name = designer.getByRole('textbox', {
+      name: kind === 'template' ? 'Template name' : 'Element name',
+      exact: true,
+    });
+    await expect(name).toHaveValue('');
+    await expect(designer.locator('.validation-summary')).toHaveCount(0);
+    await expect.poll(async () => (await report(page)).canSave).toBe(false);
+    await name.fill('   ');
+    await expect(name).toHaveAttribute('aria-invalid', 'false');
+    await expect(designer.locator('.validation-summary')).toHaveCount(0);
+    await name.press('Tab');
+    await expect(name).toHaveAttribute('aria-invalid', 'true');
+    await expect(designer.locator('.validation-summary')).toContainText('1 error — fix before saving');
+    await expect.poll(async () => (await report(page)).canSave).toBe(false);
+    await name.fill('Study');
+    await expect(designer.locator('.validation-summary')).toHaveCount(0);
+    await expect.poll(async () => (await report(page)).canSave).toBe(true);
+    await start();
+    await expect(designer.locator('.validation-summary')).toHaveCount(0);
+    await expect.poll(async () => (await report(page)).canSave).toBe(false);
+  });
+}
+
+test('summary counts only revealed name errors, while validation includes untouched names', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await page.evaluate(() =>
+    (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).newArtifact('template'),
+  );
+  await designer.getByRole('button', { name: 'Add field', exact: true }).click();
+  await designer.getByRole('button', { name: 'Text', exact: true }).click();
+  const name = designer.getByRole('textbox', { name: 'Field name', exact: true });
+  await expect(name).toBeFocused();
+  await expect(designer.locator('.validation-summary')).toHaveCount(0);
+  await name.press('Tab');
+  await expect(designer.locator('.validation-summary')).toContainText('1 error — fix before saving');
+  await expect(designer.locator('.validation-summary li')).toHaveCount(1);
+  expect((await report(page)).issues.filter((issue) => issue.setting === 'name')).toHaveLength(2);
+  await expect.poll(async () => (await report(page)).canSave).toBe(false);
 });

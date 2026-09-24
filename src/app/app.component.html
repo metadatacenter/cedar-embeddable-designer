@@ -2,19 +2,15 @@
   @if (service.loadError()) {
     <p class="ced-field-error" role="alert">{{ service.loadError() }}</p>
   }
-  @if (service.validationReport().issues.length; as count) {
+  @if (service.visibleIssues().length; as count) {
     <details class="validation-summary">
       <summary>
         <app-icon key="chevron-down" size="small" class="validation-disclosure" />
-        @if (service.visibleIssues().length) {
-          <app-icon key="warning" size="small" />
-          <span>{{ count }} {{ count === 1 ? 'error' : 'errors' }} — fix before saving</span>
-        } @else {
-          Enter missing names before saving.
-        }
+        <app-icon key="warning" size="small" />
+        <span>{{ count }} {{ count === 1 ? 'error' : 'errors' }} — fix before saving</span>
       </summary>
       <ul>
-        @for (issue of service.validationReport().issues; track $index) {
+        @for (issue of service.visibleIssues(); track $index) {
           <li>
             <button type="button" (click)="service.revealIssue(issue)">{{ issue.label }}: {{ issue.message }}</button>
           </li>
