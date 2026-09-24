@@ -30,6 +30,7 @@ export default defineConfig({
     ...(process.env.CED_VISUAL ? [] : ['**/visual.spec.ts']),
   ],
   fullyParallel: true,
+  workers: process.env.CEDAR_TEST_WORKERS ? Number(process.env.CEDAR_TEST_WORKERS) : undefined,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'line' : 'list',
