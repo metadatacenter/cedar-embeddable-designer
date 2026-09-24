@@ -1,14 +1,38 @@
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
+
+.preferences-title {
+  font-size: var(--cedar-font-size-heading);
+  font-weight: var(--cedar-font-weight-medium);
+  color: var(--cedar-color-artifact-title);
 }
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: #fafafa;
-  border-radius: 3px;
+.preferences-label {
+  @include patterns.field-label($size: body);
 }
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #e5e7eb;
-  border-radius: 3px;
+.preferences-help {
+  @include patterns.field-help($size: body);
 }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #d1d5db;
+.preferences-field-type {
+  color: var(--cedar-text-primary);
+  font-size: var(--cedar-font-size);
+}
+.preferences-muted {
+  color: var(--cedar-text-muted);
+}
+.preferences-border {
+  border-color: var(--cedar-border-rule);
+}
+.preferences-group,
+.preferences-secondary {
+  background: var(--cedar-surface-authoring);
+  color: var(--cedar-text-primary);
+}
+.preferences-surface {
+  background: var(--cedar-overlay-surface);
+}
+.preferences-secondary:hover {
+  background: var(--cedar-action-hover-surface);
+}
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--cedar-border-rule) var(--cedar-surface-authoring);
 }
