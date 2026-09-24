@@ -2,7 +2,7 @@
   "name": "cedar-embeddable-designer",
   "description": "A reusable Web Component for designing CEDAR metadata templates.",
   "license": "BSD-2-Clause",
-  "version": "0.1.0-dev.20260923.4dce24ab",
+  "version": "0.1.0-dev.20260924.6a806b63",
   "engines": {
     "node": "^24.15.0"
   },
