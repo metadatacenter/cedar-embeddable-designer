@@ -2,17 +2,38 @@ import { DestroyRef, Directive, ElementRef, afterRenderEffect, inject, input } f
 import { TemplateService } from '../core/services/template.service';
 
 /** Validation-summary navigation targets the name in the header, outside settings. */
-@Directive({ selector: 'input[appArtifactName]', host: { '(blur)': 'onBlur($event)' } })
+@Directive({ selector: 'input[appArtifactName]', host: { '(focus)': 'onFocus()', '(blur)': 'onBlur($event)' } })
 export class ArtifactNameDirective {
   readonly appArtifactName = input.required<number>();
   private readonly service = inject(TemplateService);
   private readonly element = inject<ElementRef<HTMLInputElement>>(ElementRef);
   private cancelPendingTouch?: () => void;
+  private stopTrackingPointer?: () => void;
+  private pointerPressed = false;
+  onFocus(): void {
+    this.stopTrackingPointer?.();
+    const document = this.element.nativeElement.ownerDocument;
+    const press = () => (this.pointerPressed = true);
+    const release = () => (this.pointerPressed = false);
+    document.addEventListener('pointerdown', press, true);
+    document.addEventListener('pointerup', release, true);
+    document.addEventListener('pointercancel', release, true);
+    this.stopTrackingPointer = () => {
+      document.removeEventListener('pointerdown', press, true);
+      document.removeEventListener('pointerup', release, true);
+      document.removeEventListener('pointercancel', release, true);
+      this.pointerPressed = false;
+    };
+  }
   onBlur(event: FocusEvent): void {
     this.cancelPendingTouch?.();
+    // Non-focusable header space has no relatedTarget in WebKit. Track the
+    // press while the name is focused so that click receives the same protection.
+    const pointerPressed = this.pointerPressed;
+    this.stopTrackingPointer?.();
     const id = this.appArtifactName();
     const touch = () => this.service.touchName(id);
-    if (!(event.relatedTarget instanceof Element) || !event.relatedTarget.matches(':active')) {
+    if (!pointerPressed && (!(event.relatedTarget instanceof Element) || !event.relatedTarget.matches(':active'))) {
       touch();
       return;
     }
@@ -40,7 +61,10 @@ export class ArtifactNameDirective {
     this.cancelPendingTouch = removeListeners;
   }
   constructor() {
-    inject(DestroyRef).onDestroy(() => this.cancelPendingTouch?.());
+    inject(DestroyRef).onDestroy(() => {
+      this.cancelPendingTouch?.();
+      this.stopTrackingPointer?.();
+    });
     let focused: unknown;
     afterRenderEffect(() => {
       if (this.service.nameFocusRequest() === this.appArtifactName()) {
