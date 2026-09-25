@@ -61,7 +61,11 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // dialogs, composed with the current shared tokens, measure 1,422,484 raw /
 // 437,851 gzip-9 bytes. No dependency was added. Preserve roughly 4.5 KB of raw
 // headroom; the compressed artifact remains within its existing ceiling.
-const RAW_LIMIT = 1_427_000;
+// 2026-09-25: English and Hungarian, with @ngx-translate/core 18, both language maps
+// bundled and Angular's `hu` locale data, measure 1,450,117 raw / 414,932 gzip-9 bytes.
+// The language maps are bundled so that choosing a language never makes a request.
+// Allow about 4.9 KB of raw headroom; the compressed artifact stays within its ceiling.
+const RAW_LIMIT = 1_455_000;
 const GZIP_LIMIT = 438_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;

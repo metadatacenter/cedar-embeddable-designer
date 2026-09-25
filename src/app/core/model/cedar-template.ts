@@ -1,5 +1,6 @@
 import { AttributeValueNamePolicy } from 'cedar-model-typescript-library';
 import { temporalDefaultError } from './field-default';
+import { LocalizedError, Message, Translate, describeError, english, errorParam, message } from '../../i18n/messages';
 import {
   ContainerDraft,
   ChildNode,
@@ -523,36 +524,38 @@ const INTEGER_RANGES: Record<string, readonly [number, number]> = {
 
 function validateNumericSettings(field: Field): void {
   const { type, min, max, decimalPlaces } = field.numeric!;
-  if (!NUMERIC_TYPES.some((candidate) => candidate === type)) throw new Error('Choose a datatype from the list.');
+  if (!NUMERIC_TYPES.some((candidate) => candidate === type))
+    throw new LocalizedError(message('errors.numeric.datatype'));
   const typeLabel = type.replace('xsd:', '');
   const range = INTEGER_RANGES[type];
-  const values: [string, number | null][] = [
-    ['Minimum value', min],
-    ['Maximum value', max],
+  const values: [Message, number | null][] = [
+    [message('errors.numeric.minimumValue'), min],
+    [message('errors.numeric.maximumValue'), max],
   ];
-  if (field.defaultValue?.kind === 'number') values.push(['Default value', field.defaultValue.value]);
+  if (field.defaultValue?.kind === 'number')
+    values.push([message('errors.numeric.defaultValue'), field.defaultValue.value]);
   for (const [label, value] of values) {
     if (value === null) continue;
-    if (!Number.isFinite(value)) throw new Error(`${label} must be a valid number, not infinity.`);
+    if (!Number.isFinite(value)) throw new LocalizedError(message('errors.numeric.infinite', { label }));
     if (range) {
-      if (!Number.isInteger(value)) throw new Error(`${label} cannot have decimal places for ${typeLabel}.`);
+      if (!Number.isInteger(value))
+        throw new LocalizedError(message('errors.numeric.integerOnly', { label, type: typeLabel }));
       if (value < range[0] || value > range[1]) {
-        throw new Error(`Value must be between ${range[0]} and ${range[1]}.`);
+        throw new LocalizedError(message('errors.numeric.range', { min: String(range[0]), max: String(range[1]) }));
       }
     }
     if (type === 'xsd:float') {
       const magnitude = Math.abs(value);
-      if (magnitude > 3.4028234663852886e38)
-        throw new Error('Value must be between -3.4028234663852886e38 and 3.4028234663852886e38.');
+      if (magnitude > 3.4028234663852886e38) throw new LocalizedError(message('errors.numeric.floatRange'));
       if (magnitude !== 0 && magnitude < 1.401298464324817e-45)
-        throw new Error('Value is too close to zero. Use 0 or a number at least 1.401298464324817e-45 away from zero.');
+        throw new LocalizedError(message('errors.numeric.floatTooSmall'));
     }
   }
-  if (min !== null && max !== null && min > max) throw new Error('Minimum must not be greater than maximum.');
+  if (min !== null && max !== null && min > max) throw new LocalizedError(message('errors.numeric.minAboveMax'));
   if (decimalPlaces !== null && (!Number.isSafeInteger(decimalPlaces) || decimalPlaces < 0))
-    throw new Error('Decimal places must be a nonnegative number.');
+    throw new LocalizedError(message('errors.numeric.decimalPlacesNegative'));
   if (range && decimalPlaces !== null && decimalPlaces !== 0)
-    throw new Error(`Decimal places must be 0 or left empty for ${typeLabel}.`);
+    throw new LocalizedError(message('errors.numeric.decimalPlacesInteger', { type: typeLabel }));
   if (decimalPlaces !== null) {
     for (const [label, value] of values) {
       if (value === null) continue;
@@ -560,15 +563,18 @@ function validateNumericSettings(field: Field): void {
       const [coefficient, exponent = '0'] = String(value).toLowerCase().split('e');
       const places = Math.max(0, (coefficient.split('.')[1]?.length ?? 0) - Number(exponent));
       if (places > decimalPlaces)
-        throw new Error(
-          `${label} must have no more than ${decimalPlaces} decimal ${decimalPlaces === 1 ? 'place' : 'places'}.`,
+        throw new LocalizedError(
+          message(decimalPlaces === 1 ? 'errors.numeric.tooManyPlaces.one' : 'errors.numeric.tooManyPlaces.other', {
+            label,
+            count: String(decimalPlaces),
+          }),
         );
     }
   }
   if (field.defaultValue?.kind === 'number') {
     const value = field.defaultValue.value;
     if ((min !== null && value < min) || (max !== null && value > max))
-      throw new Error('The default is outside the minimum and maximum. Change or clear it first.');
+      throw new LocalizedError(message('errors.numeric.defaultOutsideRange'));
   }
 }
 
@@ -631,8 +637,8 @@ export function deploymentKeys(fields: Pick<Field, 'name' | 'deploymentName'>[])
   for (const field of fields) {
     if (field.deploymentName === undefined) continue;
     const key = field.deploymentName;
-    if (!key.trim()) throw new Error('Key is required.');
-    if (used.has(key)) throw new Error('Another child in this container already uses that key.');
+    if (!key.trim()) throw new LocalizedError(message('validation.key.required'));
+    if (used.has(key)) throw new LocalizedError(message('validation.key.duplicate'));
     used.add(key);
   }
   return fields.map((field, index) => {
@@ -651,7 +657,7 @@ function buildTemporal(builder: FieldBuilder, field: Field): void {
   const temporal = builder as TemporalFieldBuilder;
   if (field.temporal) {
     if (!temporalGranularities(field.temporal.type).includes(field.temporal.granularity))
-      throw new Error('The selected precision is incompatible with the temporal datatype.');
+      throw new LocalizedError(message('errors.temporal.precisionIncompatible'));
     temporal.withTemporalType(TemporalType.forValue(field.temporal.type));
     temporal.withTemporalGranularity(TemporalGranularity.forValue(field.temporal.granularity));
     temporal.withTimezoneEnabled(field.temporal.timezoneEnabled);
@@ -876,16 +882,16 @@ function buildField(field: Field): TemplateField {
       [minLength, maxLength].some((n) => n !== null && (!Number.isInteger(n) || n < 0)) ||
       (minLength !== null && maxLength !== null && minLength > maxLength)
     ) {
-      throw new Error('Text lengths must be nonnegative numbers, with minimum no greater than maximum.');
+      throw new LocalizedError(message('errors.text.lengths'));
     }
     const pattern = accepts(field.type, 'textPattern') && regex ? new RegExp(regex) : null;
     if (field.defaultValue.kind === 'literal') {
       const value = field.defaultValue.value;
       if (minLength !== null && value.length < minLength)
-        throw new Error(`Default value must contain at least ${minLength} characters.`);
+        throw new LocalizedError(message('errors.text.defaultTooShort', { count: String(minLength) }));
       if (maxLength !== null && value.length > maxLength)
-        throw new Error(`Default value must contain no more than ${maxLength} characters.`);
-      if (pattern && !pattern.test(value)) throw new Error('Default value must match the regular expression.');
+        throw new LocalizedError(message('errors.text.defaultTooLong', { count: String(maxLength) }));
+      if (pattern && !pattern.test(value)) throw new LocalizedError(message('errors.text.defaultPattern'));
     }
     (builder as TextFieldBuilder | TextAreaBuilder).withMinLength(minLength).withMaxLength(maxLength);
     if (accepts(field.type, 'textPattern')) (builder as TextFieldBuilder).withRegex(regex);
@@ -912,7 +918,7 @@ function buildField(field: Field): TemplateField {
   if (accepts(field.type, 'mediaDimensions')) {
     for (const dimension of [field.width, field.height]) {
       if (dimension != null && (!Number.isInteger(dimension) || dimension <= 0))
-        throw new Error('Media dimensions must be positive numbers.');
+        throw new LocalizedError(message('errors.media.dimensions'));
     }
     (builder as StaticImageFieldBuilder | StaticYoutubeFieldBuilder)
       .withWidth(field.width ?? null)
@@ -921,11 +927,11 @@ function buildField(field: Field): TemplateField {
   const value = field.defaultValue;
   if (value.kind !== 'none') {
     if (value.kind !== descriptor.defaultKind)
-      throw new Error(`A ${field.type} field cannot hold a ${value.kind} default.`);
+      throw new LocalizedError(message('errors.default.wrongKind', { type: field.type, kind: value.kind }));
     if (descriptor.options) {
       const values = value.kind === 'literals' ? value.values : value.kind === 'literal' ? [value.value] : [];
       if (values.filter((option) => !field.options.includes(option)).length > 1)
-        throw new Error('Only one scalar choice default can be preserved.');
+        throw new LocalizedError(message('errors.default.oneScalarChoice'));
     } else {
       switch (value.kind) {
         case 'literal':
@@ -959,10 +965,10 @@ function buildField(field: Field): TemplateField {
   if (field.annotations?.length) {
     const annotations = new Annotations();
     for (const annotation of field.annotations) {
-      if (!annotation.name.trim()) throw new Error('Each annotation needs a name.');
-      if (annotations.get(annotation.name)) throw new Error('Annotation names must be unique.');
+      if (!annotation.name.trim()) throw new LocalizedError(message('annotations.nameRequired'));
+      if (annotations.get(annotation.name)) throw new LocalizedError(message('annotations.nameUnique'));
       if (annotation.kind === 'iri' && !/^[a-z][a-z0-9+.-]*:\S+$/i.test(annotation.value))
-        throw new Error('An annotation IRI must be an absolute identifier.');
+        throw new LocalizedError(message('annotations.iriAbsolute'));
       annotations.add(
         annotation.kind === 'iri'
           ? new AnnotationAtId(annotation.name, annotation.value)
@@ -974,19 +980,24 @@ function buildField(field: Field): TemplateField {
   return built;
 }
 
-/** Validate before changing state; model builders may reject intermediate defaults. */
-export function defaultValueError(field: Field, value: FieldDefaultValue): string | null {
+/**
+ * Validate before changing state; model builders may reject intermediate defaults.
+ *
+ * The message is rendered through `t`, which is English unless the caller supplies the
+ * designer's language.
+ */
+export function defaultValueError(field: Field, value: FieldDefaultValue, t: Translate = english): string | null {
   try {
-    const temporalError = temporalDefaultError(field, value);
+    const temporalError = temporalDefaultError(field, value, t);
     if (temporalError) return temporalError;
     if (allowsOptions(field.type)) {
       const values = value.kind === 'literal' ? [value.value] : value.kind === 'literals' ? value.values : [];
-      if (values.some((option) => !field.options.includes(option))) return 'Choose a default from the field options.';
+      if (values.some((option) => !field.options.includes(option))) return t('errors.default.notAnOption');
     }
     buildField({ ...field, defaultValue: value, importedChoiceDefault: undefined });
     return null;
   } catch (error) {
-    return error instanceof Error ? error.message : String(error);
+    return describeError(error, t);
   }
 }
 
@@ -1007,9 +1018,8 @@ function buildFieldNaming(field: Field): TemplateField {
   try {
     return buildField(field);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    const name = field.name.trim() || 'an unnamed field';
-    throw new Error(`${name}: ${message}`, { cause: error });
+    const name = field.name.trim() || message('common.anUnnamedField');
+    throw new LocalizedError(message('errors.namedField', { name, message: errorParam(error) }), { cause: error });
   }
 }
 
@@ -1100,7 +1110,7 @@ function buildContainerArtifact(
         [min, max].some((value) => value !== null && (!Number.isInteger(value) || value < 0)) ||
         (min !== null && max !== null && min > max)
       ) {
-        throw new Error('Minimum and maximum must be nonnegative numbers, with minimum no greater than maximum.');
+        throw new LocalizedError(message('errors.occurrences.range'));
       }
       deployment.withMinItems(min).withMaxItems(max);
     }
@@ -1197,9 +1207,7 @@ export function templateToYaml(template: Template | TemplateElement): string {
       return JSON.stringify(value);
     };
     if (canonical(templateToJson(template)) !== canonical(templateToJson(restored))) {
-      throw new Error(
-        'YAML cannot preserve every property of this template, such as custom schema metadata. Export JSON to retain the complete definitions.',
-      );
+      throw new LocalizedError(message('errors.yaml.lossy'));
     }
   }
   return yaml;
@@ -1248,14 +1256,12 @@ export function readTemplate(source: string | object): Template {
   }
 
   if (isCompactYaml(trimmed)) {
-    throw new Error(
-      'This is compact YAML, which leaves out everything that has a default and cannot be opened as a template. Open the full YAML or the JSON instead.',
-    );
+    throw new LocalizedError(message('errors.yaml.compactTemplate'));
   }
 
   const template = CedarReaders.yaml().getStrict().getTemplateReader().readFromString(trimmed).template;
   if (template.getChildrenInfo().children.length === 0 && !template.schema_name) {
-    throw new Error('The source is not a CEDAR template.');
+    throw new LocalizedError(message('errors.open.notTemplate'));
   }
   return template;
 }
@@ -1402,9 +1408,8 @@ export function toDesignerTemplate(template: Template): DesignerTemplate {
     .getChildrenInfo()
     .children.filter((info) => template.getChild(info.name)?.cedarArtifactType === CedarArtifactType.TEMPLATE_ELEMENT);
   if (elements.length) {
-    throw new Error(
-      `This template contains elements (${elements.map((info) => info.name).join(', ')}). ` +
-        'Element editing is not supported yet; the template was not opened to avoid losing nested content.',
+    throw new LocalizedError(
+      message('errors.open.containsElements', { names: elements.map((info) => info.name).join(', ') }),
     );
   }
   return projectContainerFields(template);
@@ -1530,7 +1535,7 @@ function projectContainerFields(template: Template | TemplateElement): DesignerT
 }
 
 /** Imported conflicts stay visible even when default editing is hidden in preferences. */
-export function choiceDefaultConflict(field: Field): string | null {
+export function choiceDefaultConflict(field: Field, t: Translate = english): string | null {
   if (!allowsOptions(field.type)) return null;
   const values =
     field.defaultValue.kind === 'literal'
@@ -1543,9 +1548,11 @@ export function choiceDefaultConflict(field: Field): string | null {
   ];
   const missing = all.filter((value) => !field.options.includes(value));
   if (missing.length)
-    return `The default ${missing.map((value) => '“' + value + '”').join(', ')} is not among the allowed options. Change or clear the default, or add it to the options.`;
+    return t('errors.default.missingOptions', {
+      values: missing.map((value) => t('common.quoted', { value })).join(', '),
+    });
   if (field.importedChoiceDefault !== undefined && values.length && !values.includes(field.importedChoiceDefault))
-    return `The imported default “${field.importedChoiceDefault}” conflicts with the selected default. Choose a default or clear it to resolve this.`;
+    return t('errors.default.importedConflict', { value: field.importedChoiceDefault });
   return null;
 }
 
@@ -1555,7 +1562,7 @@ export function readField(source: string): Field {
   if (text.startsWith('{')) {
     const sourceNode = JSON.parse(text);
     const field = CedarReaders.json().getStrict().getTemplateFieldReader().readFromObject(sourceNode).field;
-    if (!field.schema_name) throw new Error('The field definition needs a name.');
+    if (!field.schema_name) throw new LocalizedError(message('errors.open.fieldNeedsName'));
     const container = CedarBuilders.templateBuilder().withSchemaName('Field import').build();
     container.addChild(field, field.createDeploymentBuilder(field.schema_name).build());
     const document = JSON.parse(JSON.stringify(templateToJson(container)));
@@ -1566,15 +1573,13 @@ export function readField(source: string): Field {
   }
   // A field document carries the same marker as a template, and the same reason applies.
   if (isCompactYaml(text)) {
-    throw new Error(
-      'This is compact YAML, which leaves out everything that has a default and cannot be opened as a field. Open the full YAML or the JSON instead.',
-    );
+    throw new LocalizedError(message('errors.yaml.compactField'));
   }
   const reader = CedarReaders.yaml().getStrict().getTemplateFieldReader();
   const parsed = reader.readFromString(text);
   const deployment = new ChildDeploymentInfo(parsed.field.schema_name ?? '');
   const field = reader.readFromObject(parsed.fieldSourceObject, deployment, new JsonPath()).field;
-  if (!field.schema_name) throw new Error('The field definition needs a name.');
+  if (!field.schema_name) throw new LocalizedError(message('errors.open.fieldNeedsName'));
   const container = CedarBuilders.templateBuilder().withSchemaName('Field import').build();
   container.addChild(field, deployment);
   return toDesignerTemplate(container).fields[0];
@@ -1641,10 +1646,10 @@ export function toContainerDraft(container: Template | TemplateElement): Contain
   const fields = new Map(flat.fields.map((field) => [field.deploymentName, field]));
   draft.children = container.getChildrenInfo().children.map((info) => {
     const child = container.getChild(info.name);
-    if (!child) throw new Error(`Cannot open missing child “${info.name}”.`);
+    if (!child) throw new LocalizedError(message('errors.open.missingChild', { name: info.name }));
     if (!(child instanceof TemplateElement)) {
       const field = fields.get(info.name);
-      if (!field) throw new Error(`Cannot open unsupported child “${info.name}”.`);
+      if (!field) throw new LocalizedError(message('errors.open.unsupportedChild', { name: info.name }));
       return fieldNode({ ...field, id: newNodeId() });
     }
     const definition = toContainerDraft(child);
@@ -1676,7 +1681,7 @@ export function readContainer(source: string | object): ContainerDraft {
       type !== 'https://schema.metadatacenter.org/core/Template' &&
       type !== 'https://schema.metadatacenter.org/core/TemplateElement'
     )
-      throw new Error('Open a CEDAR template or element document.');
+      throw new LocalizedError(message('errors.open.notContainer'));
     const model =
       type === 'https://schema.metadatacenter.org/core/TemplateElement'
         ? CedarReaders.json().getStrict().getTemplateElementReader().readFromObject(json).element
@@ -1684,15 +1689,15 @@ export function readContainer(source: string | object): ContainerDraft {
     restoreContainerLanguages(model, json);
     return toContainerDraft(model);
   }
-  if (isCompactYaml(text)) throw new Error('Compact YAML cannot be reopened. Use full YAML or JSON.');
+  if (isCompactYaml(text)) throw new LocalizedError(message('errors.yaml.compactReopen'));
   const parsed = CedarReaders.yaml().getStrict().getTemplateReader().readFromString(text);
   const kind = parsed.templateSourceObject['type'];
-  if (kind !== 'template' && kind !== 'element') throw new Error('Open a CEDAR template or element document.');
+  if (kind !== 'template' && kind !== 'element') throw new LocalizedError(message('errors.open.notContainer'));
   const model =
     kind === 'element'
       ? CedarReaders.yaml().getStrict().getTemplateElementReader().readFromString(text).element
       : parsed.template;
-  if (!model.schema_name) throw new Error('Open a CEDAR template or element document.');
+  if (!model.schema_name) throw new LocalizedError(message('errors.open.notContainer'));
   return toContainerDraft(model);
 }
 

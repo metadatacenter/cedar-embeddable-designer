@@ -1,11 +1,11 @@
 <div [hidden]="!expanded" [id]="'field-settings-' + field.id">
-  <div class="tabs" role="tablist" aria-label="Field settings">
+  <div class="tabs" role="tablist" [attr.aria-label]="'fieldSettings.label' | translate">
     @for (tab of tabs; track tab; let index = $index) {
       <button
         type="button"
         role="tab"
         [class.has-errors]="service.tabHasErrors(field.id, tab)"
-        [attr.aria-description]="service.tabHasErrors(field.id, tab) ? 'Contains errors' : null"
+        [attr.aria-description]="service.tabHasErrors(field.id, tab) ? ('settings.containsErrors' | translate) : null"
         [id]="'field-tab-' + field.id + '-' + tab.replaceAll(' ', '-')"
         [attr.aria-controls]="'field-panel-' + field.id + '-' + tab.replaceAll(' ', '-')"
         [attr.aria-selected]="selectedTab === tab"
@@ -13,7 +13,7 @@
         (click)="selectTab(tab)"
         (keydown)="onTabKey($event, index)"
       >
-        {{ tab }}
+        {{ tabKey(tab) | translate }}
       </button>
     }
   </div>
@@ -43,7 +43,8 @@
               class="settings-fields text-constraint-fields"
             >
               <label
-                >Minimum length<input
+                >{{ 'fieldSettings.text.minLength' | translate
+                }}<input
                   spellcheck="false"
                   name="minLength"
                   type="number"
@@ -53,7 +54,8 @@
                   (ngModelChange)="saveText(textForm)"
               /></label>
               <label
-                >Maximum length<input
+                >{{ 'fieldSettings.text.maxLength' | translate
+                }}<input
                   spellcheck="false"
                   name="maxLength"
                   type="number"
@@ -64,13 +66,14 @@
               /></label>
               @if (accepts('textPattern')) {
                 <label
-                  >Regular expression<input
+                  >{{ 'fieldSettings.text.regex' | translate
+                  }}<input
                     spellcheck="false"
                     class="wide"
                     name="regex"
                     [(ngModel)]="text.regex"
                     (ngModelChange)="saveText(textForm)"
-                    placeholder="e.g., ^[A-Z]+$"
+                    [placeholder]="'fieldSettings.text.regexPlaceholder' | translate"
                 /></label>
               }
             </fieldset>
@@ -89,9 +92,10 @@
               class="settings-fields numeric-constraint-fields"
             >
               <label
-                >Datatype<select
+                >{{ 'fieldSettings.numeric.datatype' | translate
+                }}<select
                   name="numericType"
-                  aria-label="Datatype"
+                  [attr.aria-label]="'fieldSettings.numeric.datatype' | translate"
                   [(ngModel)]="numeric.type"
                   (ngModelChange)="saveNumeric(numericForm)"
                 >
@@ -101,7 +105,8 @@
                 </select></label
               >
               <label
-                >Minimum value<input
+                >{{ 'fieldSettings.numeric.min' | translate
+                }}<input
                   spellcheck="false"
                   name="numericMin"
                   type="number"
@@ -110,7 +115,8 @@
                   (ngModelChange)="saveNumeric(numericForm)"
               /></label>
               <label
-                >Maximum value<input
+                >{{ 'fieldSettings.numeric.max' | translate
+                }}<input
                   spellcheck="false"
                   name="numericMax"
                   type="number"
@@ -119,11 +125,14 @@
                   (ngModelChange)="saveNumeric(numericForm)"
               /></label>
               <div class="numeric-default" role="group" [attr.aria-labelledby]="'numeric-default-label-' + field.id">
-                <span class="default-label" [id]="'numeric-default-label-' + field.id">Default value</span>
+                <span class="default-label" [id]="'numeric-default-label-' + field.id">{{
+                  'defaultValue.label' | translate
+                }}</span>
                 <app-field-default-value [field]="field" />
               </div>
               <label
-                >Decimal places<input
+                >{{ 'fieldSettings.numeric.decimalPlaces' | translate
+                }}<input
                   spellcheck="false"
                   name="decimalPlaces"
                   type="number"
@@ -133,12 +142,13 @@
                   (ngModelChange)="saveNumeric(numericForm)"
               /></label>
               <label
-                >Unit of measure<input
+                >{{ 'fieldSettings.numeric.unit' | translate
+                }}<input
                   spellcheck="false"
                   name="unit"
                   [(ngModel)]="numeric.unit"
                   (ngModelChange)="saveNumeric(numericForm)"
-                  placeholder="e.g., mg"
+                  [placeholder]="'fieldSettings.numeric.unitPlaceholder' | translate"
               /></label>
             </fieldset>
           </form>
@@ -152,40 +162,43 @@
           <form (ngSubmit)="saveTemporal()" class="row">
             <fieldset [attr.aria-invalid]="!!error" [disabled]="!!field.publishedDefinition" class="settings-fields">
               <label
-                >Temporal type<select
+                >{{ 'fieldSettings.temporal.type' | translate
+                }}<select
                   name="temporalType"
-                  aria-label="Temporal type"
+                  [attr.aria-label]="'fieldSettings.temporal.type' | translate"
                   [ngModel]="temporal.type"
                   (ngModelChange)="changeTemporalType($event); saveTemporal()"
                 >
-                  <option value="xsd:date">Date</option>
-                  <option value="xsd:time">Time</option>
-                  <option value="xsd:dateTime">Date and time</option>
+                  <option value="xsd:date">{{ 'fieldTypes.date.label' | translate }}</option>
+                  <option value="xsd:time">{{ 'fieldTypes.time.label' | translate }}</option>
+                  <option value="xsd:dateTime">{{ 'fieldTypes.dateTime.label' | translate }}</option>
                 </select></label
               >
               <label
-                >Precision<select
+                >{{ 'fieldSettings.temporal.precision' | translate
+                }}<select
                   name="granularity"
-                  aria-label="Precision"
+                  [attr.aria-label]="'fieldSettings.temporal.precision' | translate"
                   [(ngModel)]="temporal.granularity"
                   (ngModelChange)="saveTemporal()"
                 >
                   @for (value of granularities; track value) {
-                    <option [value]="value">{{ value === 'decimalSecond' ? 'Fractional second' : value }}</option>
+                    <option [value]="value">{{ 'fieldSettings.temporal.granularity.' + value | translate }}</option>
                   }
                 </select></label
               >
               @if (temporal.type !== 'xsd:date') {
                 <label
-                  >Time format<select
+                  >{{ 'fieldSettings.temporal.timeFormat' | translate
+                  }}<select
                     name="timeFormat"
-                    aria-label="Time format"
+                    [attr.aria-label]="'fieldSettings.temporal.timeFormat' | translate"
                     [(ngModel)]="temporal.inputTimeFormat"
                     (ngModelChange)="saveTemporal()"
                   >
-                    <option [ngValue]="null">Default (24 hour)</option>
-                    <option value="12h">12 hour</option>
-                    <option value="24h">24 hour</option>
+                    <option [ngValue]="null">{{ 'fieldSettings.temporal.defaultFormat' | translate }}</option>
+                    <option value="12h">{{ 'fieldSettings.temporal.twelveHour' | translate }}</option>
+                    <option value="24h">{{ 'fieldSettings.temporal.twentyFourHour' | translate }}</option>
                   </select></label
                 >
                 <label class="check"
@@ -195,7 +208,7 @@
                     name="timezone"
                     [(ngModel)]="temporal.timezoneEnabled"
                     (ngModelChange)="saveTemporal()"
-                  />Show timezone</label
+                  />{{ 'fieldSettings.temporal.showTimezone' | translate }}</label
                 >
               }
             </fieldset>
@@ -207,7 +220,9 @@
       }
       @if (allowsDefault(field.type) && !accepts('numericBounds')) {
         <div class="settings" role="group" [attr.aria-labelledby]="'field-default-label-' + field.id">
-          <span class="default-label" [id]="'field-default-label-' + field.id">Default value</span>
+          <span class="default-label" [id]="'field-default-label-' + field.id">{{
+            'defaultValue.label' | translate
+          }}</span>
           <app-field-default-value [field]="field" />
         </div>
       }
@@ -217,7 +232,8 @@
           <form #mediaForm (ngSubmit)="saveMedia(mediaForm)" class="row">
             <fieldset [attr.aria-invalid]="!!error" [disabled]="!!field.publishedDefinition" class="settings-fields">
               <label
-                >Width<input
+                >{{ 'fieldSettings.media.width' | translate
+                }}<input
                   spellcheck="false"
                   type="number"
                   name="width"
@@ -225,10 +241,11 @@
                   step="1"
                   [(ngModel)]="width"
                   (ngModelChange)="saveMedia(mediaForm)"
-                  placeholder="Automatic"
+                  [placeholder]="'fieldSettings.media.automatic' | translate"
               /></label>
               <label
-                >Height<input
+                >{{ 'fieldSettings.media.height' | translate
+                }}<input
                   spellcheck="false"
                   type="number"
                   name="height"
@@ -236,7 +253,7 @@
                   step="1"
                   [(ngModel)]="height"
                   (ngModelChange)="saveMedia(mediaForm)"
-                  placeholder="Automatic"
+                  [placeholder]="'fieldSettings.media.automatic' | translate"
               /></label>
             </fieldset>
           </form>
@@ -258,7 +275,8 @@
       <form #boundsForm (ngSubmit)="saveBounds(boundsForm)" class="row">
         <fieldset [attr.aria-invalid]="!!error" [disabled]="!!field.publishedDefinition" class="settings-fields">
           <label
-            >Minimum<input
+            >{{ 'fieldSettings.occurrences.min' | translate
+            }}<input
               spellcheck="false"
               type="number"
               name="min"
@@ -266,10 +284,11 @@
               step="1"
               [(ngModel)]="min"
               (ngModelChange)="saveBounds(boundsForm)"
-              placeholder="Default (0)"
+              [placeholder]="'settings.minOccurrencesPlaceholder' | translate"
           /></label>
           <label
-            >Maximum<input
+            >{{ 'fieldSettings.occurrences.max' | translate
+            }}<input
               spellcheck="false"
               type="number"
               name="max"
@@ -277,7 +296,7 @@
               step="1"
               [(ngModel)]="max"
               (ngModelChange)="saveBounds(boundsForm)"
-              placeholder="Unlimited"
+              [placeholder]="'settings.unlimited' | translate"
           /></label>
         </fieldset>
       </form>
@@ -301,20 +320,22 @@
         class="settings-fields display-fields"
       >
         <label
-          >Display label<input
+          >{{ 'settings.displayLabel' | translate
+          }}<input
             spellcheck="false"
             name="displayLabel"
             [(ngModel)]="displayLabel"
             (ngModelChange)="saveLayout()"
-            placeholder="Field display name"
+            [placeholder]="'fieldSettings.display.labelPlaceholder' | translate"
         /></label>
         <label
-          >Display description<input
+          >{{ 'settings.displayDescription' | translate
+          }}<input
             spellcheck="false"
             name="displayDescription"
             [(ngModel)]="displayDescription"
             (ngModelChange)="saveLayout()"
-            placeholder="Field help"
+            [placeholder]="'fieldSettings.display.descriptionPlaceholder' | translate"
         /></label>
         <div class="display-flags">
           <label class="check"
@@ -324,7 +345,7 @@
               name="hidden"
               [(ngModel)]="hidden"
               (ngModelChange)="saveLayout()"
-            />Hidden</label
+            />{{ 'fieldSettings.display.hidden' | translate }}</label
           >
           @if (dynamic) {
             <label class="check"
@@ -334,7 +355,7 @@
                 name="continue"
                 [(ngModel)]="continuePreviousLine"
                 (ngModelChange)="saveLayout()"
-              />Continue previous line</label
+              />{{ 'fieldSettings.display.continueLine' | translate }}</label
             >
           }
         </div>
@@ -345,14 +366,14 @@
     }
     @if (service.preferences().showHelpText) {
       <label class="preferred-label"
-        >Help text
+        >{{ 'fieldSettings.display.helpText' | translate }}
         <input
           spellcheck="false"
           type="text"
           [ngModel]="field.helpText || ''"
           (ngModelChange)="service.updateHelpText(field.id, $event)"
           [disabled]="!!field.publishedDefinition"
-          placeholder="Add helper instructions for users..."
+          [placeholder]="'fieldSettings.display.helpTextPlaceholder' | translate"
         />
       </label>
     }
@@ -371,7 +392,9 @@
   >
     <dl class="identity">
       @if (!service.fieldDocumentMode()) {
-        <dt class="editable"><label [for]="'field-key-' + field.id">Key</label></dt>
+        <dt class="editable">
+          <label [for]="'field-key-' + field.id">{{ 'settings.key' | translate }}</label>
+        </dt>
         <dd>
           <input
             spellcheck="false"
@@ -388,31 +411,33 @@
           }
         </dd>
       }
-      <dt>Field IRI</dt>
-      <dd>{{ field.atId || 'Not yet assigned' }}</dd>
+      <dt>{{ 'fieldSettings.metadata.fieldIri' | translate }}</dt>
+      <dd>{{ field.atId || ('settings.notYetAssigned' | translate) }}</dd>
       @if (artifact.version) {
-        <dt>Version</dt>
+        <dt>{{ 'settings.version' | translate }}</dt>
         <dd>{{ artifact.version }}</dd>
       }
       @if (artifact.publicationStatus) {
-        <dt>Publication status</dt>
+        <dt>{{ 'common.publicationStatus' | translate }}</dt>
         <dd>{{ artifact.publicationStatus }}</dd>
       }
-      <dt>Model version</dt>
-      <dd>{{ artifact.schemaVersion || 'Not specified' }}</dd>
-      <dt>Created</dt>
-      <dd>{{ artifact.createdOn || 'Not yet recorded' }}</dd>
-      <dt>Modified</dt>
-      <dd>{{ artifact.modifiedOn || 'Not yet recorded' }}</dd>
+      <dt>{{ 'settings.modelVersion' | translate }}</dt>
+      <dd>{{ artifact.schemaVersion || ('common.notSpecified' | translate) }}</dd>
+      <dt>{{ 'settings.created' | translate }}</dt>
+      <dd>{{ artifact.createdOn || ('settings.notYetRecorded' | translate) }}</dd>
+      <dt>{{ 'settings.modified' | translate }}</dt>
+      <dd>{{ artifact.modifiedOn || ('settings.notYetRecorded' | translate) }}</dd>
       @if (artifact.derivedFrom) {
-        <dt>Derived from</dt>
+        <dt>{{ 'settings.derivedFrom' | translate }}</dt>
         <dd>{{ artifact.derivedFrom }}</dd>
       }
       @if (artifact.previousVersion) {
-        <dt>Previous version</dt>
+        <dt>{{ 'settings.previousVersion' | translate }}</dt>
         <dd>{{ artifact.previousVersion }}</dd>
       }
-      <dt class="editable"><label [for]="'field-identifier-' + field.id">Identifier</label></dt>
+      <dt class="editable">
+        <label [for]="'field-identifier-' + field.id">{{ 'containerEditor.identifier' | translate }}</label>
+      </dt>
       <dd>
         <input
           spellcheck="false"
@@ -424,7 +449,7 @@
         />
       </dd>
       @if (dynamic && !service.fieldDocumentMode()) {
-        <dt class="editable">Property IRI</dt>
+        <dt class="editable">{{ 'settings.propertyIri' | translate }}</dt>
         <dd>
           <app-property-picker
             [iri]="field.propertyIri"
@@ -444,8 +469,8 @@
   class="settings-toggle"
   [attr.aria-expanded]="expanded"
   [attr.aria-controls]="'field-settings-' + field.id"
-  [attr.aria-label]="expanded ? 'Collapse field settings' : 'Expand field settings'"
-  [title]="expanded ? 'Collapse field settings' : 'Expand field settings'"
+  [attr.aria-label]="(expanded ? 'fieldSettings.collapse' : 'fieldSettings.expand') | translate"
+  [title]="(expanded ? 'fieldSettings.collapse' : 'fieldSettings.expand') | translate"
   (click)="toggleExpanded()"
 >
   <app-icon key="chevron-down" size="small" [class.expanded]="expanded" />

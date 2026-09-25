@@ -14,6 +14,7 @@ import {
 } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { TemplateService } from '../../core/services/template.service';
 import { CustomField } from '../../core/models/types';
 import { CedFieldType } from '../../ced-public-api';
@@ -22,7 +23,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 @Component({
   selector: 'app-field-type-picker',
   standalone: true,
-  imports: [FormsModule, IconComponent],
+  imports: [FormsModule, IconComponent, TranslatePipe],
   templateUrl: './field-type-picker.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./field-type-picker.component.scss'],
@@ -59,11 +60,12 @@ export class FieldTypePickerComponent {
   searchText = '';
   readonly showDropdown = signal(false);
 
-  get selectedLibraryName(): string {
+  /** The chosen library's name, or null for the standard field types, which the template labels. */
+  get selectedLibraryName(): string | null {
     const libId = this.service.fieldTypeDropdownLibrary();
-    if (libId === null) return 'Standard';
+    if (libId === null) return null;
     const lib = this.service.libraries().find((l) => l.id === libId);
-    return lib ? lib.name : 'Standard';
+    return lib ? lib.name : null;
   }
 
   get filteredLibraries() {

@@ -19,12 +19,14 @@ import { TemplateService } from '../../core/services/template.service';
 import { TerminologyService } from '../../core/services/terminology.service';
 import { termPickerAvailable } from '../../core/model/term-picker';
 import { trapTab } from '../../shared/focus-trap';
+import { TranslatePipe } from '@ngx-translate/core';
+import { CedLanguageService } from '../../i18n/ced-language.service';
 
 @Component({
   selector: 'app-types-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  imports: [IconComponent, ManualIriComponent],
+  imports: [IconComponent, ManualIriComponent, TranslatePipe],
   template: `
     <div class="property">
       <div class="type-list">
@@ -35,36 +37,42 @@ import { trapTab } from '../../shared/focus-trap';
               type="button"
               class="remove"
               [disabled]="disabled()"
-              [attr.aria-label]="'Remove type ' + iri"
+              [attr.aria-label]="'typesPicker.remove' | translate: { iri: iri }"
               (click)="remove(iri)"
             >
               <app-icon key="trash" className="w-4 h-4" />
             </button>
           </div>
         } @empty {
-          <span class="placeholder">No types selected.</span>
+          <span class="placeholder">{{ 'typesPicker.none' | translate }}</span>
         }
       </div>
       @if (available && baseUrl()) {
-        <button #trigger type="button" [disabled]="disabled()" (click)="open()" aria-label="Add types">
-          Add types
+        <button
+          #trigger
+          type="button"
+          [disabled]="disabled()"
+          (click)="open()"
+          [attr.aria-label]="'typesPicker.add' | translate"
+        >
+          {{ 'typesPicker.add' | translate }}
         </button>
       }
       <button #manualTrigger type="button" [disabled]="disabled()" (click)="manualOpened.set(!manualOpened())">
-        Enter IRI manually
+        {{ 'manualIri.open' | translate }}
       </button>
     </div>
     @if (manualOpened()) {
       <app-manual-iri
         [disabled]="disabled()"
         [existing]="types()"
-        action="Add type"
+        action="manualIri.addType"
         (accepted)="acceptManual($event)"
         (cancelled)="closeManual()"
       />
     }
     @if (!available || !baseUrl()) {
-      <p role="status" class="unavailable">Vocabulary search is unavailable. You can enter an IRI manually.</p>
+      <p role="status" class="unavailable">{{ 'manualIri.searchUnavailable' | translate }}</p>
     }
     @if (opened()) {
       <div class="overlay">
@@ -72,7 +80,7 @@ import { trapTab } from '../../shared/focus-trap';
           #dialog
           role="dialog"
           aria-modal="true"
-          aria-label="Add types"
+          [attr.aria-label]="'typesPicker.add' | translate"
           tabindex="-1"
           (keydown)="keydown($event)"
           class="dialog"
@@ -85,6 +93,7 @@ import { trapTab } from '../../shared/focus-trap';
             [constraintSet]="emptySelection"
             [selectionMode]="'constraints'"
             [terminologyBaseUrl]="baseUrl()"
+            [language]="language()"
             (constraintsSelected)="select($event)"
             (cancelled)="close()"
           ></cedar-embeddable-term-picker>
@@ -188,6 +197,9 @@ export class TypesPickerComponent {
   readonly emptySelection: ControlledTermSet = { constraints: [], actions: [] };
   readonly disabled = input(false);
   readonly baseUrl = inject(TerminologyService).baseUrl;
+  private readonly i18n = inject(CedLanguageService);
+  /** The designer's language, which the term picker renders in. */
+  readonly language = this.i18n.language;
   readonly available = termPickerAvailable();
   readonly opened = signal(false);
   readonly manualOpened = signal(false);
@@ -241,7 +253,7 @@ export class TypesPickerComponent {
           !/^[a-z][a-z0-9+.-]*:\S+$/i.test(c.sourceId),
       )
     ) {
-      this.error.set('Choose classes only.');
+      this.error.set(this.i18n.t('typesPicker.classesOnly'));
       return;
     }
     if (set.constraints.length) {

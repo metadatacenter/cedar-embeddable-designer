@@ -1,26 +1,33 @@
 import { Component, inject, input, output } from '@angular/core';
 import { TemplateService } from '../../core/services/template.service';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-insertion-actions',
-  imports: [IconComponent],
+  imports: [IconComponent, TranslatePipe],
   template: `
     <button type="button" (click)="addField()">
-      <app-icon key="add" size="small" />Add field{{ here() ? ' here' : '' }}
+      <app-icon key="add" size="small" />{{ (here() ? 'insertion.addFieldHere' : 'insertion.addField') | translate }}
     </button>
     @if (service.getActivePreset() !== 'basic') {
       @if (service.preferences().showElements) {
         <button type="button" (click)="addElement()">
-          <app-icon key="add" size="small" />Add element{{ here() ? ' here' : '' }}
+          <app-icon key="add" size="small" />{{
+            (here() ? 'insertion.addElementHere' : 'insertion.addElement') | translate
+          }}
         </button>
       }
       <button type="button" (click)="importChild('field')">
-        <app-icon key="library" size="small" />Import field{{ here() ? ' here' : '' }}
+        <app-icon key="library" size="small" />{{
+          (here() ? 'insertion.importFieldHere' : 'insertion.importField') | translate
+        }}
       </button>
       @if (service.preferences().showElements) {
         <button type="button" (click)="importChild('element')">
-          <app-icon key="library" size="small" />Import element{{ here() ? ' here' : '' }}
+          <app-icon key="library" size="small" />{{
+            (here() ? 'insertion.importElementHere' : 'insertion.importElement') | translate
+          }}
         </button>
       }
     }

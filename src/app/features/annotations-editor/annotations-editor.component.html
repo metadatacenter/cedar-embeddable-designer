@@ -1,32 +1,35 @@
 <fieldset [disabled]="disabled()">
   <div class="add-row">
     <label
-      >Annotation name<input
+      >{{ 'annotations.name' | translate
+      }}<input
         spellcheck="false"
-        aria-label="New annotation name"
+        [attr.aria-label]="'annotations.newName' | translate"
         [ngModel]="draft().name"
         (ngModelChange)="editDraft({ name: $event })"
     /></label>
     <label
-      >Value type<select
-        aria-label="New annotation value type"
+      >{{ 'annotations.valueType' | translate
+      }}<select
+        [attr.aria-label]="'annotations.newValueType' | translate"
         [ngModel]="draft().kind"
         (ngModelChange)="editDraft({ kind: $event })"
       >
-        <option value="literal">Text</option>
-        <option value="iri">IRI</option>
+        <option value="literal">{{ 'annotations.kind.text' | translate }}</option>
+        <option value="iri">{{ 'annotations.kind.iri' | translate }}</option>
       </select></label
     >
     <label
-      >Value<input
+      >{{ 'annotations.value' | translate
+      }}<input
         spellcheck="false"
         type="text"
-        aria-label="New annotation value"
+        [attr.aria-label]="'annotations.newValue' | translate"
         [ngModel]="draft().value"
         (ngModelChange)="editDraft({ value: $event })"
       />
     </label>
-    <button type="button" class="add" (click)="add()">Add annotation</button>
+    <button type="button" class="add" (click)="add()">{{ 'annotations.add' | translate }}</button>
   </div>
   @if (addError(); as message) {
     <p role="alert">{{ message }}</p>
@@ -35,28 +38,32 @@
   <div class="table-scroll">
     <table>
       <caption>
-        Annotations
+        {{
+          'annotations.caption' | translate
+        }}
       </caption>
       <thead>
         <tr>
-          <th scope="col">Annotation name</th>
-          <th scope="col">Value type</th>
-          <th scope="col">Value</th>
-          <th scope="col"><span class="sr-only">Actions</span></th>
+          <th scope="col">{{ 'annotations.name' | translate }}</th>
+          <th scope="col">{{ 'annotations.valueType' | translate }}</th>
+          <th scope="col">{{ 'annotations.value' | translate }}</th>
+          <th scope="col">
+            <span class="sr-only">{{ 'fieldDesigner.columns.actions' | translate }}</span>
+          </th>
         </tr>
       </thead>
       <tbody>
         @for (row of rows(); track $index; let i = $index) {
           <tr>
             <td>{{ row.name }}</td>
-            <td>{{ row.kind === 'iri' ? 'IRI' : 'Text' }}</td>
+            <td>{{ (row.kind === 'iri' ? 'annotations.kind.iri' : 'annotations.kind.text') | translate }}</td>
             <td class="annotation-value">{{ row.value }}</td>
             <td>
               <button
                 type="button"
                 class="remove"
-                title="Remove annotation"
-                [attr.aria-label]="'Remove annotation ' + (i + 1)"
+                [title]="'annotations.remove' | translate"
+                [attr.aria-label]="'annotations.removeNumbered' | translate: { number: i + 1 }"
                 (click)="remove(i)"
               >
                 <app-icon key="trash" size="small" />
@@ -65,7 +72,7 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="4" class="empty">No annotations.</td>
+            <td colspan="4" class="empty">{{ 'annotations.none' | translate }}</td>
           </tr>
         }
       </tbody>

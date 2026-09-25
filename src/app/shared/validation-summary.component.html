@@ -3,7 +3,9 @@
     <summary>
       <app-icon key="chevron-down" size="small" class="validation-disclosure" />
       <app-icon key="warning" size="small" />
-      <span>{{ count }} {{ count === 1 ? 'error' : 'errors' }} — fix before saving</span>
+      <span>{{
+        (count === 1 ? 'validation.summary.one' : 'validation.summary.other') | translate: { count: count }
+      }}</span>
     </summary>
     <ul>
       @for (issue of service.visibleIssues(); track $index) {

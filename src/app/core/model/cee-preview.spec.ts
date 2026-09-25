@@ -63,6 +63,14 @@ describe('the editor the preview builds', () => {
     expect(createCeePreview(factory).config.showTemplateDescription).toBe(true);
   });
 
+  it("renders in the designer's language, falling back to English", () => {
+    expect(createCeePreview(factory).config).toMatchObject({ defaultLanguage: 'en', fallbackLanguage: 'en' });
+    expect(createCeePreview(factory, true, 'hu').config).toMatchObject({
+      defaultLanguage: 'hu',
+      fallbackLanguage: 'en',
+    });
+  });
+
   it('carries no template until the caller assigns one', () => {
     // CEE takes one assignment, and the element has to be in the document first.
     const editor: CeePreviewElement = createCeePreview(factory);

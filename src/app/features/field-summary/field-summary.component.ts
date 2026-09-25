@@ -11,20 +11,26 @@ import {
 import { fieldToJson } from '../../core/model/cedar-template';
 import { Field, FIELD_TYPES, FieldDefaultValue } from '../../core/models/types';
 import { TemplateService } from '../../core/services/template.service';
+import { TranslatePipe } from '@ngx-translate/core';
+import { CedLanguageService } from '../../i18n/ced-language.service';
 
 /** CEF owns the specification wording and appearance, just as it does in read-only CEE. */
 @Component({
   selector: 'app-field-summary',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  imports: [TranslatePipe],
   host: {
     '[style.display]': "field().type === 'controlledTerms' && (!available() || !artifact()) ? 'none' : null",
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (available() && artifact(); as definition) {
-      <cedar-embeddable-field [config]="config()" [fieldObject]="definition" [value]="emptyValue" />
+      <!-- CEF applies its configuration once, so a new language needs a new element. -->
+      @for (language of [language()]; track language) {
+        <cedar-embeddable-field [config]="config()" [fieldObject]="definition" [value]="emptyValue" />
+      }
     } @else {
-      <input class="field-preview" spellcheck="false" type="text" disabled [placeholder]="placeholder()" />
+      <input class="field-preview" spellcheck="false" type="text" disabled [placeholder]="placeholder() | translate" />
     }
   `,
   styles: `
@@ -54,10 +60,19 @@ export class FieldSummaryComponent {
   readonly field = input.required<Field>();
   readonly emptyValue: FieldDefaultValue = { kind: 'none' };
   private readonly service = inject(TemplateService);
+  readonly language = inject(CedLanguageService).language;
   readonly available = signal(!!customElements.get('cedar-embeddable-field'));
-  readonly config = computed(() => ({ ...this.service.fieldEditorConfig(), readOnlyMode: true }));
+  readonly config = computed(() => ({
+    ...this.service.fieldEditorConfig(),
+    readOnlyMode: true,
+    defaultLanguage: this.language(),
+    fallbackLanguage: 'en',
+  }));
+  /** The translation key of the placeholder, or nothing for a type without a description. */
   readonly placeholder = computed(() =>
-    this.field().temporal?.type === 'xsd:dateTime' ? 'Date and time' : FIELD_TYPES[this.field().type]?.preview || '',
+    this.field().temporal?.type === 'xsd:dateTime'
+      ? 'fieldTypes.dateTime.label'
+      : FIELD_TYPES[this.field().type]?.previewKey || '',
   );
   readonly artifact = computed(
     () => {

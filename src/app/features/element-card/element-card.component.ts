@@ -7,6 +7,9 @@ import { PropertyPickerComponent } from '../property-picker/property-picker.comp
 import { publicationStatusLabel } from '../../shared/publication-status';
 import { Component, input, inject, signal, effect, computed, ChangeDetectorRef, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
+import { CedLanguageService } from '../../i18n/ced-language.service';
+import { SETTINGS_TABS, settingsTabKey } from '../../shared/settings-tabs';
 import { ElementNode, ElementPlacement } from '../../core/model/container-draft';
 import { containerArtifactMetadata } from '../../core/model/cedar-template';
 import { TemplateService } from '../../core/services/template.service';
@@ -21,6 +24,7 @@ import { TemplateService } from '../../core/services/template.service';
     FormsModule,
     PropertyPickerComponent,
     TypesPickerComponent,
+    TranslatePipe,
   ],
   templateUrl: './element-card.component.html',
   styleUrls: ['../field-settings/field-settings.component.scss', './element-card.component.scss'],
@@ -33,6 +37,8 @@ export class ElementCardComponent {
 
   readonly node = input.required<ElementNode>();
   readonly service = inject(TemplateService);
+  private readonly language = inject(CedLanguageService);
+  readonly tabKey = settingsTabKey;
   readonly draft = signal<ElementPlacement>({ allowMultiple: false });
   readonly error = signal<string | null>(null);
   readonly keyDraft = signal<string | null>(null);
@@ -48,7 +54,12 @@ export class ElementCardComponent {
   );
   expanded = false;
   activeTab = 'Display';
-  readonly tabs = ['Display', 'Occurrences', 'Annotations', 'Element metadata'];
+  readonly tabs: string[] = [
+    SETTINGS_TABS.display,
+    SETTINGS_TABS.occurrences,
+    SETTINGS_TABS.annotations,
+    SETTINGS_TABS.elementMetadata,
+  ];
   readonly artifact = computed(() => containerArtifactMetadata(this.node().definition));
   readonly publicationStatus = computed(() => publicationStatusLabel(this.artifact().publicationStatus));
   tabId(tab: string): string {
@@ -92,7 +103,7 @@ export class ElementCardComponent {
   saveProperty(iri: string): void {
     const error = this.service.updateElementPlacement(this.node().id, { ...this.node().placement, propertyIri: iri });
     this.error.set(error);
-    this.service.setSettingsError(this.node().id, 'propertyIri', error, 'Element metadata');
+    this.service.setSettingsError(this.node().id, 'propertyIri', error, SETTINGS_TABS.elementMetadata);
   }
   saveKey(value: string): void {
     this.keyDraft.set(value);
@@ -102,14 +113,16 @@ export class ElementCardComponent {
         deploymentName: value,
       }),
     );
-    this.service.setSettingsError(this.node().id, 'key', this.keyDraftError(), 'Element metadata');
+    this.service.setSettingsError(this.node().id, 'key', this.keyDraftError(), SETTINGS_TABS.elementMetadata);
   }
   apply(): void {
     const invalid = Array.from(this.host.nativeElement.querySelectorAll('input')).find(
       (input) => input.validity.badInput,
     );
     if (invalid) {
-      const message = `${invalid.closest('label')?.textContent?.trim() || 'Value'} must be a valid number.`;
+      const message = this.language.t('settings.invalidNumber', {
+        label: invalid.closest('label')?.textContent?.trim() || this.language.t('settings.value'),
+      });
       this.error.set(message);
       this.service.setSettingsError(this.node().id, 'placement', message, this.activeTab);
       return;

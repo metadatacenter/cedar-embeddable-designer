@@ -1,17 +1,19 @@
 <!-- Template Header Card -->
 <div class="template-header-card" [class.nested-header]="!!placementNode()" (focusin)="activate()">
   @if (placementNode() && service.visibleIssuesFor(container().id).length; as count) {
-    <span class="validation-badge">⚠ {{ count }} {{ count === 1 ? 'error' : 'errors' }}</span>
+    <span class="validation-badge">{{
+      (count === 1 ? 'common.errorBadge.one' : 'common.errorBadge.other') | translate: { count: count }
+    }}</span>
   }
   @if (placementNode()) {
     <span
       cdkDragHandle
       class="element-drag-handle"
-      title="Drag element to reorder"
-      aria-label="Drag element to reorder"
+      [title]="'containerEditor.dragElement' | translate"
+      [attr.aria-label]="'containerEditor.dragElement' | translate"
     >
       <app-icon key="list" size="small" />
-      <span class="element-type-label">Element</span>
+      <span class="element-type-label">{{ 'containerEditor.elementLabel' | translate }}</span>
     </span>
   }
   <div class="template-header-card__body" appHeaderToggle (headerToggle)="toggleSettings()">
@@ -26,12 +28,15 @@
       <!-- Top Row: Name, Identifier, Version -->
       <div class="template-header-row">
         <div class="template-field-group flex-1">
-          <label class="template-field-label">Name</label>
+          <label class="template-field-label">{{ 'containerEditor.name' | translate }}</label>
           <input
             spellcheck="false"
             type="text"
             [appArtifactName]="container().id"
-            [attr.aria-label]="container().kind === 'element' ? 'Element name' : 'Template name'"
+            [attr.aria-label]="
+              (container().kind === 'element' ? 'containerEditor.elementName' : 'containerEditor.templateName')
+                | translate
+            "
             aria-required="true"
             [attr.aria-invalid]="!!service.nameError(container().id, container().name, container().kind)"
             [attr.aria-describedby]="
@@ -42,7 +47,12 @@
             [ngModel]="container().name"
             (ngModelChange)="update({ name: $event })"
             class="template-input font-medium text-base text-gray-900"
-            [placeholder]="container().kind === 'element' ? 'Enter element name' : 'Template name'"
+            [placeholder]="
+              (container().kind === 'element'
+                ? 'containerEditor.elementNamePlaceholder'
+                : 'containerEditor.templateName'
+              ) | translate
+            "
           />
           @if (service.nameError(container().id, container().name, container().kind); as error) {
             <p class="ced-field-error" [id]="'name-error-' + container().id">{{ error }}</p>
@@ -50,19 +60,19 @@
         </div>
 
         <div class="template-field-group w-44">
-          <label class="template-field-label">Identifier</label>
+          <label class="template-field-label">{{ 'containerEditor.identifier' | translate }}</label>
           <input
             spellcheck="false"
             type="text"
             [ngModel]="container().schemaIdentifier"
             (ngModelChange)="update({ schemaIdentifier: $event })"
             class="template-input font-medium text-sm text-gray-800"
-            placeholder="Identifier"
+            [placeholder]="'containerEditor.identifier' | translate"
           />
         </div>
 
         <div class="template-field-group version-group w-24 text-right">
-          <label class="template-field-label">Version</label>
+          <label class="template-field-label">{{ 'containerEditor.version' | translate }}</label>
           <div class="version-value-row">
             <input
               spellcheck="false"
@@ -70,8 +80,8 @@
               [ngModel]="container().version"
               (ngModelChange)="update({ version: $event })"
               class="template-input font-medium text-sm text-gray-800 text-right"
-              aria-label="Version"
-              placeholder="Not specified"
+              [attr.aria-label]="'containerEditor.version' | translate"
+              [placeholder]="'common.notSpecified' | translate"
             />
             @if (placementNode()) {
               <dialog
@@ -80,26 +90,29 @@
                 [attr.aria-labelledby]="'delete-title-' + container().id"
                 [attr.aria-describedby]="'delete-description-' + container().id"
               >
-                <h2 [id]="'delete-title-' + container().id">Delete element?</h2>
+                <h2 [id]="'delete-title-' + container().id">{{ 'containerEditor.deleteTitle' | translate }}</h2>
                 <p [id]="'delete-description-' + container().id">
-                  {{ container().name || 'This element' }} and all its children will be deleted.
+                  {{
+                    'containerEditor.deleteDescription'
+                      | translate: { name: container().name || ('containerEditor.thisElement' | translate) }
+                  }}
                 </p>
                 <form method="dialog">
-                  <button autofocus>Cancel</button>
+                  <button autofocus>{{ 'common.cancel' | translate }}</button>
                   <button
                     type="button"
                     class="primary"
                     (click)="deleteDialog.close(); service.deleteChild(container().id)"
                   >
-                    Delete
+                    {{ 'common.delete' | translate }}
                   </button>
                 </form>
               </dialog>
               <button
                 type="button"
                 class="element-delete"
-                [attr.aria-label]="'Delete element ' + container().name"
-                title="Delete element"
+                [attr.aria-label]="'containerEditor.deleteNamed' | translate: { name: container().name }"
+                [title]="'containerEditor.delete' | translate"
                 (click)="container().children.length ? deleteDialog.showModal() : service.deleteChild(container().id)"
               >
                 <app-icon key="trash" />
@@ -112,21 +125,23 @@
             );
             as status
           ) {
-            <span class="publication-status" aria-label="Publication status">{{ status }}</span>
+            <span class="publication-status" [attr.aria-label]="'common.publicationStatus' | translate">{{
+              status | translate
+            }}</span>
           }
         </div>
       </div>
 
       <!-- Bottom Row: Description -->
       <div class="template-field-group template-description">
-        <label class="template-field-label">Description</label>
+        <label class="template-field-label">{{ 'containerEditor.description' | translate }}</label>
         <textarea
           spellcheck="false"
           rows="1"
           [ngModel]="container().description"
           (ngModelChange)="update({ description: $event })"
           class="template-input text-sm text-gray-600"
-          placeholder="Add description..."
+          [placeholder]="'containerEditor.descriptionPlaceholder' | translate"
         ></textarea>
       </div>
     </div>
@@ -135,8 +150,10 @@
         type="button"
         class="element-toggle"
         [attr.aria-expanded]="!collapsed()"
-        [title]="collapsed() ? 'Expand children' : 'Collapse children'"
-        [attr.aria-label]="(collapsed() ? 'Expand ' : 'Collapse ') + container().name"
+        [title]="(collapsed() ? 'containerEditor.expandChildren' : 'containerEditor.collapseChildren') | translate"
+        [attr.aria-label]="
+          (collapsed() ? 'common.expandNamed' : 'common.collapseNamed') | translate: { name: container().name }
+        "
         [attr.aria-controls]="'element-content-' + container().id"
         (click)="$event.stopPropagation(); service.toggleElement(container().id)"
       >

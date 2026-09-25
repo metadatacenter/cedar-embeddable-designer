@@ -37,12 +37,18 @@ export interface CeePreviewConfig {
   readonly readOnlyMode: boolean;
   readonly showTemplateDescription: true;
   readonly showExpandCollapseAll: false;
+  /** The language CEE renders the form in, which is the designer's own. */
+  readonly defaultLanguage: string;
+  /** The language CEE falls back to for a string its chosen map lacks. */
+  readonly fallbackLanguage: 'en';
 }
 
 export const CEE_PREVIEW_CONFIG: CeePreviewConfig = {
   readOnlyMode: true,
   showTemplateDescription: true,
   showExpandCollapseAll: false,
+  defaultLanguage: 'en',
+  fallbackLanguage: 'en',
 };
 
 /**
@@ -75,7 +81,8 @@ export function ceePreviewAvailable(registry: Pick<CustomElementRegistry, 'get'>
  *
  * Read-only is the default; editable mode lets an author try filling in the form.
  * Preview answers are temporary and never change the authored template. Switching
- * modes requires a new element because CEE applies configuration once.
+ * modes requires a new element because CEE applies configuration once, and so does
+ * switching language: CEE renders in the designer's language, falling back to English.
  *
  * Expand All and Collapse All are off for the same reason. The designer has its
  * own controls over the same template beside the preview, and a second set acting
@@ -88,9 +95,10 @@ export function ceePreviewAvailable(registry: Pick<CustomElementRegistry, 'get'>
 export function createCeePreview(
   factory: Pick<Document, 'createElement'> = document,
   readOnly = true,
+  language = 'en',
 ): CeePreviewElement {
   const editor = factory.createElement(CEE_PREVIEW_TAG) as CeePreviewElement;
   editor.setAttribute('density', 'compact');
-  editor.config = { ...CEE_PREVIEW_CONFIG, readOnlyMode: readOnly };
+  editor.config = { ...CEE_PREVIEW_CONFIG, readOnlyMode: readOnly, defaultLanguage: language };
   return editor;
 }

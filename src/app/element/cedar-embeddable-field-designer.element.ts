@@ -19,18 +19,29 @@ import {
 import { TemplateService } from '../core/services/template.service';
 import { TerminologyService } from '../core/services/terminology.service';
 import { PreferencesService } from '../core/services/preferences.service';
-import { CedConfig, CedFieldType, CedValidationReport } from '../ced-public-api';
+import { CedConfig, CedFieldType, CedLanguage, CedValidationReport } from '../ced-public-api';
 import { fieldToJson, readField } from '../core/model/cedar-template';
 import { Field, FIELD_TYPES } from '../core/models/types';
 import { FieldCardComponent } from '../features/field-card/field-card.component';
 import { FieldTypePickerComponent } from '../features/field-type-picker/field-type-picker.component';
 import { FontRegistrar } from '../shared/font-registrar/font-registrar';
+import { TranslatePipe } from '@ngx-translate/core';
+import { CedLanguageService } from '../i18n/ced-language.service';
+import { provideCedTranslations } from '../i18n/i18n';
 
 /** The same field controls CED uses, with one field document and no repository policy. */
 @Component({
   selector: 'app-cedar-embeddable-field-designer-element',
-  imports: [FieldCardComponent, FieldTypePickerComponent, FontRegistrar, ValidationSummaryComponent],
-  providers: [TemplateService, TerminologyService, PreferencesService, DesignerConfigService],
+  imports: [FieldCardComponent, FieldTypePickerComponent, FontRegistrar, ValidationSummaryComponent, TranslatePipe],
+  // Each element owns its translation service, and therefore its language.
+  providers: [
+    ...provideCedTranslations(),
+    CedLanguageService,
+    TemplateService,
+    TerminologyService,
+    PreferencesService,
+    DesignerConfigService,
+  ],
   encapsulation: ViewEncapsulation.ShadowDom,
   styleUrls: ['../../styles.css', './cedar-embeddable-field-designer.element.scss'],
   styles: [
@@ -53,18 +64,24 @@ import { FontRegistrar } from '../shared/font-registrar/font-registrar';
   ],
   template: `<ced-font-registrar />
     <app-validation-summary />
-    <section class="field-editor" aria-label="Field designer">
+    <section class="field-editor" [attr.aria-label]="'fieldElement.label' | translate">
       @if (field(); as field) {
         @if (readOnly) {
-          <p role="status">This field is read only.</p>
+          <p role="status">{{ 'fieldElement.readOnly' | translate }}</p>
         }
         <fieldset [disabled]="readOnly" [attr.inert]="readOnly ? '' : null">
           <app-field-card [field]="field" [standalone]="true" />
         </fieldset>
       } @else {
-        <button type="button" [disabled]="readOnly" (click)="choosingType.set(true)">Choose field type</button>
+        <button type="button" [disabled]="readOnly" (click)="choosingType.set(true)">
+          {{ 'fieldElement.chooseType' | translate }}
+        </button>
         @if (choosingType() && !readOnly) {
-          <dialog #typeDialog aria-label="Choose field type" (cancel)="choosingType.set(false)">
+          <dialog
+            #typeDialog
+            [attr.aria-label]="'fieldElement.chooseType' | translate"
+            (cancel)="choosingType.set(false)"
+          >
             <app-field-type-picker
               [standalone]="true"
               (fieldSelected)="newArtifact($event)"
@@ -78,6 +95,7 @@ import { FontRegistrar } from '../shared/font-registrar/font-registrar';
 export class CedarEmbeddableFieldDesignerElementComponent {
   readonly service = inject(TemplateService);
   private readonly configuration = inject(DesignerConfigService);
+  private readonly i18n = inject(CedLanguageService);
   private readonly baseline = signal('');
   private readonly hostReadOnly = signal(false);
   readonly field = computed(() => this.service.fields()[0] as Field | undefined);
@@ -86,6 +104,21 @@ export class CedarEmbeddableFieldDesignerElementComponent {
 
   @Input() set config(value: CedConfig | null) {
     this.configuration.apply(value);
+  }
+  /**
+   * The language the field designer's own text is shown in: `'en'` or `'hu'`.
+   *
+   * Settable as a property or as the `language` attribute, and changeable at any time;
+   * the designer's text, the embedded term picker and the CEE preview follow. Any other
+   * value selects English. Each element keeps its own language, so two field designers on one
+   * page may differ. Template content the author wrote is never translated.
+   */
+  @Input()
+  set language(value: string | null) {
+    this.i18n.setLanguage(value);
+  }
+  get language(): CedLanguage {
+    return this.i18n.language();
   }
   @Input() set readOnly(value: boolean) {
     this.hostReadOnly.set(value);

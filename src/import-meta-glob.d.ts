@@ -9,7 +9,9 @@
  *
  * Only the eager form is declared, because only the eager form is used: a lazy glob
  * hands back loaders, and a test that has to await its own fixtures gains nothing.
+ * The raw form, `{ query: '?raw', import: 'default' }`, yields each file's text, which
+ * the translation-coverage guard reads templates and sources through.
  */
 interface ImportMeta {
-  glob<T = unknown>(pattern: string, options: { eager: true }): Record<string, T>;
+  glob<T = unknown>(pattern: string, options: { eager: true; query?: '?raw'; import?: 'default' }): Record<string, T>;
 }

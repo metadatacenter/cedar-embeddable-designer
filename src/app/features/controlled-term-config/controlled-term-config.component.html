@@ -1,14 +1,17 @@
-<div class="constraint-summary" aria-label="Controlled-term constraints">
+<div class="constraint-summary" [attr.aria-label]="'controlledTerms.constraints' | translate">
   @if (!field.controlledTermConstraints?.constraints?.length) {
-    <span class="empty-constraint">Choose a vocabulary constraint</span>
+    <span class="empty-constraint">{{ 'controlledTerms.chooseConstraint' | translate }}</span>
   } @else if (summaryAvailable) {
-    <cedar-embeddable-field
-      [config]="summaryConfig"
-      [fieldObject]="summaryArtifact"
-      [value]="summaryValue"
-    ></cedar-embeddable-field>
+    <!-- CEF applies its configuration once, so a new language needs a new element. -->
+    @for (config of [summaryConfig()]; track config.defaultLanguage) {
+      <cedar-embeddable-field
+        [config]="config"
+        [fieldObject]="summaryArtifact"
+        [value]="summaryValue"
+      ></cedar-embeddable-field>
+    }
   } @else {
-    <span role="status">Constraint preview needs the field editor.</span>
+    <span role="status">{{ 'controlledTerms.previewUnavailable' | translate }}</span>
   }
   @if (pickerAvailable && terminologyBaseUrl()) {
     <button
@@ -16,16 +19,17 @@
       class="ced-text-action"
       type="button"
       (click)="openPicker()"
-      aria-label="Edit controlled-term constraints"
+      [attr.aria-label]="'controlledTerms.edit' | translate"
     >
-      Edit
+      {{ 'controlledTerms.editButton' | translate }}
     </button>
   }
 </div>
 @if (!pickerAvailable || !terminologyBaseUrl()) {
   <p role="status" class="text-xs text-amber-800 mb-3">
-    Constraint editing needs <code>&lt;cedar-embeddable-term-picker&gt;</code> and a configured
-    <code>terminologyBaseUrl</code>. Saved constraints remain intact.
+    {{ 'controlledTerms.editingUnavailable.before' | translate }} <code>&lt;cedar-embeddable-term-picker&gt;</code>
+    {{ 'controlledTerms.editingUnavailable.middle' | translate }}
+    <code>terminologyBaseUrl</code>{{ 'controlledTerms.editingUnavailable.after' | translate }}
   </p>
 }
 @if (pickerOpen()) {
@@ -35,19 +39,19 @@
       role="dialog"
       aria-modal="true"
       tabindex="-1"
-      aria-label="Controlled-term constraints"
+      [attr.aria-label]="'controlledTerms.constraints' | translate"
       (keydown)="onDialogKeydown($event)"
       class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto"
     >
       @if (checking()) {
-        <p role="status" class="p-3">Checking the existing default…</p>
+        <p role="status" class="p-3">{{ 'controlledTerms.checkingDefault' | translate }}</p>
       }
       @if (error()) {
         <p role="alert" class="p-3 ced-field-error">{{ error() }}</p>
       }
       @if (invalidDefault()) {
         <button type="button" class="ced-text-action p-3" (click)="clearDefaultAndApply()">
-          Clear default and apply constraints
+          {{ 'controlledTerms.clearDefaultAndApply' | translate }}
         </button>
       }
       <cedar-embeddable-term-picker
@@ -56,6 +60,7 @@
         [termTypes]="['ontology', 'class', 'branch', 'valueSet']"
         [constraintSet]="pickerConstraints"
         [terminologyBaseUrl]="terminologyBaseUrl()"
+        [language]="language()"
         (constraintsSelected)="applyPicked($event)"
         (constraintsChanged)="draftChanged()"
         (cancelled)="closePicker()"

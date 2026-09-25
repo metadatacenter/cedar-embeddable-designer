@@ -4,7 +4,7 @@
       <textarea
         spellcheck="false"
         #control
-        aria-label="Default value"
+        [attr.aria-label]="'defaultValue.label' | translate"
         rows="1"
         [value]="draft()"
         [disabled]="!!field().publishedDefinition"
@@ -16,7 +16,7 @@
         spellcheck="false"
         #control
         type="text"
-        aria-label="Default value"
+        [attr.aria-label]="'defaultValue.label' | translate"
         [value]="draft()"
         [attr.inputmode]="field().type === 'number' ? 'decimal' : null"
         [disabled]="!!field().publishedDefinition"
@@ -36,32 +36,47 @@
     @if (allowsControlledTerms()) {
       <div class="default-value-actions">
         @if (!field().controlledTermConstraints?.constraints?.length) {
-          <p role="status" class="text-sm text-gray-500">Choose a vocabulary constraint before setting a default.</p>
+          <p role="status" class="text-sm text-gray-500">{{ 'defaultValue.constraintFirst' | translate }}</p>
         } @else if (!pickerAvailable() || !terminologyBaseUrl()) {
-          <p role="status" class="text-sm text-gray-500">Term picker is unavailable.</p>
+          <p role="status" class="text-sm text-gray-500">{{ 'defaultValue.pickerUnavailable' | translate }}</p>
         } @else {
-          <button type="button" class="ced-text-action" aria-label="Edit default term" (click)="openPicker()">
-            Edit
+          <button
+            type="button"
+            class="ced-text-action"
+            [attr.aria-label]="'defaultValue.editTerm' | translate"
+            (click)="openPicker()"
+          >
+            {{ 'defaultValue.edit' | translate }}
           </button>
           @if (pickerOpen()) {
             <div class="default-dialog-overlay">
-              <section role="dialog" aria-modal="true" aria-label="Choose default term" class="default-dialog">
+              <section
+                role="dialog"
+                aria-modal="true"
+                [attr.aria-label]="'defaultValue.chooseTerm' | translate"
+                class="default-dialog"
+              >
                 <header>
                   <span
-                    >Default value <i>{{ field().name }}</i></span
+                    >{{ 'defaultValue.label' | translate }} <i>{{ field().name }}</i></span
                   >
-                  <button type="button" aria-label="Cancel default selection" (click)="cancelPicker()">
+                  <button
+                    type="button"
+                    [attr.aria-label]="'defaultValue.cancelSelection' | translate"
+                    (click)="cancelPicker()"
+                  >
                     <app-icon key="close" size="small" />
                   </button>
                 </header>
                 @if (checking()) {
-                  <p role="status">Checking default term…</p>
+                  <p role="status">{{ 'defaultValue.checkingTerm' | translate }}</p>
                 }
                 @if (error()) {
                   <p role="alert" class="ced-field-error">{{ error() }}</p>
                 }
                 <cedar-embeddable-term-picker
                   [terminologyBaseUrl]="terminologyBaseUrl()"
+                  [language]="language()"
                   [selectionMode]="'term'"
                   [sources]="pickerSources()"
                   (selected)="selectTerm($event)"
@@ -72,17 +87,19 @@
           }
         }
         @if (field().defaultValue.kind !== 'none') {
-          <button type="button" class="ced-text-action" (click)="clear()">Clear default</button>
+          <button type="button" class="ced-text-action" (click)="clear()">
+            {{ 'defaultValue.clear' | translate }}
+          </button>
         }
       </div>
     }
   </div>
   @if (checking() && !pickerOpen()) {
-    <p role="status" class="text-sm text-gray-500">Checking default term…</p>
+    <p role="status" class="text-sm text-gray-500">{{ 'defaultValue.checkingTerm' | translate }}</p>
   }
   @if (error() && !pickerOpen() && !editorReportsError()) {
     <p role="alert" class="ced-field-error">{{ error() }}</p>
   }
 } @else {
-  <p role="status" class="text-sm text-gray-500">Default value editor is unavailable.</p>
+  <p role="status" class="text-sm text-gray-500">{{ 'defaultValue.editorUnavailable' | translate }}</p>
 }

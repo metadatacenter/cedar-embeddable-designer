@@ -11,16 +11,31 @@ import {
   defaultValueError,
   allowsOptions,
 } from './cedar-template';
+import { Translate, describeError, english } from '../../i18n/messages';
+import { SETTINGS_TABS } from '../../shared/settings-tabs';
 
 export type DraftIssues = Readonly<Record<string, { message: string; tab: string }>>;
 
 /** Names are required independently of the generated property key used by a draft. */
-export function artifactNameError(name: string, kind: 'field' | 'element' | 'template'): string | null {
-  return name.trim() ? null : `${kind[0].toUpperCase()}${kind.slice(1)} name is required.`;
+export function artifactNameError(
+  name: string,
+  kind: 'field' | 'element' | 'template',
+  t: Translate = english,
+): string | null {
+  return name.trim() ? null : t(`validation.nameRequired.${kind}`);
 }
 
-/** Validate one document snapshot, including unsaved settings drafts, without UI state. */
-export function validateDocument(document: ContainerDraft, drafts: DraftIssues): CedValidationReport {
+/**
+ * Validate one document snapshot, including unsaved settings drafts, without UI state.
+ *
+ * Messages and labels are rendered through `t`, which is English unless the caller
+ * supplies the designer's language. Draft messages arrive already rendered.
+ */
+export function validateDocument(
+  document: ContainerDraft,
+  drafts: DraftIssues,
+  t: Translate = english,
+): CedValidationReport {
   const issues: CedValidationIssue[] = [];
   const visit = (container: ContainerDraft, ancestors: number[]) => {
     const path = [...ancestors, container.id];
@@ -33,7 +48,7 @@ export function validateDocument(document: ContainerDraft, drafts: DraftIssues):
       tab: string,
       source: 'model' | 'draft',
     ) => {
-      const prefix = `${label.trim() || 'an unnamed field'}: `;
+      const prefix = t('errors.namedField', { name: label.trim() || t('common.anUnnamedField'), message: '' });
       issues.push({
         nodeId: id,
         label,
@@ -52,8 +67,17 @@ export function validateDocument(document: ContainerDraft, drafts: DraftIssues):
           add(id, label, nodePath, key.slice(key.indexOf(':') + 1), value.message, value.tab, 'draft');
       }
     };
-    const nameError = artifactNameError(container.name, container.kind);
-    if (nameError) add(container.id, `Unnamed ${container.kind}`, path, 'name', nameError, 'Display', 'model');
+    const nameError = artifactNameError(container.name, container.kind, t);
+    if (nameError)
+      add(
+        container.id,
+        t(`validation.unnamed.${container.kind}`),
+        path,
+        'name',
+        nameError,
+        SETTINGS_TABS.display,
+        'model',
+      );
     pending(container.id, container.name, path);
     const keyFields = container.children.map((node) => ({
       name: node.definition.name,
@@ -68,10 +92,8 @@ export function validateDocument(document: ContainerDraft, drafts: DraftIssues):
     for (const node of container.children) {
       const key = keys[container.children.indexOf(node)];
       const keyError =
-        childKeyError(key, node.kind === 'field' && fieldView(node).type === 'attributeValue') ??
-        (keys.filter((candidate) => candidate === key).length > 1
-          ? 'Another child in this container already uses that key.'
-          : null);
+        childKeyError(key, node.kind === 'field' && fieldView(node).type === 'attributeValue', t) ??
+        (keys.filter((candidate) => candidate === key).length > 1 ? t('validation.key.duplicate') : null);
       if (keyError)
         add(
           node.id,
@@ -79,7 +101,7 @@ export function validateDocument(document: ContainerDraft, drafts: DraftIssues):
           [...path, node.id],
           'key',
           keyError,
-          node.kind === 'field' ? 'Field metadata' : 'Element metadata',
+          node.kind === 'field' ? SETTINGS_TABS.fieldMetadata : SETTINGS_TABS.elementMetadata,
           'model',
         );
       if (node.kind === 'element') {
@@ -92,7 +114,7 @@ export function validateDocument(document: ContainerDraft, drafts: DraftIssues):
             childName(node),
             [...path, node.id],
             'placement',
-            error instanceof Error ? error.message : String(error),
+            describeError(error, t),
             'Occurrences',
             'model',
           );
@@ -101,8 +123,8 @@ export function validateDocument(document: ContainerDraft, drafts: DraftIssues):
       }
       const field = fieldView(node);
       const nodePath = [...path, node.id];
-      const nameError = artifactNameError(field.name, 'field');
-      if (nameError) add(node.id, 'Unnamed field', nodePath, 'name', nameError, 'Display', 'model');
+      const nameError = artifactNameError(field.name, 'field', t);
+      if (nameError) add(node.id, t('validation.unnamed.field'), nodePath, 'name', nameError, 'Display', 'model');
       pending(node.id, childName(node), nodePath);
       if (allowsOptions(field.type)) {
         field.options.forEach((option, index) => {
@@ -112,7 +134,7 @@ export function validateDocument(document: ContainerDraft, drafts: DraftIssues):
               childName(node),
               nodePath,
               `option-${index}`,
-              `Option ${index + 1} needs a name.`,
+              t('validation.optionName', { number: index + 1 }),
               'Constraints',
               'model',
             );
@@ -130,7 +152,7 @@ export function validateDocument(document: ContainerDraft, drafts: DraftIssues):
           childName(node),
           nodePath,
           'settings',
-          error instanceof Error ? error.message : String(error),
+          describeError(error, t),
           media ? 'Content' : 'Constraints',
           'model',
         );
@@ -145,17 +167,9 @@ export function validateDocument(document: ContainerDraft, drafts: DraftIssues):
             fields: [settingsField],
           });
         } catch (error) {
-          add(
-            node.id,
-            childName(node),
-            nodePath,
-            'occurrences',
-            error instanceof Error ? error.message : String(error),
-            'Occurrences',
-            'model',
-          );
+          add(node.id, childName(node), nodePath, 'occurrences', describeError(error, t), 'Occurrences', 'model');
         }
-        const error = choiceDefaultConflict(field) ?? defaultValueError(field, field.defaultValue);
+        const error = choiceDefaultConflict(field, t) ?? defaultValueError(field, field.defaultValue, t);
         if (error) add(node.id, childName(node), nodePath, 'defaultValue', error, 'Constraints', 'model');
       }
     }
@@ -173,7 +187,7 @@ export function validateDocument(document: ContainerDraft, drafts: DraftIssues):
         setting: 'artifact',
         tab: 'Display',
         code: 'artifact.invalid',
-        message: error instanceof Error ? error.message : String(error),
+        message: describeError(error, t),
         severity: 'error',
         source: 'model',
       });

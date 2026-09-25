@@ -55,6 +55,49 @@ document, including while a nested element is selected. CEE preview wraps a root
 element in a temporary template; host-facing documents retain their element type.
 The public artifact input accepts JSON and full YAML.
 
+## Language
+
+The designer's own text is available in English and Hungarian, and the host chooses
+between them. Both elements take a `language` property and a matching `language`
+attribute, whose value is `'en'` or `'hu'`. Any other value selects English, which
+is also the default.
+
+```html
+<cedar-embeddable-designer language="hu"></cedar-embeddable-designer>
+```
+
+```ts
+import type { CedarEmbeddableDesignerElement } from 'cedar-embeddable-designer';
+
+await customElements.whenDefined('cedar-embeddable-designer');
+const designer = document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement;
+designer.language = 'hu';
+console.log(designer.language); // 'hu'
+```
+
+The language may change at any time, and the designer's text is rendered again in
+the new one. Each element keeps its own language, so two designers on one page can
+differ. What the author wrote is never translated: names, descriptions, options and
+other template content appear as they were entered.
+
+The designer passes its language on to the components it embeds. It sets
+`language` on every `<cedar-embeddable-term-picker>` it creates, and it configures
+the CEE preview and the embedded CEE field controls with the same `defaultLanguage`
+and a `fallbackLanguage` of `'en'`. CEE applies its configuration once, so a change
+of language replaces those controls rather than reconfiguring them. Dates are
+formatted in the active language's locale: `en-US` for English, as before, and
+`hu-HU` for Hungarian.
+
+Validation messages follow the language too. `validationReport` and
+`validationChange` carry each message in the active language, while an issue's
+`tab` keeps its English identifier. A message already shown for a failed edit keeps
+the language it was produced in until the next edit.
+
+Both language maps are bundled into the script, so choosing a language never makes
+a request. They are `src/assets/i18n/en.json` and `src/assets/i18n/hu.json`. A unit
+test holds the two to the same keys, and another fails when a template or message
+states user-visible text without going through them.
+
 ## Requirements
 
 Node 24.19.0, as named by `.nvmrc` and matching CEE and the term picker.
@@ -216,12 +259,12 @@ possible, loading the distribution and nothing else.
 
 ## Testing
 
-| Command                  | What it does                                                         |
-| ------------------------ | -------------------------------------------------------------------- |
-| `npm test`               | unit tests, through the Angular CLI's Vitest builder                 |
-| `npm run test:packaging` | the publish-channel rule, under `node --test`                        |
-| `npm run test:browser`   | builds the distribution, then drives it in a real browser            |
-| `npm run test:visual`    | the screenshot baselines, in the container they are taken in         |
+| Command                  | What it does                                                        |
+| ------------------------ | ------------------------------------------------------------------- |
+| `npm test`               | unit tests, through the Angular CLI's Vitest builder                |
+| `npm run test:packaging` | the publish-channel rule, under `node --test`                       |
+| `npm run test:browser`   | builds the distribution, then drives it in a real browser           |
+| `npm run test:visual`    | the screenshot baselines, in the container they are taken in        |
 | `npm run test:ci`        | bounded parallel checks, then distribution and browser verification |
 
 `test:ci` overlaps unit, lint, type, boundary and packaging checks within
@@ -377,7 +420,8 @@ retain identity, metadata, constraints and provenance on round-trip. Placement
 controls (property IRI, requiredness, repetition and container display overrides)
 belong to CED and are absent from CEFD. Defaults, terminology, field labels,
 language and annotations use the same controls as CED. All 26 field types are
-supported; the chooser groups date/time under Temporal.
+supported; the chooser groups date/time under Temporal. CEFD takes the same
+`language` property and attribute as CED.
 
 The split Designer host uses CEFD for `/fields/create` and `/fields/edit/...`,
 with the host's normal permissions, ETag saves and Workspace return navigation.

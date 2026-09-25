@@ -13,6 +13,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 import { TemplateService } from './core/services/template.service';
 import { CED_VERSION } from './version';
 
@@ -31,6 +32,7 @@ import { ContainerOutlineComponent } from './features/container-outline/containe
   standalone: true,
   imports: [
     CommonModule,
+    TranslatePipe,
     ValidationSummaryComponent,
     ChildPickerComponent,
     IconComponent,
@@ -114,24 +116,26 @@ export class AppComponent {
    *
    * Named here rather than in the picker's markup so the three names, their
    * order and their one-line descriptions are one list. The service decides what
-   * each profile *does*; this decides how it is described.
+   * each profile *does*; this decides how it is described. The label and summary are
+   * translation keys, rendered in the template.
    */
   readonly profiles = [
-    { key: 'basic' as const, label: 'Basic', summary: 'Plain fields, no vocabularies' },
-    { key: 'semantic' as const, label: 'Semantic', summary: 'Adds controlled terms and help text' },
-    { key: 'modular' as const, label: 'Modular', summary: 'Adds template elements' },
+    { key: 'basic' as const, label: 'app.profile.basic.label', summary: 'app.profile.basic.summary' },
+    { key: 'semantic' as const, label: 'app.profile.semantic.label', summary: 'app.profile.semantic.summary' },
+    { key: 'modular' as const, label: 'app.profile.modular.label', summary: 'app.profile.modular.summary' },
   ];
 
   /**
    * The profile on screen, or nothing once its settings have been edited by hand.
    *
-   * A label rather than a key, and `Custom` where no profile matches — which is a
-   * real state an author reaches by changing one switch, and one they could not
-   * see at all while the only way to a profile was two clicks inside a modal.
+   * The translation key of a label rather than a profile key, and `Custom` where no
+   * profile matches, which is a real state an author reaches by changing one switch,
+   * and one they could not see at all while the only way to a profile was two clicks
+   * inside a modal.
    */
   readonly activeProfileLabel = computed(() => {
     const active = this.service.getActivePreset();
-    return this.profiles.find((profile) => profile.key === active)?.label ?? 'Custom';
+    return this.profiles.find((profile) => profile.key === active)?.label ?? 'app.profile.custom';
   });
 
   private scrollAnchor: number | null = null;

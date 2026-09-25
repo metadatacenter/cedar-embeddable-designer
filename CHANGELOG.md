@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Container placement controls remain in CED. The host owns repository saves.
 - CEFD contract, field-type round-trip, metadata preservation and browser tests;
   split Designer coverage for standalone field creation, updates and stale saves.
+- English and Hungarian. Both elements take a `language` property and attribute
+  (`'en'` or `'hu'`; anything else selects English), which may change at runtime.
+  Each element owns its own `@ngx-translate/core` service, so designers on one page
+  can differ. The language is passed to the embedded term picker and to CEE, and
+  dates use the matching locale. English text is unchanged.
+- Tests that hold the two language maps to the same keys and that fail when a
+  template or message states user-visible text outside them.
 
 ## [0.1.0-dev.20260916.2593d382] - 2026-09-16 (Nexus)
 

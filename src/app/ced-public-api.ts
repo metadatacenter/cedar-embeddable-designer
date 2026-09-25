@@ -12,6 +12,13 @@
  * compiler and then be `undefined` at runtime.
  */
 
+/**
+ * A language the designer's own text is available in.
+ *
+ * Assigning any other value to an element's `language` selects English.
+ */
+export type CedLanguage = 'en' | 'hu';
+
 /** A configuration key, as a type. */
 export type CedConfigKey = keyof CedConfig;
 
@@ -61,6 +68,15 @@ export type CedTemplate = CedJsonObject;
  */
 export interface CedarEmbeddableDesignerElement extends HTMLElement {
   config: CedConfig | null;
+  /**
+   * The language of the designer's own text, also settable as the `language` attribute.
+   *
+   * It may change at any time, and the designer, the term pickers it embeds and its CEE
+   * preview follow. An unsupported value selects English, which is also the default. The
+   * content of the template is never translated.
+   */
+  get language(): CedLanguage;
+  set language(value: CedLanguage | string | null);
   /** Host-owned repository search and artifact retrieval. Replaceable between documents. */
   childSource: CedChildSource | null;
   /** A template or element document. The legacy property name remains supported. */
@@ -105,7 +121,12 @@ declare global {
   }
 }
 
-/** Settings validation includes unsaved edits; IDs are stable within this document session. */
+/**
+ * Settings validation includes unsaved edits; IDs are stable within this document session.
+ *
+ * `label` and `message` are written for the author, in the element's `language`. `tab`
+ * and `code` are identifiers, and stay the same in every language.
+ */
 export interface CedValidationIssue {
   nodeId: number;
   path: number[];
@@ -181,6 +202,9 @@ export type CedFieldType =
  */
 export interface CedarEmbeddableFieldDesignerElement extends HTMLElement {
   config: CedConfig | null;
+  /** The language of the field designer's own text, as on `CedarEmbeddableDesignerElement`. */
+  get language(): CedLanguage;
+  set language(value: CedLanguage | string | null);
   artifact: CedJsonObject | string | null;
   /** Host read-only mode; published definitions are always read only. */
   readOnly: boolean;

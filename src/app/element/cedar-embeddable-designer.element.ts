@@ -13,9 +13,11 @@ import {
 import { TemplateService } from '../core/services/template.service';
 import { TerminologyService } from '../core/services/terminology.service';
 import { PreferencesService } from '../core/services/preferences.service';
-import { CedChildSource, CedConfig, CedValidationReport } from '../ced-public-api';
+import { CedChildSource, CedConfig, CedLanguage, CedValidationReport } from '../ced-public-api';
 import { AppComponent } from '../app.component';
 import { FontRegistrar } from '../shared/font-registrar/font-registrar';
+import { CedLanguageService } from '../i18n/ced-language.service';
+import { provideCedTranslations } from '../i18n/i18n';
 
 /**
  * The element an embedding page programs against.
@@ -33,7 +35,16 @@ import { FontRegistrar } from '../shared/font-registrar/font-registrar';
 @Component({
   selector: 'app-cedar-embeddable-designer-element',
   imports: [AppComponent, FontRegistrar],
-  providers: [TemplateService, TerminologyService, PreferencesService, DesignerConfigService],
+  // The translation providers are listed here rather than inherited from the application,
+  // so that each element owns its language.
+  providers: [
+    ...provideCedTranslations(),
+    CedLanguageService,
+    TemplateService,
+    TerminologyService,
+    PreferencesService,
+    DesignerConfigService,
+  ],
   // The registrar renders nothing; it exists so its unencapsulated stylesheet,
   // which is only `@font-face` declarations, reaches the document.
   template: `<ced-font-registrar /><app-root></app-root>`,
@@ -43,6 +54,24 @@ import { FontRegistrar } from '../shared/font-registrar/font-registrar';
 export class CedarEmbeddableDesignerElementComponent {
   readonly service = inject(TemplateService);
   private readonly configuration = inject(DesignerConfigService);
+  private readonly i18n = inject(CedLanguageService);
+
+  /**
+   * The language the designer's own text is shown in: `'en'` or `'hu'`.
+   *
+   * Settable as a property or as the `language` attribute, and changeable at any time;
+   * the designer's text, the embedded term picker and the CEE preview follow. Any other
+   * value selects English. Each element keeps its own language, so two designers on one
+   * page may differ. Template content the author wrote is never translated.
+   */
+  @Input()
+  set language(value: string | null) {
+    this.i18n.setLanguage(value);
+  }
+  get language(): CedLanguage {
+    return this.i18n.language();
+  }
+
   @Input() set childSource(source: CedChildSource | null) {
     this.service.childSource.set(source);
     this.service.childPicker.set(null);

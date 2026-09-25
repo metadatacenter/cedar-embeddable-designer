@@ -4,15 +4,21 @@ import { FormsModule } from '@angular/forms';
 import { CedChildResult } from '../../ced-public-api';
 import { TemplateService } from '../../core/services/template.service';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { TranslatePipe } from '@ngx-translate/core';
+import { CedLanguageService } from '../../i18n/ced-language.service';
+import { LocalizedError, message } from '../../i18n/messages';
 
 @Component({
   selector: 'app-child-picker',
-  imports: [FormsModule, DatePipe, IconComponent],
+  imports: [FormsModule, DatePipe, IconComponent, TranslatePipe],
   templateUrl: './child-picker.component.html',
   styleUrl: './child-picker.component.scss',
 })
 export class ChildPickerComponent implements OnDestroy {
   readonly service = inject(TemplateService);
+  private readonly language = inject(CedLanguageService);
+  /** The locale the picker formats dates in. */
+  readonly locale = this.language.locale;
   readonly target = input.required<{ targetId: number; position: number; type?: 'field' | 'element' }>();
   readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
   readonly selected = signal<CedChildResult[]>([]);
@@ -22,12 +28,18 @@ export class ChildPickerComponent implements OnDestroy {
   readonly error = signal('');
   readonly searched = signal(false);
   readonly nextCursor = signal<string | undefined>(undefined);
-  get kindLabel(): string {
+  /**
+   * The prefix of the keys whose text names what the picker offers.
+   *
+   * One family of keys per kind rather than one noun interpolated into each sentence,
+   * because a language that inflects the noun cannot reuse one form in every position.
+   */
+  get kindKey(): string {
     return this.target().type === 'field'
-      ? 'fields'
+      ? 'childPicker.fields.'
       : this.target().type === 'element'
-        ? 'elements'
-        : 'fields and elements';
+        ? 'childPicker.elements.'
+        : 'childPicker.children.';
   }
   query = '';
   private lastQuery = '';
@@ -92,7 +104,9 @@ export class ChildPickerComponent implements OnDestroy {
       this.searched.set(true);
     } catch (error) {
       if (!request.signal.aborted) {
-        this.error.set(error instanceof Error ? error.message : 'Search failed. Please try again.');
+        this.error.set(
+          error instanceof Error ? this.language.describe(error) : this.language.t('childPicker.searchFailed'),
+        );
       }
     } finally {
       if (!request.signal.aborted) this.searching.set(false);
@@ -114,13 +128,15 @@ export class ChildPickerComponent implements OnDestroy {
       if (request.signal.aborted) return;
       if (source !== this.service.childSource() || this.service.childPicker() !== this.target()) return;
       if (this.rootId !== this.service.session.document().id)
-        throw new Error('The document changed. Reopen the selector in the new document.');
+        throw new LocalizedError(message('childPicker.documentChanged'));
       const { targetId, position } = this.target();
       this.service.importChildren(artifacts, targetId, position);
       this.close();
     } catch (error) {
       if (!request.signal.aborted)
-        this.error.set(error instanceof Error ? error.message : 'Unable to load the selection. Please try again.');
+        this.error.set(
+          error instanceof Error ? this.language.describe(error) : this.language.t('childPicker.loadFailed'),
+        );
     } finally {
       if (!request.signal.aborted) this.saving.set(false);
     }

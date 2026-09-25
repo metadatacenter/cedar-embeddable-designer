@@ -9,7 +9,10 @@ import {
   viewChild,
   ChangeDetectionStrategy,
   OnChanges,
+  computed,
 } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
+import { CedLanguageService } from '../../i18n/ced-language.service';
 import { TemplateService } from '../../core/services/template.service';
 import { Field, ControlledTermSet } from '../../core/models/types';
 import { TerminologyService } from '../../core/services/terminology.service';
@@ -24,10 +27,14 @@ import { trapTab } from '../../shared/focus-trap';
   templateUrl: './controlled-term-config.component.html',
   styleUrl: './controlled-term-config.component.scss',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  imports: [TranslatePipe],
 })
 export class ControlledTermConfigComponent implements OnChanges {
   readonly service = inject(TemplateService);
   private readonly terminology = inject(TerminologyService);
+  private readonly i18n = inject(CedLanguageService);
+  /** The designer's language, which the term picker and the summary render in. */
+  readonly language = this.i18n.language;
   readonly terminologyBaseUrl = this.terminology.baseUrl;
   readonly pickerAvailable = termPickerAvailable();
   readonly pickerOpen = signal(false);
@@ -62,7 +69,7 @@ export class ControlledTermConfigComponent implements OnChanges {
     this.service.setSettingsError(
       this.field.id,
       'controlledTerms',
-      this.error() ?? (this.checking() ? 'Checking the default against the constraints…' : null),
+      this.error() ?? (this.checking() ? this.i18n.t('controlledTerms.checkingConstraints') : null),
     );
   }
   private setError(message: string | null): void {
@@ -87,7 +94,13 @@ export class ControlledTermConfigComponent implements OnChanges {
   }
 
   readonly summaryAvailable = customElements.get('cedar-embeddable-field') !== undefined;
-  readonly summaryConfig = { ...this.service.fieldEditorConfig(), readOnlyMode: true };
+  private readonly editorConfig = this.service.fieldEditorConfig();
+  readonly summaryConfig = computed(() => ({
+    ...this.editorConfig,
+    readOnlyMode: true,
+    defaultLanguage: this.language(),
+    fallbackLanguage: 'en',
+  }));
   readonly summaryValue = { kind: 'none' };
   summaryArtifact: ReturnType<typeof fieldToJson> | null = null;
 
@@ -143,9 +156,7 @@ export class ControlledTermConfigComponent implements OnChanges {
         if (this.pending !== attempt || this.field !== field) return;
         if (!allowed) {
           this.invalidDefault.set(true);
-          this.setError(
-            'The existing default is not permitted by these constraints. Clear it and apply, or revise the constraints.',
-          );
+          this.setError(this.i18n.t('controlledTerms.defaultNotPermitted'));
           return;
         }
       }
@@ -154,7 +165,7 @@ export class ControlledTermConfigComponent implements OnChanges {
       this.closePicker();
     } catch (error) {
       if (this.pending !== attempt || this.field !== field) return;
-      this.setError(error instanceof Error ? error.message : 'Could not apply constraints.');
+      this.setError(error instanceof Error ? this.i18n.describe(error) : this.i18n.t('controlledTerms.applyFailed'));
     } finally {
       if (this.pending === attempt) this.setChecking(false);
     }

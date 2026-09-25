@@ -1,5 +1,6 @@
 import type { Field } from '../models/types';
 import type { ContainerMetadata, DesignerTemplate } from './cedar-template';
+import { LocalizedError, message } from '../../i18n/messages';
 
 /** Session identity, independent of reusable CEDAR artifact identifiers. */
 let nextId = 10000;
@@ -174,18 +175,18 @@ export function moveChild(root: ContainerDraft, childId: number, targetId: numbe
   const parent = parentOf(root, childId);
   const target = findContainer(root, targetId);
   const node = parent?.children.find((child) => child.id === childId);
-  if (!parent || !target || !node) throw new Error('The child or destination no longer exists.');
+  if (!parent || !target || !node) throw new LocalizedError(message('errors.move.missing'));
   if (node.kind === 'element' && findContainer(node.definition, targetId))
-    throw new Error('An element cannot be moved into itself or one of its descendants.');
+    throw new LocalizedError(message('errors.move.intoItself'));
   if (node.kind === 'field' && !allowedInContainer(node.definition.type, target.kind))
-    throw new Error('Page breaks can only be placed in templates.');
+    throw new LocalizedError(message('errors.pageBreakPlacement'));
   if (
     node.placement.deploymentName !== undefined &&
     target.children.some(
       (child) => child.id !== childId && child.placement.deploymentName === node.placement.deploymentName,
     )
   )
-    throw new Error('The destination already has a child with that property name. Rename the placement first.');
+    throw new LocalizedError(message('errors.move.nameTaken'));
   const removed = updateContainer(root, parent.id, (container) => ({
     ...container,
     children: container.children.filter((child) => child.id !== childId),

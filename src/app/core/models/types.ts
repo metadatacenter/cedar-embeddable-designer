@@ -1,3 +1,4 @@
+import { english } from '../../i18n/messages';
 /** A reusable field carries the same complete specification as a template field. */
 export interface CustomField {
   id: number;
@@ -241,42 +242,66 @@ export interface PresetDefinitions {
   modular: PresetDefinition;
 }
 
-export const FIELD_TYPES: Record<string, { label: string; preview: string }> = {
-  text: { label: 'Text', preview: 'Short answer text' },
-  paragraph: { label: 'Paragraph', preview: 'Long answer text' },
-  multipleChoice: { label: 'Multiple Choice', preview: 'Radio buttons' },
-  checkboxes: { label: 'Checkboxes', preview: 'Multiple selection' },
-  singleChoiceList: { label: 'List', preview: 'Choose one from a list' },
-  multipleChoiceList: { label: 'Multi-select List', preview: 'Choose several from a list' },
-  date: { label: 'Date', preview: 'Date' },
-  time: { label: 'Time', preview: 'Time' },
-  email: { label: 'Email', preview: 'Email address' },
-  link: { label: 'Link', preview: 'URL' },
-  phone: { label: 'Phone', preview: 'Phone number' },
-  number: { label: 'Number', preview: 'Numeric value' },
-  controlledTerms: { label: 'Controlled Terms', preview: 'Controlled vocabulary' },
-  attributeValue: { label: 'Attribute Value', preview: '' },
+/**
+ * How a field type is named and described.
+ *
+ * The designer renders the two keys in its active language. `label` and `preview` are
+ * the English renderings of the same keys, for code that needs a type's English name
+ * without a designer around it, such as the browser suite. A type with no description
+ * has empty `previewKey` and `preview`.
+ */
+export interface FieldTypeText {
+  readonly labelKey: string;
+  readonly previewKey: string;
+  readonly label: string;
+  readonly preview: string;
+}
+
+function fieldType(labelKey: string, previewKey = ''): FieldTypeText {
+  return { labelKey, previewKey, label: english(labelKey), preview: previewKey ? english(previewKey) : '' };
+}
+
+export const FIELD_TYPES: Record<string, FieldTypeText> = {
+  text: fieldType('fieldTypes.text.label', 'fieldTypes.text.preview'),
+  paragraph: fieldType('fieldTypes.paragraph.label', 'fieldTypes.paragraph.preview'),
+  multipleChoice: fieldType('fieldTypes.multipleChoice.label', 'fieldTypes.multipleChoice.preview'),
+  checkboxes: fieldType('fieldTypes.checkboxes.label', 'fieldTypes.checkboxes.preview'),
+  singleChoiceList: fieldType('fieldTypes.singleChoiceList.label', 'fieldTypes.singleChoiceList.preview'),
+  multipleChoiceList: fieldType('fieldTypes.multipleChoiceList.label', 'fieldTypes.multipleChoiceList.preview'),
+  date: fieldType('fieldTypes.date.label', 'fieldTypes.date.preview'),
+  time: fieldType('fieldTypes.time.label', 'fieldTypes.time.preview'),
+  email: fieldType('fieldTypes.email.label', 'fieldTypes.email.preview'),
+  link: fieldType('fieldTypes.link.label', 'fieldTypes.link.preview'),
+  phone: fieldType('fieldTypes.phone.label', 'fieldTypes.phone.preview'),
+  number: fieldType('fieldTypes.number.label', 'fieldTypes.number.preview'),
+  controlledTerms: fieldType('fieldTypes.controlledTerms.label', 'fieldTypes.controlledTerms.preview'),
+  attributeValue: fieldType('fieldTypes.attributeValue.label'),
 
   // External authorities: an identifier resolved against a register.
-  orcid: { label: 'ORCID', preview: 'Researcher identifier' },
-  ror: { label: 'ROR', preview: 'Research organization identifier' },
-  pfas: { label: 'PFAS', preview: 'PFAS substance identifier' },
-  rrid: { label: 'RRID', preview: 'Research resource identifier' },
-  pubmed: { label: 'PubMed', preview: 'PubMed identifier' },
-  nihGrantId: { label: 'NIH Grant ID', preview: 'NIH grant identifier' },
-  doi: { label: 'DOI', preview: 'Digital object identifier' },
+  orcid: fieldType('fieldTypes.orcid.label', 'fieldTypes.orcid.preview'),
+  ror: fieldType('fieldTypes.ror.label', 'fieldTypes.ror.preview'),
+  pfas: fieldType('fieldTypes.pfas.label', 'fieldTypes.pfas.preview'),
+  rrid: fieldType('fieldTypes.rrid.label', 'fieldTypes.rrid.preview'),
+  pubmed: fieldType('fieldTypes.pubmed.label', 'fieldTypes.pubmed.preview'),
+  nihGrantId: fieldType('fieldTypes.nihGrantId.label', 'fieldTypes.nihGrantId.preview'),
+  doi: fieldType('fieldTypes.doi.label', 'fieldTypes.doi.preview'),
 
   // Static types, which show something rather than collect it.
-  image: { label: 'Image', preview: 'An image at a URL' },
-  richText: { label: 'Rich Text', preview: 'Formatted text' },
-  youtube: { label: 'YouTube', preview: 'An embedded video' },
-  sectionBreak: { label: 'Section Break', preview: 'A divider between sections' },
-  pageBreak: { label: 'Page Break', preview: 'A break between pages' },
+  image: fieldType('fieldTypes.image.label', 'fieldTypes.image.preview'),
+  richText: fieldType('fieldTypes.richText.label', 'fieldTypes.richText.preview'),
+  youtube: fieldType('fieldTypes.youtube.label', 'fieldTypes.youtube.preview'),
+  sectionBreak: fieldType('fieldTypes.sectionBreak.label', 'fieldTypes.sectionBreak.preview'),
+  pageBreak: fieldType('fieldTypes.pageBreak.label', 'fieldTypes.pageBreak.preview'),
 };
 
 /** One authoring choice for the temporal model; date/time remain internal subtype keys. */
 export const PALETTE_FIELD_TYPES: typeof FIELD_TYPES = Object.fromEntries(
   Object.entries(FIELD_TYPES)
     .filter(([key]) => key !== 'time')
-    .map(([key, value]) => [key, key === 'date' ? { ...value, label: 'Temporal' } : value]),
+    .map(([key, value]) => [
+      key,
+      key === 'date'
+        ? { ...fieldType('fieldTypes.temporal.label'), previewKey: value.previewKey, preview: value.preview }
+        : value,
+    ]),
 );

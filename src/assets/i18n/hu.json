@@ -1,0 +1,739 @@
+{
+  "common": {
+    "cancel": "Mégse",
+    "done": "Kész",
+    "delete": "Törlés",
+    "notSpecified": "Nincs megadva",
+    "publicationStatus": "Közzétételi állapot",
+    "status": {
+      "published": "Közzétett",
+      "draft": "Vázlat"
+    },
+    "errorBadge": {
+      "one": "⚠ {{count}} hiba",
+      "other": "⚠ {{count}} hiba"
+    },
+    "expandNamed": "{{name}} kinyitása",
+    "collapseNamed": "{{name}} összecsukása",
+    "required": "Kötelező",
+    "errorCount": {
+      "one": "{{count}} hiba",
+      "other": "{{count}} hiba"
+    },
+    "anUnnamedField": "egy névtelen mező",
+    "quoted": "„{{value}}”"
+  },
+  "app": {
+    "overview": {
+      "open": "Áttekintés megnyitása",
+      "close": "Áttekintés bezárása",
+      "resize": "Áttekintés átméretezése",
+      "widthValue": "{{width}} képpont",
+      "resizeHint": "Húzza az Áttekintés átméretezéséhez. A nyílbillentyűk átméretezik, a Home és az End a határértékekre állítja. Dupla kattintással visszaállítja.",
+      "heading": "Áttekintés ({{count}})",
+      "expandAll": "Minden elem kinyitása",
+      "collapseAll": "Minden elem összecsukása"
+    },
+    "profile": {
+      "menuTitle": "Az ebben a profilban elérhető mezőtípusok és vezérlők",
+      "basic": {
+        "label": "Alap",
+        "summary": "Egyszerű mezők, szókészletek nélkül"
+      },
+      "semantic": {
+        "label": "Szemantikus",
+        "summary": "Kontrollált fogalmakkal és súgószöveggel bővül"
+      },
+      "modular": {
+        "label": "Moduláris",
+        "summary": "Sablonelemekkel bővül"
+      },
+      "custom": "Egyéni",
+      "customize": "Testreszabás…"
+    },
+    "userMenu": {
+      "title": "Felhasználói menü",
+      "preferences": "Beállítások",
+      "definePresets": "Előbeállítások megadása"
+    },
+    "preview": {
+      "open": "Előnézet megnyitása",
+      "close": "Előnézet bezárása",
+      "openTitle": "CEE-előnézet megnyitása",
+      "closeTitle": "CEE-előnézet bezárása"
+    }
+  },
+  "devHost": {
+    "changes": "Utolsó templateChange: {{count}} esemény |",
+    "example": "Minden mezőt tartalmazó hibakereső példa",
+    "exampleFailed": "A példa betöltése nem sikerült ({{status}})"
+  },
+  "alternates": {
+    "names": {
+      "heading": "Alternatív nevek",
+      "newLabel": "Új alternatív név",
+      "add": "Név hozzáadása",
+      "column": "Név",
+      "removeNumbered": "A(z) {{number}}. név eltávolítása",
+      "remove": "Név eltávolítása",
+      "none": "Nincsenek alternatív nevek.",
+      "blank": "A név nem lehet üres.",
+      "unique": "A neveknek egyedinek kell lenniük."
+    },
+    "questions": {
+      "heading": "Alternatív kérdések",
+      "newLabel": "Új alternatív kérdés",
+      "add": "Kérdés hozzáadása",
+      "column": "Kérdés",
+      "removeNumbered": "A(z) {{number}}. kérdés eltávolítása",
+      "remove": "Kérdés eltávolítása",
+      "none": "Nincsenek alternatív kérdések.",
+      "blank": "A kérdés nem lehet üres.",
+      "unique": "A kérdéseknek egyedinek kell lenniük."
+    }
+  },
+  "annotations": {
+    "name": "Annotáció neve",
+    "newName": "Új annotáció neve",
+    "valueType": "Érték típusa",
+    "newValueType": "Új annotáció értékének típusa",
+    "kind": {
+      "text": "Szöveg",
+      "iri": "IRI"
+    },
+    "value": "Érték",
+    "newValue": "Új annotáció értéke",
+    "add": "Annotáció hozzáadása",
+    "caption": "Annotációk",
+    "remove": "Annotáció eltávolítása",
+    "removeNumbered": "A(z) {{number}}. annotáció eltávolítása",
+    "none": "Nincsenek annotációk.",
+    "nameRequired": "Minden annotációnak nevet kell adni.",
+    "nameUnique": "Az annotációk nevének egyedinek kell lennie.",
+    "iriAbsolute": "Az annotáció IRI-jének abszolút azonosítónak kell lennie.",
+    "valueRequired": "Az annotáció értékének megadása kötelező.",
+    "valueIri": "Az annotáció értékének érvényes IRI-nek kell lennie."
+  },
+  "ceePreview": {
+    "title": "Előnézet",
+    "mode": "Előnézeti mód",
+    "readOnly": "Csak olvasható",
+    "editable": "Szerkeszthető",
+    "close": "Előnézet bezárása",
+    "editableNotice": "Próbálja ki az űrlap kitöltését. A bejegyzések törlődnek, ha a sablon vagy az előnézeti mód megváltozik.",
+    "missing": {
+      "before": "Az előnézet ezzel a komponenssel jeleníti meg a sablont:",
+      "after": ". A tervezőt beágyazó oldal ezt nem töltötte be. A kettő egymás mellett működő webkomponens: töltse be a CEE szkriptjét is a tervezőé mellett."
+    }
+  },
+  "childPicker": {
+    "fields": {
+      "title": "Mezők importálása",
+      "selectHint": "Válasszon mezőket az alábbi találatok közül.",
+      "searchLabel": "Mezők keresése",
+      "none": "Nem található mező.",
+      "prompt": "Indítson keresést az újrafelhasználható mezők megtalálásához."
+    },
+    "elements": {
+      "title": "Elemek importálása",
+      "selectHint": "Válasszon elemeket az alábbi találatok közül.",
+      "searchLabel": "Elemek keresése",
+      "none": "Nem található elem.",
+      "prompt": "Indítson keresést az újrafelhasználható elemek megtalálásához."
+    },
+    "children": {
+      "title": "Mezők és elemek importálása",
+      "selectHint": "Válasszon mezőket és elemeket az alábbi találatok közül.",
+      "searchLabel": "Mezők és elemek keresése",
+      "none": "Nem található mező vagy elem.",
+      "prompt": "Indítson keresést az újrafelhasználható mezők és elemek megtalálásához."
+    },
+    "selectedHeading": "Kiválasztott gyermekelemek ({{count}})",
+    "adding": "Hozzáadás…",
+    "selectedTable": "Kiválasztott gyermekelemek",
+    "columns": {
+      "name": "Név",
+      "type": "Típus",
+      "created": "Létrehozva",
+      "modified": "Módosítva",
+      "version": "Verzió",
+      "status": "Állapot",
+      "remove": "Eltávolítás"
+    },
+    "kind": {
+      "field": "Mező",
+      "element": "Elem"
+    },
+    "removeRow": "{{name}} eltávolítása",
+    "selectRow": "{{name}} kiválasztása",
+    "unavailable": "Ebben a befogadó alkalmazásban a tárban való keresés nem érhető el.",
+    "searchPlaceholder": "Keresés név szerint",
+    "search": "Keresés",
+    "resultsTable": "Keresési találatok",
+    "searching": "Keresés…",
+    "resultsFailed": "A találatokat nem sikerült betölteni.",
+    "loadMore": "Továbbiak betöltése",
+    "searchFailed": "A keresés nem sikerült. Kérjük, próbálja újra.",
+    "loadFailed": "A kijelölést nem sikerült betölteni. Kérjük, próbálja újra.",
+    "documentChanged": "A dokumentum megváltozott. Nyissa meg újra a választót az új dokumentumban."
+  },
+  "containerEditor": {
+    "dragElement": "Húzza az elemet az átrendezéshez",
+    "elementLabel": "Elem",
+    "name": "Név",
+    "elementName": "Elem neve",
+    "templateName": "Sablon neve",
+    "elementNamePlaceholder": "Adja meg az elem nevét",
+    "identifier": "Azonosító",
+    "version": "Verzió",
+    "deleteTitle": "Törli az elemet?",
+    "deleteDescription": "{{name}} és minden gyermekeleme törlődik.",
+    "thisElement": "Ez az elem",
+    "deleteNamed": "{{name}} elem törlése",
+    "delete": "Elem törlése",
+    "description": "Leírás",
+    "descriptionPlaceholder": "Leírás hozzáadása...",
+    "expandChildren": "Gyermekelemek kinyitása",
+    "collapseChildren": "Gyermekelemek összecsukása"
+  },
+  "containerSettings": {
+    "template": {
+      "settings": "sablon beállításai",
+      "expand": "Sablon beállításainak kinyitása",
+      "collapse": "Sablon beállításainak összecsukása"
+    },
+    "element": {
+      "settings": "elem beállításai",
+      "expand": "Elem beállításainak kinyitása",
+      "collapse": "Elem beállításainak összecsukása"
+    },
+    "header": "Fejléc",
+    "footer": "Lábléc",
+    "templateIri": "Sablon IRI"
+  },
+  "controlledTerms": {
+    "constraints": "Kontrollált fogalmakra vonatkozó megkötések",
+    "chooseConstraint": "Válasszon szókészlet-megkötést",
+    "previewUnavailable": "A megkötés előnézetéhez a mezőszerkesztő szükséges.",
+    "edit": "Kontrollált fogalmakra vonatkozó megkötések szerkesztése",
+    "editButton": "Szerkesztés",
+    "editingUnavailable": {
+      "before": "A megkötések szerkesztéséhez szükség van a(z)",
+      "middle": "komponensre és egy beállított",
+      "after": " értékre. A mentett megkötések érintetlenek maradnak."
+    },
+    "checkingDefault": "A meglévő alapértelmezés ellenőrzése…",
+    "clearDefaultAndApply": "Alapértelmezés törlése és a megkötések alkalmazása",
+    "checkingConstraints": "Az alapértelmezés ellenőrzése a megkötések alapján…",
+    "defaultNotPermitted": "Ezek a megkötések nem engedik meg a meglévő alapértelmezést. Törölje, majd alkalmazza őket, vagy módosítsa a megkötéseket.",
+    "applyFailed": "A megkötéseket nem sikerült alkalmazni."
+  },
+  "defaultValue": {
+    "label": "Alapértelmezett érték",
+    "constraintFirst": "Az alapértelmezés megadása előtt válasszon szókészlet-megkötést.",
+    "pickerUnavailable": "A fogalomválasztó nem érhető el.",
+    "editTerm": "Alapértelmezett fogalom szerkesztése",
+    "edit": "Szerkesztés",
+    "chooseTerm": "Alapértelmezett fogalom kiválasztása",
+    "cancelSelection": "Alapértelmezés kiválasztásának megszakítása",
+    "checkingTerm": "Az alapértelmezett fogalom ellenőrzése…",
+    "clear": "Alapértelmezés törlése",
+    "editorUnavailable": "Az alapértelmezett érték szerkesztője nem érhető el.",
+    "invalid": "Adjon meg érvényes alapértelmezett értéket.",
+    "invalidNumber": "Adjon meg érvényes számot.",
+    "singleTerm": "Az alapértelmezett értékhez egyetlen fogalmat válasszon.",
+    "termNotPermitted": "A mező megkötései nem engedik meg ezt a fogalmat.",
+    "termCheckFailed": "A fogalmat nem sikerült ellenőrizni a mező megkötései alapján.",
+    "temporal": {
+      "pattern": "Adjon meg az időbeli típusnak és a pontosságnak megfelelő alapértelmezést.",
+      "date": "Az alapértelmezéshez adjon meg érvényes naptári dátumot.",
+      "precision": "Az alapértelmezésnek meg kell felelnie a kiválasztott pontosságnak.",
+      "time": "Az alapértelmezéshez adjon meg érvényes időpontot.",
+      "timezoneDisabled": "Kapcsolja be az Időzóna megjelenítése beállítást, vagy távolítsa el az időzónát az alapértelmezésből.",
+      "offset": "Adjon meg −14:00 és +14:00 közötti időzóna-eltolást."
+    }
+  },
+  "elementCard": {
+    "settings": "Elem beállításai",
+    "elementIri": "Elem IRI",
+    "expandSettings": "Elem beállításainak kinyitása",
+    "collapseSettings": "Elem beállításainak összecsukása"
+  },
+  "errors": {
+    "numeric": {
+      "datatype": "Válasszon adattípust a listából.",
+      "minimumValue": "A minimális érték",
+      "maximumValue": "A maximális érték",
+      "defaultValue": "Az alapértelmezett érték",
+      "infinite": "{{label}} érvényes szám kell legyen, nem lehet végtelen.",
+      "integerOnly": "{{label}} nem tartalmazhat tizedesjegyeket {{type}} típus esetén.",
+      "range": "Az értéknek {{min}} és {{max}} között kell lennie.",
+      "floatRange": "Az értéknek -3.4028234663852886e38 és 3.4028234663852886e38 között kell lennie.",
+      "floatTooSmall": "Az érték túl közel van a nullához. Adjon meg 0-t vagy egy olyan számot, amely legalább 1.401298464324817e-45 távolságra van a nullától.",
+      "minAboveMax": "A minimum nem lehet nagyobb a maximumnál.",
+      "decimalPlacesNegative": "A tizedesjegyek száma nem lehet negatív.",
+      "decimalPlacesInteger": "{{type}} típus esetén a tizedesjegyek száma csak 0 lehet, vagy üresen kell hagyni.",
+      "tooManyPlaces": {
+        "one": "{{label}} legfeljebb {{count}} tizedesjegyet tartalmazhat.",
+        "other": "{{label}} legfeljebb {{count}} tizedesjegyet tartalmazhat."
+      },
+      "defaultOutsideRange": "Az alapértelmezés kívül esik a minimumon és a maximumon. Először módosítsa vagy törölje."
+    },
+    "temporal": {
+      "precisionIncompatible": "A kiválasztott pontosság nem egyeztethető össze az időbeli adattípussal."
+    },
+    "text": {
+      "lengths": "A szöveghosszak nem lehetnek negatívak, és a minimum nem lehet nagyobb a maximumnál.",
+      "defaultTooShort": "Az alapértelmezett értéknek legalább {{count}} karaktert kell tartalmaznia.",
+      "defaultTooLong": "Az alapértelmezett érték legfeljebb {{count}} karaktert tartalmazhat.",
+      "defaultPattern": "Az alapértelmezett értéknek illeszkednie kell a reguláris kifejezésre."
+    },
+    "media": {
+      "dimensions": "A médiaméreteknek pozitív számoknak kell lenniük."
+    },
+    "default": {
+      "wrongKind": "Egy {{type}} típusú mező nem tartalmazhat {{kind}} típusú alapértelmezést.",
+      "oneScalarChoice": "Csak egyetlen skaláris választási alapértelmezés őrizhető meg.",
+      "notAnOption": "Az alapértelmezést a mező lehetőségei közül válassza.",
+      "missingOptions": "A(z) {{values}} alapértelmezés nincs az engedélyezett lehetőségek között. Módosítsa vagy törölje az alapértelmezést, vagy vegye fel a lehetőségek közé.",
+      "importedConflict": "Az importált „{{value}}” alapértelmezés ütközik a kiválasztott alapértelmezéssel. Az ütközés feloldásához válasszon alapértelmezést, vagy törölje azt."
+    },
+    "namedField": "{{name}}: {{message}}",
+    "occurrences": {
+      "range": "A minimum és a maximum nem lehet negatív, és a minimum nem lehet nagyobb a maximumnál."
+    },
+    "yaml": {
+      "lossy": "A YAML nem tudja megőrizni a sablon minden tulajdonságát, például az egyéni sémametaadatokat. A teljes definíciók megtartásához exportáljon JSON-t.",
+      "compactTemplate": "Ez tömör YAML, amely kihagy mindent, aminek alapértelmezése van, ezért nem nyitható meg sablonként. Nyissa meg helyette a teljes YAML-t vagy a JSON-t.",
+      "compactField": "Ez tömör YAML, amely kihagy mindent, aminek alapértelmezése van, ezért nem nyitható meg mezőként. Nyissa meg helyette a teljes YAML-t vagy a JSON-t.",
+      "compactReopen": "A tömör YAML nem nyitható meg újra. Használjon teljes YAML-t vagy JSON-t."
+    },
+    "open": {
+      "notTemplate": "A forrás nem CEDAR-sablon.",
+      "containsElements": "Ez a sablon elemeket tartalmaz ({{names}}). Az elemek szerkesztése még nem támogatott, ezért a beágyazott tartalom elvesztésének elkerülése érdekében a sablon nem nyílt meg.",
+      "fieldNeedsName": "A meződefiníciónak nevet kell adni.",
+      "missingChild": "A hiányzó „{{name}}” gyermekelem nem nyitható meg.",
+      "unsupportedChild": "A nem támogatott „{{name}}” gyermekelem nem nyitható meg.",
+      "notContainer": "Nyisson meg egy CEDAR-sablont vagy -elemdokumentumot."
+    },
+    "move": {
+      "missing": "A gyermekelem vagy a cél már nem létezik.",
+      "intoItself": "Egy elem nem helyezhető át önmagába vagy a leszármazottai közé.",
+      "nameTaken": "A célban már van ilyen tulajdonságnevű gyermekelem. Először nevezze át az elhelyezést."
+    },
+    "pageBreakPlacement": "Oldaltörés csak sablonban helyezhető el.",
+    "publishedReadOnly": "A közzétett mezők csak olvashatók. Vázlatverzió szerkesztése még nem érhető el.",
+    "importDestinationMissing": "Az importálás célja már nem létezik.",
+    "destinationMissing": "A cél már nem létezik.",
+    "chooseFieldOrElement": "Válasszon mező- vagy elemartefaktumot.",
+    "chooseElementDocument": "Válasszon elemdokumentumot, amelyet ebbe a tárolóba illeszt.",
+    "elementMissing": "Az elem már nem létezik."
+  },
+  "fieldCard": {
+    "published": "Közzétett mező – csak olvasható. Vázlatverzió szerkesztése még nem érhető el.",
+    "namePlaceholder": "Adja meg a mező nevét",
+    "name": "Mező neve",
+    "occurrenceRange": "Előfordulási tartomány",
+    "dragToReorder": "Húzza az átrendezéshez",
+    "requirement": "Kitöltési követelmény",
+    "optional": "Nem kötelező",
+    "recommended": "Ajánlott",
+    "required": "Kötelező",
+    "delete": "Mező törlése",
+    "option": "{{number}}. lehetőség",
+    "deleteOption": "Lehetőség törlése",
+    "addOption": "Lehetőség hozzáadása",
+    "clearConflict": "Ütköző alapértelmezés törlése",
+    "content": {
+      "markup": "Tartalom",
+      "url": "Kép webcíme",
+      "videoId": "YouTube-videó azonosítója"
+    }
+  },
+  "fieldDesigner": {
+    "title": "Mezőkönyvtár",
+    "back": "Vissza a sablonszerkesztőhöz",
+    "hint": "Ebben a böngészőben mentett, újrafelhasználható mezőspecifikációk, a sablonbeli megjelenítési és előfordulási beállításokkal együtt.",
+    "createLibrary": "Könyvtár létrehozása",
+    "libraryName": "Könyvtár neve",
+    "description": "Leírás",
+    "library": "Könyvtár",
+    "chooseLibrary": "Válasszon könyvtárat",
+    "saveField": "Mező mentése",
+    "createField": "Mező létrehozása",
+    "columns": {
+      "field": "Mező",
+      "actions": "Műveletek"
+    },
+    "view": "Megtekintés",
+    "edit": "Szerkesztés",
+    "addToTemplate": "Hozzáadás a sablonhoz",
+    "remove": "Eltávolítás",
+    "nameRequired": "Adjon nevet a mezőnek.",
+    "libraryRequired": "Válasszon könyvtárat, vagy előbb hozzon létre egyet."
+  },
+  "fieldElement": {
+    "label": "Mezőtervező",
+    "readOnly": "Ez a mező csak olvasható.",
+    "chooseType": "Mezőtípus kiválasztása"
+  },
+  "fieldSettings": {
+    "label": "Mező beállításai",
+    "expand": "Mező beállításainak kinyitása",
+    "collapse": "Mező beállításainak összecsukása",
+    "text": {
+      "minLength": "Minimális hossz",
+      "maxLength": "Maximális hossz",
+      "regex": "Reguláris kifejezés",
+      "regexPlaceholder": "pl. ^[A-Z]+$"
+    },
+    "numeric": {
+      "datatype": "Adattípus",
+      "min": "Minimális érték",
+      "max": "Maximális érték",
+      "decimalPlaces": "Tizedesjegyek",
+      "unit": "Mértékegység",
+      "unitPlaceholder": "pl. mg"
+    },
+    "temporal": {
+      "type": "Időbeli típus",
+      "precision": "Pontosság",
+      "granularity": {
+        "year": "év",
+        "month": "hónap",
+        "day": "nap",
+        "hour": "óra",
+        "minute": "perc",
+        "second": "másodperc",
+        "decimalSecond": "Tört másodperc"
+      },
+      "timeFormat": "Időformátum",
+      "defaultFormat": "Alapértelmezett (24 órás)",
+      "twelveHour": "12 órás",
+      "twentyFourHour": "24 órás",
+      "showTimezone": "Időzóna megjelenítése"
+    },
+    "media": {
+      "width": "Szélesség",
+      "height": "Magasság",
+      "automatic": "Automatikus"
+    },
+    "occurrences": {
+      "min": "Legalább",
+      "max": "Legfeljebb"
+    },
+    "display": {
+      "labelPlaceholder": "A mező megjelenített neve",
+      "descriptionPlaceholder": "A mező súgója",
+      "hidden": "Rejtett",
+      "continueLine": "Folytatás az előző sorban",
+      "helpText": "Súgószöveg",
+      "helpTextPlaceholder": "Adjon útmutatást a felhasználóknak..."
+    },
+    "metadata": {
+      "fieldIri": "Mező IRI"
+    }
+  },
+  "fieldTypes": {
+    "text": {
+      "label": "Szöveg",
+      "preview": "Rövid szöveges válasz"
+    },
+    "paragraph": {
+      "label": "Bekezdés",
+      "preview": "Hosszú szöveges válasz"
+    },
+    "multipleChoice": {
+      "label": "Feleletválasztós",
+      "preview": "Választógombok"
+    },
+    "checkboxes": {
+      "label": "Jelölőnégyzetek",
+      "preview": "Többszörös kijelölés"
+    },
+    "singleChoiceList": {
+      "label": "Lista",
+      "preview": "Egy elem választása a listából"
+    },
+    "multipleChoiceList": {
+      "label": "Többválasztós lista",
+      "preview": "Több elem választása a listából"
+    },
+    "date": {
+      "label": "Dátum",
+      "preview": "Dátum"
+    },
+    "time": {
+      "label": "Idő",
+      "preview": "Idő"
+    },
+    "email": {
+      "label": "E-mail",
+      "preview": "E-mail-cím"
+    },
+    "link": {
+      "label": "Hivatkozás",
+      "preview": "Webcím (URL)"
+    },
+    "phone": {
+      "label": "Telefon",
+      "preview": "Telefonszám"
+    },
+    "number": {
+      "label": "Szám",
+      "preview": "Számérték"
+    },
+    "controlledTerms": {
+      "label": "Kontrollált fogalmak",
+      "preview": "Kontrollált szókészlet"
+    },
+    "attributeValue": {
+      "label": "Attribútum-érték"
+    },
+    "orcid": {
+      "label": "ORCID",
+      "preview": "Kutatói azonosító"
+    },
+    "ror": {
+      "label": "ROR",
+      "preview": "Kutatóintézeti azonosító"
+    },
+    "pfas": {
+      "label": "PFAS",
+      "preview": "PFAS-anyagazonosító"
+    },
+    "rrid": {
+      "label": "RRID",
+      "preview": "Kutatási erőforrás azonosítója"
+    },
+    "pubmed": {
+      "label": "PubMed",
+      "preview": "PubMed-azonosító"
+    },
+    "nihGrantId": {
+      "label": "NIH támogatási azonosító",
+      "preview": "NIH-támogatás azonosítója"
+    },
+    "doi": {
+      "label": "DOI",
+      "preview": "Digitális objektumazonosító"
+    },
+    "image": {
+      "label": "Kép",
+      "preview": "Kép egy webcímen"
+    },
+    "richText": {
+      "label": "Formázott szöveg",
+      "preview": "Formázott szövegtartalom"
+    },
+    "youtube": {
+      "label": "YouTube",
+      "preview": "Beágyazott videó"
+    },
+    "sectionBreak": {
+      "label": "Szakaszelválasztó",
+      "preview": "Elválasztó a szakaszok között"
+    },
+    "pageBreak": {
+      "label": "Oldaltörés",
+      "preview": "Törés az oldalak között"
+    },
+    "temporal": {
+      "label": "Időbeli"
+    },
+    "dateTime": {
+      "label": "Dátum és idő"
+    }
+  },
+  "languageSelector": {
+    "label": "Nyelv",
+    "current": "{{code}} (jelenlegi)"
+  },
+  "fieldLibrary": {
+    "loadFailed": "A mentett mezőkönyvtárat nem sikerült betölteni. A tárolt adatai változatlanok maradtak.",
+    "saveFailed": "A böngésző nem tudta menteni a mezőkönyvtárat. Hagyja nyitva ezt az oldalt, és próbálja újra."
+  },
+  "terminology": {
+    "notConfigured": "A terminológiai kiszolgáló nincs beállítva.",
+    "checkFailed": "Az alapértelmezett fogalmat nem sikerült ellenőrizni ({{status}}).",
+    "noResultCollection": "A terminológiai kiszolgáló nem adott vissza találatgyűjteményt.",
+    "unverified": "A fogalmat nem sikerült igazolni a kapott találatok között.",
+    "searchNotConfigured": "A kontrollált fogalmak keresése nincs beállítva.",
+    "answered": "A terminológiai kiszolgáló válasza: {{status}} {{statusText}}.",
+    "noResultsCollection": "A terminológiai kiszolgáló nem adott vissza találati gyűjteményt."
+  },
+  "outline": {
+    "errors": "{{count}} hiba",
+    "expand": "Elem kinyitása",
+    "collapse": "Elem összecsukása",
+    "reorder": "{{name}} áthelyezése",
+    "reorderHint": "Húzza az átrendezéshez, vagy a nyílbillentyűkkel mozgassa fel és le"
+  },
+  "insertion": {
+    "addField": "Mező hozzáadása",
+    "addFieldHere": "Mező hozzáadása ide",
+    "addElement": "Elem hozzáadása",
+    "addElementHere": "Elem hozzáadása ide",
+    "importField": "Mező importálása",
+    "importFieldHere": "Mező importálása ide",
+    "importElement": "Elem importálása",
+    "importElementHere": "Elem importálása ide"
+  },
+  "manualIri": {
+    "label": "IRI",
+    "addType": "Típus hozzáadása",
+    "addProperty": "Tulajdonság hozzáadása",
+    "open": "IRI kézi megadása",
+    "searchUnavailable": "A szókészletben való keresés nem érhető el. Az IRI-t kézzel is megadhatja.",
+    "required": "Az IRI megadása kötelező.",
+    "invalid": "Kérjük, adjon meg érvényes IRI-t.",
+    "duplicate": "Ezt a típust már hozzáadta."
+  },
+  "propertyPicker": {
+    "placeholder": "Válasszon tulajdonság IRI-t",
+    "replaceLabel": "Tulajdonság IRI cseréje",
+    "chooseLabel": "Tulajdonság IRI kiválasztása",
+    "replace": "Csere",
+    "choose": "Kiválasztás",
+    "selectOne": "A Kész gomb előtt válasszon ki egy tulajdonságot."
+  },
+  "typesPicker": {
+    "remove": "A(z) {{iri}} típus eltávolítása",
+    "none": "Nincs kiválasztott típus.",
+    "add": "Típusok hozzáadása",
+    "classesOnly": "Csak osztályokat válasszon."
+  },
+  "preferences": {
+    "title": "Felhasználói beállítások",
+    "close": "Bezárás",
+    "presets": {
+      "heading": "Előre beállított konfigurációk",
+      "basic": "alap",
+      "semantic": "szemantikus",
+      "modular": "moduláris"
+    },
+    "fieldOptions": {
+      "heading": "Mezőbeállítási lehetőségek",
+      "required": {
+        "label": "A „Kötelező” jelölőnégyzet megjelenítése",
+        "help": "A kötelező/nem kötelező kapcsoló megjelenítése a mezőknél"
+      },
+      "allowMultiple": {
+        "label": "A „Több érték engedélyezése” jelölőnégyzet megjelenítése",
+        "help": "A több érték kapcsolójának megjelenítése a mezőknél"
+      },
+      "helpText": {
+        "label": "A „Súgószöveg” mező megjelenítése",
+        "help": "A súgószöveg beviteli mezőjének megjelenítése a mezőknél"
+      },
+      "defaultValue": {
+        "label": "Az „Alapértelmezett érték” mező megjelenítése",
+        "help": "Az alapértelmezett érték beviteli mezőjének megjelenítése a mezőknél"
+      }
+    },
+    "features": {
+      "heading": "Funkciók láthatósága",
+      "elements": {
+        "label": "Elemek engedélyezése",
+        "help": "Az elemek funkció engedélyezése a sablonszerkesztőben"
+      }
+    },
+    "selection": {
+      "heading": "Mezőválasztás módja",
+      "help": "Válassza ki, hogyan szeretne mezőket adni a sablonhoz",
+      "inline": {
+        "label": "Beágyazott mezőválasztó",
+        "help": "A mezőtípusok megjelenítése ott, ahol a mezőt hozzáadja (alapértelmezett)"
+      },
+      "sidebar": {
+        "label": "Könyvtár oldalsáv",
+        "help": "Kinyitható könyvtárlista megjelenítése az oldal bal szélén"
+      }
+    },
+    "fieldTypes": {
+      "heading": "Látható mezőtípusok",
+      "selectAll": "Összes kijelölése",
+      "deselectAll": "Kijelölés megszüntetése",
+      "help": "Adja meg, mely mezőtípusok jelenjenek meg a „Mező hozzáadása” szakaszban és a legördülő menükben"
+    }
+  },
+  "presetDefinitions": {
+    "intro": "Adja meg, mit tartalmazzanak az egyes előre beállított konfigurációk. Ezek a beállítások akkor lépnek érvénybe, amikor a felhasználók a beállításaikban kiválasztanak egy előbeállítást.",
+    "fieldTypes": "Elérhető mezőtípusok"
+  },
+  "settings": {
+    "containsErrors": "Hibákat tartalmaz",
+    "key": "Kulcs",
+    "version": "Verzió",
+    "notYetAssigned": "Még nincs hozzárendelve",
+    "modelVersion": "Modellverzió",
+    "created": "Létrehozva",
+    "modified": "Módosítva",
+    "notYetRecorded": "Még nincs rögzítve",
+    "derivedFrom": "Származtatás forrása",
+    "previousVersion": "Előző verzió",
+    "propertyIri": "Tulajdonság IRI",
+    "types": "Típusok",
+    "displayLabel": "Megjelenített címke",
+    "displayDescription": "Megjelenített leírás",
+    "allowMultiple": "Több érték engedélyezése",
+    "minOccurrences": "Előfordulások minimális száma",
+    "minOccurrencesPlaceholder": "Alapértelmezett (0)",
+    "maxOccurrences": "Előfordulások maximális száma",
+    "unlimited": "Korlátlan",
+    "invalidNumber": "{{label}}: érvényes számot kell megadni.",
+    "value": "Érték"
+  },
+  "sidebar": {
+    "fields": "Mezők ({{count}})",
+    "collapse": "Oldalsáv összecsukása",
+    "expand": "Oldalsáv kinyitása",
+    "noFields": "Még nincsenek mezők",
+    "librariesAndFields": "Könyvtárak és mezők",
+    "builtIn": "Beépített mezők",
+    "libraryEmpty": "Ebben a könyvtárban nincsenek mezők"
+  },
+  "fieldTypePicker": {
+    "title": "Mező kiválasztása",
+    "standard": "Alapmezők",
+    "searchLibraries": "Könyvtárak keresése...",
+    "noLibraries": "Nem található könyvtár",
+    "close": "Mezőválasztó bezárása",
+    "libraryEmpty": "Ebben a könyvtárban még nincsenek egyéni mezők."
+  },
+  "tabs": {
+    "display": "Megjelenítés",
+    "constraints": "Megkötések",
+    "content": "Tartalom",
+    "occurrences": "Előfordulások",
+    "annotations": "Annotációk",
+    "fieldMetadata": "Mező metaadatai",
+    "elementMetadata": "Elem metaadatai",
+    "templateMetadata": "Sablon metaadatai"
+  },
+  "validation": {
+    "summary": {
+      "one": "{{count}} hiba – javítsa mentés előtt",
+      "other": "{{count}} hiba – javítsa mentés előtt"
+    },
+    "optionName": "A(z) {{number}}. lehetőségnek nevet kell adni.",
+    "key": {
+      "required": "A kulcs megadása kötelező.",
+      "objectInternals": "Ez a kulcs az objektumok belső használatára van fenntartva.",
+      "cedarMetadata": "Ez a kulcs a CEDAR-metaadatok számára van fenntartva.",
+      "controlCharacters": "A kulcs nem tartalmazhat vezérlőkaraktereket.",
+      "yamlMetadata": "Ez a kulcs a CEDAR YAML-metaadatok számára van fenntartva.",
+      "duplicate": "Ebben a tárolóban egy másik gyermekelem már használja ezt a kulcsot."
+    },
+    "nameRequired": {
+      "field": "A mező nevének megadása kötelező.",
+      "element": "Az elem nevének megadása kötelező.",
+      "template": "A sablon nevének megadása kötelező."
+    },
+    "unnamed": {
+      "field": "Névtelen mező",
+      "element": "Névtelen elem",
+      "template": "Névtelen sablon"
+    }
+  }
+}

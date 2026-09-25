@@ -16,6 +16,9 @@ import {
   ElementRef,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
+import { CedLanguageService } from '../../i18n/ced-language.service';
+import { SETTINGS_TABS, settingsTabKey } from '../../shared/settings-tabs';
 import { Field } from '../../core/models/types';
 import {
   accepts,
@@ -38,6 +41,7 @@ import { TemplateService } from '../../core/services/template.service';
     FormsModule,
     FieldDefaultValueComponent,
     PropertyPickerComponent,
+    TranslatePipe,
   ],
   templateUrl: './field-settings.component.html',
   styleUrl: './field-settings.component.scss',
@@ -51,6 +55,8 @@ export class FieldSettingsComponent implements OnChanges {
 
   @Input({ required: true }) field!: Field;
   @Input() hasValues = false;
+  private readonly i18n = inject(CedLanguageService);
+  readonly tabKey = settingsTabKey;
   expanded = false;
   activeTab = 'Display';
   get valuesTab(): string {
@@ -73,7 +79,7 @@ export class FieldSettingsComponent implements OnChanges {
         ? ['Occurrences']
         : []),
       'Annotations',
-      'Field metadata',
+      SETTINGS_TABS.fieldMetadata,
     ];
   }
   get selectedTab(): string {
@@ -174,7 +180,9 @@ export class FieldSettingsComponent implements OnChanges {
               'app-field-default-value input, app-field-default-value textarea, app-field-default-value button',
             )
           : /^option-\d+$/.test(issue.setting)
-            ? panel?.querySelector<HTMLElement>(`input[aria-label="Option ${Number(issue.setting.slice(7)) + 1}"]`)
+            ? panel?.querySelector<HTMLElement>(
+                `input[aria-label="${CSS.escape(this.i18n.t('fieldCard.option', { number: Number(issue.setting.slice(7)) + 1 }))}"]`,
+              )
             : panel?.querySelector<HTMLElement>('input, select, textarea, button');
       control?.focus({ preventScroll: true });
     });
@@ -203,7 +211,10 @@ export class FieldSettingsComponent implements OnChanges {
           .map((issue) => issue.message)
           .join(' ')) ||
       null;
-    const prefix = `${this.field.name.trim() || 'an unnamed field'}: `;
+    const prefix = this.i18n.t('errors.namedField', {
+      name: this.field.name.trim() || this.i18n.t('common.anUnnamedField'),
+      message: '',
+    });
     return message?.startsWith(prefix) ? message.slice(prefix.length) : message;
   }
   get multiple(): boolean {
@@ -274,12 +285,17 @@ export class FieldSettingsComponent implements OnChanges {
   private badInput(form: HTMLFormElement | undefined, tab: string): boolean {
     const invalid = form && Array.from(form.querySelectorAll('input')).find((input) => input.validity.badInput);
     if (!invalid) return false;
-    this.report(tab, `${invalid.closest('label')?.textContent?.trim() || 'Value'} must be a valid number.`);
+    this.report(
+      tab,
+      this.i18n.t('settings.invalidNumber', {
+        label: invalid.closest('label')?.textContent?.trim() || this.i18n.t('settings.value'),
+      }),
+    );
     return true;
   }
   saveIdentifier(): void {
     this.report(
-      'Field metadata',
+      SETTINGS_TABS.fieldMetadata,
       this.service.updateFieldSettings(this.field.id, {
         schemaIdentifier: this.schemaIdentifier || undefined,
       }),
@@ -298,11 +314,11 @@ export class FieldSettingsComponent implements OnChanges {
   }
   saveKey(): void {
     this.keyDraftError = this.service.updateFieldSettings(this.field.id, { deploymentName: this.deploymentName });
-    this.service.setSettingsError(this.field.id, 'key', this.keyDraftError, 'Field metadata');
+    this.service.setSettingsError(this.field.id, 'key', this.keyDraftError, SETTINGS_TABS.fieldMetadata);
   }
 
   saveProperty(iri: string): void {
-    this.report('Field metadata', this.service.updateFieldSettings(this.field.id, { propertyIri: iri }));
+    this.report(SETTINGS_TABS.fieldMetadata, this.service.updateFieldSettings(this.field.id, { propertyIri: iri }));
   }
   saveMedia(form?: HTMLFormElement): void {
     if (this.badInput(form, 'Content')) return;
@@ -328,8 +344,8 @@ export class FieldSettingsComponent implements OnChanges {
     // Keep that draft out of the model instead of treating it as a cleared bound.
     const invalid = form && Array.from(form.querySelectorAll('input')).find((input) => input.validity.badInput);
     if (invalid) {
-      const label = invalid.closest('label')?.textContent?.trim() || 'Numeric value';
-      this.report('Constraints', `${label} must be a valid number.`);
+      const label = invalid.closest('label')?.textContent?.trim() || this.i18n.t('fieldTypes.number.preview');
+      this.report('Constraints', this.i18n.t('settings.invalidNumber', { label }));
       return;
     }
     this.report(

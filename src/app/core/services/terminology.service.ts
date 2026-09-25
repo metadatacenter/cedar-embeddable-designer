@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { CeeTemplateObject } from '../model/cee-preview';
 import { CedConfig } from '../../ced-public-api';
+import { LocalizedError, message } from '../../i18n/messages';
 
 /**
  * The terminology server's search route, under whatever base a host names.
@@ -64,7 +65,7 @@ export class TerminologyService {
   /** Check membership with the same constrained endpoint that supplies CEE's values. */
   async allowsDefault(field: CeeTemplateObject, iri: string, label: string): Promise<boolean> {
     const base = this.baseUrl();
-    if (!base) throw new Error('Terminology server is not configured.');
+    if (!base) throw new LocalizedError(message('terminology.notConfigured'));
     for (let page = 1; page <= 100; page++) {
       const response = await fetch(`${base}bioportal/integrated-search`, {
         method: 'POST',
@@ -75,13 +76,14 @@ export class TerminologyService {
           pageSize: 50,
         }),
       });
-      if (!response.ok) throw new Error(`Could not check the default term (${response.status}).`);
+      if (!response.ok)
+        throw new LocalizedError(message('terminology.checkFailed', { status: String(response.status) }));
       const result = (await response.json()) as { collection?: Array<{ '@id': string }> };
-      if (!Array.isArray(result.collection)) throw new Error('The terminology server returned no result collection.');
+      if (!Array.isArray(result.collection)) throw new LocalizedError(message('terminology.noResultCollection'));
       if (result.collection.some((term) => term['@id'] === iri)) return true;
       if (result.collection.length < 50) return false;
     }
-    throw new Error('The term could not be verified in the returned results.');
+    throw new LocalizedError(message('terminology.unverified'));
   }
 
   /**
@@ -97,7 +99,7 @@ export class TerminologyService {
   async search(query: string, scope: SearchScope, sources: string[] = []): Promise<TerminologyHit[]> {
     if (this.searchUrl === null) {
       this.reportUnconfigured();
-      throw new Error('Controlled-term search is not configured.');
+      throw new LocalizedError(message('terminology.searchNotConfigured'));
     }
 
     const url = new URL(this.searchUrl);
@@ -124,13 +126,15 @@ export class TerminologyService {
     const response = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
 
     if (!response.ok) {
-      throw new Error(`The terminology server answered ${response.status} ${response.statusText}.`);
+      throw new LocalizedError(
+        message('terminology.answered', { status: String(response.status), statusText: response.statusText }),
+      );
     }
 
     const body: unknown = await response.json();
     const collection = (body as { collection?: unknown })?.collection;
     if (!Array.isArray(collection)) {
-      throw new Error('The terminology server returned no results collection.');
+      throw new LocalizedError(message('terminology.noResultsCollection'));
     }
     return collection.map((item: Record<string, unknown>) => toHit(item));
   }

@@ -2,6 +2,7 @@ import { PALETTE_FIELD_TYPES } from '../../../core/models/types';
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { TemplateService } from '../../../core/services/template.service';
 import { UserPreferences } from '../../../core/models/types';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
@@ -9,7 +10,7 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
 @Component({
   selector: 'app-preferences-modal',
   standalone: true,
-  imports: [FormsModule, IconComponent],
+  imports: [FormsModule, IconComponent, TranslatePipe],
   templateUrl: './preferences.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./preferences.component.scss'],

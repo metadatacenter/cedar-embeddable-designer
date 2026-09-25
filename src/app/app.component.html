@@ -13,8 +13,8 @@
           (click)="showFieldsOverview.set(!showFieldsOverview())"
           [attr.aria-expanded]="showFieldsOverview()"
           aria-controls="ced-overview"
-          [attr.aria-label]="showFieldsOverview() ? 'Close Overview' : 'Open Overview'"
-          [title]="showFieldsOverview() ? 'Close Overview' : 'Open Overview'"
+          [attr.aria-label]="(showFieldsOverview() ? 'app.overview.close' : 'app.overview.open') | translate"
+          [title]="(showFieldsOverview() ? 'app.overview.close' : 'app.overview.open') | translate"
         >
           <app-icon key="panelLeft" size="default" />
         </button>
@@ -65,9 +65,9 @@
           <button
             (click)="showProfileMenu.set(!showProfileMenu())"
             class="px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100/80 rounded flex items-center gap-1 transition-colors"
-            title="The field types and controls this profile offers"
+            [title]="'app.profile.menuTitle' | translate"
           >
-            <span>{{ activeProfileLabel() }}</span>
+            <span>{{ activeProfileLabel() | translate }}</span>
             <app-icon key="chevronDown" size="small" className="text-gray-500"></app-icon>
           </button>
 
@@ -86,8 +86,8 @@
                     }
                   </span>
                   <span class="min-w-0">
-                    <span class="block text-xs font-medium text-gray-700">{{ profile.label }}</span>
-                    <span class="block text-xs text-gray-500">{{ profile.summary }}</span>
+                    <span class="block text-xs font-medium text-gray-700">{{ profile.label | translate }}</span>
+                    <span class="block text-xs text-gray-500">{{ profile.summary | translate }}</span>
                   </span>
                 </button>
               }
@@ -96,7 +96,7 @@
                 (click)="service.showPreferencesModal.set(true); showProfileMenu.set(false)"
                 class="w-full px-3.5 py-2 text-left text-xs font-medium text-gray-700 hover:bg-gray-100"
               >
-                <span class="pl-5">Customize…</span>
+                <span class="pl-5">{{ 'app.profile.customize' | translate }}</span>
               </button>
             </div>
           }
@@ -109,7 +109,7 @@
           <button
             (click)="service.showUserMenu.set(!service.showUserMenu())"
             class="user-menu-trigger"
-            title="User Menu"
+            [title]="'app.userMenu.title' | translate"
           >
             <div class="user-menu-avatar">
               <app-icon key="user" size="small"></app-icon>
@@ -124,14 +124,14 @@
                 class="user-menu-item"
               >
                 <app-icon key="settings" size="small"></app-icon>
-                <span class="font-medium">Preferences</span>
+                <span class="font-medium">{{ 'app.userMenu.preferences' | translate }}</span>
               </button>
               <button
                 (click)="service.showPresetDefinitionsModal.set(true); service.showUserMenu.set(false)"
                 class="user-menu-item"
               >
                 <app-icon key="library" size="small"></app-icon>
-                <span class="font-medium">Define Presets</span>
+                <span class="font-medium">{{ 'app.userMenu.definePresets' | translate }}</span>
               </button>
             </div>
           }
@@ -142,8 +142,8 @@
           (click)="service.showPreview.set(!service.showPreview())"
           [attr.aria-expanded]="service.showPreview()"
           aria-controls="ced-preview"
-          [attr.aria-label]="service.showPreview() ? 'Close Preview' : 'Open Preview'"
-          [title]="service.showPreview() ? 'Close CEE preview' : 'Open CEE preview'"
+          [attr.aria-label]="(service.showPreview() ? 'app.preview.close' : 'app.preview.open') | translate"
+          [title]="(service.showPreview() ? 'app.preview.closeTitle' : 'app.preview.openTitle') | translate"
         >
           <app-icon key="panelRight" size="default" />
         </button>
@@ -174,14 +174,14 @@
               class="overview-panel__resize"
               role="separator"
               tabindex="0"
-              aria-label="Resize Overview"
+              [attr.aria-label]="'app.overview.resize' | translate"
               aria-orientation="vertical"
               aria-controls="ced-overview"
               [attr.aria-valuemin]="overviewMinWidth"
               [attr.aria-valuemax]="overviewMaxWidth()"
               [attr.aria-valuenow]="overviewWidth()"
-              [attr.aria-valuetext]="overviewWidth() + ' pixels'"
-              title="Drag to resize Overview. Arrow keys resize; Home and End set limits. Double-click to reset."
+              [attr.aria-valuetext]="'app.overview.widthValue' | translate: { width: overviewWidth() }"
+              [title]="'app.overview.resizeHint' | translate"
               (pointerdown)="startOverviewResize($event)"
               (pointermove)="resizeOverview($event)"
               (pointerup)="endOverviewResize()"
@@ -194,22 +194,24 @@
               <div class="overview-panel__header">
                 <div class="overview-panel__header-left">
                   <app-icon key="list" size="small" className="text-gray-600"></app-icon>
-                  <h3 class="overview-panel__title">Overview ({{ service.session.document().children.length }})</h3>
+                  <h3 class="overview-panel__title">
+                    {{ 'app.overview.heading' | translate: { count: service.session.document().children.length } }}
+                  </h3>
                 </div>
                 @if (service.hasElements()) {
                   <div class="overview-panel__actions">
                     <button
                       type="button"
-                      title="Expand all elements"
-                      aria-label="Expand all elements"
+                      [title]="'app.overview.expandAll' | translate"
+                      [attr.aria-label]="'app.overview.expandAll' | translate"
                       (click)="service.expandAllElements()"
                     >
                       <app-icon key="expand-all" size="small" />
                     </button>
                     <button
                       type="button"
-                      title="Collapse all elements"
-                      aria-label="Collapse all elements"
+                      [title]="'app.overview.collapseAll' | translate"
+                      [attr.aria-label]="'app.overview.collapseAll' | translate"
                       (click)="service.collapseAllElements()"
                     >
                       <app-icon key="collapse-all" size="small" />
@@ -218,8 +220,8 @@
                 }
                 <button
                   class="overview-panel__close"
-                  aria-label="Close Overview"
-                  title="Close Overview"
+                  [attr.aria-label]="'app.overview.close' | translate"
+                  [title]="'app.overview.close' | translate"
                   (click)="showFieldsOverview.set(false)"
                 >
                   <span class="text-xs"><app-icon key="close" size="small" /></span>

@@ -1,23 +1,25 @@
 <section class="library-page">
   <header>
-    <h1>Field library</h1>
-    <button type="button" (click)="service.showFieldDesigner.set(false)">Back to Template Builder</button>
+    <h1>{{ 'fieldDesigner.title' | translate }}</h1>
+    <button type="button" (click)="service.showFieldDesigner.set(false)">{{ 'fieldDesigner.back' | translate }}</button>
   </header>
   <p class="hint">
-    Reusable field specifications saved in this browser, including template display and occurrence settings.
+    {{ 'fieldDesigner.hint' | translate }}
   </p>
   @if (service.fieldLibrary.error(); as storageError) {
-    <p role="alert" class="ced-field-error">{{ storageError }}</p>
+    <p role="alert" class="ced-field-error">{{ storageError | translate }}</p>
   }
   @if (error) {
     <p role="alert" class="ced-field-error">{{ error }}</p>
   }
   <details class="library-create">
-    <summary>Create library</summary>
+    <summary>{{ 'fieldDesigner.createLibrary' | translate }}</summary>
     <div class="row">
-      <label>Library name<input spellcheck="false" [(ngModel)]="libraryName" /></label>
-      <label>Description<input spellcheck="false" [(ngModel)]="libraryDescription" /></label>
-      <button type="button" (click)="createLibrary()">Create library</button>
+      <label>{{ 'fieldDesigner.libraryName' | translate }}<input spellcheck="false" [(ngModel)]="libraryName" /></label>
+      <label
+        >{{ 'fieldDesigner.description' | translate }}<input spellcheck="false" [(ngModel)]="libraryDescription"
+      /></label>
+      <button type="button" (click)="createLibrary()">{{ 'fieldDesigner.createLibrary' | translate }}</button>
     </div>
   </details>
   @if (draft(); as field) {
@@ -25,20 +27,21 @@
       <app-field-specification-editor [field]="field" (fieldChange)="edited = $event"></app-field-specification-editor>
       <div class="row">
         <label
-          >Library<select [(ngModel)]="selectedLibraryId">
-            <option [ngValue]="0">Choose a library</option>
+          >{{ 'fieldDesigner.library' | translate
+          }}<select [(ngModel)]="selectedLibraryId">
+            <option [ngValue]="0">{{ 'fieldDesigner.chooseLibrary' | translate }}</option>
             @for (library of service.libraries(); track library.id) {
               <option [ngValue]="library.id">{{ library.name }}</option>
             }
           </select></label
         >
-        <button type="button" (click)="saveField()">Save field</button
-        ><button type="button" (click)="cancel()">Cancel</button>
+        <button type="button" (click)="saveField()">{{ 'fieldDesigner.saveField' | translate }}</button
+        ><button type="button" (click)="cancel()">{{ 'common.cancel' | translate }}</button>
       </div>
     </div>
   } @else {
     <div class="row">
-      <button type="button" (click)="createField()">Create field</button>
+      <button type="button" (click)="createField()">{{ 'fieldDesigner.createField' | translate }}</button>
     </div>
   }
   @for (library of service.libraries(); track library.id) {
@@ -47,11 +50,11 @@
     <table>
       <thead>
         <tr>
-          <th>Field</th>
-          <th>Type</th>
-          <th>Version</th>
-          <th>Status</th>
-          <th>Actions</th>
+          <th>{{ 'fieldDesigner.columns.field' | translate }}</th>
+          <th>{{ 'childPicker.columns.type' | translate }}</th>
+          <th>{{ 'childPicker.columns.version' | translate }}</th>
+          <th>{{ 'childPicker.columns.status' | translate }}</th>
+          <th>{{ 'fieldDesigner.columns.actions' | translate }}</th>
         </tr>
       </thead>
       <tbody>
@@ -64,18 +67,14 @@
               <td>{{ field.definition.type }}</td>
               <td>{{ metadata(field.definition).version ?? '—' }}</td>
               <td>
-                {{
-                  metadata(field.definition).publicationStatus === 'bibo:published'
-                    ? 'Published'
-                    : metadata(field.definition).publicationStatus === 'bibo:draft'
-                      ? 'Draft'
-                      : '—'
-                }}
+                {{ (publicationStatusLabel(metadata(field.definition).publicationStatus) | translate) || '—' }}
               </td>
               <td class="actions">
-                <button (click)="editField(field)">{{ field.definition.publishedDefinition ? 'View' : 'Edit' }}</button>
-                <button (click)="addToTemplate(field)">Add to template</button>
-                <button (click)="service.deleteCustomField(field.id)">Remove</button>
+                <button (click)="editField(field)">
+                  {{ (field.definition.publishedDefinition ? 'fieldDesigner.view' : 'fieldDesigner.edit') | translate }}
+                </button>
+                <button (click)="addToTemplate(field)">{{ 'fieldDesigner.addToTemplate' | translate }}</button>
+                <button (click)="service.deleteCustomField(field.id)">{{ 'fieldDesigner.remove' | translate }}</button>
               </td>
             </tr>
           }

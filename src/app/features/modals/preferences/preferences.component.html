@@ -17,9 +17,13 @@
         >
           <app-icon key="settings" [style.color]="'var(--cedar-color-primary)'" size="default"></app-icon>
         </div>
-        <h2 class="preferences-title">User Preferences</h2>
+        <h2 class="preferences-title">{{ 'preferences.title' | translate }}</h2>
       </div>
-      <button aria-label="Close" (click)="close()" class="preferences-muted transition-colors p-1">
+      <button
+        [attr.aria-label]="'preferences.close' | translate"
+        (click)="close()"
+        class="preferences-muted transition-colors p-1"
+      >
         <app-icon key="close" size="default"></app-icon>
       </button>
     </div>
@@ -28,7 +32,7 @@
       <div class="p-6 space-y-6">
         <!-- Preset configurations -->
         <div>
-          <h3 class="preferences-label mb-3">Preset configurations</h3>
+          <h3 class="preferences-label mb-3">{{ 'preferences.presets.heading' | translate }}</h3>
           <div class="flex gap-2">
             @for (preset of presets; track preset) {
               <button
@@ -43,14 +47,14 @@
                     : 'var(--cedar-text-primary)'
                 "
               >
-                {{ preset }}
+                {{ 'preferences.presets.' + preset | translate }}
               </button>
             }
           </div>
         </div>
         <!-- Field configuration options -->
         <div>
-          <h3 class="preferences-label mb-3">Field configuration options</h3>
+          <h3 class="preferences-label mb-3">{{ 'preferences.fieldOptions.heading' | translate }}</h3>
           <div class="space-y-3 preferences-group rounded-lg p-4">
             <label class="flex items-center gap-3 cursor-pointer group">
               <input
@@ -61,8 +65,8 @@
                 class="w-4 h-4 checkbox-white"
               />
               <div class="flex-1">
-                <span class="preferences-label">Show "Required" checkbox</span>
-                <p class="preferences-help">Display required/optional toggle for fields</p>
+                <span class="preferences-label">{{ 'preferences.fieldOptions.required.label' | translate }}</span>
+                <p class="preferences-help">{{ 'preferences.fieldOptions.required.help' | translate }}</p>
               </div>
             </label>
             <label class="flex items-center gap-3 cursor-pointer group">
@@ -74,8 +78,8 @@
                 class="w-4 h-4 checkbox-white"
               />
               <div class="flex-1">
-                <span class="preferences-label">Show "Allow multiple" checkbox</span>
-                <p class="preferences-help">Display multiple values toggle for fields</p>
+                <span class="preferences-label">{{ 'preferences.fieldOptions.allowMultiple.label' | translate }}</span>
+                <p class="preferences-help">{{ 'preferences.fieldOptions.allowMultiple.help' | translate }}</p>
               </div>
             </label>
             <label class="flex items-center gap-3 cursor-pointer group">
@@ -87,8 +91,8 @@
                 class="w-4 h-4 checkbox-white"
               />
               <div class="flex-1">
-                <span class="preferences-label">Show "Help text" field</span>
-                <p class="preferences-help">Display help text input for fields</p>
+                <span class="preferences-label">{{ 'preferences.fieldOptions.helpText.label' | translate }}</span>
+                <p class="preferences-help">{{ 'preferences.fieldOptions.helpText.help' | translate }}</p>
               </div>
             </label>
             <label class="flex items-center gap-3 cursor-pointer group">
@@ -100,15 +104,15 @@
                 class="w-4 h-4 checkbox-white"
               />
               <div class="flex-1">
-                <span class="preferences-label">Show "Default Value" field</span>
-                <p class="preferences-help">Display default value input for fields</p>
+                <span class="preferences-label">{{ 'preferences.fieldOptions.defaultValue.label' | translate }}</span>
+                <p class="preferences-help">{{ 'preferences.fieldOptions.defaultValue.help' | translate }}</p>
               </div>
             </label>
           </div>
         </div>
         <!-- Feature visibility -->
         <div>
-          <h3 class="preferences-label mb-3">Feature visibility</h3>
+          <h3 class="preferences-label mb-3">{{ 'preferences.features.heading' | translate }}</h3>
           <div class="preferences-group rounded-lg p-4 space-y-3">
             <label class="flex items-center gap-3 cursor-pointer group">
               <input
@@ -119,17 +123,17 @@
                 class="w-4 h-4 checkbox-white"
               />
               <div class="flex-1">
-                <span class="preferences-label">Enable Elements</span>
-                <p class="preferences-help">Enable elements functionality in the template builder</p>
+                <span class="preferences-label">{{ 'preferences.features.elements.label' | translate }}</span>
+                <p class="preferences-help">{{ 'preferences.features.elements.help' | translate }}</p>
               </div>
             </label>
           </div>
         </div>
         <!-- Field selection style -->
         <div>
-          <h3 class="preferences-label mb-3">Field selection style</h3>
+          <h3 class="preferences-label mb-3">{{ 'preferences.selection.heading' | translate }}</h3>
           <div class="preferences-group rounded-lg p-4">
-            <p class="preferences-help mb-3">Choose how you want to add fields to your template</p>
+            <p class="preferences-help mb-3">{{ 'preferences.selection.help' | translate }}</p>
             <div class="space-y-2">
               <label
                 class="flex items-center gap-3 cursor-pointer group p-2 rounded preferences-surface preferences-choice transition-colors"
@@ -143,8 +147,8 @@
                   class="w-4 h-4 radio-white text-emerald-700"
                 />
                 <div class="flex-1">
-                  <span class="preferences-label">Inline field picker</span>
-                  <p class="preferences-help">Show field types where you are adding a field (default)</p>
+                  <span class="preferences-label">{{ 'preferences.selection.inline.label' | translate }}</span>
+                  <p class="preferences-help">{{ 'preferences.selection.inline.help' | translate }}</p>
                 </div>
               </label>
               <label
@@ -159,8 +163,8 @@
                   class="w-4 h-4 radio-white text-emerald-700"
                 />
                 <div class="flex-1">
-                  <span class="preferences-label">Library Sidebar</span>
-                  <p class="preferences-help">Show expandable library list on the left side of the page</p>
+                  <span class="preferences-label">{{ 'preferences.selection.sidebar.label' | translate }}</span>
+                  <p class="preferences-help">{{ 'preferences.selection.sidebar.help' | translate }}</p>
                 </div>
               </label>
             </div>
@@ -169,7 +173,7 @@
         <!-- Visible field types -->
         <div>
           <div class="flex items-center justify-between mb-3">
-            <h3 class="preferences-label">Visible field types</h3>
+            <h3 class="preferences-label">{{ 'preferences.fieldTypes.heading' | translate }}</h3>
             <div class="flex gap-2">
               <button
                 (click)="service.toggleAllFieldTypes(true)"
@@ -177,19 +181,19 @@
                 [style.color]="'var(--cedar-color-primary)'"
                 [style.backgroundColor]="'var(--cedar-primary-50)'"
               >
-                Select All
+                {{ 'preferences.fieldTypes.selectAll' | translate }}
               </button>
               <button
                 (click)="service.toggleAllFieldTypes(false)"
                 class="text-xs px-2 py-1 rounded preferences-secondary transition-colors"
               >
-                Deselect All
+                {{ 'preferences.fieldTypes.deselectAll' | translate }}
               </button>
             </div>
           </div>
           <div class="preferences-group rounded-lg p-4">
             <p class="preferences-help mb-3">
-              Control which field types appear in the "Add Field" section and dropdown menus
+              {{ 'preferences.fieldTypes.help' | translate }}
             </p>
             <div class="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto custom-scrollbar pr-2 pb-2">
               @for (item of fieldTypesList; track item) {
@@ -203,7 +207,7 @@
                   />
                   <div class="flex items-center gap-2 preferences-muted">
                     <app-icon [key]="item.key" size="default"></app-icon>
-                    <span class="preferences-field-type">{{ item.value.label }}</span>
+                    <span class="preferences-field-type">{{ item.value.labelKey | translate }}</span>
                   </div>
                 </label>
               }
@@ -219,7 +223,7 @@
         class="px-4 py-2 text-sm font-medium text-white rounded-lg transition-all shadow hover:shadow-md cursor-pointer"
         [style.backgroundColor]="'var(--cedar-color-primary)'"
       >
-        Done
+        {{ 'common.done' | translate }}
       </button>
     </div>
   </div>

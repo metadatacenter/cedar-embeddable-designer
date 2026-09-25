@@ -5,6 +5,8 @@ import { AnnotationsEditorComponent } from '../annotations-editor/annotations-ed
 import { ChangeDetectorRef } from '@angular/core';
 import { Component, computed, inject, input, effect } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
+import { SETTINGS_TABS, settingsTabKey } from '../../shared/settings-tabs';
 import { ContainerDraft } from '../../core/model/container-draft';
 import { containerArtifactMetadata } from '../../core/model/cedar-template';
 import { TemplateService } from '../../core/services/template.service';
@@ -20,6 +22,7 @@ import { TypesPickerComponent } from '../types-picker/types-picker.component';
     AnnotationsEditorComponent,
     FormsModule,
     TypesPickerComponent,
+    TranslatePipe,
   ],
   templateUrl: './container-settings.component.html',
   styleUrls: ['../field-settings/field-settings.component.scss', '../element-card/element-card.component.scss'],
@@ -46,6 +49,7 @@ export class ContainerSettingsComponent {
 
   readonly container = input.required<ContainerDraft>();
   readonly service = inject(TemplateService);
+  readonly tabKey = settingsTabKey;
   readonly artifact = computed(() => containerArtifactMetadata(this.container()));
   readonly status = computed(() => publicationStatusLabel(this.artifact().publicationStatus));
   constructor() {
@@ -60,8 +64,8 @@ export class ContainerSettingsComponent {
   }
   expanded = false;
   activeTab = 'Display';
-  readonly metadataTab = computed(() =>
-    this.container().kind === 'template' ? 'Template Metadata' : 'Element metadata',
+  readonly metadataTab = computed<string>(() =>
+    this.container().kind === 'template' ? SETTINGS_TABS.templateMetadata : SETTINGS_TABS.elementMetadata,
   );
   readonly tabs = computed(() => ['Display', 'Annotations', this.metadataTab()]);
   tabId(tab: string): string {
