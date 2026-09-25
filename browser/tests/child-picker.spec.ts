@@ -138,39 +138,47 @@ test('bottom insertion actions reveal on hover and keyboard focus without shifti
   await expect(designer.getByRole('heading', { name: 'Choose field' })).toBeVisible();
 });
 
-test('new empty templates reveal insertion actions until the first hover exit', async ({ page }) => {
-  const designer = await openDesigner(page);
-  await page.mouse.move(0, 0);
-  const start = () =>
-    page.evaluate(() =>
-      (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).newArtifact('template'),
-    );
-  await start();
-  const zone = designer.locator('.bottom-insert-zone');
-  const actions = zone.locator('app-insertion-actions');
-  await expect(actions).toHaveCSS('opacity', '1');
-  await designer.getByRole('textbox', { name: 'Template name', exact: true }).fill('Study');
-  await expect(actions).toHaveCSS('opacity', '1');
-  const before = await zone.boundingBox();
-  await zone.hover();
-  await page.mouse.move(0, 0);
-  await expect(actions).toHaveCSS('opacity', '0');
-  expect(await zone.boundingBox()).toEqual(before);
-  await zone.hover();
-  await expect(actions).toHaveCSS('opacity', '1');
-  await page.mouse.move(0, 0);
-  await actions.getByRole('button', { name: 'Add field', exact: true }).focus();
-  await expect(actions).toHaveCSS('opacity', '1');
-  // A subsequent new document gets its own initial hint; opening a saved one does not.
-  await start();
-  await expect(actions).toHaveCSS('opacity', '1');
-  await designer.getByRole('textbox', { name: 'Template name', exact: true }).fill('Another study');
-  await page.evaluate(() => {
-    const element = document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement;
-    element.loadArtifact(element.currentArtifact);
+for (const kind of ['template', 'element'] as const) {
+  test(`new empty ${kind}s reveal insertion actions until the first hover exit`, async ({ page }) => {
+    const designer = await openDesigner(page);
+    await page.mouse.move(0, 0);
+    const start = () =>
+      page.evaluate(
+        (kind) =>
+          (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).newArtifact(kind),
+        kind,
+      );
+    await start();
+    const zone = designer.locator('.bottom-insert-zone');
+    const actions = zone.locator('app-insertion-actions');
+    await expect(actions).toHaveCSS('opacity', '1');
+    await designer
+      .getByRole('textbox', { name: kind === 'template' ? 'Template name' : 'Element name', exact: true })
+      .fill('Study');
+    await expect(actions).toHaveCSS('opacity', '1');
+    const before = await zone.boundingBox();
+    await zone.hover();
+    await page.mouse.move(0, 0);
+    await expect(actions).toHaveCSS('opacity', '0');
+    expect(await zone.boundingBox()).toEqual(before);
+    await zone.hover();
+    await expect(actions).toHaveCSS('opacity', '1');
+    await page.mouse.move(0, 0);
+    await actions.getByRole('button', { name: 'Add field', exact: true }).focus();
+    await expect(actions).toHaveCSS('opacity', '1');
+    // A subsequent new document gets its own initial hint; opening a saved one does not.
+    await start();
+    await expect(actions).toHaveCSS('opacity', '1');
+    await designer
+      .getByRole('textbox', { name: kind === 'template' ? 'Template name' : 'Element name', exact: true })
+      .fill('Another study');
+    await page.evaluate(() => {
+      const element = document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement;
+      element.loadArtifact(element.currentArtifact);
+    });
+    await expect(actions).toHaveCSS('opacity', '0');
   });
-  await expect(actions).toHaveCSS('opacity', '0');
-});
+}
 
 test('bottom insertion actions remain visible on touch devices', async ({ browser, baseURL }) => {
   const context = await browser.newContext({

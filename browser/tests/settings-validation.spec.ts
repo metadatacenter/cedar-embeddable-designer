@@ -382,3 +382,21 @@ test('summary counts only revealed name errors, while validation includes untouc
   expect((await report(page)).issues.filter((issue) => issue.setting === 'name')).toHaveLength(2);
   await expect.poll(async () => (await report(page)).canSave).toBe(false);
 });
+
+test('adding the first field reveals a missing element name even when it was never focused', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await page.evaluate(() =>
+    (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).newArtifact('element'),
+  );
+  const elementName = designer.getByRole('textbox', { name: 'Element name', exact: true });
+  await expect(designer.locator('.validation-summary')).toHaveCount(0);
+  await designer.getByRole('button', { name: 'Add field', exact: true }).click();
+  await designer.getByRole('button', { name: 'Text', exact: true }).click();
+  await expect(elementName).toHaveAttribute('aria-invalid', 'true');
+  await designer.getByRole('textbox', { name: 'Field name', exact: true }).fill('Study title');
+  await expect(designer.locator('.validation-summary')).toContainText('1 error — fix before saving');
+  await expect.poll(async () => (await report(page)).canSave).toBe(false);
+  await elementName.fill('Study');
+  await expect(designer.locator('.validation-summary')).toHaveCount(0);
+  await expect.poll(async () => (await report(page)).canSave).toBe(true);
+});

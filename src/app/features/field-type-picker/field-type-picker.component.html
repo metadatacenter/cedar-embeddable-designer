@@ -4,7 +4,7 @@
       <h3 class="picker-title">Choose field</h3>
 
       <!-- Library Dropdown with Autocomplete -->
-      @if (service.libraries().length > 0) {
+      @if (!standalone() && service.libraries().length > 0) {
         <div class="library-dropdown-container">
           <button (click)="showDropdown.set(!showDropdown())" class="btn-library-dropdown">
             <span class="dropdown-text">{{ selectedLibraryName }}</span>
@@ -54,13 +54,13 @@
       }
     </div>
 
-    <button (click)="close()" class="btn-close">
+    <button (click)="close()" class="btn-close" aria-label="Close field picker">
       <app-icon key="close" size="default"></app-icon>
     </button>
   </div>
 
   <div class="fields-grid">
-    @if (service.fieldTypeDropdownLibrary() === null) {
+    @if (standalone() || service.fieldTypeDropdownLibrary() === null) {
       @for (item of visibleFieldTypesList(); track item) {
         <button (click)="onFieldClick(item.key)" class="btn-field-item">
           <div class="field-item-icon">
@@ -85,7 +85,7 @@
     }
   </div>
 
-  @if (service.fieldTypeDropdownLibrary() !== null && libraryCustomFields.length === 0) {
+  @if (!standalone() && service.fieldTypeDropdownLibrary() !== null && libraryCustomFields.length === 0) {
     <div class="custom-fields-empty-msg">
       <p class="custom-fields-empty-text">No custom fields in this library yet.</p>
     </div>

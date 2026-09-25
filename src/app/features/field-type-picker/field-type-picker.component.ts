@@ -5,6 +5,7 @@ import {
   afterNextRender,
   Input,
   input,
+  output,
   inject,
   signal,
   HostListener,
@@ -15,6 +16,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { TemplateService } from '../../core/services/template.service';
 import { CustomField } from '../../core/models/types';
+import { CedFieldType } from '../../ced-public-api';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 
 @Component({
@@ -50,6 +52,9 @@ export class FieldTypePickerComponent {
 
   @Input() insertPosition = 0;
   readonly containerId = input<number>();
+  readonly standalone = input(false);
+  readonly fieldSelected = output<CedFieldType>();
+  readonly dismissed = output<void>();
 
   searchText = '';
   readonly showDropdown = signal(false);
@@ -73,7 +78,9 @@ export class FieldTypePickerComponent {
   readonly visibleFieldTypesList = computed(() => {
     const visible = this.service.preferences().visibleFieldTypes;
     return Object.entries(PALETTE_FIELD_TYPES)
-      .filter(([key]) => visible[key] !== false && this.service.canAddField(key, this.containerId()))
+      .filter(
+        ([key]) => this.standalone() || (visible[key] !== false && this.service.canAddField(key, this.containerId())),
+      )
       .map(([key, value]) => ({ key, value }));
   });
 
@@ -84,7 +91,8 @@ export class FieldTypePickerComponent {
   }
 
   onFieldClick(key: string) {
-    this.service.addField(key, this.insertPosition, this.containerId());
+    if (this.standalone()) this.fieldSelected.emit(key as CedFieldType);
+    else this.service.addField(key, this.insertPosition, this.containerId());
   }
 
   onCustomFieldClick(field: CustomField) {
@@ -93,6 +101,7 @@ export class FieldTypePickerComponent {
 
   close() {
     this.service.showPicker.set(null);
+    this.dismissed.emit();
   }
 
   @HostListener('document:mousedown', ['$event'])

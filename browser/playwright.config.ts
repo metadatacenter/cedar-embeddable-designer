@@ -45,7 +45,7 @@ export default defineConfig({
           {
             name: 'webkit',
             use: { ...devices['Desktop Safari'] },
-            testMatch: /(?:header-toggle|overview-resize|card-navigation|text-default)\.spec\.ts/,
+            testMatch: /(?:header-toggle|overview-resize|card-navigation|text-default|field-designer)\.spec\.ts/,
           },
         ]
       : []),

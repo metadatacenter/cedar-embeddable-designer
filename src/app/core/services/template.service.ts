@@ -626,7 +626,7 @@ export class TemplateService {
     this.loadError.set(null);
     this.mintedIdentifier.set(newTemplateIdentifier());
     const document = newContainer(kind);
-    this.initialInsertionId.set(kind === 'template' && !withStarterFields ? document.id : null);
+    this.initialInsertionId.set(!withStarterFields ? document.id : null);
     if (kind === 'template') {
       document.identifier = '';
       document.children = withStarterFields ? containerFromFlat({ ...document, fields: starterFields() }).children : [];
@@ -719,6 +719,9 @@ export class TemplateService {
   ): void {
     const target = findContainer(this.session.document(), targetId);
     if (!target) throw new Error('The import destination no longer exists.');
+    if (target.kind === 'element' && node.kind === 'field' && !target.children.length && !target.name.trim()) {
+      this.touchName(target.id);
+    }
     this.loadError.set(null);
     if (namePlacement) {
       const used = new Set(target.children.map((child) => this.childKey(child.id)));

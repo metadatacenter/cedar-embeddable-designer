@@ -14,6 +14,26 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
+test('opens the shared field picker in a dialog, supports cancel and keeps invalid saves blocked', async ({ page }) => {
+  const picker = page.getByRole('dialog', { name: 'Choose field type', exact: true });
+  await expect(picker.locator('app-field-type-picker')).toBeVisible();
+  await expect(picker.getByRole('button', { name: 'Text', exact: true }).locator('app-icon')).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Field name', exact: true })).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(picker).toHaveCount(0);
+  await page.getByRole('button', { name: 'Choose field type', exact: true }).click();
+  await picker.getByRole('button', { name: 'Number', exact: true }).click();
+  await expect(picker).toHaveCount(0);
+  const name = page.getByRole('textbox', { name: 'Field name', exact: true });
+  await expect(name).toBeFocused();
+  await expect(name).toHaveAttribute('aria-invalid', 'false');
+  await expect
+    .poll(() => page.evaluate(() => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).canSave))
+    .toBe(false);
+  await name.press('Tab');
+  await expect(name).toHaveAttribute('aria-invalid', 'true');
+});
+
 for (const [label, type] of [
   ['Text', 'textfield'],
   ['Paragraph', 'textarea'],
