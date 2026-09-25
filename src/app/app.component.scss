@@ -1,4 +1,3 @@
-@use '@org.metadatacenter/cedar-design-tokens/patterns';
 @reference "tailwindcss";
 
 /* ─── App Shell ───────────────────────────────────────────────────────────── */
@@ -389,10 +388,6 @@
 
 .add-field-section__picker {
   @apply w-full mt-4;
-}
-
-.validation-summary {
-  @include patterns.validation-summary;
 }
 
 .designer-identity {

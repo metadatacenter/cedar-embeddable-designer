@@ -27,11 +27,20 @@ test('opens the shared field picker in a dialog, supports cancel and keeps inval
   const name = page.getByRole('textbox', { name: 'Field name', exact: true });
   await expect(name).toBeFocused();
   await expect(name).toHaveAttribute('aria-invalid', 'false');
+  await expect(page.locator('.validation-summary')).toHaveCount(0);
   await expect
     .poll(() => page.evaluate(() => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).canSave))
     .toBe(false);
   await name.press('Tab');
   await expect(name).toHaveAttribute('aria-invalid', 'true');
+  const summary = page.locator('.validation-summary');
+  await expect(summary.locator('summary')).toHaveText('1 error — fix before saving');
+  expect((await summary.boundingBox())!.y).toBeLessThan((await name.boundingBox())!.y);
+  await summary.locator('summary').click();
+  await summary.getByRole('button', { name: /Field name is required/ }).click();
+  await expect(name).toBeFocused();
+  await name.fill('Named number');
+  await expect(summary).toHaveCount(0);
 });
 
 for (const [label, type] of [
@@ -152,6 +161,12 @@ test('keeps invalid numeric settings dirty and unsaveable until corrected', asyn
   await page.evaluate(() => document.body.style.setProperty('--cedar-control-error', '#993311'));
   await page.getByLabel('Maximum value', { exact: true }).fill('5');
   await expect(page.getByRole('alert').first()).toHaveCSS('color', 'rgb(153, 51, 17)');
+  const summary = page.locator('.validation-summary');
+  await expect(summary).toBeVisible();
+  await page.getByRole('tab', { name: 'Display', exact: true }).click();
+  await summary.locator('summary').click();
+  await summary.getByRole('button').first().click();
+  await expect(page.getByRole('tab', { name: 'Constraints', exact: true })).toHaveAttribute('aria-selected', 'true');
   await expect
     .poll(() => page.evaluate(() => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).canSave))
     .toBe(false);
@@ -160,6 +175,7 @@ test('keeps invalid numeric settings dirty and unsaveable until corrected', asyn
     .toBe(true);
   await expect(page.getByLabel('Maximum value', { exact: true })).toHaveValue('5');
   await page.getByLabel('Maximum value', { exact: true }).fill('15');
+  await expect(summary).toHaveCount(0);
   await expect
     .poll(() => page.evaluate(() => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).canSave))
     .toBe(true);

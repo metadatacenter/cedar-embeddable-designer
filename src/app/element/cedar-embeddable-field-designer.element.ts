@@ -1,3 +1,4 @@
+import { ValidationSummaryComponent } from '../shared/validation-summary.component';
 import { DesignerConfigService } from '../core/services/designer-config.service';
 import {
   Component,
@@ -28,7 +29,7 @@ import { FontRegistrar } from '../shared/font-registrar/font-registrar';
 /** The same field controls CED uses, with one field document and no repository policy. */
 @Component({
   selector: 'app-cedar-embeddable-field-designer-element',
-  imports: [FieldCardComponent, FieldTypePickerComponent, FontRegistrar],
+  imports: [FieldCardComponent, FieldTypePickerComponent, FontRegistrar, ValidationSummaryComponent],
   providers: [TemplateService, TerminologyService, PreferencesService, DesignerConfigService],
   encapsulation: ViewEncapsulation.ShadowDom,
   styleUrls: ['../../styles.css', './cedar-embeddable-field-designer.element.scss'],
@@ -51,6 +52,7 @@ import { FontRegistrar } from '../shared/font-registrar/font-registrar';
     `,
   ],
   template: `<ced-font-registrar />
+    <app-validation-summary />
     <section class="field-editor" aria-label="Field designer">
       @if (field(); as field) {
         @if (readOnly) {

@@ -1,3 +1,4 @@
+import { ValidationSummaryComponent } from './shared/validation-summary.component';
 import { ChildPickerComponent } from './features/child-picker/child-picker.component';
 import {
   Component,
@@ -30,6 +31,7 @@ import { ContainerOutlineComponent } from './features/container-outline/containe
   standalone: true,
   imports: [
     CommonModule,
+    ValidationSummaryComponent,
     ChildPickerComponent,
     IconComponent,
     FieldLibrarySidebarComponent,

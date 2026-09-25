@@ -2,22 +2,7 @@
   @if (service.loadError()) {
     <p class="ced-field-error" role="alert">{{ service.loadError() }}</p>
   }
-  @if (service.visibleIssues().length; as count) {
-    <details class="validation-summary">
-      <summary>
-        <app-icon key="chevron-down" size="small" class="validation-disclosure" />
-        <app-icon key="warning" size="small" />
-        <span>{{ count }} {{ count === 1 ? 'error' : 'errors' }} — fix before saving</span>
-      </summary>
-      <ul>
-        @for (issue of service.visibleIssues(); track $index) {
-          <li>
-            <button type="button" (click)="service.revealIssue(issue)">{{ issue.label }}: {{ issue.message }}</button>
-          </li>
-        }
-      </ul>
-    </details>
-  }
+  <app-validation-summary />
   <!-- Header -->
   <header class="app-header">
     <div class="app-header__inner">

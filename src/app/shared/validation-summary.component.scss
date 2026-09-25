@@ -1,0 +1,9 @@
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
+
+:host {
+  display: contents;
+}
+
+.validation-summary {
+  @include patterns.validation-summary;
+}
