@@ -223,6 +223,8 @@ export class FieldSettingsComponent implements OnChanges {
     const first = this.loadedFieldId !== this.field.id;
     if (first) {
       // A different field: the previous draft belonged to the previous card.
+      // A standalone field opens directly into its settings; later edits preserve the author's toggle.
+      this.expanded = this.service.fieldDocumentMode();
       this.loaded = {};
       this.keyDraftError = null;
       this.loadedFieldId = this.field.id;
