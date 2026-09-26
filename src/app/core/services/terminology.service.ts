@@ -3,6 +3,9 @@ import { CeeTemplateObject } from '../model/cee-preview';
 import { CedConfig } from '../../ced-public-api';
 import { LocalizedError, message } from '../../i18n/messages';
 
+/** How deep a default check reads before it gives up and reports the term as unverified. */
+const MEMBERSHIP_CHECK_DEPTH = 5_000;
+
 /**
  * The terminology server's search route, under whatever base a host names.
  *
@@ -62,26 +65,31 @@ export class TerminologyService {
     this.configured.set(this.searchUrl !== null);
   }
 
-  /** Check membership with the same constrained endpoint that supplies CEE's values. */
+  /**
+   * Check membership with the same constrained endpoint that supplies CEE's values, walking its pages
+   * by offset until the term turns up, a page comes back short, or the server's count is reached.
+   */
   async allowsDefault(field: CeeTemplateObject, iri: string, label: string): Promise<boolean> {
     const base = this.baseUrl();
     if (!base) throw new LocalizedError(message('terminology.notConfigured'));
-    for (let page = 1; page <= 100; page++) {
+    const limit = 50;
+    for (let offset = 0; offset < MEMBERSHIP_CHECK_DEPTH; offset += limit) {
       const response = await fetch(`${base}bioportal/integrated-search`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           parameterObject: { inputText: label, valueConstraints: field['_valueConstraints'] },
-          page,
-          pageSize: 50,
+          limit,
+          offset,
         }),
       });
       if (!response.ok)
         throw new LocalizedError(message('terminology.checkFailed', { status: String(response.status) }));
-      const result = (await response.json()) as { collection?: Array<{ '@id': string }> };
+      const result = (await response.json()) as { collection?: Array<{ '@id': string }>; totalCount?: number };
       if (!Array.isArray(result.collection)) throw new LocalizedError(message('terminology.noResultCollection'));
       if (result.collection.some((term) => term['@id'] === iri)) return true;
-      if (result.collection.length < 50) return false;
+      if (result.collection.length < limit) return false;
+      if (typeof result.totalCount === 'number' && offset + result.collection.length >= result.totalCount) return false;
     }
     throw new LocalizedError(message('terminology.unverified'));
   }

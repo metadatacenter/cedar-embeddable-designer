@@ -187,8 +187,33 @@ describe('TerminologyService', () => {
         return new Response(JSON.stringify({ collection }));
       }) as typeof fetch;
       await expect(service.allowsDefault(field, 'urn:chosen', 'cancer')).resolves.toBe(true);
-      expect(bodies.map((body) => body['page'])).toEqual([1, 2]);
+      expect(bodies.map((body) => body['offset'])).toEqual([0, 50]);
+      expect(bodies.every((body) => body['limit'] === 50 && !('page' in body) && !('pageSize' in body))).toBe(true);
       expect(bodies[1]['parameterObject']).toEqual({ inputText: 'cancer', valueConstraints: field._valueConstraints });
+    });
+
+    it('stops at the server count rather than asking past the end', async () => {
+      let calls = 0;
+      globalThis.fetch = (async () => {
+        calls++;
+        const collection = Array.from({ length: 50 }, (_, i) => ({ '@id': `urn:other:${calls}:${i}` }));
+        return new Response(JSON.stringify({ collection, totalCount: 100 }));
+      }) as typeof fetch;
+
+      await expect(service.allowsDefault(field, 'urn:chosen', 'cancer')).resolves.toBe(false);
+      expect(calls).toBe(2);
+    });
+
+    it('reports a term it could not reach as unverified rather than refused', async () => {
+      let calls = 0;
+      globalThis.fetch = (async () => {
+        calls++;
+        const collection = Array.from({ length: 50 }, (_, i) => ({ '@id': `urn:other:${calls}:${i}` }));
+        return new Response(JSON.stringify({ collection, totalCount: 1_000_000 }));
+      }) as typeof fetch;
+
+      await expect(service.allowsDefault(field, 'urn:chosen', 'cancer')).rejects.toThrow();
+      expect(calls).toBe(100);
     });
 
     it('refuses a term outside the returned constraint results', async () => {
