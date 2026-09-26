@@ -58,7 +58,7 @@
     "@angular/platform-browser": "^22.2.0",
     "@ngx-translate/core": "^18.0.0",
     "@tailwindcss/postcss": "^4.3.3",
-    "cedar-model-typescript-library": "npm:@org.metadatacenter/cedar-model-typescript-library@1.0.15-dev.20260925.553b314",
+    "cedar-model-typescript-library": "npm:@org.metadatacenter/cedar-model-typescript-library@1.0.15-dev.20260925.8d57f2e",
     "rxjs": "~7.8.0",
     "tailwindcss": "^4.3.3",
     "tslib": "^2.3.0",

@@ -17,6 +17,7 @@ import {
   moveChild,
   parentOf,
   updateContainer,
+  replaceFields,
   allowedInContainer,
   findContainer,
 } from '../model/container-draft';
@@ -29,7 +30,6 @@ import { PreferencesService } from './preferences.service';
 import {
   DesignerTemplate,
   deploymentKeys,
-  buildTemplate,
   newFieldIdentity,
   newTemplateIdentifier,
   readContainer,
@@ -107,7 +107,12 @@ export class TemplateService {
   private readonly automaticKeys = new Set<number>();
 
   private generatedKey(id: number, name: string): string {
-    const base = name.trim().toLowerCase().replace(/\s+/g, '_') || 'field';
+    const candidate = name.trim().toLowerCase().replace(/\s+/g, '_');
+    // Suffixing cannot repair a leading @ or an embedded control character.
+    const base =
+      candidate.startsWith('@') || [...candidate].some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127)
+        ? 'field'
+        : candidate || 'field';
     let key = base;
     for (let suffix = 2; this.keyError(id, key); suffix++) key = `${base}_${suffix}`;
     return key;
@@ -557,13 +562,9 @@ export class TemplateService {
     }
     const fields = this.fieldsFor(id)().map((field) => (field.id === id ? { ...field, ...changes } : field));
     try {
-      buildTemplate({
-        name: this.templateName(),
-        description: this.templateDesc(),
-        identifier: '',
-        version: '0.0.1',
-        fields,
-      });
+      const parent = findContainer(this.session.document(), this.parentContainerId(id));
+      if (!parent) return this.i18n.t('errors.elementMissing');
+      buildContainer(replaceFields(parent, fields));
       this.fieldsFor(id).set(fields);
       return null;
     } catch (error) {
