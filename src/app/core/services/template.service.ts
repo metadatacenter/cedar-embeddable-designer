@@ -514,12 +514,14 @@ export class TemplateService {
 
   private keyError(id: number, value: string): string | null {
     const key = value.trim();
-    const siblings = parentOf(this.session.document(), id)?.children ?? [];
+    const parent = parentOf(this.session.document(), id);
+    const siblings = parent?.children ?? [];
     const node = siblings.find((child) => child.id === id);
     const invalid = childKeyError(
       key,
       node?.kind === 'field' && fieldView(node).type === 'attributeValue',
       this.i18n.t,
+      parent?.kind ?? 'template',
     );
     if (invalid) return invalid;
     return siblings.some((node) => node.id !== id && this.childKey(node.id) === key)

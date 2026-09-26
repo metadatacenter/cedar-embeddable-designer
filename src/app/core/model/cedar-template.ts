@@ -1,4 +1,3 @@
-import { AttributeValueNamePolicy } from 'cedar-model-typescript-library';
 import { temporalDefaultError } from './field-default';
 import { LocalizedError, Message, Translate, describeError, english, errorParam, message } from '../../i18n/messages';
 import {
@@ -91,6 +90,10 @@ import {
   MultipleChoiceListFieldBuilder,
 } from 'cedar-model-typescript-library';
 import { ArtifactMetadata, ControlledTermSet, ControlledTermConfig, Field, FieldDefaultValue } from '../models/types';
+
+// The model library's reserved names, for the modules that may not import the library themselves.
+export { ReservedNames } from 'cedar-model-typescript-library';
+export type { AttributeValueFieldParent } from 'cedar-model-typescript-library';
 
 /**
  * What a field builder is, for our purposes.
@@ -1725,8 +1728,4 @@ export function containerPreview(draft: ContainerDraft): Template {
     .withStatus(BiboStatus.DRAFT)
     .addChild(model, model.createDeploymentBuilder(draft.name || 'Element').build())
     .build();
-}
-
-export function isReservedInstanceName(name: string): boolean {
-  return AttributeValueNamePolicy.isReserved(name);
 }

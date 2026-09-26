@@ -92,7 +92,7 @@ export function validateDocument(
     for (const node of container.children) {
       const key = keys[container.children.indexOf(node)];
       const keyError =
-        childKeyError(key, node.kind === 'field' && fieldView(node).type === 'attributeValue', t) ??
+        childKeyError(key, node.kind === 'field' && fieldView(node).type === 'attributeValue', t, container.kind) ??
         (keys.filter((candidate) => candidate === key).length > 1 ? t('validation.key.duplicate') : null);
       if (keyError)
         add(

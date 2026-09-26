@@ -15,4 +15,11 @@ describe('serialized child keys', () => {
       expect(childKeyError(key)).toBeNull();
     }
   });
+  it("protects only an element's own YAML keys for an attribute-value field inside it", () => {
+    for (const key of ['type', 'id', 'children']) expect(childKeyError(key, true, undefined, 'element')).not.toBeNull();
+    for (const key of ['name', 'description', 'annotations']) {
+      expect(childKeyError(key, true, undefined, 'element')).toBeNull();
+      expect(childKeyError(key, true, undefined, 'template')).not.toBeNull();
+    }
+  });
 });
