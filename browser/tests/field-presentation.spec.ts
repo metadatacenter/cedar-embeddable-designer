@@ -88,10 +88,11 @@ test('template header shows stored publication status beside the version', async
   const designer = await openDesigner(page);
   const status = designer.getByLabel('Publication status', { exact: true });
   await expect(status).toHaveText('Draft');
+  // A template stored without a status is a draft, as the model library and Java read it.
   for (const [stored, label] of [
     ['bibo:published', 'Published'],
     ['bibo:draft', 'Draft'],
-    [null, ''],
+    [null, 'Draft'],
   ]) {
     await page.evaluate((value) => {
       const host = document.querySelector('cedar-embeddable-designer') as any;
@@ -99,8 +100,7 @@ test('template header shows stored publication status beside the version', async
       template['bibo:status'] = value;
       host.template = template;
     }, stored);
-    if (label) await expect(status).toHaveText(label);
-    else await expect(status).toHaveCount(0);
+    await expect(status).toHaveText(label);
   }
 });
 

@@ -66,6 +66,7 @@ const UNADOPTED: Record<string, string> = {
   withCreatedBy: 'Imported provenance is displayed, not edited.',
   withCreatedOn: 'Imported provenance is displayed, not edited.',
   withDerivedFrom: 'Imported provenance is displayed, not edited.',
+  withExtensions: 'Schema extensions are not authored in the designer.',
   withLastUpdatedOn: 'Imported provenance is displayed, not edited.',
   withModifiedBy: 'Imported provenance is displayed, not edited.',
   withSchemaVersion: 'The model schema version is preserved, not edited.',

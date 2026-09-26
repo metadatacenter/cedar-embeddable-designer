@@ -65,7 +65,13 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // bundled and Angular's `hu` locale data, measure 1,450,117 raw / 414,932 gzip-9 bytes.
 // The language maps are bundled so that choosing a language never makes a request.
 // Allow about 4.9 KB of raw headroom; the compressed artifact stays within its ceiling.
-const RAW_LIMIT = 1_455_000;
+// 2026-09-25: the CEDAR model library's 2026-09-24 and 2026-09-25 changes, with the
+// designer asking its ReservedNames for reserved child keys, measure 1,468,358 raw /
+// 421,214 gzip-9 bytes, against 1,451,469 raw for the same designer on its previously
+// pinned library. The library accounts for all 16,889 bytes: 16,118 from its own
+// changes and 771 from the reserved-name vocabulary. No designer dependency was added.
+// Allow about 6.6 KB of raw headroom; the compressed artifact stays within its ceiling.
+const RAW_LIMIT = 1_475_000;
 const GZIP_LIMIT = 438_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
