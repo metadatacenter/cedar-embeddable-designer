@@ -1,0 +1,739 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "done": "Done",
+    "delete": "Delete",
+    "notSpecified": "Not specified",
+    "publicationStatus": "Publication status",
+    "status": {
+      "published": "Published",
+      "draft": "Draft"
+    },
+    "errorBadge": {
+      "one": "⚠ {{count}} error",
+      "other": "⚠ {{count}} errors"
+    },
+    "expandNamed": "Expand {{name}}",
+    "collapseNamed": "Collapse {{name}}",
+    "required": "Required",
+    "errorCount": {
+      "one": "{{count}} error",
+      "other": "{{count}} errors"
+    },
+    "anUnnamedField": "an unnamed field",
+    "quoted": "“{{value}}”"
+  },
+  "app": {
+    "overview": {
+      "open": "Open Overview",
+      "close": "Close Overview",
+      "resize": "Resize Overview",
+      "widthValue": "{{width}} pixels",
+      "resizeHint": "Drag to resize Overview. Arrow keys resize; Home and End set limits. Double-click to reset.",
+      "heading": "Overview ({{count}})",
+      "expandAll": "Expand all elements",
+      "collapseAll": "Collapse all elements"
+    },
+    "profile": {
+      "menuTitle": "The field types and controls this profile offers",
+      "basic": {
+        "label": "Basic",
+        "summary": "Plain fields, no vocabularies"
+      },
+      "semantic": {
+        "label": "Semantic",
+        "summary": "Adds controlled terms and help text"
+      },
+      "modular": {
+        "label": "Modular",
+        "summary": "Adds template elements"
+      },
+      "custom": "Custom",
+      "customize": "Customize…"
+    },
+    "userMenu": {
+      "title": "User Menu",
+      "preferences": "Preferences",
+      "definePresets": "Define Presets"
+    },
+    "preview": {
+      "open": "Open Preview",
+      "close": "Close Preview",
+      "openTitle": "Open CEE preview",
+      "closeTitle": "Close CEE preview"
+    }
+  },
+  "devHost": {
+    "changes": "Last templateChange: {{count}} event(s) |",
+    "example": "All-fields debugging example",
+    "exampleFailed": "Example load failed ({{status}})"
+  },
+  "alternates": {
+    "names": {
+      "heading": "Alternate names",
+      "newLabel": "New alternate name",
+      "add": "Add name",
+      "column": "Name",
+      "removeNumbered": "Remove name {{number}}",
+      "remove": "Remove name",
+      "none": "No alternate names.",
+      "blank": "Name cannot be blank.",
+      "unique": "Names must be unique."
+    },
+    "questions": {
+      "heading": "Alternate questions",
+      "newLabel": "New alternate question",
+      "add": "Add question",
+      "column": "Question",
+      "removeNumbered": "Remove question {{number}}",
+      "remove": "Remove question",
+      "none": "No alternate questions.",
+      "blank": "Question cannot be blank.",
+      "unique": "Questions must be unique."
+    }
+  },
+  "annotations": {
+    "name": "Annotation name",
+    "newName": "New annotation name",
+    "valueType": "Value type",
+    "newValueType": "New annotation value type",
+    "kind": {
+      "text": "Text",
+      "iri": "IRI"
+    },
+    "value": "Value",
+    "newValue": "New annotation value",
+    "add": "Add annotation",
+    "caption": "Annotations",
+    "remove": "Remove annotation",
+    "removeNumbered": "Remove annotation {{number}}",
+    "none": "No annotations.",
+    "nameRequired": "Each annotation needs a name.",
+    "nameUnique": "Annotation names must be unique.",
+    "iriAbsolute": "An annotation IRI must be an absolute identifier.",
+    "valueRequired": "An annotation value is required.",
+    "valueIri": "Annotation value must be a valid IRI."
+  },
+  "ceePreview": {
+    "title": "Preview",
+    "mode": "Preview mode",
+    "readOnly": "Read-only",
+    "editable": "Editable",
+    "close": "Close preview",
+    "editableNotice": "Try filling in the form. Entries reset when the template or preview mode changes.",
+    "missing": {
+      "before": "Preview renders the template with",
+      "after": ", which the page embedding this designer has not loaded. The two are sibling web components: load CEE's script alongside this one."
+    }
+  },
+  "childPicker": {
+    "fields": {
+      "title": "Import fields",
+      "selectHint": "Select fields from the results below.",
+      "searchLabel": "Search fields",
+      "none": "No fields found.",
+      "prompt": "Enter a search to find reusable fields."
+    },
+    "elements": {
+      "title": "Import elements",
+      "selectHint": "Select elements from the results below.",
+      "searchLabel": "Search elements",
+      "none": "No elements found.",
+      "prompt": "Enter a search to find reusable elements."
+    },
+    "children": {
+      "title": "Import fields and elements",
+      "selectHint": "Select fields and elements from the results below.",
+      "searchLabel": "Search fields and elements",
+      "none": "No fields and elements found.",
+      "prompt": "Enter a search to find reusable fields and elements."
+    },
+    "selectedHeading": "Selected children ({{count}})",
+    "adding": "Adding…",
+    "selectedTable": "Selected children",
+    "columns": {
+      "name": "Name",
+      "type": "Type",
+      "created": "Created",
+      "modified": "Modified",
+      "version": "Version",
+      "status": "Status",
+      "remove": "Remove"
+    },
+    "kind": {
+      "field": "Field",
+      "element": "Element"
+    },
+    "removeRow": "Remove {{name}}",
+    "selectRow": "Select {{name}}",
+    "unavailable": "Repository search is unavailable in this host.",
+    "searchPlaceholder": "Search by name",
+    "search": "Search",
+    "resultsTable": "Search results",
+    "searching": "Searching…",
+    "resultsFailed": "Results could not be loaded.",
+    "loadMore": "Load more",
+    "searchFailed": "Search failed. Please try again.",
+    "loadFailed": "Unable to load the selection. Please try again.",
+    "documentChanged": "The document changed. Reopen the selector in the new document."
+  },
+  "containerEditor": {
+    "dragElement": "Drag element to reorder",
+    "elementLabel": "Element",
+    "name": "Name",
+    "elementName": "Element name",
+    "templateName": "Template name",
+    "elementNamePlaceholder": "Enter element name",
+    "identifier": "Identifier",
+    "version": "Version",
+    "deleteTitle": "Delete element?",
+    "deleteDescription": "{{name}} and all its children will be deleted.",
+    "thisElement": "This element",
+    "deleteNamed": "Delete element {{name}}",
+    "delete": "Delete element",
+    "description": "Description",
+    "descriptionPlaceholder": "Add description...",
+    "expandChildren": "Expand children",
+    "collapseChildren": "Collapse children"
+  },
+  "containerSettings": {
+    "template": {
+      "settings": "template settings",
+      "expand": "Expand template settings",
+      "collapse": "Collapse template settings"
+    },
+    "element": {
+      "settings": "element settings",
+      "expand": "Expand element settings",
+      "collapse": "Collapse element settings"
+    },
+    "header": "Header",
+    "footer": "Footer",
+    "templateIri": "Template IRI"
+  },
+  "controlledTerms": {
+    "constraints": "Controlled-term constraints",
+    "chooseConstraint": "Choose a vocabulary constraint",
+    "previewUnavailable": "Constraint preview needs the field editor.",
+    "edit": "Edit controlled-term constraints",
+    "editButton": "Edit",
+    "editingUnavailable": {
+      "before": "Constraint editing needs",
+      "middle": "and a configured",
+      "after": ". Saved constraints remain intact."
+    },
+    "checkingDefault": "Checking the existing default…",
+    "clearDefaultAndApply": "Clear default and apply constraints",
+    "checkingConstraints": "Checking the default against the constraints…",
+    "defaultNotPermitted": "The existing default is not permitted by these constraints. Clear it and apply, or revise the constraints.",
+    "applyFailed": "Could not apply constraints."
+  },
+  "defaultValue": {
+    "label": "Default value",
+    "constraintFirst": "Choose a vocabulary constraint before setting a default.",
+    "pickerUnavailable": "Term picker is unavailable.",
+    "editTerm": "Edit default term",
+    "edit": "Edit",
+    "chooseTerm": "Choose default term",
+    "cancelSelection": "Cancel default selection",
+    "checkingTerm": "Checking default term…",
+    "clear": "Clear default",
+    "editorUnavailable": "Default value editor is unavailable.",
+    "invalid": "Enter a valid default value.",
+    "invalidNumber": "Enter a valid number.",
+    "singleTerm": "Choose a single term for the default value.",
+    "termNotPermitted": "This term is not permitted by the field constraints.",
+    "termCheckFailed": "Could not check the term against the field constraints.",
+    "temporal": {
+      "pattern": "Enter a default matching the temporal type and precision.",
+      "date": "Enter a valid calendar date for the default.",
+      "precision": "The default must match the selected precision.",
+      "time": "Enter a valid time for the default.",
+      "timezoneDisabled": "Enable Show timezone or remove the timezone from the default.",
+      "offset": "Enter a timezone offset between −14:00 and +14:00."
+    }
+  },
+  "elementCard": {
+    "settings": "Element settings",
+    "elementIri": "Element IRI",
+    "expandSettings": "Expand element settings",
+    "collapseSettings": "Collapse element settings"
+  },
+  "errors": {
+    "numeric": {
+      "datatype": "Choose a datatype from the list.",
+      "minimumValue": "Minimum value",
+      "maximumValue": "Maximum value",
+      "defaultValue": "Default value",
+      "infinite": "{{label}} must be a valid number, not infinity.",
+      "integerOnly": "{{label}} cannot have decimal places for {{type}}.",
+      "range": "Value must be between {{min}} and {{max}}.",
+      "floatRange": "Value must be between -3.4028234663852886e38 and 3.4028234663852886e38.",
+      "floatTooSmall": "Value is too close to zero. Use 0 or a number at least 1.401298464324817e-45 away from zero.",
+      "minAboveMax": "Minimum must not be greater than maximum.",
+      "decimalPlacesNegative": "Decimal places must be a nonnegative number.",
+      "decimalPlacesInteger": "Decimal places must be 0 or left empty for {{type}}.",
+      "tooManyPlaces": {
+        "one": "{{label}} must have no more than {{count}} decimal place.",
+        "other": "{{label}} must have no more than {{count}} decimal places."
+      },
+      "defaultOutsideRange": "The default is outside the minimum and maximum. Change or clear it first."
+    },
+    "temporal": {
+      "precisionIncompatible": "The selected precision is incompatible with the temporal datatype."
+    },
+    "text": {
+      "lengths": "Text lengths must be nonnegative numbers, with minimum no greater than maximum.",
+      "defaultTooShort": "Default value must contain at least {{count}} characters.",
+      "defaultTooLong": "Default value must contain no more than {{count}} characters.",
+      "defaultPattern": "Default value must match the regular expression."
+    },
+    "media": {
+      "dimensions": "Media dimensions must be positive numbers."
+    },
+    "default": {
+      "wrongKind": "A {{type}} field cannot hold a {{kind}} default.",
+      "oneScalarChoice": "Only one scalar choice default can be preserved.",
+      "notAnOption": "Choose a default from the field options.",
+      "missingOptions": "The default {{values}} is not among the allowed options. Change or clear the default, or add it to the options.",
+      "importedConflict": "The imported default “{{value}}” conflicts with the selected default. Choose a default or clear it to resolve this."
+    },
+    "namedField": "{{name}}: {{message}}",
+    "occurrences": {
+      "range": "Minimum and maximum must be nonnegative numbers, with minimum no greater than maximum."
+    },
+    "yaml": {
+      "lossy": "YAML cannot preserve every property of this template, such as custom schema metadata. Export JSON to retain the complete definitions.",
+      "compactTemplate": "This is compact YAML, which leaves out everything that has a default and cannot be opened as a template. Open the full YAML or the JSON instead.",
+      "compactField": "This is compact YAML, which leaves out everything that has a default and cannot be opened as a field. Open the full YAML or the JSON instead.",
+      "compactReopen": "Compact YAML cannot be reopened. Use full YAML or JSON."
+    },
+    "open": {
+      "notTemplate": "The source is not a CEDAR template.",
+      "containsElements": "This template contains elements ({{names}}). Element editing is not supported yet; the template was not opened to avoid losing nested content.",
+      "fieldNeedsName": "The field definition needs a name.",
+      "missingChild": "Cannot open missing child “{{name}}”.",
+      "unsupportedChild": "Cannot open unsupported child “{{name}}”.",
+      "notContainer": "Open a CEDAR template or element document."
+    },
+    "move": {
+      "missing": "The child or destination no longer exists.",
+      "intoItself": "An element cannot be moved into itself or one of its descendants.",
+      "nameTaken": "The destination already has a child with that property name. Rename the placement first."
+    },
+    "pageBreakPlacement": "Page breaks can only be placed in templates.",
+    "publishedReadOnly": "Published fields are read-only. Editing a draft version is not available yet.",
+    "importDestinationMissing": "The import destination no longer exists.",
+    "destinationMissing": "The destination no longer exists.",
+    "chooseFieldOrElement": "Choose a field or element artifact.",
+    "chooseElementDocument": "Choose an element document to insert into this container.",
+    "elementMissing": "The element no longer exists."
+  },
+  "fieldCard": {
+    "published": "Published field — read-only. Editing a draft version is not available yet.",
+    "namePlaceholder": "Enter field name",
+    "name": "Field name",
+    "occurrenceRange": "Occurrence range",
+    "dragToReorder": "Drag to reorder",
+    "requirement": "Requirement",
+    "optional": "Optional",
+    "recommended": "Recommended",
+    "required": "Required",
+    "delete": "Delete field",
+    "option": "Option {{number}}",
+    "deleteOption": "Delete option",
+    "addOption": "Add option",
+    "clearConflict": "Clear conflicting default",
+    "content": {
+      "markup": "Content",
+      "url": "Image URL",
+      "videoId": "YouTube video ID"
+    }
+  },
+  "fieldDesigner": {
+    "title": "Field library",
+    "back": "Back to Template Builder",
+    "hint": "Reusable field specifications saved in this browser, including template display and occurrence settings.",
+    "createLibrary": "Create library",
+    "libraryName": "Library name",
+    "description": "Description",
+    "library": "Library",
+    "chooseLibrary": "Choose a library",
+    "saveField": "Save field",
+    "createField": "Create field",
+    "columns": {
+      "field": "Field",
+      "actions": "Actions"
+    },
+    "view": "View",
+    "edit": "Edit",
+    "addToTemplate": "Add to template",
+    "remove": "Remove",
+    "nameRequired": "Give the field a name.",
+    "libraryRequired": "Choose a library, or create one first."
+  },
+  "fieldElement": {
+    "label": "Field designer",
+    "readOnly": "This field is read only.",
+    "chooseType": "Choose field type"
+  },
+  "fieldSettings": {
+    "label": "Field settings",
+    "expand": "Expand field settings",
+    "collapse": "Collapse field settings",
+    "text": {
+      "minLength": "Minimum length",
+      "maxLength": "Maximum length",
+      "regex": "Regular expression",
+      "regexPlaceholder": "e.g., ^[A-Z]+$"
+    },
+    "numeric": {
+      "datatype": "Datatype",
+      "min": "Minimum value",
+      "max": "Maximum value",
+      "decimalPlaces": "Decimal places",
+      "unit": "Unit of measure",
+      "unitPlaceholder": "e.g., mg"
+    },
+    "temporal": {
+      "type": "Temporal type",
+      "precision": "Precision",
+      "granularity": {
+        "year": "year",
+        "month": "month",
+        "day": "day",
+        "hour": "hour",
+        "minute": "minute",
+        "second": "second",
+        "decimalSecond": "Fractional second"
+      },
+      "timeFormat": "Time format",
+      "defaultFormat": "Default (24 hour)",
+      "twelveHour": "12 hour",
+      "twentyFourHour": "24 hour",
+      "showTimezone": "Show timezone"
+    },
+    "media": {
+      "width": "Width",
+      "height": "Height",
+      "automatic": "Automatic"
+    },
+    "occurrences": {
+      "min": "Minimum",
+      "max": "Maximum"
+    },
+    "display": {
+      "labelPlaceholder": "Field display name",
+      "descriptionPlaceholder": "Field help",
+      "hidden": "Hidden",
+      "continueLine": "Continue previous line",
+      "helpText": "Help text",
+      "helpTextPlaceholder": "Add helper instructions for users..."
+    },
+    "metadata": {
+      "fieldIri": "Field IRI"
+    }
+  },
+  "fieldTypes": {
+    "text": {
+      "label": "Text",
+      "preview": "Short answer text"
+    },
+    "paragraph": {
+      "label": "Paragraph",
+      "preview": "Long answer text"
+    },
+    "multipleChoice": {
+      "label": "Multiple Choice",
+      "preview": "Radio buttons"
+    },
+    "checkboxes": {
+      "label": "Checkboxes",
+      "preview": "Multiple selection"
+    },
+    "singleChoiceList": {
+      "label": "List",
+      "preview": "Choose one from a list"
+    },
+    "multipleChoiceList": {
+      "label": "Multi-select List",
+      "preview": "Choose several from a list"
+    },
+    "date": {
+      "label": "Date",
+      "preview": "Date"
+    },
+    "time": {
+      "label": "Time",
+      "preview": "Time"
+    },
+    "email": {
+      "label": "Email",
+      "preview": "Email address"
+    },
+    "link": {
+      "label": "Link",
+      "preview": "URL"
+    },
+    "phone": {
+      "label": "Phone",
+      "preview": "Phone number"
+    },
+    "number": {
+      "label": "Number",
+      "preview": "Numeric value"
+    },
+    "controlledTerms": {
+      "label": "Controlled Terms",
+      "preview": "Controlled vocabulary"
+    },
+    "attributeValue": {
+      "label": "Attribute Value"
+    },
+    "orcid": {
+      "label": "ORCID",
+      "preview": "Researcher identifier"
+    },
+    "ror": {
+      "label": "ROR",
+      "preview": "Research organization identifier"
+    },
+    "pfas": {
+      "label": "PFAS",
+      "preview": "PFAS substance identifier"
+    },
+    "rrid": {
+      "label": "RRID",
+      "preview": "Research resource identifier"
+    },
+    "pubmed": {
+      "label": "PubMed",
+      "preview": "PubMed identifier"
+    },
+    "nihGrantId": {
+      "label": "NIH Grant ID",
+      "preview": "NIH grant identifier"
+    },
+    "doi": {
+      "label": "DOI",
+      "preview": "Digital object identifier"
+    },
+    "image": {
+      "label": "Image",
+      "preview": "An image at a URL"
+    },
+    "richText": {
+      "label": "Rich Text",
+      "preview": "Formatted text"
+    },
+    "youtube": {
+      "label": "YouTube",
+      "preview": "An embedded video"
+    },
+    "sectionBreak": {
+      "label": "Section Break",
+      "preview": "A divider between sections"
+    },
+    "pageBreak": {
+      "label": "Page Break",
+      "preview": "A break between pages"
+    },
+    "temporal": {
+      "label": "Temporal"
+    },
+    "dateTime": {
+      "label": "Date and time"
+    }
+  },
+  "languageSelector": {
+    "label": "Language",
+    "current": "{{code}} (current)"
+  },
+  "fieldLibrary": {
+    "loadFailed": "The saved field library could not be loaded. Its stored data has been left unchanged.",
+    "saveFailed": "The browser could not save the field library. Keep this page open and try again."
+  },
+  "terminology": {
+    "notConfigured": "Terminology server is not configured.",
+    "checkFailed": "Could not check the default term ({{status}}).",
+    "noResultCollection": "The terminology server returned no result collection.",
+    "unverified": "The term could not be verified in the returned results.",
+    "searchNotConfigured": "Controlled-term search is not configured.",
+    "answered": "The terminology server answered {{status}} {{statusText}}.",
+    "noResultsCollection": "The terminology server returned no results collection."
+  },
+  "outline": {
+    "errors": "{{count}} errors",
+    "expand": "Expand element",
+    "collapse": "Collapse element",
+    "reorder": "Reorder {{name}}",
+    "reorderHint": "Drag to reorder; use arrow keys to move up or down"
+  },
+  "insertion": {
+    "addField": "Add field",
+    "addFieldHere": "Add field here",
+    "addElement": "Add element",
+    "addElementHere": "Add element here",
+    "importField": "Import field",
+    "importFieldHere": "Import field here",
+    "importElement": "Import element",
+    "importElementHere": "Import element here"
+  },
+  "manualIri": {
+    "label": "IRI",
+    "addType": "Add type",
+    "addProperty": "Add property",
+    "open": "Enter IRI manually",
+    "searchUnavailable": "Vocabulary search is unavailable. You can enter an IRI manually.",
+    "required": "An IRI is required.",
+    "invalid": "Please enter a valid IRI.",
+    "duplicate": "This type has already been added."
+  },
+  "propertyPicker": {
+    "placeholder": "Choose a property IRI",
+    "replaceLabel": "Replace property IRI",
+    "chooseLabel": "Choose property IRI",
+    "replace": "Replace",
+    "choose": "Choose",
+    "selectOne": "Select one property before choosing Done."
+  },
+  "typesPicker": {
+    "remove": "Remove type {{iri}}",
+    "none": "No types selected.",
+    "add": "Add types",
+    "classesOnly": "Choose classes only."
+  },
+  "preferences": {
+    "title": "User Preferences",
+    "close": "Close",
+    "presets": {
+      "heading": "Preset configurations",
+      "basic": "basic",
+      "semantic": "semantic",
+      "modular": "modular"
+    },
+    "fieldOptions": {
+      "heading": "Field configuration options",
+      "required": {
+        "label": "Show \"Required\" checkbox",
+        "help": "Display required/optional toggle for fields"
+      },
+      "allowMultiple": {
+        "label": "Show \"Allow multiple\" checkbox",
+        "help": "Display multiple values toggle for fields"
+      },
+      "helpText": {
+        "label": "Show \"Help text\" field",
+        "help": "Display help text input for fields"
+      },
+      "defaultValue": {
+        "label": "Show \"Default Value\" field",
+        "help": "Display default value input for fields"
+      }
+    },
+    "features": {
+      "heading": "Feature visibility",
+      "elements": {
+        "label": "Enable Elements",
+        "help": "Enable elements functionality in the template builder"
+      }
+    },
+    "selection": {
+      "heading": "Field selection style",
+      "help": "Choose how you want to add fields to your template",
+      "inline": {
+        "label": "Inline field picker",
+        "help": "Show field types where you are adding a field (default)"
+      },
+      "sidebar": {
+        "label": "Library Sidebar",
+        "help": "Show expandable library list on the left side of the page"
+      }
+    },
+    "fieldTypes": {
+      "heading": "Visible field types",
+      "selectAll": "Select All",
+      "deselectAll": "Deselect All",
+      "help": "Control which field types appear in the \"Add Field\" section and dropdown menus"
+    }
+  },
+  "presetDefinitions": {
+    "intro": "Customize what each preset configuration includes. These settings will be applied when users select a preset in their preferences.",
+    "fieldTypes": "Available field types"
+  },
+  "settings": {
+    "containsErrors": "Contains errors",
+    "key": "Key",
+    "version": "Version",
+    "notYetAssigned": "Not yet assigned",
+    "modelVersion": "Model version",
+    "created": "Created",
+    "modified": "Modified",
+    "notYetRecorded": "Not yet recorded",
+    "derivedFrom": "Derived from",
+    "previousVersion": "Previous version",
+    "propertyIri": "Property IRI",
+    "types": "Types",
+    "displayLabel": "Display label",
+    "displayDescription": "Display description",
+    "allowMultiple": "Allow multiple",
+    "minOccurrences": "Minimum occurrences",
+    "minOccurrencesPlaceholder": "Default (0)",
+    "maxOccurrences": "Maximum occurrences",
+    "unlimited": "Unlimited",
+    "invalidNumber": "{{label}} must be a valid number.",
+    "value": "Value"
+  },
+  "sidebar": {
+    "fields": "Fields ({{count}})",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar",
+    "noFields": "No fields yet",
+    "librariesAndFields": "Libraries & Fields",
+    "builtIn": "Built-in Fields",
+    "libraryEmpty": "No fields in this library"
+  },
+  "fieldTypePicker": {
+    "title": "Choose field",
+    "standard": "Standard",
+    "searchLibraries": "Search libraries...",
+    "noLibraries": "No libraries found",
+    "close": "Close field picker",
+    "libraryEmpty": "No custom fields in this library yet."
+  },
+  "tabs": {
+    "display": "Display",
+    "constraints": "Constraints",
+    "content": "Content",
+    "occurrences": "Occurrences",
+    "annotations": "Annotations",
+    "fieldMetadata": "Field metadata",
+    "elementMetadata": "Element metadata",
+    "templateMetadata": "Template Metadata"
+  },
+  "validation": {
+    "summary": {
+      "one": "{{count}} error — fix before saving",
+      "other": "{{count}} errors — fix before saving"
+    },
+    "optionName": "Option {{number}} needs a name.",
+    "key": {
+      "required": "Key is required.",
+      "objectInternals": "This key is reserved for object internals.",
+      "cedarMetadata": "This key is reserved for CEDAR metadata.",
+      "controlCharacters": "Key must not contain control characters.",
+      "yamlMetadata": "This key is reserved for CEDAR YAML metadata.",
+      "duplicate": "Another child in this container already uses that key."
+    },
+    "nameRequired": {
+      "field": "Field name is required.",
+      "element": "Element name is required.",
+      "template": "Template name is required."
+    },
+    "unnamed": {
+      "field": "Unnamed field",
+      "element": "Unnamed element",
+      "template": "Unnamed template"
+    }
+  }
+}

@@ -1,6 +1,6 @@
 @if (field.publishedDefinition) {
   <p role="status" class="published-warning">
-    Published field — read-only. Editing a draft version is not available yet.
+    {{ 'fieldCard.published' | translate }}
   </p>
 }
 <div>
@@ -29,14 +29,16 @@
             class="text-sm font-medium text-gray-900 border-none outline-none pb-0.5 flex-1 min-w-0 bg-transparent border-b-2"
             [style.borderBottomColor]="service.selectedField() === field.id ? 'var(--cedar-color-primary)' : '#d1d5db'"
             (focus)="service.selectedField.set(field.id)"
-            placeholder="Enter field name"
-            aria-label="Field name"
+            [placeholder]="'fieldCard.namePlaceholder' | translate"
+            [attr.aria-label]="'fieldCard.name' | translate"
           />
           @if (field.status === 'required' && allowsStatus(field.type)) {
-            <sup class="required-mark" aria-label="Required">*</sup>
+            <sup class="required-mark" [attr.aria-label]="'common.required' | translate">*</sup>
           }
           @if (occurrenceRange; as range) {
-            <span class="occurrence-range" aria-label="Occurrence range">{{ range }}</span>
+            <span class="occurrence-range" [attr.aria-label]="'fieldCard.occurrenceRange' | translate">{{
+              range
+            }}</span>
           }
           @if (service.visibleIssuesFor(field.id).length; as count) {
             <button
@@ -45,12 +47,19 @@
               (click)="service.revealIssue(service.visibleIssuesFor(field.id)[0])"
             >
               <app-icon key="warning" size="small" />
-              <span>{{ count }} {{ count === 1 ? 'error' : 'errors' }}</span>
+              <span>{{
+                (count === 1 ? 'common.errorCount.one' : 'common.errorCount.other') | translate: { count: count }
+              }}</span>
             </button>
           }
         </div>
         @if (!standalone) {
-          <span class="field-drag-handle" cdkDragHandle title="Drag to reorder" aria-label="Drag to reorder">
+          <span
+            class="field-drag-handle"
+            cdkDragHandle
+            [title]="'fieldCard.dragToReorder' | translate"
+            [attr.aria-label]="'fieldCard.dragToReorder' | translate"
+          >
             <app-icon key="list" size="small"></app-icon>
           </span>
         }
@@ -59,7 +68,7 @@
           <div class="field-summary">
             <!-- Label Badge details -->
             <div class="field-type-label">
-              {{ getFieldTypeName(field) }}
+              {{ getFieldTypeName(field) | translate }}
             </div>
           </div>
           <div class="field-actions">
@@ -70,14 +79,14 @@
     -->
             @if (!service.fieldDocumentMode() && service.preferences().showRequired && allowsStatus(field.type)) {
               <select
-                aria-label="Requirement"
+                [attr.aria-label]="'fieldCard.requirement' | translate"
                 [ngModel]="field.status"
                 (ngModelChange)="service.updateFieldStatus(field.id, $event)"
                 class="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded px-1 py-0.5"
               >
-                <option value="optional">Optional</option>
-                <option value="recommended">Recommended</option>
-                <option value="required">Required</option>
+                <option value="optional">{{ 'fieldCard.optional' | translate }}</option>
+                <option value="recommended">{{ 'fieldCard.recommended' | translate }}</option>
+                <option value="required">{{ 'fieldCard.required' | translate }}</option>
               </select>
             }
             @if (
@@ -91,15 +100,17 @@
                   (change)="service.toggleAllowMultiple(field.id)"
                   class="w-3.5 h-3.5 checkbox-white"
                 />
-                <span class="text-xs text-gray-600 group-hover:text-gray-900 whitespace-nowrap">Allow multiple</span>
+                <span class="text-xs text-gray-600 group-hover:text-gray-900 whitespace-nowrap">{{
+                  'settings.allowMultiple' | translate
+                }}</span>
               </label>
             }
             @if (!standalone) {
               <button
                 (click)="service.deleteField(field.id)"
                 class="inline-flex items-center justify-center text-black disabled:text-gray-400 p-0.5 transition-colors border-none bg-transparent cursor-pointer shrink-0"
-                title="Delete field"
-                aria-label="Delete field"
+                [title]="'fieldCard.delete' | translate"
+                [attr.aria-label]="'fieldCard.delete' | translate"
               >
                 <app-icon key="trash" size="small"></app-icon>
               </button>
@@ -145,16 +156,16 @@
                   (ngModelChange)="service.updateOption(field.id, optIdx, $event)"
                   class="border-none outline-none bg-transparent flex-1 min-w-0 border-b border-gray-200 focus:border-teal-500"
                   (focus)="service.selectedField.set(field.id)"
-                  [placeholder]="'Option ' + (optIdx + 1)"
-                  [attr.aria-label]="'Option ' + (optIdx + 1)"
+                  [placeholder]="'fieldCard.option' | translate: { number: optIdx + 1 }"
+                  [attr.aria-label]="'fieldCard.option' | translate: { number: optIdx + 1 }"
                 />
                 <!-- Delete option button -->
                 @if (field.options.length > 0) {
                   <button
                     (click)="service.deleteOption(field.id, optIdx)"
                     class="text-black disabled:text-gray-400 transition-colors cursor-pointer border-none bg-transparent flex items-center justify-center p-0.5"
-                    title="Delete option"
-                    aria-label="Delete option"
+                    [title]="'fieldCard.deleteOption' | translate"
+                    [attr.aria-label]="'fieldCard.deleteOption' | translate"
                   >
                     <app-icon key="trash" size="small"></app-icon>
                   </button>
@@ -162,7 +173,7 @@
               </div>
               @if (!option.trim()) {
                 <p class="ced-field-error" [id]="'option-error-' + field.id + '-' + optIdx" role="alert">
-                  Option {{ optIdx + 1 }} needs a name.
+                  {{ 'validation.optionName' | translate: { number: optIdx + 1 } }}
                 </p>
               }
             }
@@ -171,7 +182,7 @@
               (click)="service.addOption(field.id); service.selectedField.set(field.id)"
               class="choice-add-action flex items-center px-1 text-xs text-gray-500 hover:text-teal-600 transition-colors border-none bg-transparent cursor-pointer font-medium"
             >
-              <app-icon key="add" size="default" /> Add option
+              <app-icon key="add" size="default" /> {{ 'fieldCard.addOption' | translate }}
             </button>
           </div>
         }
@@ -191,7 +202,9 @@
   -->
         @if (contentLabel(field.type); as label) {
           <div class="mt-1 px-1">
-            <label [for]="'field-content-' + field.id" class="content-label mb-0.5 block">{{ label }}</label>
+            <label [for]="'field-content-' + field.id" class="content-label mb-0.5 block">{{
+              label | translate
+            }}</label>
             @if (hasMarkupContent(field.type)) {
               <textarea
                 spellcheck="false"
@@ -208,7 +221,7 @@
                 type="text"
                 [ngModel]="field.content || ''"
                 (ngModelChange)="service.updateContent(field.id, $event)"
-                [placeholder]="FIELD_TYPES_LIST[field.type]?.preview || ''"
+                [placeholder]="FIELD_TYPES_LIST[field.type]?.previewKey || '' | translate"
                 class="text-sm w-full border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:border-teal-600"
               />
             }
@@ -222,7 +235,7 @@
     <div class="mt-1 px-1">
       <p role="alert" class="ced-field-error">{{ conflict }}</p>
       <button type="button" class="ced-text-action" (click)="service.updateDefaultValue(field.id, { kind: 'none' })">
-        Clear conflicting default
+        {{ 'fieldCard.clearConflict' | translate }}
       </button>
     </div>
   }

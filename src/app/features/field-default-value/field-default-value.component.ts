@@ -20,19 +20,27 @@ import { Field, FieldDefaultValue } from '../../core/models/types';
 import { TemplateService } from '../../core/services/template.service';
 import { TerminologyService } from '../../core/services/terminology.service';
 import { PickedConstraint } from '../../core/model/term-picker';
+import { TranslatePipe } from '@ngx-translate/core';
+import { CedLanguageService } from '../../i18n/ced-language.service';
 
 const FIELD_TAG = 'cedar-embeddable-field';
 
 /** The portion of the sibling element's contract used for field defaults. */
 interface FieldElement extends HTMLElement {
-  config: { readOnlyMode: boolean; bridgeBaseUrl?: string; terminologyBaseUrl?: string };
+  config: {
+    readOnlyMode: boolean;
+    bridgeBaseUrl?: string;
+    terminologyBaseUrl?: string;
+    defaultLanguage: string;
+    fallbackLanguage: string;
+  };
   fieldObject: CeeTemplateObject;
   value: FieldDefaultValue;
   readonly currentValue: FieldDefaultValue;
 }
 
 @Component({
-  imports: [IconComponent],
+  imports: [IconComponent, TranslatePipe],
   selector: 'app-field-default-value',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './field-default-value.component.html',
@@ -44,6 +52,9 @@ export class FieldDefaultValueComponent {
   readonly service = inject(TemplateService);
   private readonly terminology = inject(TerminologyService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly i18n = inject(CedLanguageService);
+  /** The designer's language, which the term picker and CEF render in. */
+  readonly language = this.i18n.language;
   readonly terminologyBaseUrl = this.terminology.baseUrl;
   /**
    * Whether this field's values come from a vocabulary, which decides how its
@@ -86,7 +97,7 @@ export class FieldDefaultValueComponent {
     this.service.setSettingsError(
       this.field().id,
       'defaultValue',
-      this.error() ?? (this.checking() ? 'Checking the default against the constraints…' : null),
+      this.error() ?? (this.checking() ? this.i18n.t('controlledTerms.checkingConstraints') : null),
     );
   }
   private setError(message: string | null, editorReportsError = false): void {
@@ -129,6 +140,9 @@ export class FieldDefaultValueComponent {
       const config = {
         ...this.service.fieldEditorConfig(),
         readOnlyMode: !!field.publishedDefinition || accepts(field.type, 'controlledTermConstraints'),
+        // CEF applies configuration once, so a change of language builds a new control.
+        defaultLanguage: this.language(),
+        fallbackLanguage: 'en',
       };
       if (!host) return;
       if (!this.editor || this.configKey !== JSON.stringify(config)) {
@@ -160,7 +174,7 @@ export class FieldDefaultValueComponent {
     const detail = (event as CustomEvent<{ value: FieldDefaultValue; valid: boolean }>).detail;
     if (this.allowsControlledTerms() || this.field().publishedDefinition) return;
     if (detail?.valid === true) this.save(defaultFromCef(this.field(), detail.value));
-    else this.setError('Enter a valid default value.', true);
+    else this.setError(this.i18n.t('defaultValue.invalid'), true);
   };
 
   editNative(text: string): void {
@@ -172,7 +186,7 @@ export class FieldDefaultValueComponent {
     }
     if (this.field().type === 'number') {
       if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(text.trim()) || !Number.isFinite(Number(text))) {
-        this.setError('Enter a valid number.');
+        this.setError(this.i18n.t('defaultValue.invalidNumber'));
         return;
       }
       this.save({ kind: 'number', value: Number(text) });
@@ -182,7 +196,7 @@ export class FieldDefaultValueComponent {
   }
 
   private save(value: FieldDefaultValue): void {
-    const error = defaultValueError(this.field(), value);
+    const error = defaultValueError(this.field(), value, this.i18n.t);
     this.setError(error);
     if (error === null) this.service.updateDefaultValue(this.field().id, value);
   }
@@ -210,7 +224,7 @@ export class FieldDefaultValueComponent {
   async selectTerm(event: Event): Promise<void> {
     const picked = (event as CustomEvent<PickedConstraint>).detail;
     if (picked?.type !== 'class') {
-      this.setError('Choose a single term for the default value.');
+      this.setError(this.i18n.t('defaultValue.singleTerm'));
       return;
     }
     if (this.checking()) return;
@@ -229,14 +243,14 @@ export class FieldDefaultValueComponent {
       // A response for a field the author has since changed cannot set its default.
       if (this.destroyRef.destroyed || this.pending !== attempt || this.field() !== field) return;
       if (!allowed) {
-        this.setError('This term is not permitted by the field constraints.');
+        this.setError(this.i18n.t('defaultValue.termNotPermitted'));
         return;
       }
       this.save({ kind: 'iri', iri: picked.termIri, label: picked.termLabel });
       if (this.error() === null) this.pickerOpen.set(false);
     } catch (error) {
       if (this.destroyRef.destroyed || this.pending !== attempt || this.field() !== field) return;
-      this.setError(error instanceof Error ? error.message : 'Could not check the term against the field constraints.');
+      this.setError(error instanceof Error ? this.i18n.describe(error) : this.i18n.t('defaultValue.termCheckFailed'));
     } finally {
       if (this.pending === attempt) {
         this.pending = null;

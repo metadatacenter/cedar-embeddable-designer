@@ -1,13 +1,15 @@
-import { Component, ElementRef, effect, input, output, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
+import { CedLanguageService } from '../../i18n/ced-language.service';
 
 @Component({
   selector: 'app-manual-iri',
-  imports: [FormsModule],
+  imports: [FormsModule, TranslatePipe],
   template: `
     <div class="entry" (keydown.escape)="cancelled.emit(); $event.stopPropagation()">
       <label
-        >IRI
+        >{{ 'manualIri.label' | translate }}
         <input
           spellcheck="false"
           #control
@@ -20,8 +22,8 @@ import { FormsModule } from '@angular/forms';
           placeholder="https://example.org/vocab/term"
         />
       </label>
-      <button type="button" [disabled]="disabled()" (click)="submit()">{{ action() }}</button>
-      <button type="button" (click)="cancelled.emit()">Cancel</button>
+      <button type="button" [disabled]="disabled()" (click)="submit()">{{ action() | translate }}</button>
+      <button type="button" (click)="cancelled.emit()">{{ 'common.cancel' | translate }}</button>
     </div>
     @if (error(); as message) {
       <p role="alert">{{ message }}</p>
@@ -67,7 +69,9 @@ import { FormsModule } from '@angular/forms';
   `,
 })
 export class ManualIriComponent {
-  readonly action = input('Add type');
+  /** The translation key of the submit button's label. */
+  readonly action = input('manualIri.addType');
+  private readonly i18n = inject(CedLanguageService);
   readonly existing = input<readonly string[]>([]);
   readonly disabled = input(false);
   readonly accepted = output<string>();
@@ -82,15 +86,15 @@ export class ManualIriComponent {
     if (this.disabled()) return;
     const iri = this.value().trim();
     if (!iri) {
-      this.error.set('An IRI is required.');
+      this.error.set(this.i18n.t('manualIri.required'));
       return;
     }
     if (!/^[a-z][a-z0-9+.-]*:[^\s<>"{}|\\^`]+$/i.test(iri) || /%(?![0-9a-f]{2})/i.test(iri)) {
-      this.error.set('Please enter a valid IRI.');
+      this.error.set(this.i18n.t('manualIri.invalid'));
       return;
     }
     if (this.existing().includes(iri)) {
-      this.error.set('This type has already been added.');
+      this.error.set(this.i18n.t('manualIri.duplicate'));
       return;
     }
     this.accepted.emit(iri);

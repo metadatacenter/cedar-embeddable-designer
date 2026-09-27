@@ -996,13 +996,22 @@ describe('complete field specification transfer', () => {
         'pav:previousVersion': 'https://example.org/fields/previous',
       });
       const imported = toDesignerTemplate(readTemplate(JSON.stringify(original)));
-      expect(json(imported)).toEqual(original);
+      const expected = structuredClone(original);
+      const expectedProperty = (expected['properties'] as Record<string, Record<string, unknown>>)['property-key'];
+      const expectedDefinition = (expectedProperty['items'] ?? expectedProperty) as Record<string, unknown>;
+      // The schema name determines the title, not the deployment key or display label.
+      expectedDefinition['title'] = 'Original field schema';
+      expect(json(imported)).toEqual(expected);
       expect(imported.fields[0].artifact?.version).toBe('2.3.4');
       expect(() => templateToYaml(buildTemplate(imported))).toThrow(/Export JSON/);
     });
     it(`imports the complete standalone ${type} definition`, () => {
       const original = fieldToJson(field({ type, name: 'Standalone', preferredLabel: 'Preferred' }));
       expect(fieldToJson(readField(JSON.stringify(original)))).toEqual(original);
+      if (type === 'attributeValue') {
+        // Historical standalone documents omitted the array envelope.
+        expect(fieldToJson(readField(JSON.stringify(original['items'])))).toEqual(original);
+      }
     });
   }
 });

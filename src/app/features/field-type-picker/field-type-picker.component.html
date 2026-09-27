@@ -1,13 +1,13 @@
 <div class="picker-container animate-fade-in" [style.border]="'2px solid ' + 'var(--cedar-primary-100)'">
   <div class="picker-header">
     <div class="picker-header-left">
-      <h3 class="picker-title">Choose field</h3>
+      <h3 class="picker-title">{{ 'fieldTypePicker.title' | translate }}</h3>
 
       <!-- Library Dropdown with Autocomplete -->
-      @if (service.libraries().length > 0) {
+      @if (!standalone() && service.libraries().length > 0) {
         <div class="library-dropdown-container">
           <button (click)="showDropdown.set(!showDropdown())" class="btn-library-dropdown">
-            <span class="dropdown-text">{{ selectedLibraryName }}</span>
+            <span class="dropdown-text">{{ selectedLibraryName ?? ('fieldTypePicker.standard' | translate) }}</span>
             <span class="dropdown-arrow">▼</span>
           </button>
           <!-- Dropdown Options Panel -->
@@ -19,7 +19,7 @@
                   spellcheck="false"
                   type="text"
                   [(ngModel)]="searchText"
-                  placeholder="Search libraries..."
+                  [placeholder]="'fieldTypePicker.searchLibraries' | translate"
                   class="dropdown-search-input"
                   autoFocus
                 />
@@ -32,7 +32,7 @@
                   class="dropdown-option"
                   [class.active]="service.fieldTypeDropdownLibrary() === null"
                 >
-                  Standard
+                  {{ 'fieldTypePicker.standard' | translate }}
                 </button>
                 <!-- Filtered Library Options -->
                 @for (lib of filteredLibraries; track lib) {
@@ -45,7 +45,7 @@
                   </button>
                 }
                 @if (filteredLibraries.length === 0 && searchText) {
-                  <div class="dropdown-empty-state">No libraries found</div>
+                  <div class="dropdown-empty-state">{{ 'fieldTypePicker.noLibraries' | translate }}</div>
                 }
               </div>
             </div>
@@ -54,19 +54,19 @@
       }
     </div>
 
-    <button (click)="close()" class="btn-close">
+    <button (click)="close()" class="btn-close" [attr.aria-label]="'fieldTypePicker.close' | translate">
       <app-icon key="close" size="default"></app-icon>
     </button>
   </div>
 
   <div class="fields-grid">
-    @if (service.fieldTypeDropdownLibrary() === null) {
+    @if (standalone() || service.fieldTypeDropdownLibrary() === null) {
       @for (item of visibleFieldTypesList(); track item) {
         <button (click)="onFieldClick(item.key)" class="btn-field-item">
           <div class="field-item-icon">
             <app-icon [key]="item.key" size="default"></app-icon>
           </div>
-          <span class="field-item-label">{{ item.value.label }}</span>
+          <span class="field-item-label">{{ item.value.labelKey | translate }}</span>
         </button>
       }
     } @else {
@@ -85,9 +85,9 @@
     }
   </div>
 
-  @if (service.fieldTypeDropdownLibrary() !== null && libraryCustomFields.length === 0) {
+  @if (!standalone() && service.fieldTypeDropdownLibrary() !== null && libraryCustomFields.length === 0) {
     <div class="custom-fields-empty-msg">
-      <p class="custom-fields-empty-text">No custom fields in this library yet.</p>
+      <p class="custom-fields-empty-text">{{ 'fieldTypePicker.libraryEmpty' | translate }}</p>
     </div>
   }
 </div>

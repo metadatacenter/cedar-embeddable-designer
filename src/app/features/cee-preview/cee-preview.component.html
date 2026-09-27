@@ -1,21 +1,21 @@
 <div class="cee-preview">
   <div class="cee-preview__bar">
-    <span class="cee-preview__title">Preview</span>
+    <span class="cee-preview__title">{{ 'ceePreview.title' | translate }}</span>
     @if (editorAvailable) {
       <select
-        aria-label="Preview mode"
+        [attr.aria-label]="'ceePreview.mode' | translate"
         [value]="readOnly() ? 'read-only' : 'editable'"
         (change)="readOnly.set($any($event.target).value === 'read-only')"
       >
-        <option value="read-only">Read-only</option>
-        <option value="editable">Editable</option>
+        <option value="read-only">{{ 'ceePreview.readOnly' | translate }}</option>
+        <option value="editable">{{ 'ceePreview.editable' | translate }}</option>
       </select>
     }
     <button
       (click)="service.showPreview.set(false)"
       class="cee-preview__close"
-      title="Close preview"
-      aria-label="Close preview"
+      [title]="'ceePreview.close' | translate"
+      [attr.aria-label]="'ceePreview.close' | translate"
       type="button"
     >
       <app-icon key="close" size="small" />
@@ -25,14 +25,14 @@
   @if (editorAvailable) {
     @if (!readOnly()) {
       <p class="cee-preview__notice">
-        Try filling in the form. Entries reset when the template or preview mode changes.
+        {{ 'ceePreview.editableNotice' | translate }}
       </p>
     }
     <div class="cee-preview__mount" #mount></div>
   } @else {
     <p class="cee-preview__missing">
-      Preview renders the template with <code>&lt;cedar-embeddable-editor&gt;</code>, which the page embedding this
-      designer has not loaded. The two are sibling web components: load CEE's script alongside this one.
+      {{ 'ceePreview.missing.before' | translate }} <code>&lt;cedar-embeddable-editor&gt;</code
+      >{{ 'ceePreview.missing.after' | translate }}
     </p>
   }
 </div>

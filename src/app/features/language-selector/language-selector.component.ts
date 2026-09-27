@@ -5,24 +5,42 @@ import { ContainerDraft } from '../../core/model/container-draft';
 import { containerArtifactMetadata } from '../../core/model/cedar-template';
 import { TemplateService } from '../../core/services/template.service';
 import { LANGUAGES } from './languages';
+import { TranslatePipe } from '@ngx-translate/core';
+import { CedLanguageService } from '../../i18n/ced-language.service';
+
+/**
+ * The language list in the designer's own language.
+ *
+ * English keeps the Library of Congress names the list is written with. Another
+ * language takes each name from the browser's CLDR data, which already names every ISO
+ * 639-1 language in every locale the designer supports, and sorts by it; a code the
+ * browser cannot name keeps its English name.
+ */
+function languageOptions(locale: string, english: boolean): readonly { code: string; name: string }[] {
+  if (english) return LANGUAGES;
+  const names = new Intl.DisplayNames([locale], { type: 'language', fallback: 'none' });
+  return LANGUAGES.map((language) => ({ code: language.code, name: names.of(language.code) ?? language.name })).sort(
+    (a, b) => a.name.localeCompare(b.name, locale),
+  );
+}
 
 @Component({
   selector: 'app-language-selector',
-  imports: [FormsModule],
+  imports: [FormsModule, TranslatePipe],
   template: `
     <label
-      >Language
+      >{{ 'languageSelector.label' | translate }}
       <select
-        aria-label="Language"
+        [attr.aria-label]="'languageSelector.label' | translate"
         [disabled]="!!field()?.publishedDefinition"
         [ngModel]="value()"
         (ngModelChange)="change($event)"
       >
-        <option value="">Not specified</option>
+        <option value="">{{ 'common.notSpecified' | translate }}</option>
         @if (custom(); as code) {
-          <option [value]="code">{{ code }} (current)</option>
+          <option [value]="code">{{ 'languageSelector.current' | translate: { code: code } }}</option>
         }
-        @for (language of languages; track language.code) {
+        @for (language of languages(); track language.code) {
           <option [value]="language.code">{{ language.name }} ({{ language.code }})</option>
         }
       </select>
@@ -57,7 +75,8 @@ import { LANGUAGES } from './languages';
 export class LanguageSelectorComponent {
   readonly field = input<Field>();
   readonly container = input<ContainerDraft>();
-  readonly languages = LANGUAGES;
+  private readonly i18n = inject(CedLanguageService);
+  readonly languages = computed(() => languageOptions(this.i18n.locale(), this.i18n.language() === 'en'));
   readonly value = computed(() => this.field()?.language ?? this.container()?.metadata?.language ?? '');
   readonly custom = computed(() =>
     this.value() && !LANGUAGES.some((l) => l.code === this.value()) ? this.value() : '',

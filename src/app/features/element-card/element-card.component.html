@@ -1,12 +1,14 @@
-<section aria-label="Element settings">
+<section [attr.aria-label]="'elementCard.settings' | translate">
   <div [id]="'element-settings-' + node().id" [hidden]="!expanded">
-    <div class="tabs" role="tablist" aria-label="Element settings">
+    <div class="tabs" role="tablist" [attr.aria-label]="'elementCard.settings' | translate">
       @for (tab of tabs; track tab; let index = $index) {
         <button
           type="button"
           role="tab"
           [class.has-errors]="service.tabHasErrors(node().id, tab)"
-          [attr.aria-description]="service.tabHasErrors(node().id, tab) ? 'Contains errors' : null"
+          [attr.aria-description]="
+            service.tabHasErrors(node().id, tab) ? ('settings.containsErrors' | translate) : null
+          "
           [id]="tabId(tab)"
           [attr.aria-selected]="activeTab === tab"
           [attr.aria-controls]="tabId(tab) + '-panel'"
@@ -14,7 +16,7 @@
           (click)="activeTab = tab"
           (keydown)="onTabKeydown($event, index)"
         >
-          {{ tab }}
+          {{ tabKey(tab) | translate }}
         </button>
       }
     </div>
@@ -32,7 +34,9 @@
           }
           @case ('Element metadata') {
             <dl class="identity">
-              <dt class="editable"><label [for]="'element-key-' + node().id">Key</label></dt>
+              <dt class="editable">
+                <label [for]="'element-key-' + node().id">{{ 'settings.key' | translate }}</label>
+              </dt>
               <dd>
                 <input
                   spellcheck="false"
@@ -47,48 +51,49 @@
                   <p role="alert" class="ced-field-error" [id]="'element-key-error-' + node().id">{{ keyError() }}</p>
                 }
               </dd>
-              <dt>Element IRI</dt>
-              <dd>{{ node().definition.identifier || 'Not yet assigned' }}</dd>
+              <dt>{{ 'elementCard.elementIri' | translate }}</dt>
+              <dd>{{ node().definition.identifier || ('settings.notYetAssigned' | translate) }}</dd>
               @if (node().definition.version) {
-                <dt>Version</dt>
+                <dt>{{ 'settings.version' | translate }}</dt>
                 <dd>{{ node().definition.version }}</dd>
               }
               @if (publicationStatus()) {
-                <dt>Publication status</dt>
-                <dd>{{ publicationStatus() }}</dd>
+                <dt>{{ 'common.publicationStatus' | translate }}</dt>
+                <dd>{{ publicationStatus() | translate }}</dd>
               }
-              <dt>Model version</dt>
-              <dd>{{ artifact().schemaVersion || 'Not specified' }}</dd>
-              <dt>Created</dt>
-              <dd>{{ artifact().createdOn || 'Not yet recorded' }}</dd>
-              <dt>Modified</dt>
-              <dd>{{ artifact().modifiedOn || 'Not yet recorded' }}</dd>
+              <dt>{{ 'settings.modelVersion' | translate }}</dt>
+              <dd>{{ artifact().schemaVersion || ('common.notSpecified' | translate) }}</dd>
+              <dt>{{ 'settings.created' | translate }}</dt>
+              <dd>{{ artifact().createdOn || ('settings.notYetRecorded' | translate) }}</dd>
+              <dt>{{ 'settings.modified' | translate }}</dt>
+              <dd>{{ artifact().modifiedOn || ('settings.notYetRecorded' | translate) }}</dd>
               @if (artifact().derivedFrom) {
-                <dt>Derived from</dt>
+                <dt>{{ 'settings.derivedFrom' | translate }}</dt>
                 <dd>{{ artifact().derivedFrom }}</dd>
               }
               @if (artifact().previousVersion) {
-                <dt>Previous version</dt>
+                <dt>{{ 'settings.previousVersion' | translate }}</dt>
                 <dd>{{ artifact().previousVersion }}</dd>
               }
-              <dt class="editable">Property IRI</dt>
+              <dt class="editable">{{ 'settings.propertyIri' | translate }}</dt>
               <dd>
                 <app-property-picker [iri]="node().placement.propertyIri" (propertySelected)="saveProperty($event)" />
                 @if (error()) {
                   <p role="alert" class="ced-field-error">{{ error() }}</p>
                 }
               </dd>
-              <dt class="editable">Types</dt>
+              <dt class="editable">{{ 'settings.types' | translate }}</dt>
               <dd><app-types-picker [container]="node().definition" /></dd>
             </dl>
           }
           @case ('Display') {
             <div class="settings-fields display-fields">
               <label
-                >Display label <input spellcheck="false" [(ngModel)]="draft().displayLabel" (ngModelChange)="apply()"
+                >{{ 'settings.displayLabel' | translate }}
+                <input spellcheck="false" [(ngModel)]="draft().displayLabel" (ngModelChange)="apply()"
               /></label>
               <label
-                >Display description
+                >{{ 'settings.displayDescription' | translate }}
                 <input spellcheck="false" [(ngModel)]="draft().displayDescription" (ngModelChange)="apply()"
               /></label>
             </div>
@@ -104,28 +109,28 @@
                   [(ngModel)]="draft().allowMultiple"
                   (ngModelChange)="apply()"
                 />
-                Allow multiple</label
+                {{ 'settings.allowMultiple' | translate }}</label
               >
               @if (draft().allowMultiple) {
                 <label
-                  >Minimum occurrences
+                  >{{ 'settings.minOccurrences' | translate }}
                   <input
                     spellcheck="false"
                     type="number"
                     min="0"
                     step="1"
-                    placeholder="Default (0)"
+                    [placeholder]="'settings.minOccurrencesPlaceholder' | translate"
                     [(ngModel)]="draft().minItems"
                     (ngModelChange)="apply()"
                 /></label>
                 <label
-                  >Maximum occurrences
+                  >{{ 'settings.maxOccurrences' | translate }}
                   <input
                     spellcheck="false"
                     type="number"
                     min="0"
                     step="1"
-                    placeholder="Unlimited"
+                    [placeholder]="'settings.unlimited' | translate"
                     [(ngModel)]="draft().maxItems"
                     (ngModelChange)="apply()"
                 /></label>
@@ -144,8 +149,8 @@
     class="settings-toggle"
     [attr.aria-expanded]="expanded"
     [attr.aria-controls]="'element-settings-' + node().id"
-    [attr.aria-label]="expanded ? 'Collapse element settings' : 'Expand element settings'"
-    [title]="expanded ? 'Collapse element settings' : 'Expand element settings'"
+    [attr.aria-label]="(expanded ? 'elementCard.collapseSettings' : 'elementCard.expandSettings') | translate"
+    [title]="(expanded ? 'elementCard.collapseSettings' : 'elementCard.expandSettings') | translate"
     (click)="toggleExpanded()"
   >
     <app-icon key="chevron-down" size="small" [class.expanded]="expanded" />

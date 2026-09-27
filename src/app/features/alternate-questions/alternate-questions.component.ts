@@ -1,5 +1,7 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
+import { CedLanguageService } from '../../i18n/ced-language.service';
 import { ContainerDraft } from '../../core/model/container-draft';
 import { Field } from '../../core/models/types';
 import { TemplateService } from '../../core/services/template.service';
@@ -7,15 +9,19 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-alternate-questions',
-  imports: [FormsModule, IconComponent],
+  imports: [FormsModule, IconComponent, TranslatePipe],
   templateUrl: './alternate-questions.component.html',
   styleUrl: './alternate-questions.component.scss',
 })
 export class AlternateQuestionsComponent {
   readonly field = input<Field>();
   readonly container = input<ContainerDraft>();
-  readonly noun = computed(() => (this.container() ? 'name' : 'question'));
-  readonly heading = computed(() => (this.container() ? 'Alternate names' : 'Alternate questions'));
+  /**
+   * The prefix of this editor's keys: an element has alternate names, a field alternate
+   * questions, and each has its own sentences rather than one noun substituted into them.
+   */
+  readonly keys = computed(() => (this.container() ? 'alternates.names.' : 'alternates.questions.'));
+  private readonly i18n = inject(CedLanguageService);
   readonly question = signal('');
   readonly error = signal<string | null>(null);
   readonly questions = computed(() => this.field()?.alternateLabels ?? this.container()?.alternateLabels ?? []);
@@ -42,11 +48,11 @@ export class AlternateQuestionsComponent {
     if (this.disabled()) return;
     const question = this.question().trim();
     if (!question) {
-      this.error.set(this.container() ? 'Name cannot be blank.' : 'Question cannot be blank.');
+      this.error.set(this.i18n.t(this.keys() + 'blank'));
       return;
     }
     if (this.questions().some((existing) => existing.trim() === question)) {
-      this.error.set(this.container() ? 'Names must be unique.' : 'Questions must be unique.');
+      this.error.set(this.i18n.t(this.keys() + 'unique'));
       return;
     }
     const error = this.save([...this.questions(), question]);

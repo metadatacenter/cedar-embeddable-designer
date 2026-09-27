@@ -1,4 +1,3 @@
-@use '@org.metadatacenter/cedar-design-tokens/patterns';
 @reference "tailwindcss";
 
 /* ─── App Shell ───────────────────────────────────────────────────────────── */
@@ -391,10 +390,6 @@
   @apply w-full mt-4;
 }
 
-.validation-summary {
-  @include patterns.validation-summary;
-}
-
 .designer-identity {
   display: flex;
   flex-direction: column;
@@ -461,11 +456,6 @@
 }
 .insert-zone.dismissed app-insertion-actions {
   pointer-events: none;
-}
-
-.validation-summary--pending {
-  color: var(--cedar-text-muted);
-  background: var(--cedar-surface-authoring);
 }
 
 .overview-panel__resize {

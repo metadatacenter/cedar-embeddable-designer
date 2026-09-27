@@ -14,6 +14,35 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
+test('opens the shared field picker in a dialog, supports cancel and keeps invalid saves blocked', async ({ page }) => {
+  const picker = page.getByRole('dialog', { name: 'Choose field type', exact: true });
+  await expect(picker.locator('app-field-type-picker')).toBeVisible();
+  await expect(picker.getByRole('button', { name: 'Text', exact: true }).locator('app-icon')).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Field name', exact: true })).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(picker).toHaveCount(0);
+  await page.getByRole('button', { name: 'Choose field type', exact: true }).click();
+  await picker.getByRole('button', { name: 'Number', exact: true }).click();
+  await expect(picker).toHaveCount(0);
+  const name = page.getByRole('textbox', { name: 'Field name', exact: true });
+  await expect(name).toBeFocused();
+  await expect(name).toHaveAttribute('aria-invalid', 'false');
+  await expect(page.locator('.validation-summary')).toHaveCount(0);
+  await expect
+    .poll(() => page.evaluate(() => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).canSave))
+    .toBe(false);
+  await name.press('Tab');
+  await expect(name).toHaveAttribute('aria-invalid', 'true');
+  const summary = page.locator('.validation-summary');
+  await expect(summary.locator('summary')).toHaveText('1 error — fix before saving');
+  expect((await summary.boundingBox())!.y).toBeLessThan((await name.boundingBox())!.y);
+  await summary.locator('summary').click();
+  await summary.getByRole('button', { name: /Field name is required/ }).click();
+  await expect(name).toBeFocused();
+  await name.fill('Named number');
+  await expect(summary).toHaveCount(0);
+});
+
 for (const [label, type] of [
   ['Text', 'textfield'],
   ['Paragraph', 'textarea'],
@@ -26,6 +55,8 @@ for (const [label, type] of [
 ]) {
   test(`creates and reopens a ${label} field through the public component`, async ({ page }) => {
     await page.getByRole('button', { name: label, exact: true }).click();
+    await expect(page.getByRole('tab', { name: 'Display', exact: true })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Field metadata', exact: true })).toBeVisible();
     await page.getByRole('textbox', { name: 'Field name', exact: true }).fill(`My ${label}`);
     await expect
       .poll(() =>
@@ -42,6 +73,7 @@ for (const [label, type] of [
       artifact,
     );
     await expect(page.getByRole('textbox', { name: 'Field name', exact: true })).toHaveValue(`My ${label}`);
+    await expect(page.getByRole('tab', { name: 'Display', exact: true })).toBeVisible();
     await expect
       .poll(() =>
         page.evaluate(() => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).isDirty),
@@ -56,12 +88,24 @@ for (const [label, type] of [
   });
 }
 
+test('preserves a manual collapse during edits and opens settings for the next field', async ({ page }) => {
+  await page.getByRole('button', { name: 'Text', exact: true }).click();
+  await page.getByRole('button', { name: 'Collapse field settings' }).click();
+  await page.getByRole('textbox', { name: 'Field name', exact: true }).fill('Collapsed field');
+  await expect(page.getByRole('tab', { name: 'Display', exact: true })).toBeHidden();
+  await page.evaluate(() =>
+    (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).newArtifact('number'),
+  );
+  await expect(page.getByRole('tab', { name: 'Display', exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Constraints', exact: true })).toBeVisible();
+});
+
 test('hides placement controls, uses shadow styles and emits current artifacts', async ({ page }) => {
   await page.getByRole('button', { name: 'Text', exact: true }).click();
   await page.getByRole('textbox', { name: 'Field name', exact: true }).fill('Reusable text');
   await expect(page.getByRole('combobox', { name: 'Requirement' })).toHaveCount(0);
   await expect(page.getByText('Allow multiple', { exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: /settings/i }).click();
+  await expect(page.getByRole('button', { name: 'Collapse field settings' })).toBeVisible();
   await expect(page.getByLabel('Display label', { exact: true })).toBeHidden();
   await expect(page.getByRole('tab', { name: 'Occurrences' })).toHaveCount(0);
   await page.getByRole('tab', { name: 'Field metadata' }).click();
@@ -111,12 +155,18 @@ test('keeps invalid numeric settings dirty and unsaveable until corrected', asyn
     const field = document.getElementById('field') as CedarEmbeddableFieldDesignerElement;
     field.loadArtifact(field.currentArtifact!);
   });
-  await page.getByRole('button', { name: 'Expand field settings' }).click();
+  await expect(page.getByRole('tab', { name: 'Constraints', exact: true })).toBeVisible();
   await page.getByRole('tab', { name: 'Constraints', exact: true }).click();
   await page.getByLabel('Minimum value', { exact: true }).fill('10');
   await page.evaluate(() => document.body.style.setProperty('--cedar-control-error', '#993311'));
   await page.getByLabel('Maximum value', { exact: true }).fill('5');
   await expect(page.getByRole('alert').first()).toHaveCSS('color', 'rgb(153, 51, 17)');
+  const summary = page.locator('.validation-summary');
+  await expect(summary).toBeVisible();
+  await page.getByRole('tab', { name: 'Display', exact: true }).click();
+  await summary.locator('summary').click();
+  await summary.getByRole('button').first().click();
+  await expect(page.getByRole('tab', { name: 'Constraints', exact: true })).toHaveAttribute('aria-selected', 'true');
   await expect
     .poll(() => page.evaluate(() => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).canSave))
     .toBe(false);
@@ -125,6 +175,7 @@ test('keeps invalid numeric settings dirty and unsaveable until corrected', asyn
     .toBe(true);
   await expect(page.getByLabel('Maximum value', { exact: true })).toHaveValue('5');
   await page.getByLabel('Maximum value', { exact: true }).fill('15');
+  await expect(summary).toHaveCount(0);
   await expect
     .poll(() => page.evaluate(() => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).canSave))
     .toBe(true);

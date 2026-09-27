@@ -5,6 +5,7 @@ import {
   afterNextRender,
   Input,
   input,
+  output,
   inject,
   signal,
   HostListener,
@@ -13,14 +14,16 @@ import {
 } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { TemplateService } from '../../core/services/template.service';
 import { CustomField } from '../../core/models/types';
+import { CedFieldType } from '../../ced-public-api';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-field-type-picker',
   standalone: true,
-  imports: [FormsModule, IconComponent],
+  imports: [FormsModule, IconComponent, TranslatePipe],
   templateUrl: './field-type-picker.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./field-type-picker.component.scss'],
@@ -50,15 +53,19 @@ export class FieldTypePickerComponent {
 
   @Input() insertPosition = 0;
   readonly containerId = input<number>();
+  readonly standalone = input(false);
+  readonly fieldSelected = output<CedFieldType>();
+  readonly dismissed = output<void>();
 
   searchText = '';
   readonly showDropdown = signal(false);
 
-  get selectedLibraryName(): string {
+  /** The chosen library's name, or null for the standard field types, which the template labels. */
+  get selectedLibraryName(): string | null {
     const libId = this.service.fieldTypeDropdownLibrary();
-    if (libId === null) return 'Standard';
+    if (libId === null) return null;
     const lib = this.service.libraries().find((l) => l.id === libId);
-    return lib ? lib.name : 'Standard';
+    return lib ? lib.name : null;
   }
 
   get filteredLibraries() {
@@ -73,7 +80,9 @@ export class FieldTypePickerComponent {
   readonly visibleFieldTypesList = computed(() => {
     const visible = this.service.preferences().visibleFieldTypes;
     return Object.entries(PALETTE_FIELD_TYPES)
-      .filter(([key]) => visible[key] !== false && this.service.canAddField(key, this.containerId()))
+      .filter(
+        ([key]) => this.standalone() || (visible[key] !== false && this.service.canAddField(key, this.containerId())),
+      )
       .map(([key, value]) => ({ key, value }));
   });
 
@@ -84,7 +93,8 @@ export class FieldTypePickerComponent {
   }
 
   onFieldClick(key: string) {
-    this.service.addField(key, this.insertPosition, this.containerId());
+    if (this.standalone()) this.fieldSelected.emit(key as CedFieldType);
+    else this.service.addField(key, this.insertPosition, this.containerId());
   }
 
   onCustomFieldClick(field: CustomField) {
@@ -93,6 +103,7 @@ export class FieldTypePickerComponent {
 
   close() {
     this.service.showPicker.set(null);
+    this.dismissed.emit();
   }
 
   @HostListener('document:mousedown', ['$event'])

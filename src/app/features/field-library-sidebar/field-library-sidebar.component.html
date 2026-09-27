@@ -15,16 +15,20 @@
       <div class="sidebar-header">
         <div class="sidebar-header-left">
           <app-icon key="list" size="small" className="text-gray-600"></app-icon>
-          <h3 class="sidebar-title">Fields ({{ service.children().length }})</h3>
+          <h3 class="sidebar-title">{{ 'sidebar.fields' | translate: { count: service.children().length } }}</h3>
         </div>
-        <button (click)="service.sidebarCollapsed.set(true)" class="btn-collapse" title="Collapse sidebar">
+        <button
+          (click)="service.sidebarCollapsed.set(true)"
+          class="btn-collapse"
+          [title]="'sidebar.collapse' | translate"
+        >
           <span class="text-xs">◀</span>
         </button>
       </div>
       <!-- Field List - Drag & Drop Scrollable -->
       <div class="sidebar-scrollable custom-scrollbar" cdkDropList (cdkDropListDropped)="onFieldDrop($event)">
         @if (service.children().length === 0) {
-          <div class="field-empty-state">No fields yet</div>
+          <div class="field-empty-state">{{ 'sidebar.noFields' | translate }}</div>
         }
         @for (field of service.fields(); track field.id; let idx = $index) {
           <div
@@ -65,14 +69,14 @@
     <div class="sidebar-section" [style.height.%]="100 - fieldListHeight">
       <!-- Add Fields Header -->
       <div class="add-fields-header">
-        <h3 class="add-fields-title">Libraries & Fields</h3>
+        <h3 class="add-fields-title">{{ 'sidebar.librariesAndFields' | translate }}</h3>
       </div>
       <!-- Scrollable Content -->
       <div class="sidebar-scrollable custom-scrollbar">
         <!-- Built-in Field Types -->
         <div class="library-group">
           <button (click)="expandedBuiltIn.set(!expandedBuiltIn())" class="btn-library-toggle">
-            <span class="library-toggle-text">Built-in Fields</span>
+            <span class="library-toggle-text">{{ 'sidebar.builtIn' | translate }}</span>
             <span class="library-toggle-icon" [class.rotated]="!expandedBuiltIn()">▼</span>
           </button>
           @if (expandedBuiltIn()) {
@@ -82,7 +86,7 @@
                   <span class="add-item-icon">
                     <app-icon [key]="item.key" size="default"></app-icon>
                   </span>
-                  <span class="add-item-text">{{ item.value.label }}</span>
+                  <span class="add-item-text">{{ item.value.labelKey | translate }}</span>
                   <span class="add-item-plus"><app-icon key="add" size="small" /></span>
                 </button>
               }
@@ -99,7 +103,7 @@
             @if (expandedLibraries().has(library.id)) {
               <div class="library-content animate-fade-in">
                 @if (getFieldsForLibrary(library.id).length === 0) {
-                  <div class="library-empty-state">No fields in this library</div>
+                  <div class="library-empty-state">{{ 'sidebar.libraryEmpty' | translate }}</div>
                 }
                 @for (field of getFieldsForLibrary(library.id); track field) {
                   <button
@@ -128,7 +132,7 @@
     <div class="collapsed-view-container">
       <!-- Expand Button -->
       <div class="collapsed-header">
-        <button (click)="service.sidebarCollapsed.set(false)" class="btn-expand" title="Expand sidebar">
+        <button (click)="service.sidebarCollapsed.set(false)" class="btn-expand" [title]="'sidebar.expand' | translate">
           <span class="text-xs">▶</span>
         </button>
       </div>

@@ -30,7 +30,7 @@
 # label resolving to x86_64 would rasterise differently and the baselines would be
 # wrong again, quietly.
 #
-# `node_modules` is a named volume rather than the host's directory: the host's is
+# `node_modules` is a private anonymous volume rather than the host's directory: the host's is
 # built for darwin-arm64 and its binaries do not run here.
 #
 # The behaviour suite does not need any of this and should not pay for it — run it
@@ -58,11 +58,18 @@ if [ ! -f "$REPO/dist-bundle/cedar-embeddable-designer.js" ]; then
   exit 1
 fi
 
-exec docker run --rm --init \
+# Own the container as well as the Docker client, including interrupted builds.
+CONTAINER="ced-tests-$$-${RANDOM}"
+cleanup() { docker rm -f "$CONTAINER" >/dev/null 2>&1 || true; }
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+docker run --name "$CONTAINER" --rm --init \
   --platform linux/arm64 \
   --ipc=host \
+  -e CEDAR_TEST_WORKERS="${CEDAR_TEST_WORKERS:-}" \
   -v "$REPO":/repo \
-  -v ced-browser-node-modules:/repo/browser/node_modules \
+  -v /repo/browser/node_modules \
   -w /repo/browser \
   -e CI="${CI:-}" \
   -e CED_VISUAL="$([ "$TARGET" = 'visual.spec.ts' ] && echo 1 || echo '')" \

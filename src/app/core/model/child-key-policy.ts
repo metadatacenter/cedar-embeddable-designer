@@ -1,28 +1,26 @@
-import { isReservedInstanceName } from './cedar-template';
+import { AttributeValueFieldParent, ReservedNames } from './cedar-template';
+import { Translate, english } from '../../i18n/messages';
 
-// Attribute-value groups sit beside (rather than inside) `children` in CEDAR YAML.
-const yamlEnvelope = new Set([
-  'type',
-  'name',
-  'description',
-  'id',
-  'isBasedOn',
-  'derivedFrom',
-  'children',
-  'annotations',
-  'createdOn',
-  'createdBy',
-  'modifiedOn',
-  'modifiedBy',
-]);
-
-export function childKeyError(value: string, attributeValue = false): string | null {
+/**
+ * Why a child's key is unusable, rendered through `t`, or null for a usable key.
+ *
+ * The model library's `ReservedNames` decides which names are reserved. `parent` is the kind of
+ * container the child sits in, and matters only for an attribute-value field: the YAML form writes
+ * that field beside its parent's metadata, and a template carries more metadata keys than an element.
+ */
+export function childKeyError(
+  value: string,
+  attributeValue = false,
+  t: Translate = english,
+  parent: AttributeValueFieldParent = 'template',
+): string | null {
   const key = value.trim();
-  if (!key) return 'Key is required.';
-  if (['__proto__', 'prototype', 'constructor'].includes(key)) return 'This key is reserved for object internals.';
-  if (isReservedInstanceName(key)) return 'This key is reserved for CEDAR metadata.';
+  if (!key) return t('validation.key.required');
+  if (['__proto__', 'prototype', 'constructor'].includes(key)) return t('validation.key.objectInternals');
+  if (ReservedNames.isReservedName(key)) return t('validation.key.cedarMetadata');
   if ([...key].some((character) => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127))
-    return 'Key must not contain control characters.';
-  if (attributeValue && yamlEnvelope.has(key)) return 'This key is reserved for CEDAR YAML metadata.';
+    return t('validation.key.controlCharacters');
+  if (attributeValue && ReservedNames.isReservedAttributeValueFieldName(key, parent))
+    return t('validation.key.yamlMetadata');
   return null;
 }

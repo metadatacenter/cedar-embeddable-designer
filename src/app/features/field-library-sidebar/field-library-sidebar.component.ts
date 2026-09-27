@@ -7,11 +7,12 @@ import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService } from '../../core/services/template.service';
 import { Field, CustomField } from '../../core/models/types';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-field-library-sidebar',
   standalone: true,
-  imports: [DragDropModule, IconComponent, InsertionActionsComponent, FieldTypePickerComponent],
+  imports: [DragDropModule, IconComponent, InsertionActionsComponent, FieldTypePickerComponent, TranslatePipe],
   templateUrl: './field-library-sidebar.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./field-library-sidebar.component.scss'],

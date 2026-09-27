@@ -3,6 +3,29 @@ import { expect, test } from '@playwright/test';
 import { openDesigner } from './support';
 
 for (const width of [1280, 375]) {
+  test(`template header click finishes before empty-name errors appear at ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    const designer = await openDesigner(page);
+    const header = designer.locator('app-container-editor').first().locator(':scope > .template-header-card');
+    const name = header.getByPlaceholder('Template name');
+    await name.click();
+    await expect(designer.locator('.validation-summary')).toHaveCount(0);
+    const bounds = (await header.locator('.template-header-card__body').boundingBox())!;
+    await page.mouse.move(bounds.x + 8, bounds.y + 10);
+    await page.mouse.down();
+    await page.evaluate(
+      () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))),
+    );
+    await expect(designer.locator('.validation-summary')).toHaveCount(0);
+    await page.mouse.up();
+    await expect(name).toHaveAttribute('aria-invalid', 'true');
+    await expect(header.getByRole('button', { name: 'Collapse template settings', exact: true })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    await expect(designer.locator('.validation-summary')).toContainText('1 error — fix before saving');
+  });
+
   test(`header space toggles settings without intercepting controls at ${width}`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width, height: 1000 });
     const designer = await openDesigner(page);

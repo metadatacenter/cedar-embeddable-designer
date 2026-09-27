@@ -5,6 +5,7 @@ import { FieldSettingsComponent } from '../field-settings/field-settings.compone
 import { Component, Input, inject, ChangeDetectionStrategy, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService, FIELD_TYPES } from '../../core/services/template.service';
 import { Field } from '../../core/models/types';
@@ -33,6 +34,7 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
     IconComponent,
     ControlledTermConfigComponent,
     DragDropModule,
+    TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './field-card.component.html',
@@ -88,15 +90,15 @@ export class FieldCardComponent {
     return contentKindOf(type) === 'markup';
   }
 
-  /** The label for a static field's one value, or nothing for a type without one. */
+  /** The translation key of the label for a static field's one value, or nothing for a type without one. */
   contentLabel(type: string): string | null {
     switch (contentKindOf(type)) {
       case 'markup':
-        return 'Content';
+        return 'fieldCard.content.markup';
       case 'url':
-        return 'Image URL';
+        return 'fieldCard.content.url';
       case 'videoId':
-        return 'YouTube video ID';
+        return 'fieldCard.content.videoId';
       default:
         return null;
     }
@@ -106,8 +108,9 @@ export class FieldCardComponent {
     return field.type;
   }
 
+  /** The translation key of the field's type name, or the raw type where the palette has none. */
   getFieldTypeName(field: Field): string {
-    if (field.temporal?.type === 'xsd:dateTime') return 'Date and time';
-    return FIELD_TYPES[field.type]?.label || field.type;
+    if (field.temporal?.type === 'xsd:dateTime') return 'fieldTypes.dateTime.label';
+    return FIELD_TYPES[field.type]?.labelKey || field.type;
   }
 }

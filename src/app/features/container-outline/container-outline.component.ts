@@ -3,10 +3,11 @@ import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { ContainerDraft, ChildNode, childName } from '../../core/model/container-draft';
 import { TemplateService } from '../../core/services/template.service';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-container-outline',
-  imports: [DragDropModule, IconComponent],
+  imports: [DragDropModule, IconComponent, TranslatePipe],
   template: `<ul cdkDropList [cdkDropListData]="container().children" (cdkDropListDropped)="drop($event)">
     @for (node of container().children; track node.id) {
       <li cdkDrag [cdkDragData]="node.id" [cdkDragDisabled]="locked(node)">
@@ -18,15 +19,19 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
           <button type="button" class="select-node" (click)="select(node)">
             <app-icon [key]="node.kind === 'field' ? node.definition.type : 'folder'" className="w-4 h-4" />
             <span class="node-name">{{
-              childName(node) || (node.kind === 'field' ? 'Unnamed field' : 'Unnamed element')
+              childName(node) ||
+                ((node.kind === 'field' ? 'validation.unnamed.field' : 'validation.unnamed.element') | translate)
             }}</span>
             @if (service.visibleIssuesFor(node.id).length; as count) {
-              <span class="validation-badge" [attr.aria-label]="count + ' errors'" [title]="count + ' errors'"
+              <span
+                class="validation-badge"
+                [attr.aria-label]="'outline.errors' | translate: { count: count }"
+                [title]="'outline.errors' | translate: { count: count }"
                 ><app-icon key="warning" size="small" /> {{ count }}</span
               >
             }
             @if (node.kind === 'field' && node.placement.status === 'required') {
-              <span aria-label="Required">*</span>
+              <span [attr.aria-label]="'common.required' | translate">*</span>
             }
           </button>
           @if (node.kind === 'element') {
@@ -34,8 +39,11 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
               type="button"
               class="outline-toggle"
               [attr.aria-expanded]="!service.collapsedElements().has(node.id)"
-              [attr.aria-label]="(service.collapsedElements().has(node.id) ? 'Expand ' : 'Collapse ') + childName(node)"
-              [title]="service.collapsedElements().has(node.id) ? 'Expand element' : 'Collapse element'"
+              [attr.aria-label]="
+                (service.collapsedElements().has(node.id) ? 'common.expandNamed' : 'common.collapseNamed')
+                  | translate: { name: childName(node) }
+              "
+              [title]="(service.collapsedElements().has(node.id) ? 'outline.expand' : 'outline.collapse') | translate"
               (click)="service.toggleElement(node.id)"
             >
               <app-icon
@@ -50,8 +58,8 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
             class="outline-drag-handle"
             cdkDragHandle
             [disabled]="locked(node)"
-            [attr.aria-label]="'Reorder ' + childName(node)"
-            title="Drag to reorder; use arrow keys to move up or down"
+            [attr.aria-label]="'outline.reorder' | translate: { name: childName(node) }"
+            [title]="'outline.reorderHint' | translate"
             (keydown)="moveWithKeyboard($event, node)"
           >
             <app-icon key="list" className="w-4 h-4" />

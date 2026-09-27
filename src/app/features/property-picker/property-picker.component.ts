@@ -14,40 +14,42 @@ import {
 import { TerminologyService } from '../../core/services/terminology.service';
 import { termPickerAvailable } from '../../core/model/term-picker';
 import { trapTab } from '../../shared/focus-trap';
+import { TranslatePipe } from '@ngx-translate/core';
+import { CedLanguageService } from '../../i18n/ced-language.service';
 
 @Component({
   selector: 'app-property-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  imports: [ManualIriComponent],
+  imports: [ManualIriComponent, TranslatePipe],
   template: `
     <div class="property">
-      <span class="iri" [class.placeholder]="!iri()">{{ iri() || 'Choose a property IRI' }}</span>
+      <span class="iri" [class.placeholder]="!iri()">{{ iri() || ('propertyPicker.placeholder' | translate) }}</span>
       @if (available && baseUrl()) {
         <button
           #trigger
           type="button"
           [disabled]="disabled()"
           (click)="open()"
-          [attr.aria-label]="iri() ? 'Replace property IRI' : 'Choose property IRI'"
+          [attr.aria-label]="(iri() ? 'propertyPicker.replaceLabel' : 'propertyPicker.chooseLabel') | translate"
         >
-          {{ iri() ? 'Replace' : 'Choose' }}
+          {{ (iri() ? 'propertyPicker.replace' : 'propertyPicker.choose') | translate }}
         </button>
       }
       <button #manualTrigger type="button" [disabled]="disabled()" (click)="manualOpened.set(!manualOpened())">
-        Enter IRI manually
+        {{ 'manualIri.open' | translate }}
       </button>
     </div>
     @if (manualOpened()) {
       <app-manual-iri
         [disabled]="disabled()"
-        action="Add property"
+        action="manualIri.addProperty"
         (accepted)="acceptManual($event)"
         (cancelled)="closeManual()"
       />
     }
     @if (!available || !baseUrl()) {
-      <p role="status" class="unavailable">Vocabulary search is unavailable. You can enter an IRI manually.</p>
+      <p role="status" class="unavailable">{{ 'manualIri.searchUnavailable' | translate }}</p>
     }
     @if (opened()) {
       <div class="overlay">
@@ -55,7 +57,7 @@ import { trapTab } from '../../shared/focus-trap';
           #dialog
           role="dialog"
           aria-modal="true"
-          aria-label="Choose property IRI"
+          [attr.aria-label]="'propertyPicker.chooseLabel' | translate"
           tabindex="-1"
           (keydown)="keydown($event)"
           class="dialog"
@@ -68,6 +70,7 @@ import { trapTab } from '../../shared/focus-trap';
             [maximumTerms]="1"
             [selectionMode]="'constraints'"
             [terminologyBaseUrl]="baseUrl()"
+            [language]="language()"
             (constraintsSelected)="select($event)"
             (cancelled)="close()"
           ></cedar-embeddable-term-picker>
@@ -143,6 +146,9 @@ export class PropertyPickerComponent {
   readonly disabled = input(false);
   readonly propertySelected = output<string>();
   readonly baseUrl = inject(TerminologyService).baseUrl;
+  private readonly i18n = inject(CedLanguageService);
+  /** The designer's language, which the term picker renders in. */
+  readonly language = this.i18n.language;
   readonly available = termPickerAvailable();
   readonly opened = signal(false);
   readonly manualOpened = signal(false);
@@ -192,7 +198,7 @@ export class PropertyPickerComponent {
       typeof selected.sourceId !== 'string' ||
       !/^[a-z][a-z0-9+.-]*:\S+$/i.test(selected.sourceId)
     ) {
-      this.error.set('Select one property before choosing Done.');
+      this.error.set(this.i18n.t('propertyPicker.selectOne'));
       return;
     }
     this.propertySelected.emit(selected.sourceId);

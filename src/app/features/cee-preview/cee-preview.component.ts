@@ -1,4 +1,6 @@
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { TranslatePipe } from '@ngx-translate/core';
+import { CedLanguageService } from '../../i18n/ced-language.service';
 import { ChangeDetectionStrategy, Component, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 
 import { TemplateService } from '../../core/services/template.service';
@@ -29,7 +31,7 @@ const REBUILD_QUIET_MS = 200;
 @Component({
   selector: 'app-cee-preview',
   standalone: true,
-  imports: [IconComponent],
+  imports: [IconComponent, TranslatePipe],
   templateUrl: './cee-preview.component.html',
   styleUrls: ['./cee-preview.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,6 +40,8 @@ export class CeePreviewComponent {
   readonly service = inject(TemplateService);
   readonly readOnly = signal(true);
   private editorReadOnly = true;
+  private readonly language = inject(CedLanguageService).language;
+  private editorLanguage = '';
 
   /**
    * Whether CEE can be offered.
@@ -57,11 +61,12 @@ export class CeePreviewComponent {
       const host = this.mount()?.nativeElement;
       const template = this.service.previewJson();
       const readOnly = this.readOnly();
+      const language = this.language();
       if (host === undefined) {
         return;
       }
 
-      const timer = setTimeout(() => this.show(host, template, readOnly), REBUILD_QUIET_MS);
+      const timer = setTimeout(() => this.show(host, template, readOnly, language), REBUILD_QUIET_MS);
       onCleanup(() => clearTimeout(timer));
     });
   }
@@ -78,11 +83,12 @@ export class CeePreviewComponent {
    * The first template is assigned after the element is in the document, which is
    * the order CEE's own hosts use.
    */
-  private show(host: HTMLDivElement, template: CeeTemplateObject, readOnly: boolean): void {
-    if (this.editor === null || this.editorReadOnly !== readOnly) {
-      // CEE accepts configuration once; changing modes requires a fresh instance.
-      this.editor = createCeePreview(document, readOnly);
+  private show(host: HTMLDivElement, template: CeeTemplateObject, readOnly: boolean, language: string): void {
+    if (this.editor === null || this.editorReadOnly !== readOnly || this.editorLanguage !== language) {
+      // CEE accepts configuration once; changing mode or language requires a fresh instance.
+      this.editor = createCeePreview(document, readOnly, language);
       this.editorReadOnly = readOnly;
+      this.editorLanguage = language;
       host.replaceChildren(this.editor);
     }
     this.editor.templateObject = template;

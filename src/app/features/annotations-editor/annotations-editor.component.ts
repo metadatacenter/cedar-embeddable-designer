@@ -1,6 +1,9 @@
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
+import { CedLanguageService } from '../../i18n/ced-language.service';
+import { SETTINGS_TABS } from '../../shared/settings-tabs';
 import { Field } from '../../core/models/types';
 import { ContainerDraft } from '../../core/model/container-draft';
 import { containerArtifactMetadata } from '../../core/model/cedar-template';
@@ -10,7 +13,7 @@ type Annotation = NonNullable<Field['annotations']>[number];
 
 @Component({
   selector: 'app-annotations-editor',
-  imports: [FormsModule, IconComponent],
+  imports: [FormsModule, IconComponent, TranslatePipe],
   templateUrl: './annotations-editor.component.html',
   styleUrl: './annotations-editor.component.scss',
 })
@@ -18,6 +21,7 @@ export class AnnotationsEditorComponent {
   readonly field = input<Field>();
   readonly container = input<ContainerDraft>();
   readonly draft = signal<Annotation>({ name: '', kind: 'literal', value: '' });
+  private readonly i18n = inject(CedLanguageService);
   readonly addError = signal<string | null>(null);
   readonly rows = signal<Annotation[]>([]);
   readonly error = signal<string | null>(null);
@@ -69,20 +73,20 @@ export class AnnotationsEditorComponent {
     let error: string | null = null;
     for (const row of rows) {
       if (!row.name.trim()) {
-        error = 'Each annotation needs a name.';
+        error = this.i18n.t('annotations.nameRequired');
         break;
       }
       if (names.has(row.name)) {
-        error = 'Annotation names must be unique.';
+        error = this.i18n.t('annotations.nameUnique');
         break;
       }
       names.add(row.name);
       if (!row.value.trim()) {
-        error = 'An annotation value is required.';
+        error = this.i18n.t('annotations.valueRequired');
         break;
       }
       if (row.kind === 'iri' && !/^[a-z][a-z0-9+.-]*:\S+$/i.test(row.value)) {
-        error = 'Annotation value must be a valid IRI.';
+        error = this.i18n.t('annotations.valueIri');
         break;
       }
     }
@@ -110,7 +114,7 @@ export class AnnotationsEditorComponent {
       if (!error) this.loaded = JSON.stringify([owner.id, annotations]);
     }
     this.error.set(error);
-    this.service.setSettingsError(owner.id, 'annotations', error, 'Annotations');
+    this.service.setSettingsError(owner.id, 'annotations', error, SETTINGS_TABS.annotations);
     return !error;
   }
 }

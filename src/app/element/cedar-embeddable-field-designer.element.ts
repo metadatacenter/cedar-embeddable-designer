@@ -1,6 +1,8 @@
+import { ValidationSummaryComponent } from '../shared/validation-summary.component';
 import { DesignerConfigService } from '../core/services/designer-config.service';
 import {
   Component,
+  ElementRef,
   DestroyRef,
   EnvironmentInjector,
   EventEmitter,
@@ -11,23 +13,37 @@ import {
   effect,
   inject,
   signal,
+  viewChild,
+  afterRenderEffect,
 } from '@angular/core';
 import { TemplateService } from '../core/services/template.service';
 import { TerminologyService } from '../core/services/terminology.service';
 import { PreferencesService } from '../core/services/preferences.service';
-import { CedConfig, CedFieldType, CedValidationReport } from '../ced-public-api';
+import { CedConfig, CedFieldType, CedLanguage, CedValidationReport } from '../ced-public-api';
 import { fieldToJson, readField } from '../core/model/cedar-template';
-import { Field, PALETTE_FIELD_TYPES, FIELD_TYPES } from '../core/models/types';
+import { Field, FIELD_TYPES } from '../core/models/types';
 import { FieldCardComponent } from '../features/field-card/field-card.component';
+import { FieldTypePickerComponent } from '../features/field-type-picker/field-type-picker.component';
 import { FontRegistrar } from '../shared/font-registrar/font-registrar';
+import { TranslatePipe } from '@ngx-translate/core';
+import { CedLanguageService } from '../i18n/ced-language.service';
+import { provideCedTranslations } from '../i18n/i18n';
 
 /** The same field controls CED uses, with one field document and no repository policy. */
 @Component({
   selector: 'app-cedar-embeddable-field-designer-element',
-  imports: [FieldCardComponent, FontRegistrar],
-  providers: [TemplateService, TerminologyService, PreferencesService, DesignerConfigService],
+  imports: [FieldCardComponent, FieldTypePickerComponent, FontRegistrar, ValidationSummaryComponent, TranslatePipe],
+  // Each element owns its translation service, and therefore its language.
+  providers: [
+    ...provideCedTranslations(),
+    CedLanguageService,
+    TemplateService,
+    TerminologyService,
+    PreferencesService,
+    DesignerConfigService,
+  ],
   encapsulation: ViewEncapsulation.ShadowDom,
-  styleUrls: ['../../styles.css'],
+  styleUrls: ['../../styles.css', './cedar-embeddable-field-designer.element.scss'],
   styles: [
     `
       :host {
@@ -38,11 +54,6 @@ import { FontRegistrar } from '../shared/font-registrar/font-registrar';
       .field-editor {
         padding: var(--cedar-space-4);
       }
-      .type-picker {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--cedar-space-2);
-      }
       fieldset {
         border: 0;
         padding: 0;
@@ -52,37 +63,62 @@ import { FontRegistrar } from '../shared/font-registrar/font-registrar';
     `,
   ],
   template: `<ced-font-registrar />
-    <section class="field-editor" aria-label="Field designer">
+    <app-validation-summary />
+    <section class="field-editor" [attr.aria-label]="'fieldElement.label' | translate">
       @if (field(); as field) {
         @if (readOnly) {
-          <p role="status">This field is read only.</p>
+          <p role="status">{{ 'fieldElement.readOnly' | translate }}</p>
         }
         <fieldset [disabled]="readOnly" [attr.inert]="readOnly ? '' : null">
           <app-field-card [field]="field" [standalone]="true" />
         </fieldset>
       } @else {
-        <h2>Choose a field type</h2>
-        <div class="type-picker">
-          @for (type of types; track type.key) {
-            <button type="button" [disabled]="readOnly" (click)="newArtifact(type.key)">{{ type.label }}</button>
-          }
-        </div>
+        <button type="button" [disabled]="readOnly" (click)="choosingType.set(true)">
+          {{ 'fieldElement.chooseType' | translate }}
+        </button>
+        @if (choosingType() && !readOnly) {
+          <dialog
+            #typeDialog
+            [attr.aria-label]="'fieldElement.chooseType' | translate"
+            (cancel)="choosingType.set(false)"
+          >
+            <app-field-type-picker
+              [standalone]="true"
+              (fieldSelected)="newArtifact($event)"
+              (dismissed)="choosingType.set(false)"
+            />
+          </dialog>
+        }
       }
     </section>`,
 })
 export class CedarEmbeddableFieldDesignerElementComponent {
   readonly service = inject(TemplateService);
   private readonly configuration = inject(DesignerConfigService);
+  private readonly i18n = inject(CedLanguageService);
   private readonly baseline = signal('');
   private readonly hostReadOnly = signal(false);
   readonly field = computed(() => this.service.fields()[0] as Field | undefined);
-  readonly types = Object.entries(PALETTE_FIELD_TYPES).map(([key, value]) => ({
-    key: key as CedFieldType,
-    label: value.label,
-  }));
+  readonly choosingType = signal(true);
+  private readonly typeDialog = viewChild<ElementRef<HTMLDialogElement>>('typeDialog');
 
   @Input() set config(value: CedConfig | null) {
     this.configuration.apply(value);
+  }
+  /**
+   * The language the field designer's own text is shown in: `'en'` or `'hu'`.
+   *
+   * Settable as a property or as the `language` attribute, and changeable at any time;
+   * the designer's text, the embedded term picker and the CEE preview follow. Any other
+   * value selects English. Each element keeps its own language, so two field designers on one
+   * page may differ. Template content the author wrote is never translated.
+   */
+  @Input()
+  set language(value: string | null) {
+    this.i18n.setLanguage(value);
+  }
+  get language(): CedLanguage {
+    return this.i18n.language();
   }
   @Input() set readOnly(value: boolean) {
     this.hostReadOnly.set(value);
@@ -102,6 +138,7 @@ export class CedarEmbeddableFieldDesignerElementComponent {
   @Input() readonly newArtifact = (type?: CedFieldType): void => {
     if (type !== undefined && !Object.hasOwn(FIELD_TYPES, type)) throw new Error(`Unsupported field type: ${type}`);
     this.reset();
+    this.choosingType.set(!type);
     if (type) {
       this.service.addField(type, 0);
       this.service.updateFieldName(this.service.fields()[0].id, '');
@@ -134,6 +171,10 @@ export class CedarEmbeddableFieldDesignerElementComponent {
     this.service.fieldDocumentMode.set(true);
     this.service.preferences.update((p) => ({ ...p, showHelpText: true, showDefaultValue: true }));
     this.newArtifact();
+    afterRenderEffect(() => {
+      const dialog = this.typeDialog()?.nativeElement;
+      if (dialog && !dialog.open) dialog.showModal();
+    });
     const injector = inject(EnvironmentInjector);
     const destroy = inject(DestroyRef);
     for (const callback of [

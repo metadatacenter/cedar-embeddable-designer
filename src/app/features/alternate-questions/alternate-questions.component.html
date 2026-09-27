@@ -1,22 +1,24 @@
 <fieldset [disabled]="disabled()">
-  <legend>{{ heading() }}</legend>
+  <legend>{{ keys() + 'heading' | translate }}</legend>
   <div class="add-row">
     <input
       spellcheck="false"
-      [attr.aria-label]="'New alternate ' + noun()"
+      [attr.aria-label]="keys() + 'newLabel' | translate"
       [ngModel]="question()"
       (ngModelChange)="edit($event)"
     />
-    <button type="button" (click)="add()">Add {{ noun() }}</button>
+    <button type="button" (click)="add()">{{ keys() + 'add' | translate }}</button>
   </div>
   @if (error(); as message) {
     <p role="alert">{{ message }}</p>
   }
-  <table [attr.aria-label]="heading()">
+  <table [attr.aria-label]="keys() + 'heading' | translate">
     <thead>
       <tr>
-        <th scope="col">{{ container() ? 'Name' : 'Question' }}</th>
-        <th scope="col" class="actions"><span class="sr-only">Actions</span></th>
+        <th scope="col">{{ keys() + 'column' | translate }}</th>
+        <th scope="col" class="actions">
+          <span class="sr-only">{{ 'fieldDesigner.columns.actions' | translate }}</span>
+        </th>
       </tr>
     </thead>
     <tbody>
@@ -27,8 +29,8 @@
             <button
               type="button"
               class="remove"
-              [attr.aria-label]="'Remove ' + noun() + ' ' + (i + 1)"
-              [title]="'Remove ' + noun()"
+              [attr.aria-label]="keys() + 'removeNumbered' | translate: { number: i + 1 }"
+              [title]="keys() + 'remove' | translate"
               (click)="remove(i)"
             >
               <app-icon key="trash" size="small" />
@@ -37,7 +39,7 @@
         </tr>
       } @empty {
         <tr>
-          <td colspan="2" class="empty">No alternate {{ noun() }}s.</td>
+          <td colspan="2" class="empty">{{ keys() + 'none' | translate }}</td>
         </tr>
       }
     </tbody>

@@ -15,4 +15,12 @@ describe('serialized child keys', () => {
       expect(childKeyError(key)).toBeNull();
     }
   });
+  it('protects nested and standalone element metadata', () => {
+    for (const key of ['type', 'id', 'children', 'name', 'description', 'createdOn'])
+      expect(childKeyError(key, true, undefined, 'element')).not.toBeNull();
+    for (const key of ['annotations', 'isBasedOn', 'derivedFrom']) {
+      expect(childKeyError(key, true, undefined, 'element')).toBeNull();
+      expect(childKeyError(key, true, undefined, 'template')).not.toBeNull();
+    }
+  });
 });

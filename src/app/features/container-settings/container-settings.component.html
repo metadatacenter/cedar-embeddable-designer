@@ -1,11 +1,17 @@
 <div [hidden]="!expanded" [id]="'container-settings-' + container().id">
-  <div class="tabs" role="tablist" [attr.aria-label]="container().kind + ' settings'">
+  <div
+    class="tabs"
+    role="tablist"
+    [attr.aria-label]="'containerSettings.' + container().kind + '.settings' | translate"
+  >
     @for (tab of tabs(); track tab; let index = $index) {
       <button
         type="button"
         role="tab"
         [class.has-errors]="service.tabHasErrors(container().id, tab)"
-        [attr.aria-description]="service.tabHasErrors(container().id, tab) ? 'Contains errors' : null"
+        [attr.aria-description]="
+          service.tabHasErrors(container().id, tab) ? ('settings.containsErrors' | translate) : null
+        "
         [id]="tabId(tab)"
         [attr.aria-selected]="selected() === tab"
         [attr.aria-controls]="tabId(tab) + '-panel'"
@@ -13,7 +19,7 @@
         (click)="activeTab = tab"
         (keydown)="keydown($event, index)"
       >
-        {{ tab }}
+        {{ tabKey(tab) | translate }}
       </button>
     }
   </div>
@@ -36,7 +42,7 @@
     @if (container().kind === 'template') {
       <div class="settings-fields display-fields">
         <label
-          >Header
+          >{{ 'containerSettings.header' | translate }}
           <textarea
             spellcheck="false"
             rows="1"
@@ -45,7 +51,7 @@
           ></textarea>
         </label>
         <label
-          >Footer
+          >{{ 'containerSettings.footer' | translate }}
           <textarea
             spellcheck="false"
             rows="1"
@@ -68,31 +74,33 @@
     [attr.aria-labelledby]="tabId(metadataTab())"
   >
     <dl class="identity">
-      <dt>{{ container().kind === 'template' ? 'Template IRI' : 'Element IRI' }}</dt>
-      <dd>{{ container().identifier || 'Not yet assigned' }}</dd>
+      <dt>
+        {{ (container().kind === 'template' ? 'containerSettings.templateIri' : 'elementCard.elementIri') | translate }}
+      </dt>
+      <dd>{{ container().identifier || ('settings.notYetAssigned' | translate) }}</dd>
       @if (container().version) {
-        <dt>Version</dt>
+        <dt>{{ 'settings.version' | translate }}</dt>
         <dd>{{ container().version }}</dd>
       }
       @if (status()) {
-        <dt>Publication status</dt>
-        <dd>{{ status() }}</dd>
+        <dt>{{ 'common.publicationStatus' | translate }}</dt>
+        <dd>{{ status() | translate }}</dd>
       }
-      <dt>Model version</dt>
-      <dd>{{ artifact().schemaVersion || 'Not specified' }}</dd>
-      <dt>Created</dt>
-      <dd>{{ artifact().createdOn || 'Not yet recorded' }}</dd>
-      <dt>Modified</dt>
-      <dd>{{ artifact().modifiedOn || 'Not yet recorded' }}</dd>
+      <dt>{{ 'settings.modelVersion' | translate }}</dt>
+      <dd>{{ artifact().schemaVersion || ('common.notSpecified' | translate) }}</dd>
+      <dt>{{ 'settings.created' | translate }}</dt>
+      <dd>{{ artifact().createdOn || ('settings.notYetRecorded' | translate) }}</dd>
+      <dt>{{ 'settings.modified' | translate }}</dt>
+      <dd>{{ artifact().modifiedOn || ('settings.notYetRecorded' | translate) }}</dd>
       @if (artifact().derivedFrom) {
-        <dt>Derived from</dt>
+        <dt>{{ 'settings.derivedFrom' | translate }}</dt>
         <dd>{{ artifact().derivedFrom }}</dd>
       }
       @if (artifact().previousVersion) {
-        <dt>Previous version</dt>
+        <dt>{{ 'settings.previousVersion' | translate }}</dt>
         <dd>{{ artifact().previousVersion }}</dd>
       }
-      <dt class="editable">Types</dt>
+      <dt class="editable">{{ 'settings.types' | translate }}</dt>
       <dd><app-types-picker [container]="container()" /></dd>
     </dl>
   </section>
@@ -102,8 +110,8 @@
   class="settings-toggle"
   [attr.aria-expanded]="expanded"
   [attr.aria-controls]="'container-settings-' + container().id"
-  [attr.aria-label]="(expanded ? 'Collapse ' : 'Expand ') + container().kind + ' settings'"
-  [title]="(expanded ? 'Collapse ' : 'Expand ') + container().kind + ' settings'"
+  [attr.aria-label]="'containerSettings.' + container().kind + (expanded ? '.collapse' : '.expand') | translate"
+  [title]="'containerSettings.' + container().kind + (expanded ? '.collapse' : '.expand') | translate"
   (click)="toggleExpanded()"
 >
   <app-icon key="chevron-down" size="small" [class.expanded]="expanded" />

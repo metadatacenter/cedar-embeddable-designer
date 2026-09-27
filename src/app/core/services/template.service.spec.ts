@@ -28,6 +28,40 @@ describe('TemplateService', () => {
     service = TestBed.inject(TemplateService);
   });
 
+  it('generates usable unique keys for reserved-prefix display names without looping', () => {
+    // Bound a recurrence of the synchronous loop so it fails instead of hanging the test worker.
+    const internals = service as unknown as { keyError(id: number, key: string): string | null };
+    const original = internals.keyError.bind(service);
+    let attempts = 0;
+    internals.keyError = (id, key) => {
+      if (++attempts > 100) throw new Error('Unbounded automatic naming');
+      return original(id, key);
+    };
+    for (const name of ['@id', '@context', '@anything', 'bad\u0000key']) {
+      service.addField('text', 0);
+      const id = service.selectedField()!;
+      service.updateFieldName(id, name);
+      expect(service.childKey(id)).toMatch(/^field(?:_\d+)?$/);
+    }
+    expect(() => buildContainer(service.session.document())).not.toThrow();
+    service.addElement(service.session.document().id);
+    const element = service.session.document().children.find((n) => n.kind === 'element')!;
+    service.updateContainerDefinition(element.id, { name: '@id' });
+    expect(service.childKey(element.id)).toMatch(/^field(?:_\d+)?$/);
+  });
+
+  it('validates element field settings in their real parent', () => {
+    service.addElement(service.session.document().id);
+    const element = service.session.document().children.find((n) => n.kind === 'element')!;
+    service.updateContainerDefinition(element.id, { name: 'Section' });
+    service.addField('attributeValue', 0, element.id);
+    const field = findContainer(service.session.document(), element.id)!.children[0];
+    // annotations belongs to the template envelope, but neither element envelope.
+    expect(service.updateFieldSettings(field.id, { deploymentName: 'annotations' })).toBeNull();
+    expect(service.updateFieldSettings(field.id, { displayLabel: 'Details' })).toBeNull();
+    expect(service.updateFieldSettings(field.id, { deploymentName: 'name' })).not.toBeNull();
+  });
+
   it('inserts a mixed reusable batch in order, retaining definitions and resolving placement names', () => {
     const field = fieldToJson(service.fields()[0]) as CedJsonObject;
     const element = templateToJson(buildContainer(newContainer('element', 'Section'))) as CedJsonObject;

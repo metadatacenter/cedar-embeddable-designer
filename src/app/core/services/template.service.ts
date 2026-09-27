@@ -17,17 +17,19 @@ import {
   moveChild,
   parentOf,
   updateContainer,
+  replaceFields,
   allowedInContainer,
   findContainer,
 } from '../model/container-draft';
 import { FieldLibraryService } from './field-library.service';
+import { CedLanguageService } from '../../i18n/ced-language.service';
+import { LocalizedError, message } from '../../i18n/messages';
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { Field, FieldDefaultValue, CustomField, ControlledTermSet, UserPreferences } from '../models/types';
 import { PreferencesService } from './preferences.service';
 import {
   DesignerTemplate,
   deploymentKeys,
-  buildTemplate,
   newFieldIdentity,
   newTemplateIdentifier,
   readContainer,
@@ -105,7 +107,12 @@ export class TemplateService {
   private readonly automaticKeys = new Set<number>();
 
   private generatedKey(id: number, name: string): string {
-    const base = name.trim().toLowerCase().replace(/\s+/g, '_') || 'field';
+    const candidate = name.trim().toLowerCase().replace(/\s+/g, '_');
+    // Suffixing cannot repair a leading @ or an embedded control character.
+    const base =
+      candidate.startsWith('@') || [...candidate].some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127)
+        ? 'field'
+        : candidate || 'field';
     let key = base;
     for (let suffix = 2; this.keyError(id, key); suffix++) key = `${base}_${suffix}`;
     return key;
@@ -113,6 +120,8 @@ export class TemplateService {
 
   // Inject PreferencesService
   readonly preferencesService = inject(PreferencesService);
+  /** The language validation messages and errors are rendered in. */
+  private readonly i18n = inject(CedLanguageService);
 
   /** A standalone field has no container-owned placement settings. */
   readonly fieldDocumentMode = signal(false);
@@ -135,12 +144,13 @@ export class TemplateService {
   readonly loadError = signal<string | null>(null);
   private readonly draftIssues = signal<Record<string, { message: string; tab: string }>>({});
   readonly nameFocusRequest = signal<number | null>(null);
+  readonly initialInsertionId = signal<number | null>(null);
   private readonly touchedNames = signal<ReadonlySet<number>>(new Set());
   touchName(id: number): void {
     this.touchedNames.update((ids) => new Set([...ids, id]));
   }
   nameError(id: number, name: string, kind: 'field' | 'element' | 'template'): string | null {
-    return this.touchedNames().has(id) ? artifactNameError(name, kind) : null;
+    return this.touchedNames().has(id) ? artifactNameError(name, kind, this.i18n.t) : null;
   }
   readonly visibleIssues = computed(() =>
     this.validationReport().issues.filter((issue) => issue.setting !== 'name' || this.touchedNames().has(issue.nodeId)),
@@ -163,7 +173,7 @@ export class TemplateService {
       return next;
     });
   }
-  readonly validationReport = computed(() => validateDocument(this.document(), this.draftIssues()));
+  readonly validationReport = computed(() => validateDocument(this.document(), this.draftIssues(), this.i18n.t));
   issuesFor(id: number): CedValidationIssue[] {
     return this.validationReport().issues.filter((issue) => issue.path.includes(id));
   }
@@ -357,7 +367,7 @@ export class TemplateService {
   // Field manipulation methods
   addField(type: string, position: number, targetId = this.session.active().id) {
     if (!this.canAddField(type, targetId)) {
-      this.loadError.set('Page breaks can only be placed in templates.');
+      this.loadError.set(this.i18n.t('errors.pageBreakPlacement'));
       return;
     }
     const newField: Field = {
@@ -383,7 +393,7 @@ export class TemplateService {
 
   addCustomFieldToTemplate(customField: CustomField, position: number, targetId = this.session.active().id) {
     if (!this.canAddField(customField.definition.type, targetId)) {
-      this.loadError.set('Page breaks can only be placed in templates.');
+      this.loadError.set(this.i18n.t('errors.pageBreakPlacement'));
       return;
     }
     const newField: Field = {
@@ -509,17 +519,23 @@ export class TemplateService {
 
   private keyError(id: number, value: string): string | null {
     const key = value.trim();
-    const siblings = parentOf(this.session.document(), id)?.children ?? [];
+    const parent = parentOf(this.session.document(), id);
+    const siblings = parent?.children ?? [];
     const node = siblings.find((child) => child.id === id);
-    const invalid = childKeyError(key, node?.kind === 'field' && fieldView(node).type === 'attributeValue');
+    const invalid = childKeyError(
+      key,
+      node?.kind === 'field' && fieldView(node).type === 'attributeValue',
+      this.i18n.t,
+      parent?.kind ?? 'template',
+    );
     if (invalid) return invalid;
     return siblings.some((node) => node.id !== id && this.childKey(node.id) === key)
-      ? 'Another child in this container already uses that key.'
+      ? this.i18n.t('validation.key.duplicate')
       : null;
   }
 
   updateFieldSettings(id: number, changes: Partial<Field>): string | null {
-    if (this.isPublished(id)) return 'Published fields are read-only. Editing a draft version is not available yet.';
+    if (this.isPublished(id)) return this.i18n.t('errors.publishedReadOnly');
     if (changes.deploymentName !== undefined) {
       const error = this.keyError(id, changes.deploymentName);
       if (error) return error;
@@ -528,7 +544,7 @@ export class TemplateService {
     }
     const current = this.fieldsFor(id)().find((field) => field.id === id);
     if (current && !this.canAddField(changes.type ?? current.type, this.parentContainerId(id)))
-      return 'Page breaks can only be placed in templates.';
+      return this.i18n.t('errors.pageBreakPlacement');
     if (current) changes = reducePrecision(current, changes);
     if (current && changes.temporal?.timezoneEnabled === false) {
       const value = changes.defaultValue ?? current.defaultValue;
@@ -537,22 +553,22 @@ export class TemplateService {
       }
     }
     if (current) {
-      const error = defaultValueError({ ...current, ...changes }, changes.defaultValue ?? current.defaultValue);
+      const error = defaultValueError(
+        { ...current, ...changes },
+        changes.defaultValue ?? current.defaultValue,
+        this.i18n.t,
+      );
       if (error) return error;
     }
     const fields = this.fieldsFor(id)().map((field) => (field.id === id ? { ...field, ...changes } : field));
     try {
-      buildTemplate({
-        name: this.templateName(),
-        description: this.templateDesc(),
-        identifier: '',
-        version: '0.0.1',
-        fields,
-      });
+      const parent = findContainer(this.session.document(), this.parentContainerId(id));
+      if (!parent) return this.i18n.t('errors.elementMissing');
+      buildContainer(replaceFields(parent, fields));
       this.fieldsFor(id).set(fields);
       return null;
     } catch (error) {
-      return error instanceof Error ? error.message : String(error);
+      return this.i18n.describe(error);
     }
   }
 
@@ -625,6 +641,7 @@ export class TemplateService {
     this.loadError.set(null);
     this.mintedIdentifier.set(newTemplateIdentifier());
     const document = newContainer(kind);
+    this.initialInsertionId.set(!withStarterFields ? document.id : null);
     if (kind === 'template') {
       document.identifier = '';
       document.children = withStarterFields ? containerFromFlat({ ...document, fields: starterFields() }).children : [];
@@ -657,11 +674,12 @@ export class TemplateService {
     try {
       state = readContainer(source as string | object);
     } catch (error) {
-      this.loadError.set(error instanceof Error ? error.message : String(error));
+      this.loadError.set(this.i18n.describe(error));
       throw error;
     }
     this.loadError.set(null);
 
+    this.initialInsertionId.set(null);
     this.draftIssues.set({});
     this.touchedNames.set(new Set());
     this.nameFocusRequest.set(null);
@@ -715,7 +733,10 @@ export class TemplateService {
     namePlacement = true,
   ): void {
     const target = findContainer(this.session.document(), targetId);
-    if (!target) throw new Error('The import destination no longer exists.');
+    if (!target) throw new LocalizedError(message('errors.importDestinationMissing'));
+    if (target.kind === 'element' && node.kind === 'field' && !target.children.length && !target.name.trim()) {
+      this.touchName(target.id);
+    }
     this.loadError.set(null);
     if (namePlacement) {
       const used = new Set(target.children.map((child) => this.childKey(child.id)));
@@ -759,12 +780,12 @@ export class TemplateService {
   ): void {
     const root = this.session.document();
     const target = findContainer(root, targetId);
-    if (!target) throw new Error('The destination no longer exists.');
+    if (!target) throw new LocalizedError(message('errors.destinationMissing'));
     const nodes = sources.map(({ type, artifact }): ChildNode => {
       if (type === 'field') {
         const field = readField(JSON.stringify(artifact));
         if (!allowedInContainer(field.type, target.kind))
-          throw new Error('Page breaks can only be placed in templates.');
+          throw new LocalizedError(message('errors.pageBreakPlacement'));
         return fieldNode({
           ...field,
           id: newNodeId(),
@@ -773,7 +794,7 @@ export class TemplateService {
         });
       }
       const definition = readContainer(artifact);
-      if (definition.kind !== 'element') throw new Error('Choose a field or element artifact.');
+      if (definition.kind !== 'element') throw new LocalizedError(message('errors.chooseFieldOrElement'));
       return {
         kind: 'element',
         id: definition.id,
@@ -810,7 +831,7 @@ export class TemplateService {
   }
   importElement(source: string | object, targetId = this.session.active().id): void {
     const definition = readContainer(source);
-    if (definition.kind !== 'element') throw new Error('Choose an element document to insert into this container.');
+    if (definition.kind !== 'element') throw new LocalizedError(message('errors.chooseElementDocument'));
     // Import is an independent local copy retaining its source artifact identity.
     this.insertNode(
       {
@@ -865,7 +886,7 @@ export class TemplateService {
         parent!.id,
       );
     } catch (error) {
-      this.loadError.set(error instanceof Error ? error.message : String(error));
+      this.loadError.set(this.i18n.describe(error));
     }
   }
 
@@ -887,12 +908,12 @@ export class TemplateService {
       this.pruneCollapsed();
       this.loadError.set(null);
     } catch (error) {
-      this.loadError.set(error instanceof Error ? error.message : String(error));
+      this.loadError.set(this.i18n.describe(error));
     }
   }
   updateElementPlacement(id: number, placement: ElementNode['placement']): string | null {
     const parent = parentOf(this.session.document(), id);
-    if (!parent) return 'The element no longer exists.';
+    if (!parent) return this.i18n.t('errors.elementMissing');
     const name = placement.deploymentName?.trim();
     if (name !== undefined) {
       const error = this.keyError(id, name);
@@ -912,7 +933,7 @@ export class TemplateService {
       this.session.document.set(next);
       return null;
     } catch (error) {
-      return error instanceof Error ? error.message : String(error);
+      return this.i18n.describe(error);
     }
   }
 }

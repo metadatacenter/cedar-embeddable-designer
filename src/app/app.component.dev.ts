@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, signal } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { CedConfig } from './ced-public-api';
+import { LocalizedError, message } from './i18n/messages';
 
 /**
  * The standalone application, which is a host page like any other.
@@ -15,14 +17,15 @@ import { CedConfig } from './ced-public-api';
     <cedar-embeddable-designer
       [config]="config"
       [artifact]="example()"
+      [language]="language"
       (templateChange)="onTemplateChange($event)"
     ></cedar-embeddable-designer>
     <p class="dev-host__status">
       @if (exampleError()) {
         {{ exampleError() }}
       } @else {
-        Last templateChange: {{ changeCount() }} event(s) |
-        <a href="?example=all-fields">All-fields debugging example</a>
+        {{ 'devHost.changes' | translate: { count: changeCount() } }}
+        <a href="?example=all-fields">{{ 'devHost.example' | translate }}</a>
       }
     </p>
   `,
@@ -54,6 +57,7 @@ import { CedConfig } from './ced-public-api';
     `,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  imports: [TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DevHostComponent {
@@ -74,13 +78,17 @@ export class DevHostComponent {
     bridgeBaseUrl: 'https://bridge.metadatacenter.orgx/',
   };
 
+  /** The designer's language, from `?language=hu`, so either can be tried from the address bar. */
+  readonly language = new URLSearchParams(location.search).get('language');
+
   readonly example = signal<object | undefined>(undefined);
   readonly exampleError = signal('');
   constructor() {
     if (new URLSearchParams(location.search).get('example') === 'all-fields') {
       fetch('examples/all-fields-nested.json')
         .then((response) => {
-          if (!response.ok) throw new Error(`Example load failed (${response.status})`);
+          if (!response.ok)
+            throw new LocalizedError(message('devHost.exampleFailed', { status: String(response.status) }));
           return response.json();
         })
         .then((artifact) => this.example.set(artifact))

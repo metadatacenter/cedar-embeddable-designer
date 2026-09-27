@@ -1,41 +1,43 @@
 <dialog #dialog aria-labelledby="child-picker-title" (cancel)="$event.preventDefault(); close()">
-  <h2 id="child-picker-title">Import {{ kindLabel }}</h2>
+  <h2 id="child-picker-title">{{ kindKey + 'title' | translate }}</h2>
   <div class="selection-heading">
-    <h3>Selected children ({{ selected().length }})</h3>
+    <h3>{{ 'childPicker.selectedHeading' | translate: { count: selected().length } }}</h3>
     <div class="actions">
-      <button type="button" (click)="close()">Cancel</button>
+      <button type="button" (click)="close()">{{ 'common.cancel' | translate }}</button>
       <button type="button" class="primary" [disabled]="!selected().length || saving()" (click)="done()">
-        {{ saving() ? 'Adding…' : 'Done' }}
+        {{ (saving() ? 'childPicker.adding' : 'common.done') | translate }}
       </button>
     </div>
   </div>
   <div class="table-scroll">
-    <table aria-label="Selected children" class="selected-table">
+    <table [attr.aria-label]="'childPicker.selectedTable' | translate" class="selected-table">
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Created</th>
-          <th>Modified</th>
-          <th>Version</th>
-          <th>Status</th>
-          <th><span class="sr-only">Remove</span></th>
+          <th>{{ 'childPicker.columns.name' | translate }}</th>
+          <th>{{ 'childPicker.columns.type' | translate }}</th>
+          <th>{{ 'childPicker.columns.created' | translate }}</th>
+          <th>{{ 'childPicker.columns.modified' | translate }}</th>
+          <th>{{ 'childPicker.columns.version' | translate }}</th>
+          <th>{{ 'childPicker.columns.status' | translate }}</th>
+          <th>
+            <span class="sr-only">{{ 'childPicker.columns.remove' | translate }}</span>
+          </th>
         </tr>
       </thead>
       <tbody>
         @for (row of selected(); track key(row)) {
           <tr>
             <td>{{ row.name }}</td>
-            <td>{{ row.type === 'field' ? 'Field' : 'Element' }}</td>
-            <td>{{ row.createdOn ? (row.createdOn | date: 'mediumDate') : '—' }}</td>
-            <td>{{ row.modifiedOn ? (row.modifiedOn | date: 'mediumDate') : '—' }}</td>
+            <td>{{ (row.type === 'field' ? 'childPicker.kind.field' : 'childPicker.kind.element') | translate }}</td>
+            <td>{{ row.createdOn ? (row.createdOn | date: 'mediumDate' : undefined : locale()) : '—' }}</td>
+            <td>{{ row.modifiedOn ? (row.modifiedOn | date: 'mediumDate' : undefined : locale()) : '—' }}</td>
             <td>{{ row.version || '—' }}</td>
             <td>{{ row.status || '—' }}</td>
             <td>
               <button
                 type="button"
                 [disabled]="saving()"
-                [attr.aria-label]="'Remove ' + row.name"
+                [attr.aria-label]="'childPicker.removeRow' | translate: { name: row.name }"
                 (click)="remove(row)"
               >
                 <app-icon key="trash" />
@@ -44,17 +46,17 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="7" class="empty">Select {{ kindLabel }} from the results below.</td>
+            <td colspan="7" class="empty">{{ kindKey + 'selectHint' | translate }}</td>
           </tr>
         }
       </tbody>
     </table>
   </div>
   @if (!service.childSource()) {
-    <p role="status">Repository search is unavailable in this host.</p>
+    <p role="status">{{ 'childPicker.unavailable' | translate }}</p>
   } @else {
     <form (ngSubmit)="search()" class="search">
-      <label for="child-search">Search {{ kindLabel }}</label>
+      <label for="child-search">{{ kindKey + 'searchLabel' | translate }}</label>
       <div>
         <input
           spellcheck="false"
@@ -62,21 +64,21 @@
           name="query"
           type="search"
           [(ngModel)]="query"
-          placeholder="Search by name"
+          [placeholder]="'childPicker.searchPlaceholder' | translate"
           autofocus
-        /><button type="submit" [disabled]="saving()">Search</button>
+        /><button type="submit" [disabled]="saving()">{{ 'childPicker.search' | translate }}</button>
       </div>
     </form>
     <div class="table-scroll" [attr.aria-busy]="searching()">
-      <table aria-label="Search results">
+      <table [attr.aria-label]="'childPicker.resultsTable' | translate">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Created</th>
-            <th>Modified</th>
-            <th>Version</th>
-            <th>Status</th>
+            <th>{{ 'childPicker.columns.name' | translate }}</th>
+            <th>{{ 'childPicker.columns.type' | translate }}</th>
+            <th>{{ 'childPicker.columns.created' | translate }}</th>
+            <th>{{ 'childPicker.columns.modified' | translate }}</th>
+            <th>{{ 'childPicker.columns.version' | translate }}</th>
+            <th>{{ 'childPicker.columns.status' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -85,7 +87,7 @@
               class="result-row"
               [class.selected]="isSelected(row)"
               [attr.tabindex]="isSelected(row) || saving() ? -1 : 0"
-              [attr.aria-label]="'Select ' + row.name"
+              [attr.aria-label]="'childPicker.selectRow' | translate: { name: row.name }"
               [attr.aria-selected]="isSelected(row)"
               [attr.aria-disabled]="isSelected(row) || saving()"
               (click)="select(row)"
@@ -98,9 +100,9 @@
                   <app-icon key="check" size="small" />
                 }
               </td>
-              <td>{{ row.type === 'field' ? 'Field' : 'Element' }}</td>
-              <td>{{ row.createdOn ? (row.createdOn | date: 'mediumDate') : '—' }}</td>
-              <td>{{ row.modifiedOn ? (row.modifiedOn | date: 'mediumDate') : '—' }}</td>
+              <td>{{ (row.type === 'field' ? 'childPicker.kind.field' : 'childPicker.kind.element') | translate }}</td>
+              <td>{{ row.createdOn ? (row.createdOn | date: 'mediumDate' : undefined : locale()) : '—' }}</td>
+              <td>{{ row.modifiedOn ? (row.modifiedOn | date: 'mediumDate' : undefined : locale()) : '—' }}</td>
               <td>{{ row.version || '—' }}</td>
               <td>{{ row.status || '—' }}</td>
             </tr>
@@ -108,13 +110,14 @@
             <tr>
               <td colspan="6" class="empty">
                 {{
-                  searching()
-                    ? 'Searching…'
+                  (searching()
+                    ? 'childPicker.searching'
                     : searched()
-                      ? 'No ' + kindLabel + ' found.'
+                      ? kindKey + 'none'
                       : error()
-                        ? 'Results could not be loaded.'
-                        : 'Enter a search to find reusable ' + kindLabel + '.'
+                        ? 'childPicker.resultsFailed'
+                        : kindKey + 'prompt'
+                  ) | translate
                 }}
               </td>
             </tr>
@@ -123,10 +126,12 @@
       </table>
     </div>
     @if (nextCursor()) {
-      <button type="button" [disabled]="searching() || saving()" (click)="search(true)">Load more</button>
+      <button type="button" [disabled]="searching() || saving()" (click)="search(true)">
+        {{ 'childPicker.loadMore' | translate }}
+      </button>
     }
   }
-  <p role="status" aria-live="polite">{{ searching() ? 'Searching…' : '' }}</p>
+  <p role="status" aria-live="polite">{{ searching() ? ('childPicker.searching' | translate) : '' }}</p>
   @if (error()) {
     <p role="alert" class="error">{{ error() }}</p>
   }

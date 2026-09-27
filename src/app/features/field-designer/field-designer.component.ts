@@ -1,5 +1,8 @@
 import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
+import { CedLanguageService } from '../../i18n/ced-language.service';
+import { publicationStatusLabel } from '../../shared/publication-status';
 import { TemplateService } from '../../core/services/template.service';
 import { CustomField, Field } from '../../core/models/types';
 import { fieldArtifactMetadata, validateFieldSpecification, newFieldIdentity } from '../../core/model/cedar-template';
@@ -7,7 +10,7 @@ import { FieldSpecificationEditorComponent } from '../field-specification-editor
 
 @Component({
   selector: 'app-field-designer',
-  imports: [FormsModule, FieldSpecificationEditorComponent],
+  imports: [FormsModule, FieldSpecificationEditorComponent, TranslatePipe],
   templateUrl: './field-designer.component.html',
   styleUrls: ['./field-designer.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -15,6 +18,8 @@ import { FieldSpecificationEditorComponent } from '../field-specification-editor
 export class FieldDesignerComponent {
   readonly service = inject(TemplateService);
   readonly metadata = fieldArtifactMetadata;
+  readonly publicationStatusLabel = publicationStatusLabel;
+  private readonly i18n = inject(CedLanguageService);
   readonly draft = signal<Field | null>(null);
   edited: Field | null = null;
   editingId: number | null = null;
@@ -65,11 +70,11 @@ export class FieldDesignerComponent {
   }
   saveField(): void {
     if (!this.edited?.name.trim()) {
-      this.error = 'Give the field a name.';
+      this.error = this.i18n.t('fieldDesigner.nameRequired');
       return;
     }
     if (!this.service.libraries().some((library) => library.id === Number(this.selectedLibraryId))) {
-      this.error = 'Choose a library, or create one first.';
+      this.error = this.i18n.t('fieldDesigner.libraryRequired');
       return;
     }
     try {
@@ -83,7 +88,7 @@ export class FieldDesignerComponent {
       else this.service.customFields.update((fields) => [...fields, field]);
       this.cancel();
     } catch (error) {
-      this.error = error instanceof Error ? error.message : String(error);
+      this.error = this.i18n.describe(error);
     }
   }
   cancel(): void {
