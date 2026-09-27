@@ -77,7 +77,7 @@ test('real CETP selects a property for field metadata', async ({ page }) => {
         page: 1,
         pageSize: 25,
         items:
-          route.request().postDataJSON().page > 1
+          (route.request().postDataJSON().offset ?? 0) > 0
             ? []
             : [{ sourceAcronym: 'RO', versionId: 'ro-v1', property: { ...property, hasChildren: false } }],
       },
