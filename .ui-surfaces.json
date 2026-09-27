@@ -1,0 +1,336 @@
+{
+  "schema": 1,
+  "repo": "cedar-embeddable-designer",
+  "browserHelper": "browser/tests/surface-contracts.generated.mjs",
+  "surfaces": [
+    {
+      "id": "ced.user-preferences-ced",
+      "name": "User Preferences (CED)",
+      "section": "Management",
+      "contract": "dialog",
+      "scenario": "preferences",
+      "selector": "app-preferences-modal .cedar-modal-surface",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/modals/preferences/preferences.component.html",
+          "anchor": "cedar-modal-surface"
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.define-presets-ced",
+      "name": "Define Presets (CED)",
+      "section": "Management",
+      "contract": "dialog",
+      "scenario": "presets",
+      "selector": "app-preset-definitions-modal .cedar-modal-surface",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
+          "anchor": "cedar-modal-surface"
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.field-library-ced",
+      "name": "Field Library (CED)",
+      "section": "Management"
+    },
+    {
+      "id": "ced.ced",
+      "name": "CED",
+      "section": "Menus"
+    },
+    {
+      "id": "ced.profile-menu",
+      "name": "Profile Menu",
+      "section": "Menus",
+      "parent": "ced.ced",
+      "contract": "menu",
+      "scenario": "profile-menu",
+      "selector": ".profile-menu-dropdown",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/app.component.html",
+          "anchor": "profile-menu-dropdown"
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.user-menu",
+      "name": "User Menu",
+      "section": "Menus",
+      "parent": "ced.ced",
+      "contract": "menu",
+      "scenario": "user-menu",
+      "selector": ".user-menu-dropdown",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/app.component.html",
+          "anchor": "class=\"user-menu-dropdown\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.field-library-menu",
+      "name": "Field Library Menu",
+      "section": "Menus",
+      "parent": "ced.ced",
+      "contract": "menu",
+      "scenario": "library-menu",
+      "selector": ".dropdown-panel",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-type-picker/field-type-picker.component.html",
+          "anchor": "class=\"dropdown-panel"
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts",
+      "debt": {
+        "border-top-left-radius": {
+          "actual": "8px",
+          "expected": "4px",
+          "reason": "Existing picker corners measured before surface registration; preserve the current design until the shared radius is deliberately adopted."
+        }
+      }
+    },
+    {
+      "id": "ced.ced-field-designer",
+      "name": "CED / Field Designer",
+      "section": "Resource Dialogs"
+    },
+    {
+      "id": "ced.choose-field-type",
+      "name": "Choose Field Type",
+      "section": "Resource Dialogs",
+      "parent": "ced.ced-field-designer",
+      "contract": "dialog",
+      "scenario": "field-type",
+      "selector": "cedar-embeddable-field-designer dialog",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/element/cedar-embeddable-field-designer.element.ts",
+          "anchor": "#typeDialog"
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.import-fields",
+      "name": "Import Fields",
+      "section": "Resource Dialogs",
+      "parent": "ced.ced-field-designer",
+      "contract": "dialog",
+      "scenario": "import-fields",
+      "selector": "app-child-picker dialog",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/child-picker/child-picker.component.html",
+          "anchor": "aria-labelledby=\"child-picker-title\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.import-elements",
+      "name": "Import Elements",
+      "section": "Resource Dialogs",
+      "parent": "ced.ced-field-designer",
+      "contract": "dialog",
+      "scenario": "import-elements",
+      "selector": "app-child-picker dialog",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/child-picker/child-picker.component.html",
+          "anchor": "aria-labelledby=\"child-picker-title\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.import-fields-and-elements",
+      "name": "Import Fields and Elements",
+      "section": "Resource Dialogs",
+      "parent": "ced.ced-field-designer"
+    },
+    {
+      "id": "ced.controlled-term-constraints",
+      "name": "Controlled-Term Constraints",
+      "section": "Resource Dialogs",
+      "parent": "ced.ced-field-designer",
+      "contract": "dialog",
+      "scenario": "constraints",
+      "selector": "app-controlled-term-config [role=\"dialog\"]",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/controlled-term-config/controlled-term-config.component.html",
+          "anchor": "controlledTerms.constraints"
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.choose-default-term",
+      "name": "Choose Default Term",
+      "section": "Resource Dialogs",
+      "parent": "ced.ced-field-designer",
+      "contract": "dialog",
+      "scenario": "default-term",
+      "selector": ".default-dialog",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-default-value/field-default-value.component.html",
+          "anchor": "class=\"default-dialog\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts",
+      "debt": {
+        "border-top-left-radius": {
+          "actual": "6px",
+          "expected": "4px",
+          "reason": "Existing picker corners measured before surface registration; preserve the current design until the shared radius is deliberately adopted."
+        }
+      }
+    },
+    {
+      "id": "ced.choose-replace-property-iri",
+      "name": "Choose / Replace Property IRI",
+      "section": "Resource Dialogs",
+      "parent": "ced.ced-field-designer",
+      "contract": "dialog",
+      "scenario": "property",
+      "selector": "app-property-picker [role=\"dialog\"]",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/property-picker/property-picker.component.ts",
+          "anchor": "propertyPicker.chooseLabel"
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts",
+      "debt": {
+        "border-top-left-radius": {
+          "actual": "8px",
+          "expected": "4px",
+          "reason": "Existing picker corners measured before surface registration; preserve the current design until the shared radius is deliberately adopted."
+        }
+      }
+    },
+    {
+      "id": "ced.add-types",
+      "name": "Add Types",
+      "section": "Resource Dialogs",
+      "parent": "ced.ced-field-designer",
+      "contract": "dialog",
+      "scenario": "types",
+      "selector": "app-types-picker [role=\"dialog\"]",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/types-picker/types-picker.component.ts",
+          "anchor": "typesPicker.add"
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts",
+      "debt": {
+        "border-top-left-radius": {
+          "actual": "8px",
+          "expected": "4px",
+          "reason": "Existing picker corners measured before surface registration; preserve the current design until the shared radius is deliberately adopted."
+        }
+      }
+    },
+    {
+      "id": "ced.template-designer-ced",
+      "name": "Template Designer / CED",
+      "section": "Confirmation / Warning / Error"
+    },
+    {
+      "id": "ced.delete-element",
+      "name": "Delete Element",
+      "section": "Confirmation / Warning / Error",
+      "parent": "ced.template-designer-ced",
+      "contract": "dialog",
+      "scenario": "delete-element",
+      "selector": "dialog.delete-dialog[open]",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/container-editor/container-editor.component.html",
+          "anchor": "class=\"delete-dialog\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.validation-summary",
+      "name": "Validation Summary",
+      "section": "Confirmation / Warning / Error",
+      "parent": "ced.template-designer-ced",
+      "contract": "error-summary",
+      "scenario": "validation",
+      "selector": ".validation-summary",
+      "states": ["collapsed", "expanded"],
+      "source": [
+        {
+          "file": "src/app/shared/validation-summary.component.html",
+          "anchor": "class=\"validation-summary\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.settings-default-value-errors",
+      "name": "Settings / Default Value Errors",
+      "section": "Confirmation / Warning / Error",
+      "parent": "ced.template-designer-ced"
+    },
+    {
+      "id": "ced.import-field-library-errors",
+      "name": "Import / Field Library Errors",
+      "section": "Confirmation / Warning / Error",
+      "parent": "ced.template-designer-ced"
+    },
+    {
+      "id": "ced.preview-component-unavailable",
+      "name": "Preview / Component Unavailable",
+      "section": "Confirmation / Warning / Error",
+      "parent": "ced.template-designer-ced"
+    },
+    {
+      "id": "ced.term-picker-errors-warnings",
+      "name": "Term Picker Errors / Warnings",
+      "section": "Confirmation / Warning / Error",
+      "parent": "ced.template-designer-ced"
+    },
+    {
+      "id": "ced.designer-errors-warnings",
+      "name": "Designer Errors / Warnings",
+      "section": "Template Designer"
+    },
+    {
+      "id": "ced.ced-view",
+      "name": "CED",
+      "section": "Template Designer"
+    },
+    {
+      "id": "ced.field-designer",
+      "name": "Field Designer (CEFD)",
+      "section": "Template Designer"
+    }
+  ]
+}
