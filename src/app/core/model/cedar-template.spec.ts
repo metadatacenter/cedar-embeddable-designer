@@ -1008,6 +1008,10 @@ describe('complete field specification transfer', () => {
     it(`imports the complete standalone ${type} definition`, () => {
       const original = fieldToJson(field({ type, name: 'Standalone', preferredLabel: 'Preferred' }));
       expect(fieldToJson(readField(JSON.stringify(original)))).toEqual(original);
+      if (type === 'attributeValue') {
+        // Historical standalone documents omitted the array envelope.
+        expect(fieldToJson(readField(JSON.stringify(original['items'])))).toEqual(original);
+      }
     });
   }
 });

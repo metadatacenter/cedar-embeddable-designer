@@ -1570,7 +1570,9 @@ export function readField(source: string): Field {
     container.addChild(field, field.createDeploymentBuilder(field.schema_name).build());
     const document = JSON.parse(JSON.stringify(templateToJson(container)));
     const property = document.properties[field.schema_name];
-    if (property.items) property.items = sourceNode;
+    // Attribute-value standalone artifacts already carry the deployment array
+    // envelope. Reuse its definition rather than nesting one array inside another.
+    if (property.items) property.items = sourceNode.type === 'array' ? sourceNode.items : sourceNode;
     else document.properties[field.schema_name] = sourceNode;
     return toDesignerTemplate(readTemplate(JSON.stringify(document))).fields[0];
   }
