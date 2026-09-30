@@ -138,6 +138,21 @@ is not in place yet.
 `npm run build:app` compiles `src/main.dev.ts` and the host page around it, which
 is what `npm start` serves.
 
+## Authoring Style Ownership
+
+Native authoring controls and compact tables import the design-token package's
+`authoring` Sass module directly. `src/authoring.scss` is the selector adapter for
+both designer elements: it chooses where central density, select-arrow and entry-row
+recipes apply. Keep shared geometry and typography in the central recipes, not in
+copies under `src/app/shared` or corrective declarations in `src/styles.css`.
+Component styles still own their layout and content-specific widths.
+
+The surface registry verifies annotation labels, control typography and table-cell
+density against central contracts at desktop and narrow widths. The field-type and
+label-weight browser suites cover the broader authoring matrix. Preserve their
+rendered expectations when consolidating styles; do not update visual baselines to
+accept an unintended change.
+
 ## The Sibling Components It Works With
 
 The designer uses sibling web components the embedding page loads,
