@@ -18,13 +18,13 @@ test('opens the shared field picker in a dialog, supports cancel and keeps inval
   const picker = page.getByRole('dialog', { name: 'Choose field type', exact: true });
   await expect(picker.locator('app-field-type-picker')).toBeVisible();
   await expect(picker.getByRole('button', { name: 'Text', exact: true }).locator('app-icon')).toBeVisible();
-  await expect(page.getByRole('textbox', { name: 'Field name', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveCount(0);
   await page.keyboard.press('Escape');
   await expect(picker).toHaveCount(0);
   await page.getByRole('button', { name: 'Choose field type', exact: true }).click();
   await picker.getByRole('button', { name: 'Number', exact: true }).click();
   await expect(picker).toHaveCount(0);
-  const name = page.getByRole('textbox', { name: 'Field name', exact: true });
+  const name = page.getByRole('textbox', { name: 'Field display name', exact: true });
   await expect(name).toBeFocused();
   await expect(name).toHaveAttribute('aria-invalid', 'false');
   await expect(page.locator('.validation-summary')).toHaveCount(0);
@@ -57,7 +57,7 @@ for (const [label, type] of [
     await page.getByRole('button', { name: label, exact: true }).click();
     await expect(page.getByRole('tab', { name: 'Display', exact: true })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Field metadata', exact: true })).toBeVisible();
-    await page.getByRole('textbox', { name: 'Field name', exact: true }).fill(`My ${label}`);
+    await page.getByRole('textbox', { name: 'Field display name', exact: true }).fill(`My ${label}`);
     await expect
       .poll(() =>
         page.evaluate(() => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).canSave),
@@ -72,14 +72,14 @@ for (const [label, type] of [
       (artifact) => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).loadArtifact(artifact),
       artifact,
     );
-    await expect(page.getByRole('textbox', { name: 'Field name', exact: true })).toHaveValue(`My ${label}`);
+    await expect(page.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue(`My ${label}`);
     await expect(page.getByRole('tab', { name: 'Display', exact: true })).toBeVisible();
     await expect
       .poll(() =>
         page.evaluate(() => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).isDirty),
       )
       .toBe(false);
-    await page.getByRole('textbox', { name: 'Field name', exact: true }).fill('Edited again');
+    await page.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Edited again');
     await expect
       .poll(() =>
         page.evaluate(() => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).isDirty),
@@ -91,7 +91,7 @@ for (const [label, type] of [
 test('preserves a manual collapse during edits and opens settings for the next field', async ({ page }) => {
   await page.getByRole('button', { name: 'Text', exact: true }).click();
   await page.getByRole('button', { name: 'Collapse field settings' }).click();
-  await page.getByRole('textbox', { name: 'Field name', exact: true }).fill('Collapsed field');
+  await page.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Collapsed field');
   await expect(page.getByRole('tab', { name: 'Display', exact: true })).toBeHidden();
   await page.evaluate(() =>
     (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).newArtifact('number'),
@@ -102,7 +102,7 @@ test('preserves a manual collapse during edits and opens settings for the next f
 
 test('hides placement controls, uses shadow styles and emits current artifacts', async ({ page }) => {
   await page.getByRole('button', { name: 'Text', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Field name', exact: true }).fill('Reusable text');
+  await page.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Reusable text');
   await expect(page.getByRole('combobox', { name: 'Requirement' })).toHaveCount(0);
   await expect(page.getByText('Allow multiple', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Collapse field settings' })).toBeVisible();
@@ -111,7 +111,7 @@ test('hides placement controls, uses shadow styles and emits current artifacts',
   await page.getByRole('tab', { name: 'Field metadata' }).click();
   await expect(page.getByText('Property IRI', { exact: true })).toHaveCount(0);
   const background = await page
-    .getByRole('textbox', { name: 'Field name', exact: true })
+    .getByRole('textbox', { name: 'Field display name', exact: true })
     .evaluate((el) => getComputedStyle(el).backgroundColor);
   expect(background).not.toBe('rgb(255, 105, 180)');
   await expect
@@ -135,22 +135,22 @@ test('isolates two instances and enforces host read-only state', async ({ page }
     document.body.append(b);
     b.newArtifact('number');
   });
-  await page.locator('#field').getByRole('textbox', { name: 'Field name', exact: true }).fill('First');
-  await page.locator('#second').getByRole('textbox', { name: 'Field name', exact: true }).fill('Second');
+  await page.locator('#field').getByRole('textbox', { name: 'Field display name', exact: true }).fill('First');
+  await page.locator('#second').getByRole('textbox', { name: 'Field display name', exact: true }).fill('Second');
   await page.evaluate(() => {
     (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).readOnly = true;
   });
-  await expect(page.locator('#field').getByRole('textbox', { name: 'Field name', exact: true })).toBeDisabled();
-  await expect(page.locator('#second').getByRole('textbox', { name: 'Field name', exact: true })).toBeEnabled();
+  await expect(page.locator('#field').getByRole('textbox', { name: 'Field display name', exact: true })).toBeDisabled();
+  await expect(page.locator('#second').getByRole('textbox', { name: 'Field display name', exact: true })).toBeEnabled();
   await page.evaluate(() => {
     (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).readOnly = false;
   });
-  await expect(page.locator('#field').getByRole('textbox', { name: 'Field name', exact: true })).toBeEnabled();
+  await expect(page.locator('#field').getByRole('textbox', { name: 'Field display name', exact: true })).toBeEnabled();
 });
 
 test('keeps invalid numeric settings dirty and unsaveable until corrected', async ({ page }) => {
   await page.getByRole('button', { name: 'Number', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Field name', exact: true }).fill('Measured value');
+  await page.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Measured value');
   await page.evaluate(() => {
     const field = document.getElementById('field') as CedarEmbeddableFieldDesignerElement;
     field.loadArtifact(field.currentArtifact!);
@@ -188,7 +188,7 @@ test('keeps invalid numeric settings dirty and unsaveable until corrected', asyn
 
 test('standalone fields cannot be saved with an empty or whitespace name', async ({ page }) => {
   await page.getByRole('button', { name: 'Text', exact: true }).click();
-  const name = page.getByRole('textbox', { name: 'Field name', exact: true });
+  const name = page.getByRole('textbox', { name: 'Field display name', exact: true });
   for (const blank of ['', '   ']) {
     await name.fill(blank);
     await name.blur();

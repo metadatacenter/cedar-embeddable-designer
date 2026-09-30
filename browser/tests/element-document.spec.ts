@@ -84,12 +84,12 @@ for (const width of [1280, 375]) {
     await placement.getByRole('button', { name: 'Expand element settings', exact: true }).click();
     await placement.getByRole('tab', { name: 'Occurrences', exact: true }).click();
     const moved = nested.locator('app-field-card').first();
-    await expect(moved.getByRole('textbox', { name: 'Field name', exact: true })).toHaveValue('Title');
+    await expect(moved.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue('Title');
     await placement.getByLabel('Minimum occurrences', { exact: true }).fill('8');
     await expect(placement.getByRole('alert')).toBeVisible();
     // Select the root, then edit the nested field without navigating into it.
     await directHeader(root).getByPlaceholder('Template name').click();
-    await moved.getByRole('textbox', { name: 'Field name', exact: true }).fill('Nested title');
+    await moved.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Nested title');
     await expect(placement.getByLabel('Minimum occurrences', { exact: true })).toHaveValue('8');
     await placement.getByLabel('Minimum occurrences', { exact: true }).fill('2');
     await expect(placement.getByRole('alert')).toHaveCount(0);
@@ -99,14 +99,14 @@ for (const width of [1280, 375]) {
     await expect(directContent(parent)).toBeHidden();
     const collapsed = await currentTemplate(page);
     await directHeader(parent).getByRole('button', { name: 'Expand Samples', exact: true }).click();
-    await expect(moved.getByRole('textbox', { name: 'Field name', exact: true })).toHaveValue('Nested title');
+    await expect(moved.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue('Nested display');
     expect(await currentTemplate(page)).toEqual(collapsed);
     // Root fields still respond while a different element is selected.
     await directHeader(nested).getByPlaceholder('Enter element name').click();
     const rootCategory = root
       .locator(':scope > .container-content > .fields-drop-list > .field-drop-item app-field-card')
       .first();
-    await rootCategory.getByRole('textbox', { name: 'Field name', exact: true }).fill('Root category');
+    await rootCategory.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Root category');
     const saved = await currentTemplate(page);
     const properties = saved.properties as Record<string, any>;
     expect(properties.element.properties.element.minItems).toBe(2);
@@ -114,19 +114,15 @@ for (const width of [1280, 375]) {
     expect(properties.element.properties.element.items['schema:name']).toBe('Sample');
     expect(properties.element.properties.element.items._ui.propertyLabels.Title).toBe('Nested display');
     expect(
-      Object.values(properties).some((field: any) => (field.items ?? field)['schema:name'] === 'Root category'),
+      Object.values(properties).some((field: any) => (field.items ?? field)['skos:prefLabel'] === 'Root category'),
     ).toBe(true);
     expect(await root.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
     await page.screenshot({ path: test.info().outputPath(`ced-inline-elements-${width}.png`), fullPage: true });
     await page.evaluate((artifact) => {
       (document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object }).artifact = artifact;
     }, saved);
-    // Reopening derives schema titles from the edited names, preserving every other property.
-    const expected = structuredClone(saved);
-    const expectedProperties = expected.properties as Record<string, any>;
-    expectedProperties.Category.title = 'Root category field schema';
-    expectedProperties.element.properties.element.items.properties.Title.title = 'Nested title field schema';
-    expect(await currentTemplate(page)).toEqual(expected);
+    // Display labels preserve the existing artifact names and schema titles on reopening.
+    expect(await currentTemplate(page)).toEqual(saved);
     await expect(nestedEditors(root).first().locator(':scope > .container-content')).toBeVisible();
   });
 }

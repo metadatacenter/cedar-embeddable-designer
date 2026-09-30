@@ -1,4 +1,5 @@
 import { fieldDisplayName } from '../../core/model/field-display-name';
+import { ArtifactNameDirective } from '../../shared/artifact-name.directive';
 import { FieldSummaryComponent } from '../field-summary/field-summary.component';
 import { HeaderToggleDirective } from '../../shared/header-toggle.directive';
 import { FieldSettingsComponent } from '../field-settings/field-settings.component';
@@ -25,6 +26,7 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
   selector: 'app-field-card',
   standalone: true,
   imports: [
+    ArtifactNameDirective,
     CommonModule,
     FieldSummaryComponent,
     HeaderToggleDirective,

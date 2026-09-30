@@ -20,6 +20,9 @@
           <input
             spellcheck="false"
             type="text"
+            [appArtifactName]="field.id"
+            [attr.aria-invalid]="!!service.nameError(field.id, field.name, 'field')"
+            [attr.aria-describedby]="service.nameError(field.id, field.name, 'field') ? 'name-error-' + field.id : null"
             [ngModel]="displayName(field)"
             (ngModelChange)="updateDisplayName($event)"
             class="text-sm font-medium text-gray-900 border-none outline-none pb-0.5 flex-1 min-w-0 bg-transparent border-b-2"

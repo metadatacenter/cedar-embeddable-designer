@@ -95,7 +95,7 @@ async function designerShowing(
       .first()
       .click();
     await designer.getByRole('button', { name: label, exact: true }).click();
-    await designer.locator('input[aria-label="Field name"]:focus').fill(label);
+    await designer.locator('input[aria-label="Field display name"]:focus').fill(label);
   }
   await expect.poll(async () => starting.count(), { timeout: 15_000 }).toBe(labels.length);
   // Field insertion scrolls the designer's own viewport. Reset that viewport,
@@ -211,7 +211,7 @@ test('an unnamed field is quiet until the author leaves its name empty', async (
   await designer.getByRole('textbox', { name: 'Template name', exact: true }).fill('Study');
   await designer.getByRole('button', { name: 'Add field', exact: true }).first().click();
   await designer.getByRole('button', { name: 'Text', exact: true }).click();
-  const name = designer.locator('input[aria-label="Field name"]:focus');
+  const name = designer.locator('input[aria-label="Field display name"]:focus');
   await expect(name).toHaveValue('');
   const card = name.locator('xpath=ancestor::app-field-card');
   await page.mouse.move(0, 0);

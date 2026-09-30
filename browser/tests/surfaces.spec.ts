@@ -66,10 +66,8 @@ for (const kind of ['field', 'element'])
   scenarios['import-' + kind + 's'] = async (page) => {
     const d = await openDesigner(page);
     await applyPreset(page, 'modular');
-    await d
-      .getByRole('button', { name: 'Import ' + kind, exact: true })
-      .first()
-      .click();
+    await d.getByRole('button', { name: 'Add field', exact: true }).first().click();
+    await d.getByRole('button', { name: 'Import fields and elements', exact: true }).first().click();
   };
 async function termField(page: Page) {
   // Only the CED-owned dialog is under test. Sibling internals have their own suite.

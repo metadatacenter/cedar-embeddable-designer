@@ -46,7 +46,7 @@ test('editing controls and modified shortcuts keep their normal arrow handling',
   await card.focus();
   await page.keyboard.press('Alt+ArrowDown');
   await expect(card).toBeFocused();
-  const name = card.getByRole('textbox', { name: 'Field name', exact: true });
+  const name = card.getByRole('textbox', { name: 'Field display name', exact: true });
   await name.click();
   await page.keyboard.press('ArrowDown');
   await expect(name).toBeFocused();

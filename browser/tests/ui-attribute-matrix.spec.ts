@@ -187,7 +187,7 @@ async function oneCardOf(
       exact: true,
     })
     .click();
-  await designer.getByRole('textbox', { name: 'Field name', exact: true }).fill(LABEL_OF[paletteType]);
+  await designer.getByRole('textbox', { name: 'Field display name', exact: true }).fill(LABEL_OF[paletteType]);
   if (paletteType === 'time') {
     await openSettings(card(page), 'Constraints');
     await card(page).getByLabel('Temporal type', { exact: true }).selectOption('xsd:time');
@@ -355,9 +355,9 @@ const LIFECYCLES: readonly Lifecycle[] = [
   {
     control: 'field name',
     paletteType: 'text',
-    set: async (page) => card(page).getByLabel('Field name', { exact: true }).fill('Renamed'),
+    set: async (page) => card(page).getByLabel('Field display name', { exact: true }).fill('Renamed'),
     // A field must have a name, so putting this back means the name it began with.
-    restore: async (page) => card(page).getByLabel('Field name', { exact: true }).fill('Text'),
+    restore: async (page) => card(page).getByLabel('Field display name', { exact: true }).fill('Text'),
   },
   {
     control: 'requirement',

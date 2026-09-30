@@ -122,7 +122,7 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
   await designer.locator('app-field-type-picker').getByRole('button', { name: 'Image', exact: true }).click();
   await expect(designer.locator('app-field-card')).toHaveCount(4);
   const card = designer.locator('app-field-card').last();
-  await card.getByRole('textbox', { name: 'Field name', exact: true }).fill('Picture');
+  await card.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Picture');
   const section = await openSettings(card, 'Content');
   await section.getByLabel('Width').fill('640');
   await expect.poll(async () => ((await currentTemplate(page)).properties as any).picture._ui._size?.width).toBe(640);
@@ -136,7 +136,7 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
     .click();
   await designer.locator('app-field-type-picker').getByRole('button', { name: 'Rich Text', exact: true }).click();
   await expect(designer.locator('app-field-card')).toHaveCount(5);
-  await card.getByRole('textbox', { name: 'Field name', exact: true }).fill('Rich content');
+  await card.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Rich content');
   await openSettings(card, 'Content');
   await expect(card.getByRole('tab').first()).toHaveText('Display');
   await card.getByRole('textbox', { name: 'Content', exact: true }).fill('<p>First</p>\n<p>Second</p>');
@@ -167,7 +167,7 @@ test('one Temporal palette entry supports date, time and date-time without chang
   await expect(picker.getByRole('button', { name: 'Temporal', exact: true })).toHaveCount(1);
   await expect(picker.getByRole('button', { name: /^(Date|Time|Date and time)$/ })).toHaveCount(0);
   await picker.getByRole('button', { name: 'Temporal', exact: true }).click();
-  await designer.locator('input[aria-label="Field name"]:focus').fill('Temporal');
+  await designer.locator('input[aria-label="Field display name"]:focus').fill('Temporal');
   await expect(designer.locator('app-field-card')).toHaveCount(4);
   const card = designer.locator('app-field-card').last();
   const settings = await openSettings(card, 'Constraints');
@@ -195,15 +195,15 @@ test('metadata keys are editable and unique within their parent while names and 
   const cards = designer.locator('app-field-card');
   const first = cards.nth(0);
   const second = cards.nth(1);
-  await first.getByLabel('Field name', { exact: true }).fill('Repeated');
-  await second.getByLabel('Field name', { exact: true }).fill('Repeated');
+  await first.getByLabel('Field display name', { exact: true }).fill('Repeated');
+  await second.getByLabel('Field display name', { exact: true }).fill('Repeated');
   const display = await openSettings(first, 'Display');
   await expect(display.getByLabel('Preferred name', { exact: true })).toHaveCount(0);
   await display.getByLabel('Display label', { exact: true }).fill('Same label');
   const otherDisplay = await openSettings(second, 'Display');
   await otherDisplay.getByLabel('Display label', { exact: true }).fill('Same label');
   const metadata = await openSettings(first, 'Field metadata');
-  await expect(metadata.getByLabel('Key', { exact: true })).toHaveValue('Repeated');
+  await expect(metadata.getByLabel('Key', { exact: true })).toHaveValue('Title');
   await metadata.getByLabel('Key', { exact: true }).fill('subject');
   const otherMetadata = await openSettings(second, 'Field metadata');
   const key = otherMetadata.getByLabel('Key', { exact: true });
@@ -214,8 +214,10 @@ test('metadata keys are editable and unique within their parent while names and 
   await key.fill('category');
   await expect(otherMetadata.getByRole('alert')).toHaveCount(0);
   const saved = await currentTemplate(page);
-  expect((saved.properties as any).subject['schema:name']).toBe('Repeated');
-  expect((saved.properties as any).category['schema:name']).toBe('Repeated');
+  expect((saved.properties as any).subject['schema:name']).toBe('Title');
+  expect((saved.properties as any).subject['skos:prefLabel']).toBe('Repeated');
+  expect((saved.properties as any).category['schema:name']).toBe('Category');
+  expect((saved.properties as any).category['skos:prefLabel']).toBe('Repeated');
   expect((saved._ui as any).propertyLabels).toMatchObject({ subject: 'Same label', category: 'Same label' });
 });
 
