@@ -1,4 +1,4 @@
-@use '../../shared/table-style';
+@use '@org.metadatacenter/cedar-design-tokens/authoring';
 @use '../../shared/field-error';
 :host {
   display: block;
@@ -111,4 +111,4 @@ tbody tr:nth-child(even) {
   margin: 2px;
 }
 
-@include table-style.compact-table;
+@include authoring.compact-table;

@@ -43,7 +43,7 @@ import { provideCedTranslations } from '../i18n/i18n';
     DesignerConfigService,
   ],
   encapsulation: ViewEncapsulation.ShadowDom,
-  styleUrls: ['../../styles.css', './cedar-embeddable-field-designer.element.scss'],
+  styleUrls: ['../../styles.css', '../../authoring.scss', './cedar-embeddable-field-designer.element.scss'],
   styles: [
     `
       :host {

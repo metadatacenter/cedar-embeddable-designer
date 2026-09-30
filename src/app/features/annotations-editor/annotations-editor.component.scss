@@ -1,5 +1,4 @@
-@use '../../shared/table-style';
-@use '../../shared/control-style';
+@use '@org.metadatacenter/cedar-design-tokens/authoring';
 :host {
   display: block;
   min-width: 0;
@@ -26,8 +25,7 @@ caption {
 }
 .add-row label,
 th {
-  font-size: var(--cedar-font-size);
-  font-weight: var(--cedar-font-weight-medium, 500);
+  @include authoring.label-text;
 }
 th {
   text-align: left;
@@ -50,7 +48,7 @@ td {
 }
 input,
 select {
-  @include control-style.compact-control;
+  @include authoring.compact-control;
   width: 100%;
   box-sizing: border-box;
 }
@@ -132,4 +130,4 @@ td {
   white-space: pre-wrap;
 }
 
-@include table-style.compact-table;
+@include authoring.compact-table;

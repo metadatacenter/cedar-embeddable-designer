@@ -30,7 +30,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
     }
   `,
   styles: `
-    @use '../../shared/control-style';
+    @use '@org.metadatacenter/cedar-design-tokens/authoring';
     :host {
       display: block;
       margin-top: 8px;
@@ -50,11 +50,11 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       min-width: 0;
     }
     input {
-      @include control-style.compact-control;
+      @include authoring.compact-control;
       width: 100%;
     }
     button {
-      @include control-style.compact-control;
+      @include authoring.compact-control;
       cursor: pointer;
       color: var(--cedar-color-primary, #117b89);
     }

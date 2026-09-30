@@ -1,0 +1,30 @@
+// Selector adapter only. Authoring geometry and typography belong to design tokens.
+@use '@org.metadatacenter/cedar-design-tokens/authoring';
+
+/* Inline authoring actions share typography, independent of the surrounding panel. */
+.ced-text-action {
+  @include authoring.text-action;
+}
+
+/* Shared authoring select arrow; reserve space for long selected values. */
+:is(app-annotations-editor, app-field-settings, app-container-settings, app-language-selector, app-field-designer)
+  select:not([multiple]):not([size]) {
+  @include authoring.select-arrow;
+}
+
+/* One density contract for all CED authoring tables and their entry forms. */
+:is(app-annotations-editor, app-alternate-questions, app-field-designer, app-preset-definitions) {
+  @include authoring.density;
+}
+:is(app-annotations-editor, app-alternate-questions, app-field-designer) .add-row {
+  @include authoring.entry-row;
+}
+app-annotations-editor .add-row label {
+  @include authoring.entry-label;
+}
+:is(app-annotations-editor, app-alternate-questions) .add-row button {
+  @include authoring.entry-action;
+}
+app-annotations-editor table caption {
+  @include authoring.table-caption;
+}

@@ -1,4 +1,4 @@
-@use '../../shared/control-style';
+@use '@org.metadatacenter/cedar-design-tokens/authoring';
 :host {
   display: block;
   font-size: var(--cedar-font-size);
@@ -25,8 +25,7 @@ label {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: var(--cedar-font-size);
-  font-weight: var(--cedar-font-weight-medium, 500);
+  @include authoring.label-text;
   /*
    * Shrinkable, or a wide control overflows the card that holds it.
    *
@@ -174,7 +173,7 @@ button:focus-visible {
 .settings-fields textarea {
   width: 100%;
   box-sizing: border-box;
-  @include control-style.compact-control;
+  @include authoring.compact-control;
 }
 .settings-fields .check {
   align-self: end;
@@ -220,7 +219,7 @@ button:focus-visible {
 .preferred-label input {
   width: 100%;
   box-sizing: border-box;
-  @include control-style.compact-control;
+  @include authoring.compact-control;
 }
 @container (max-width: 480px) {
   .display-fields > label,
@@ -231,8 +230,7 @@ button:focus-visible {
 
 .default-label {
   display: block;
-  font-size: var(--cedar-font-size);
-  font-weight: var(--cedar-font-weight-medium, 500);
+  @include authoring.label-text;
   margin-bottom: 2px;
 }
 

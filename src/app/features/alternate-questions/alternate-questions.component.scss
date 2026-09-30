@@ -1,5 +1,4 @@
-@use '../../shared/table-style';
-@use '../../shared/control-style';
+@use '@org.metadatacenter/cedar-design-tokens/authoring';
 :host {
   display: block;
   margin-top: var(--cedar-space-3);
@@ -22,7 +21,7 @@ legend {
   flex-wrap: wrap;
 }
 input {
-  @include control-style.compact-control;
+  @include authoring.compact-control;
   flex: 1;
   min-width: 100px;
 }
@@ -85,4 +84,4 @@ p[role='alert'] {
   clip-path: inset(50%);
 }
 
-@include table-style.compact-table;
+@include authoring.compact-table;

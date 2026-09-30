@@ -1,4 +1,4 @@
-@use '../../../shared/table-style';
+@use '@org.metadatacenter/cedar-design-tokens/authoring';
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
@@ -14,4 +14,4 @@
   background: #d1d5db;
 }
 
-@include table-style.compact-table;
+@include authoring.compact-table;

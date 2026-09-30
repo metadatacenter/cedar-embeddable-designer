@@ -1,4 +1,4 @@
-@use '../../shared/control-style';
+@use '@org.metadatacenter/cedar-design-tokens/authoring';
 @use '../../shared/field-error';
 .default-dialog-overlay {
   position: fixed;
@@ -55,7 +55,7 @@
   textarea {
     width: 100%;
     min-width: 0;
-    @include control-style.compact-control;
+    @include authoring.compact-control;
   }
 
   textarea {
@@ -83,7 +83,7 @@
   min-width: 0;
 }
 .controlled-default {
-  @include control-style.compact-control;
+  @include authoring.compact-control;
 }
 .constraint-first {
   margin: 0;

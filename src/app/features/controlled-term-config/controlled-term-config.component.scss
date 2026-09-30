@@ -1,5 +1,5 @@
 @use '../../shared/field-error';
-@use '../../shared/control-style';
+@use '@org.metadatacenter/cedar-design-tokens/authoring';
 
 // CEF owns the read-only specification's layout; CED adds only the editing affordance.
 .constraint-summary {
@@ -19,6 +19,6 @@ cedar-embeddable-field {
   align-items: center;
   flex: 1;
   min-width: 0;
-  @include control-style.compact-control;
+  @include authoring.compact-control;
   color: var(--cedar-text-muted);
 }

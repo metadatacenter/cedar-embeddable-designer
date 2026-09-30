@@ -48,7 +48,7 @@ import { provideCedTranslations } from '../i18n/i18n';
   // The registrar renders nothing; it exists so its unencapsulated stylesheet,
   // which is only `@font-face` declarations, reaches the document.
   template: `<ced-font-registrar /><app-root></app-root>`,
-  styleUrls: ['../../styles.css', './cedar-embeddable-designer.element.scss'],
+  styleUrls: ['../../styles.css', '../../authoring.scss', './cedar-embeddable-designer.element.scss'],
   encapsulation: ViewEncapsulation.ShadowDom,
 })
 export class CedarEmbeddableDesignerElementComponent {

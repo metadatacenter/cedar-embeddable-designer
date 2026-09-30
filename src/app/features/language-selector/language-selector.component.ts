@@ -50,7 +50,7 @@ function languageOptions(locale: string, english: boolean): readonly { code: str
     }
   `,
   styles: `
-    @use '../../shared/control-style';
+    @use '@org.metadatacenter/cedar-design-tokens/authoring';
     :host {
       display: block;
       margin-top: 8px;
@@ -63,7 +63,7 @@ function languageOptions(locale: string, english: boolean): readonly { code: str
       font-size: var(--cedar-font-size);
     }
     select {
-      @include control-style.compact-control;
+      @include authoring.compact-control;
       width: 100%;
       max-width: 320px;
     }
