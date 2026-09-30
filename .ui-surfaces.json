@@ -126,44 +126,21 @@
       "test": "browser/tests/surfaces.spec.ts"
     },
     {
-      "id": "ced.import-fields",
-      "name": "Import Fields",
-      "section": "Resource Dialogs",
-      "parent": "ced.ced-field-designer",
-      "contract": "dialog",
-      "scenario": "import-fields",
-      "selector": "app-child-picker dialog",
-      "states": ["open"],
-      "source": [
-        {
-          "file": "src/app/features/child-picker/child-picker.component.html",
-          "anchor": "aria-labelledby=\"child-picker-title\""
-        }
-      ],
-      "test": "browser/tests/surfaces.spec.ts"
-    },
-    {
-      "id": "ced.import-elements",
-      "name": "Import Elements",
-      "section": "Resource Dialogs",
-      "parent": "ced.ced-field-designer",
-      "contract": "dialog",
-      "scenario": "import-elements",
-      "selector": "app-child-picker dialog",
-      "states": ["open"],
-      "source": [
-        {
-          "file": "src/app/features/child-picker/child-picker.component.html",
-          "anchor": "aria-labelledby=\"child-picker-title\""
-        }
-      ],
-      "test": "browser/tests/surfaces.spec.ts"
-    },
-    {
       "id": "ced.import-fields-and-elements",
       "name": "Import Fields and Elements",
       "section": "Resource Dialogs",
-      "parent": "ced.ced-field-designer"
+      "parent": "ced.ced-field-designer",
+      "contract": "dialog",
+      "scenario": "import-fields-and-elements",
+      "selector": "app-child-picker dialog",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/child-picker/child-picker.component.html",
+          "anchor": "aria-labelledby=\"child-picker-title\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.controlled-term-constraints",

@@ -62,13 +62,12 @@ const scenarios: Record<string, (page: Page) => Promise<void>> = {
     await nested.getByRole('button', { name: 'Delete element Element', exact: true }).click();
   },
 };
-for (const kind of ['field', 'element'])
-  scenarios['import-' + kind + 's'] = async (page) => {
-    const d = await openDesigner(page);
-    await applyPreset(page, 'modular');
-    await d.getByRole('button', { name: 'Add field', exact: true }).first().click();
-    await d.getByRole('button', { name: 'Import fields and elements', exact: true }).first().click();
-  };
+scenarios['import-fields-and-elements'] = async (page) => {
+  const d = await openDesigner(page);
+  await applyPreset(page, 'modular');
+  await d.getByRole('button', { name: 'Add field', exact: true }).first().click();
+  await d.getByRole('button', { name: 'Import fields and elements', exact: true }).first().click();
+};
 async function termField(page: Page) {
   // Only the CED-owned dialog is under test. Sibling internals have their own suite.
   await page.addInitScript(() => customElements.define('cedar-embeddable-field', class extends HTMLElement {}));
