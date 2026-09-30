@@ -34,13 +34,28 @@
   text-transform: none;
   color: var(--cedar-text-muted, #6b7280);
 }
+.cee-preview__mode {
+  position: relative;
+  display: inline-flex;
+  margin-left: auto;
+  min-width: 0;
+
+  app-icon {
+    position: absolute;
+    right: var(--cedar-space-2);
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+}
 .cee-preview__bar select {
   box-sizing: border-box;
   height: 28px;
-  margin: 0 0 0 auto;
+  margin: 0;
   align-self: center;
   min-width: 0;
-  padding: 3px 6px;
+  appearance: none;
+  padding: 3px 30px 3px 10px;
   border: 1px solid #b8cdcf;
   border-radius: 3px;
   background: white;

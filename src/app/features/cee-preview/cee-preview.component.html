@@ -2,14 +2,17 @@
   <div class="cee-preview__bar">
     <span class="cee-preview__title">{{ 'ceePreview.title' | translate }}</span>
     @if (editorAvailable) {
-      <select
-        [attr.aria-label]="'ceePreview.mode' | translate"
-        [value]="readOnly() ? 'read-only' : 'editable'"
-        (change)="readOnly.set($any($event.target).value === 'read-only')"
-      >
-        <option value="read-only">{{ 'ceePreview.readOnly' | translate }}</option>
-        <option value="editable">{{ 'ceePreview.editable' | translate }}</option>
-      </select>
+      <span class="cee-preview__mode">
+        <select
+          [attr.aria-label]="'ceePreview.mode' | translate"
+          [value]="readOnly() ? 'read-only' : 'editable'"
+          (change)="readOnly.set($any($event.target).value === 'read-only')"
+        >
+          <option value="read-only">{{ 'ceePreview.readOnly' | translate }}</option>
+          <option value="editable">{{ 'ceePreview.editable' | translate }}</option>
+        </select>
+        <app-icon key="chevron-down" size="small" />
+      </span>
     }
     <button
       (click)="service.showPreview.set(false)"
