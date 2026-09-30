@@ -144,6 +144,35 @@ it('keeps unnamed siblings independent and editable while saving is disabled', (
   expect(service.validationReport().canSave).toBe(true);
 });
 
+for (const kind of ['template', 'element'] as const) {
+  for (const child of ['field', 'element'] as const) {
+    it(`reveals an untouched missing ${kind} name when adding a ${child}`, () => {
+      const service = TestBed.inject(TemplateService);
+      service.resetTemplate(kind, false);
+      const root = service.document().id;
+      expect(service.visibleIssues()).toHaveLength(0);
+      if (child === 'field') service.addField('text', 0, root);
+      else service.addElement(root);
+      expect(service.visibleIssues().map((issue) => issue.nodeId)).toEqual([root]);
+      expect(service.nameError(root, '', kind)).toContain('name is required');
+      service.updateContainerDefinition(root, { name: 'Study' });
+      expect(service.visibleIssues()).toHaveLength(0);
+    });
+  }
+}
+
+it('reveals unnamed ancestors when authoring inside an existing nested element', () => {
+  const service = TestBed.inject(TemplateService);
+  service.resetTemplate('template', false);
+  const root = service.document().id;
+  service.templateName.set('Study');
+  const element = service.addElement(root);
+  service.templateName.set('');
+  expect(service.visibleIssues()).toHaveLength(0);
+  service.addField('text', 0, element);
+  expect(service.visibleIssues().map((issue) => issue.nodeId)).toEqual([root, element]);
+});
+
 it('keys are unique across sibling fields and elements, independently of names and display labels', () => {
   localStorage.clear();
   const service = TestBed.inject(TemplateService);

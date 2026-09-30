@@ -747,8 +747,14 @@ export class TemplateService {
   ): void {
     const target = findContainer(this.session.document(), targetId);
     if (!target) throw new LocalizedError(message('errors.importDestinationMissing'));
-    if (target.kind === 'element' && node.kind === 'field' && !target.children.length && !target.name.trim()) {
-      this.touchName(target.id);
+    // Beginning child authoring must explain why Save is blocked even when the
+    // author never focused the containing template or element's name.
+    for (
+      let ancestor: ContainerDraft | undefined = target;
+      ancestor;
+      ancestor = parentOf(this.document(), ancestor.id)
+    ) {
+      if (!ancestor.name.trim()) this.touchName(ancestor.id);
     }
     this.loadError.set(null);
     if (namePlacement) {

@@ -379,7 +379,7 @@ for (const kind of ['template', 'element'] as const) {
   });
 }
 
-test('summary counts only revealed name errors, while validation includes untouched names', async ({ page }) => {
+test('adding a field reveals the missing template name while its own name waits for blur', async ({ page }) => {
   const designer = await openDesigner(page);
   await page.evaluate(() =>
     (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).newArtifact('template'),
@@ -388,28 +388,42 @@ test('summary counts only revealed name errors, while validation includes untouc
   await designer.getByRole('button', { name: 'Text', exact: true }).click();
   const name = designer.getByRole('textbox', { name: 'Field display name', exact: true });
   await expect(name).toBeFocused();
-  await expect(designer.locator('.validation-summary')).toHaveCount(0);
-  await name.press('Tab');
   await expect(designer.locator('.validation-summary')).toContainText('1 error — fix before saving');
   await expect(designer.locator('.validation-summary li')).toHaveCount(1);
+  await name.press('Tab');
+  await expect(designer.locator('.validation-summary')).toContainText('2 errors — fix before saving');
+  await expect(designer.locator('.validation-summary li')).toHaveCount(2);
   expect((await report(page)).issues.filter((issue) => issue.setting === 'name')).toHaveLength(2);
   await expect.poll(async () => (await report(page)).canSave).toBe(false);
 });
 
-test('adding the first field reveals a missing element name even when it was never focused', async ({ page }) => {
-  const designer = await openDesigner(page);
-  await page.evaluate(() =>
-    (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).newArtifact('element'),
-  );
-  const elementName = designer.getByRole('textbox', { name: 'Element name', exact: true });
-  await expect(designer.locator('.validation-summary')).toHaveCount(0);
-  await designer.getByRole('button', { name: 'Add field', exact: true }).click();
-  await designer.getByRole('button', { name: 'Text', exact: true }).click();
-  await expect(elementName).toHaveAttribute('aria-invalid', 'true');
-  await designer.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Study title');
-  await expect(designer.locator('.validation-summary')).toContainText('1 error — fix before saving');
-  await expect.poll(async () => (await report(page)).canSave).toBe(false);
-  await elementName.fill('Study');
-  await expect(designer.locator('.validation-summary')).toHaveCount(0);
-  await expect.poll(async () => (await report(page)).canSave).toBe(true);
-});
+for (const kind of ['template', 'element'] as const) {
+  test(`adding a field reveals a missing ${kind} name even when it was never focused`, async ({ page }) => {
+    const designer = await openDesigner(page);
+    await page.evaluate(
+      (kind) =>
+        (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).newArtifact(kind),
+      kind,
+    );
+    const containerName = designer.getByRole('textbox', {
+      name: kind === 'template' ? 'Template name' : 'Element name',
+      exact: true,
+    });
+    await expect(designer.locator('.validation-summary')).toHaveCount(0);
+    await designer.getByRole('button', { name: 'Add field', exact: true }).click();
+    await designer.getByRole('button', { name: 'Text', exact: true }).click();
+    await expect(containerName).toHaveAttribute('aria-invalid', 'true');
+    await designer.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Study title');
+    await expect(designer.locator('.validation-summary')).toContainText('1 error — fix before saving');
+    await expect.poll(async () => (await report(page)).canSave).toBe(false);
+    await designer.locator('.validation-summary summary').click();
+    await designer
+      .locator('.validation-summary button')
+      .filter({ hasText: `${kind === 'template' ? 'Template' : 'Element'} name is required` })
+      .click();
+    await expect(containerName).toBeFocused();
+    await containerName.fill('Study');
+    await expect(designer.locator('.validation-summary')).toHaveCount(0);
+    await expect.poll(async () => (await report(page)).canSave).toBe(true);
+  });
+}
