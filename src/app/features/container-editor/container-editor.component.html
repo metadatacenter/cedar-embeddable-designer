@@ -90,7 +90,7 @@
                 [attr.aria-labelledby]="'delete-title-' + container().id"
                 [attr.aria-describedby]="'delete-description-' + container().id"
               >
-                <h2 [id]="'delete-title-' + container().id">{{ 'containerEditor.deleteTitle' | translate }}</h2>
+                <h2 [id]="'delete-title-' + container().id"><app-icon key="element" />{{ 'containerEditor.deleteTitle' | translate }}</h2>
                 <p [id]="'delete-description-' + container().id">
                   {{
                     'containerEditor.deleteDescription'

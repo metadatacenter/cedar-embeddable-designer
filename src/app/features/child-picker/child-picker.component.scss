@@ -25,6 +25,9 @@ dialog {
   margin-bottom: var(--cedar-space-6);
 }
 h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--cedar-space-2);
   @include dialog-style.heading;
   color: var(--cedar-color-component-title);
   margin: 0;
@@ -110,10 +113,10 @@ td:not(.name-cell):not([colspan]) {
 .empty {
   text-align: center;
   color: var(--cedar-text-muted);
-  padding: var(--cedar-space-6);
+  padding: var(--cedar-space-3);
 }
 .search {
-  margin: var(--cedar-space-6) 0 var(--cedar-space-3);
+  margin: var(--cedar-space-3) 0;
 }
 label {
   display: block;

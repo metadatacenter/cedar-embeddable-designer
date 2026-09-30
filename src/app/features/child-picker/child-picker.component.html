@@ -1,6 +1,6 @@
 <dialog #dialog aria-labelledby="child-picker-title" (cancel)="$event.preventDefault(); close()">
   <div class="dialog-heading">
-    <h2 id="child-picker-title">{{ kindKey + 'title' | translate }}</h2>
+    <h2 id="child-picker-title"><app-icon key="download" />{{ kindKey + 'title' | translate }}</h2>
     <button type="button" class="icon-button" [attr.aria-label]="'common.close' | translate" (click)="close()">
       <app-icon key="close" />
     </button>
