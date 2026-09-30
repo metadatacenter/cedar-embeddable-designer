@@ -1148,3 +1148,20 @@ it.each(['type', 'properties', 'required', 'name', 'true', 'null', 'yes'])(
     }
   },
 );
+
+it('loads the legacy empty-description marker as an empty editable description', () => {
+  const source = templateOf(field({ helpText: 'VALIDATION.noDescriptionField' }));
+  source.description = 'VALIDATION.noDescriptionField';
+  const loaded = toDesignerTemplate(readTemplate(json(source)));
+  expect(loaded.description).toBe('');
+  expect(loaded.fields[0].helpText).toBe('');
+  expect(json(loaded)['schema:description'] ?? '').toBe('');
+});
+
+it('preserves genuine description text when loading older artifacts', () => {
+  const source = templateOf(field({ helpText: 'A helpful description' }));
+  source.description = 'Explanation mentioning VALIDATION.noDescriptionField';
+  const loaded = toDesignerTemplate(readTemplate(json(source)));
+  expect(loaded.description).toBe(source.description);
+  expect(loaded.fields[0].helpText).toBe('A helpful description');
+});
