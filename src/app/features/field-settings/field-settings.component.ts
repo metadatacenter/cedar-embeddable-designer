@@ -199,8 +199,8 @@ export class FieldSettingsComponent implements OnChanges {
     const message =
       (this.errors[this.selectedTab] ??
         this.service
-          .validationReport()
-          .issues.filter(
+          .visibleIssues()
+          .filter(
             (issue) =>
               issue.nodeId === this.field.id &&
               issue.source === 'model' &&

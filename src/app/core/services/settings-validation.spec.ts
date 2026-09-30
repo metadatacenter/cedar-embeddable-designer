@@ -1,3 +1,4 @@
+import { FIELD_TYPES } from '../models/types';
 import { TestBed } from '@angular/core/testing';
 import { TemplateService } from './template.service';
 import { findContainer } from '../model/container-draft';
@@ -282,3 +283,36 @@ it.each(['multipleChoice', 'checkboxes', 'singleChoiceList', 'multipleChoiceList
     expect(service.validationReport().canSave).toBe(true);
   },
 );
+
+for (const type of Object.keys(FIELD_TYPES)) {
+  it(`keeps a new ${type} field quiet without weakening save validation`, () => {
+    const service = TestBed.inject(TemplateService);
+    service.resetTemplate('template', false);
+    service.templateName.set('Field document');
+    service.addField(type, 0);
+    expect(service.fields()).toHaveLength(1);
+    expect(service.visibleIssues()).toEqual([]);
+    expect(service.validationReport().canSave).toBe(false);
+  });
+}
+for (const type of ['multipleChoice', 'checkboxes']) {
+  it(`reveals the ${type} starter option on blur and keeps later invalid options visible`, () => {
+    const service = TestBed.inject(TemplateService);
+    service.resetTemplate('template', false);
+    service.templateName.set('Field document');
+    service.addField(type, 0);
+    const id = service.fields()[0].id;
+    service.updateFieldName(id, 'Choice');
+    expect(service.visibleIssues()).toEqual([]);
+    expect(service.validationReport().canSave).toBe(false);
+    service.touchOption(id, 0);
+    expect(service.visibleIssues().map((issue) => issue.setting)).toEqual(['option-0']);
+    service.updateOption(id, 0, 'First');
+    expect(service.validationReport().canSave).toBe(true);
+    service.updateOption(id, 0, '');
+    expect(service.visibleIssues().map((issue) => issue.setting)).toEqual(['option-0']);
+    service.deleteOption(id, 0);
+    service.addOption(id);
+    expect(service.visibleIssues().map((issue) => issue.setting)).toEqual(['option-0']);
+  });
+}

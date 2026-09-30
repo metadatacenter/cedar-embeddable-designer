@@ -154,8 +154,21 @@ export class TemplateService {
   nameError(id: number, name: string, kind: 'field' | 'element' | 'template'): string | null {
     return this.touchedNames().has(id) ? artifactNameError(name, kind, this.i18n.t) : null;
   }
+  // A newly inserted choice field has one blank starter option, not an author error yet.
+  private readonly pristineStarterOptions = signal<ReadonlySet<number>>(new Set());
+  touchOption(id: number, index: number): void {
+    if (index !== 0 || !this.pristineStarterOptions().has(id)) return;
+    this.pristineStarterOptions.update((ids) => new Set([...ids].filter((candidate) => candidate !== id)));
+  }
+  optionErrorVisible(id: number, index: number): boolean {
+    return index !== 0 || !this.pristineStarterOptions().has(id);
+  }
   readonly visibleIssues = computed(() =>
-    this.validationReport().issues.filter((issue) => issue.setting !== 'name' || this.touchedNames().has(issue.nodeId)),
+    this.validationReport().issues.filter((issue) =>
+      issue.setting === 'name'
+        ? this.touchedNames().has(issue.nodeId)
+        : issue.setting !== 'option-0' || this.optionErrorVisible(issue.nodeId, 0),
+    ),
   );
   visibleIssuesFor(id: number): CedValidationIssue[] {
     return this.visibleIssues().filter((issue) => issue.path.includes(id));
@@ -181,6 +194,7 @@ export class TemplateService {
   }
   revealIssue(issue: CedValidationIssue): void {
     if (issue.setting === 'name') this.touchName(issue.nodeId);
+    if (issue.setting === 'option-0') this.touchOption(issue.nodeId, 0);
     this.openContainer(this.parentContainerId(issue.nodeId));
     this.selectedField.set(issue.nodeId);
     this.scrollRequest.set(issue.nodeId);
@@ -383,6 +397,7 @@ export class TemplateService {
       allowMultiple: false,
     };
 
+    if (newField.options[0] === '') this.pristineStarterOptions.update((ids) => new Set([...ids, newField.id]));
     this.automaticKeys.add(newField.id);
     this.automaticFieldNames.add(newField.id);
     this.insertNode(fieldNode(newField), position, targetId, false);
@@ -459,6 +474,7 @@ export class TemplateService {
   }
 
   updateOption(fieldId: number, optionIndex: number, value: string) {
+    this.touchOption(fieldId, optionIndex);
     if (this.isPublished(fieldId)) return;
     this.fieldsFor(fieldId).update((prev) =>
       prev.map((f) => {
@@ -497,6 +513,7 @@ export class TemplateService {
   }
 
   deleteOption(fieldId: number, optionIndex: number) {
+    this.touchOption(fieldId, optionIndex);
     if (this.isPublished(fieldId)) return;
     this.fieldsFor(fieldId).update((prev) =>
       prev.map((f) => {
@@ -661,6 +678,7 @@ export class TemplateService {
     }
     this.draftIssues.set({});
     this.touchedNames.set(new Set());
+    this.pristineStarterOptions.set(new Set());
     this.nameFocusRequest.set(null);
     this.childPicker.set(null);
     this.session.replace(document);
@@ -695,6 +713,7 @@ export class TemplateService {
     this.initialInsertionId.set(null);
     this.draftIssues.set({});
     this.touchedNames.set(new Set());
+    this.pristineStarterOptions.set(new Set());
     this.nameFocusRequest.set(null);
     this.childPicker.set(null);
     this.session.replace(state);
