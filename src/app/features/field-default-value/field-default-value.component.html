@@ -34,6 +34,7 @@
       @if (field().controlledTermConstraints?.constraints?.length) {
         <input
           class="default-value-control controlled-default"
+          spellcheck="false"
           type="text"
           readonly
           [attr.aria-label]="'defaultValue.label' | translate"

@@ -55,7 +55,7 @@
   align-self: center;
   min-width: 0;
   appearance: none;
-  padding: 3px 30px 3px 10px;
+  padding: calc(var(--cedar-space-1) * 0.75) calc(var(--cedar-space-2) * 3.75) calc(var(--cedar-space-1) * 0.75) calc(var(--cedar-space-2) * 1.25);
   border: 1px solid #b8cdcf;
   border-radius: 3px;
   background: white;
