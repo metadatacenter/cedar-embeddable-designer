@@ -62,6 +62,12 @@ export class FieldDefaultValueComponent {
    * constraints, rather than through CEF.
    */
   readonly allowsControlledTerms = computed(() => accepts(this.field().type, 'controlledTermConstraints'));
+  // An empty read-only CEF renders the vocabulary specification, not an empty value.
+  // Defaults must display only the explicitly selected term, never the allowed terms.
+  readonly controlledDefaultLabel = computed(() => {
+    const value = this.field().defaultValue;
+    return value.kind === 'iri' ? value.label || value.iri : '';
+  });
   readonly native = computed(() => ['text', 'paragraph', 'number'].includes(this.field().type));
   readonly draft = signal('');
   private defaultKey = '';

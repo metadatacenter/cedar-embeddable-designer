@@ -179,6 +179,34 @@ for (const [type, iri] of authorities) {
   });
 }
 
+test('choosing an allowed term leaves the default visibly empty and absent from the saved schema', async ({ page }) => {
+  const control = await openField(page, 'controlledTerms', {}, '?picker=stub');
+  const notice = control.getByRole('status');
+  await expect(notice).toContainText('Choose a vocabulary constraint before setting a default');
+  const controlBox = (await control.boundingBox())!;
+  const noticeBox = (await notice.boundingBox())!;
+  expect(noticeBox.x).toBeCloseTo(controlBox.x, 0);
+  await page.getByRole('button', { name: 'Edit controlled-term constraints' }).click();
+  await page.locator('#stub-pick').click();
+  await expect.poll(async () => (await constraints(page))['classes']).toHaveLength(1);
+  const summary = page.locator('app-controlled-term-config');
+  await expect(summary.locator('.cee-spec-box')).toContainText('cancer');
+  await expect(summary.locator('app-cedar-component-header')).toHaveCount(0);
+  await expect(control.getByRole('textbox', { name: 'Default value', exact: true })).toHaveValue('');
+  expect((await constraints(page))['defaultValue']).toBeUndefined();
+  await test.info().attach('constraint-without-default', {
+    body: await page.locator('app-field-card').first().screenshot(),
+    contentType: 'image/png',
+  });
+  const saved = await currentTemplate(page);
+  await page.evaluate((template) => {
+    (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
+  }, saved);
+  await openSettings(page.locator('app-field-card').first());
+  await expect(control.getByRole('textbox', { name: 'Default value', exact: true })).toHaveValue('');
+  expect((await constraints(page))['defaultValue']).toBeUndefined();
+});
+
 test('controlled default uses the term picker and verifies field membership', async ({ page }) => {
   let checked = false;
   await page.route('**/fake-terminology/bioportal/integrated-search', async (route) => {
@@ -199,6 +227,9 @@ test('controlled default uses the term picker and verifies field membership', as
     '?picker=stub',
   );
   const chooser = control.getByRole('button', { name: 'Edit default term' });
+  const defaultInput = control.getByRole('textbox', { name: 'Default value', exact: true });
+  await expect(defaultInput).toHaveValue('');
+  expect((await constraints(page))['defaultValue']).toBeUndefined();
   const constraintEdit = page.getByRole('button', { name: 'Edit controlled-term constraints' });
   for (const property of ['fontSize', 'fontWeight', 'color', 'lineHeight', 'textUnderlineOffset'] as const) {
     const expected = await constraintEdit.evaluate((node, key) => getComputedStyle(node)[key], property);
@@ -222,6 +253,7 @@ test('controlled default uses the term picker and verifies field membership', as
     .poll(async () => (await constraints(page))['defaultValue'])
     .toEqual({ termUri: 'http://purl.obolibrary.org/obo/DOID_162', 'rdfs:label': 'cancer' });
   await expect(page.locator('app-field-summary .cee-spec-box')).toContainText(/default.*cancer/i);
+  await expect(defaultInput).toHaveValue('cancer');
   expect(checked).toBe(true);
   await page.setViewportSize({ width: 375, height: 900 });
   const narrowValue = (await control.locator('.default-value-control').boundingBox())!;
@@ -231,6 +263,7 @@ test('controlled default uses the term picker and verifies field membership', as
 
   await control.getByRole('button', { name: 'Clear default' }).click();
   await expect.poll(async () => (await constraints(page))['defaultValue']).toBeUndefined();
+  await expect(defaultInput).toHaveValue('');
 });
 
 test('the real picker selects a default within the field vocabulary', async ({ page }) => {

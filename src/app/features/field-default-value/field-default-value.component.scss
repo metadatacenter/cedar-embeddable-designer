@@ -82,6 +82,12 @@
   flex: 1 1 0;
   min-width: 0;
 }
+.controlled-default {
+  @include control-style.compact-control;
+}
+.constraint-first {
+  margin: 0;
+}
 .default-value-actions {
   display: flex;
   align-items: center;

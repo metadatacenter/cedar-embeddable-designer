@@ -100,6 +100,7 @@ export class ControlledTermConfigComponent implements OnChanges {
   readonly summaryConfig = computed(() => ({
     ...this.editorConfig,
     readOnlyMode: true,
+    previewMode: true,
     defaultLanguage: this.language(),
     fallbackLanguage: 'en',
   }));
