@@ -137,7 +137,7 @@ for (const width of [1440, 768, 375]) {
     const designer = await openDesigner(page);
     const card = designer.locator('app-field-card').first();
     await openSettings(card, 'Constraints');
-    const fields = card.locator('.text-constraint-fields');
+    const fields = card.locator('.constraint-fields');
     const inputs = fields.locator('input');
     const boxes = await inputs.evaluateAll((nodes) =>
       nodes.map((node) => {

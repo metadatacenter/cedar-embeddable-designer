@@ -10,9 +10,7 @@
       "contract": "dialog",
       "scenario": "preferences",
       "selector": "app-preferences-modal .cedar-modal-surface",
-      "states": [
-        "open"
-      ],
+      "states": ["open"],
       "source": [
         {
           "file": "src/app/features/modals/preferences/preferences.component.html",
@@ -28,9 +26,7 @@
       "contract": "dialog",
       "scenario": "presets",
       "selector": "app-preset-definitions-modal .cedar-modal-surface",
-      "states": [
-        "open"
-      ],
+      "states": ["open"],
       "source": [
         {
           "file": "src/app/features/modals/preset-definitions/preset-definitions.component.html",
@@ -57,9 +53,7 @@
       "contract": "menu",
       "scenario": "user-menu",
       "selector": ".user-menu-dropdown",
-      "states": [
-        "open"
-      ],
+      "states": ["open"],
       "source": [
         {
           "file": "src/app/app.component.html",
@@ -76,9 +70,7 @@
       "contract": "menu",
       "scenario": "library-menu",
       "selector": ".dropdown-panel",
-      "states": [
-        "open"
-      ],
+      "states": ["open"],
       "source": [
         {
           "file": "src/app/features/field-type-picker/field-type-picker.component.html",
@@ -107,9 +99,7 @@
       "contract": "dialog",
       "scenario": "field-type",
       "selector": "cedar-embeddable-field-designer dialog",
-      "states": [
-        "open"
-      ],
+      "states": ["open"],
       "source": [
         {
           "file": "src/app/element/cedar-embeddable-field-designer.element.ts",
@@ -126,9 +116,7 @@
       "contract": "dialog",
       "scenario": "import-fields-and-elements",
       "selector": "app-child-picker dialog",
-      "states": [
-        "open"
-      ],
+      "states": ["open"],
       "source": [
         {
           "file": "src/app/features/child-picker/child-picker.component.html",
@@ -145,9 +133,7 @@
       "contract": "dialog",
       "scenario": "constraints",
       "selector": "app-controlled-term-config [role=\"dialog\"]",
-      "states": [
-        "open"
-      ],
+      "states": ["open"],
       "source": [
         {
           "file": "src/app/features/controlled-term-config/controlled-term-config.component.html",
@@ -164,23 +150,14 @@
       "contract": "dialog",
       "scenario": "default-term",
       "selector": ".default-dialog",
-      "states": [
-        "open"
-      ],
+      "states": ["open"],
       "source": [
         {
           "file": "src/app/features/field-default-value/field-default-value.component.html",
           "anchor": "class=\"default-dialog\""
         }
       ],
-      "test": "browser/tests/surfaces.spec.ts",
-      "debt": {
-        "border-top-left-radius": {
-          "actual": "6px",
-          "expected": "4px",
-          "reason": "Existing picker corners measured before surface registration; preserve the current design until the shared radius is deliberately adopted."
-        }
-      }
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.choose-replace-property-iri",
@@ -190,23 +167,14 @@
       "contract": "dialog",
       "scenario": "property",
       "selector": "app-property-picker [role=\"dialog\"]",
-      "states": [
-        "open"
-      ],
+      "states": ["open"],
       "source": [
         {
           "file": "src/app/features/property-picker/property-picker.component.ts",
           "anchor": "propertyPicker.chooseLabel"
         }
       ],
-      "test": "browser/tests/surfaces.spec.ts",
-      "debt": {
-        "border-top-left-radius": {
-          "actual": "8px",
-          "expected": "4px",
-          "reason": "Existing picker corners measured before surface registration; preserve the current design until the shared radius is deliberately adopted."
-        }
-      }
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.add-types",
@@ -216,23 +184,14 @@
       "contract": "dialog",
       "scenario": "types",
       "selector": "app-types-picker [role=\"dialog\"]",
-      "states": [
-        "open"
-      ],
+      "states": ["open"],
       "source": [
         {
           "file": "src/app/features/types-picker/types-picker.component.ts",
           "anchor": "typesPicker.add"
         }
       ],
-      "test": "browser/tests/surfaces.spec.ts",
-      "debt": {
-        "border-top-left-radius": {
-          "actual": "8px",
-          "expected": "4px",
-          "reason": "Existing picker corners measured before surface registration; preserve the current design until the shared radius is deliberately adopted."
-        }
-      }
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.template-designer-ced",
@@ -247,9 +206,7 @@
       "contract": "dialog",
       "scenario": "delete-element",
       "selector": "dialog.delete-dialog[open]",
-      "states": [
-        "open"
-      ],
+      "states": ["open"],
       "source": [
         {
           "file": "src/app/features/container-editor/container-editor.component.html",
@@ -266,10 +223,7 @@
       "contract": "error-summary",
       "scenario": "validation",
       "selector": ".validation-summary",
-      "states": [
-        "collapsed",
-        "expanded"
-      ],
+      "states": ["collapsed", "expanded"],
       "source": [
         {
           "file": "src/app/shared/validation-summary.component.html",
@@ -324,9 +278,7 @@
       "contract": "authoring-label",
       "scenario": "annotations",
       "selector": "app-annotations-editor:visible .add-row label:first-child",
-      "states": [
-        "open"
-      ],
+      "states": ["open"],
       "source": [
         {
           "file": "src/app/features/annotations-editor/annotations-editor.component.html",
@@ -342,9 +294,7 @@
       "contract": "authoring-control",
       "scenario": "annotations",
       "selector": "app-annotations-editor:visible .add-row label:first-child input",
-      "states": [
-        "open"
-      ],
+      "states": ["open"],
       "source": [
         {
           "file": "src/app/features/annotations-editor/annotations-editor.component.html",
@@ -360,9 +310,7 @@
       "contract": "authoring-table-cell",
       "scenario": "annotations",
       "selector": "app-annotations-editor:visible tbody td:first-child",
-      "states": [
-        "open"
-      ],
+      "states": ["open"],
       "source": [
         {
           "file": "src/app/features/annotations-editor/annotations-editor.component.html",

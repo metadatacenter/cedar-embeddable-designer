@@ -3,8 +3,8 @@
 .default-dialog-overlay {
   position: fixed;
   inset: 0;
-  z-index: 50;
-  background: rgb(0 0 0 / 40%);
+  z-index: var(--cedar-layer-modal);
+  background: var(--cedar-dialog-backdrop);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -15,9 +15,6 @@
   max-width: 896px;
   max-height: 90vh;
   overflow: auto;
-  background: var(--cedar-overlay-surface);
-  border-radius: 6px;
-  box-shadow: 0 12px 28px rgb(0 0 0 / 20%);
   header {
     display: flex;
     align-items: center;

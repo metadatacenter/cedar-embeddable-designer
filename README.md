@@ -460,3 +460,24 @@ CED as described in the frontend runbook. Before pushing a consumer that needs
 new exports, publish a new token snapshot, update both pins and verify a clean
 `npm ci` build. The real-CEF integration workflow must also pin a CEE revision
 that supports the adopted control profile.
+
+### Styling ownership and remaining debt
+
+Central `authoring` recipes own labels, controls, tables, settings-dialog structure
+and density. Central `patterns` recipes own dialog surfaces; property, type and
+default-term pickers share the same corners, border and shadow. `src/authoring.scss`
+selects these surfaces without implementing another set of values.
+
+Local rules are appropriate for card composition, nested-element indentation,
+sidebar resizing, drag handles, picker bounds and responsive placement. Syntax
+highlighting owns a content palette, and the demo host deliberately uses different
+styles to test embedding. Those are not reasons to duplicate control typography,
+theme colors, focus rings or dialog geometry.
+
+The adoption baseline still contains migration debt: residual utility styles,
+compact toolbar/chip measurements, picker styling and global type rules. It is not
+a list of approved exceptions. Keep resolved entries pruned, document any necessary
+local rule at its owner, and retain desktop/narrow-width, host-override and real-CEF
+checks. An approved exception covers only its reviewed occurrences; additional
+copies are new drift. Do not substitute an unrelated token merely because its
+current numeric value happens to match.

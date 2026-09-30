@@ -120,16 +120,14 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
     .overlay {
       position: fixed;
       inset: 0;
-      z-index: 50;
-      background: #0006;
+      z-index: var(--cedar-layer-modal);
+      background: var(--cedar-dialog-backdrop);
       display: flex;
       align-items: center;
       justify-content: center;
       padding: var(--cedar-space-6);
     }
     .dialog {
-      background: var(--cedar-surface-raised);
-      border-radius: 0.5rem;
       width: 100%;
       max-width: 64rem;
       max-height: 90vh;
