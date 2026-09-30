@@ -39,6 +39,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       min-width: 0;
     }
     cedar-embeddable-field {
+      --cedar-field-type-font-weight: var(--cedar-font-weight-medium, 500);
       display: block;
       min-width: 0;
     }

@@ -304,7 +304,7 @@
 
 .template-field-label {
   font-size: var(--cedar-font-size);
-  font-weight: var(--cedar-font-weight-regular);
+  font-weight: var(--cedar-font-weight-medium, 500);
   color: var(--cedar-text-muted);
   margin-bottom: var(--cedar-space-1);
 }

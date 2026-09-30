@@ -56,6 +56,7 @@ function languageOptions(locale: string, english: boolean): readonly { code: str
       margin-top: 8px;
     }
     label {
+      font-weight: var(--cedar-font-weight-medium, 500);
       display: flex;
       flex-direction: column;
       gap: 4px;

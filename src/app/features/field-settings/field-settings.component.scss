@@ -26,7 +26,7 @@ label {
   flex-direction: column;
   gap: 2px;
   font-size: var(--cedar-font-size);
-  font-weight: var(--cedar-font-weight-regular, 400);
+  font-weight: var(--cedar-font-weight-medium, 500);
   /*
    * Shrinkable, or a wide control overflows the card that holds it.
    *
@@ -49,6 +49,7 @@ textarea {
   border: 1px solid var(--cedar-control-border-default);
   border-radius: 2px;
   font: inherit;
+  font-weight: var(--cedar-font-weight-regular, 400);
 }
 button {
   padding: 3px var(--cedar-space-2);
@@ -278,7 +279,7 @@ button:focus-visible {
 .default-label {
   display: block;
   font-size: var(--cedar-font-size);
-  font-weight: var(--cedar-font-weight-regular, 400);
+  font-weight: var(--cedar-font-weight-medium, 500);
   margin-bottom: 2px;
 }
 
@@ -304,4 +305,8 @@ fieldset[aria-invalid='true'] {
 .identity input[name='deploymentName'] {
   width: 250px;
   max-width: 100%;
+}
+
+.identity dt {
+  font-weight: var(--cedar-font-weight-medium, 500);
 }

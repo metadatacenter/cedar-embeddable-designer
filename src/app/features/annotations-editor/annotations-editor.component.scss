@@ -76,7 +76,7 @@ button:disabled {
   margin-bottom: var(--cedar-space-2);
 }
 .add-row label {
-  font-weight: var(--cedar-font-weight-regular);
+  font-weight: var(--cedar-font-weight-medium, 500);
   display: flex;
   flex-direction: column;
   gap: var(--cedar-form-label-gap);

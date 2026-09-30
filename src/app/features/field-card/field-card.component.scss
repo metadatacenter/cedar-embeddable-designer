@@ -157,7 +157,7 @@ app-icon {
 .content-label {
   color: var(--cedar-text-authoring);
   font-size: var(--cedar-font-size);
-  font-weight: var(--cedar-font-weight-regular);
+  font-weight: var(--cedar-font-weight-medium, 500);
 }
 
 .choice-add-action {

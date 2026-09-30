@@ -164,3 +164,9 @@ test.describe('a default control inside a field card', () => {
     });
   }
 });
+
+test('Designer summary type labels use medium weight without bolding descriptions', async ({ page }) => {
+  await designerWithCef(page, 'controlledTerms');
+  const summary = page.locator('app-field-summary').first();
+  await expect(summary.locator('.cee-field-type')).toHaveCSS('font-weight', '500');
+});

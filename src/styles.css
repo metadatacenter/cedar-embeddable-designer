@@ -215,7 +215,7 @@
 
   label {
     font-size: var(--text-base);
-    font-weight: var(--font-weight-normal);
+    font-weight: var(--font-weight-medium);
     line-height: 1.5;
   }
 

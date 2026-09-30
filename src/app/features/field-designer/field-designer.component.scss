@@ -65,6 +65,7 @@ select {
   border-radius: 3px;
   padding: var(--cedar-space-1) 6px;
   font: inherit;
+  font-weight: var(--cedar-font-weight-regular, 400);
 }
 button {
   color: #0b6570;
