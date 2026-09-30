@@ -1,3 +1,4 @@
+import { applyPreset } from './support';
 import { expect, test } from '@playwright/test';
 import {
   DESIGNER,
@@ -210,8 +211,7 @@ test('header panel icons toggle Overview and CEE without changing the template',
 test('the field picker scrolls into a short designer and keeps its last option reachable', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 420 });
   const designer = await openDesigner(page);
-  await designer.getByRole('button', { name: 'Basic', exact: true }).click();
-  await designer.getByRole('button', { name: /Modular/ }).click();
+  await applyPreset(page, 'modular');
   await designer.getByRole('button', { name: /^Add field$/ }).click();
   const picker = designer.locator('.picker-container');
   await expect

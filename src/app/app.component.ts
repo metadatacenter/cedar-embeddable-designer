@@ -56,7 +56,6 @@ export class AppComponent {
 
   // Layout & UI states
   readonly showFieldsOverview = signal(true);
-  readonly showProfileMenu = signal(false);
   readonly overviewMinWidth = 224;
   private readonly overviewRequestedWidth = signal<number | null>(null);
   private readonly availableWidth = signal(1280);
@@ -110,33 +109,6 @@ export class AppComponent {
   private setOverviewWidth(width: number): void {
     this.overviewRequestedWidth.set(Math.max(this.overviewMinWidth, Math.min(this.overviewMaxWidth(), width)));
   }
-
-  /**
-   * The profiles, and what each one is for.
-   *
-   * Named here rather than in the picker's markup so the three names, their
-   * order and their one-line descriptions are one list. The service decides what
-   * each profile *does*; this decides how it is described. The label and summary are
-   * translation keys, rendered in the template.
-   */
-  readonly profiles = [
-    { key: 'basic' as const, label: 'app.profile.basic.label', summary: 'app.profile.basic.summary' },
-    { key: 'semantic' as const, label: 'app.profile.semantic.label', summary: 'app.profile.semantic.summary' },
-    { key: 'modular' as const, label: 'app.profile.modular.label', summary: 'app.profile.modular.summary' },
-  ];
-
-  /**
-   * The profile on screen, or nothing once its settings have been edited by hand.
-   *
-   * The translation key of a label rather than a profile key, and `Custom` where no
-   * profile matches, which is a real state an author reaches by changing one switch,
-   * and one they could not see at all while the only way to a profile was two clicks
-   * inside a modal.
-   */
-  readonly activeProfileLabel = computed(() => {
-    const active = this.service.getActivePreset();
-    return this.profiles.find((profile) => profile.key === active)?.label ?? 'app.profile.custom';
-  });
 
   private scrollAnchor: number | null = null;
 
@@ -279,10 +251,6 @@ export class AppComponent {
 
     if (this.service.showUserMenu() && !within('.user-menu-container')) {
       this.service.showUserMenu.set(false);
-    }
-
-    if (this.showProfileMenu() && !within('.profile-menu-container')) {
-      this.showProfileMenu.set(false);
     }
   }
 }

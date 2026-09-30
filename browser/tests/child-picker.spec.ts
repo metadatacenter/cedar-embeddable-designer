@@ -1,3 +1,4 @@
+import { applyPreset } from './support';
 import nestedTemplate from '../../src/app/core/model/fixtures/corpus/template-028.json' with { type: 'json' };
 import { expect, test } from '@playwright/test';
 import { openDesigner, currentTemplate, fieldOrder } from './support';
@@ -12,8 +13,7 @@ for (const width of [1280, 375])
     await designer.getByRole('button', { name: /^Add field$/ }).click();
     await expect(designer.getByRole('heading', { name: 'Choose field' })).toBeVisible();
     await expect(designer.getByRole('button', { name: 'Import field' })).toHaveCount(0);
-    await designer.getByRole('button', { name: 'Basic', exact: true }).click();
-    await designer.getByRole('button', { name: /Modular/ }).click();
+    await applyPreset(page, 'modular');
     await expect(designer.locator('app-insertion-actions').first().getByRole('button')).toHaveCount(3);
     const before = await currentTemplate(page);
     await page.evaluate((section) => {
@@ -115,8 +115,7 @@ for (const width of [1280, 375])
 test('creates an editable element at the insertion position and adds a nested field', async ({ page }) => {
   const designer = await openDesigner(page);
   await expect(designer.getByRole('button', { name: 'Add element', exact: true })).toHaveCount(0);
-  await designer.getByRole('button', { name: 'Basic', exact: true }).click();
-  await designer.getByRole('button', { name: /Modular/ }).click();
+  await applyPreset(page, 'modular');
   const insert = designer.getByRole('button', { name: 'Add element here', exact: true }).first();
   await insert.focus();
   await insert.click();

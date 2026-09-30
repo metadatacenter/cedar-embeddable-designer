@@ -12,11 +12,9 @@ test('switches between English and Hungarian through the attribute and the prope
   const designer = await openDesigner(page);
   const overview = designer.locator('.overview-panel__title');
   await expect(overview).toHaveText('Overview (3)');
-  await expect(designer.getByRole('button', { name: 'Basic', exact: true })).toBeVisible();
 
   await page.evaluate((tag) => document.querySelector(tag)!.setAttribute('language', 'hu'), DESIGNER);
   await expect(overview).toHaveText('Áttekintés (3)');
-  await expect(designer.getByRole('button', { name: 'Alap', exact: true })).toBeVisible();
   await expect(designer.locator('.field-type-label').first()).toHaveText('Szöveg');
   expect(
     await page.evaluate((tag) => (document.querySelector(tag) as unknown as { language: string }).language, DESIGNER),
@@ -26,7 +24,6 @@ test('switches between English and Hungarian through the attribute and the prope
     (document.querySelector(tag) as unknown as { language: string }).language = 'en';
   }, DESIGNER);
   await expect(overview).toHaveText('Overview (3)');
-  await expect(designer.getByRole('button', { name: 'Basic', exact: true })).toBeVisible();
   await expect(designer.locator('.field-type-label').first()).toHaveText('Text');
 });
 

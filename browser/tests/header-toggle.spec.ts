@@ -1,3 +1,4 @@
+import { applyPreset } from './support';
 import { addElementFixture, nestFixtureFields } from './support';
 import { expect, test } from '@playwright/test';
 import { openDesigner } from './support';
@@ -81,8 +82,7 @@ for (const width of [1280, 375]) {
       await expect(toggle).toHaveAttribute('aria-expanded', 'false');
     }
 
-    await page.getByRole('button', { name: 'Basic', exact: true }).click();
-    await page.getByRole('button', { name: /Modular/ }).click();
+    await applyPreset(page, 'modular');
     await addElementFixture(page, root);
     await nestFixtureFields(page, ['element']);
     const element = root.locator('.template-header-card').nth(1);
@@ -135,8 +135,7 @@ for (const kind of ['field', 'element'] as const) {
       await page.setViewportSize({ width, height: 1000 });
       const designer = await openDesigner(page);
       if (kind === 'element') {
-        await designer.getByRole('button', { name: 'Basic', exact: true }).click();
-        await designer.getByRole('button', { name: /Modular/ }).click();
+        await applyPreset(page, 'modular');
       }
       const insert = designer.getByRole('button', { name: `Add ${kind} here`, exact: true }).first();
       await insert.focus();

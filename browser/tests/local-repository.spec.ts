@@ -5,7 +5,7 @@ test('local test1 can search and insert a reusable element in the default Modula
   test.skip(!process.env.CED_LOCAL_REPOSITORY, 'Opt-in: requires demo:serve and the local CEDAR stack.');
   await page.goto('http://localhost:4599/');
   const designer = page.locator('cedar-embeddable-designer');
-  await expect(designer.getByRole('button', { name: 'Modular', exact: true })).toBeVisible();
+  await expect(designer.getByRole('button', { name: 'Add element', exact: true }).first()).toBeVisible();
   await expect(designer.locator('input[type="file"]')).toHaveCount(0);
   await designer.getByRole('button', { name: 'Import fields and elements', exact: true }).click();
   await designer.getByRole('searchbox').fill('Study');

@@ -1,3 +1,4 @@
+import { applyPreset } from './support';
 import { addElementFixture, child } from './support';
 import { expect, test } from '@playwright/test';
 import { openSettings, openDesigner, currentTemplate, nestFixtureFields } from './support';
@@ -33,8 +34,7 @@ for (const width of [1280, 375]) {
     const designer = await openDesigner(page);
     const root = designer.locator('app-container-editor').first();
     await root.getByPlaceholder('Template name').fill('Debug template');
-    await page.getByRole('button', { name: 'Basic', exact: true }).click();
-    await page.getByRole('button', { name: /Modular/ }).click();
+    await applyPreset(page, 'modular');
     await addElementFixture(page, root);
     const parent = nestedEditors(root).first();
     await directHeader(parent).getByPlaceholder('Enter element name').fill('Samples');
@@ -153,8 +153,7 @@ test('element metadata shows provenance without changing the artifact and hides 
   page,
 }) => {
   const designer = await openDesigner(page);
-  await page.getByRole('button', { name: 'Basic', exact: true }).click();
-  await page.getByRole('button', { name: /Modular/ }).click();
+  await applyPreset(page, 'modular');
   await addElementFixture(page, designer);
   const artifact = await currentTemplate(page);
   const element = (artifact.properties as Record<string, any>).element;
@@ -199,8 +198,7 @@ test('element metadata shows provenance without changing the artifact and hides 
 // Standalone documents are supplied by the embedding host, without a File menu.
 async function loadStandalone(page: import('@playwright/test').Page, kind: string) {
   if (kind === 'Template') return;
-  await page.getByRole('button', { name: 'Basic', exact: true }).click();
-  await page.getByRole('button', { name: /Modular/ }).click();
+  await applyPreset(page, 'modular');
   await addElementFixture(page);
   const template = await currentTemplate(page);
   const element = (template.properties as Record<string, any>).element;
@@ -236,8 +234,7 @@ for (const width of [1280, 375]) {
   test(`nested element header has half the child inset and a bottom-corner toggle at ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
     const designer = await openDesigner(page);
-    await designer.getByRole('button', { name: 'Basic', exact: true }).click();
-    await designer.getByRole('button', { name: /Modular/ }).click();
+    await applyPreset(page, 'modular');
     await addElementFixture(page);
     await nestFixtureFields(page, ['element']);
     const element = designer.locator('app-container-editor').nth(1);
@@ -274,8 +271,7 @@ for (const collapsed of [false, true]) {
   test(`element move handle preserves children when collapsed=${collapsed}`, async ({ page }) => {
     const designer = await openDesigner(page);
     await page.setViewportSize({ width: 1280, height: 1400 });
-    await page.getByRole('button', { name: 'Basic', exact: true }).click();
-    await page.getByRole('button', { name: /Modular/ }).click();
+    await applyPreset(page, 'modular');
     await addElementFixture(page, designer);
     await nestFixtureFields(page, ['element'], 2);
     const root = designer.locator('app-container-editor').first();
@@ -330,8 +326,7 @@ for (const width of [1280, 375]) {
 
 test('edits a nested element key and rejects keys used by sibling fields', async ({ page }) => {
   const designer = await openDesigner(page);
-  await page.getByRole('button', { name: 'Basic', exact: true }).click();
-  await page.getByRole('button', { name: /Modular/ }).click();
+  await applyPreset(page, 'modular');
   await addElementFixture(page, designer);
   const settings = designer.locator('app-element-card').first();
   const expand = settings.getByRole('button', { name: 'Expand element settings', exact: true });
@@ -348,8 +343,7 @@ test('edits a nested element key and rejects keys used by sibling fields', async
 
 test('confirms deletion of an element subtree, but deletes empty elements immediately', async ({ page }) => {
   const designer = await openDesigner(page);
-  await page.getByRole('button', { name: 'Basic', exact: true }).click();
-  await page.getByRole('button', { name: /Modular/ }).click();
+  await applyPreset(page, 'modular');
   const root = designer.locator('app-container-editor').first();
   await addElementFixture(page, root);
   const parent = nestedEditors(root).first();

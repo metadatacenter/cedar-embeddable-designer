@@ -50,57 +50,6 @@
           <span class="designer-identity__name">CED</span>
           <span class="designer-identity__version" [title]="version">{{ version }}</span>
         </div>
-
-        <!--
-          The profile picker.
-
-          The three profiles decide which field types and which per-field controls
-          an author is offered, and until now the only way to one was the user menu
-          then the preferences modal — two clicks behind an unlabelled avatar, with
-          nothing on screen saying which profile was in force. An author who wanted
-          controlled terms had to know that Basic hides them and that a profile
-          existed to change.
-        -->
-        <div class="relative profile-menu-container ml-2">
-          <button
-            (click)="showProfileMenu.set(!showProfileMenu())"
-            class="px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100/80 rounded flex items-center gap-1 transition-colors"
-            [title]="'app.profile.menuTitle' | translate"
-          >
-            <span>{{ activeProfileLabel() | translate }}</span>
-            <app-icon key="chevronDown" size="small" className="text-gray-500"></app-icon>
-          </button>
-
-          @if (showProfileMenu()) {
-            <div
-              class="profile-menu-dropdown absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50 animate-in fade-in zoom-in-95 duration-100"
-            >
-              @for (profile of profiles; track profile.key) {
-                <button
-                  (click)="service.applyPreset(profile.key); showProfileMenu.set(false)"
-                  class="w-full px-3.5 py-2 text-left hover:bg-gray-100 flex items-start gap-2"
-                >
-                  <span class="w-3.5 pt-0.5 shrink-0">
-                    @if (activeProfileLabel() === profile.label) {
-                      <app-icon key="check" size="small" className="text-teal-600"></app-icon>
-                    }
-                  </span>
-                  <span class="min-w-0">
-                    <span class="block text-xs font-medium text-gray-700">{{ profile.label | translate }}</span>
-                    <span class="block text-xs text-gray-500">{{ profile.summary | translate }}</span>
-                  </span>
-                </button>
-              }
-              <div class="my-1 border-t border-gray-200"></div>
-              <button
-                (click)="service.showPreferencesModal.set(true); showProfileMenu.set(false)"
-                class="w-full px-3.5 py-2 text-left text-xs font-medium text-gray-700 hover:bg-gray-100"
-              >
-                <span class="pl-5">{{ 'app.profile.customize' | translate }}</span>
-              </button>
-            </div>
-          }
-        </div>
       </div>
 
       <div class="app-header__actions">

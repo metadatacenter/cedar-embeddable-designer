@@ -5,10 +5,6 @@ import { buildTemplate, templateToJson } from '../../src/app/core/model/cedar-te
 import { surfaceCases, checkSurface } from './surface-contracts.generated.mjs';
 const registry = JSON.parse(readFileSync(new URL('../../.ui-surfaces.json', import.meta.url), 'utf8'));
 const scenarios: Record<string, (page: Page) => Promise<void>> = {
-  'profile-menu': async (page) => {
-    const d = await openDesigner(page);
-    await d.getByRole('button', { name: 'Basic', exact: true }).click();
-  },
   'user-menu': async (page) => {
     const d = await openDesigner(page);
     await d.getByRole('button', { name: 'User Menu', exact: true }).click();

@@ -46,23 +46,6 @@
       "section": "Menus"
     },
     {
-      "id": "ced.profile-menu",
-      "name": "Profile Menu",
-      "section": "Menus",
-      "parent": "ced.ced",
-      "contract": "menu",
-      "scenario": "profile-menu",
-      "selector": ".profile-menu-dropdown",
-      "states": ["open"],
-      "source": [
-        {
-          "file": "src/app/app.component.html",
-          "anchor": "profile-menu-dropdown"
-        }
-      ],
-      "test": "browser/tests/surfaces.spec.ts"
-    },
-    {
       "id": "ced.user-menu",
       "name": "User Menu",
       "section": "Menus",

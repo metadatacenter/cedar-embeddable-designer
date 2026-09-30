@@ -1,3 +1,4 @@
+import { applyPreset } from './support';
 import { expect, test } from '@playwright/test';
 import {
   openDesigner,
@@ -63,8 +64,7 @@ test('editing controls and modified shortcuts keep their normal arrow handling',
 
 test('navigation includes elements but skips children of collapsed elements', async ({ page }) => {
   const designer = await openDesigner(page);
-  await designer.getByRole('button', { name: 'Basic', exact: true }).click();
-  await designer.getByRole('button', { name: /Modular/ }).click();
+  await applyPreset(page, 'modular');
   await addElementFixture(page);
   await nestFixtureFields(page, ['element']);
   const cards = designer.locator('.field-drag-container');

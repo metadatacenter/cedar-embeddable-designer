@@ -239,8 +239,7 @@ test('an inactive settings tab still shows its error', async ({ page }) => {
 
 test('element deletion confirmation uses the shared dialog actions', async ({ page }) => {
   const designer = await openDesigner(page);
-  await designer.getByRole('button', { name: 'Basic', exact: true }).click();
-  await designer.getByRole('button', { name: /Modular/ }).click();
+  await applyPreset(page, 'modular');
   await addElementFixture(page);
   await nestFixtureFields(page, ['element']);
   await designer.getByRole('button', { name: 'Delete element Element', exact: true }).click();

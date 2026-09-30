@@ -1,3 +1,4 @@
+import { applyPreset } from './support';
 import { addElementFixture } from './support';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { openDesigner, openSettings, currentTemplate, child } from './support';
@@ -104,8 +105,7 @@ for (const width of [1280, 375]) {
     await openSettings(card, 'Annotations');
     await addRows(card.locator('app-annotations-editor'));
     expect(child(await currentTemplate(page), 'Title')._annotations).toEqual(annotations);
-    await page.getByRole('button', { name: 'Basic', exact: true }).click();
-    await page.getByRole('button', { name: /Modular/ }).click();
+    await applyPreset(page, 'modular');
     await addElementFixture(page, root);
     const elementSettings = designer.locator('app-element-card').first();
     await elementSettings.getByRole('button', { name: 'Expand element settings' }).click();

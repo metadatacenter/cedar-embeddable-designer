@@ -23,9 +23,7 @@ export async function openDesigner(page: Page, query = ''): Promise<Locator> {
   // The first field card is the earliest sign the designer inside has rendered.
   await expect(designer.locator('[id^=field-card-]').first()).toBeVisible();
   // Existing workflow fixtures deliberately exercise Basic; the component defaults to Modular.
-  await designer.getByRole('button', { name: 'Modular', exact: true }).click();
-  await designer.getByRole('button', { name: /Basic/ }).click();
-  await expect(designer.getByRole('button', { name: 'Basic', exact: true })).toBeVisible();
+  await applyPreset(page, 'basic');
   return designer;
 }
 

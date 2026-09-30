@@ -22,7 +22,7 @@
   border-bottom: 1px solid var(--cedar-border-rule);
 }
 
-.app-header:has(.profile-menu-dropdown, .user-menu-dropdown) {
+.app-header:has(.user-menu-dropdown) {
   z-index: var(--cedar-layer-menu);
 }
 
