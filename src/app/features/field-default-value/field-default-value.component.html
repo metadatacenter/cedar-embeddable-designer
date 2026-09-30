@@ -41,7 +41,7 @@
           [value]="controlledDefaultLabel()"
         />
       } @else {
-        <p role="status" class="constraint-first text-sm text-gray-500">
+        <p role="status" class="constraint-first default-help">
           {{ 'defaultValue.constraintFirst' | translate }}
         </p>
       }
@@ -51,7 +51,7 @@
     @if (allowsControlledTerms()) {
       <div class="default-value-actions">
         @if (field().controlledTermConstraints?.constraints?.length && (!pickerAvailable() || !terminologyBaseUrl())) {
-          <p role="status" class="text-sm text-gray-500">{{ 'defaultValue.pickerUnavailable' | translate }}</p>
+          <p role="status" class="default-help">{{ 'defaultValue.pickerUnavailable' | translate }}</p>
         } @else if (field().controlledTermConstraints?.constraints?.length) {
           <button
             type="button"
@@ -108,11 +108,11 @@
     }
   </div>
   @if (checking() && !pickerOpen()) {
-    <p role="status" class="text-sm text-gray-500">{{ 'defaultValue.checkingTerm' | translate }}</p>
+    <p role="status" class="default-help">{{ 'defaultValue.checkingTerm' | translate }}</p>
   }
   @if (error() && !pickerOpen() && !editorReportsError()) {
     <p role="alert" class="ced-field-error">{{ error() }}</p>
   }
 } @else {
-  <p role="status" class="text-sm text-gray-500">{{ 'defaultValue.editorUnavailable' | translate }}</p>
+  <p role="status" class="default-help">{{ 'defaultValue.editorUnavailable' | translate }}</p>
 }

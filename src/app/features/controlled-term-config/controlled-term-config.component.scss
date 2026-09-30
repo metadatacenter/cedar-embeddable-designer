@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
 @use '../../shared/field-error';
 @use '@org.metadatacenter/cedar-design-tokens/authoring';
 
@@ -21,4 +22,26 @@ cedar-embeddable-field {
   min-width: 0;
   @include authoring.compact-control;
   color: var(--cedar-text-muted);
+}
+
+.picker-unavailable {
+  font-size: var(--cedar-font-size);
+  color: var(--cedar-status-warning-text);
+  margin-bottom: var(--cedar-space-3);
+}
+.picker-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--cedar-layer-modal);
+  background: var(--cedar-dialog-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--cedar-space-6);
+}
+.picker-dialog {
+  @include patterns.dialog-surface($padding: 0);
+}
+.picker-status {
+  padding: var(--cedar-space-3);
 }

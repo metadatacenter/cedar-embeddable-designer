@@ -7,7 +7,7 @@
   align-self: center;
   color: var(--cedar-text-muted);
   cursor: grab;
-  padding: 2px;
+  padding: calc(var(--cedar-space-1) / 2);
 }
 app-icon {
   display: inline-flex;
@@ -162,4 +162,116 @@ app-icon {
 
 .choice-add-action {
   gap: var(--cedar-space-3);
+}
+
+.field-edit-scope {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.field-name {
+  border: none;
+  outline: none;
+  padding-bottom: calc(var(--cedar-space-1) / 2);
+  min-width: 0;
+  background: transparent;
+  border-bottom-width: 2px;
+}
+.field-requirement {
+  font-size: var(--cedar-font-size);
+  color: var(--cedar-text-muted);
+  background: var(--cedar-surface-panel);
+  border: 1px solid var(--cedar-border-rule);
+  border-radius: var(--cedar-control-radius-default);
+  padding: calc(var(--cedar-space-1) / 2) var(--cedar-space-1);
+}
+.field-repetition {
+  display: flex;
+  align-items: center;
+  gap: var(--cedar-space-1);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.field-repetition-label {
+  font-size: var(--cedar-font-size);
+  color: var(--cedar-text-muted);
+  white-space: nowrap;
+}
+.field-repetition:hover .field-repetition-label {
+  color: var(--cedar-text-primary);
+}
+.field-icon-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cedar-color-primary);
+  padding: calc(var(--cedar-space-1) / 2);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+.field-icon-action:disabled {
+  opacity: var(--cedar-control-disabled-opacity);
+  cursor: default;
+}
+app-field-summary {
+  margin-top: var(--cedar-space-1);
+}
+.choice-options {
+  padding-inline: var(--cedar-space-1);
+}
+.choice-option-row {
+  display: flex;
+  align-items: center;
+  gap: var(--cedar-space-3);
+  padding-inline: var(--cedar-space-1);
+}
+.choice-option-icon {
+  color: var(--cedar-color-primary);
+}
+.choice-option-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  min-width: 0;
+  border-bottom-width: 1px;
+  border-bottom-color: var(--cedar-border-rule);
+}
+.choice-option-input:focus {
+  border-color: var(--cedar-color-primary);
+}
+.choice-add-action {
+  display: flex;
+  align-items: center;
+  padding-inline: var(--cedar-space-1);
+  font-size: var(--cedar-font-size);
+  color: var(--cedar-text-muted);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-weight: var(--cedar-font-weight-medium);
+}
+.choice-add-action:hover {
+  color: var(--cedar-color-primary);
+}
+.field-content {
+  margin-top: var(--cedar-space-1);
+  padding-inline: var(--cedar-space-1);
+}
+.content-label {
+  display: block;
+  margin-bottom: calc(var(--cedar-space-1) / 2);
+}
+.field-content-control {
+  font-size: var(--cedar-font-size);
+  width: 100%;
+  border: 1px solid var(--cedar-control-border-default);
+  border-radius: var(--cedar-control-radius-default);
+  padding: calc(var(--cedar-space-3) / 2) var(--cedar-space-3);
+}
+.field-content-control:focus {
+  outline: none;
+  border-color: var(--cedar-color-primary);
 }

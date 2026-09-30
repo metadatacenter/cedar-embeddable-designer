@@ -247,3 +247,15 @@ test('element deletion confirmation uses the shared dialog actions', async ({ pa
   await expect(dialog.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
   await expect(dialog).toHaveScreenshot('delete-element.png', SHOT);
 });
+
+for (const name of ['Preferences', 'Define Presets']) {
+  test(`settings dialog: ${name}`, async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 1000 });
+    const designer = await openDesigner(page);
+    await designer.getByRole('button', { name: 'User Menu', exact: true }).click();
+    await designer.locator('.user-menu-dropdown').getByRole('button', { name, exact: true }).click();
+    const dialog = designer.locator('.cedar-modal-surface');
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toHaveScreenshot(`settings-${name.toLowerCase().replaceAll(' ', '-')}.png`, SHOT);
+  });
+}

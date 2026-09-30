@@ -36,7 +36,7 @@ import { TypesPickerComponent } from '../types-picker/types-picker.component';
     .display-fields {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 6px;
+      gap: calc(var(--cedar-space-3) / 2);
     }
   `,
 })

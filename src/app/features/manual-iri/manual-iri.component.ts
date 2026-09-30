@@ -33,19 +33,19 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
     @use '@org.metadatacenter/cedar-design-tokens/authoring';
     :host {
       display: block;
-      margin-top: 8px;
+      margin-top: var(--cedar-space-2);
       font-size: var(--cedar-font-size);
     }
     .entry {
       display: flex;
       flex-wrap: wrap;
       align-items: end;
-      gap: 8px;
+      gap: var(--cedar-space-2);
     }
     label {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: var(--cedar-space-1);
       flex: 1 1 240px;
       min-width: 0;
     }
@@ -56,15 +56,15 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
     button {
       @include authoring.compact-control;
       cursor: pointer;
-      color: var(--cedar-color-primary, #117b89);
+      color: var(--cedar-color-primary);
     }
     button:disabled {
       opacity: 0.5;
       cursor: default;
     }
     p {
-      margin: 4px 0 0;
-      color: #b42318;
+      margin: var(--cedar-space-1) 0 0;
+      color: var(--cedar-status-error-text);
     }
   `,
 })

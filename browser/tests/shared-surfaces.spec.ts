@@ -35,3 +35,24 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
     await expect(modal).toHaveCount(0);
   });
 }
+
+for (const name of ['Preferences', 'Define Presets']) {
+  test(`${name} action follows host theme states and stays available`, async ({ page }) => {
+    const designer = await openDesigner(page);
+    await designer.evaluate((el) => {
+      const style = (el as HTMLElement).style;
+      style.setProperty('--cedar-action-primary-surface', 'rgb(50, 60, 70)');
+      style.setProperty('--cedar-action-primary-hover-surface', 'rgb(70, 80, 90)');
+    });
+    await designer.getByRole('button', { name: 'User Menu', exact: true }).click();
+    await designer.locator('.user-menu-dropdown').getByRole('button', { name, exact: true }).click();
+    const dialog = designer.locator('.cedar-modal-surface');
+    const done = dialog.locator('.settings-dialog-done');
+    await expect(done).toBeInViewport();
+    await expect(done).toHaveCSS('background-color', 'rgb(50, 60, 70)');
+    await done.hover();
+    await expect(done).toHaveCSS('background-color', 'rgb(70, 80, 90)');
+    await done.click();
+    await expect(dialog).toHaveCount(0);
+  });
+}

@@ -2,7 +2,7 @@
 @use '../../shared/field-error';
 :host {
   display: block;
-  background: #f5f7f7;
+  background: var(--cedar-surface-authoring);
   overflow-y: auto;
 }
 .library-page {
@@ -29,7 +29,7 @@ h1 {
 }
 h2 {
   font-size: var(--cedar-font-size);
-  margin: var(--cedar-space-4) 0 2px;
+  margin: var(--cedar-space-4) 0 calc(var(--cedar-space-1) / 2);
   font-weight: var(--cedar-font-weight-medium, 500);
 }
 .hint,
@@ -60,25 +60,25 @@ label {
 }
 input,
 select {
-  border: 1px solid #ccd5d4;
-  background: white;
+  border: 1px solid var(--cedar-control-border-default);
+  background: var(--cedar-surface-raised);
   border-radius: 3px;
-  padding: var(--cedar-space-1) 6px;
+  padding: var(--cedar-space-1) calc(var(--cedar-space-3) / 2);
   font: inherit;
   font-weight: var(--cedar-font-weight-regular, 400);
 }
 button {
-  color: #0b6570;
-  background: white;
-  border: 1px solid #b8cdcf;
+  color: var(--cedar-color-primary);
+  background: var(--cedar-surface-raised);
+  border: 1px solid var(--cedar-border-rule);
   border-radius: 3px;
   padding: var(--cedar-space-1) 7px;
   cursor: pointer;
   font: inherit;
 }
 .editor {
-  background: white;
-  border: 1px solid #d5dede;
+  background: var(--cedar-surface-raised);
+  border: 1px solid var(--cedar-border-rule);
   border-radius: 4px;
   margin: 10px 0;
   padding-bottom: var(--cedar-space-2);
@@ -93,22 +93,22 @@ table {
 }
 th,
 td {
-  padding: 6px var(--cedar-space-2);
-  border-bottom: 1px solid #e1e6e5;
+  padding: calc(var(--cedar-space-3) / 2) var(--cedar-space-2);
+  border-bottom: 1px solid var(--cedar-border-rule-light);
 }
 th {
-  background: #e9eeee;
+  background: var(--cedar-surface-panel);
   font-weight: var(--cedar-font-weight-medium, 500);
   font-size: var(--cedar-font-size);
 }
 tbody tr {
-  background: white;
+  background: var(--cedar-surface-raised);
 }
 tbody tr:nth-child(even) {
-  background: #f7f9f9;
+  background: var(--cedar-surface-panel);
 }
 .actions button {
-  margin: 2px;
+  margin: calc(var(--cedar-space-1) / 2);
 }
 
 @include authoring.compact-table;

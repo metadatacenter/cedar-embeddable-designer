@@ -28,10 +28,10 @@ input {
 button {
   font: inherit;
   color: var(--cedar-color-primary);
-  background: white;
+  background: var(--cedar-surface-raised);
   border: 1px solid var(--cedar-primary-100);
   border-radius: 3px;
-  padding: var(--cedar-space-1) 6px;
+  padding: var(--cedar-space-1) calc(var(--cedar-space-3) / 2);
   cursor: pointer;
 }
 button:disabled {
@@ -53,7 +53,7 @@ th.actions {
   width: 32px;
 }
 td {
-  padding: 2px var(--cedar-space-1);
+  padding: calc(var(--cedar-space-1) / 2) var(--cedar-space-1);
   vertical-align: middle;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
@@ -64,13 +64,13 @@ td {
   justify-content: center;
   width: 24px;
   height: 24px;
-  padding: 2px;
+  padding: calc(var(--cedar-space-1) / 2);
   border: 0;
   background: transparent;
-  color: black;
+  color: var(--cedar-color-primary);
 }
 .empty {
-  color: #64748b;
+  color: var(--cedar-text-muted);
 }
 p[role='alert'] {
   color: var(--cedar-control-error, var(--cedar-color-error));

@@ -26,14 +26,14 @@
   }
 </div>
 @if (!pickerAvailable || !terminologyBaseUrl()) {
-  <p role="status" class="text-xs text-amber-800 mb-3">
+  <p role="status" class="picker-unavailable">
     {{ 'controlledTerms.editingUnavailable.before' | translate }} <code>&lt;cedar-embeddable-term-picker&gt;</code>
     {{ 'controlledTerms.editingUnavailable.middle' | translate }}
     <code>terminologyBaseUrl</code>{{ 'controlledTerms.editingUnavailable.after' | translate }}
   </p>
 }
 @if (pickerOpen()) {
-  <div class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-6">
+  <div class="picker-backdrop">
     <div
       #dialog
       role="dialog"
@@ -41,16 +41,16 @@
       tabindex="-1"
       [attr.aria-label]="'controlledTerms.constraints' | translate"
       (keydown)="onDialogKeydown($event)"
-      class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto"
+      class="picker-dialog w-full max-w-4xl max-h-[90vh] overflow-auto"
     >
       @if (checking()) {
-        <p role="status" class="p-3">{{ 'controlledTerms.checkingDefault' | translate }}</p>
+        <p role="status" class="picker-status">{{ 'controlledTerms.checkingDefault' | translate }}</p>
       }
       @if (error()) {
-        <p role="alert" class="p-3 ced-field-error">{{ error() }}</p>
+        <p role="alert" class="picker-status ced-field-error">{{ error() }}</p>
       }
       @if (invalidDefault()) {
-        <button type="button" class="ced-text-action p-3" (click)="clearDefaultAndApply()">
+        <button type="button" class="ced-text-action picker-status" (click)="clearDefaultAndApply()">
           {{ 'controlledTerms.clearDefaultAndApply' | translate }}
         </button>
       }

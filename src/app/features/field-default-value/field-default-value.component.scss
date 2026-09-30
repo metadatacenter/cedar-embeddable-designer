@@ -22,7 +22,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px var(--cedar-space-3);
+    padding: calc(var(--cedar-space-3) / 2) var(--cedar-space-3);
     background: var(--cedar-surface-authoring);
     font-size: var(--cedar-font-size);
     color: var(--cedar-text-muted);
@@ -38,7 +38,7 @@
     font-size: var(--cedar-font-size-heading);
   }
   p {
-    margin: 6px var(--cedar-space-3);
+    margin: calc(var(--cedar-space-3) / 2) var(--cedar-space-3);
     font-size: var(--cedar-font-size);
   }
 }
@@ -103,4 +103,9 @@
   .default-value-row:has(.default-value-actions) .default-value-control {
     flex-basis: 100%;
   }
+}
+
+.default-help {
+  font-size: var(--cedar-font-size);
+  color: var(--cedar-text-muted);
 }

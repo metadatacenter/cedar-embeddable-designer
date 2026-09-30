@@ -14,6 +14,6 @@
   background: var(--cedar-surface-advisory);
   font-size: var(--cedar-font-size);
   line-height: var(--cedar-form-help-line-height);
-  margin: 6px var(--cedar-space-2) 0;
+  margin: calc(var(--cedar-space-3) / 2) var(--cedar-space-2) 0;
   padding: 5px var(--cedar-space-2);
 }

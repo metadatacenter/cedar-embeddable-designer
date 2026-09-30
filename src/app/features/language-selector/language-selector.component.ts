@@ -53,13 +53,13 @@ function languageOptions(locale: string, english: boolean): readonly { code: str
     @use '@org.metadatacenter/cedar-design-tokens/authoring';
     :host {
       display: block;
-      margin-top: 8px;
+      margin-top: var(--cedar-space-2);
     }
     label {
       font-weight: var(--cedar-font-weight-medium, 500);
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: var(--cedar-space-1);
       font-size: var(--cedar-font-size);
     }
     select {
@@ -68,8 +68,8 @@ function languageOptions(locale: string, english: boolean): readonly { code: str
       max-width: 320px;
     }
     p {
-      color: #b42318;
-      margin: 4px 0;
+      color: var(--cedar-status-error-text);
+      margin: var(--cedar-space-1) 0;
     }
   `,
 })

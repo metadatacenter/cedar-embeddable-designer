@@ -105,7 +105,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
     .property {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: var(--cedar-space-3);
       font-size: var(--cedar-font-size);
     }
     .unavailable {
@@ -118,16 +118,16 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       min-width: 0;
       overflow-wrap: anywhere;
       padding: 3px 6px;
-      border: 1px solid #ccc;
+      border: 1px solid var(--cedar-control-border-authoring);
       border-radius: 2px;
-      color: #4b5563;
+      color: var(--cedar-text-muted);
     }
     button {
       flex: 0 0 auto;
       padding: 0;
       border: 0;
       background: none;
-      color: #317c85;
+      color: var(--cedar-color-primary);
       font: inherit;
       text-decoration: underline;
       text-underline-offset: 2px;
@@ -140,10 +140,10 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
     .type-row {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: var(--cedar-space-2);
     }
     .type-row + .type-row {
-      margin-top: 4px;
+      margin-top: var(--cedar-space-1);
     }
     .remove {
       display: flex;
@@ -151,11 +151,11 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       justify-content: center;
       width: 24px;
       height: 24px;
-      color: black;
+      color: var(--cedar-color-primary);
       text-decoration: none;
     }
     .placeholder {
-      color: #777;
+      color: var(--cedar-border-control);
     }
     button:disabled {
       opacity: 0.5;
@@ -169,10 +169,10 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1.5rem;
+      padding: var(--cedar-space-6);
     }
     .dialog {
-      background: white;
+      background: var(--cedar-surface-raised);
       border-radius: 0.5rem;
       width: 100%;
       max-width: 64rem;
@@ -180,8 +180,8 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       overflow: auto;
     }
     [role='alert'] {
-      padding: 0.75rem;
-      color: #991b1b;
+      padding: var(--cedar-space-3);
+      color: var(--cedar-status-error-text);
     }
   `,
 })

@@ -18,9 +18,9 @@
   box-sizing: border-box;
   min-height: 40px;
   gap: var(--cedar-space-2);
-  padding: 6px var(--cedar-space-3);
+  padding: calc(var(--cedar-space-3) / 2) var(--cedar-space-3);
   border-bottom: 1px solid var(--cedar-border-rule-light);
-  background: #ffffff;
+  background: var(--cedar-surface-raised);
 }
 
 .cee-preview__title {
@@ -32,7 +32,7 @@
   font-weight: var(--cedar-font-weight-medium, 500);
   letter-spacing: 0.04em;
   text-transform: none;
-  color: var(--cedar-text-muted, #6b7280);
+  color: var(--cedar-text-muted);
 }
 .cee-preview__mode {
   position: relative;
@@ -55,10 +55,11 @@
   align-self: center;
   min-width: 0;
   appearance: none;
-  padding: calc(var(--cedar-space-1) * 0.75) calc(var(--cedar-space-2) * 3.75) calc(var(--cedar-space-1) * 0.75) calc(var(--cedar-space-2) * 1.25);
-  border: 1px solid #b8cdcf;
+  padding: calc(var(--cedar-space-1) * 0.75) calc(var(--cedar-space-2) * 3.75) calc(var(--cedar-space-1) * 0.75)
+    calc(var(--cedar-space-2) * 1.25);
+  border: 1px solid var(--cedar-border-rule);
   border-radius: 3px;
-  background: white;
+  background: var(--cedar-surface-raised);
   font: inherit;
   font-size: var(--cedar-font-size);
 }
@@ -66,7 +67,7 @@
   margin: 0;
   padding: var(--cedar-space-1) var(--cedar-space-3);
   font-size: var(--cedar-font-size);
-  color: #64748b;
+  color: var(--cedar-text-muted);
 }
 
 .cee-preview__close {
@@ -83,7 +84,7 @@
   border: 0;
   border-radius: 4px;
   background: transparent;
-  color: var(--cedar-text-muted, #6b7280);
+  color: var(--cedar-text-muted);
   cursor: pointer;
 
   &:hover {
@@ -108,7 +109,7 @@
   padding: var(--cedar-space-4);
   font-size: var(--cedar-font-size);
   line-height: 1.6;
-  color: var(--cedar-text-muted, #6b7280);
+  color: var(--cedar-text-muted);
 
   code {
     font-family: var(--cedar-font-family-monospace, ui-monospace, SFMono-Regular, Menlo, monospace);

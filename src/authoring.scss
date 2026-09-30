@@ -28,3 +28,7 @@ app-annotations-editor .add-row label {
 app-annotations-editor table caption {
   @include authoring.table-caption;
 }
+
+:is(app-preferences-modal, app-preset-definitions-modal) {
+  @include authoring.settings-dialog;
+}

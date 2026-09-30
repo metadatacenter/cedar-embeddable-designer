@@ -147,7 +147,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #64748b;
+  color: var(--cedar-text-muted);
   cursor: pointer;
 }
 .overview-panel__actions button:hover {
@@ -216,7 +216,7 @@
   border: 0;
   border-radius: 4px;
   background: transparent;
-  color: #8b9093;
+  color: var(--cedar-text-muted);
   cursor: pointer;
 }
 .panel-toggle:hover,

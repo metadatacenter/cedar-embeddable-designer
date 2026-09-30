@@ -61,7 +61,7 @@ test('header controls share a vertical center and version is right aligned', asy
   await expect(designer.getByRole('textbox', { name: 'Version', exact: true })).toHaveCSS('text-align', 'right');
 });
 
-test('compact cards keep controls close and enabled trash icons black', async ({ page }) => {
+test('compact cards keep controls close and enabled trash icons themed', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   const designer = await openDesigner(page);
   const card = designer.locator('app-field-card').first();
@@ -81,7 +81,11 @@ test('compact cards keep controls close and enabled trash icons black', async ({
   expect(spacing.afterHeader).toBeLessThanOrEqual(6);
   expect(spacing.belowPreview).toBeLessThanOrEqual(18);
   expect(spacing.toggleHeight).toBe(14);
-  await expect(card.getByRole('button', { name: 'Delete field' }).locator('svg')).toHaveCSS('color', 'rgb(0, 0, 0)');
+  await designer.evaluate((el) => (el as HTMLElement).style.setProperty('--cedar-color-primary', 'rgb(91, 32, 124)'));
+  await expect(card.getByRole('button', { name: 'Delete field' }).locator('svg')).toHaveCSS(
+    'color',
+    'rgb(91, 32, 124)',
+  );
 });
 
 test('template header shows stored publication status beside the version', async ({ page }) => {

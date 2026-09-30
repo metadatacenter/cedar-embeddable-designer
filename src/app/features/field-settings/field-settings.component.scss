@@ -24,7 +24,7 @@
 label {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: calc(var(--cedar-space-1) / 2);
   @include authoring.label-text;
   /*
    * Shrinkable, or a wide control overflows the card that holds it.
@@ -44,7 +44,7 @@ textarea {
   min-width: 0;
   width: 125px;
   padding: 3px 5px;
-  background: white;
+  background: var(--cedar-surface-raised);
   border: 1px solid var(--cedar-control-border-default);
   border-radius: 2px;
   font: inherit;
@@ -55,7 +55,7 @@ button {
   color: var(--cedar-color-primary);
   border: 1px solid var(--cedar-border-rule);
   border-radius: 2px;
-  background: white;
+  background: var(--cedar-surface-raised);
   cursor: pointer;
 }
 p[role='alert'] {
@@ -100,7 +100,7 @@ p[role='alert'] {
 .tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: var(--cedar-space-1);
   margin-top: 0.375rem;
   border-bottom: 1px solid var(--cedar-border-rule);
 }
@@ -207,7 +207,7 @@ button:focus-visible {
 .display-flags {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: calc(var(--cedar-space-1) / 2);
 }
 .display-flags .check {
   align-self: start;
@@ -231,7 +231,7 @@ button:focus-visible {
 .default-label {
   display: block;
   @include authoring.label-text;
-  margin-bottom: 2px;
+  margin-bottom: calc(var(--cedar-space-1) / 2);
 }
 
 .numeric-constraint-fields {
@@ -244,7 +244,7 @@ button:focus-visible {
 
 fieldset[aria-invalid='true'] {
   border-left: 2px solid var(--cedar-control-error, var(--cedar-color-error));
-  padding-left: 6px;
+  padding-left: calc(var(--cedar-space-3) / 2);
 }
 
 .identity dt.editable {
