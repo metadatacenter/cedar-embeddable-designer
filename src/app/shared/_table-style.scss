@@ -3,6 +3,7 @@
 @mixin compact-table {
   table {
     border-collapse: collapse;
+    border-bottom: 1px solid var(--cedar-border-rule);
   }
   th,
   td {
