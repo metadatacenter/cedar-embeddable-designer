@@ -31,6 +31,10 @@ async function openField(page: Page, type: string, extra: Partial<Field> = {}, q
       ],
     }),
   );
+  // Exercise the preferred-label fallback without the builder's default deployment label.
+  if (extra.preferredLabel && extra.displayLabel === undefined) {
+    delete (template as { _ui: { propertyLabels: Record<string, string> } })._ui.propertyLabels.Value;
+  }
   await page.evaluate((template) => {
     (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
   }, template);
@@ -445,7 +449,7 @@ for (const host of ['CED', 'CEFD']) {
       await page.goto('/field-host.html');
       await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
       await page.getByRole('button', { name: 'Temporal', exact: true }).click();
-      await page.getByRole('textbox', { name: 'Field name', exact: true }).fill('Date field');
+      await page.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Date field');
       await openSettings(page.locator('app-field-card'), 'Constraints');
     }
     const native = page.getByRole('combobox', { name: 'Temporal type', exact: true });
@@ -649,3 +653,43 @@ for (const [type, value] of [
     expect(await currentTemplate(page)).toEqual(original);
   });
 }
+
+test('inline summaries omit duplicate headings while full previews retain display labels', async ({ page }) => {
+  await openField(page, 'shortText', { preferredLabel: 'Lab ID', helpText: 'An external laboratory identifier.' });
+  const summary = page.locator('app-field-summary');
+  await expect(summary.locator('.cee-spec-box')).toBeVisible();
+  await expect(summary.locator('app-cedar-component-header')).toHaveCount(0);
+  await expect(summary).toContainText('An external laboratory identifier.');
+  const preview = await openPreview(page);
+  await expect(preview.locator('app-cedar-component-header').filter({ hasText: 'Lab ID' })).toBeVisible();
+});
+
+for (const [labels, wanted] of [
+  [{ preferredLabel: 'Lab ID' }, 'Lab ID'],
+  [{ preferredLabel: 'Lab ID', displayLabel: 'Laboratory identifier' }, 'Laboratory identifier'],
+  [{}, 'Value'],
+] as const) {
+  test(`Overview uses the effective field label: ${wanted}`, async ({ page }) => {
+    await openField(page, 'shortText', labels);
+    await expect(page.locator('app-container-outline .node-name')).toHaveText(wanted);
+    await expect(
+      page.locator('app-container-outline').getByRole('button', { name: `Reorder ${wanted}`, exact: true }),
+    ).toBeVisible();
+    expect((await currentTemplate(page)).properties).toHaveProperty('Value');
+    await expect(page.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue(wanted);
+  });
+}
+
+test('editing a display name updates Overview without renaming the field key', async ({ page }) => {
+  await openField(page, 'shortText', { preferredLabel: 'Lab ID', displayLabel: 'Value' });
+  const heading = page.getByRole('textbox', { name: 'Field display name', exact: true });
+  await expect(heading).toHaveValue('Lab ID');
+  await expect(page.locator('app-container-outline .node-name')).toHaveText('Lab ID');
+  await heading.fill('Laboratory identifier');
+  await heading.blur();
+  await expect(page.locator('app-container-outline .node-name')).toHaveText('Laboratory identifier');
+  const template = await currentTemplate(page);
+  expect(template.properties).toHaveProperty('Value');
+  expect(child(template, 'Value')['schema:name']).toBe('Value');
+  expect(child(template, 'Value')['skos:prefLabel']).toBe('Laboratory identifier');
+});

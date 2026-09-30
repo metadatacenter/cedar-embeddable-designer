@@ -20,17 +20,13 @@
           <input
             spellcheck="false"
             type="text"
-            [appArtifactName]="field.id"
-            aria-required="true"
-            [attr.aria-invalid]="!!service.nameError(field.id, field.name, 'field')"
-            [attr.aria-describedby]="service.nameError(field.id, field.name, 'field') ? 'name-error-' + field.id : null"
-            [ngModel]="field.name"
-            (ngModelChange)="service.updateFieldName(field.id, $event)"
+            [ngModel]="displayName(field)"
+            (ngModelChange)="updateDisplayName($event)"
             class="text-sm font-medium text-gray-900 border-none outline-none pb-0.5 flex-1 min-w-0 bg-transparent border-b-2"
             [style.borderBottomColor]="service.selectedField() === field.id ? 'var(--cedar-color-primary)' : '#d1d5db'"
             (focus)="service.selectedField.set(field.id)"
             [placeholder]="'fieldCard.namePlaceholder' | translate"
-            [attr.aria-label]="'fieldCard.name' | translate"
+            [attr.aria-label]="'fieldCard.displayName' | translate"
           />
           @if (field.status === 'required' && allowsStatus(field.type)) {
             <sup class="required-mark" [attr.aria-label]="'common.required' | translate">*</sup>

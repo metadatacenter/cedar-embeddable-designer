@@ -330,6 +330,7 @@
     "elementMissing": "The element no longer exists."
   },
   "fieldCard": {
+    "displayName": "Field display name",
     "published": "Published field — read-only. Editing a draft version is not available yet.",
     "namePlaceholder": "Enter field name",
     "name": "Field name",

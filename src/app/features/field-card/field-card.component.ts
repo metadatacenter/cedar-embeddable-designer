@@ -1,4 +1,4 @@
-import { ArtifactNameDirective } from '../../shared/artifact-name.directive';
+import { fieldDisplayName, fieldDisplayOverride } from '../../core/model/field-display-name';
 import { FieldSummaryComponent } from '../field-summary/field-summary.component';
 import { HeaderToggleDirective } from '../../shared/header-toggle.directive';
 import { FieldSettingsComponent } from '../field-settings/field-settings.component';
@@ -25,7 +25,6 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
   selector: 'app-field-card',
   standalone: true,
   imports: [
-    ArtifactNameDirective,
     CommonModule,
     FieldSummaryComponent,
     HeaderToggleDirective,
@@ -58,6 +57,14 @@ export class FieldCardComponent {
   readonly service = inject(TemplateService);
 
   readonly FIELD_TYPES_LIST = FIELD_TYPES;
+  readonly displayName = fieldDisplayName;
+
+  updateDisplayName(value: string): void {
+    this.service.updateFieldSettings(
+      this.field.id,
+      fieldDisplayOverride(this.field) ? { displayLabel: value } : { preferredLabel: value },
+    );
+  }
 
   /*
    * What a type will actually accept, asked of the same table that builds it.

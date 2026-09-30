@@ -330,6 +330,7 @@
     "elementMissing": "Az elem már nem létezik."
   },
   "fieldCard": {
+    "displayName": "Mező megjelenítési neve",
     "published": "Közzétett mező – csak olvasható. Vázlatverzió szerkesztése még nem érhető el.",
     "namePlaceholder": "Adja meg a mező nevét",
     "name": "Mező neve",

@@ -1,6 +1,7 @@
+import { fieldDisplayName } from '../../core/model/field-display-name';
 import { Component, input, inject } from '@angular/core';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
-import { ContainerDraft, ChildNode, childName } from '../../core/model/container-draft';
+import { ContainerDraft, ChildNode, childName, fieldView } from '../../core/model/container-draft';
 import { TemplateService } from '../../core/services/template.service';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -19,7 +20,7 @@ import { TranslatePipe } from '@ngx-translate/core';
           <button type="button" class="select-node" (click)="select(node)">
             <app-icon [key]="node.kind === 'field' ? node.definition.type : 'folder'" className="w-4 h-4" />
             <span class="node-name">{{
-              childName(node) ||
+              displayName(node) ||
                 ((node.kind === 'field' ? 'validation.unnamed.field' : 'validation.unnamed.element') | translate)
             }}</span>
             @if (service.visibleIssuesFor(node.id).length; as count) {
@@ -41,7 +42,7 @@ import { TranslatePipe } from '@ngx-translate/core';
               [attr.aria-expanded]="!service.collapsedElements().has(node.id)"
               [attr.aria-label]="
                 (service.collapsedElements().has(node.id) ? 'common.expandNamed' : 'common.collapseNamed')
-                  | translate: { name: childName(node) }
+                  | translate: { name: displayName(node) }
               "
               [title]="(service.collapsedElements().has(node.id) ? 'outline.expand' : 'outline.collapse') | translate"
               (click)="service.toggleElement(node.id)"
@@ -58,7 +59,7 @@ import { TranslatePipe } from '@ngx-translate/core';
             class="outline-drag-handle"
             cdkDragHandle
             [disabled]="locked(node)"
-            [attr.aria-label]="'outline.reorder' | translate: { name: childName(node) }"
+            [attr.aria-label]="'outline.reorder' | translate: { name: displayName(node) }"
             [title]="'outline.reorderHint' | translate"
             (keydown)="moveWithKeyboard($event, node)"
           >
@@ -184,7 +185,9 @@ import { TranslatePipe } from '@ngx-translate/core';
 export class ContainerOutlineComponent {
   readonly container = input.required<ContainerDraft>();
   readonly service = inject(TemplateService);
-  readonly childName = childName;
+  displayName(node: ChildNode): string {
+    return node.kind === 'field' ? fieldDisplayName(fieldView(node)) : (node.placement.displayLabel ?? childName(node));
+  }
   locked(node: ChildNode): boolean {
     return node.kind === 'field' && !!node.definition.publishedDefinition;
   }

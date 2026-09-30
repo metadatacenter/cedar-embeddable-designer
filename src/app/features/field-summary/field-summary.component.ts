@@ -65,6 +65,8 @@ export class FieldSummaryComponent {
   readonly config = computed(() => ({
     ...this.service.fieldEditorConfig(),
     readOnlyMode: true,
+    // The designer card already owns the field heading.
+    previewMode: true,
     defaultLanguage: this.language(),
     fallbackLanguage: 'en',
   }));
