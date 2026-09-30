@@ -24,6 +24,11 @@ async function expectValueTypeFits(editor: Locator) {
 }
 async function addRows(editor: Locator) {
   await expectValueTypeFits(editor);
+  const valueType = editor.getByRole('combobox', { name: 'New annotation value type', exact: true });
+  await expect(valueType).toHaveCSS('appearance', 'none');
+  await expect(valueType).toHaveCSS('padding-right', '24px');
+  await expect(valueType).toHaveCSS('height', '32px');
+  await expect(editor.locator('.add-row label').first()).toHaveCSS('gap', '2px');
   const controls = await editor
     .locator('.add-row input, .add-row select, .add-row textarea, .add-row button')
     .evaluateAll((nodes) =>

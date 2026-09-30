@@ -36,7 +36,7 @@ for (const width of [1280, 375]) {
     await expect(help).toHaveCSS('text-transform', 'none');
     for (const label of [help, card.locator('app-language-selector label')]) {
       await expect(label).toHaveCSS('font-size', '14px');
-      await expect(label).toHaveCSS('font-weight', '400');
+      await expect(label).toHaveCSS('font-weight', '500');
     }
     await expect(card.getByLabel('Language', { exact: true })).toHaveCSS('font-size', '14px');
     for (const label of await designer.locator('.template-field-label').all()) {
