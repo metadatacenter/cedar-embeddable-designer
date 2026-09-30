@@ -4,6 +4,15 @@ import type { CedarEmbeddableFieldDesignerElement } from '../../src/app/ced-publ
 import { openDesigner } from './support';
 
 async function checkLabels(scope: Locator) {
+  await expect
+    .poll(() =>
+      scope
+        .locator('dt:visible')
+        .evaluateAll((nodes) =>
+          nodes.filter((node) => getComputedStyle(node).fontStyle !== 'normal').map((node) => node.textContent),
+        ),
+    )
+    .toEqual([]);
   for (const [selector, weight] of [
     ['label:visible, legend:visible, .default-label:visible, th:visible, dt:visible', '500'],
     ['input:not([type=checkbox]):not([type=radio]):visible, textarea:visible, select:visible', '400'],

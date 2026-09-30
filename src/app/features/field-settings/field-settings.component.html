@@ -417,9 +417,9 @@
         <dt>{{ 'settings.version' | translate }}</dt>
         <dd>{{ artifact.version }}</dd>
       }
-      @if (artifact.publicationStatus) {
+      @if (publicationStatusLabel(artifact.publicationStatus); as status) {
         <dt>{{ 'common.publicationStatus' | translate }}</dt>
-        <dd>{{ artifact.publicationStatus }}</dd>
+        <dd>{{ status | translate }}</dd>
       }
       <dt>{{ 'settings.modelVersion' | translate }}</dt>
       <dd>{{ artifact.schemaVersion || ('common.notSpecified' | translate) }}</dd>

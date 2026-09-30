@@ -14,6 +14,9 @@ test('removed details controls remain absent and imported metadata survives disp
     });
     designer.artifact = template;
   });
+  await expect
+    .poll(async () => ((await currentTemplate(page)).properties as any).Title['schema:identifier'])
+    .toBe('title-field');
   const card = designer.locator('app-field-card').first();
   const section = await openSettings(card, 'Display');
   await expect(card.getByRole('tab', { name: 'Field details', exact: true })).toHaveCount(0);
@@ -27,3 +30,28 @@ test('removed details controls remain absent and imported metadata survives disp
     _annotations: { source: { '@id': 'https://example.org/source' } },
   });
 });
+
+for (const [stored, label] of [
+  ['bibo:draft', 'Draft'],
+  ['bibo:published', 'Published'],
+]) {
+  test(`field metadata displays ${label} without exposing its schema prefix`, async ({ page }) => {
+    const designer = await openDesigner(page);
+    await page.evaluate((status) => {
+      const host = document.querySelector('cedar-embeddable-designer') as any;
+      const template = structuredClone(host.currentTemplate);
+      template.properties.Title['bibo:status'] = status;
+      host.artifact = template;
+    }, stored);
+    await expect.poll(async () => ((await currentTemplate(page)).properties as any).Title['bibo:status']).toBe(stored);
+    const section = await openSettings(designer.locator('app-field-card').first(), 'Field metadata');
+    await expect(
+      section
+        .locator('dt')
+        .filter({ hasText: /^Publication status$/ })
+        .locator('+ dd'),
+    ).toHaveText(label);
+    await expect(section).not.toContainText('bibo:');
+    expect(((await currentTemplate(page)).properties as any).Title['bibo:status']).toBe(stored);
+  });
+}

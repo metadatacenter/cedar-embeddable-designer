@@ -1,3 +1,4 @@
+import { publicationStatusLabel } from '../../shared/publication-status';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 import { AlternateQuestionsComponent } from '../alternate-questions/alternate-questions.component';
@@ -57,6 +58,7 @@ export class FieldSettingsComponent implements OnChanges {
   @Input() hasValues = false;
   private readonly i18n = inject(CedLanguageService);
   readonly tabKey = settingsTabKey;
+  readonly publicationStatusLabel = publicationStatusLabel;
   expanded = false;
   activeTab = 'Display';
   get valuesTab(): string {
