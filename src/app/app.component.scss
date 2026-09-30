@@ -99,6 +99,10 @@
   animation: fade-in var(--cedar-motion-duration-normal) var(--cedar-motion-ease-enter);
 }
 
+.user-menu-item app-icon {
+  color: var(--cedar-color-primary);
+}
+
 .user-menu-item {
   @apply w-full text-left text-sm text-gray-700 transition-colors flex items-center gap-3 cursor-pointer border-none bg-transparent;
 
