@@ -627,3 +627,25 @@ test('reducing date precision trims the default and updates the editor without a
   await expect(control.getByRole('alert')).toHaveCount(0);
   await expect(page.getByText('The default must match the selected precision.')).toHaveCount(0);
 });
+
+for (const [type, value] of [
+  ['shortText', 'trial'],
+  ['paragraph', 'trial'],
+  ['number', '12'],
+] as const) {
+  test(`${type} editable preview clears quietly without changing the draft`, async ({ page }) => {
+    await openField(page, type);
+    const original = await currentTemplate(page);
+    const preview = await openPreview(page);
+    await preview.getByRole('combobox', { name: 'Preview mode' }).selectOption('editable');
+    const input = preview
+      .locator('cedar-embeddable-editor')
+      .getByRole(type === 'number' ? 'spinbutton' : 'textbox', { name: 'Value', exact: true });
+    await input.fill(value);
+    await input.fill('');
+    await input.blur();
+    await expect(input.locator('xpath=ancestor::mat-form-field')).not.toHaveClass(/mat-form-field-invalid/);
+    await expect(preview.locator('mat-error')).toHaveCount(0);
+    expect(await currentTemplate(page)).toEqual(original);
+  });
+}

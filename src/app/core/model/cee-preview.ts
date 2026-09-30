@@ -35,6 +35,7 @@ export interface CeeTemplateObject {
  */
 export interface CeePreviewConfig {
   readonly readOnlyMode: boolean;
+  readonly suppressEmptyFieldErrors: true;
   readonly showTemplateDescription: true;
   readonly showExpandCollapseAll: false;
   /** The language CEE renders the form in, which is the designer's own. */
@@ -45,6 +46,7 @@ export interface CeePreviewConfig {
 
 export const CEE_PREVIEW_CONFIG: CeePreviewConfig = {
   readOnlyMode: true,
+  suppressEmptyFieldErrors: true,
   showTemplateDescription: true,
   showExpandCollapseAll: false,
   defaultLanguage: 'en',
