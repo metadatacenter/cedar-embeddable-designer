@@ -1,3 +1,4 @@
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Component, ElementRef, OnDestroy, afterNextRender, inject, input, signal, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -10,7 +11,7 @@ import { LocalizedError, message } from '../../i18n/messages';
 
 @Component({
   selector: 'app-child-picker',
-  imports: [FormsModule, DatePipe, IconComponent, TranslatePipe],
+  imports: [DragDropModule, FormsModule, DatePipe, IconComponent, TranslatePipe],
   templateUrl: './child-picker.component.html',
   styleUrl: './child-picker.component.scss',
 })
@@ -53,6 +54,12 @@ export class ChildPickerComponent implements OnDestroy {
     this.request?.abort();
     this.loading?.abort();
   }
+  statusLabel(status: string | null | undefined): string {
+    const value = status?.trim().toLowerCase().split(/[:/#]/).pop();
+    return value === 'draft' || value === 'published'
+      ? this.language.t('common.status.' + value).toLocaleLowerCase()
+      : '—';
+  }
   key(row: CedChildResult): string {
     return `${row.type}:${row.id}`;
   }
@@ -63,7 +70,24 @@ export class ChildPickerComponent implements OnDestroy {
     if (!this.saving() && !this.isSelected(row)) this.selected.update((items) => [...items, row]);
   }
   remove(row: CedChildResult): void {
+    if (this.saving()) return;
     this.selected.update((items) => items.filter((item) => this.key(item) !== this.key(row)));
+  }
+  reorder(event: CdkDragDrop<CedChildResult[]>): void {
+    this.move(event.previousIndex, event.currentIndex);
+  }
+  move(from: number, to: number): void {
+    if (this.saving() || to < 0 || to >= this.selected().length) return;
+    this.selected.update((items) => {
+      const next = [...items];
+      moveItemInArray(next, from, to);
+      return next;
+    });
+  }
+  moveWithKeyboard(event: KeyboardEvent, index: number): void {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    event.preventDefault();
+    this.move(index, index + (event.key === 'ArrowUp' ? -1 : 1));
   }
   close(): void {
     this.dialog().nativeElement.close();

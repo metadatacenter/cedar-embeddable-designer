@@ -1,5 +1,10 @@
 <dialog #dialog aria-labelledby="child-picker-title" (cancel)="$event.preventDefault(); close()">
-  <h2 id="child-picker-title">{{ kindKey + 'title' | translate }}</h2>
+  <div class="dialog-heading">
+    <h2 id="child-picker-title">{{ kindKey + 'title' | translate }}</h2>
+    <button type="button" class="icon-button" [attr.aria-label]="'common.close' | translate" (click)="close()">
+      <app-icon key="close" />
+    </button>
+  </div>
   <div class="selection-heading">
     <h3>{{ 'childPicker.selectedHeading' | translate: { count: selected().length } }}</h3>
     <div class="actions">
@@ -13,29 +18,33 @@
     <table [attr.aria-label]="'childPicker.selectedTable' | translate" class="selected-table">
       <thead>
         <tr>
+          <th class="icon-cell">
+            <span class="sr-only">{{ 'childPicker.columns.type' | translate }}</span>
+          </th>
           <th>{{ 'childPicker.columns.name' | translate }}</th>
-          <th>{{ 'childPicker.columns.type' | translate }}</th>
-          <th>{{ 'childPicker.columns.created' | translate }}</th>
           <th>{{ 'childPicker.columns.modified' | translate }}</th>
           <th>{{ 'childPicker.columns.version' | translate }}</th>
-          <th>{{ 'childPicker.columns.status' | translate }}</th>
           <th>
             <span class="sr-only">{{ 'childPicker.columns.remove' | translate }}</span>
           </th>
+          <th class="icon-cell">
+            <span class="sr-only">{{ 'childPicker.columns.reorder' | translate }}</span>
+          </th>
         </tr>
       </thead>
-      <tbody>
-        @for (row of selected(); track key(row)) {
-          <tr>
-            <td>{{ row.name }}</td>
-            <td>{{ (row.type === 'field' ? 'childPicker.kind.field' : 'childPicker.kind.element') | translate }}</td>
-            <td>{{ row.createdOn ? (row.createdOn | date: 'mediumDate' : undefined : locale()) : '—' }}</td>
+      <tbody cdkDropList [cdkDropListData]="selected()" (cdkDropListDropped)="reorder($event)">
+        @for (row of selected(); track key(row); let index = $index) {
+          <tr cdkDrag [cdkDragDisabled]="saving()">
+            <td class="icon-cell"><app-icon [key]="row.type === 'field' ? 'artifact-field' : 'artifact-element'" /></td>
+            <td class="name-cell">{{ row.name }}</td>
             <td>{{ row.modifiedOn ? (row.modifiedOn | date: 'mediumDate' : undefined : locale()) : '—' }}</td>
-            <td>{{ row.version || '—' }}</td>
-            <td>{{ row.status || '—' }}</td>
+            <td class="version-cell">
+              {{ row.version || '—' }} <span class="status">· {{ statusLabel(row.status) }}</span>
+            </td>
             <td>
               <button
                 type="button"
+                class="icon-button"
                 [disabled]="saving()"
                 [attr.aria-label]="'childPicker.removeRow' | translate: { name: row.name }"
                 (click)="remove(row)"
@@ -43,10 +52,22 @@
                 <app-icon key="trash" />
               </button>
             </td>
+            <td class="icon-cell">
+              <button
+                type="button"
+                class="icon-button drag-handle"
+                cdkDragHandle
+                [disabled]="saving()"
+                [attr.aria-label]="'childPicker.reorderRow' | translate: { name: row.name }"
+                (keydown)="moveWithKeyboard($event, index)"
+              >
+                <app-icon key="list" />
+              </button>
+            </td>
           </tr>
         } @empty {
           <tr>
-            <td colspan="7" class="empty">{{ kindKey + 'selectHint' | translate }}</td>
+            <td colspan="6" class="empty">{{ kindKey + 'selectHint' | translate }}</td>
           </tr>
         }
       </tbody>
@@ -73,12 +94,12 @@
       <table [attr.aria-label]="'childPicker.resultsTable' | translate">
         <thead>
           <tr>
+            <th class="icon-cell">
+              <span class="sr-only">{{ 'childPicker.columns.type' | translate }}</span>
+            </th>
             <th>{{ 'childPicker.columns.name' | translate }}</th>
-            <th>{{ 'childPicker.columns.type' | translate }}</th>
-            <th>{{ 'childPicker.columns.created' | translate }}</th>
             <th>{{ 'childPicker.columns.modified' | translate }}</th>
             <th>{{ 'childPicker.columns.version' | translate }}</th>
-            <th>{{ 'childPicker.columns.status' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -94,21 +115,23 @@
               (keydown.enter)="select(row)"
               (keydown.space)="$event.preventDefault(); select(row)"
             >
-              <td>
+              <td class="icon-cell">
+                <app-icon [key]="row.type === 'field' ? 'artifact-field' : 'artifact-element'" />
+              </td>
+              <td class="name-cell">
                 {{ row.name }}
                 @if (isSelected(row)) {
                   <app-icon key="check" size="small" />
                 }
               </td>
-              <td>{{ (row.type === 'field' ? 'childPicker.kind.field' : 'childPicker.kind.element') | translate }}</td>
-              <td>{{ row.createdOn ? (row.createdOn | date: 'mediumDate' : undefined : locale()) : '—' }}</td>
               <td>{{ row.modifiedOn ? (row.modifiedOn | date: 'mediumDate' : undefined : locale()) : '—' }}</td>
-              <td>{{ row.version || '—' }}</td>
-              <td>{{ row.status || '—' }}</td>
+              <td class="version-cell">
+                {{ row.version || '—' }} <span class="status">· {{ statusLabel(row.status) }}</span>
+              </td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="6" class="empty">
+              <td colspan="4" class="empty">
                 {{
                   (searching()
                     ? 'childPicker.searching'

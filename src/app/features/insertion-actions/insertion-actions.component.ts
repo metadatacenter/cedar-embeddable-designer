@@ -18,18 +18,9 @@ import { TranslatePipe } from '@ngx-translate/core';
           }}
         </button>
       }
-      <button type="button" (click)="importChild('field')">
-        <app-icon key="library" size="small" />{{
-          (here() ? 'insertion.importFieldHere' : 'insertion.importField') | translate
-        }}
+      <button type="button" (click)="importChild()">
+        <app-icon key="library" size="small" />{{ (here() ? 'insertion.importHere' : 'insertion.import') | translate }}
       </button>
-      @if (service.preferences().showElements) {
-        <button type="button" (click)="importChild('element')">
-          <app-icon key="library" size="small" />{{
-            (here() ? 'insertion.importElementHere' : 'insertion.importElement') | translate
-          }}
-        </button>
-      }
     }
   `,
   styleUrl: './insertion-actions.component.scss',
@@ -40,9 +31,9 @@ export class InsertionActionsComponent {
   readonly position = input.required<number>();
   readonly here = input(false);
   readonly used = output<void>();
-  importChild(type: 'field' | 'element'): void {
+  importChild(): void {
     this.used.emit();
-    this.service.openChildPicker(this.targetId(), this.position(), type);
+    this.service.openChildPicker(this.targetId(), this.position());
   }
   addElement(): void {
     this.used.emit();

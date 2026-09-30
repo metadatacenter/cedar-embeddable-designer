@@ -71,7 +71,10 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // pinned library. The library accounts for all 16,889 bytes: 16,118 from its own
 // changes and 771 from the reserved-name vocabulary. No designer dependency was added.
 // Allow about 6.6 KB of raw headroom; the compressed artifact stays within its ceiling.
-const RAW_LIMIT = 1_475_000;
+// 2026-09-30: unified mixed import with keyboard/drag ordering and shared table
+// styling measures 1,475,267 raw / 424,095 gzip-9 bytes. Restore 4.7 KB raw
+// headroom; keep the compressed ceiling unchanged.
+const RAW_LIMIT = 1_480_000;
 const GZIP_LIMIT = 438_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;

@@ -200,7 +200,7 @@ export async function addElementFixture(page: Page, scope = page.locator(DESIGNE
       },
     };
   }, elementFixture.properties['Read & Understood Catalog']);
-  await scope.getByRole('button', { name: 'Import element', exact: true }).first().click();
+  await scope.getByRole('button', { name: 'Import fields and elements', exact: true }).first().click();
   await page.getByRole('button', { name: 'Search', exact: true }).click();
   await page.getByRole('row', { name: 'Select Element', exact: true }).click();
   await page.getByRole('button', { name: 'Done', exact: true }).click();

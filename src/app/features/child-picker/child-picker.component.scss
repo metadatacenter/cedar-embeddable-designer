@@ -1,22 +1,15 @@
 @use '../../shared/dialog-style';
-@use '../../shared/table-style';
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
 :host {
   display: contents;
 }
 dialog {
-  margin: auto;
+  @include dialog-style.surface;
   width: min(1000px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
-  @include dialog-style.surface;
   box-sizing: border-box;
 }
-h2 {
-  @include dialog-style.heading;
-}
-h3 {
-  font-size: var(--cedar-font-size-lead);
-  margin: 0;
-}
+.dialog-heading,
 .selection-heading,
 .actions,
 .search div {
@@ -24,8 +17,24 @@ h3 {
   align-items: center;
   gap: var(--cedar-space-3);
 }
+.dialog-heading,
 .selection-heading {
   justify-content: space-between;
+}
+.dialog-heading {
+  margin-bottom: var(--cedar-space-6);
+}
+h2 {
+  @include dialog-style.heading;
+  color: var(--cedar-color-component-title);
+  margin: 0;
+}
+h3 {
+  font-size: var(--cedar-font-size-lead);
+  font-weight: var(--cedar-font-weight-medium);
+  margin: 0;
+}
+.selection-heading {
   margin-bottom: var(--cedar-space-3);
   flex-wrap: wrap;
 }
@@ -35,36 +44,72 @@ button {
 .primary {
   @include dialog-style.primary;
 }
+.icon-button {
+  border: 0;
+  background: transparent;
+  color: var(--cedar-color-primary);
+  padding: var(--cedar-space-1);
+}
+.drag-handle {
+  cursor: grab;
+}
 .table-scroll {
   overflow: auto;
   max-height: 260px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
 }
 table {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--cedar-font-size);
   text-align: left;
+  border-top: 1px solid var(--cedar-border-rule);
 }
 th,
 td {
-  padding: 10px var(--cedar-space-3);
-  border-bottom: 1px solid #eee;
+  @include patterns.table-cell;
+  vertical-align: middle;
 }
 th {
   position: sticky;
   top: 0;
-  background: var(--cedar-primary-50, #f5f5f5);
+  background: var(--cedar-overlay-surface);
+  color: var(--cedar-color-primary);
+  font-weight: var(--cedar-font-weight-medium);
+  border-bottom: 2px solid var(--cedar-border-rule);
+  white-space: nowrap;
+  z-index: 1;
+}
+td {
+  height: var(--cedar-table-row-height);
+}
+.icon-cell {
+  width: 1%;
+  white-space: nowrap;
+  color: var(--cedar-color-primary);
+}
+// Name absorbs spare width; metadata and actions stay together at the right.
+th:nth-child(2),
+td.name-cell {
+  width: 100%;
+}
+th:not(:nth-child(2)),
+td:not(.name-cell):not([colspan]) {
+  width: 1%;
   white-space: nowrap;
 }
-td:first-child {
-  min-width: 150px;
+.name-cell {
+  min-width: 140px;
   overflow-wrap: anywhere;
+}
+.version-cell {
+  white-space: nowrap;
+}
+.status {
+  color: var(--cedar-text-muted);
 }
 .empty {
   text-align: center;
-  color: #666;
+  color: var(--cedar-text-muted);
   padding: var(--cedar-space-6);
 }
 .search {
@@ -72,19 +117,20 @@ td:first-child {
 }
 label {
   display: block;
-  font-weight: var(--cedar-font-weight-medium, 500);
+  font-weight: var(--cedar-font-weight-medium);
   margin-bottom: var(--cedar-space-2);
 }
 input {
   flex: 1;
   min-width: 0;
-  height: 38px;
-  border: 1px solid #bbb;
-  border-radius: 6px;
+  min-height: var(--cedar-control-height-default);
+  border: 1px solid var(--cedar-control-border-default);
+  border-radius: var(--cedar-control-radius-default);
   padding: var(--cedar-space-2) var(--cedar-space-3);
+  font: inherit;
 }
 .error {
-  color: var(--cedar-control-error, var(--cedar-color-error));
+  color: var(--cedar-status-error-text);
 }
 .sr-only {
   position: absolute;
@@ -93,26 +139,13 @@ input {
   overflow: hidden;
   clip-path: inset(50%);
 }
-
-/* Keep removal reachable while the selected table scrolls. */
-.selected-table th:last-child,
-.selected-table td:last-child {
-  position: sticky;
-  right: 0;
-  background: var(--cedar-overlay-surface);
-}
-.selected-table th:last-child {
-  z-index: 1;
-  background: var(--cedar-primary-50, #f5f5f5);
-}
-
 .result-row {
   cursor: pointer;
 }
 .result-row:hover,
 .result-row:focus-visible,
 .result-row.selected {
-  background: var(--cedar-primary-50, #f5f5f5);
+  background: var(--cedar-surface-selected);
 }
 .result-row:focus-visible {
   outline: 2px solid var(--cedar-color-primary);
@@ -121,5 +154,10 @@ input {
 .result-row[aria-disabled='true'] {
   cursor: default;
 }
-
-@include table-style.compact-table;
+.cdk-drag-preview {
+  background: var(--cedar-overlay-surface);
+  box-shadow: var(--cedar-dialog-shadow);
+}
+.cdk-drag-placeholder {
+  opacity: 0.3;
+}

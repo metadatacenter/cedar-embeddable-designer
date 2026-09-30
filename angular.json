@@ -44,7 +44,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumError": "1475000"
+                  "maximumError": "1480000"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -121,7 +121,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumError": "1475000"
+                  "maximumError": "1480000"
                 },
                 {
                   "type": "anyComponentStyle",
