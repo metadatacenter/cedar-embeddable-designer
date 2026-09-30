@@ -1,4 +1,5 @@
 import { childKeyError } from '../model/child-key-policy';
+import { fieldDisplayOverride } from '../model/field-display-name';
 import { reducePrecision } from '../model/precision-change';
 import { artifactNameError, validateDocument } from '../model/document-validation';
 import { CedChildSource, CedJsonObject, CedValidationIssue } from '../../ced-public-api';
@@ -105,6 +106,7 @@ function choiceDefault(field: Field, options: string[], renamed?: { from: string
 })
 export class TemplateService {
   private readonly automaticKeys = new Set<number>();
+  private readonly automaticFieldNames = new Set<number>();
 
   private generatedKey(id: number, name: string): string {
     const candidate = name.trim().toLowerCase().replace(/\s+/g, '_');
@@ -382,6 +384,7 @@ export class TemplateService {
     };
 
     this.automaticKeys.add(newField.id);
+    this.automaticFieldNames.add(newField.id);
     this.insertNode(fieldNode(newField), position, targetId, false);
     this.nameFocusRequest.set(newField.id);
 
@@ -418,6 +421,16 @@ export class TemplateService {
     if (this.selectedField() === id) {
       this.selectedField.set(null);
     }
+  }
+
+  updateFieldDisplayName(id: number, value: string): string | null {
+    const field = this.fieldsFor(id)().find((item) => item.id === id);
+    if (!field) return null;
+    if (this.automaticFieldNames.has(id)) this.updateFieldName(id, value);
+    return this.updateFieldSettings(
+      id,
+      fieldDisplayOverride(field) ? { displayLabel: value } : { preferredLabel: value },
+    );
   }
 
   updateFieldName(id: number, name: string) {

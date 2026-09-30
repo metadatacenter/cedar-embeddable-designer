@@ -28,6 +28,31 @@ describe('TemplateService', () => {
     service = TestBed.inject(TemplateService);
   });
 
+  it('names new fields through their display name and rejects clearing that name', () => {
+    service.addField('text', 0);
+    const id = service.selectedField()!;
+    expect(service.updateFieldDisplayName(id, 'Disease')).toBeNull();
+    expect(service.fields().find((field) => field.id === id)?.name).toBe('Disease');
+    expect(service.childKey(id)).toBe('disease');
+    expect(service.validationReport().issues.filter((issue) => issue.nodeId === id)).toEqual([]);
+    service.updateFieldDisplayName(id, '');
+    expect(service.validationReport().issues.some((issue) => issue.nodeId === id && issue.setting === 'name')).toBe(
+      true,
+    );
+    service.updateFieldDisplayName(id, 'Condition');
+    expect(service.childKey(id)).toBe('condition');
+    expect(service.fields().find((field) => field.id === id)?.preferredLabel).toBe('Condition');
+  });
+
+  it('keeps established field names and keys when editing their display name', () => {
+    const field = service.fields()[0];
+    const key = service.childKey(field.id);
+    expect(service.updateFieldDisplayName(field.id, 'Changed display label')).toBeNull();
+    expect(service.fields().find((item) => item.id === field.id)?.name).toBe(field.name);
+    expect(service.childKey(field.id)).toBe(key);
+    expect(service.fields().find((item) => item.id === field.id)?.preferredLabel).toBe('Changed display label');
+  });
+
   it('generates usable unique keys for reserved-prefix display names without looping', () => {
     // Bound a recurrence of the synchronous loop so it fails instead of hanging the test worker.
     const internals = service as unknown as { keyError(id: number, key: string): string | null };

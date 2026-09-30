@@ -55,7 +55,7 @@
         </button>
       }
       <cedar-embeddable-term-picker
-        [query]="field.name"
+        [query]="displayName(field)"
         [selectionMode]="'constraints'"
         [termTypes]="['ontology', 'class', 'branch', 'valueSet']"
         [constraintSet]="pickerConstraints"

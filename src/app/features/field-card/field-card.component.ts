@@ -1,4 +1,4 @@
-import { fieldDisplayName, fieldDisplayOverride } from '../../core/model/field-display-name';
+import { fieldDisplayName } from '../../core/model/field-display-name';
 import { FieldSummaryComponent } from '../field-summary/field-summary.component';
 import { HeaderToggleDirective } from '../../shared/header-toggle.directive';
 import { FieldSettingsComponent } from '../field-settings/field-settings.component';
@@ -60,10 +60,7 @@ export class FieldCardComponent {
   readonly displayName = fieldDisplayName;
 
   updateDisplayName(value: string): void {
-    this.service.updateFieldSettings(
-      this.field.id,
-      fieldDisplayOverride(this.field) ? { displayLabel: value } : { preferredLabel: value },
-    );
+    this.service.updateFieldDisplayName(this.field.id, value);
   }
 
   /*
