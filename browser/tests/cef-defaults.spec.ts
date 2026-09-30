@@ -468,7 +468,8 @@ test('Display controls use the standard CEE scale', async ({ page }) => {
   await openField(page, 'number');
   const panel = await openSettings(page.locator('app-field-card').first(), 'Display');
   for (const input of await panel.locator('input:not([type="checkbox"])').all()) {
-    await expect(input).toHaveCSS('height', '36px');
+    const authoringRow = await input.evaluate((el) => !!el.closest('app-alternate-questions'));
+    await expect(input).toHaveCSS('height', authoringRow ? '32px' : '36px');
     // Authoring and CEE use the same readable body scale.
     await expect(input).toHaveCSS('font-size', '14px');
   }

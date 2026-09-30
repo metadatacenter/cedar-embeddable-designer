@@ -13,14 +13,26 @@ test('designer icons use shared meanings, square sizes and decorative SVGs', asy
   );
   const icons = designer.locator('app-icon svg');
   expect(await icons.count()).toBeGreaterThan(5);
-  for (const icon of await icons.all()) {
-    await expect(icon).toHaveAttribute('aria-hidden', 'true');
-    await expect(icon).toHaveAttribute('focusable', 'false');
-    await expect(icon).toHaveAttribute('stroke-width', '2');
-    const box = await icon.boundingBox();
-    if (box) {
-      expect([16, 20, 24]).toContain(box.width);
-      expect(box.height).toBe(box.width);
+  // Inspect one rendered snapshot; asynchronously loaded summaries can replace icons.
+  const rendered = await icons.evaluateAll((nodes) =>
+    nodes.map((icon) => {
+      const box = icon.getBoundingClientRect();
+      return {
+        hidden: icon.getAttribute('aria-hidden'),
+        focusable: icon.getAttribute('focusable'),
+        stroke: icon.getAttribute('stroke-width'),
+        width: box.width,
+        height: box.height,
+      };
+    }),
+  );
+  for (const icon of rendered) {
+    expect(icon.hidden).toBe('true');
+    expect(icon.focusable).toBe('false');
+    expect(icon.stroke).toBe('2');
+    if (icon.width || icon.height) {
+      expect([16, 20, 24]).toContain(icon.width);
+      expect(icon.height).toBe(icon.width);
     }
   }
 });

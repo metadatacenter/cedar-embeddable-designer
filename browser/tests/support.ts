@@ -121,6 +121,11 @@ export async function applyPreset(page: Page, preset: 'basic' | 'semantic' | 'mo
 
 /** Reveal one field's settings without changing the document. */
 export async function openSettings(card: Locator, tab = 'Constraints'): Promise<Locator> {
+  // Public artifact inputs update the model before Angular paints the replacement card.
+  // Click only after that render, otherwise the click targets the outgoing field.
+  await card.evaluate(
+    () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))),
+  );
   const settings = card.locator('app-field-settings');
   const toggle = settings.locator('.settings-toggle');
   await expect(toggle).toBeVisible();
