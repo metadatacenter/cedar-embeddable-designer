@@ -21,7 +21,7 @@ table {
 }
 caption {
   text-align: left;
-  font-weight: var(--cedar-font-weight-medium, 500);
+  @include authoring.label-text;
 }
 .add-row label,
 th {

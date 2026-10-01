@@ -56,11 +56,10 @@ function languageOptions(locale: string, english: boolean): readonly { code: str
       margin-top: var(--cedar-space-2);
     }
     label {
-      font-weight: var(--cedar-font-weight-medium, 500);
+      @include authoring.label-text;
       display: flex;
       flex-direction: column;
       gap: var(--cedar-space-1);
-      font-size: var(--cedar-font-size);
     }
     select {
       @include authoring.compact-control;
