@@ -8,7 +8,14 @@
 }
 
 /* Shared authoring select arrow; reserve space for long selected values. */
-:is(app-annotations-editor, app-field-settings, app-container-settings, app-language-selector, app-field-designer)
+:is(
+    app-annotations-editor,
+    app-field-card,
+    app-field-settings,
+    app-container-settings,
+    app-language-selector,
+    app-field-designer
+  )
   select:not([multiple]):not([size]) {
   @include authoring.select-arrow;
 }

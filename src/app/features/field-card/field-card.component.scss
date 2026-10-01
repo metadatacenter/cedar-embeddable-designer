@@ -1,4 +1,5 @@
 @use '@org.metadatacenter/cedar-design-tokens/controls';
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
 
 .field-drag-handle {
   display: inline-flex;
@@ -139,12 +140,12 @@ app-icon {
   white-space: nowrap;
 }
 
+/* The shared mark is raised like CEE's without adding height to the heading row. */
 .required-mark {
+  @include patterns.required-mark;
   flex: 0 0 auto;
   align-self: baseline;
   margin-left: calc(-1 * var(--cedar-space-1));
-  color: var(--cedar-text-primary);
-  font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-medium);
 }
 
@@ -179,8 +180,13 @@ app-icon {
   background: transparent;
   border-bottom-width: 2px;
 }
+/*
+ * The shared chevron draws this select without the browser's appearance, and the select then
+ * honours line height. It takes the authoring control line, as the settings controls do.
+ */
 .field-requirement {
   font-size: var(--cedar-font-size);
+  line-height: var(--cedar-control-line-height-authoring);
   color: var(--cedar-text-muted);
   background: var(--cedar-surface-panel);
   border: 1px solid var(--cedar-border-rule);

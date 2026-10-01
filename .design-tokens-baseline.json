@@ -225,13 +225,6 @@
       "value": "0.4rem 0.6rem",
       "count": 1
     },
-    "553244b652ab42ff276f": {
-      "file": "src/app/app.component.html",
-      "rule": "utility-style",
-      "property": "utility-style",
-      "value": "font-medium",
-      "count": 2
-    },
     "596903e0b3b81aff22b4": {
       "file": "src/app/features/container-editor/container-editor.component.html",
       "rule": "utility-style",
