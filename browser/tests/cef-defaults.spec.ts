@@ -688,14 +688,15 @@ for (const [type, value] of [
   });
 }
 
-test('inline summaries omit duplicate headings while full previews retain display labels', async ({ page }) => {
+test('inline summaries omit headings and help text while full previews retain both', async ({ page }) => {
   await openField(page, 'shortText', { preferredLabel: 'Lab ID', helpText: 'An external laboratory identifier.' });
   const summary = page.locator('app-field-summary');
   await expect(summary.locator('.cee-spec-box')).toBeVisible();
   await expect(summary.locator('app-cedar-component-header')).toHaveCount(0);
-  await expect(summary).toContainText('An external laboratory identifier.');
+  await expect(summary).not.toContainText('An external laboratory identifier.');
   const preview = await openPreview(page);
   await expect(preview.locator('app-cedar-component-header').filter({ hasText: 'Lab ID' })).toBeVisible();
+  await expect(preview.locator('.cee-field-spec-description')).toHaveText('An external laboratory identifier.');
 });
 
 for (const [labels, wanted] of [

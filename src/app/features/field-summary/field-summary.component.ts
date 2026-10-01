@@ -8,7 +8,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { fieldToJson } from '../../core/model/cedar-template';
+import { undescribedFieldToJson } from '../../core/model/cedar-template';
 import { Field, FIELD_TYPES, FieldDefaultValue } from '../../core/models/types';
 import { TemplateService } from '../../core/services/template.service';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -90,7 +90,8 @@ export class FieldSummaryComponent {
             : field.type === 'checkboxes'
               ? 'multipleChoiceList'
               : field.type;
-        return fieldToJson({ ...field, type });
+        // The card shows the field's control and constraints, not its help text.
+        return undescribedFieldToJson({ ...field, type });
       } catch {
         // Incomplete constraints remain editable; do not feed an invalid draft to CEF.
         return null;

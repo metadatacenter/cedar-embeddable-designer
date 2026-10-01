@@ -33,6 +33,7 @@ import {
   templateToJson,
   templateToYaml,
   toDesignerTemplate,
+  undescribedFieldToJson,
 } from './cedar-template';
 
 /** A field with the identity the designer mints when the author adds one. */
@@ -865,6 +866,20 @@ it('retains published field status version and provenance through JSON and YAML'
     const state = toDesignerTemplate(readTemplate(serialized));
     expect(state.fields[0].publishedDefinition).toBeTruthy();
     expect(templateToJson(buildTemplate(state))).toEqual(templateToJson(original));
+  }
+});
+
+it('writes a field without its description for a summary, published or not', () => {
+  const authored = field({ helpText: 'Explain this field' });
+  const source = JSON.parse(JSON.stringify(templateToJson(buildTemplate(templateOf(authored)))));
+  const child = source.properties[Object.keys(source.properties).find((key) => source.properties[key]['schema:name'])!];
+  child['bibo:status'] = 'bibo:published';
+  const published = toDesignerTemplate(readTemplate(source)).fields[0];
+  expect(published.publishedDefinition).toBeTruthy();
+  for (const subject of [authored, published]) {
+    expect(readField(JSON.stringify(undescribedFieldToJson(subject))).helpText).toBe('');
+    // Clearing the summary's copy leaves the field itself described.
+    expect(readField(JSON.stringify(fieldToJson(subject))).helpText).toBe('Explain this field');
   }
 });
 

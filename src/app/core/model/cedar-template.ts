@@ -1032,6 +1032,17 @@ export function fieldToJson(field: Field): JsonNode {
   return CedarWriters.json().getStrict().getFieldWriterForField(built).getAsJsonNode(built);
 }
 
+/**
+ * The same artifact with an empty description, for a surface that shows a field's control but not
+ * its help text. The description is cleared on the built field, so a published definition loses it
+ * too. The designer's own state is untouched, because every build is a fresh copy.
+ */
+export function undescribedFieldToJson(field: Field): JsonNode {
+  const built = buildField(field);
+  built.schema_description = '';
+  return CedarWriters.json().getStrict().getFieldWriterForField(built).getAsJsonNode(built);
+}
+
 /** The designer's state, as a CEDAR template. */
 export function buildTemplate(state: DesignerTemplate): Template {
   return buildContainerArtifact(state, 'template') as Template;
