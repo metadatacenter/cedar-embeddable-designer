@@ -1,3 +1,4 @@
+@use "@org.metadatacenter/cedar-design-tokens/patterns";
 :host {
   display: block;
 }
@@ -71,6 +72,7 @@
 }
 
 .dropdown-panel {
+  @include patterns.menu-text;
   position: absolute;
   top: 100%;
   left: 0;
@@ -107,6 +109,7 @@
 }
 
 .dropdown-option {
+  @include patterns.menu-text;
   width: 100%;
   padding: var(--cedar-space-2) var(--cedar-space-3);
   text-align: left;
@@ -122,14 +125,11 @@
 
   &.active {
     background-color: var(--cedar-surface-panel);
-    font-weight: var(--cedar-font-weight-medium, 500);
   }
 }
 
 .dropdown-empty-state {
   padding: var(--cedar-space-2) var(--cedar-space-3);
-  font-size: var(--cedar-font-size);
-  color: var(--cedar-text-muted);
 }
 
 /* Close Button */

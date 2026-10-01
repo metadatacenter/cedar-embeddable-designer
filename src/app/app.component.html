@@ -73,14 +73,14 @@
                 class="user-menu-item"
               >
                 <app-icon key="settings" size="small"></app-icon>
-                <span class="font-medium">{{ 'app.userMenu.preferences' | translate }}</span>
+                <span>{{ 'app.userMenu.preferences' | translate }}</span>
               </button>
               <button
                 (click)="service.showPresetDefinitionsModal.set(true); service.showUserMenu.set(false)"
                 class="user-menu-item"
               >
                 <app-icon key="library" size="small"></app-icon>
-                <span class="font-medium">{{ 'app.userMenu.definePresets' | translate }}</span>
+                <span>{{ 'app.userMenu.definePresets' | translate }}</span>
               </button>
             </div>
           }

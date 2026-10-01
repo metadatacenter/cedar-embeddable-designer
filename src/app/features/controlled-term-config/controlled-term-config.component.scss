@@ -26,6 +26,7 @@ cedar-embeddable-field {
 
 .picker-unavailable {
   font-size: var(--cedar-font-size);
+  --cedar-icon-color: var(--cedar-status-warning-text);
   color: var(--cedar-status-warning-text);
   margin-bottom: var(--cedar-space-3);
 }

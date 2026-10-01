@@ -133,6 +133,7 @@ input {
   font: inherit;
 }
 .error {
+  --cedar-icon-color: var(--cedar-status-error-text);
   color: var(--cedar-status-error-text);
 }
 .sr-only {

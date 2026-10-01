@@ -60,6 +60,7 @@ button {
 }
 p[role='alert'] {
   margin: 5px 0 0;
+  --cedar-icon-color: var(--cedar-control-error, var(--cedar-color-error));
   color: var(--cedar-control-error, var(--cedar-color-error));
   font-size: var(--cedar-font-size);
   line-height: 1.3;
@@ -118,6 +119,7 @@ p[role='alert'] {
   font-weight: var(--cedar-font-weight-medium, 500);
 }
 .tabs button.has-errors {
+  --cedar-icon-color: var(--cedar-control-error, var(--cedar-color-error));
   color: var(--cedar-control-error, var(--cedar-color-error));
   border-bottom-color: var(--cedar-control-error, var(--cedar-color-error));
 }

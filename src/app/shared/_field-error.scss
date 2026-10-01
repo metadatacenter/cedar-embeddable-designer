@@ -1,5 +1,6 @@
 // Shared invalid-control role, with the public host override.
 .ced-field-error {
+  --cedar-icon-color: var(--cedar-control-error, var(--cedar-color-error));
   color: var(--cedar-control-error, var(--cedar-color-error));
   font-size: var(--cedar-font-size);
   line-height: var(--cedar-form-help-line-height);
@@ -10,6 +11,7 @@
 // value. Written out as #856404 until the shared values arrived, which is what the
 // editor said when this was copied from it and not what it says now.
 .published-warning {
+  --cedar-icon-color: var(--cedar-color-warning);
   color: var(--cedar-color-warning);
   background: var(--cedar-surface-advisory);
   font-size: var(--cedar-font-size);

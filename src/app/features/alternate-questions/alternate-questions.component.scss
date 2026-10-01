@@ -73,6 +73,7 @@ td {
   color: var(--cedar-text-muted);
 }
 p[role='alert'] {
+  --cedar-icon-color: var(--cedar-control-error, var(--cedar-color-error));
   color: var(--cedar-control-error, var(--cedar-color-error));
   margin: var(--cedar-space-1) 0;
 }

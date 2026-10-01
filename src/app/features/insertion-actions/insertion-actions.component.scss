@@ -13,6 +13,7 @@ button {
   border: 0;
   border-radius: var(--cedar-control-height-authoring);
   background: var(--cedar-color-primary);
+  --cedar-icon-color: var(--cedar-color-on-primary);
   color: var(--cedar-color-on-primary);
   font-size: var(--cedar-font-size);
   cursor: pointer;

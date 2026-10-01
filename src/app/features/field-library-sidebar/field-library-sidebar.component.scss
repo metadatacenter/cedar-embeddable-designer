@@ -337,6 +337,7 @@
   align-items: center;
   justify-content: center;
   font-weight: var(--cedar-font-weight-medium, 500);
+  --cedar-icon-color: var(--cedar-color-on-primary);
   color: var(--cedar-color-on-primary);
   font-size: var(--cedar-font-size);
 }

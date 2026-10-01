@@ -90,6 +90,7 @@ app-icon {
   align-self: baseline;
   gap: var(--cedar-space-1);
   line-height: var(--cedar-control-line-height-default);
+  --cedar-icon-color: var(--cedar-control-error, var(--cedar-color-error));
   color: var(--cedar-control-error, var(--cedar-color-error));
   font-size: var(--cedar-font-size);
   white-space: nowrap;

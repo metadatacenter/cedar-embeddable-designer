@@ -8,6 +8,7 @@
   element, outside it.
 */
 @import '@org.metadatacenter/cedar-design-tokens/custom-properties.css';
+@import '@org.metadatacenter/cedar-design-tokens/icon-contract.css';
 @import '@org.metadatacenter/cedar-design-tokens/motion.css';
 @source "./app/**/*.{html,ts}";
 

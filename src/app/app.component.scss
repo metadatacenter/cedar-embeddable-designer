@@ -1,3 +1,4 @@
+@use "@org.metadatacenter/cedar-design-tokens/patterns";
 @reference "tailwindcss";
 
 /* ─── App Shell ───────────────────────────────────────────────────────────── */
@@ -89,6 +90,7 @@
 }
 
 .user-menu-dropdown {
+  @include patterns.menu-text;
   @apply absolute right-0 mt-2 w-56 border overflow-hidden;
   z-index: var(--cedar-layer-menu);
   background: var(--cedar-overlay-surface);
@@ -104,10 +106,9 @@
 }
 
 .user-menu-item {
-  @apply w-full text-left text-sm text-gray-700 transition-colors flex items-center gap-3 cursor-pointer border-none bg-transparent;
+  @include patterns.menu-item;
+  @apply w-full text-left transition-colors flex items-center gap-3 cursor-pointer border-none bg-transparent;
 
-  min-height: var(--cedar-menu-item-height);
-  padding: var(--cedar-menu-item-padding-block) var(--cedar-menu-item-padding-inline);
   &:hover {
     background: var(--cedar-action-hover-surface);
   }
@@ -383,6 +384,7 @@
   padding: var(--cedar-space-2) var(--cedar-space-3);
   border-radius: var(--cedar-control-radius-default);
   border: 0;
+  --cedar-icon-color: var(--cedar-color-on-primary);
   color: var(--cedar-color-on-primary);
 
   &:hover {
