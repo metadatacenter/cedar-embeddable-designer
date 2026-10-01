@@ -257,7 +257,18 @@
     {
       "id": "ced.ced-view",
       "name": "CED",
-      "section": "Template Designer"
+      "section": "Template Designer",
+      "contract": "page",
+      "scenario": "designer-page",
+      "selector": "cedar-embeddable-designer .app-shell",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/app.component.html",
+          "anchor": "class=\"app-shell\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.field-designer",

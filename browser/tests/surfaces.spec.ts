@@ -24,6 +24,9 @@ const scenarios: Record<string, (page: Page) => Promise<void>> = {
   'field-type': async (page) => {
     await page.goto('/field-host.html');
   },
+  'designer-page': async (page) => {
+    await openDesigner(page);
+  },
   'library-menu': async (page) => {
     await page.addInitScript(() =>
       localStorage.setItem(
