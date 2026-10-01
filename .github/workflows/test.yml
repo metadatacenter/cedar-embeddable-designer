@@ -133,14 +133,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: metadatacenter/cedar-embeddable-editor
-          ref: 8c262216721b66356d7209622d9c9eb5779653c0
+          ref: aa3f06be7907097f1a2489292271b637fccbbac2
           path: cedar-embeddable-editor
 
       - name: Check out the supported term picker revision
         uses: actions/checkout@v4
         with:
           repository: metadatacenter/cedar-embeddable-term-picker
-          ref: 1cab12e38d6cf92be569f578f1fefccc47cb3511
+          ref: eeecea62bff30906c5a2ae3b88bbf77e8ba473f0
           path: cedar-embeddable-term-picker
 
       - name: Use Node.js 24
