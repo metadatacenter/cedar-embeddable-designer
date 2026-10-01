@@ -3,7 +3,7 @@
 .preferences-title {
   font-size: var(--cedar-font-size-heading);
   font-weight: var(--cedar-font-weight-medium);
-  color: var(--cedar-color-artifact-title);
+  color: var(--cedar-text-title);
 }
 .preferences-label {
   @include patterns.field-label($size: body);
@@ -22,19 +22,19 @@
   border-color: var(--cedar-border-rule);
 }
 .preferences-secondary {
-  background: var(--cedar-surface-authoring);
+  background: var(--cedar-surface-subtle);
   color: var(--cedar-text-primary);
 }
 .preferences-surface {
-  background: var(--cedar-overlay-surface);
+  background: var(--cedar-surface-raised);
 }
 .preferences-secondary:hover,
 .preferences-choice:hover {
-  background: var(--cedar-action-hover-surface);
+  background: var(--cedar-surface-selected);
 }
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: var(--cedar-border-rule) var(--cedar-surface-authoring);
+  scrollbar-color: var(--cedar-border-rule) var(--cedar-surface-subtle);
 }
 
 .preferences-actions {
@@ -84,19 +84,19 @@
 }
 .preferences-choice {
   padding: var(--cedar-space-2);
-  border-radius: var(--cedar-control-radius-default);
+  border-radius: var(--cedar-radius);
   background: var(--cedar-surface-raised);
 }
 .preferences-preset {
   padding: var(--cedar-space-2) var(--cedar-space-3);
   font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-medium);
-  border-radius: var(--cedar-control-radius-default);
+  border-radius: var(--cedar-radius);
   cursor: pointer;
   text-transform: capitalize;
 }
 .preferences-small-action {
   font-size: var(--cedar-font-size);
   padding: var(--cedar-space-1) var(--cedar-space-2);
-  border-radius: var(--cedar-control-radius-default);
+  border-radius: var(--cedar-radius);
 }

@@ -20,7 +20,7 @@
 .sidebar-header {
   padding: var(--cedar-space-3) var(--cedar-space-4);
   border-bottom: 1px solid var(--cedar-border-rule);
-  background-color: var(--cedar-surface-panel);
+  background-color: var(--cedar-surface-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -95,7 +95,7 @@
   }
 
   &.active {
-    background-color: var(--cedar-surface-panel);
+    background-color: var(--cedar-surface-subtle);
   }
 }
 
@@ -121,7 +121,7 @@
 .draggable-indicator {
   width: 0.5rem;
   height: 0.5rem;
-  border-radius: 9999px;
+  border-radius: var(--cedar-radius-pill);
   flex-shrink: 0;
 }
 
@@ -140,7 +140,7 @@
 /* Draggable Divider */
 .resizable-divider {
   height: 0.5rem;
-  background-color: var(--cedar-surface-panel);
+  background-color: var(--cedar-surface-subtle);
   cursor: ns-resize;
   display: flex;
   align-items: center;
@@ -160,20 +160,20 @@
   width: 2rem;
   height: 0.25rem;
   background-color: var(--cedar-border-rule);
-  border-radius: 0.25rem;
+  border-radius: var(--cedar-radius);
 }
 
 /* Add Fields section */
 .add-fields-header {
   padding: var(--cedar-space-3) var(--cedar-space-4);
   border-bottom: 1px solid var(--cedar-border-rule);
-  background-color: var(--cedar-surface-panel);
+  background-color: var(--cedar-surface-subtle);
 }
 
 .add-fields-title {
   font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-medium, 500);
-  color: var(--cedar-text-authoring);
+  color: var(--cedar-text-primary);
   text-transform: none;
   letter-spacing: 0.025em;
 }
@@ -196,7 +196,7 @@
   transition-duration: var(--cedar-motion-duration-fast);
 
   &:hover {
-    background-color: var(--cedar-surface-panel);
+    background-color: var(--cedar-surface-subtle);
   }
 }
 
@@ -245,7 +245,7 @@
   transition-duration: var(--cedar-motion-duration-fast);
 
   &:hover {
-    background-color: var(--cedar-surface-panel);
+    background-color: var(--cedar-surface-subtle);
   }
 }
 
@@ -329,10 +329,10 @@
 
 .badge-count-indicator {
   min-width: 22px;
-  padding: 0 3px;
+  padding: 0 var(--cedar-space-1);
   box-sizing: border-box;
   height: 22px;
-  border-radius: 9999px;
+  border-radius: var(--cedar-radius-pill);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -353,12 +353,12 @@
   width: 6px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: var(--cedar-surface-panel);
-  border-radius: 3px;
+  background: var(--cedar-surface-subtle);
+  border-radius: var(--cedar-radius);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: var(--cedar-border-rule);
-  border-radius: 3px;
+  border-radius: var(--cedar-radius);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: var(--cedar-text-muted);

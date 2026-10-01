@@ -123,7 +123,7 @@ test('the whole palette lays out without clipping, escaping or drifting', async 
           node.classList.contains('invalid')
             ? '--cedar-status-error-text'
             : node.classList.contains('selected')
-              ? '--cedar-border-selected'
+              ? '--cedar-color-primary'
               : '--cedar-border-rule',
         )
         .trim();

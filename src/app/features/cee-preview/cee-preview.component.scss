@@ -19,7 +19,7 @@
   min-height: 40px;
   gap: var(--cedar-space-2);
   padding: calc(var(--cedar-space-3) / 2) var(--cedar-space-3);
-  border-bottom: 1px solid var(--cedar-border-rule-light);
+  border-bottom: 1px solid var(--cedar-border-rule);
   background: var(--cedar-surface-raised);
 }
 
@@ -58,7 +58,7 @@
   padding: calc(var(--cedar-space-1) * 0.75) calc(var(--cedar-space-2) * 3.75) calc(var(--cedar-space-1) * 0.75)
     calc(var(--cedar-space-2) * 1.25);
   border: 1px solid var(--cedar-border-rule);
-  border-radius: 3px;
+  border-radius: var(--cedar-radius);
   background: var(--cedar-surface-raised);
   font: inherit;
   font-size: var(--cedar-font-size);
@@ -82,14 +82,14 @@
   flex: none;
   line-height: 1;
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--cedar-radius);
   background: transparent;
   color: var(--cedar-text-muted);
   cursor: pointer;
 
   &:hover {
-    background: var(--cedar-primary-50);
-    color: var(--cedar-primary-500, var(--cedar-color-primary));
+    background: var(--cedar-surface-selected);
+    color: var(--cedar-color-primary);
   }
 }
 

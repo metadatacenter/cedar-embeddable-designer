@@ -28,24 +28,31 @@
   --text-2xl: var(--text-2xl);
 
   /*
-    The teal in this application is CEDAR's, not Tailwind's.
-
-    Roughly thirty markup sites reach for `text-teal-600`, `bg-teal-50` and their
-    neighbours, and Tailwind's teal is a different hue from the brand's. Rather
-    than rewrite each to an arbitrary-value class, the scale itself is redefined:
-    a `teal-*` utility anywhere in this application emits CEDAR's palette, and one
-    written tomorrow is on brand without anyone remembering to check.
+    The teal and grey in this application are CEDAR's roles, not Tailwind's scales. A
+    `teal-*` or `gray-*` utility anywhere in this application resolves to one of the
+    shared roles, so one written tomorrow is on brand without anyone remembering to check.
   */
-  --color-teal-50: var(--cedar-primary-50);
-  --color-teal-100: var(--cedar-primary-100);
-  --color-teal-200: var(--cedar-primary-200);
-  --color-teal-300: var(--cedar-primary-300);
-  --color-teal-400: var(--cedar-primary-400);
-  --color-teal-500: var(--cedar-primary-500);
-  --color-teal-600: var(--cedar-primary-600);
-  --color-teal-700: var(--cedar-primary-700);
-  --color-teal-800: var(--cedar-primary-800);
-  --color-teal-900: var(--cedar-primary-900);
+  --color-teal-50: var(--cedar-surface-selected);
+  --color-teal-100: var(--cedar-surface-selected);
+  --color-teal-200: var(--cedar-border-rule);
+  --color-teal-300: var(--cedar-color-primary);
+  --color-teal-400: var(--cedar-color-primary);
+  --color-teal-500: var(--cedar-color-primary);
+  --color-teal-600: var(--cedar-color-primary);
+  --color-teal-700: var(--cedar-color-primary-strong);
+  --color-teal-800: var(--cedar-color-primary-strong);
+  --color-teal-900: var(--cedar-text-title);
+  --color-gray-50: var(--cedar-surface-subtle);
+  --color-gray-100: var(--cedar-surface-subtle);
+  --color-gray-200: var(--cedar-border-rule);
+  --color-gray-300: var(--cedar-border-rule);
+  --color-gray-400: var(--cedar-control-border-default);
+  --color-gray-500: var(--cedar-text-muted);
+  --color-gray-600: var(--cedar-text-muted);
+  --color-gray-700: var(--cedar-text-muted);
+  --color-gray-800: var(--cedar-text-primary);
+  --color-gray-900: var(--cedar-text-primary);
+  --color-white: var(--cedar-surface-raised);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -68,10 +75,20 @@
   --color-input-background: var(--input-background);
   --color-switch-background: var(--switch-background);
   --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  /* One elevation for anything that floats, and one corner for every box; `rounded-full` remains the pill. */
+  --shadow-2xs: var(--cedar-shadow-overlay);
+  --shadow-xs: var(--cedar-shadow-overlay);
+  --shadow-sm: var(--cedar-shadow-overlay);
+  --shadow-md: var(--cedar-shadow-overlay);
+  --shadow-lg: var(--cedar-shadow-overlay);
+  --shadow-xl: var(--cedar-shadow-overlay);
+  --shadow-2xl: var(--cedar-shadow-overlay);
+  --radius-xs: var(--radius);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
 }
 
 /*
@@ -114,7 +131,7 @@
   --text-xs: var(--cedar-font-size);
   --text-sm: var(--cedar-font-size);
   --text-base: var(--cedar-font-size);
-  --text-lg: var(--cedar-font-size-lead);
+  --text-lg: var(--cedar-font-size);
   --text-xl: var(--cedar-font-size-element-heading);
   --text-2xl: var(--cedar-font-size-heading);
 
@@ -134,22 +151,6 @@
   */
   --font-sans: var(--cedar-font-family);
 
-  /*
-    Four names this application already used, each now resolving to the shared
-    property that carries the value. Kept as aliases rather than rewritten at
-    every site, because a hue is referred to by the name the utility layer was
-    built from; the value itself is stated once, in the package.
-
-    The advisory colour is the one that makes the point. It read #856404 here,
-    which is what the editor's token file said when these were copied from it.
-    The editor moved to #b45309 and this copy did not, so the designer marked an
-    advisory in a colour no other CEDAR surface drew.
-  */
-  --cedar-accent-a200: var(--cedar-accent-A200);
-  --cedar-heading: var(--cedar-color-component-title);
-  --cedar-warn: var(--cedar-color-warn);
-  --cedar-warning: var(--cedar-color-warning);
-
   /* The names the utility layer below is built from, resolved to the values above. */
   --background: var(--cedar-surface-raised);
   --foreground: var(--cedar-text-primary);
@@ -157,22 +158,22 @@
   --card-foreground: var(--cedar-text-primary);
   --popover: var(--cedar-surface-raised);
   --popover-foreground: var(--cedar-text-primary);
-  --primary: var(--cedar-primary-500);
+  --primary: var(--cedar-color-primary);
   --primary-foreground: var(--cedar-color-on-primary);
   --secondary: var(--cedar-surface-selected);
-  --secondary-foreground: var(--cedar-color-component-title);
-  --muted: var(--cedar-surface-panel);
+  --secondary-foreground: var(--cedar-text-title);
+  --muted: var(--cedar-surface-subtle);
   --muted-foreground: var(--cedar-text-muted);
   --accent: var(--cedar-surface-selected);
-  --accent-foreground: var(--cedar-color-component-title);
-  --destructive: var(--cedar-color-warn);
+  --accent-foreground: var(--cedar-text-title);
+  --destructive: var(--cedar-status-error-text);
   --destructive-foreground: var(--cedar-color-on-primary);
   --border: var(--cedar-border-rule);
   --input: transparent;
-  --input-background: var(--cedar-surface-panel);
-  --switch-background: #cbced4;
-  --ring: var(--cedar-primary-300);
-  --radius: var(--cedar-control-radius-default);
+  --input-background: var(--cedar-surface-subtle);
+  --switch-background: var(--cedar-control-border-default);
+  --ring: var(--cedar-color-primary);
+  --radius: var(--cedar-radius);
 }
 
 @layer base {
@@ -193,43 +194,28 @@
   h1 {
     font-size: var(--text-2xl);
     font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    line-height: var(--cedar-line-height-heading);
   }
 
   h2 {
     font-size: var(--text-xl);
     font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    line-height: var(--cedar-line-height-heading);
   }
 
-  h3 {
-    font-size: var(--text-lg);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
-
-  h4 {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
-
-  label {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
-
+  h3,
+  h4,
+  label,
   button {
     font-size: var(--text-base);
     font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    line-height: var(--cedar-control-line-height-default);
   }
 
   input {
     font-size: var(--text-base);
     font-weight: var(--font-weight-normal);
-    line-height: 1.5;
+    line-height: var(--cedar-control-line-height-default);
   }
 
   input[type='checkbox'],
@@ -244,7 +230,7 @@
     -moz-appearance: none;
     background-color: var(--cedar-surface-raised);
     border: 1.5px solid var(--cedar-control-border-default);
-    border-radius: 3px;
+    border-radius: var(--cedar-radius);
     cursor: pointer;
     position: relative;
   }
@@ -354,13 +340,13 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: var(--cedar-surface-panel);
-  border-radius: 3px;
+  background: var(--cedar-surface-subtle);
+  border-radius: var(--cedar-radius);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: var(--cedar-border-rule);
-  border-radius: 3px;
+  border-radius: var(--cedar-radius);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -371,18 +357,18 @@
 button:focus-visible,
 a:focus-visible,
 [tabindex]:focus-visible {
-  outline: var(--cedar-focus-ring-width) solid var(--cedar-control-focus, var(--cedar-focus-ring-color));
+  outline: var(--cedar-focus-ring-width) solid var(--cedar-control-focus, var(--cedar-color-primary));
   outline-offset: var(--cedar-focus-ring-offset);
 }
 
 input[aria-invalid='true'],
 select[aria-invalid='true'],
 textarea[aria-invalid='true'] {
-  border-color: var(--cedar-control-error, var(--cedar-control-invalid-border));
+  border-color: var(--cedar-control-error, var(--cedar-status-error-text));
 }
 input[readonly],
 textarea[readonly] {
-  background: var(--cedar-control-readonly-surface);
+  background: var(--cedar-surface-subtle);
 }
 input:disabled,
 select:disabled,
@@ -394,10 +380,10 @@ textarea:disabled {
   background: var(--cedar-dialog-backdrop);
 }
 .cedar-modal-surface {
-  background: var(--cedar-overlay-surface);
-  border: 1px solid var(--cedar-overlay-border);
-  border-radius: var(--cedar-dialog-radius);
-  box-shadow: var(--cedar-dialog-shadow);
+  background: var(--cedar-surface-raised);
+  border: 1px solid var(--cedar-border-rule);
+  border-radius: var(--cedar-radius);
+  box-shadow: var(--cedar-shadow-dialog);
 }
 
 .cedar-modal-backdrop,

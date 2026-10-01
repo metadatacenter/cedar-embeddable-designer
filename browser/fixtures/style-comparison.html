@@ -9,21 +9,21 @@
       body {
         margin: var(--cedar-space-4);
         font: var(--cedar-font-size) var(--cedar-font-family);
-        background: var(--cedar-surface-canvas);
+        background: var(--cedar-surface-subtle);
         color: var(--cedar-text-primary);
       }
       header {
-        margin-bottom: var(--cedar-form-field-gap);
+        margin-bottom: var(--cedar-space-4);
       }
       nav {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--cedar-form-field-gap);
+        gap: var(--cedar-space-4);
       }
       main {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: var(--cedar-form-field-gap);
+        gap: var(--cedar-space-4);
       }
       section {
         padding: var(--cedar-space-4);
@@ -62,7 +62,7 @@
       }
       .status-reference span {
         padding: var(--cedar-space-2) var(--cedar-space-3);
-        border-radius: var(--cedar-control-radius-default);
+        border-radius: var(--cedar-radius);
       }
       .status-reference .error {
         color: var(--cedar-status-error-text);
@@ -77,8 +77,8 @@
         background: var(--cedar-status-success-surface);
       }
       .status-reference .info {
-        color: var(--cedar-status-info-text);
-        background: var(--cedar-status-info-surface);
+        color: var(--cedar-color-primary-strong);
+        background: var(--cedar-surface-selected);
       }
     </style>
   </head>

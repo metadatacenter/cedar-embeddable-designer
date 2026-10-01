@@ -117,7 +117,7 @@ import { TranslatePipe } from '@ngx-translate/core';
         font-size: var(--cedar-font-size);
       }
       .outline-row:hover {
-        background: var(--cedar-surface-row-hover);
+        background: var(--cedar-surface-subtle);
       }
       .outline-row.active {
         background: var(--cedar-surface-selected);
@@ -135,7 +135,7 @@ import { TranslatePipe } from '@ngx-translate/core';
         gap: var(--cedar-space-2);
         min-width: 0;
         padding: calc(var(--cedar-space-1) / 2) 0;
-        color: var(--cedar-text-authoring);
+        color: var(--cedar-text-primary);
         text-align: left;
         font-size: var(--cedar-font-size);
       }
@@ -172,7 +172,7 @@ import { TranslatePipe } from '@ngx-translate/core';
       .cdk-drag-preview {
         box-sizing: border-box;
         background: var(--cedar-surface-raised);
-        box-shadow: var(--cedar-menu-shadow);
+        box-shadow: var(--cedar-shadow-overlay);
         list-style: none;
       }
       button:focus-visible {

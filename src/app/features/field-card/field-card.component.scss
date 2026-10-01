@@ -91,8 +91,8 @@ app-icon {
   align-self: baseline;
   gap: var(--cedar-space-1);
   line-height: var(--cedar-control-line-height-default);
-  --cedar-icon-color: var(--cedar-control-error, var(--cedar-color-error));
-  color: var(--cedar-control-error, var(--cedar-color-error));
+  --cedar-icon-color: var(--cedar-control-error, var(--cedar-status-error-text));
+  color: var(--cedar-control-error, var(--cedar-status-error-text));
   font-size: var(--cedar-font-size);
   white-space: nowrap;
   cursor: pointer;
@@ -157,7 +157,7 @@ app-icon {
 }
 
 .content-label {
-  color: var(--cedar-text-authoring);
+  color: var(--cedar-text-primary);
   font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-medium, 500);
 }
@@ -188,9 +188,9 @@ app-icon {
   font-size: var(--cedar-font-size);
   line-height: var(--cedar-control-line-height-authoring);
   color: var(--cedar-text-muted);
-  background: var(--cedar-surface-panel);
+  background: var(--cedar-surface-subtle);
   border: 1px solid var(--cedar-border-rule);
-  border-radius: var(--cedar-control-radius-default);
+  border-radius: var(--cedar-radius);
   padding: calc(var(--cedar-space-1) / 2) var(--cedar-space-1);
 }
 .field-repetition {
@@ -275,10 +275,15 @@ app-field-summary {
   font-size: var(--cedar-font-size);
   width: 100%;
   border: 1px solid var(--cedar-control-border-default);
-  border-radius: var(--cedar-control-radius-default);
+  border-radius: var(--cedar-radius);
   padding: calc(var(--cedar-space-3) / 2) var(--cedar-space-3);
 }
 .field-content-control:focus {
   outline: none;
   border-color: var(--cedar-color-primary);
+}
+
+.field-repetition-check {
+  width: var(--cedar-icon-size-small);
+  height: var(--cedar-icon-size-small);
 }

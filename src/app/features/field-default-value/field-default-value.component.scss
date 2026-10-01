@@ -20,7 +20,7 @@
     align-items: center;
     justify-content: space-between;
     padding: calc(var(--cedar-space-3) / 2) var(--cedar-space-3);
-    background: var(--cedar-surface-authoring);
+    background: var(--cedar-surface-subtle);
     font-size: var(--cedar-font-size);
     color: var(--cedar-text-muted);
   }
@@ -59,14 +59,14 @@
     resize: none;
   }
   [aria-invalid='true'] {
-    border-color: var(--cedar-control-error, var(--cedar-color-error));
+    border-color: var(--cedar-control-error, var(--cedar-status-error-text));
   }
 }
 
 .native-default input[aria-invalid='true'],
 .native-default textarea[aria-invalid='true'] {
-  border-color: var(--cedar-control-error, var(--cedar-color-error));
-  outline-color: var(--cedar-control-error, var(--cedar-color-error));
+  border-color: var(--cedar-control-error, var(--cedar-status-error-text));
+  outline-color: var(--cedar-control-error, var(--cedar-status-error-text));
 }
 
 .default-value-row {

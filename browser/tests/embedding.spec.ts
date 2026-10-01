@@ -159,7 +159,7 @@ test('brand tokens reach template bindings and native choice controls', async ({
   await designer.evaluate((element) => {
     const host = element as HTMLElement;
     host.style.setProperty('--cedar-color-primary', 'rgb(80, 20, 120)');
-    host.style.setProperty('--cedar-primary-50', 'rgb(240, 220, 250)');
+    host.style.setProperty('--cedar-surface-selected', 'rgb(240, 220, 250)');
   });
   await expect(designer.getByRole('button', { name: /^Add field$/ }).first()).toHaveCSS(
     'background-color',

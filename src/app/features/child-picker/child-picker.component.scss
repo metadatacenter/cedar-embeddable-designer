@@ -29,11 +29,11 @@ h2 {
   align-items: center;
   gap: var(--cedar-space-2);
   @include dialog-style.heading;
-  color: var(--cedar-color-component-title);
+  color: var(--cedar-text-title);
   margin: 0;
 }
 h3 {
-  font-size: var(--cedar-font-size-lead);
+  font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-medium);
   margin: 0;
 }
@@ -75,7 +75,7 @@ td {
 th {
   position: sticky;
   top: 0;
-  background: var(--cedar-overlay-surface);
+  background: var(--cedar-surface-raised);
   color: var(--cedar-color-primary);
   font-weight: var(--cedar-font-weight-medium);
   border-bottom: 2px solid var(--cedar-border-rule);
@@ -128,7 +128,7 @@ input {
   min-width: 0;
   min-height: var(--cedar-control-height-default);
   border: 1px solid var(--cedar-control-border-default);
-  border-radius: var(--cedar-control-radius-default);
+  border-radius: var(--cedar-radius);
   padding: var(--cedar-space-2) var(--cedar-space-3);
   font: inherit;
 }
@@ -159,8 +159,8 @@ input {
   cursor: default;
 }
 .cdk-drag-preview {
-  background: var(--cedar-overlay-surface);
-  box-shadow: var(--cedar-dialog-shadow);
+  background: var(--cedar-surface-raised);
+  box-shadow: var(--cedar-shadow-dialog);
 }
 .cdk-drag-placeholder {
   opacity: 0.3;

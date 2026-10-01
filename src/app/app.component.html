@@ -6,7 +6,7 @@
   <!-- Header -->
   <header class="app-header">
     <div class="app-header__inner">
-      <div class="app-header__brand flex items-center gap-3">
+      <div class="app-header__brand">
         <button
           type="button"
           class="panel-toggle overview-toggle"
@@ -26,7 +26,7 @@
             a broken mark. Everything the element draws has to travel inside it.
           -->
           <svg
-            class="w-7 h-7 shadow-xs rounded-full"
+            class="designer-mark"
             viewBox="0 0 120 120"
             role="img"
             aria-label="CEDAR"
@@ -142,7 +142,7 @@
             <div class="overview-panel__card">
               <div class="overview-panel__header">
                 <div class="overview-panel__header-left">
-                  <app-icon key="list" size="small" className="text-gray-600"></app-icon>
+                  <app-icon key="list" size="small"></app-icon>
                   <h3 class="overview-panel__title">
                     {{ 'app.overview.heading' | translate: { count: service.session.document().children.length } }}
                   </h3>
@@ -173,7 +173,7 @@
                   [title]="'app.overview.close' | translate"
                   (click)="showFieldsOverview.set(false)"
                 >
-                  <span class="text-xs"><app-icon key="close" size="small" /></span>
+                  <app-icon key="close" size="small" />
                 </button>
               </div>
               <div class="overview-panel__list">
@@ -192,7 +192,7 @@
 
     <!-- Preview: the template as CEE renders it -->
     @if (service.showPreview()) {
-      <app-cee-preview id="ced-preview" class="preview-panel bg-white border-l border-gray-300"></app-cee-preview>
+      <app-cee-preview id="ced-preview" class="preview-panel"></app-cee-preview>
     }
   </div>
 
@@ -203,7 +203,7 @@
 
 <!-- Field Designer Overlay -->
 @if (service.showFieldDesigner()) {
-  <app-field-designer class="fixed inset-0 z-50"></app-field-designer>
+  <app-field-designer class="field-designer-overlay"></app-field-designer>
 }
 
 @if (service.childPicker(); as target) {

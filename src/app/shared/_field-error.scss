@@ -1,21 +1,21 @@
 // Shared invalid-control role, with the public host override.
 .ced-field-error {
-  --cedar-icon-color: var(--cedar-control-error, var(--cedar-color-error));
-  color: var(--cedar-control-error, var(--cedar-color-error));
+  --cedar-icon-color: var(--cedar-control-error, var(--cedar-status-error-text));
+  color: var(--cedar-control-error, var(--cedar-status-error-text));
   font-size: var(--cedar-font-size);
-  line-height: var(--cedar-form-help-line-height);
-  margin: var(--cedar-form-help-gap) 0 0;
+  line-height: var(--cedar-control-line-height-authoring);
+  margin: var(--cedar-space-1) 0 0;
 }
 
 // CEDAR's advisory colour; this explains a read-only state rather than an invalid
 // value. Written out as #856404 until the shared values arrived, which is what the
 // editor said when this was copied from it and not what it says now.
 .published-warning {
-  --cedar-icon-color: var(--cedar-color-warning);
-  color: var(--cedar-color-warning);
-  background: var(--cedar-surface-advisory);
+  --cedar-icon-color: var(--cedar-status-warning-text);
+  color: var(--cedar-status-warning-text);
+  background: var(--cedar-status-warning-surface);
   font-size: var(--cedar-font-size);
-  line-height: var(--cedar-form-help-line-height);
+  line-height: var(--cedar-control-line-height-authoring);
   margin: calc(var(--cedar-space-3) / 2) var(--cedar-space-2) 0;
-  padding: 5px var(--cedar-space-2);
+  padding: var(--cedar-space-1) var(--cedar-space-2);
 }

@@ -86,7 +86,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       font-size: var(--cedar-font-size);
     }
     .unavailable {
-      margin: 3px 0 0;
+      margin: var(--cedar-space-1) 0 0;
       font-size: var(--cedar-font-size);
       overflow-wrap: anywhere;
     }
@@ -94,9 +94,9 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       flex: 1;
       min-width: 0;
       overflow-wrap: anywhere;
-      padding: 3px 6px;
-      border: 1px solid var(--cedar-control-border-authoring);
-      border-radius: 2px;
+      padding: var(--cedar-space-1) var(--cedar-space-1);
+      border: 1px solid var(--cedar-control-border-default);
+      border-radius: var(--cedar-radius);
       color: var(--cedar-text-muted);
     }
     button {
@@ -111,7 +111,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       cursor: pointer;
     }
     .placeholder {
-      color: var(--cedar-border-control);
+      color: var(--cedar-control-border-default);
     }
     button:disabled {
       opacity: 0.5;

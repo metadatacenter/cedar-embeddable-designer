@@ -1,4 +1,4 @@
-@use "@org.metadatacenter/cedar-design-tokens/patterns";
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
 @reference "tailwindcss";
 
 /* ─── App Shell ───────────────────────────────────────────────────────────── */
@@ -60,7 +60,7 @@
   min-height: var(--cedar-control-height-default);
   font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-medium);
-  border-radius: var(--cedar-control-radius-default);
+  border-radius: var(--cedar-radius);
   border: 0;
 }
 
@@ -73,7 +73,7 @@
   background: transparent;
   color: var(--cedar-text-primary);
   &:hover {
-    background: var(--cedar-action-hover-surface);
+    background: var(--cedar-surface-selected);
   }
 }
 
@@ -93,11 +93,11 @@
   @include patterns.menu-text;
   @apply absolute right-0 mt-2 w-56 border overflow-hidden;
   z-index: var(--cedar-layer-menu);
-  background: var(--cedar-overlay-surface);
-  border-color: var(--cedar-overlay-border);
-  border-radius: var(--cedar-menu-radius);
-  box-shadow: var(--cedar-menu-shadow);
-  padding: var(--cedar-menu-padding);
+  background: var(--cedar-surface-raised);
+  border-color: var(--cedar-border-rule);
+  border-radius: var(--cedar-radius);
+  box-shadow: var(--cedar-shadow-overlay);
+  padding: var(--cedar-space-1);
   animation: fade-in var(--cedar-motion-duration-normal) var(--cedar-motion-ease-enter);
 }
 
@@ -110,10 +110,10 @@
   @apply w-full text-left transition-colors flex items-center gap-3 cursor-pointer border-none bg-transparent;
 
   &:hover {
-    background: var(--cedar-action-hover-surface);
+    background: var(--cedar-surface-selected);
   }
   & + & {
-    border-top: 1px solid var(--cedar-overlay-border);
+    border-top: 1px solid var(--cedar-border-rule);
   }
 }
 
@@ -153,7 +153,7 @@
 }
 .overview-panel__actions button:hover {
   color: var(--cedar-color-primary);
-  background: var(--cedar-surface-authoring);
+  background: var(--cedar-surface-subtle);
 }
 
 .designer-scroll,
@@ -215,7 +215,7 @@
   flex: none;
   padding: 0;
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--cedar-radius);
   background: transparent;
   color: var(--cedar-text-muted);
   cursor: pointer;
@@ -223,7 +223,7 @@
 .panel-toggle:hover,
 .panel-toggle[aria-expanded='true'] {
   color: var(--cedar-color-primary);
-  background: var(--cedar-surface-authoring);
+  background: var(--cedar-surface-subtle);
 }
 .panel-toggle:focus-visible {
   outline: 2px solid var(--cedar-color-primary);
@@ -267,6 +267,18 @@
   flex: 0 0 max(0px, calc((100% - var(--overview-width) - var(--library-width) - 2 * var(--cedar-space-3)) / 2));
   min-width: 0;
   box-sizing: border-box;
+  background: var(--cedar-surface-raised);
+  border-left: 1px solid var(--cedar-border-rule);
+}
+
+.designer-mark {
+  @apply w-7 h-7 rounded-full;
+}
+
+.field-designer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--cedar-layer-modal);
 }
 
 /* ─── Template Header Card ────────────────────────────────────────────────── */
@@ -355,8 +367,8 @@
   }
 
   &.selected {
-    border-color: var(--cedar-border-selected);
-    outline: 1px solid var(--cedar-border-selected);
+    border-color: var(--cedar-color-primary);
+    outline: 1px solid var(--cedar-color-primary);
     outline-offset: -1px;
   }
 }
@@ -369,7 +381,7 @@
 .field-selection-bar {
   @apply absolute left-0 top-0 bottom-0;
   width: 2px;
-  background: var(--cedar-border-selected);
+  background: var(--cedar-color-primary);
 }
 
 /* ─── Add Field Section ───────────────────────────────────────────────────── */
@@ -382,7 +394,7 @@
   gap: var(--cedar-space-2);
   min-height: var(--cedar-control-height-default);
   padding: var(--cedar-space-2) var(--cedar-space-3);
-  border-radius: var(--cedar-control-radius-default);
+  border-radius: var(--cedar-radius);
   border: 0;
   --cedar-icon-color: var(--cedar-color-on-primary);
   color: var(--cedar-color-on-primary);
@@ -421,7 +433,7 @@
   margin-top: var(--cedar-space-1);
   font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-medium);
-  color: var(--cedar-color-component-title);
+  color: var(--cedar-text-title);
 }
 
 .designer-identity__version {

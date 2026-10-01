@@ -602,7 +602,7 @@ for (const type of ['checkboxes', 'multipleChoice', 'singleChoiceList', 'multipl
           const style = (host as HTMLElement).style;
           style.setProperty('--cedar-control-font-size', '16px');
           style.setProperty('--cedar-control-line-height', '28px');
-          style.setProperty('--cedar-choice-row-height', '36px');
+          style.setProperty('--cedar-row-height-compact', '36px');
         });
       }
       for (const property of ['font-family', 'font-size', 'font-weight', 'line-height', 'letter-spacing', 'color']) {

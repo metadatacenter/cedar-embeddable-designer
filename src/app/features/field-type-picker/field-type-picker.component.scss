@@ -1,16 +1,15 @@
-@use "@org.metadatacenter/cedar-design-tokens/patterns";
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
 :host {
   display: block;
 }
 
 .picker-container {
+  border: 1px solid var(--cedar-border-rule);
   container-type: inline-size;
   background-color: var(--cedar-surface-raised);
-  border-radius: 0.5rem;
-  box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  padding: 14px;
+  border-radius: var(--cedar-radius);
+  box-shadow: var(--cedar-shadow-overlay);
+  padding: var(--cedar-space-3);
   box-sizing: border-box;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -50,10 +49,10 @@
   padding: calc(var(--cedar-space-3) / 2) var(--cedar-space-3);
   font-size: var(--cedar-font-size);
   border: 1px solid var(--cedar-control-border-default);
-  border-radius: 0.5rem;
+  border-radius: var(--cedar-radius);
   background-color: var(--cedar-surface-raised);
   min-width: 140px;
-  color: var(--cedar-text-authoring);
+  color: var(--cedar-text-primary);
   cursor: pointer;
   transition: border-color var(--cedar-motion-duration-fast);
 
@@ -63,7 +62,7 @@
 }
 
 .dropdown-text {
-  color: var(--cedar-text-authoring);
+  color: var(--cedar-text-primary);
 }
 
 .dropdown-arrow {
@@ -78,7 +77,7 @@
   left: 0;
   margin-top: var(--cedar-space-1);
   background-color: var(--cedar-surface-raised);
-  border-radius: 0.5rem;
+  border-radius: var(--cedar-radius);
   border: 1px solid var(--cedar-control-border-default);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   z-index: 20;
@@ -95,7 +94,7 @@
   padding: calc(var(--cedar-space-3) / 2) var(--cedar-space-2);
   font-size: var(--cedar-font-size);
   border: 1px solid var(--cedar-control-border-default);
-  border-radius: 0.25rem;
+  border-radius: var(--cedar-radius);
   outline: none;
 
   &:focus {
@@ -120,11 +119,11 @@
   transition: background-color var(--cedar-motion-duration-fast);
 
   &:hover {
-    background-color: var(--cedar-surface-panel);
+    background-color: var(--cedar-surface-subtle);
   }
 
   &.active {
-    background-color: var(--cedar-surface-panel);
+    background-color: var(--cedar-surface-subtle);
   }
 }
 
@@ -148,8 +147,8 @@
 .custom-fields-empty-msg {
   margin-bottom: var(--cedar-space-2);
   padding: var(--cedar-space-4);
-  background-color: var(--cedar-surface-panel);
-  border-radius: 0.5rem;
+  background-color: var(--cedar-surface-subtle);
+  border-radius: var(--cedar-radius);
   border: 1px solid var(--cedar-border-rule);
 }
 
@@ -167,7 +166,7 @@
 .fields-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 110px), 1fr));
-  gap: 5px;
+  gap: var(--cedar-space-1);
 }
 
 .btn-field-item {
@@ -176,7 +175,7 @@
   align-items: center;
   gap: calc(var(--cedar-space-1) / 2);
   padding: var(--cedar-space-1) calc(var(--cedar-space-3) / 2);
-  border-radius: 0.5rem;
+  border-radius: var(--cedar-radius);
   border: 1px solid var(--cedar-border-rule);
   background-color: var(--cedar-surface-raised);
   cursor: pointer;
@@ -194,7 +193,7 @@
 
 .field-item-label {
   font-size: var(--cedar-font-size);
-  color: var(--cedar-text-authoring);
+  color: var(--cedar-text-primary);
   text-align: center;
   word-break: break-word;
   width: 100%;

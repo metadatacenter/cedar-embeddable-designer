@@ -41,8 +41,8 @@ for (const name of ['Preferences', 'Define Presets']) {
     const designer = await openDesigner(page);
     await designer.evaluate((el) => {
       const style = (el as HTMLElement).style;
-      style.setProperty('--cedar-action-primary-surface', 'rgb(50, 60, 70)');
-      style.setProperty('--cedar-action-primary-hover-surface', 'rgb(70, 80, 90)');
+      style.setProperty('--cedar-color-primary', 'rgb(50, 60, 70)');
+      style.setProperty('--cedar-color-primary-strong', 'rgb(70, 80, 90)');
     });
     await designer.getByRole('button', { name: 'User Menu', exact: true }).click();
     await designer.locator('.user-menu-dropdown').getByRole('button', { name, exact: true }).click();

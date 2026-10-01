@@ -77,14 +77,7 @@
           "anchor": "class=\"dropdown-panel"
         }
       ],
-      "test": "browser/tests/surfaces.spec.ts",
-      "debt": {
-        "border-top-left-radius": {
-          "actual": "8px",
-          "expected": "4px",
-          "reason": "Existing picker corners measured before surface registration; preserve the current design until the shared radius is deliberately adopted."
-        }
-      }
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.ced-field-designer",

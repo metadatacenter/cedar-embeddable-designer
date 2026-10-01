@@ -3,12 +3,12 @@
   width: 6px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: var(--cedar-surface-panel);
-  border-radius: 3px;
+  background: var(--cedar-surface-subtle);
+  border-radius: var(--cedar-radius);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: var(--cedar-border-rule);
-  border-radius: 3px;
+  border-radius: var(--cedar-radius);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: var(--cedar-border-rule);
@@ -17,7 +17,7 @@
 @include authoring.compact-table;
 
 .preset-title {
-  font-size: var(--cedar-font-size-lead);
+  font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-medium);
   color: var(--cedar-text-primary);
 }

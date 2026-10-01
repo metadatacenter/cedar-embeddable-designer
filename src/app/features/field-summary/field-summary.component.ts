@@ -48,7 +48,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       width: 100%;
       height: var(--cedar-control-height, var(--cedar-control-height-default));
       border: 1px solid var(--cedar-control-border, var(--cedar-control-border-default));
-      border-radius: var(--cedar-control-radius, var(--cedar-control-radius-default));
+      border-radius: var(--cedar-control-radius, var(--cedar-radius));
       padding: var(--cedar-space-1) var(--cedar-space-2);
       background: var(--cedar-surface-raised);
       color: var(--cedar-text-muted);

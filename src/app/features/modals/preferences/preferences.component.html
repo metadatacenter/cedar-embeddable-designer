@@ -30,12 +30,10 @@
                 (click)="service.applyPreset(preset)"
                 class="preferences-preset"
                 [style.backgroundColor]="
-                  service.getActivePreset() === preset ? 'var(--cedar-color-primary)' : 'var(--cedar-surface-authoring)'
+                  service.getActivePreset() === preset ? 'var(--cedar-color-primary)' : 'var(--cedar-surface-subtle)'
                 "
                 [style.color]="
-                  service.getActivePreset() === preset
-                    ? 'var(--cedar-action-primary-text)'
-                    : 'var(--cedar-text-primary)'
+                  service.getActivePreset() === preset ? 'var(--cedar-color-on-primary)' : 'var(--cedar-text-primary)'
                 "
               >
                 {{ 'preferences.presets.' + preset | translate }}
@@ -166,7 +164,6 @@
                 (click)="service.toggleAllFieldTypes(true)"
                 class="preferences-small-action"
                 [style.color]="'var(--cedar-color-primary)'"
-
               >
                 {{ 'preferences.fieldTypes.selectAll' | translate }}
               </button>
