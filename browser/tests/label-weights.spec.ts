@@ -49,8 +49,6 @@ for (const type of Object.keys(FIELD_TYPES)) {
       await expect(tab).toHaveAttribute('aria-selected', 'true');
       await checkLabels(settings);
     }
-    const typeLabel = page.locator('app-field-summary .cee-field-type');
-    if (await typeLabel.count()) await expect(typeLabel).toHaveCSS('font-weight', '500');
   });
 }
 for (const kind of ['template', 'element']) {

@@ -165,8 +165,10 @@ test.describe('a default control inside a field card', () => {
   }
 });
 
-test('Designer summary type labels use medium weight without bolding descriptions', async ({ page }) => {
+test('Designer summaries leave the field type to the card heading', async ({ page }) => {
   await designerWithCef(page, 'controlledTerms');
   const summary = page.locator('app-field-summary').first();
-  await expect(summary.locator('.cee-field-type')).toHaveCSS('font-weight', '500');
+  // The card heading names the type with its icon and badge, so the summary does not repeat it.
+  await expect(summary.locator('cedar-embeddable-field .child-component-content')).toBeVisible();
+  await expect(summary.locator('.cee-field-type')).toHaveCount(0);
 });
