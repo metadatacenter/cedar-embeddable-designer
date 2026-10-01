@@ -15,13 +15,6 @@
       "value": "uninspectable-binding",
       "count": 1
     },
-    "19bbea270e7d8ff289f4": {
-      "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
-      "rule": "typography",
-      "property": "letter-spacing",
-      "value": "0.025em",
-      "count": 1
-    },
     "2618584b089ce8f7cb1d": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
       "rule": "geometry",
@@ -279,13 +272,6 @@
       "rule": "geometry",
       "property": "height",
       "value": "24px",
-      "count": 1
-    },
-    "f684be0615a9e3797492": {
-      "file": "src/app/features/cee-preview/cee-preview.component.scss",
-      "rule": "typography",
-      "property": "letter-spacing",
-      "value": "0.04em",
       "count": 1
     },
     "f7875568db5384e058ac": {
