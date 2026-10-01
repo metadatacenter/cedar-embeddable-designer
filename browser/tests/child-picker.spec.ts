@@ -69,6 +69,23 @@ for (const width of [1280, 375])
 
     const dialog = designer.getByRole('dialog', { name: 'Import Fields and Elements' });
     await expect(dialog.getByRole('searchbox', { name: 'Search for fields or elements' })).toBeVisible();
+    // The search field clears with the registry's close glyph, drawn as a mask, rather than the
+    // browser's own button. Chromium reports no computed style for that pseudo-element, so the
+    // rule that draws it is read instead.
+    const masked = await dialog.getByRole('searchbox').evaluate((input) => {
+      const root = input.getRootNode() as Document | ShadowRoot;
+      const pseudo = '::-webkit-search-cancel-button';
+      return [...root.styleSheets, ...root.adoptedStyleSheets]
+        .flatMap((sheet) => [...sheet.cssRules])
+        .some(
+          (rule) =>
+            rule instanceof CSSStyleRule &&
+            rule.selectorText.endsWith(pseudo) &&
+            input.matches(rule.selectorText.slice(0, -pseudo.length)) &&
+            rule.style.getPropertyValue('mask-image').startsWith('url("data:image/svg+xml'),
+        );
+    });
+    expect(masked).toBe(true);
     await designer.getByRole('row', { name: 'Select Section', exact: true }).click();
     const selected = dialog.getByRole('table', { name: 'Selected items' });
     await expect(selected.locator('.version-cell')).toHaveText(['0.0.1 · draft', '0.0.1 · published']);
