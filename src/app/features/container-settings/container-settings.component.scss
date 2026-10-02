@@ -1,0 +1,12 @@
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  height: var(--cedar-control-height, var(--cedar-control-height-default));
+  resize: none;
+}
+.display-fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  @include spacing.apply(gap, control-inset);
+}

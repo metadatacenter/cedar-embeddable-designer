@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
 /*
   `overflow: hidden` keeps the panel a panel: the form inside is as tall as the
   template, and without it that height escapes upward through the flex row.
@@ -18,7 +19,7 @@
   box-sizing: border-box;
   min-height: 40px;
   gap: var(--cedar-space-2);
-  padding: calc(var(--cedar-space-3) / 2) var(--cedar-space-3);
+  @include spacing.apply(padding, control-row);
   border-bottom: 1px solid var(--cedar-border-rule);
   background: var(--cedar-surface-raised);
 }
@@ -54,8 +55,7 @@
   align-self: center;
   min-width: 0;
   appearance: none;
-  padding: calc(var(--cedar-space-1) * 0.75) calc(var(--cedar-space-2) * 3.75) calc(var(--cedar-space-1) * 0.75)
-    calc(var(--cedar-space-2) * 1.25);
+  @include spacing.apply(padding, preview-select);
   border: 1px solid var(--cedar-border-rule);
   border-radius: var(--cedar-radius);
   background: var(--cedar-surface-raised);

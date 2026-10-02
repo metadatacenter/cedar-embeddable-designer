@@ -70,10 +70,19 @@ for (const width of [1280, 375])
     const dialog = designer.getByRole('dialog', { name: 'Import Fields and Elements' });
     await expect(dialog.getByRole('searchbox', { name: 'Search for fields or elements' })).toBeVisible();
     // Cancel and Done close the dialog from its bottom right, as the designer's other dialogs do.
-    const frame = (await dialog.boundingBox())!;
-    const results = (await dialog.locator('table').last().boundingBox())!;
-    const cancelBox = (await dialog.getByRole('button', { name: 'Cancel', exact: true }).boundingBox())!;
-    const doneBox = (await dialog.getByRole('button', { name: 'Done', exact: true }).boundingBox())!;
+    await page.evaluate(() => document.fonts.ready);
+    // A native dialog recentres as its content settles. Read every box in one layout
+    // frame so movement between Playwright calls cannot look like misaligned buttons.
+    const { frame, results, cancelBox, doneBox } = await dialog.evaluate((element) => {
+      const tables = element.querySelectorAll('table');
+      const buttons = element.querySelectorAll('.actions button');
+      return {
+        frame: element.getBoundingClientRect().toJSON(),
+        results: tables[tables.length - 1].getBoundingClientRect().toJSON(),
+        cancelBox: buttons[0].getBoundingClientRect().toJSON(),
+        doneBox: buttons[1].getBoundingClientRect().toJSON(),
+      };
+    });
     expect(doneBox.y).toBeGreaterThan(results.y + results.height);
     expect(Math.abs(cancelBox.y - doneBox.y)).toBeLessThanOrEqual(1);
     expect(cancelBox.x + cancelBox.width).toBeLessThan(doneBox.x);

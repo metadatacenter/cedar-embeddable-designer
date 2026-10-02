@@ -178,11 +178,13 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--cedar-border-rule);
+    outline-color: color-mix(in srgb, var(--cedar-color-primary) 50%, transparent);
   }
 
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--cedar-surface-raised);
+    color: var(--cedar-text-primary);
     height: 100%;
     margin: 0;
   }

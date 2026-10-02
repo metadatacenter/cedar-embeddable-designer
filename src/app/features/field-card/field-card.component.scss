@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
 @use '@org.metadatacenter/cedar-design-tokens/authoring';
 @use '@org.metadatacenter/cedar-design-tokens/controls';
 @use '@org.metadatacenter/cedar-design-tokens/patterns';
@@ -9,7 +10,7 @@
   align-self: center;
   color: var(--cedar-text-muted);
   cursor: grab;
-  padding: calc(var(--cedar-space-1) / 2);
+  @include spacing.apply(padding, compact);
 }
 app-icon {
   display: inline-flex;
@@ -146,7 +147,7 @@ app-icon {
   @include patterns.required-mark;
   flex: 0 0 auto;
   align-self: baseline;
-  margin-left: calc(-1 * var(--cedar-space-1));
+  @include spacing.apply(margin-left, field-action-outdent);
   font-weight: var(--cedar-font-weight-medium);
 }
 
@@ -174,7 +175,7 @@ app-icon {
 .field-name {
   border: none;
   outline: none;
-  padding-bottom: calc(var(--cedar-space-1) / 2);
+  @include spacing.apply(padding-bottom, compact);
   min-width: 0;
   background: transparent;
   border-bottom-width: 2px;
@@ -190,7 +191,7 @@ app-icon {
   background: var(--cedar-surface-subtle);
   border: 1px solid var(--cedar-border-rule);
   border-radius: var(--cedar-radius);
-  padding: calc(var(--cedar-space-1) / 2) var(--cedar-space-1);
+  @include spacing.apply(padding, compact-cell);
 }
 .field-repetition {
   display: flex;
@@ -212,7 +213,7 @@ app-icon {
   align-items: center;
   justify-content: center;
   color: var(--cedar-color-primary);
-  padding: calc(var(--cedar-space-1) / 2);
+  @include spacing.apply(padding, compact);
   border: none;
   background: transparent;
   cursor: pointer;
@@ -268,14 +269,14 @@ app-field-summary {
 }
 .content-label {
   display: block;
-  margin-bottom: calc(var(--cedar-space-1) / 2);
+  @include spacing.apply(margin-bottom, compact);
 }
 .field-content-control {
   font-size: var(--cedar-font-size);
   width: 100%;
   border: 1px solid var(--cedar-control-border-default);
   border-radius: var(--cedar-radius);
-  padding: calc(var(--cedar-space-3) / 2) var(--cedar-space-3);
+  @include spacing.apply(padding, control-row);
 }
 .field-content-control:focus {
   outline: none;

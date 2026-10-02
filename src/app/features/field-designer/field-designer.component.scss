@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
 @use '@org.metadatacenter/cedar-design-tokens/authoring';
 @use '../../shared/field-error';
 :host {
@@ -29,7 +30,7 @@ h1 {
 }
 h2 {
   font-size: var(--cedar-font-size);
-  margin: var(--cedar-space-4) 0 calc(var(--cedar-space-1) / 2);
+  @include spacing.apply(margin, field-label);
   font-weight: var(--cedar-font-weight-medium, 500);
 }
 .hint,
@@ -63,7 +64,7 @@ select {
   border: 1px solid var(--cedar-control-border-default);
   background: var(--cedar-surface-raised);
   border-radius: var(--cedar-radius);
-  padding: var(--cedar-space-1) calc(var(--cedar-space-3) / 2);
+  @include spacing.apply(padding, field-heading);
   font: inherit;
   font-weight: var(--cedar-font-weight-regular, 400);
 }
@@ -93,7 +94,7 @@ table {
 }
 th,
 td {
-  padding: calc(var(--cedar-space-3) / 2) var(--cedar-space-2);
+  @include spacing.apply(padding, field-control);
   border-bottom: 1px solid var(--cedar-border-rule);
 }
 th {
@@ -108,7 +109,7 @@ tbody tr:nth-child(even) {
   background: var(--cedar-surface-subtle);
 }
 .actions button {
-  margin: calc(var(--cedar-space-1) / 2);
+  @include spacing.apply(margin, compact);
 }
 
 @include authoring.compact-table;

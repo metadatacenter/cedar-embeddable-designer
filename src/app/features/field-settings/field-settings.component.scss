@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
 @use '@org.metadatacenter/cedar-design-tokens/controls';
 @use '@org.metadatacenter/cedar-design-tokens/patterns';
 @use '@org.metadatacenter/cedar-design-tokens/authoring';
@@ -26,7 +27,7 @@
 label {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--cedar-space-1) / 2);
+  @include spacing.apply(gap, compact);
   @include authoring.label-text;
   /*
    * Shrinkable, or a wide control overflows the card that holds it.
@@ -200,7 +201,7 @@ button:focus-visible {
 .display-flags {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--cedar-space-1) / 2);
+  @include spacing.apply(gap, compact);
 }
 .display-flags .check {
   align-self: start;
@@ -224,7 +225,7 @@ button:focus-visible {
 .default-label {
   display: block;
   @include authoring.label-text;
-  margin-bottom: calc(var(--cedar-space-1) / 2);
+  @include spacing.apply(margin-bottom, compact);
 }
 
 .numeric-constraint-fields {
@@ -237,7 +238,7 @@ button:focus-visible {
 
 fieldset[aria-invalid='true'] {
   border-left: 2px solid var(--cedar-control-error, var(--cedar-status-error-text));
-  padding-left: calc(var(--cedar-space-3) / 2);
+  @include spacing.apply(padding-left, control-inset);
 }
 
 .identity dt.editable {

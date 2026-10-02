@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
 @use '@org.metadatacenter/cedar-design-tokens/patterns';
 :host {
   display: block;
@@ -46,7 +47,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--cedar-space-2);
-  padding: calc(var(--cedar-space-3) / 2) var(--cedar-space-3);
+  @include spacing.apply(padding, control-row);
   font-size: var(--cedar-font-size);
   border: 1px solid var(--cedar-control-border-default);
   border-radius: var(--cedar-radius);
@@ -91,7 +92,7 @@
 
 .dropdown-search-input {
   width: 100%;
-  padding: calc(var(--cedar-space-3) / 2) var(--cedar-space-2);
+  @include spacing.apply(padding, field-control);
   font-size: var(--cedar-font-size);
   border: 1px solid var(--cedar-control-border-default);
   border-radius: var(--cedar-radius);
@@ -173,8 +174,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: calc(var(--cedar-space-1) / 2);
-  padding: var(--cedar-space-1) calc(var(--cedar-space-3) / 2);
+  @include spacing.apply(gap, compact);
+  @include spacing.apply(padding, field-heading);
   border-radius: var(--cedar-radius);
   border: 1px solid var(--cedar-border-rule);
   background-color: var(--cedar-surface-raised);

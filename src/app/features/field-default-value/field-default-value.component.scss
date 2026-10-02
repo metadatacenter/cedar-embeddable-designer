@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
 @use '@org.metadatacenter/cedar-design-tokens/authoring';
 @use '../../shared/field-error';
 .default-dialog-overlay {
@@ -19,7 +20,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: calc(var(--cedar-space-3) / 2) var(--cedar-space-3);
+    @include spacing.apply(padding, control-row);
     background: var(--cedar-surface-subtle);
     font-size: var(--cedar-font-size);
     color: var(--cedar-text-muted);
@@ -35,7 +36,7 @@
     font-size: var(--cedar-font-size-heading);
   }
   p {
-    margin: calc(var(--cedar-space-3) / 2) var(--cedar-space-3);
+    @include spacing.apply(margin, control-row);
     font-size: var(--cedar-font-size);
   }
 }

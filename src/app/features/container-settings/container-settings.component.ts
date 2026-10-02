@@ -25,20 +25,11 @@ import { TypesPickerComponent } from '../types-picker/types-picker.component';
     TranslatePipe,
   ],
   templateUrl: './container-settings.component.html',
-  styleUrls: ['../field-settings/field-settings.component.scss', '../element-card/element-card.component.scss'],
-  styles: `
-    textarea {
-      width: 100%;
-      box-sizing: border-box;
-      height: var(--cedar-control-height, var(--cedar-control-height-default));
-      resize: none;
-    }
-    .display-fields {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: calc(var(--cedar-space-3) / 2);
-    }
-  `,
+  styleUrls: [
+    '../field-settings/field-settings.component.scss',
+    '../element-card/element-card.component.scss',
+    './container-settings.component.scss',
+  ],
 })
 export class ContainerSettingsComponent {
   private readonly changeDetector = inject(ChangeDetectorRef);

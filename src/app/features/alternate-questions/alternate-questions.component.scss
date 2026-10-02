@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
 @use '@org.metadatacenter/cedar-design-tokens/authoring';
 :host {
   display: block;
@@ -53,7 +54,7 @@ th.actions {
   width: 32px;
 }
 td {
-  padding: calc(var(--cedar-space-1) / 2) var(--cedar-space-1);
+  @include spacing.apply(padding, compact-cell);
   vertical-align: middle;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
@@ -64,7 +65,7 @@ td {
   justify-content: center;
   width: 24px;
   height: 24px;
-  padding: calc(var(--cedar-space-1) / 2);
+  @include spacing.apply(padding, compact);
   border: 0;
   background: transparent;
   color: var(--cedar-color-primary);

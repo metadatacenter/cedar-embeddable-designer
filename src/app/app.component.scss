@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
 @use '@org.metadatacenter/cedar-design-tokens/patterns';
 @reference "../styles.css";
 
@@ -10,7 +11,8 @@
 */
 .app-shell {
   container-type: inline-size;
-  @apply h-full min-h-0 relative flex flex-col font-sans;
+  @apply h-full min-h-0 relative flex flex-col;
+  font-family: var(--cedar-font-family);
   background: var(--cedar-surface-raised);
   color: var(--cedar-text-primary);
 }
@@ -39,11 +41,14 @@
 }
 
 .app-header__brand {
-  @apply flex items-center gap-3;
+  @apply flex items-center;
+  gap: var(--cedar-space-3);
 }
 
 .app-header__title {
-  @apply text-lg font-medium text-gray-900;
+  font-size: var(--cedar-font-size);
+  font-weight: var(--cedar-font-weight-medium);
+  color: var(--cedar-text-primary);
 }
 
 .app-header__actions {
@@ -65,7 +70,8 @@
 }
 
 .btn-header--primary {
-  @apply text-white border-transparent;
+  @apply border-transparent;
+  color: var(--cedar-color-on-primary);
   /* background-color set via [style.backgroundColor] binding */
 }
 
@@ -86,12 +92,14 @@
 }
 
 .user-menu-trigger {
-  @apply flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer text-left;
+  @apply flex items-center hover:opacity-80 transition-opacity cursor-pointer text-left;
+  gap: var(--cedar-space-2);
 }
 
 .user-menu-dropdown {
   @include patterns.menu-text;
-  @apply absolute right-0 mt-2 w-56 border overflow-hidden;
+  @apply absolute right-0 w-56 border overflow-hidden;
+  margin-top: var(--cedar-space-2);
   z-index: var(--cedar-layer-menu);
   background: var(--cedar-surface-raised);
   border-color: var(--cedar-border-rule);
@@ -107,7 +115,8 @@
 
 .user-menu-item {
   @include patterns.menu-item;
-  @apply w-full text-left transition-colors flex items-center gap-3 cursor-pointer border-none bg-transparent;
+  @apply w-full text-left transition-colors flex items-center cursor-pointer border-none bg-transparent;
+  gap: var(--cedar-space-3);
 
   &:hover {
     background: var(--cedar-surface-selected);
@@ -170,7 +179,8 @@
 
 /* ─── Fields Overview Sidebar ─────────────────────────────────────────────── */
 .overview-panel {
-  @apply p-3 hidden md:block;
+  @apply hidden md:block;
+  padding: var(--cedar-space-3);
   position: relative;
 }
 
@@ -185,20 +195,32 @@
 }
 
 .overview-panel__header {
-  @apply px-3 py-2 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10;
+  @apply border-b flex items-center justify-between sticky top-0;
+  padding-inline: var(--cedar-space-3);
+  padding-block: var(--cedar-space-2);
+  border-color: var(--cedar-border-rule);
+  background-color: var(--cedar-surface-raised);
+  z-index: var(--cedar-layer-sticky);
   padding-left: var(--cedar-space-2);
 }
 
 .overview-panel__header-left {
-  @apply flex items-center gap-2;
+  @apply flex items-center;
+  gap: var(--cedar-space-2);
 }
 
 .overview-panel__title {
-  @apply text-sm font-medium text-gray-900;
+  font-size: var(--cedar-font-size);
+  font-weight: var(--cedar-font-weight-medium);
+  color: var(--cedar-text-primary);
 }
 
 .overview-panel__close {
-  @apply text-gray-400 hover:text-gray-600 cursor-pointer;
+  @apply cursor-pointer;
+  color: var(--cedar-control-border-default);
+  &:hover {
+    color: var(--cedar-text-muted);
+  }
 }
 
 .overview-panel__list {
@@ -272,7 +294,9 @@
 }
 
 .designer-mark {
-  @apply w-7 h-7 rounded-full;
+  @apply w-7;
+  height: var(--cedar-row-height-compact);
+  border-radius: var(--cedar-radius-pill);
 }
 
 .field-designer-overlay {
@@ -303,12 +327,15 @@
 
 .template-header-card__inputs {
   /* A flex child will not go below its content without this, whatever `flex-1` says. */
-  @apply flex-1 min-w-0 flex flex-col gap-1;
+  @apply flex-1 min-w-0 flex flex-col;
+  gap: var(--cedar-space-1);
 }
 
 .template-header-row {
   /* Name, identifier and version sit on one line where there is room, and stack where there is not. */
-  @apply flex flex-wrap items-end gap-x-4 gap-y-2 w-full;
+  @apply flex flex-wrap items-end w-full;
+  column-gap: var(--cedar-space-4);
+  row-gap: var(--cedar-space-2);
 }
 
 .template-field-group {
@@ -323,7 +350,11 @@
 }
 
 .template-input {
-  @apply bg-transparent border-b-2 border-transparent outline-none pb-0.5 transition-colors w-full focus:border-teal-600;
+  @apply bg-transparent border-b-2 border-transparent outline-none transition-colors w-full;
+  @include spacing.apply(padding-bottom, compact);
+  &:focus {
+    border-color: var(--cedar-color-primary);
+  }
 }
 
 /* ─── Fields Drop List ────────────────────────────────────────────────────── */
@@ -340,7 +371,8 @@
 
 /* ─── Insert Zone ─────────────────────────────────────────────────────────── */
 .insert-zone {
-  @apply flex justify-center items-center absolute w-full opacity-0 hover:opacity-100 transition-opacity z-10 cursor-pointer;
+  @apply flex justify-center items-center absolute w-full opacity-0 hover:opacity-100 transition-opacity cursor-pointer;
+  z-index: var(--cedar-layer-sticky);
   // The hover target belongs to the gap, never to the next card's name input.
   height: var(--cedar-space-2);
   top: calc(-1 * var(--cedar-space-2));
@@ -351,7 +383,13 @@
 }
 
 .btn-insert-here {
-  @apply text-white rounded-full px-3 py-1 shadow-md font-medium border-none cursor-pointer;
+  @apply border-none cursor-pointer;
+  color: var(--cedar-color-on-primary);
+  border-radius: var(--cedar-radius-pill);
+  padding-inline: var(--cedar-space-3);
+  padding-block: var(--cedar-space-1);
+  box-shadow: var(--cedar-shadow-overlay);
+  font-weight: var(--cedar-font-weight-medium);
   font-size: var(--cedar-font-size);
 }
 
@@ -386,7 +424,8 @@
 
 /* ─── Add Field Section ───────────────────────────────────────────────────── */
 .add-field-section {
-  @apply mt-6 flex flex-col items-center;
+  @apply flex flex-col items-center;
+  margin-top: var(--cedar-space-6);
 }
 
 .btn-add-field {
@@ -405,7 +444,8 @@
 }
 
 .add-field-section__picker {
-  @apply w-full mt-4;
+  @apply w-full;
+  margin-top: var(--cedar-space-4);
 }
 
 .designer-identity {
@@ -437,7 +477,7 @@
 }
 
 .designer-identity__version {
-  margin-top: calc(var(--cedar-space-1) / 2);
+  @include spacing.apply(margin-top, compact);
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;

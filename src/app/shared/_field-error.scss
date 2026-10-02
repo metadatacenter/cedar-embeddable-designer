@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
 // Shared invalid-control role, with the public host override.
 .ced-field-error {
   --cedar-icon-color: var(--cedar-control-error, var(--cedar-status-error-text));
@@ -16,6 +17,6 @@
   background: var(--cedar-status-warning-surface);
   font-size: var(--cedar-font-size);
   line-height: var(--cedar-control-line-height-authoring);
-  margin: calc(var(--cedar-space-3) / 2) var(--cedar-space-2) 0;
+  @include spacing.apply(margin, field-error);
   padding: var(--cedar-space-1) var(--cedar-space-2);
 }
