@@ -92,13 +92,6 @@
       "value": "#f2cc60",
       "count": 1
     },
-    "6546ce697cda807aca67": {
-      "file": "src/app/features/modals/preferences/preferences.component.html",
-      "rule": "dynamic-style",
-      "property": "color",
-      "value": "uninspectable-binding",
-      "count": 1
-    },
     "665a5f43c5e491bfdb45": {
       "file": "src/app/app.component.dev.ts",
       "rule": "color",

@@ -94,6 +94,12 @@
   border-radius: var(--cedar-radius);
   cursor: pointer;
   text-transform: capitalize;
+  background-color: var(--cedar-surface-subtle);
+  color: var(--cedar-text-primary);
+  &.active {
+    background-color: var(--cedar-color-primary);
+    color: var(--cedar-color-on-primary);
+  }
 }
 .preferences-small-action {
   font-size: var(--cedar-font-size);

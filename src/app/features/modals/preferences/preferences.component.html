@@ -29,12 +29,7 @@
               <button
                 (click)="service.applyPreset(preset)"
                 class="preferences-preset"
-                [style.backgroundColor]="
-                  service.getActivePreset() === preset ? 'var(--cedar-color-primary)' : 'var(--cedar-surface-subtle)'
-                "
-                [style.color]="
-                  service.getActivePreset() === preset ? 'var(--cedar-color-on-primary)' : 'var(--cedar-text-primary)'
-                "
+                [class.active]="service.getActivePreset() === preset"
               >
                 {{ 'preferences.presets.' + preset | translate }}
               </button>

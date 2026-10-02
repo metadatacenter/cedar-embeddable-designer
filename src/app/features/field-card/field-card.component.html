@@ -26,9 +26,7 @@
             [ngModel]="displayName(field)"
             (ngModelChange)="updateDisplayName($event)"
             class="field-name"
-            [style.borderBottomColor]="
-              service.selectedField() === field.id ? 'var(--cedar-color-primary)' : 'var(--cedar-border-rule)'
-            "
+            [class.selected]="service.selectedField() === field.id"
             (focus)="service.selectedField.set(field.id)"
             [placeholder]="'fieldCard.namePlaceholder' | translate"
             [attr.aria-label]="'fieldCard.displayName' | translate"

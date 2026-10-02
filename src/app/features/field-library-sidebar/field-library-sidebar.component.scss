@@ -87,6 +87,7 @@
   transition-duration: var(--cedar-motion-duration-fast);
   border-left-width: 3px;
   border-left-style: solid;
+  border-left-color: transparent;
   cursor: pointer;
 
   &:hover {
@@ -96,6 +97,7 @@
 
   &.active {
     background-color: var(--cedar-surface-subtle);
+    border-left-color: var(--cedar-color-primary);
   }
 }
 
@@ -123,6 +125,10 @@
   height: 0.5rem;
   border-radius: var(--cedar-radius-pill);
   flex-shrink: 0;
+  background-color: var(--cedar-control-border-default);
+  .draggable-field-item.active & {
+    background-color: var(--cedar-color-primary);
+  }
 }
 
 .draggable-handle {
@@ -151,7 +157,9 @@
   transition-duration: var(--cedar-motion-duration-fast);
   user-select: none;
 
-  &:hover {
+  // While it is dragged, the divider keeps the colour it takes under the pointer.
+  &:hover,
+  &.resizing {
     background-color: var(--cedar-border-rule);
   }
 }

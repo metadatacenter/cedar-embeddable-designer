@@ -36,9 +36,6 @@
             (click)="service.selectedField.set(field.id)"
             class="draggable-field-item group"
             [class.active]="service.selectedField() === field.id"
-            [style.borderLeftColor]="
-              service.selectedField() === field.id ? 'var(--cedar-color-primary)' : 'transparent'
-            "
           >
             <span class="draggable-icon">
               <app-icon [key]="getFieldIconKey(field)" size="default"></app-icon>
@@ -46,10 +43,7 @@
             <div class="draggable-name-container">
               <div class="draggable-name">{{ field.name }}</div>
             </div>
-            <div
-              class="draggable-indicator"
-              [style.backgroundColor]="service.selectedField() === field.id ? 'var(--cedar-color-primary)' : '#94A3B8'"
-            ></div>
+            <div class="draggable-indicator"></div>
             <div class="draggable-handle" cdkDragHandle>
               <app-icon key="list" size="small"></app-icon>
             </div>
@@ -58,11 +52,7 @@
       </div>
     </div>
     <!-- Draggable Divider -->
-    <div
-      (mousedown)="onResizeStart($event)"
-      class="resizable-divider"
-      [style.backgroundColor]="isResizing() ? '#d1d5db' : ''"
-    >
+    <div (mousedown)="onResizeStart($event)" class="resizable-divider" [class.resizing]="isResizing()">
       <div class="divider-handle"></div>
     </div>
     <!-- Add Fields Section -->
