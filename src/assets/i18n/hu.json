@@ -588,7 +588,7 @@
     "open": "IRI kézi megadása",
     "searchUnavailable": "A szókészletben való keresés nem érhető el. Az IRI-t kézzel is megadhatja.",
     "required": "Az IRI megadása kötelező.",
-    "invalid": "Kérjük, adjon meg érvényes IRI-t.",
+    "invalid": "Adjon meg egy abszolút IRI-t, például: {{example}}.",
     "duplicate": "Ezt a típust már hozzáadta."
   },
   "propertyPicker": {

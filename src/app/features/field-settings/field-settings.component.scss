@@ -244,6 +244,12 @@ fieldset[aria-invalid='true'] {
 .identity dt.editable {
   align-self: center;
 }
+// A label beside a value that can grow to several lines, such as an IRI and its manual entry, sits on
+// the value's first line rather than beside its middle.
+.identity dt.first-line,
+.identity dt.first-line + dd {
+  align-self: baseline;
+}
 
 // Twice the default 125px control width, bounded by the metadata column.
 .identity input[name='schemaIdentifier'],

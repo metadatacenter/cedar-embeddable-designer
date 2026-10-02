@@ -44,6 +44,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       <app-manual-iri
         [disabled]="disabled()"
         action="manualIri.addProperty"
+        example="https://example.org/property"
         (accepted)="acceptManual($event)"
         (cancelled)="closeManual()"
       />

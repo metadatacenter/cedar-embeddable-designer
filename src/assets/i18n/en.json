@@ -588,7 +588,7 @@
     "open": "Enter IRI manually",
     "searchUnavailable": "Vocabulary search is unavailable. You can enter an IRI manually.",
     "required": "An IRI is required.",
-    "invalid": "Please enter a valid IRI.",
+    "invalid": "Enter an absolute IRI, such as {{example}}.",
     "duplicate": "This type has already been added."
   },
   "propertyPicker": {
