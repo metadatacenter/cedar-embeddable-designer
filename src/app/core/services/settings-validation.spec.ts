@@ -24,6 +24,15 @@ describe('settings validation report', () => {
     service.setSettingsError(id, 'occurrences', null);
     expect(service.validationReport().valid).toBe(true);
   });
+  it("names an issue's field by the display name its card shows, not by its plain name", () => {
+    const id = service.fields()[0].id;
+    service.updateFieldName(id, 'parent_sample_id');
+    service.updateFieldSettings(id, { preferredLabel: 'Parent sample ID' });
+    service.setSettingsError(id, 'defaultValue', 'Default exceeds maximum.');
+    expect(service.validationReport().issues.map((issue) => issue.label)).toEqual(['Parent sample ID']);
+    service.updateFieldSettings(id, { preferredLabel: undefined });
+    expect(service.validationReport().issues.map((issue) => issue.label)).toEqual(['parent_sample_id']);
+  });
   it('aggregates nested errors, expands ancestors and ignores deleted nodes', () => {
     const root = service.session.document().id;
     service.addElement(root);

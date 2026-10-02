@@ -1,6 +1,7 @@
 import { childKeyError } from './child-key-policy';
 import type { CedValidationIssue, CedValidationReport } from '../../ced-public-api';
-import { ContainerDraft, childName, fieldView } from './container-draft';
+import { ChildNode, ContainerDraft, fieldView } from './container-draft';
+import { elementDisplayName, fieldDisplayName } from './field-display-name';
 import type { Field } from '../models/types';
 import {
   deploymentKeys,
@@ -15,6 +16,11 @@ import { Translate, describeError, english } from '../../i18n/messages';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
 
 export type DraftIssues = Readonly<Record<string, { message: string; tab: string }>>;
+
+/** An issue names a child as its card heading does, so a key or plain name never stands in for a display name. */
+function issueLabel(node: ChildNode): string {
+  return node.kind === 'field' ? fieldDisplayName(fieldView(node)) : elementDisplayName(node);
+}
 
 /** Names are required independently of the generated property key used by a draft. */
 export function artifactNameError(
@@ -47,8 +53,10 @@ export function validateDocument(
       message: string,
       tab: string,
       source: 'model' | 'draft',
+      // The model names an artifact by its plain name when it prefixes a message.
+      name = label,
     ) => {
-      const prefix = t('errors.namedField', { name: label.trim() || t('common.anUnnamedField'), message: '' });
+      const prefix = t('errors.namedField', { name: name.trim() || t('common.anUnnamedField'), message: '' });
       issues.push({
         nodeId: id,
         label,
@@ -61,10 +69,10 @@ export function validateDocument(
         source,
       });
     };
-    const pending = (id: number, label: string, nodePath: number[]) => {
+    const pending = (id: number, label: string, nodePath: number[], name = label) => {
       for (const [key, value] of Object.entries(drafts)) {
         if (key.startsWith(`${id}:`))
-          add(id, label, nodePath, key.slice(key.indexOf(':') + 1), value.message, value.tab, 'draft');
+          add(id, label, nodePath, key.slice(key.indexOf(':') + 1), value.message, value.tab, 'draft', name);
       }
     };
     const nameError = artifactNameError(container.name, container.kind, t);
@@ -97,12 +105,13 @@ export function validateDocument(
       if (keyError)
         add(
           node.id,
-          childName(node),
+          issueLabel(node),
           [...path, node.id],
           'key',
           keyError,
           node.kind === 'field' ? SETTINGS_TABS.fieldMetadata : SETTINGS_TABS.elementMetadata,
           'model',
+          node.definition.name,
         );
       if (node.kind === 'element') {
         visit(node.definition, path);
@@ -111,12 +120,13 @@ export function validateDocument(
         } catch (error) {
           add(
             node.id,
-            childName(node),
+            issueLabel(node),
             [...path, node.id],
             'placement',
             describeError(error, t),
             'Occurrences',
             'model',
+            node.definition.name,
           );
         }
         continue;
@@ -125,18 +135,19 @@ export function validateDocument(
       const nodePath = [...path, node.id];
       const nameError = artifactNameError(field.name, 'field', t);
       if (nameError) add(node.id, t('validation.unnamed.field'), nodePath, 'name', nameError, 'Display', 'model');
-      pending(node.id, childName(node), nodePath);
+      pending(node.id, issueLabel(node), nodePath, field.name);
       if (allowsOptions(field.type)) {
         field.options.forEach((option, index) => {
           if (!option.trim())
             add(
               node.id,
-              childName(node),
+              issueLabel(node),
               nodePath,
               `option-${index}`,
               t('validation.optionName', { number: index + 1 }),
               'Constraints',
               'model',
+              field.name,
             );
         });
       }
@@ -149,12 +160,13 @@ export function validateDocument(
         const media = ['image', 'youtube', 'richText'].includes(field.type);
         add(
           node.id,
-          childName(node),
+          issueLabel(node),
           nodePath,
           'settings',
           describeError(error, t),
           media ? 'Content' : 'Constraints',
           'model',
+          field.name,
         );
       }
       if (settingsValid) {
@@ -167,10 +179,19 @@ export function validateDocument(
             fields: [settingsField],
           });
         } catch (error) {
-          add(node.id, childName(node), nodePath, 'occurrences', describeError(error, t), 'Occurrences', 'model');
+          add(
+            node.id,
+            issueLabel(node),
+            nodePath,
+            'occurrences',
+            describeError(error, t),
+            'Occurrences',
+            'model',
+            field.name,
+          );
         }
         const error = choiceDefaultConflict(field, t) ?? defaultValueError(field, field.defaultValue, t);
-        if (error) add(node.id, childName(node), nodePath, 'defaultValue', error, 'Constraints', 'model');
+        if (error) add(node.id, issueLabel(node), nodePath, 'defaultValue', error, 'Constraints', 'model', field.name);
       }
     }
   };
