@@ -45,6 +45,16 @@ import {
 
 export { FIELD_TYPES } from '../models/types';
 
+/** Every container and child whose name the author can see, throughout the document. */
+function namedIds(container: ContainerDraft): number[] {
+  return [
+    container.id,
+    ...container.children.flatMap((node) =>
+      node.kind === 'element' ? [node.id, ...namedIds(node.definition)] : [node.id],
+    ),
+  ];
+}
+
 /**
  * The three fields a new template opens with.
  *
@@ -737,7 +747,10 @@ export class TemplateService {
 
     this.initialInsertionId.set(null);
     this.draftIssues.set({});
-    this.touchedNames.set(new Set());
+    // A name the template arrived with is the author's, not a blank the designer has just
+    // put in front of them, so a missing one is stated at once. Held back like a new
+    // field's, it refused Save with nothing on screen to say why.
+    this.touchedNames.set(new Set(namedIds(state)));
     this.pristineStarterOptions.set(new Set());
     this.nameFocusRequest.set(null);
     this.childPicker.set(null);

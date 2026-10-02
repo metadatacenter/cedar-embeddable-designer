@@ -350,6 +350,28 @@ describe('TemplateService', () => {
       expect(service.fields().map((f) => f.name)).toEqual((written['_ui'] as Record<string, string[]>)['order']);
     });
 
+    it('states at once a name the template arrived without, so a refused Save has a reason on screen', () => {
+      service.addField('text', 0);
+      const written = service.templateJson();
+      const key = (written['_ui'] as { order: string[] }).order[0];
+      (written['properties'] as Record<string, Record<string, unknown>>)[key]['schema:name'] = '';
+
+      service.loadTemplate(written);
+
+      const field = service.fields()[0];
+      expect(service.visibleIssues().some((issue) => issue.nodeId === field.id && issue.setting === 'name')).toBe(true);
+      expect(service.validationReport().canSave).toBe(false);
+    });
+
+    it('keeps the name of a field added after loading quiet until the author touches it', () => {
+      service.loadTemplate(templateToJson(service.template()));
+      service.addField('text', 0);
+      const id = service.selectedField()!;
+      service.updateFieldDisplayName(id, '');
+
+      expect(service.visibleIssues().some((issue) => issue.nodeId === id && issue.setting === 'name')).toBe(false);
+    });
+
     it('reports a file it cannot read instead of silently keeping the old template', () => {
       service.templateName.set('Keep me');
 
