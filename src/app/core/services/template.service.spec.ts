@@ -28,6 +28,31 @@ describe('TemplateService', () => {
     service = TestBed.inject(TemplateService);
   });
 
+  it('names new fields through their display name and rejects clearing that name', () => {
+    service.addField('text', 0);
+    const id = service.selectedField()!;
+    expect(service.updateFieldDisplayName(id, 'Disease')).toBeNull();
+    expect(service.fields().find((field) => field.id === id)?.name).toBe('Disease');
+    expect(service.childKey(id)).toBe('disease');
+    expect(service.validationReport().issues.filter((issue) => issue.nodeId === id)).toEqual([]);
+    service.updateFieldDisplayName(id, '');
+    expect(service.validationReport().issues.some((issue) => issue.nodeId === id && issue.setting === 'name')).toBe(
+      true,
+    );
+    service.updateFieldDisplayName(id, 'Condition');
+    expect(service.childKey(id)).toBe('condition');
+    expect(service.fields().find((field) => field.id === id)?.preferredLabel).toBe('Condition');
+  });
+
+  it('keeps established field names and keys when editing their display name', () => {
+    const field = service.fields()[0];
+    const key = service.childKey(field.id);
+    expect(service.updateFieldDisplayName(field.id, 'Changed display label')).toBeNull();
+    expect(service.fields().find((item) => item.id === field.id)?.name).toBe(field.name);
+    expect(service.childKey(field.id)).toBe(key);
+    expect(service.fields().find((item) => item.id === field.id)?.preferredLabel).toBe('Changed display label');
+  });
+
   it('generates usable unique keys for reserved-prefix display names without looping', () => {
     // Bound a recurrence of the synchronous loop so it fails instead of hanging the test worker.
     const internals = service as unknown as { keyError(id: number, key: string): string | null };
@@ -325,12 +350,67 @@ describe('TemplateService', () => {
       expect(service.fields().map((f) => f.name)).toEqual((written['_ui'] as Record<string, string[]>)['order']);
     });
 
+    it('states at once a name the template arrived without, so a refused Save has a reason on screen', () => {
+      service.addField('text', 0);
+      const written = service.templateJson();
+      const key = (written['_ui'] as { order: string[] }).order[0];
+      (written['properties'] as Record<string, Record<string, unknown>>)[key]['schema:name'] = '';
+
+      service.loadTemplate(written);
+
+      const field = service.fields()[0];
+      expect(service.visibleIssues().some((issue) => issue.nodeId === field.id && issue.setting === 'name')).toBe(true);
+      expect(service.validationReport().canSave).toBe(false);
+    });
+
+    it('keeps the name of a field added after loading quiet until the author touches it', () => {
+      service.loadTemplate(templateToJson(service.template()));
+      service.addField('text', 0);
+      const id = service.selectedField()!;
+      service.updateFieldDisplayName(id, '');
+
+      expect(service.visibleIssues().some((issue) => issue.nodeId === id && issue.setting === 'name')).toBe(false);
+    });
+
     it('reports a file it cannot read instead of silently keeping the old template', () => {
       service.templateName.set('Keep me');
 
       expect(() => service.loadTemplate('this is not a template')).toThrow();
       expect(service.templateName()).toBe('Keep me');
     });
+  });
+});
+
+describe('preview paths', () => {
+  let service: TemplateService;
+
+  beforeEach(() => {
+    localStorage.clear();
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(TemplateService);
+  });
+
+  it('names a field inside an element by the keys the written template holds it under', () => {
+    service.loadTemplate(nestedTemplate);
+    const element = service.children().find((child) => child.kind === 'element')!;
+    const child = element.definition.children[0];
+
+    const path = service.previewPath(child.id)!;
+
+    type Holder = { properties?: Record<string, unknown>; items?: { properties?: Record<string, unknown> } };
+    const holder = (service.templateJson()['properties'] as Record<string, Holder>)[path[0]];
+    expect((holder.items ?? holder).properties?.[path[1]]).toBeDefined();
+    expect(service.previewPath(element.id)).toEqual([path[0]]);
+    expect(service.previewPath(service.session.document().id)).toBeNull();
+  });
+
+  it('starts an element designed on its own with the name the preview holds it under', () => {
+    service.resetTemplate('element');
+    service.templateName.set('Address');
+    service.addField('text', 0);
+    const id = service.selectedField()!;
+
+    expect(service.previewPath(id)).toEqual(['Address', service.childKey(id)]);
   });
 });
 

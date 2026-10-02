@@ -8,7 +8,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { fieldToJson } from '../../core/model/cedar-template';
+import { undescribedFieldToJson } from '../../core/model/cedar-template';
 import { Field, FIELD_TYPES, FieldDefaultValue } from '../../core/models/types';
 import { TemplateService } from '../../core/services/template.service';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -47,7 +47,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       width: 100%;
       height: var(--cedar-control-height, var(--cedar-control-height-default));
       border: 1px solid var(--cedar-control-border, var(--cedar-control-border-default));
-      border-radius: var(--cedar-control-radius, var(--cedar-control-radius-default));
+      border-radius: var(--cedar-control-radius, var(--cedar-radius));
       padding: var(--cedar-space-1) var(--cedar-space-2);
       background: var(--cedar-surface-raised);
       color: var(--cedar-text-muted);
@@ -65,6 +65,8 @@ export class FieldSummaryComponent {
   readonly config = computed(() => ({
     ...this.service.fieldEditorConfig(),
     readOnlyMode: true,
+    // The designer card already owns the field heading.
+    previewMode: true,
     defaultLanguage: this.language(),
     fallbackLanguage: 'en',
   }));
@@ -88,7 +90,8 @@ export class FieldSummaryComponent {
             : field.type === 'checkboxes'
               ? 'multipleChoiceList'
               : field.type;
-        return fieldToJson({ ...field, type });
+        // The card shows the field's control and constraints, not its help text.
+        return undescribedFieldToJson({ ...field, type });
       } catch {
         // Incomplete constraints remain editable; do not feed an invalid draft to CEF.
         return null;

@@ -1,15 +1,16 @@
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
 :host {
   display: block;
 }
 
 .picker-container {
+  border: 1px solid var(--cedar-border-rule);
   container-type: inline-size;
-  background-color: #ffffff;
-  border-radius: 0.5rem;
-  box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  padding: 14px;
+  background-color: var(--cedar-surface-raised);
+  border-radius: var(--cedar-radius);
+  box-shadow: var(--cedar-shadow-overlay);
+  padding: var(--cedar-space-3);
   box-sizing: border-box;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -26,14 +27,14 @@
 .picker-header-left {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--cedar-space-3);
 }
 
 .picker-title {
   margin: 0;
   font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-medium, 500);
-  color: #111827;
+  color: var(--cedar-text-primary);
 }
 
 /* Library Dropdown */
@@ -45,59 +46,60 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.375rem 0.75rem;
+  gap: var(--cedar-space-2);
+  @include spacing.apply(padding, control-row);
   font-size: var(--cedar-font-size);
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  background-color: #ffffff;
+  border: 1px solid var(--cedar-control-border-default);
+  border-radius: var(--cedar-radius);
+  background-color: var(--cedar-surface-raised);
   min-width: 140px;
-  color: #374151;
+  color: var(--cedar-text-primary);
   cursor: pointer;
   transition: border-color var(--cedar-motion-duration-fast);
 
   &:hover {
-    border-color: #9ca3af;
+    border-color: var(--cedar-text-muted);
   }
 }
 
 .dropdown-text {
-  color: #374151;
+  color: var(--cedar-text-primary);
 }
 
 .dropdown-arrow {
   font-size: var(--cedar-font-size);
-  color: #6b7280;
+  color: var(--cedar-text-muted);
 }
 
 .dropdown-panel {
+  @include patterns.menu-text;
   position: absolute;
   top: 100%;
   left: 0;
-  margin-top: 0.25rem;
-  background-color: #ffffff;
-  border-radius: 0.5rem;
-  border: 1px solid #d1d5db;
+  margin-top: var(--cedar-space-1);
+  background-color: var(--cedar-surface-raised);
+  border-radius: var(--cedar-radius);
+  border: 1px solid var(--cedar-control-border-default);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   z-index: 20;
   min-width: 200px;
 }
 
 .dropdown-search-box {
-  padding: 0.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  padding: var(--cedar-space-2);
+  border-bottom: 1px solid var(--cedar-border-rule);
 }
 
 .dropdown-search-input {
   width: 100%;
-  padding: 0.375rem 0.5rem;
+  @include spacing.apply(padding, field-control);
   font-size: var(--cedar-font-size);
-  border: 1px solid #d1d5db;
-  border-radius: 0.25rem;
+  border: 1px solid var(--cedar-control-border-default);
+  border-radius: var(--cedar-radius);
   outline: none;
 
   &:focus {
-    border-color: #9ca3af;
+    border-color: var(--cedar-text-muted);
   }
 }
 
@@ -107,8 +109,9 @@
 }
 
 .dropdown-option {
+  @include patterns.menu-text;
   width: 100%;
-  padding: 0.5rem 0.75rem;
+  padding: var(--cedar-space-2) var(--cedar-space-3);
   text-align: left;
   font-size: var(--cedar-font-size);
   cursor: pointer;
@@ -117,45 +120,42 @@
   transition: background-color var(--cedar-motion-duration-fast);
 
   &:hover {
-    background-color: #f9fafb;
+    background-color: var(--cedar-surface-subtle);
   }
 
   &.active {
-    background-color: #f3f4f6;
-    font-weight: var(--cedar-font-weight-medium, 500);
+    background-color: var(--cedar-surface-subtle);
   }
 }
 
 .dropdown-empty-state {
-  padding: 0.5rem 0.75rem;
-  font-size: var(--cedar-font-size);
-  color: #6b7280;
+  padding: var(--cedar-space-2) var(--cedar-space-3);
 }
 
 /* Close Button */
 .btn-close {
-  color: #9ca3af;
+  color: var(--cedar-text-muted);
   background: transparent;
   border: none;
   cursor: pointer;
 
   &:hover {
-    color: #4b5563;
+    color: var(--cedar-text-muted);
   }
 }
 
 /* Custom Fields Message */
 .custom-fields-empty-msg {
   margin-bottom: var(--cedar-space-2);
-  padding: 1rem;
-  background-color: #f9fafb;
-  border-radius: 0.5rem;
-  border: 1px solid #e5e7eb;
+  padding: var(--cedar-space-4);
+  background-color: var(--cedar-surface-subtle);
+  border-radius: var(--cedar-radius);
+  border: 1px solid var(--cedar-border-rule);
 }
 
 .custom-fields-empty-text {
   font-size: var(--cedar-font-size);
-  color: #4b5563;
+  color: var(--cedar-text-muted);
   text-align: center;
 }
 
@@ -167,34 +167,34 @@
 .fields-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 110px), 1fr));
-  gap: 5px;
+  gap: var(--cedar-space-1);
 }
 
 .btn-field-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: var(--cedar-space-1) 6px;
-  border-radius: 0.5rem;
-  border: 1px solid #e5e7eb;
-  background-color: #ffffff;
+  @include spacing.apply(gap, compact);
+  @include spacing.apply(padding, field-heading);
+  border-radius: var(--cedar-radius);
+  border: 1px solid var(--cedar-border-rule);
+  background-color: var(--cedar-surface-raised);
   cursor: pointer;
   transition: all var(--cedar-motion-duration-fast);
 
   &:hover {
-    background-color: #e8f3f0 !important;
-    border-color: #3b7a5d !important;
+    background-color: var(--cedar-surface-selected) !important;
+    border-color: var(--cedar-color-primary) !important;
   }
 }
 
 .field-item-icon {
-  color: #4b5563;
+  color: var(--cedar-color-primary);
 }
 
 .field-item-label {
   font-size: var(--cedar-font-size);
-  color: #374151;
+  color: var(--cedar-text-primary);
   text-align: center;
   word-break: break-word;
   width: 100%;

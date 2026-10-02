@@ -75,14 +75,14 @@
                 <dt>{{ 'settings.previousVersion' | translate }}</dt>
                 <dd>{{ artifact().previousVersion }}</dd>
               }
-              <dt class="editable">{{ 'settings.propertyIri' | translate }}</dt>
+              <dt class="editable first-line">{{ 'settings.propertyIri' | translate }}</dt>
               <dd>
                 <app-property-picker [iri]="node().placement.propertyIri" (propertySelected)="saveProperty($event)" />
                 @if (error()) {
                   <p role="alert" class="ced-field-error">{{ error() }}</p>
                 }
               </dd>
-              <dt class="editable">{{ 'settings.types' | translate }}</dt>
+              <dt class="editable first-line">{{ 'settings.types' | translate }}</dt>
               <dd><app-types-picker [container]="node().definition" /></dd>
             </dl>
           }
@@ -90,7 +90,7 @@
             <div class="settings-fields display-fields">
               <label
                 >{{ 'settings.displayLabel' | translate }}
-                <input spellcheck="false" [(ngModel)]="draft().displayLabel" (ngModelChange)="apply()"
+                <input spellcheck="false" [ngModel]="displayName()" (ngModelChange)="rename($event)"
               /></label>
               <label
                 >{{ 'settings.displayDescription' | translate }}

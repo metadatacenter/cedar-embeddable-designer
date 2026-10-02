@@ -5,9 +5,9 @@ test('local test1 can search and insert a reusable element in the default Modula
   test.skip(!process.env.CED_LOCAL_REPOSITORY, 'Opt-in: requires demo:serve and the local CEDAR stack.');
   await page.goto('http://localhost:4599/');
   const designer = page.locator('cedar-embeddable-designer');
-  await expect(designer.getByRole('button', { name: 'Modular', exact: true })).toBeVisible();
+  await expect(designer.getByRole('button', { name: 'Add element', exact: true }).first()).toBeVisible();
   await expect(designer.locator('input[type="file"]')).toHaveCount(0);
-  await designer.getByRole('button', { name: 'Import element', exact: true }).click();
+  await designer.getByRole('button', { name: 'Import fields and elements', exact: true }).click();
   await designer.getByRole('searchbox').fill('Study');
   await designer.getByRole('button', { name: 'Search', exact: true }).click();
   await expect(designer.getByRole('table', { name: 'Search results' })).toContainText('No elements found.');
@@ -18,7 +18,7 @@ test('local test1 can search and insert a reusable element in the default Modula
     await expect(designer.getByRole('row', { name: 'Select Principal Investigator', exact: true })).toBeVisible();
   }
   await designer.getByRole('row', { name: 'Select Principal Investigator', exact: true }).click();
-  await expect(designer.getByRole('table', { name: 'Selected children' })).toContainText('Published');
+  await expect(designer.getByRole('table', { name: 'Selected items' })).toContainText('published');
   await designer.getByRole('button', { name: 'Done', exact: true }).click();
   await expect(designer.getByRole('dialog')).toHaveCount(0);
   const child = await page.evaluate(() => {

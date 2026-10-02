@@ -1032,6 +1032,17 @@ export function fieldToJson(field: Field): JsonNode {
   return CedarWriters.json().getStrict().getFieldWriterForField(built).getAsJsonNode(built);
 }
 
+/**
+ * The same artifact with an empty description, for a surface that shows a field's control but not
+ * its help text. The description is cleared on the built field, so a published definition loses it
+ * too. The designer's own state is untouched, because every build is a fresh copy.
+ */
+export function undescribedFieldToJson(field: Field): JsonNode {
+  const built = buildField(field);
+  built.schema_description = '';
+  return CedarWriters.json().getStrict().getFieldWriterForField(built).getAsJsonNode(built);
+}
+
 /** The designer's state, as a CEDAR template. */
 export function buildTemplate(state: DesignerTemplate): Template {
   return buildContainerArtifact(state, 'template') as Template;
@@ -1499,7 +1510,7 @@ function projectContainerFields(template: Template | TemplateElement): DesignerT
       continuePreviousLine: info instanceof AbstractFieldChildDeploymentInfo ? info.continuePreviousLine : false,
       minItems: info.isMultiInAnyWay() ? dynamic.minItems : null,
       maxItems: info.isMultiInAnyWay() ? dynamic.maxItems : null,
-      helpText: field.schema_description ?? '',
+      helpText: descriptionText(field.schema_description),
       content: contentOf(field),
       ...(paletteTypeOf(field) === 'image' || paletteTypeOf(field) === 'youtube'
         ? {
@@ -1515,7 +1526,7 @@ function projectContainerFields(template: Template | TemplateElement): DesignerT
 
   return {
     name: template.schema_name ?? '',
-    description: template.schema_description ?? '',
+    description: descriptionText(template.schema_description),
     identifier: template.at_id?.getValue() ?? '',
     schemaIdentifier: template.schema_identifier,
     version: template.pav_version?.getValue() ?? '',
@@ -1730,4 +1741,9 @@ export function containerPreview(draft: ContainerDraft): Template {
     .withStatus(BiboStatus.DRAFT)
     .addChild(model, model.createDeploymentBuilder(draft.name || 'Element').build())
     .build();
+}
+
+/** Older Workbench versions persisted this untranslated empty-description fallback. */
+function descriptionText(value: string | null | undefined): string {
+  return value === 'VALIDATION.noDescriptionField' ? '' : (value ?? '');
 }

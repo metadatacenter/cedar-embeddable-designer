@@ -1,14 +1,17 @@
-@use '../../shared/control-style';
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
+@use '@org.metadatacenter/cedar-design-tokens/controls';
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
+@use '@org.metadatacenter/cedar-design-tokens/authoring';
 :host {
   display: block;
   font-size: var(--cedar-font-size);
-  color: var(--cedar-text-authoring);
+  color: var(--cedar-text-primary);
 }
 .settings {
   margin-top: var(--cedar-space-1);
   padding: var(--cedar-space-1) var(--cedar-space-2);
-  background: var(--cedar-surface-authoring);
-  border-radius: 3px;
+  background: var(--cedar-surface-subtle);
+  border-radius: var(--cedar-radius);
 }
 .details-placeholder {
   margin: 0;
@@ -24,9 +27,8 @@
 label {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  font-size: var(--cedar-font-size);
-  font-weight: var(--cedar-font-weight-regular, 400);
+  @include spacing.apply(gap, compact);
+  @include authoring.label-text;
   /*
    * Shrinkable, or a wide control overflows the card that holds it.
    *
@@ -44,30 +46,34 @@ select,
 textarea {
   min-width: 0;
   width: 125px;
-  padding: 3px 5px;
-  background: white;
+  padding: var(--cedar-space-1) var(--cedar-space-1);
+  background: var(--cedar-surface-raised);
   border: 1px solid var(--cedar-control-border-default);
-  border-radius: 2px;
+  border-radius: var(--cedar-radius);
   font: inherit;
+  font-weight: var(--cedar-font-weight-regular, 400);
 }
 button {
-  padding: 3px var(--cedar-space-2);
+  padding: var(--cedar-space-1) var(--cedar-space-2);
   color: var(--cedar-color-primary);
   border: 1px solid var(--cedar-border-rule);
-  border-radius: 2px;
-  background: white;
+  border-radius: var(--cedar-radius);
+  background: var(--cedar-surface-raised);
   cursor: pointer;
 }
 p[role='alert'] {
-  margin: 5px 0 0;
-  color: var(--cedar-control-error, var(--cedar-color-error));
+  margin: var(--cedar-space-1) 0 0;
+  --cedar-icon-color: var(--cedar-control-error, var(--cedar-status-error-text));
+  color: var(--cedar-control-error, var(--cedar-status-error-text));
   font-size: var(--cedar-font-size);
   line-height: 1.3;
 }
 
+/* A checkbox's label names an option, so it takes an option's regular text rather than a label's weight. */
 .check {
   flex-direction: row;
   align-items: center;
+  @include controls.choice-text;
 }
 .check input {
   width: auto;
@@ -78,60 +84,16 @@ p[role='alert'] {
   max-width: 100%;
 }
 
-/* Carries the annotation table's overflow instead of letting it leave the card. */
-.annotations-scroll {
-  margin-top: var(--cedar-space-2);
-  overflow-x: auto;
-}
-
-.annotations {
-  width: 100%;
-  /* Fills the row where there is room, and scrolls inside its container where there is not. */
-  min-width: 20rem;
-  border-collapse: collapse;
-  font-size: var(--cedar-font-size);
-  text-align: left;
-  caption {
-    text-align: left;
-    color: var(--cedar-text-muted);
-    font-style: italic;
-    padding-bottom: 3px;
-  }
-  th {
-    background: var(--cedar-surface-panel);
-    color: var(--cedar-text-muted);
-    font-weight: var(--cedar-font-weight-medium, 500);
-  }
-  th,
-  td {
-    padding: var(--cedar-space-1) 6px;
-    border-bottom: 1px solid var(--cedar-border-rule-light);
-  }
-  tbody tr {
-    background: white;
-  }
-  tbody tr:nth-child(even) {
-    background: var(--cedar-surface-panel);
-  }
-  input {
-    width: 100%;
-    box-sizing: border-box;
-  }
-  select {
-    width: 65px;
-  }
-}
-
 .identity {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
-  gap: 3px var(--cedar-space-3);
+  gap: var(--cedar-space-1) var(--cedar-space-3);
   margin: 0;
   font-size: var(--cedar-font-size);
 }
 .identity dt {
   color: var(--cedar-text-muted);
-  font-style: italic;
+  font-style: normal;
 }
 .identity dd {
   margin: 0;
@@ -142,28 +104,16 @@ p[role='alert'] {
   display: none !important;
 }
 .tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  margin-top: 0.375rem;
-  border-bottom: 1px solid var(--cedar-border-rule);
+  @include patterns.tabs;
+  margin-top: var(--cedar-space-1);
 }
 .tabs button {
-  background: transparent;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
-  color: var(--cedar-text-muted);
-  padding: 0.4rem 0.6rem;
-}
-.tabs button[aria-selected='true'] {
-  color: var(--cedar-color-primary);
-  border-bottom-color: var(--cedar-color-primary);
-  font-weight: var(--cedar-font-weight-medium, 500);
+  @include patterns.tab;
 }
 .tabs button.has-errors {
-  color: var(--cedar-control-error, var(--cedar-color-error));
-  border-bottom-color: var(--cedar-control-error, var(--cedar-color-error));
+  --cedar-icon-color: var(--cedar-control-error, var(--cedar-status-error-text));
+  color: var(--cedar-control-error, var(--cedar-status-error-text));
+  border-bottom-color: var(--cedar-control-error, var(--cedar-status-error-text));
 }
 button:focus-visible {
   outline: 2px solid var(--cedar-color-primary);
@@ -212,15 +162,12 @@ button:focus-visible {
 .settings-fields > .row:last-child {
   display: flex;
 }
-.settings-fields .annotations-scroll {
-  grid-column: 1 / -1;
-}
 .settings-fields input:not([type='checkbox']),
 .settings-fields select,
 .settings-fields textarea {
   width: 100%;
   box-sizing: border-box;
-  @include control-style.compact-control;
+  @include authoring.compact-control;
 }
 .settings-fields .check {
   align-self: end;
@@ -241,20 +188,20 @@ button:focus-visible {
   align-items: center;
   container-type: inline-size;
 }
-.text-constraint-fields {
+.constraint-fields {
   grid-template-columns: minmax(120px, 1fr) minmax(120px, 1fr) minmax(0, 7fr);
   align-items: end;
   container-type: inline-size;
 }
 @container (max-width: 400px) {
-  .text-constraint-fields > label {
+  .constraint-fields > label {
     grid-column: 1 / -1;
   }
 }
 .display-flags {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  @include spacing.apply(gap, compact);
 }
 .display-flags .check {
   align-self: start;
@@ -266,7 +213,7 @@ button:focus-visible {
 .preferred-label input {
   width: 100%;
   box-sizing: border-box;
-  @include control-style.compact-control;
+  @include authoring.compact-control;
 }
 @container (max-width: 480px) {
   .display-fields > label,
@@ -277,9 +224,8 @@ button:focus-visible {
 
 .default-label {
   display: block;
-  font-size: var(--cedar-font-size);
-  font-weight: var(--cedar-font-weight-regular, 400);
-  margin-bottom: 2px;
+  @include authoring.label-text;
+  @include spacing.apply(margin-bottom, compact);
 }
 
 .numeric-constraint-fields {
@@ -291,12 +237,18 @@ button:focus-visible {
 }
 
 fieldset[aria-invalid='true'] {
-  border-left: 2px solid var(--cedar-control-error, var(--cedar-color-error));
-  padding-left: 6px;
+  border-left: 2px solid var(--cedar-control-error, var(--cedar-status-error-text));
+  @include spacing.apply(padding-left, control-inset);
 }
 
 .identity dt.editable {
   align-self: center;
+}
+// A label beside a value that can grow to several lines, such as an IRI and its manual entry, sits on
+// the value's first line rather than beside its middle.
+.identity dt.first-line,
+.identity dt.first-line + dd {
+  align-self: baseline;
 }
 
 // Twice the default 125px control width, bounded by the metadata column.
@@ -304,4 +256,8 @@ fieldset[aria-invalid='true'] {
 .identity input[name='deploymentName'] {
   width: 250px;
   max-width: 100%;
+}
+
+.identity dt {
+  font-weight: var(--cedar-font-weight-medium, 500);
 }

@@ -1,5 +1,5 @@
-@use '../../shared/table-style';
-@use '../../shared/control-style';
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
+@use '@org.metadatacenter/cedar-design-tokens/authoring';
 :host {
   display: block;
   min-width: 0;
@@ -22,13 +22,11 @@ table {
 }
 caption {
   text-align: left;
-  font-weight: var(--cedar-font-weight-medium, 500);
-  padding: var(--cedar-space-1) 0;
+  @include authoring.label-text;
 }
 .add-row label,
 th {
-  font-size: var(--cedar-font-size);
-  font-weight: var(--cedar-font-weight-medium, 500);
+  @include authoring.label-text;
 }
 th {
   text-align: left;
@@ -42,26 +40,26 @@ th:nth-child(2) {
   white-space: nowrap;
 }
 th:nth-child(4) {
-  width: calc(var(--cedar-control-height-default) + 2 * var(--cedar-table-cell-padding-inline-authoring));
+  width: calc(var(--cedar-control-height-default) + 2 * var(--cedar-space-2));
 }
 th,
 td {
-  padding: var(--cedar-table-cell-padding-block-authoring) var(--cedar-table-cell-padding-inline-authoring);
+  @include spacing.apply(padding, compact-row);
   vertical-align: top;
 }
 input,
 select {
-  @include control-style.compact-control;
+  @include authoring.compact-control;
   width: 100%;
   box-sizing: border-box;
 }
 button {
   font: inherit;
   color: var(--cedar-color-primary);
-  background: white;
-  border: 1px solid var(--cedar-primary-100);
-  border-radius: 3px;
-  padding: var(--cedar-space-1) 6px;
+  background: var(--cedar-surface-raised);
+  border: 1px solid var(--cedar-border-rule);
+  border-radius: var(--cedar-radius);
+  padding: var(--cedar-space-1) var(--cedar-space-2);
   cursor: pointer;
 }
 button:disabled {
@@ -71,15 +69,12 @@ button:disabled {
 .add-row {
   display: grid;
   grid-template-columns: minmax(100px, 1fr) calc(12 * var(--cedar-space-2)) minmax(100px, 2fr) auto;
-  gap: var(--cedar-space-2);
   align-items: end;
-  margin-bottom: var(--cedar-space-2);
 }
 .add-row label {
-  font-weight: var(--cedar-font-weight-regular);
+  font-weight: var(--cedar-font-weight-medium, 500);
   display: flex;
   flex-direction: column;
-  gap: var(--cedar-form-label-gap);
   min-width: 0;
 }
 .add-row button {
@@ -102,10 +97,11 @@ button:disabled {
   }
 }
 .empty {
-  color: #64748b;
+  color: var(--cedar-text-muted);
 }
 p[role='alert'] {
-  color: var(--cedar-control-error, var(--cedar-color-error));
+  --cedar-icon-color: var(--cedar-control-error, var(--cedar-status-error-text));
+  color: var(--cedar-control-error, var(--cedar-status-error-text));
   margin: var(--cedar-space-1) 0 0;
 }
 .sr-only {
@@ -122,10 +118,10 @@ p[role='alert'] {
   justify-content: center;
   width: 24px;
   height: 24px;
-  padding: 2px;
+  @include spacing.apply(padding, compact);
   border: 0;
   background: transparent;
-  color: black;
+  color: var(--cedar-color-primary);
 }
 
 td {
@@ -136,4 +132,4 @@ td {
   white-space: pre-wrap;
 }
 
-@include table-style.compact-table;
+@include authoring.compact-table;

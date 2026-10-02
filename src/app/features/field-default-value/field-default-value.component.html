@@ -28,18 +28,31 @@
   @if (error()) {
     <p role="alert" class="ced-field-error">{{ error() }}</p>
   }
-} @else if (available()) {
+} @else if (available() || allowsControlledTerms()) {
   <div class="default-value-row">
-    @if (!allowsControlledTerms() || field().controlledTermConstraints?.constraints?.length) {
+    @if (allowsControlledTerms()) {
+      @if (field().controlledTermConstraints?.constraints?.length) {
+        <input
+          class="default-value-control controlled-default"
+          spellcheck="false"
+          type="text"
+          readonly
+          [attr.aria-label]="'defaultValue.label' | translate"
+          [value]="controlledDefaultLabel()"
+        />
+      } @else {
+        <p role="status" class="constraint-first default-help">
+          {{ 'defaultValue.constraintFirst' | translate }}
+        </p>
+      }
+    } @else {
       <div class="default-value-control" #mount (focusin)="service.selectedField.set(field().id)"></div>
     }
     @if (allowsControlledTerms()) {
       <div class="default-value-actions">
-        @if (!field().controlledTermConstraints?.constraints?.length) {
-          <p role="status" class="text-sm text-gray-500">{{ 'defaultValue.constraintFirst' | translate }}</p>
-        } @else if (!pickerAvailable() || !terminologyBaseUrl()) {
-          <p role="status" class="text-sm text-gray-500">{{ 'defaultValue.pickerUnavailable' | translate }}</p>
-        } @else {
+        @if (field().controlledTermConstraints?.constraints?.length && (!pickerAvailable() || !terminologyBaseUrl())) {
+          <p role="status" class="default-help">{{ 'defaultValue.pickerUnavailable' | translate }}</p>
+        } @else if (field().controlledTermConstraints?.constraints?.length) {
           <button
             type="button"
             class="ced-text-action"
@@ -95,11 +108,11 @@
     }
   </div>
   @if (checking() && !pickerOpen()) {
-    <p role="status" class="text-sm text-gray-500">{{ 'defaultValue.checkingTerm' | translate }}</p>
+    <p role="status" class="default-help">{{ 'defaultValue.checkingTerm' | translate }}</p>
   }
   @if (error() && !pickerOpen() && !editorReportsError()) {
     <p role="alert" class="ced-field-error">{{ error() }}</p>
   }
 } @else {
-  <p role="status" class="text-sm text-gray-500">{{ 'defaultValue.editorUnavailable' | translate }}</p>
+  <p role="status" class="default-help">{{ 'defaultValue.editorUnavailable' | translate }}</p>
 }

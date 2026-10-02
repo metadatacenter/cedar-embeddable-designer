@@ -31,6 +31,10 @@ async function openField(page: Page, type: string, extra: Partial<Field> = {}, q
       ],
     }),
   );
+  // Exercise the preferred-label fallback without the builder's default deployment label.
+  if (extra.preferredLabel && extra.displayLabel === undefined) {
+    delete (template as { _ui: { propertyLabels: Record<string, string> } })._ui.propertyLabels.Value;
+  }
   await page.evaluate((template) => {
     (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
   }, template);
@@ -78,8 +82,8 @@ for (const [type, text, stored] of [
 test('real CEE preview honors deployment display overrides over field metadata', async ({ page }) => {
   await openField(page, 'shortText', { preferredLabel: 'Semantic label', helpText: 'Artifact description' });
   const section = await openSettings(page.locator('app-field-card').first(), 'Display');
-  await section.getByLabel('Display label', { exact: true }).fill('Deployment heading');
-  await section.getByLabel('Display description', { exact: true }).fill('Deployment help');
+  await section.getByLabel('Name', { exact: true }).fill('Deployment heading');
+  await section.getByLabel('Description', { exact: true }).fill('Deployment help');
   const preview = await openPreview(page);
   await expect(preview.locator('.title-label')).toContainText('Deployment heading');
   await expect(preview.locator('.cee-field-spec-description')).toHaveText('Deployment help');
@@ -175,6 +179,34 @@ for (const [type, iri] of authorities) {
   });
 }
 
+test('choosing an allowed term leaves the default visibly empty and absent from the saved schema', async ({ page }) => {
+  const control = await openField(page, 'controlledTerms', {}, '?picker=stub');
+  const notice = control.getByRole('status');
+  await expect(notice).toContainText('Choose a vocabulary constraint before setting a default');
+  const controlBox = (await control.boundingBox())!;
+  const noticeBox = (await notice.boundingBox())!;
+  expect(noticeBox.x).toBeCloseTo(controlBox.x, 0);
+  await page.getByRole('button', { name: 'Edit controlled-term constraints' }).click();
+  await page.locator('#stub-pick').click();
+  await expect.poll(async () => (await constraints(page))['classes']).toHaveLength(1);
+  const summary = page.locator('app-controlled-term-config');
+  await expect(summary.locator('.cee-spec-box')).toContainText('cancer');
+  await expect(summary.locator('app-cedar-component-header')).toHaveCount(0);
+  await expect(control.getByRole('textbox', { name: 'Default value', exact: true })).toHaveValue('');
+  expect((await constraints(page))['defaultValue']).toBeUndefined();
+  await test.info().attach('constraint-without-default', {
+    body: await page.locator('app-field-card').first().screenshot(),
+    contentType: 'image/png',
+  });
+  const saved = await currentTemplate(page);
+  await page.evaluate((template) => {
+    (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = template;
+  }, saved);
+  await openSettings(page.locator('app-field-card').first());
+  await expect(control.getByRole('textbox', { name: 'Default value', exact: true })).toHaveValue('');
+  expect((await constraints(page))['defaultValue']).toBeUndefined();
+});
+
 test('controlled default uses the term picker and verifies field membership', async ({ page }) => {
   let checked = false;
   await page.route('**/fake-terminology/bioportal/integrated-search', async (route) => {
@@ -195,6 +227,9 @@ test('controlled default uses the term picker and verifies field membership', as
     '?picker=stub',
   );
   const chooser = control.getByRole('button', { name: 'Edit default term' });
+  const defaultInput = control.getByRole('textbox', { name: 'Default value', exact: true });
+  await expect(defaultInput).toHaveValue('');
+  expect((await constraints(page))['defaultValue']).toBeUndefined();
   const constraintEdit = page.getByRole('button', { name: 'Edit controlled-term constraints' });
   for (const property of ['fontSize', 'fontWeight', 'color', 'lineHeight', 'textUnderlineOffset'] as const) {
     const expected = await constraintEdit.evaluate((node, key) => getComputedStyle(node)[key], property);
@@ -218,6 +253,7 @@ test('controlled default uses the term picker and verifies field membership', as
     .poll(async () => (await constraints(page))['defaultValue'])
     .toEqual({ termUri: 'http://purl.obolibrary.org/obo/DOID_162', 'rdfs:label': 'cancer' });
   await expect(page.locator('app-field-summary .cee-spec-box')).toContainText(/default.*cancer/i);
+  await expect(defaultInput).toHaveValue('cancer');
   expect(checked).toBe(true);
   await page.setViewportSize({ width: 375, height: 900 });
   const narrowValue = (await control.locator('.default-value-control').boundingBox())!;
@@ -227,6 +263,7 @@ test('controlled default uses the term picker and verifies field membership', as
 
   await control.getByRole('button', { name: 'Clear default' }).click();
   await expect.poll(async () => (await constraints(page))['defaultValue']).toBeUndefined();
+  await expect(defaultInput).toHaveValue('');
 });
 
 test('the real picker selects a default within the field vocabulary', async ({ page }) => {
@@ -395,6 +432,49 @@ test('previews an element document through CEE while publishing element artifact
   expect((await currentTemplate(page))['@type']).toBe('https://schema.metadatacenter.org/core/TemplateElement');
 });
 
+test('the CEE preview follows the selected field onto the page that holds it', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
+  await page.waitForFunction(() => !!customElements.get('cedar-embeddable-editor'));
+  const template = newContainer('template', 'Paged study');
+  for (const [name, type] of [
+    ['First question', 'text'],
+    ['Break', 'pageBreak'],
+    ['Second question', 'text'],
+  ]) {
+    template.children.push(
+      fieldNode({
+        id: newNodeId(),
+        name,
+        type,
+        status: 'optional',
+        allowMultiple: false,
+        options: [],
+        defaultValue: { kind: 'none' },
+      }),
+    );
+  }
+  await page.evaluate(
+    (artifact) => {
+      const host = document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object };
+      host.artifact = artifact;
+    },
+    templateToJson(buildContainer(template)),
+  );
+  const preview = await openPreview(page);
+  const first = preview.locator('.title-label').filter({ hasText: 'First question' });
+  await expect(first).toBeVisible();
+  const cards = designer.locator('.field-drag-container');
+
+  await cards.nth(2).locator('.field-type-icon').click();
+
+  const second = preview.locator('.title-label').filter({ hasText: 'Second question' });
+  await expect(second).toBeInViewport();
+  await expect(first).toHaveCount(0);
+  // The author is still working in the designer.
+  await expect(cards.nth(2)).toBeFocused();
+});
+
 for (const type of ['number', 'date']) {
   test(`${type} default aligns with its neighboring settings controls`, async ({ page }) => {
     const control = await openField(
@@ -431,7 +511,8 @@ test('Display controls use the standard CEE scale', async ({ page }) => {
   await openField(page, 'number');
   const panel = await openSettings(page.locator('app-field-card').first(), 'Display');
   for (const input of await panel.locator('input:not([type="checkbox"])').all()) {
-    await expect(input).toHaveCSS('height', '36px');
+    const authoringRow = await input.evaluate((el) => !!el.closest('app-alternate-questions'));
+    await expect(input).toHaveCSS('height', authoringRow ? '32px' : '36px');
     // Authoring and CEE use the same readable body scale.
     await expect(input).toHaveCSS('font-size', '14px');
   }
@@ -445,7 +526,7 @@ for (const host of ['CED', 'CEFD']) {
       await page.goto('/field-host.html');
       await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
       await page.getByRole('button', { name: 'Temporal', exact: true }).click();
-      await page.getByRole('textbox', { name: 'Field name', exact: true }).fill('Date field');
+      await page.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Date field');
       await openSettings(page.locator('app-field-card'), 'Constraints');
     }
     const native = page.getByRole('combobox', { name: 'Temporal type', exact: true });
@@ -564,7 +645,7 @@ for (const type of ['checkboxes', 'multipleChoice', 'singleChoiceList', 'multipl
           const style = (host as HTMLElement).style;
           style.setProperty('--cedar-control-font-size', '16px');
           style.setProperty('--cedar-control-line-height', '28px');
-          style.setProperty('--cedar-choice-row-height', '36px');
+          style.setProperty('--cedar-row-height-compact', '36px');
         });
       }
       for (const property of ['font-family', 'font-size', 'font-weight', 'line-height', 'letter-spacing', 'color']) {
@@ -626,4 +707,67 @@ test('reducing date precision trims the default and updates the editor without a
   await expect.poll(async () => (await constraints(page))['defaultValue']).toBe('2021');
   await expect(control.getByRole('alert')).toHaveCount(0);
   await expect(page.getByText('The default must match the selected precision.')).toHaveCount(0);
+});
+
+for (const [type, value] of [
+  ['shortText', 'trial'],
+  ['paragraph', 'trial'],
+  ['number', '12'],
+] as const) {
+  test(`${type} editable preview clears quietly without changing the draft`, async ({ page }) => {
+    await openField(page, type);
+    const original = await currentTemplate(page);
+    const preview = await openPreview(page);
+    await preview.getByRole('combobox', { name: 'Preview mode' }).selectOption('editable');
+    const input = preview
+      .locator('cedar-embeddable-editor')
+      .getByRole(type === 'number' ? 'spinbutton' : 'textbox', { name: 'Value', exact: true });
+    await input.fill(value);
+    await input.fill('');
+    await input.blur();
+    await expect(input.locator('xpath=ancestor::mat-form-field')).not.toHaveClass(/mat-form-field-invalid/);
+    await expect(preview.locator('mat-error')).toHaveCount(0);
+    expect(await currentTemplate(page)).toEqual(original);
+  });
+}
+
+test('inline summaries omit headings and help text while full previews retain both', async ({ page }) => {
+  await openField(page, 'shortText', { preferredLabel: 'Lab ID', helpText: 'An external laboratory identifier.' });
+  const summary = page.locator('app-field-summary');
+  await expect(summary.locator('.cee-spec-box')).toBeVisible();
+  await expect(summary.locator('app-cedar-component-header')).toHaveCount(0);
+  await expect(summary).not.toContainText('An external laboratory identifier.');
+  const preview = await openPreview(page);
+  await expect(preview.locator('app-cedar-component-header').filter({ hasText: 'Lab ID' })).toBeVisible();
+  await expect(preview.locator('.cee-field-spec-description')).toHaveText('An external laboratory identifier.');
+});
+
+for (const [labels, wanted] of [
+  [{ preferredLabel: 'Lab ID' }, 'Lab ID'],
+  [{ preferredLabel: 'Lab ID', displayLabel: 'Laboratory identifier' }, 'Laboratory identifier'],
+  [{}, 'Value'],
+] as const) {
+  test(`Overview uses the effective field label: ${wanted}`, async ({ page }) => {
+    await openField(page, 'shortText', labels);
+    await expect(page.locator('app-container-outline .node-name')).toHaveText(wanted);
+    await expect(
+      page.locator('app-container-outline').getByRole('button', { name: `Reorder ${wanted}`, exact: true }),
+    ).toBeVisible();
+    expect((await currentTemplate(page)).properties).toHaveProperty('Value');
+    await expect(page.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue(wanted);
+  });
+}
+
+test('editing a display name updates Overview without renaming the field key', async ({ page }) => {
+  await openField(page, 'shortText', { preferredLabel: 'Lab ID', displayLabel: 'Value' });
+  const heading = page.getByRole('textbox', { name: 'Field display name', exact: true });
+  await expect(heading).toHaveValue('Lab ID');
+  await expect(page.locator('app-container-outline .node-name')).toHaveText('Lab ID');
+  await heading.fill('Laboratory identifier');
+  await heading.blur();
+  await expect(page.locator('app-container-outline .node-name')).toHaveText('Laboratory identifier');
+  const template = await currentTemplate(page);
+  expect(template.properties).toHaveProperty('Value');
+  expect(child(template, 'Value')['schema:name']).toBe('Value');
+  expect(child(template, 'Value')['skos:prefLabel']).toBe('Laboratory identifier');
 });

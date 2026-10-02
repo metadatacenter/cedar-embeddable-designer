@@ -1,6 +1,7 @@
+import { fieldDisplayName } from '../../core/model/field-display-name';
 import { Component, input, inject } from '@angular/core';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
-import { ContainerDraft, ChildNode, childName } from '../../core/model/container-draft';
+import { ContainerDraft, ChildNode, childName, fieldView } from '../../core/model/container-draft';
 import { TemplateService } from '../../core/services/template.service';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -19,7 +20,7 @@ import { TranslatePipe } from '@ngx-translate/core';
           <button type="button" class="select-node" (click)="select(node)">
             <app-icon [key]="node.kind === 'field' ? node.definition.type : 'folder'" className="w-4 h-4" />
             <span class="node-name">{{
-              childName(node) ||
+              displayName(node) ||
                 ((node.kind === 'field' ? 'validation.unnamed.field' : 'validation.unnamed.element') | translate)
             }}</span>
             @if (service.visibleIssuesFor(node.id).length; as count) {
@@ -41,7 +42,7 @@ import { TranslatePipe } from '@ngx-translate/core';
               [attr.aria-expanded]="!service.collapsedElements().has(node.id)"
               [attr.aria-label]="
                 (service.collapsedElements().has(node.id) ? 'common.expandNamed' : 'common.collapseNamed')
-                  | translate: { name: childName(node) }
+                  | translate: { name: displayName(node) }
               "
               [title]="(service.collapsedElements().has(node.id) ? 'outline.expand' : 'outline.collapse') | translate"
               (click)="service.toggleElement(node.id)"
@@ -58,7 +59,7 @@ import { TranslatePipe } from '@ngx-translate/core';
             class="outline-drag-handle"
             cdkDragHandle
             [disabled]="locked(node)"
-            [attr.aria-label]="'outline.reorder' | translate: { name: childName(node) }"
+            [attr.aria-label]="'outline.reorder' | translate: { name: displayName(node) }"
             [title]="'outline.reorderHint' | translate"
             (keydown)="moveWithKeyboard($event, node)"
           >
@@ -71,120 +72,14 @@ import { TranslatePipe } from '@ngx-translate/core';
       </li>
     }
   </ul>`,
-  styles: [
-    `
-      :host {
-        display: block;
-        min-width: 0;
-      }
-      :host([hidden]) {
-        display: none;
-      }
-      .outline-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex: none;
-        width: var(--cedar-icon-size-small);
-        height: var(--cedar-icon-size-large);
-        padding: 0;
-        color: var(--cedar-text-muted);
-      }
-      ul {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-      }
-      li {
-        min-width: 0;
-        background: var(--cedar-surface-raised);
-      }
-      .outline-row {
-        display: flex;
-        align-items: center;
-        gap: var(--cedar-space-1);
-        padding: 0 var(--cedar-space-2);
-      }
-      .outline-row.invalid {
-        box-shadow: inset calc(var(--cedar-space-1) * 0.75) 0 var(--cedar-status-error-text);
-      }
-      .validation-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--cedar-space-1);
-        color: var(--cedar-status-error-text);
-        font-size: var(--cedar-font-size);
-      }
-      .outline-row:hover {
-        background: var(--cedar-surface-row-hover);
-      }
-      .outline-row.active {
-        background: var(--cedar-surface-selected);
-      }
-      button {
-        border: 0;
-        background: transparent;
-        font: inherit;
-        cursor: pointer;
-      }
-      .select-node {
-        display: flex;
-        flex: 0 1 auto;
-        align-items: center;
-        gap: var(--cedar-space-2);
-        min-width: 0;
-        padding: calc(var(--cedar-space-1) / 2) 0;
-        color: var(--cedar-text-authoring);
-        text-align: left;
-        font-size: var(--cedar-font-size);
-      }
-      .select-node app-icon {
-        flex: none;
-        color: var(--cedar-text-muted);
-      }
-      .node-name {
-        min-width: 0;
-        overflow-wrap: anywhere;
-      }
-      .outline-drag-handle {
-        margin-left: auto;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex: none;
-        width: var(--cedar-icon-size-large);
-        height: var(--cedar-icon-size-large);
-        padding: 0;
-        color: var(--cedar-text-muted);
-        cursor: grab;
-      }
-      .outline-drag-handle:disabled {
-        opacity: var(--cedar-control-disabled-opacity);
-        cursor: default;
-      }
-      app-container-outline {
-        margin-left: var(--cedar-space-3);
-      }
-      .cdk-drag-placeholder {
-        opacity: 0.25;
-      }
-      .cdk-drag-preview {
-        box-sizing: border-box;
-        background: var(--cedar-surface-raised);
-        box-shadow: var(--cedar-menu-shadow);
-        list-style: none;
-      }
-      button:focus-visible {
-        outline: 2px solid var(--cedar-color-primary);
-        outline-offset: 1px;
-      }
-    `,
-  ],
+  styleUrl: './container-outline.component.scss',
 })
 export class ContainerOutlineComponent {
   readonly container = input.required<ContainerDraft>();
   readonly service = inject(TemplateService);
-  readonly childName = childName;
+  displayName(node: ChildNode): string {
+    return node.kind === 'field' ? fieldDisplayName(fieldView(node)) : (node.placement.displayLabel ?? childName(node));
+  }
   locked(node: ChildNode): boolean {
     return node.kind === 'field' && !!node.definition.publishedDefinition;
   }

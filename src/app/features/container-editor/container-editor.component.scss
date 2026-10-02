@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
 @use '../../shared/dialog-style';
 :host {
   --element-child-inset: var(--cedar-space-3);
@@ -8,25 +9,25 @@
   position: relative;
   scroll-margin-top: var(--cedar-space-4);
   border: 1px solid var(--cedar-border-rule);
-  border-radius: var(--cedar-control-radius-default);
+  border-radius: var(--cedar-radius);
   overflow: hidden;
 }
 .template-header-card::before {
   content: '';
   display: block;
   height: var(--cedar-space-1);
-  background: linear-gradient(90deg, var(--cedar-color-primary), var(--cedar-surface-tinted));
+  background: linear-gradient(90deg, var(--cedar-color-primary), var(--cedar-surface-selected));
 }
 .template-header-card__body {
   padding-bottom: var(--cedar-space-1);
 }
 .container-path,
 .container-path button {
-  padding: 0.4rem 0.6rem;
+  padding: var(--cedar-space-1) var(--cedar-space-2);
   color: var(--cedar-color-primary);
-  border: 1px solid var(--cedar-primary-100);
-  border-radius: 0.3rem;
-  background: white;
+  border: 1px solid var(--cedar-border-rule);
+  border-radius: var(--cedar-radius);
+  background: var(--cedar-surface-raised);
 }
 .container-path button[aria-current] {
   font-weight: var(--cedar-font-weight-medium, 500);
@@ -38,14 +39,14 @@
 }
 
 .element-child-move {
-  padding: 6px var(--cedar-space-4);
+  @include spacing.apply(padding, element-header);
 }
 
 .template-header-row {
   align-items: flex-start;
 }
 .publication-status {
-  color: #64748b;
+  color: var(--cedar-text-muted);
   font-size: var(--cedar-font-size);
   line-height: 18px;
   text-align: right;
@@ -59,8 +60,8 @@
   display: flex;
   width: var(--cedar-control-height-default);
   height: var(--cedar-control-height-default);
-  border-radius: var(--cedar-control-radius-default);
-  background: var(--cedar-surface-tinted);
+  border-radius: var(--cedar-radius);
+  background: var(--cedar-surface-selected);
   color: var(--cedar-color-primary);
 }
 .template-header-card__inputs {
@@ -88,7 +89,7 @@
   margin-bottom: 0;
   font-weight: var(--cedar-font-weight-medium);
   text-transform: none;
-  line-height: var(--cedar-form-help-line-height);
+  line-height: var(--cedar-control-line-height-authoring);
 }
 .template-input {
   width: auto;
@@ -101,7 +102,7 @@
 }
 .template-header-row > .template-field-group.flex-1 .template-input {
   font-size: var(--cedar-font-size);
-  color: var(--cedar-color-artifact-title);
+  color: var(--cedar-text-title);
   line-height: var(--cedar-control-line-height-default);
 }
 .template-description {
@@ -110,7 +111,7 @@
 }
 .publication-status {
   color: var(--cedar-text-muted);
-  line-height: var(--cedar-form-help-line-height);
+  line-height: var(--cedar-control-line-height-authoring);
 }
 
 @container (min-width: 680px) {
@@ -142,10 +143,10 @@
   padding: 0 var(--element-child-inset);
 }
 .nested-header {
-  margin-inline: calc(var(--element-child-inset) / 2);
+  @include spacing.apply(margin-inline, nested-heading-alignment);
 }
 .nested-header .template-header-card__body {
-  padding-right: calc(var(--cedar-space-3) + var(--cedar-space-6));
+  @include spacing.apply(padding-right, element-toggle-reserve);
 }
 .element-toggle {
   position: absolute;
@@ -160,7 +161,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #64748b;
+  color: var(--cedar-text-muted);
   cursor: pointer;
 }
 .container-content > app-element-card {
@@ -169,11 +170,11 @@
 }
 @container (max-width: 400px) {
   .nested-content {
-    --element-child-inset: calc(var(--cedar-space-3) / 2);
-    padding-bottom: calc(var(--cedar-space-3) / 2);
+    @include spacing.apply(--element-child-inset, control-inset);
+    @include spacing.apply(padding-bottom, control-inset);
   }
   .nested-header {
-    --element-child-inset: calc(var(--cedar-space-3) / 2);
+    @include spacing.apply(--element-child-inset, control-inset);
   }
 }
 
@@ -209,18 +210,23 @@
 }
 
 .field-drag-container.invalid {
-  outline: 2px solid var(--cedar-control-error, var(--cedar-color-error));
+  outline: 2px solid var(--cedar-control-error, var(--cedar-status-error-text));
   outline-offset: 1px;
 }
 .validation-badge {
-  color: var(--cedar-control-error, var(--cedar-color-error));
+  --cedar-icon-color: var(--cedar-control-error, var(--cedar-status-error-text));
+  color: var(--cedar-control-error, var(--cedar-status-error-text));
   font-size: var(--cedar-font-size);
   padding: var(--cedar-space-1) var(--cedar-space-3);
   display: block;
 }
 
-.template-field-group.text-right .template-input {
+.version-group {
+  text-align: right;
+}
+.version-group .template-input {
   align-self: flex-end;
+  text-align: right;
 }
 
 textarea.template-input {
@@ -278,6 +284,9 @@ textarea.template-input {
   overflow-wrap: anywhere;
 
   h2 {
+    display: flex;
+    align-items: center;
+    gap: var(--cedar-space-2);
     @include dialog-style.heading;
   }
   p {
@@ -292,4 +301,20 @@ textarea.template-input {
   .primary {
     @include dialog-style.primary;
   }
+}
+
+/* The template's own name, identifier, version and description, each in its shared text role. */
+.template-input--name {
+  font-weight: var(--cedar-font-weight-medium);
+  color: var(--cedar-text-title);
+}
+.template-input--fact {
+  font-weight: var(--cedar-font-weight-medium);
+  color: var(--cedar-text-primary);
+}
+.template-input--description {
+  color: var(--cedar-text-muted);
+}
+.inline-picker {
+  margin-block: var(--cedar-space-3);
 }

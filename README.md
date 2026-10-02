@@ -138,6 +138,21 @@ is not in place yet.
 `npm run build:app` compiles `src/main.dev.ts` and the host page around it, which
 is what `npm start` serves.
 
+## Authoring Style Ownership
+
+Native authoring controls and compact tables import the design-token package's
+`authoring` Sass module directly. `src/authoring.scss` is the selector adapter for
+both designer elements: it chooses where central density, select-arrow and entry-row
+recipes apply. Keep shared geometry and typography in the central recipes, not in
+copies under `src/app/shared` or corrective declarations in `src/styles.css`.
+Component styles still own their layout and content-specific widths.
+
+The surface registry verifies annotation labels, control typography and table-cell
+density against central contracts at desktop and narrow widths. The field-type and
+label-weight browser suites cover the broader authoring matrix. Preserve their
+rendered expectations when consolidating styles; do not update visual baselines to
+accept an unintended change.
+
 ## The Sibling Components It Works With
 
 The designer uses sibling web components the embedding page loads,
@@ -327,8 +342,12 @@ events alone are therefore not a save-readiness check.
 Listen for `validationChange` to update the wrapper's Save button and error list.
 Its detail is the same report: `{ valid, canSave, issues }`. Each issue includes a
 session `nodeId`, an ancestor-ID `path`, a display `label`, `setting`, settings `tab`,
-stable category `code`, user-facing `message`, `severity: 'error'`, and `source`
-(`model` or `draft`). Do not parse messages or persist session IDs across documents.
+stable category `code`, user-facing `message`, `severity: 'error'`, `source`
+(`model` or `draft`), and `shown`. An issue that is not `shown` still blocks saving,
+but CED's error summary holds it back until the author reaches it: a name nobody has
+touched yet, or a new choice field's blank starter option. A host that explains a
+disabled Save by pointing at errors should count only the shown ones. Do not parse
+messages or persist session IDs across documents.
 Validation checks the settings CED supports; it does not replace server validation,
 permission checks, or save/publish lifecycle rules.
 
@@ -445,3 +464,24 @@ CED as described in the frontend runbook. Before pushing a consumer that needs
 new exports, publish a new token snapshot, update both pins and verify a clean
 `npm ci` build. The real-CEF integration workflow must also pin a CEE revision
 that supports the adopted control profile.
+
+### Styling ownership and remaining debt
+
+Central `authoring` recipes own labels, controls, tables, settings-dialog structure
+and density. Central `patterns` recipes own dialog surfaces; property, type and
+default-term pickers share the same corners, border and shadow. `src/authoring.scss`
+selects these surfaces without implementing another set of values.
+
+Local rules are appropriate for card composition, nested-element indentation,
+sidebar resizing, drag handles, picker bounds and responsive placement. Syntax
+highlighting owns a content palette, and the demo host deliberately uses different
+styles to test embedding. Those are not reasons to duplicate control typography,
+theme colors, focus rings or dialog geometry.
+
+The adoption baseline still contains migration debt: residual utility styles,
+compact toolbar/chip measurements, picker styling and global type rules. It is not
+a list of approved exceptions. Keep resolved entries pruned, document any necessary
+local rule at its owner, and retain desktop/narrow-width, host-override and real-CEF
+checks. An approved exception covers only its reviewed occurrences; additional
+copies are new drift. Do not substitute an unrelated token merely because its
+current numeric value happens to match.

@@ -11,6 +11,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { CedLanguageService } from '../../i18n/ced-language.service';
 import { SETTINGS_TABS, settingsTabKey } from '../../shared/settings-tabs';
 import { ElementNode, ElementPlacement } from '../../core/model/container-draft';
+import { elementDisplayName } from '../../core/model/field-display-name';
 import { containerArtifactMetadata } from '../../core/model/cedar-template';
 import { TemplateService } from '../../core/services/template.service';
 
@@ -114,6 +115,12 @@ export class ElementCardComponent {
       }),
     );
     this.service.setSettingsError(this.node().id, 'key', this.keyDraftError(), SETTINGS_TABS.elementMetadata);
+  }
+  /** The same name the element's header shows, edited through the same update. */
+  readonly displayName = computed(() => elementDisplayName(this.node()));
+  rename(value: string): void {
+    this.error.set(this.service.updateElementDisplayName(this.node(), value));
+    this.service.setSettingsError(this.node().id, 'placement', this.error(), this.activeTab);
   }
   apply(): void {
     const invalid = Array.from(this.host.nativeElement.querySelectorAll('input')).find(

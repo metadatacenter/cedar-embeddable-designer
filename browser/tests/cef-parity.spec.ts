@@ -164,3 +164,11 @@ test.describe('a default control inside a field card', () => {
     });
   }
 });
+
+test('Designer summaries leave the field type to the card heading', async ({ page }) => {
+  await designerWithCef(page, 'controlledTerms');
+  const summary = page.locator('app-field-summary').first();
+  // The card heading names the type with its icon and badge, so the summary does not repeat it.
+  await expect(summary.locator('cedar-embeddable-field .child-component-content')).toBeVisible();
+  await expect(summary.locator('.cee-field-type')).toHaveCount(0);
+});

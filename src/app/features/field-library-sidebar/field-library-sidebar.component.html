@@ -14,7 +14,7 @@
       <!-- Field List Header -->
       <div class="sidebar-header">
         <div class="sidebar-header-left">
-          <app-icon key="list" size="small" className="text-gray-600"></app-icon>
+          <app-icon key="list" size="small"></app-icon>
           <h3 class="sidebar-title">{{ 'sidebar.fields' | translate: { count: service.children().length } }}</h3>
         </div>
         <button
@@ -22,7 +22,7 @@
           class="btn-collapse"
           [title]="'sidebar.collapse' | translate"
         >
-          <span class="text-xs">◀</span>
+          <app-icon key="chevron-left" size="small" />
         </button>
       </div>
       <!-- Field List - Drag & Drop Scrollable -->
@@ -36,9 +36,6 @@
             (click)="service.selectedField.set(field.id)"
             class="draggable-field-item group"
             [class.active]="service.selectedField() === field.id"
-            [style.borderLeftColor]="
-              service.selectedField() === field.id ? 'var(--cedar-color-primary)' : 'transparent'
-            "
           >
             <span class="draggable-icon">
               <app-icon [key]="getFieldIconKey(field)" size="default"></app-icon>
@@ -46,10 +43,7 @@
             <div class="draggable-name-container">
               <div class="draggable-name">{{ field.name }}</div>
             </div>
-            <div
-              class="draggable-indicator"
-              [style.backgroundColor]="service.selectedField() === field.id ? 'var(--cedar-color-primary)' : '#94A3B8'"
-            ></div>
+            <div class="draggable-indicator"></div>
             <div class="draggable-handle" cdkDragHandle>
               <app-icon key="list" size="small"></app-icon>
             </div>
@@ -58,11 +52,7 @@
       </div>
     </div>
     <!-- Draggable Divider -->
-    <div
-      (mousedown)="onResizeStart($event)"
-      class="resizable-divider"
-      [style.backgroundColor]="isResizing() ? '#d1d5db' : ''"
-    >
+    <div (mousedown)="onResizeStart($event)" class="resizable-divider" [class.resizing]="isResizing()">
       <div class="divider-handle"></div>
     </div>
     <!-- Add Fields Section -->
@@ -133,7 +123,7 @@
       <!-- Expand Button -->
       <div class="collapsed-header">
         <button (click)="service.sidebarCollapsed.set(false)" class="btn-expand" [title]="'sidebar.expand' | translate">
-          <span class="text-xs">▶</span>
+          <app-icon key="chevron-right" size="small" />
         </button>
       </div>
       <!-- Collapsed Icons -->
@@ -141,7 +131,7 @@
         <!-- Field count indicator -->
         <div class="collapsed-indicator">
           <div class="relative">
-            <app-icon key="list" size="default" className="text-gray-600"></app-icon>
+            <app-icon key="list" size="default"></app-icon>
             @if (service.children().length > 0) {
               <div class="badge-count-indicator" [style.backgroundColor]="'var(--cedar-color-primary)'">
                 {{ service.children().length }}
@@ -156,7 +146,7 @@
         <!-- Library indicators -->
         @for (library of service.libraries(); track library; let last = $last) {
           <div class="collapsed-indicator" [class.no-border]="last">
-            <app-icon key="library" size="default" className="text-gray-600"></app-icon>
+            <app-icon key="library" size="default"></app-icon>
           </div>
         }
       </div>

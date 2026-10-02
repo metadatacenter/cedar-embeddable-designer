@@ -6,3 +6,6 @@
 # says to copy the files; this is what makes that instruction survive a `npm run
 # format`.
 src/app/core/model/fixtures/corpus/
+
+# Byte-checked copies of the central surface validator.
+**/surface-contracts.generated.*

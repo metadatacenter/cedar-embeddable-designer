@@ -50,25 +50,25 @@ function languageOptions(locale: string, english: boolean): readonly { code: str
     }
   `,
   styles: `
-    @use '../../shared/control-style';
+    @use '@org.metadatacenter/cedar-design-tokens/authoring';
     :host {
       display: block;
-      margin-top: 8px;
+      margin-top: var(--cedar-space-2);
     }
     label {
+      @include authoring.label-text;
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      font-size: var(--cedar-font-size);
+      gap: var(--cedar-space-1);
     }
     select {
-      @include control-style.compact-control;
+      @include authoring.compact-control;
       width: 100%;
       max-width: 320px;
     }
     p {
-      color: #b42318;
-      margin: 4px 0;
+      color: var(--cedar-status-error-text);
+      margin: var(--cedar-space-1) 0;
     }
   `,
 })

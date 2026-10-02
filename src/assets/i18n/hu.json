@@ -21,7 +21,8 @@
       "other": "{{count}} hiba"
     },
     "anUnnamedField": "egy névtelen mező",
-    "quoted": "„{{value}}”"
+    "quoted": "„{{value}}”",
+    "close": "Bezárás"
   },
   "app": {
     "overview": {
@@ -144,21 +145,22 @@
     "children": {
       "title": "Mezők és elemek importálása",
       "selectHint": "Válasszon mezőket és elemeket az alábbi találatok közül.",
-      "searchLabel": "Mezők és elemek keresése",
+      "searchLabel": "Mezők vagy elemek keresése",
       "none": "Nem található mező vagy elem.",
       "prompt": "Indítson keresést az újrafelhasználható mezők és elemek megtalálásához."
     },
-    "selectedHeading": "Kiválasztott gyermekelemek ({{count}})",
+    "selectedHeading": "Kiválasztott elemek ({{count}})",
     "adding": "Hozzáadás…",
-    "selectedTable": "Kiválasztott gyermekelemek",
+    "selectedTable": "Kiválasztott elemek",
     "columns": {
       "name": "Név",
       "type": "Típus",
       "created": "Létrehozva",
-      "modified": "Módosítva",
+      "modified": "Utoljára módosítva",
       "version": "Verzió",
       "status": "Állapot",
-      "remove": "Eltávolítás"
+      "remove": "Eltávolítás",
+      "reorder": "Átrendezés"
     },
     "kind": {
       "field": "Mező",
@@ -175,7 +177,8 @@
     "loadMore": "Továbbiak betöltése",
     "searchFailed": "A keresés nem sikerült. Kérjük, próbálja újra.",
     "loadFailed": "A kijelölést nem sikerült betölteni. Kérjük, próbálja újra.",
-    "documentChanged": "A dokumentum megváltozott. Nyissa meg újra a választót az új dokumentumban."
+    "documentChanged": "A dokumentum megváltozott. Nyissa meg újra a választót az új dokumentumban.",
+    "reorderRow": "{{name}} átrendezése"
   },
   "containerEditor": {
     "dragElement": "Húzza az elemet az átrendezéshez",
@@ -330,6 +333,7 @@
     "elementMissing": "Az elem már nem létezik."
   },
   "fieldCard": {
+    "displayName": "Mező megjelenítési neve",
     "published": "Közzétett mező – csak olvasható. Vázlatverzió szerkesztése még nem érhető el.",
     "namePlaceholder": "Adja meg a mező nevét",
     "name": "Mező neve",
@@ -423,8 +427,8 @@
       "max": "Legfeljebb"
     },
     "display": {
-      "labelPlaceholder": "A mező megjelenített neve",
-      "descriptionPlaceholder": "A mező súgója",
+      "labelPlaceholder": "Mező neve",
+      "descriptionPlaceholder": "Mező leírása",
       "hidden": "Rejtett",
       "continueLine": "Folytatás az előző sorban",
       "helpText": "Súgószöveg",
@@ -574,10 +578,8 @@
     "addFieldHere": "Mező hozzáadása ide",
     "addElement": "Elem hozzáadása",
     "addElementHere": "Elem hozzáadása ide",
-    "importField": "Mező importálása",
-    "importFieldHere": "Mező importálása ide",
-    "importElement": "Elem importálása",
-    "importElementHere": "Elem importálása ide"
+    "import": "Mezők és elemek importálása",
+    "importHere": "Mezők és elemek importálása ide"
   },
   "manualIri": {
     "label": "IRI",
@@ -586,7 +588,7 @@
     "open": "IRI kézi megadása",
     "searchUnavailable": "A szókészletben való keresés nem érhető el. Az IRI-t kézzel is megadhatja.",
     "required": "Az IRI megadása kötelező.",
-    "invalid": "Kérjük, adjon meg érvényes IRI-t.",
+    "invalid": "Adjon meg egy abszolút IRI-t, például: {{example}}.",
     "duplicate": "Ezt a típust már hozzáadta."
   },
   "propertyPicker": {
@@ -674,8 +676,8 @@
     "previousVersion": "Előző verzió",
     "propertyIri": "Tulajdonság IRI",
     "types": "Típusok",
-    "displayLabel": "Megjelenített címke",
-    "displayDescription": "Megjelenített leírás",
+    "displayLabel": "Név",
+    "displayDescription": "Leírás",
     "allowMultiple": "Több érték engedélyezése",
     "minOccurrences": "Előfordulások minimális száma",
     "minOccurrencesPlaceholder": "Alapértelmezett (0)",

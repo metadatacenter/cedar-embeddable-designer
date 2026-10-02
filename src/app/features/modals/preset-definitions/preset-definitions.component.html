@@ -1,110 +1,105 @@
 @if (service.showPresetDefinitionsModal()) {
   <!-- Backdrop -->
-  <div class="cedar-modal-backdrop fixed inset-0 z-50 animate-backdrop-fade-in" (click)="close()"></div>
+  <div class="cedar-modal-backdrop settings-dialog-backdrop animate-backdrop-fade-in" (click)="close()"></div>
   <!-- Modal -->
   <div
-    class="cedar-modal-surface fixed z-50 w-full max-h-[85vh] overflow-hidden animate-modal-fade-in"
+    class="cedar-modal-surface settings-dialog-panel animate-modal-fade-in"
     style="left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: 800px"
   >
     <!-- Header -->
-    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
-      <div class="flex items-center gap-3">
-        <div
-          class="w-10 h-10 rounded-full flex items-center justify-center"
-          [style.backgroundColor]="'var(--cedar-primary-50)'"
-        >
+    <div class="settings-dialog-header">
+      <div class="settings-dialog-heading">
+        <div class="settings-dialog-badge">
           <app-icon key="settings" [style.color]="'var(--cedar-color-primary)'" size="default"></app-icon>
         </div>
-        <h2 class="text-lg font-medium text-gray-900">{{ 'app.userMenu.definePresets' | translate }}</h2>
+        <h2 class="preset-title">{{ 'app.userMenu.definePresets' | translate }}</h2>
       </div>
-      <button (click)="close()" class="text-gray-400 hover:text-gray-600 transition-colors p-1">
+      <button (click)="close()" class="settings-dialog-close">
         <app-icon key="close" size="default"></app-icon>
       </button>
     </div>
     <!-- Content -->
     <div class="overflow-y-auto custom-scrollbar" style="max-height: calc(85vh - 130px)">
-      <div class="p-6">
-        <p class="text-sm text-gray-600 mb-6">
+      <div class="settings-dialog-body">
+        <p class="settings-dialog-intro">
           {{ 'presetDefinitions.intro' | translate }}
         </p>
-        <div class="space-y-6">
+        <div class="settings-dialog-stack">
           <!-- Field configuration options Section -->
-          <div class="bg-gray-50 rounded-lg p-4">
-            <p class="text-xs font-medium text-gray-600 mb-4">{{ 'preferences.fieldOptions.heading' | translate }}</p>
-            <table class="w-full text-left">
+          <div class="settings-dialog-group">
+            <p class="settings-dialog-group-title">{{ 'preferences.fieldOptions.heading' | translate }}</p>
+            <table class="preset-table">
               <thead>
                 <tr>
-                  <th class="pb-3 pr-4"></th>
+                  <th class="preset-row-label"></th>
                   @for (preset of presets; track preset) {
-                    <th class="text-center pb-3 px-3">
-                      <span class="text-sm font-medium text-gray-900 capitalize">{{
-                        'preferences.presets.' + preset | translate
-                      }}</span>
+                    <th class="preset-column">
+                      <span class="preset-column-label">{{ 'preferences.presets.' + preset | translate }}</span>
                     </th>
                   }
                 </tr>
               </thead>
               <tbody>
-                <tr class="border-t border-gray-200">
-                  <td class="py-3 pr-4 text-sm text-gray-900">
+                <tr class="preset-row">
+                  <td class="preset-row-label">
                     {{ 'preferences.fieldOptions.required.label' | translate }}
                   </td>
                   @for (preset of presets; track preset) {
-                    <td class="py-3 px-3 text-center">
+                    <td class="preset-column">
                       <input
                         spellcheck="false"
                         type="checkbox"
                         [ngModel]="service.presetDefinitions()[preset].showRequired"
                         (ngModelChange)="updateDef(preset, 'showRequired', $event)"
-                        class="w-4 h-4 checkbox-white cursor-pointer"
+                        class="settings-dialog-check checkbox-white"
                       />
                     </td>
                   }
                 </tr>
-                <tr class="border-t border-gray-200">
-                  <td class="py-3 pr-4 text-sm text-gray-900">
+                <tr class="preset-row">
+                  <td class="preset-row-label">
                     {{ 'preferences.fieldOptions.allowMultiple.label' | translate }}
                   </td>
                   @for (preset of presets; track preset) {
-                    <td class="py-3 px-3 text-center">
+                    <td class="preset-column">
                       <input
                         spellcheck="false"
                         type="checkbox"
                         [ngModel]="service.presetDefinitions()[preset].showAllowMultiple"
                         (ngModelChange)="updateDef(preset, 'showAllowMultiple', $event)"
-                        class="w-4 h-4 checkbox-white cursor-pointer"
+                        class="settings-dialog-check checkbox-white"
                       />
                     </td>
                   }
                 </tr>
-                <tr class="border-t border-gray-200">
-                  <td class="py-3 pr-4 text-sm text-gray-900">
+                <tr class="preset-row">
+                  <td class="preset-row-label">
                     {{ 'preferences.fieldOptions.helpText.label' | translate }}
                   </td>
                   @for (preset of presets; track preset) {
-                    <td class="py-3 px-3 text-center">
+                    <td class="preset-column">
                       <input
                         spellcheck="false"
                         type="checkbox"
                         [ngModel]="service.presetDefinitions()[preset].showHelpText"
                         (ngModelChange)="updateDef(preset, 'showHelpText', $event)"
-                        class="w-4 h-4 checkbox-white cursor-pointer"
+                        class="settings-dialog-check checkbox-white"
                       />
                     </td>
                   }
                 </tr>
-                <tr class="border-t border-gray-200">
-                  <td class="py-3 pr-4 text-sm text-gray-900">
+                <tr class="preset-row">
+                  <td class="preset-row-label">
                     {{ 'preferences.fieldOptions.defaultValue.label' | translate }}
                   </td>
                   @for (preset of presets; track preset) {
-                    <td class="py-3 px-3 text-center">
+                    <td class="preset-column">
                       <input
                         spellcheck="false"
                         type="checkbox"
                         [ngModel]="service.presetDefinitions()[preset].showDefaultValue"
                         (ngModelChange)="updateDef(preset, 'showDefaultValue', $event)"
-                        class="w-4 h-4 checkbox-white cursor-pointer"
+                        class="settings-dialog-check checkbox-white"
                       />
                     </td>
                   }
@@ -113,34 +108,32 @@
             </table>
           </div>
           <!-- Feature visibility Section -->
-          <div class="bg-gray-50 rounded-lg p-4">
-            <p class="text-xs font-medium text-gray-600 mb-4">{{ 'preferences.features.heading' | translate }}</p>
-            <table class="w-full text-left">
+          <div class="settings-dialog-group">
+            <p class="settings-dialog-group-title">{{ 'preferences.features.heading' | translate }}</p>
+            <table class="preset-table">
               <thead>
                 <tr>
-                  <th class="pb-3 pr-4"></th>
+                  <th class="preset-row-label"></th>
                   @for (preset of presets; track preset) {
-                    <th class="text-center pb-3 px-3">
-                      <span class="text-sm font-medium text-gray-900 capitalize">{{
-                        'preferences.presets.' + preset | translate
-                      }}</span>
+                    <th class="preset-column">
+                      <span class="preset-column-label">{{ 'preferences.presets.' + preset | translate }}</span>
                     </th>
                   }
                 </tr>
               </thead>
               <tbody>
-                <tr class="border-t border-gray-200">
-                  <td class="py-3 pr-4 text-sm text-gray-900">
+                <tr class="preset-row">
+                  <td class="preset-row-label">
                     {{ 'preferences.features.elements.label' | translate }}
                   </td>
                   @for (preset of presets; track preset) {
-                    <td class="py-3 px-3 text-center">
+                    <td class="preset-column">
                       <input
                         spellcheck="false"
                         type="checkbox"
                         [ngModel]="service.presetDefinitions()[preset].showElements"
                         (ngModelChange)="updateDef(preset, 'showElements', $event)"
-                        class="w-4 h-4 checkbox-white cursor-pointer"
+                        class="settings-dialog-check checkbox-white"
                       />
                     </td>
                   }
@@ -149,38 +142,36 @@
             </table>
           </div>
           <!-- Available field types Section -->
-          <div class="bg-gray-50 rounded-lg p-4">
-            <p class="text-xs font-medium text-gray-600 mb-4">{{ 'presetDefinitions.fieldTypes' | translate }}</p>
-            <table class="w-full text-left">
+          <div class="settings-dialog-group">
+            <p class="settings-dialog-group-title">{{ 'presetDefinitions.fieldTypes' | translate }}</p>
+            <table class="preset-table">
               <thead>
                 <tr>
-                  <th class="pb-3 pr-4"></th>
+                  <th class="preset-row-label"></th>
                   @for (preset of presets; track preset) {
-                    <th class="text-center pb-3 px-3">
-                      <span class="text-sm font-medium text-gray-900 capitalize">{{
-                        'preferences.presets.' + preset | translate
-                      }}</span>
+                    <th class="preset-column">
+                      <span class="preset-column-label">{{ 'preferences.presets.' + preset | translate }}</span>
                     </th>
                   }
                 </tr>
               </thead>
               <tbody>
                 @for (item of fieldTypesList; track item) {
-                  <tr class="border-t border-gray-200">
-                    <td class="py-3 pr-4">
-                      <div class="flex items-center gap-2 text-gray-600">
+                  <tr class="preset-row">
+                    <td class="preset-row-label">
+                      <div class="preset-field-label">
                         <app-icon [key]="item.key" size="default"></app-icon>
-                        <span class="text-sm text-gray-900">{{ item.value.labelKey | translate }}</span>
+                        <span class="preset-field-text">{{ item.value.labelKey | translate }}</span>
                       </div>
                     </td>
                     @for (preset of presets; track preset) {
-                      <td class="py-3 px-3 text-center">
+                      <td class="preset-column">
                         <input
                           spellcheck="false"
                           type="checkbox"
                           [checked]="!service.presetDefinitions()[preset].hiddenFieldTypes.includes(item.key)"
                           (change)="toggleFieldType(preset, item.key)"
-                          class="w-4 h-4 checkbox-white cursor-pointer"
+                          class="settings-dialog-check checkbox-white"
                         />
                       </td>
                     }
@@ -193,12 +184,8 @@
       </div>
     </div>
     <!-- Footer -->
-    <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3 bg-white z-10">
-      <button
-        (click)="close()"
-        class="px-4 py-2 text-sm font-medium text-white rounded-lg transition-all shadow hover:shadow-md cursor-pointer"
-        [style.backgroundColor]="'var(--cedar-color-primary)'"
-      >
+    <div class="settings-dialog-footer">
+      <button (click)="close()" class="settings-dialog-done">
         {{ 'common.done' | translate }}
       </button>
     </div>

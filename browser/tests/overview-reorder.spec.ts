@@ -13,7 +13,9 @@ for (const nested of [false, true]) {
       await nestFixtureFields(page, ['element'], 2);
       await designer.locator('.overview-panel').getByRole('button', { name: 'Element', exact: true }).click();
       editor = designer.locator('app-container-editor').last();
-      await expect(editor.locator('app-field-card input[aria-label="Field name"]').first()).toHaveValue('Title');
+      await expect(editor.locator('app-field-card input[aria-label="Field display name"]').first()).toHaveValue(
+        'Title',
+      );
       await expect(editor.locator('app-field-card')).toHaveCount(2);
     }
     const outline = designer.locator('app-container-outline').last();
@@ -22,7 +24,7 @@ for (const nested of [false, true]) {
     const last = rows.last();
     const before = await currentTemplate(page);
     const names = await editor
-      .locator('app-field-card input[aria-label="Field name"]')
+      .locator('app-field-card input[aria-label="Field display name"]')
       .evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value));
     const alignment = await rows.first().evaluate((el) => {
       const icon = el.querySelector('.select-node app-icon')!.getBoundingClientRect();
@@ -42,7 +44,7 @@ for (const nested of [false, true]) {
     expect(await currentTemplate(page)).toEqual(before);
     expect(
       await editor
-        .locator('app-field-card input[aria-label="Field name"]')
+        .locator('app-field-card input[aria-label="Field display name"]')
         .evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value)),
     ).toEqual(names);
     await page.mouse.up();
@@ -55,7 +57,7 @@ for (const nested of [false, true]) {
     await expect
       .poll(async () =>
         editor
-          .locator('app-field-card input[aria-label="Field name"]')
+          .locator('app-field-card input[aria-label="Field display name"]')
           .evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value)),
       )
       .toEqual(expected);

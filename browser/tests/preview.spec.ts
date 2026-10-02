@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openDesigner, openPreview, templateName } from './support';
+import { currentTemplate, fieldOrder, openDesigner, openPreview, templateName } from './support';
 
 /**
  * The preview, which renders the template with CEE rather than with an
@@ -117,4 +117,40 @@ test('switches between one read-only and one editable preview without changing t
   await expect.poll(async () => (await mounts(page)).at(-1)?.config.readOnlyMode).toBe(true);
   await expect(panel.locator('cedar-embeddable-editor')).toHaveCount(1);
   expect(await page.evaluate(() => (window as unknown as { __ceeConfigs: number }).__ceeConfigs)).toBe(3);
+});
+
+interface Reveal {
+  location: { path: string[] };
+  options: { focus?: boolean };
+  template: string;
+}
+
+const reveals = (page: import('@playwright/test').Page): Promise<Reveal[]> =>
+  page.evaluate(() => (window as unknown as { __ceeReveals: Reveal[] }).__ceeReveals);
+
+test('scrolls the preview to the field the designer selects, leaving focus in the designer', async ({ page }) => {
+  const designer = await openDesigner(page, '?cee=stub');
+  await openPreview(page);
+  await expect.poll(async () => (await mounts(page)).length).toBeGreaterThan(0);
+  const keys = fieldOrder(await currentTemplate(page));
+  const cards = designer.locator('.field-drag-container');
+
+  await cards.nth(1).locator('.field-type-icon').click();
+
+  await expect.poll(async () => (await reveals(page)).at(-1)?.location).toEqual({ path: [keys[1]] });
+  expect((await reveals(page)).at(-1)?.options).toEqual({ focus: false });
+  await expect(cards.nth(1)).toBeFocused();
+});
+
+test('scrolls the preview to a selected field again once an edit reaches it', async ({ page }) => {
+  const designer = await openDesigner(page, '?cee=stub');
+  await openPreview(page);
+  await expect.poll(async () => (await mounts(page)).length).toBeGreaterThan(0);
+  await designer.locator('.field-drag-container').nth(1).locator('.field-type-icon').click();
+  await expect.poll(async () => (await reveals(page)).length).toBeGreaterThan(0);
+
+  await templateName(page).fill('Renamed');
+
+  // The rebuilt form is the one the selected field has to be found in.
+  await expect.poll(async () => (await reveals(page)).at(-1)?.template).toBe('Renamed');
 });

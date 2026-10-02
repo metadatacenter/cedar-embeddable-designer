@@ -33,6 +33,7 @@ import {
   templateToJson,
   templateToYaml,
   toDesignerTemplate,
+  undescribedFieldToJson,
 } from './cedar-template';
 
 /** A field with the identity the designer mints when the author adds one. */
@@ -868,6 +869,20 @@ it('retains published field status version and provenance through JSON and YAML'
   }
 });
 
+it('writes a field without its description for a summary, published or not', () => {
+  const authored = field({ helpText: 'Explain this field' });
+  const source = JSON.parse(JSON.stringify(templateToJson(buildTemplate(templateOf(authored)))));
+  const child = source.properties[Object.keys(source.properties).find((key) => source.properties[key]['schema:name'])!];
+  child['bibo:status'] = 'bibo:published';
+  const published = toDesignerTemplate(readTemplate(source)).fields[0];
+  expect(published.publishedDefinition).toBeTruthy();
+  for (const subject of [authored, published]) {
+    expect(readField(JSON.stringify(undescribedFieldToJson(subject))).helpText).toBe('');
+    // Clearing the summary's copy leaves the field itself described.
+    expect(readField(JSON.stringify(fieldToJson(subject))).helpText).toBe('Explain this field');
+  }
+});
+
 describe('complete controlled-term constraints', () => {
   it('preserves every mixed entry, identity, parameter, pin and action through JSON and YAML', () => {
     const initial = templateToJson(
@@ -1148,3 +1163,20 @@ it.each(['type', 'properties', 'required', 'name', 'true', 'null', 'yes'])(
     }
   },
 );
+
+it('loads the legacy empty-description marker as an empty editable description', () => {
+  const source = templateOf(field({ helpText: 'VALIDATION.noDescriptionField' }));
+  source.description = 'VALIDATION.noDescriptionField';
+  const loaded = toDesignerTemplate(readTemplate(json(source)));
+  expect(loaded.description).toBe('');
+  expect(loaded.fields[0].helpText).toBe('');
+  expect(json(loaded)['schema:description'] ?? '').toBe('');
+});
+
+it('preserves genuine description text when loading older artifacts', () => {
+  const source = templateOf(field({ helpText: 'A helpful description' }));
+  source.description = 'Explanation mentioning VALIDATION.noDescriptionField';
+  const loaded = toDesignerTemplate(readTemplate(json(source)));
+  expect(loaded.description).toBe(source.description);
+  expect(loaded.fields[0].helpText).toBe('A helpful description');
+});

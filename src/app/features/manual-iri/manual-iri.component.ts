@@ -1,4 +1,4 @@
-import { Component, ElementRef, effect, inject, input, output, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { CedLanguageService } from '../../i18n/ced-language.service';
@@ -17,54 +17,60 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
           [disabled]="disabled()"
           [ngModel]="value()"
           (ngModelChange)="value.set($event); error.set(null)"
-          [attr.aria-invalid]="!!error()"
+          [attr.aria-invalid]="!!message()"
+          [attr.aria-describedby]="message() ? 'manual-iri-error' : null"
           (keydown.enter)="submit(); $event.preventDefault()"
-          placeholder="https://example.org/vocab/term"
+          [placeholder]="example()"
         />
       </label>
-      <button type="button" [disabled]="disabled()" (click)="submit()">{{ action() | translate }}</button>
+      <button type="button" [disabled]="disabled() || !!problem()" (click)="submit()">
+        {{ action() | translate }}
+      </button>
       <button type="button" (click)="cancelled.emit()">{{ 'common.cancel' | translate }}</button>
     </div>
-    @if (error(); as message) {
-      <p role="alert">{{ message }}</p>
+    @if (message(); as message) {
+      <p id="manual-iri-error" role="alert">{{ message }}</p>
     }
   `,
   styles: `
-    @use '../../shared/control-style';
+    @use '@org.metadatacenter/cedar-design-tokens/authoring';
     :host {
       display: block;
-      margin-top: 8px;
+      margin-top: var(--cedar-space-2);
       font-size: var(--cedar-font-size);
     }
     .entry {
       display: flex;
       flex-wrap: wrap;
       align-items: end;
-      gap: 8px;
+      gap: var(--cedar-space-2);
     }
     label {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: var(--cedar-space-1);
       flex: 1 1 240px;
       min-width: 0;
+      @include authoring.label-text;
     }
     input {
-      @include control-style.compact-control;
+      @include authoring.compact-control;
       width: 100%;
+      color: var(--cedar-text-primary);
+      font-weight: var(--cedar-font-weight-regular);
     }
     button {
-      @include control-style.compact-control;
+      @include authoring.compact-control;
       cursor: pointer;
-      color: var(--cedar-color-primary, #117b89);
+      color: var(--cedar-color-primary);
     }
     button:disabled {
       opacity: 0.5;
       cursor: default;
     }
     p {
-      margin: 4px 0 0;
-      color: #b42318;
+      margin: var(--cedar-space-1) 0 0;
+      color: var(--cedar-status-error-text);
     }
   `,
 })
@@ -76,27 +82,32 @@ export class ManualIriComponent {
   readonly disabled = input(false);
   readonly accepted = output<string>();
   readonly cancelled = output<void>();
+  /** An IRI of the kind being entered, shown as the placeholder and in the message for a malformed one. */
+  readonly example = input('https://example.org/vocab/term');
   readonly value = signal('');
+  /** Set by a submit with nothing entered; cleared by the next edit. */
   readonly error = signal<string | null>(null);
+  /** What is wrong with the text entered so far, checked as it is typed. Nothing entered is not yet a problem. */
+  readonly problem = computed(() => this.check(this.value().trim()));
+  readonly message = computed(() => this.problem() ?? this.error());
   private readonly control = viewChild<ElementRef<HTMLInputElement>>('control');
   constructor() {
     effect(() => this.control()?.nativeElement.focus());
   }
   submit(): void {
-    if (this.disabled()) return;
+    if (this.disabled() || this.problem()) return;
     const iri = this.value().trim();
     if (!iri) {
       this.error.set(this.i18n.t('manualIri.required'));
       return;
     }
-    if (!/^[a-z][a-z0-9+.-]*:[^\s<>"{}|\\^`]+$/i.test(iri) || /%(?![0-9a-f]{2})/i.test(iri)) {
-      this.error.set(this.i18n.t('manualIri.invalid'));
-      return;
-    }
-    if (this.existing().includes(iri)) {
-      this.error.set(this.i18n.t('manualIri.duplicate'));
-      return;
-    }
     this.accepted.emit(iri);
+  }
+  private check(iri: string): string | null {
+    if (!iri) return null;
+    if (!/^[a-z][a-z0-9+.-]*:[^\s<>"{}|\\^`]+$/i.test(iri) || /%(?![0-9a-f]{2})/i.test(iri))
+      return this.i18n.t('manualIri.invalid', { example: this.example() });
+    if (this.existing().includes(iri)) return this.i18n.t('manualIri.duplicate');
+    return null;
   }
 }

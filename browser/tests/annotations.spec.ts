@@ -1,3 +1,4 @@
+import { applyPreset } from './support';
 import { addElementFixture } from './support';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { openDesigner, openSettings, currentTemplate, child } from './support';
@@ -23,6 +24,11 @@ async function expectValueTypeFits(editor: Locator) {
 }
 async function addRows(editor: Locator) {
   await expectValueTypeFits(editor);
+  const valueType = editor.getByRole('combobox', { name: 'New annotation value type', exact: true });
+  await expect(valueType).toHaveCSS('appearance', 'none');
+  await expect(valueType).toHaveCSS('padding-right', '24px');
+  await expect(valueType).toHaveCSS('height', '32px');
+  await expect(editor.locator('.add-row label').first()).toHaveCSS('gap', '2px');
   const controls = await editor
     .locator('.add-row input, .add-row select, .add-row textarea, .add-row button')
     .evaluateAll((nodes) =>
@@ -104,8 +110,7 @@ for (const width of [1280, 375]) {
     await openSettings(card, 'Annotations');
     await addRows(card.locator('app-annotations-editor'));
     expect(child(await currentTemplate(page), 'Title')._annotations).toEqual(annotations);
-    await page.getByRole('button', { name: 'Basic', exact: true }).click();
-    await page.getByRole('button', { name: /Modular/ }).click();
+    await applyPreset(page, 'modular');
     await addElementFixture(page, root);
     const elementSettings = designer.locator('app-element-card').first();
     await elementSettings.getByRole('button', { name: 'Expand element settings' }).click();

@@ -15,7 +15,7 @@ test('authors occurrence limits and rejects an inverted range', async ({ page })
   await expect(settings.getByRole('alert')).toContainText('minimum no greater');
   expect(((await currentTemplate(page)).properties as any).Title.minItems).toBe(2);
   const display = await openSettings(card, 'Display');
-  await display.getByLabel('Display label', { exact: true }).fill('Immediate label');
+  await display.getByLabel('Name', { exact: true }).fill('Immediate label');
   await expect(display.getByRole('alert')).toHaveCount(0);
   await openSettings(card, 'Occurrences');
   await expect(settings.getByLabel('Minimum', { exact: true })).toHaveValue('8');
@@ -27,17 +27,21 @@ test('authors occurrence limits and rejects an inverted range', async ({ page })
   await page.screenshot({ path: '/tmp/ced-occurrences.png' });
 });
 
-test('writes display labels and layout settings', async ({ page }) => {
+test('writes the display name, description and layout settings', async ({ page }) => {
   await openDesigner(page);
   const settings = page.locator('#field-card-1 app-field-settings');
   const section = await openSettings(page.locator('#field-card-1'), 'Display');
-  await section.getByLabel('Display label', { exact: true }).fill('Shown title');
-  await section.getByLabel('Display description', { exact: true }).fill('Shown help');
+  await section.getByLabel('Name', { exact: true }).fill('Shown title');
+  await section.getByLabel('Description', { exact: true }).fill('Shown help');
   await section.getByLabel('Hidden', { exact: true }).check();
   await section.getByLabel('Continue previous line', { exact: true }).check();
+  // The name is the one the card's header shows, so it lands where the header writes it.
+  await expect
+    .poll(async () => ((await currentTemplate(page)).properties as any).Title['skos:prefLabel'])
+    .toBe('Shown title');
   await expect
     .poll(async () => (await currentTemplate(page))._ui)
-    .toMatchObject({ propertyLabels: { Title: 'Shown title' }, propertyDescriptions: { Title: 'Shown help' } });
+    .toMatchObject({ propertyDescriptions: { Title: 'Shown help' } });
   await expect
     .poll(async () => ((await currentTemplate(page)).properties as any).Title._ui)
     .toMatchObject({ hidden: true, continuePreviousLine: true });
@@ -122,7 +126,7 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
   await designer.locator('app-field-type-picker').getByRole('button', { name: 'Image', exact: true }).click();
   await expect(designer.locator('app-field-card')).toHaveCount(4);
   const card = designer.locator('app-field-card').last();
-  await card.getByRole('textbox', { name: 'Field name', exact: true }).fill('Picture');
+  await card.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Picture');
   const section = await openSettings(card, 'Content');
   await section.getByLabel('Width').fill('640');
   await expect.poll(async () => ((await currentTemplate(page)).properties as any).picture._ui._size?.width).toBe(640);
@@ -136,7 +140,7 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
     .click();
   await designer.locator('app-field-type-picker').getByRole('button', { name: 'Rich Text', exact: true }).click();
   await expect(designer.locator('app-field-card')).toHaveCount(5);
-  await card.getByRole('textbox', { name: 'Field name', exact: true }).fill('Rich content');
+  await card.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Rich content');
   await openSettings(card, 'Content');
   await expect(card.getByRole('tab').first()).toHaveText('Display');
   await card.getByRole('textbox', { name: 'Content', exact: true }).fill('<p>First</p>\n<p>Second</p>');
@@ -167,7 +171,7 @@ test('one Temporal palette entry supports date, time and date-time without chang
   await expect(picker.getByRole('button', { name: 'Temporal', exact: true })).toHaveCount(1);
   await expect(picker.getByRole('button', { name: /^(Date|Time|Date and time)$/ })).toHaveCount(0);
   await picker.getByRole('button', { name: 'Temporal', exact: true }).click();
-  await designer.locator('input[aria-label="Field name"]:focus').fill('Temporal');
+  await designer.locator('input[aria-label="Field display name"]:focus').fill('Temporal');
   await expect(designer.locator('app-field-card')).toHaveCount(4);
   const card = designer.locator('app-field-card').last();
   const settings = await openSettings(card, 'Constraints');
@@ -195,15 +199,17 @@ test('metadata keys are editable and unique within their parent while names and 
   const cards = designer.locator('app-field-card');
   const first = cards.nth(0);
   const second = cards.nth(1);
-  await first.getByLabel('Field name', { exact: true }).fill('Repeated');
-  await second.getByLabel('Field name', { exact: true }).fill('Repeated');
+  await first.getByLabel('Field display name', { exact: true }).fill('Repeated');
+  await second.getByLabel('Field display name', { exact: true }).fill('Repeated');
   const display = await openSettings(first, 'Display');
   await expect(display.getByLabel('Preferred name', { exact: true })).toHaveCount(0);
-  await display.getByLabel('Display label', { exact: true }).fill('Same label');
+  // The Display tab shows the name typed in the header.
+  await expect(display.getByLabel('Name', { exact: true })).toHaveValue('Repeated');
+  await display.getByLabel('Name', { exact: true }).fill('Same label');
   const otherDisplay = await openSettings(second, 'Display');
-  await otherDisplay.getByLabel('Display label', { exact: true }).fill('Same label');
+  await otherDisplay.getByLabel('Name', { exact: true }).fill('Same label');
   const metadata = await openSettings(first, 'Field metadata');
-  await expect(metadata.getByLabel('Key', { exact: true })).toHaveValue('Repeated');
+  await expect(metadata.getByLabel('Key', { exact: true })).toHaveValue('Title');
   await metadata.getByLabel('Key', { exact: true }).fill('subject');
   const otherMetadata = await openSettings(second, 'Field metadata');
   const key = otherMetadata.getByLabel('Key', { exact: true });
@@ -214,28 +220,39 @@ test('metadata keys are editable and unique within their parent while names and 
   await key.fill('category');
   await expect(otherMetadata.getByRole('alert')).toHaveCount(0);
   const saved = await currentTemplate(page);
-  expect((saved.properties as any).subject['schema:name']).toBe('Repeated');
-  expect((saved.properties as any).category['schema:name']).toBe('Repeated');
-  expect((saved._ui as any).propertyLabels).toMatchObject({ subject: 'Same label', category: 'Same label' });
+  expect((saved.properties as any).subject['schema:name']).toBe('Title');
+  expect((saved.properties as any).subject['skos:prefLabel']).toBe('Same label');
+  expect((saved.properties as any).category['schema:name']).toBe('Category');
+  expect((saved.properties as any).category['skos:prefLabel']).toBe('Same label');
 });
 
-test('display label starts unset and distinguishes a copied fallback from an authored override', async ({ page }) => {
+test('the Display tab name is the header name, ignoring a copied fallback and editing an authored override', async ({
+  page,
+}) => {
   const designer = await openDesigner(page);
-  const card = designer.locator('app-field-card').first();
-  let display = await openSettings(card, 'Display');
-  await expect(display.getByLabel('Display label', { exact: true })).toHaveValue('');
-  await expect(display.getByLabel('Display label', { exact: true })).toHaveAttribute(
-    'placeholder',
-    'Field display name',
-  );
+  const header = () =>
+    designer.locator('app-field-card').first().getByRole('textbox', { name: 'Field display name', exact: true });
+  let display = await openSettings(designer.locator('app-field-card').first(), 'Display');
+  await expect(display.getByLabel('Name', { exact: true })).toHaveValue('Title');
+  await expect(display.getByLabel('Name', { exact: true })).toHaveAttribute('placeholder', 'Field name');
+  // Typing in the header shows in the Display tab as it is typed.
+  await header().fill('Heading');
+  await expect(display.getByLabel('Name', { exact: true })).toHaveValue('Heading');
+
+  // A parent label that only repeats the key is the writer's filler, not a second name.
   const artifact = await currentTemplate(page);
+  expect((artifact._ui as any).propertyLabels.Title).toBe('Title');
+  (artifact._ui as any).propertyLabels.Title = 'Study title';
   await page.evaluate((value) => {
     (document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object }).artifact = value;
   }, artifact);
+  // An authored override is the name both places show, and both edit it.
   display = await openSettings(designer.locator('app-field-card').first(), 'Display');
-  await expect(display.getByLabel('Display label', { exact: true })).toHaveValue('');
-  await display.getByLabel('Display label', { exact: true }).fill('Study title');
+  await expect(display.getByLabel('Name', { exact: true })).toHaveValue('Study title');
+  await expect(header()).toHaveValue('Study title');
+  await display.getByLabel('Name', { exact: true }).fill('Study heading');
+  await expect(header()).toHaveValue('Study heading');
   await expect
     .poll(async () => (await currentTemplate(page))._ui)
-    .toMatchObject({ propertyLabels: { Title: 'Study title' } });
+    .toMatchObject({ propertyLabels: { Title: 'Study heading' } });
 });

@@ -5,7 +5,7 @@ import { PropertyPickerComponent } from '../property-picker/property-picker.comp
 import { TypesPickerComponent } from '../types-picker/types-picker.component';
 import { TemplateService } from '../../core/services/template.service';
 
-it('validates only on submit, trims IRIs and rejects duplicate types', async () => {
+it('checks an IRI as it is typed, trims it and rejects duplicate types', async () => {
   const fixture = TestBed.createComponent(ManualIriComponent);
   fixture.componentRef.setInput('existing', ['urn:existing']);
   fixture.detectChanges();
@@ -13,13 +13,22 @@ it('validates only on submit, trims IRIs and rejects duplicate types', async () 
   const editor = fixture.componentInstance;
   const received: string[] = [];
   editor.accepted.subscribe((value) => received.push(value));
-  expect(editor.error()).toBeNull();
-  for (const value of ['', 'relative', 'https://example.org/a b', 'urn:bad%xx', 'urn:existing']) {
+  // Nothing entered is not yet a problem; submitting it is.
+  expect(editor.message()).toBeNull();
+  editor.submit();
+  expect(editor.message()).toBe('An IRI is required.');
+  for (const value of ['relative', 'dddd', 'https://example.org/a b', 'urn:bad%xx']) {
     editor.value.set(value);
+    expect(editor.problem()).toBe('Enter an absolute IRI, such as https://example.org/vocab/term.');
     editor.submit();
-    expect(editor.error()).toBeTruthy();
   }
+  editor.value.set('urn:existing');
+  expect(editor.problem()).toBe('This type has already been added.');
+  editor.submit();
   expect(received).toEqual([]);
+  fixture.componentRef.setInput('example', 'https://example.org/property');
+  editor.value.set('dddd');
+  expect(editor.problem()).toBe('Enter an absolute IRI, such as https://example.org/property.');
   for (const value of ['urn:custom', ' https://example.org/語彙/term ']) {
     editor.value.set(value);
     editor.submit();

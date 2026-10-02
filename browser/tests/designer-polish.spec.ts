@@ -1,11 +1,11 @@
+import { applyPreset } from './support';
 import { test, expect } from '@playwright/test';
 import { openDesigner } from './support';
 
 test('an inserted element retains headroom when the library sidebar collapses', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 800 });
   const designer = await openDesigner(page);
-  await designer.getByRole('button', { name: 'Basic', exact: true }).click();
-  await designer.getByRole('button', { name: /Modular/ }).click();
+  await applyPreset(page, 'modular');
   await designer.locator('.user-menu-container button').first().click();
   await designer.getByRole('button', { name: 'Preferences', exact: true }).click();
   await designer.getByRole('radio', { name: /Library Sidebar/ }).check();
@@ -27,8 +27,7 @@ test('an inserted element retains headroom when the library sidebar collapses', 
 
 test('element overview chevron follows its name and insertion actions have balanced spacing', async ({ page }) => {
   const designer = await openDesigner(page);
-  await designer.getByRole('button', { name: 'Basic', exact: true }).click();
-  await designer.getByRole('button', { name: /Modular/ }).click();
+  await applyPreset(page, 'modular');
   await designer.getByRole('button', { name: 'Add element', exact: true }).click();
   await designer.getByRole('textbox', { name: 'Element name', exact: true }).fill('New element');
   const row = designer.locator('.outline-row').filter({ hasText: 'New element' });

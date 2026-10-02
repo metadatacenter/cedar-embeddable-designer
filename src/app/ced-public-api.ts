@@ -137,6 +137,12 @@ export interface CedValidationIssue {
   message: string;
   severity: 'error';
   source: 'model' | 'draft';
+  /**
+   * Whether the designer's error summary lists the issue. A name nobody has touched yet, and a new
+   * choice field's blank starter option, block saving without being listed until the author
+   * reaches them.
+   */
+  shown: boolean;
 }
 export interface CedValidationReport {
   valid: boolean;

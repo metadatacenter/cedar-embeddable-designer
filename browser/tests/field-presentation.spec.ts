@@ -12,13 +12,15 @@ for (const width of [1440, 768, 375]) {
     const before = await currentTemplate(page);
     const metadata = await openSettings(card, 'Display');
     await expect(card.getByRole('button', { name: 'Apply', exact: true })).toHaveCount(0);
-    await metadata.getByLabel('Display label', { exact: true }).fill('Live label');
+    await metadata.getByLabel('Name', { exact: true }).fill('Live label');
     await openSettings(card, 'Field metadata');
     await card.getByRole('button', { name: 'Collapse field settings' }).click();
     await expect(card.getByRole('tab')).toHaveCount(0);
     await openSettings(card, 'Display');
-    await expect(metadata.getByLabel('Display label', { exact: true })).toHaveValue('Live label');
-    expect(((await currentTemplate(page))._ui as any).propertyLabels.Title).toBe('Live label');
+    await expect(metadata.getByLabel('Name', { exact: true })).toHaveValue('Live label');
+    // One name in two places: the header follows the Display tab as it is typed.
+    await expect(card.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue('Live label');
+    expect(((await currentTemplate(page)).properties as any).Title['skos:prefLabel']).toBe('Live label');
     expect((await currentTemplate(page))['@id']).toEqual(before['@id']);
     const tab = card.getByRole('tab', { name: 'Display', exact: true });
     await tab.focus();
@@ -61,7 +63,7 @@ test('header controls share a vertical center and version is right aligned', asy
   await expect(designer.getByRole('textbox', { name: 'Version', exact: true })).toHaveCSS('text-align', 'right');
 });
 
-test('compact cards keep controls close and enabled trash icons black', async ({ page }) => {
+test('compact cards keep controls close and enabled trash icons themed', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   const designer = await openDesigner(page);
   const card = designer.locator('app-field-card').first();
@@ -81,7 +83,11 @@ test('compact cards keep controls close and enabled trash icons black', async ({
   expect(spacing.afterHeader).toBeLessThanOrEqual(6);
   expect(spacing.belowPreview).toBeLessThanOrEqual(18);
   expect(spacing.toggleHeight).toBe(14);
-  await expect(card.getByRole('button', { name: 'Delete field' }).locator('svg')).toHaveCSS('color', 'rgb(0, 0, 0)');
+  await designer.evaluate((el) => (el as HTMLElement).style.setProperty('--cedar-color-primary', 'rgb(91, 32, 124)'));
+  await expect(card.getByRole('button', { name: 'Delete field' }).locator('svg')).toHaveCSS(
+    'color',
+    'rgb(91, 32, 124)',
+  );
 });
 
 test('template header shows stored publication status beside the version', async ({ page }) => {
@@ -133,7 +139,7 @@ for (const width of [1440, 768, 375]) {
     const designer = await openDesigner(page);
     const card = designer.locator('app-field-card').first();
     await openSettings(card, 'Constraints');
-    const fields = card.locator('.text-constraint-fields');
+    const fields = card.locator('.constraint-fields');
     const inputs = fields.locator('input');
     const boxes = await inputs.evaluateAll((nodes) =>
       nodes.map((node) => {

@@ -8,7 +8,8 @@
  * production uses rather than a second implementation of one.
  *
  * The shape below is declared here rather than imported, because CEE's package is
- * not installed and the designer assigns two properties of a much larger element.
+ * not installed and the designer uses two properties and one method of a much larger
+ * element.
  */
 
 /** The tag the host is expected to have registered. */
@@ -35,6 +36,7 @@ export interface CeeTemplateObject {
  */
 export interface CeePreviewConfig {
   readonly readOnlyMode: boolean;
+  readonly suppressEmptyFieldErrors: true;
   readonly showTemplateDescription: true;
   readonly showExpandCollapseAll: false;
   /** The language CEE renders the form in, which is the designer's own. */
@@ -45,6 +47,7 @@ export interface CeePreviewConfig {
 
 export const CEE_PREVIEW_CONFIG: CeePreviewConfig = {
   readOnlyMode: true,
+  suppressEmptyFieldErrors: true,
   showTemplateDescription: true,
   showExpandCollapseAll: false,
   defaultLanguage: 'en',
@@ -66,6 +69,12 @@ export const CEE_PREVIEW_CONFIG: CeePreviewConfig = {
 export interface CeePreviewElement extends HTMLElement {
   config: CeePreviewConfig;
   templateObject: CeeTemplateObject;
+  /**
+   * Scroll the form to a field or element, turning its page and opening the panels
+   * around it. Optional, because a host may load a CEE that predates it, and the
+   * preview then simply stays where it is.
+   */
+  readonly reveal?: (location: { path: string[] }, options?: { focus?: boolean }) => Promise<boolean>;
 }
 
 /** Whether a host has loaded CEE, which decides whether a preview can be offered. */

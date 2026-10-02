@@ -44,6 +44,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       <app-manual-iri
         [disabled]="disabled()"
         action="manualIri.addProperty"
+        example="https://example.org/property"
         (accepted)="acceptManual($event)"
         (cancelled)="closeManual()"
       />
@@ -82,11 +83,11 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
     .property {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: var(--cedar-space-3);
       font-size: var(--cedar-font-size);
     }
     .unavailable {
-      margin: 3px 0 0;
+      margin: var(--cedar-space-1) 0 0;
       font-size: var(--cedar-font-size);
       overflow-wrap: anywhere;
     }
@@ -94,24 +95,24 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       flex: 1;
       min-width: 0;
       overflow-wrap: anywhere;
-      padding: 3px 6px;
-      border: 1px solid #ccc;
-      border-radius: 2px;
-      color: #4b5563;
+      padding: var(--cedar-space-1) var(--cedar-space-1);
+      border: 1px solid var(--cedar-control-border-default);
+      border-radius: var(--cedar-radius);
+      color: var(--cedar-text-muted);
     }
     button {
       flex: 0 0 auto;
       padding: 0;
       border: 0;
       background: none;
-      color: #317c85;
+      color: var(--cedar-color-primary);
       font: inherit;
       text-decoration: underline;
       text-underline-offset: 2px;
       cursor: pointer;
     }
     .placeholder {
-      color: #777;
+      color: var(--cedar-control-border-default);
     }
     button:disabled {
       opacity: 0.5;
@@ -120,24 +121,22 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
     .overlay {
       position: fixed;
       inset: 0;
-      z-index: 50;
-      background: #0006;
+      z-index: var(--cedar-layer-modal);
+      background: var(--cedar-dialog-backdrop);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1.5rem;
+      padding: var(--cedar-space-6);
     }
     .dialog {
-      background: white;
-      border-radius: 0.5rem;
       width: 100%;
       max-width: 64rem;
       max-height: 90vh;
       overflow: auto;
     }
     [role='alert'] {
-      padding: 0.75rem;
-      color: #991b1b;
+      padding: var(--cedar-space-3);
+      color: var(--cedar-status-error-text);
     }
   `,
 })

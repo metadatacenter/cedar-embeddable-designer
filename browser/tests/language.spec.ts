@@ -1,3 +1,4 @@
+import { applyPreset } from './support';
 import { addElementFixture } from './support';
 import { expect, test } from '@playwright/test';
 import { openDesigner, openSettings } from './support';
@@ -19,8 +20,7 @@ for (const width of [1280, 375]) {
     await openSettings(field, 'Display');
     await field.getByRole('combobox', { name: 'Language', exact: true }).selectOption('en');
     await field.locator('app-field-settings').screenshot({ path: testInfo.outputPath('language.png') });
-    await page.getByRole('button', { name: 'Basic', exact: true }).click();
-    await page.getByRole('button', { name: /Modular/ }).click();
+    await applyPreset(page, 'modular');
     await addElementFixture(page, root);
     const element = designer.locator('app-element-card').first();
     await element.getByRole('button', { name: 'Expand element settings' }).click();

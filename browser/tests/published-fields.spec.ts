@@ -17,7 +17,7 @@ test('published fields are visibly read-only while draft fields remain editable'
   await expect(card.getByLabel('Requirement')).toBeDisabled();
   await expect(card.getByTitle('Delete field', { exact: true })).toBeDisabled();
   const metadata = await openSettings(card, 'Display');
-  await expect(metadata.getByLabel('Display label', { exact: true })).toBeDisabled();
+  await expect(metadata.getByLabel('Name', { exact: true })).toBeDisabled();
   await expect(metadata.getByRole('button', { name: 'Apply' })).toHaveCount(0);
   await page.locator('.field-drop-item').nth(1).getByPlaceholder('Enter field name').fill('Draft changed');
   await expect

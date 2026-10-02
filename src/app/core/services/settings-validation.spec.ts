@@ -1,3 +1,4 @@
+import { FIELD_TYPES } from '../models/types';
 import { TestBed } from '@angular/core/testing';
 import { TemplateService } from './template.service';
 import { findContainer } from '../model/container-draft';
@@ -22,6 +23,26 @@ describe('settings validation report', () => {
     expect(service.validationReport().issues[0].setting).toBe('occurrences');
     service.setSettingsError(id, 'occurrences', null);
     expect(service.validationReport().valid).toBe(true);
+  });
+  it('reports an untouched blank name as blocking but not yet shown, and shows it once touched', () => {
+    const root = service.session.document().id;
+    service.updateContainerDefinition(root, { name: '' });
+    const nameIssue = () => service.validationReport().issues.find((issue) => issue.setting === 'name');
+    expect(service.validationReport().canSave).toBe(false);
+    expect(nameIssue()?.shown).toBe(false);
+    expect(service.visibleIssues()).toEqual([]);
+    service.touchName(root);
+    expect(nameIssue()?.shown).toBe(true);
+    expect(service.visibleIssues()).toEqual([nameIssue()]);
+  });
+  it("names an issue's field by the display name its card shows, not by its plain name", () => {
+    const id = service.fields()[0].id;
+    service.updateFieldName(id, 'parent_sample_id');
+    service.updateFieldSettings(id, { preferredLabel: 'Parent sample ID' });
+    service.setSettingsError(id, 'defaultValue', 'Default exceeds maximum.');
+    expect(service.validationReport().issues.map((issue) => issue.label)).toEqual(['Parent sample ID']);
+    service.updateFieldSettings(id, { preferredLabel: undefined });
+    expect(service.validationReport().issues.map((issue) => issue.label)).toEqual(['parent_sample_id']);
   });
   it('aggregates nested errors, expands ancestors and ignores deleted nodes', () => {
     const root = service.session.document().id;
@@ -144,6 +165,35 @@ it('keeps unnamed siblings independent and editable while saving is disabled', (
   expect(service.validationReport().canSave).toBe(true);
 });
 
+for (const kind of ['template', 'element'] as const) {
+  for (const child of ['field', 'element'] as const) {
+    it(`reveals an untouched missing ${kind} name when adding a ${child}`, () => {
+      const service = TestBed.inject(TemplateService);
+      service.resetTemplate(kind, false);
+      const root = service.document().id;
+      expect(service.visibleIssues()).toHaveLength(0);
+      if (child === 'field') service.addField('text', 0, root);
+      else service.addElement(root);
+      expect(service.visibleIssues().map((issue) => issue.nodeId)).toEqual([root]);
+      expect(service.nameError(root, '', kind)).toContain('name is required');
+      service.updateContainerDefinition(root, { name: 'Study' });
+      expect(service.visibleIssues()).toHaveLength(0);
+    });
+  }
+}
+
+it('reveals unnamed ancestors when authoring inside an existing nested element', () => {
+  const service = TestBed.inject(TemplateService);
+  service.resetTemplate('template', false);
+  const root = service.document().id;
+  service.templateName.set('Study');
+  const element = service.addElement(root);
+  service.templateName.set('');
+  expect(service.visibleIssues()).toHaveLength(0);
+  service.addField('text', 0, element);
+  expect(service.visibleIssues().map((issue) => issue.nodeId)).toEqual([root, element]);
+});
+
 it('keys are unique across sibling fields and elements, independently of names and display labels', () => {
   localStorage.clear();
   const service = TestBed.inject(TemplateService);
@@ -253,3 +303,36 @@ it.each(['multipleChoice', 'checkboxes', 'singleChoiceList', 'multipleChoiceList
     expect(service.validationReport().canSave).toBe(true);
   },
 );
+
+for (const type of Object.keys(FIELD_TYPES)) {
+  it(`keeps a new ${type} field quiet without weakening save validation`, () => {
+    const service = TestBed.inject(TemplateService);
+    service.resetTemplate('template', false);
+    service.templateName.set('Field document');
+    service.addField(type, 0);
+    expect(service.fields()).toHaveLength(1);
+    expect(service.visibleIssues()).toEqual([]);
+    expect(service.validationReport().canSave).toBe(false);
+  });
+}
+for (const type of ['multipleChoice', 'checkboxes']) {
+  it(`reveals the ${type} starter option on blur and keeps later invalid options visible`, () => {
+    const service = TestBed.inject(TemplateService);
+    service.resetTemplate('template', false);
+    service.templateName.set('Field document');
+    service.addField(type, 0);
+    const id = service.fields()[0].id;
+    service.updateFieldName(id, 'Choice');
+    expect(service.visibleIssues()).toEqual([]);
+    expect(service.validationReport().canSave).toBe(false);
+    service.touchOption(id, 0);
+    expect(service.visibleIssues().map((issue) => issue.setting)).toEqual(['option-0']);
+    service.updateOption(id, 0, 'First');
+    expect(service.validationReport().canSave).toBe(true);
+    service.updateOption(id, 0, '');
+    expect(service.visibleIssues().map((issue) => issue.setting)).toEqual(['option-0']);
+    service.deleteOption(id, 0);
+    service.addOption(id);
+    expect(service.visibleIssues().map((issue) => issue.setting)).toEqual(['option-0']);
+  });
+}

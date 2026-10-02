@@ -1,17 +1,54 @@
-@use '../../../shared/table-style';
+@use '@org.metadatacenter/cedar-design-tokens/authoring';
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #fafafa;
-  border-radius: 3px;
+  background: var(--cedar-surface-subtle);
+  border-radius: var(--cedar-radius);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #e5e7eb;
-  border-radius: 3px;
+  background: var(--cedar-border-rule);
+  border-radius: var(--cedar-radius);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #d1d5db;
+  background: var(--cedar-border-rule);
 }
 
-@include table-style.compact-table;
+@include authoring.compact-table;
+
+.preset-title {
+  font-size: var(--cedar-font-size);
+  font-weight: var(--cedar-font-weight-medium);
+  color: var(--cedar-text-primary);
+}
+.preset-table {
+  width: 100%;
+  text-align: left;
+}
+.preset-row {
+  border-top: 1px solid var(--cedar-border-rule);
+}
+.preset-row-label {
+  padding-right: var(--cedar-space-4);
+  color: var(--cedar-text-primary);
+  font-size: var(--cedar-font-size);
+}
+.preset-column {
+  text-align: center;
+  padding-inline: var(--cedar-space-3);
+}
+.preset-column-label {
+  @include authoring.label-text;
+  color: var(--cedar-text-primary);
+  text-transform: capitalize;
+}
+.preset-field-label {
+  display: flex;
+  align-items: center;
+  gap: var(--cedar-space-2);
+  color: var(--cedar-text-muted);
+}
+.preset-field-text {
+  color: var(--cedar-text-primary);
+  font-size: var(--cedar-font-size);
+}

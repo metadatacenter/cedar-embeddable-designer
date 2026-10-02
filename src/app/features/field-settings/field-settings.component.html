@@ -40,7 +40,7 @@
             <fieldset
               [attr.aria-invalid]="!!error"
               [disabled]="!!field.publishedDefinition"
-              class="settings-fields text-constraint-fields"
+              class="settings-fields constraint-fields"
             >
               <label
                 >{{ 'fieldSettings.text.minLength' | translate
@@ -324,8 +324,8 @@
           }}<input
             spellcheck="false"
             name="displayLabel"
-            [(ngModel)]="displayLabel"
-            (ngModelChange)="saveLayout()"
+            [ngModel]="displayName()"
+            (ngModelChange)="rename($event)"
             [placeholder]="'fieldSettings.display.labelPlaceholder' | translate"
         /></label>
         <label
@@ -417,9 +417,9 @@
         <dt>{{ 'settings.version' | translate }}</dt>
         <dd>{{ artifact.version }}</dd>
       }
-      @if (artifact.publicationStatus) {
+      @if (publicationStatusLabel(artifact.publicationStatus); as status) {
         <dt>{{ 'common.publicationStatus' | translate }}</dt>
-        <dd>{{ artifact.publicationStatus }}</dd>
+        <dd>{{ status | translate }}</dd>
       }
       <dt>{{ 'settings.modelVersion' | translate }}</dt>
       <dd>{{ artifact.schemaVersion || ('common.notSpecified' | translate) }}</dd>
@@ -449,7 +449,7 @@
         />
       </dd>
       @if (dynamic && !service.fieldDocumentMode()) {
-        <dt class="editable">{{ 'settings.propertyIri' | translate }}</dt>
+        <dt class="editable first-line">{{ 'settings.propertyIri' | translate }}</dt>
         <dd>
           <app-property-picker
             [iri]="field.propertyIri"

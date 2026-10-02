@@ -71,7 +71,14 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // pinned library. The library accounts for all 16,889 bytes: 16,118 from its own
 // changes and 771 from the reserved-name vocabulary. No designer dependency was added.
 // Allow about 6.6 KB of raw headroom; the compressed artifact stays within its ceiling.
-const RAW_LIMIT = 1_475_000;
+// 2026-09-30: unified mixed import with keyboard/drag ordering and shared table
+// styling measures 1,475,267 raw / 424,095 gzip-9 bytes. Restore 4.7 KB raw
+// headroom; keep the compressed ceiling unchanged.
+// 2026-09-30: central semantic colors, spacing and shared settings-dialog recipes
+// replace 508 local style findings. Measured 1,487,706 raw / 424,364 gzip-9:
+// longer CSS role names cost raw bytes, without another dependency. Keep the
+// compressed ceiling unchanged and allow 7 KB raw headroom for this adoption.
+const RAW_LIMIT = 1_495_000;
 const GZIP_LIMIT = 438_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;

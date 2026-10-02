@@ -18,6 +18,7 @@ import { Field, ControlledTermSet } from '../../core/models/types';
 import { TerminologyService } from '../../core/services/terminology.service';
 import { termPickerAvailable } from '../../core/model/term-picker';
 import { fieldToJson } from '../../core/model/cedar-template';
+import { fieldDisplayName } from '../../core/model/field-display-name';
 import { trapTab } from '../../shared/focus-trap';
 
 @Component({
@@ -30,6 +31,7 @@ import { trapTab } from '../../shared/focus-trap';
   imports: [TranslatePipe],
 })
 export class ControlledTermConfigComponent implements OnChanges {
+  readonly displayName = fieldDisplayName;
   readonly service = inject(TemplateService);
   private readonly terminology = inject(TerminologyService);
   private readonly i18n = inject(CedLanguageService);
@@ -98,6 +100,7 @@ export class ControlledTermConfigComponent implements OnChanges {
   readonly summaryConfig = computed(() => ({
     ...this.editorConfig,
     readOnlyMode: true,
+    previewMode: true,
     defaultLanguage: this.language(),
     fallbackLanguage: 'en',
   }));

@@ -1,10 +1,11 @@
-@use '../../shared/control-style';
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
+@use '@org.metadatacenter/cedar-design-tokens/authoring';
 @use '../../shared/field-error';
 .default-dialog-overlay {
   position: fixed;
   inset: 0;
-  z-index: 50;
-  background: rgb(0 0 0 / 40%);
+  z-index: var(--cedar-layer-modal);
+  background: var(--cedar-dialog-backdrop);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -15,15 +16,12 @@
   max-width: 896px;
   max-height: 90vh;
   overflow: auto;
-  background: var(--cedar-overlay-surface);
-  border-radius: 6px;
-  box-shadow: 0 12px 28px rgb(0 0 0 / 20%);
   header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px var(--cedar-space-3);
-    background: var(--cedar-surface-authoring);
+    @include spacing.apply(padding, control-row);
+    background: var(--cedar-surface-subtle);
     font-size: var(--cedar-font-size);
     color: var(--cedar-text-muted);
   }
@@ -38,7 +36,7 @@
     font-size: var(--cedar-font-size-heading);
   }
   p {
-    margin: 6px var(--cedar-space-3);
+    @include spacing.apply(margin, control-row);
     font-size: var(--cedar-font-size);
   }
 }
@@ -55,21 +53,21 @@
   textarea {
     width: 100%;
     min-width: 0;
-    @include control-style.compact-control;
+    @include authoring.compact-control;
   }
 
   textarea {
     resize: none;
   }
   [aria-invalid='true'] {
-    border-color: var(--cedar-control-error, var(--cedar-color-error));
+    border-color: var(--cedar-control-error, var(--cedar-status-error-text));
   }
 }
 
 .native-default input[aria-invalid='true'],
 .native-default textarea[aria-invalid='true'] {
-  border-color: var(--cedar-control-error, var(--cedar-color-error));
-  outline-color: var(--cedar-control-error, var(--cedar-color-error));
+  border-color: var(--cedar-control-error, var(--cedar-status-error-text));
+  outline-color: var(--cedar-control-error, var(--cedar-status-error-text));
 }
 
 .default-value-row {
@@ -81,6 +79,12 @@
 .default-value-control {
   flex: 1 1 0;
   min-width: 0;
+}
+.controlled-default {
+  @include authoring.compact-control;
+}
+.constraint-first {
+  margin: 0;
 }
 .default-value-actions {
   display: flex;
@@ -97,4 +101,9 @@
   .default-value-row:has(.default-value-actions) .default-value-control {
     flex-basis: 100%;
   }
+}
+
+.default-help {
+  font-size: var(--cedar-font-size);
+  color: var(--cedar-text-muted);
 }

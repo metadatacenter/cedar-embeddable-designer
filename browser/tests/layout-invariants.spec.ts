@@ -94,7 +94,7 @@ async function everyTypeOnPage(page: Page): Promise<string[]> {
       .first()
       .click();
     await designer.getByRole('button', { name: label, exact: true }).click();
-    await designer.locator('input[aria-label="Field name"]:focus').fill(label);
+    await designer.locator('input[aria-label="Field display name"]:focus').fill(label);
   }
   await expect
     .poll(async () => designer.locator('[id^=field-card-]').count(), { timeout: 15_000 })
@@ -123,7 +123,7 @@ test('the whole palette lays out without clipping, escaping or drifting', async 
           node.classList.contains('invalid')
             ? '--cedar-status-error-text'
             : node.classList.contains('selected')
-              ? '--cedar-border-selected'
+              ? '--cedar-color-primary'
               : '--cedar-border-rule',
         )
         .trim();

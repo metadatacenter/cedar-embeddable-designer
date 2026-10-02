@@ -95,7 +95,7 @@ async function designerShowing(
       .first()
       .click();
     await designer.getByRole('button', { name: label, exact: true }).click();
-    await designer.locator('input[aria-label="Field name"]:focus').fill(label);
+    await designer.locator('input[aria-label="Field display name"]:focus').fill(label);
   }
   await expect.poll(async () => starting.count(), { timeout: 15_000 }).toBe(labels.length);
   // Field insertion scrolls the designer's own viewport. Reset that viewport,
@@ -211,7 +211,7 @@ test('an unnamed field is quiet until the author leaves its name empty', async (
   await designer.getByRole('textbox', { name: 'Template name', exact: true }).fill('Study');
   await designer.getByRole('button', { name: 'Add field', exact: true }).first().click();
   await designer.getByRole('button', { name: 'Text', exact: true }).click();
-  const name = designer.locator('input[aria-label="Field name"]:focus');
+  const name = designer.locator('input[aria-label="Field display name"]:focus');
   await expect(name).toHaveValue('');
   const card = name.locator('xpath=ancestor::app-field-card');
   await page.mouse.move(0, 0);
@@ -239,8 +239,7 @@ test('an inactive settings tab still shows its error', async ({ page }) => {
 
 test('element deletion confirmation uses the shared dialog actions', async ({ page }) => {
   const designer = await openDesigner(page);
-  await designer.getByRole('button', { name: 'Basic', exact: true }).click();
-  await designer.getByRole('button', { name: /Modular/ }).click();
+  await applyPreset(page, 'modular');
   await addElementFixture(page);
   await nestFixtureFields(page, ['element']);
   await designer.getByRole('button', { name: 'Delete element Element', exact: true }).click();
@@ -248,3 +247,15 @@ test('element deletion confirmation uses the shared dialog actions', async ({ pa
   await expect(dialog.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
   await expect(dialog).toHaveScreenshot('delete-element.png', SHOT);
 });
+
+for (const name of ['Preferences', 'Define Presets']) {
+  test(`settings dialog: ${name}`, async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 1000 });
+    const designer = await openDesigner(page);
+    await designer.getByRole('button', { name: 'User Menu', exact: true }).click();
+    await designer.locator('.user-menu-dropdown').getByRole('button', { name, exact: true }).click();
+    const dialog = designer.locator('.cedar-modal-surface');
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toHaveScreenshot(`settings-${name.toLowerCase().replaceAll(' ', '-')}.png`, SHOT);
+  });
+}

@@ -23,9 +23,7 @@ export async function openDesigner(page: Page, query = ''): Promise<Locator> {
   // The first field card is the earliest sign the designer inside has rendered.
   await expect(designer.locator('[id^=field-card-]').first()).toBeVisible();
   // Existing workflow fixtures deliberately exercise Basic; the component defaults to Modular.
-  await designer.getByRole('button', { name: 'Modular', exact: true }).click();
-  await designer.getByRole('button', { name: /Basic/ }).click();
-  await expect(designer.getByRole('button', { name: 'Basic', exact: true })).toBeVisible();
+  await applyPreset(page, 'basic');
   return designer;
 }
 
@@ -123,6 +121,11 @@ export async function applyPreset(page: Page, preset: 'basic' | 'semantic' | 'mo
 
 /** Reveal one field's settings without changing the document. */
 export async function openSettings(card: Locator, tab = 'Constraints'): Promise<Locator> {
+  // Public artifact inputs update the model before Angular paints the replacement card.
+  // Click only after that render, otherwise the click targets the outgoing field.
+  await card.evaluate(
+    () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))),
+  );
   const settings = card.locator('app-field-settings');
   const toggle = settings.locator('.settings-toggle');
   await expect(toggle).toBeVisible();
@@ -200,7 +203,7 @@ export async function addElementFixture(page: Page, scope = page.locator(DESIGNE
       },
     };
   }, elementFixture.properties['Read & Understood Catalog']);
-  await scope.getByRole('button', { name: 'Import element', exact: true }).first().click();
+  await scope.getByRole('button', { name: 'Import fields and elements', exact: true }).first().click();
   await page.getByRole('button', { name: 'Search', exact: true }).click();
   await page.getByRole('row', { name: 'Select Element', exact: true }).click();
   await page.getByRole('button', { name: 'Done', exact: true }).click();

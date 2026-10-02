@@ -161,6 +161,41 @@ for (const type of ['singleChoiceList', 'multipleChoiceList', 'multipleChoice', 
   });
 }
 
+test('field summaries draw the control without the help text', async ({ page }) => {
+  test.skip(!process.env.CEF_BUNDLE, 'Requires the real CEE/CEF distribution');
+  const designer = await openDesigner(page);
+  await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
+  const artifact = templateToJson(
+    buildTemplate({
+      name: 'Described',
+      description: '',
+      identifier: '',
+      version: '0.0.1',
+      fields: [
+        {
+          id: 1,
+          type: 'paragraph',
+          name: 'Notes',
+          status: 'optional',
+          allowMultiple: false,
+          options: [],
+          defaultValue: { kind: 'none' },
+          helpText: 'Free text over several lines.',
+        },
+      ],
+    }),
+  );
+  await page.evaluate((template) => {
+    (document.querySelector('cedar-embeddable-designer') as any).template = template;
+  }, artifact);
+  const summary = designer.locator('app-field-card').first().locator('app-field-summary');
+  await expect(summary.locator('cedar-embeddable-field .child-component-content')).toBeVisible();
+  await expect(summary.locator('.cee-field-spec-description')).toHaveCount(0);
+  await expect(summary).not.toContainText('Free text over several lines.');
+  // The template keeps the description the summary leaves out.
+  expect(await currentTemplate(page)).toEqual(artifact);
+});
+
 test('occurrence ranges follow limits and repetition beside the field name', async ({ page }) => {
   const designer = await openDesigner(page);
   const artifact = templateToJson(
@@ -188,7 +223,10 @@ test('occurrence ranges follow limits and repetition beside the field name', asy
   await expect(required).toHaveCount(0);
   await expect(range).toHaveText('(3 .. 4)');
   await expect(range).toHaveCSS('align-self', 'baseline');
-  await expect(card.getByRole('textbox', { name: 'Field name', exact: true })).toHaveCSS('align-self', 'baseline');
+  await expect(card.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveCSS(
+    'align-self',
+    'baseline',
+  );
   await openSettings(card, 'Occurrences');
   await card.getByLabel('Maximum', { exact: true }).fill('');
   await card.getByLabel('Maximum', { exact: true }).press('Tab');
@@ -222,7 +260,7 @@ test('toggling repetition keeps the field header and preview stationary', async 
     document.body.style.setProperty('--cedar-font-size-small', '14px');
   });
   const targets = [
-    card.getByRole('textbox', { name: 'Field name', exact: true }),
+    card.getByRole('textbox', { name: 'Field display name', exact: true }),
     card.locator('app-field-summary'),
     card.locator('.field-header'),
     card.locator('.field-type-icon'),

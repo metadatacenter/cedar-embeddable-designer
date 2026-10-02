@@ -1,3 +1,4 @@
+import { applyPreset } from './support';
 import { addElementFixture, nestFixtureFields } from './support';
 import { expect, test } from '@playwright/test';
 import { openDesigner } from './support';
@@ -65,7 +66,7 @@ for (const width of [1280, 375]) {
     const toggle = card.getByRole('button', { name: /field settings/ });
     await header.locator('.field-type-icon').click();
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    await header.getByRole('textbox', { name: 'Field name' }).click();
+    await header.getByRole('textbox', { name: 'Field display name' }).click();
     await header.getByLabel('Allow multiple', { exact: true }).check();
     await header.locator('.field-drag-handle').click();
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
@@ -81,8 +82,7 @@ for (const width of [1280, 375]) {
       await expect(toggle).toHaveAttribute('aria-expanded', 'false');
     }
 
-    await page.getByRole('button', { name: 'Basic', exact: true }).click();
-    await page.getByRole('button', { name: /Modular/ }).click();
+    await applyPreset(page, 'modular');
     await addElementFixture(page, root);
     await nestFixtureFields(page, ['element']);
     const element = root.locator('.template-header-card').nth(1);
@@ -109,7 +109,7 @@ test('an unnamed field keeps its expanded tabs while its name is edited', async 
   await designer.getByRole('button', { name: /^Add field$/ }).click();
   await designer.locator('app-field-type-picker').getByRole('button', { name: 'Text', exact: true }).click();
   const card = designer.locator('app-field-card').last();
-  const name = card.getByRole('textbox', { name: 'Field name', exact: true });
+  const name = card.getByRole('textbox', { name: 'Field display name', exact: true });
   const toggle = card.getByRole('button', { name: /field settings/ });
   await expect(name).toBeFocused();
   await toggle.click();
@@ -135,8 +135,7 @@ for (const kind of ['field', 'element'] as const) {
       await page.setViewportSize({ width, height: 1000 });
       const designer = await openDesigner(page);
       if (kind === 'element') {
-        await designer.getByRole('button', { name: 'Basic', exact: true }).click();
-        await designer.getByRole('button', { name: /Modular/ }).click();
+        await applyPreset(page, 'modular');
       }
       const insert = designer.getByRole('button', { name: `Add ${kind} here`, exact: true }).first();
       await insert.focus();
@@ -145,7 +144,10 @@ for (const kind of ['field', 'element'] as const) {
         await designer.locator('app-field-type-picker').getByRole('button', { name: 'Text', exact: true }).click();
       }
       const card = designer.locator(kind === 'field' ? 'app-field-card' : '.nested-header').first();
-      const name = card.getByRole('textbox', { name: kind === 'field' ? 'Field name' : 'Element name', exact: true });
+      const name = card.getByRole('textbox', {
+        name: kind === 'field' ? 'Field display name' : 'Element name',
+        exact: true,
+      });
       const toggle = card.getByRole('button', { name: `Expand ${kind} settings`, exact: true });
       await expect(name).toBeFocused();
       await card.evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
@@ -171,7 +173,10 @@ test('keyboard blur still validates a blank name without waiting for a pointer',
   const designer = await openDesigner(page);
   await designer.getByRole('button', { name: /^Add field$/ }).click();
   await designer.locator('app-field-type-picker').getByRole('button', { name: 'Text', exact: true }).click();
-  const name = designer.locator('app-field-card').last().getByRole('textbox', { name: 'Field name', exact: true });
+  const name = designer
+    .locator('app-field-card')
+    .last()
+    .getByRole('textbox', { name: 'Field display name', exact: true });
   await expect(name).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(name).toHaveAttribute('aria-invalid', 'true');
@@ -189,7 +194,7 @@ test.describe('touch expansion', () => {
     await card.evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
     const bounds = (await card.getByRole('button', { name: 'Expand field settings', exact: true }).boundingBox())!;
     await page.touchscreen.tap(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
-    await expect(card.getByRole('textbox', { name: 'Field name', exact: true })).toHaveAttribute(
+    await expect(card.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveAttribute(
       'aria-invalid',
       'true',
     );

@@ -1,3 +1,4 @@
+import { applyPreset } from './support';
 import nestedTemplate from '../../src/app/core/model/fixtures/corpus/template-028.json' with { type: 'json' };
 import { expect, test } from '@playwright/test';
 import { openDesigner, currentTemplate, fieldOrder } from './support';
@@ -12,8 +13,8 @@ for (const width of [1280, 375])
     await designer.getByRole('button', { name: /^Add field$/ }).click();
     await expect(designer.getByRole('heading', { name: 'Choose field' })).toBeVisible();
     await expect(designer.getByRole('button', { name: 'Import field' })).toHaveCount(0);
-    await designer.getByRole('button', { name: 'Basic', exact: true }).click();
-    await designer.getByRole('button', { name: /Modular/ }).click();
+    await applyPreset(page, 'modular');
+    await expect(designer.locator('app-insertion-actions').first().getByRole('button')).toHaveCount(3);
     const before = await currentTemplate(page);
     await page.evaluate((section) => {
       section['schema:name'] = 'Section';
@@ -26,13 +27,21 @@ for (const width of [1280, 375])
               query === 'missing'
                 ? []
                 : [
-                    { id: String(field['@id']), name: 'Title', type: 'field', version: '1.0.0', status: 'Draft' },
+                    {
+                      id: String(field['@id']),
+                      name: 'Title',
+                      type: 'field',
+                      version: '0.0.1',
+                      status: 'bibo:draft',
+                      modifiedOn: '2026-09-29T12:00:00Z',
+                    },
                     {
                       id: String(section['@id']),
                       name: 'Section',
                       type: 'element',
-                      version: '1.0.0',
-                      status: 'Published',
+                      version: '0.0.1',
+                      modifiedOn: '2026-09-28T12:00:00Z',
+                      status: 'http://purl.org/ontology/bibo/status/published',
                     },
                   ],
           };
@@ -43,7 +52,7 @@ for (const width of [1280, 375])
       };
     }, nestedTemplate.properties['Read & Understood Catalog'] as CedJsonObject);
     const open = async () => {
-      await designer.getByRole('button', { name: 'Import field', exact: true }).click();
+      await designer.getByRole('button', { name: 'Import fields and elements', exact: true }).click();
       await expect(designer.getByRole('dialog')).toBeVisible();
       await designer.getByRole('searchbox').fill('Title');
       await designer.getByRole('button', { name: 'Search', exact: true }).click();
@@ -57,31 +66,92 @@ for (const width of [1280, 375])
     await designer.getByRole('button', { name: 'Cancel', exact: true }).click();
     expect(await currentTemplate(page)).toEqual(before);
     await open();
-    await expect(designer.getByRole('row', { name: 'Select Section', exact: true })).toHaveCount(0);
+
+    const dialog = designer.getByRole('dialog', { name: 'Import Fields and Elements' });
+    await expect(dialog.getByRole('searchbox', { name: 'Search for fields or elements' })).toBeVisible();
+    // Cancel and Done close the dialog from its bottom right, as the designer's other dialogs do.
+    await page.evaluate(() => document.fonts.ready);
+    // A native dialog recentres as its content settles. Read every box in one layout
+    // frame so movement between Playwright calls cannot look like misaligned buttons.
+    const { frame, results, cancelBox, doneBox } = await dialog.evaluate((element) => {
+      const tables = element.querySelectorAll('table');
+      const buttons = element.querySelectorAll('.actions button');
+      return {
+        frame: element.getBoundingClientRect().toJSON(),
+        results: tables[tables.length - 1].getBoundingClientRect().toJSON(),
+        cancelBox: buttons[0].getBoundingClientRect().toJSON(),
+        doneBox: buttons[1].getBoundingClientRect().toJSON(),
+      };
+    });
+    expect(doneBox.y).toBeGreaterThan(results.y + results.height);
+    expect(Math.abs(cancelBox.y - doneBox.y)).toBeLessThanOrEqual(1);
+    expect(cancelBox.x + cancelBox.width).toBeLessThan(doneBox.x);
+    expect(frame.x + frame.width - (doneBox.x + doneBox.width)).toBeLessThan(40);
+    await dialog.screenshot({ path: test.info().outputPath('import-dialog.png') });
+    // The search field clears with the registry's close glyph, drawn as a mask, rather than the
+    // browser's own button. Chromium reports no computed style for that pseudo-element, so the
+    // rule that draws it is read instead.
+    const masked = await dialog.getByRole('searchbox').evaluate((input) => {
+      const root = input.getRootNode() as Document | ShadowRoot;
+      const pseudo = '::-webkit-search-cancel-button';
+      return [...root.styleSheets, ...root.adoptedStyleSheets]
+        .flatMap((sheet) => [...sheet.cssRules])
+        .some(
+          (rule) =>
+            rule instanceof CSSStyleRule &&
+            rule.selectorText.endsWith(pseudo) &&
+            input.matches(rule.selectorText.slice(0, -pseudo.length)) &&
+            rule.style.getPropertyValue('mask-image').startsWith('url("data:image/svg+xml'),
+        );
+    });
+    expect(masked).toBe(true);
+    await designer.getByRole('row', { name: 'Select Section', exact: true }).click();
+    const selected = dialog.getByRole('table', { name: 'Selected items' });
+    await expect(selected.locator('.version-cell')).toHaveText(['0.0.1 · draft', '0.0.1 · published']);
+    await expect(dialog.getByRole('table', { name: 'Search results' }).locator('.version-cell')).toHaveText([
+      '0.0.1 · draft',
+      '0.0.1 · published',
+    ]);
+    await expect(selected.locator('.status').first()).toHaveCSS('display', 'inline');
+
+    await selected.getByRole('button', { name: 'Reorder Section', exact: true }).press('ArrowUp');
+    await expect(selected.locator('tbody .name-cell')).toHaveText(['Section', 'Title']);
+    await expect(dialog.getByRole('table', { name: 'Search results' }).getByRole('columnheader')).toHaveText([
+      'Type',
+      'Name',
+      'Last modified',
+      'Version',
+    ]);
+    await expect(selected.locator('th').first()).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    if (width === 1280) {
+      const handle = selected.getByRole('button', { name: 'Reorder Title', exact: true });
+      const from = (await handle.boundingBox())!;
+      const target = (await selected.locator('tbody tr').first().boundingBox())!;
+      await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(from.x + from.width / 2, from.y - 8, { steps: 4 });
+      await page.mouse.move(from.x + from.width / 2, target.y + 4, { steps: 12 });
+      await page.mouse.up();
+      await expect(selected.locator('tbody .name-cell')).toHaveText(['Title', 'Section']);
+      await handle.press('ArrowDown');
+      await expect(selected.locator('tbody .name-cell')).toHaveText(['Section', 'Title']);
+    }
     await page.screenshot({ path: `/tmp/ced-child-dialog-${width}.png` });
     await designer.getByRole('button', { name: 'Done', exact: true }).click();
     await expect(designer.getByRole('dialog')).toHaveCount(0);
-    expect(fieldOrder(await currentTemplate(page))).toEqual(['Title', 'Category', 'Publication Date', 'title']);
-    await designer.getByRole('button', { name: 'Import element', exact: true }).click();
-    await designer.getByRole('searchbox').fill('Section');
-    await designer.getByRole('button', { name: 'Search', exact: true }).click();
-    await expect(designer.getByRole('row', { name: 'Select Title', exact: true })).toHaveCount(0);
-    await designer.getByRole('row', { name: 'Select Section', exact: true }).click();
-    await designer.getByRole('button', { name: 'Done', exact: true }).click();
     expect(fieldOrder(await currentTemplate(page))).toEqual([
       'Title',
       'Category',
       'Publication Date',
-      'title',
       'section',
+      'title',
     ]);
   });
 
 test('creates an editable element at the insertion position and adds a nested field', async ({ page }) => {
   const designer = await openDesigner(page);
   await expect(designer.getByRole('button', { name: 'Add element', exact: true })).toHaveCount(0);
-  await designer.getByRole('button', { name: 'Basic', exact: true }).click();
-  await designer.getByRole('button', { name: /Modular/ }).click();
+  await applyPreset(page, 'modular');
   const insert = designer.getByRole('button', { name: 'Add element here', exact: true }).first();
   await insert.focus();
   await insert.click();

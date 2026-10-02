@@ -1,5 +1,5 @@
-@use '../../shared/table-style';
-@use '../../shared/control-style';
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
+@use '@org.metadatacenter/cedar-design-tokens/authoring';
 :host {
   display: block;
   margin-top: var(--cedar-space-3);
@@ -13,28 +13,26 @@ fieldset {
   min-width: 0;
 }
 legend {
-  font-weight: var(--cedar-font-weight-medium, 500);
+  @include authoring.label-text;
   padding: 0;
   margin-bottom: var(--cedar-space-1);
 }
 .add-row {
   display: flex;
-  gap: var(--cedar-space-2);
-  margin-bottom: var(--cedar-space-2);
   flex-wrap: wrap;
 }
 input {
-  @include control-style.compact-control;
+  @include authoring.compact-control;
   flex: 1;
   min-width: 100px;
 }
 button {
   font: inherit;
   color: var(--cedar-color-primary);
-  background: white;
-  border: 1px solid var(--cedar-primary-100);
-  border-radius: 3px;
-  padding: var(--cedar-space-1) 6px;
+  background: var(--cedar-surface-raised);
+  border: 1px solid var(--cedar-border-rule);
+  border-radius: var(--cedar-radius);
+  padding: var(--cedar-space-1) var(--cedar-space-2);
   cursor: pointer;
 }
 button:disabled {
@@ -47,7 +45,7 @@ table {
   table-layout: fixed;
 }
 th {
-  font-weight: var(--cedar-font-weight-medium, 500);
+  @include authoring.label-text;
   text-align: left;
   padding: var(--cedar-space-1);
   border-bottom: 1px solid var(--cedar-border-rule);
@@ -56,7 +54,7 @@ th.actions {
   width: 32px;
 }
 td {
-  padding: 2px var(--cedar-space-1);
+  @include spacing.apply(padding, compact-cell);
   vertical-align: middle;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
@@ -67,16 +65,17 @@ td {
   justify-content: center;
   width: 24px;
   height: 24px;
-  padding: 2px;
+  @include spacing.apply(padding, compact);
   border: 0;
   background: transparent;
-  color: black;
+  color: var(--cedar-color-primary);
 }
 .empty {
-  color: #64748b;
+  color: var(--cedar-text-muted);
 }
 p[role='alert'] {
-  color: var(--cedar-control-error, var(--cedar-color-error));
+  --cedar-icon-color: var(--cedar-control-error, var(--cedar-status-error-text));
+  color: var(--cedar-control-error, var(--cedar-status-error-text));
   margin: var(--cedar-space-1) 0;
 }
 .sr-only {
@@ -87,4 +86,4 @@ p[role='alert'] {
   clip-path: inset(50%);
 }
 
-@include table-style.compact-table;
+@include authoring.compact-table;

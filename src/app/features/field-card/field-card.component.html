@@ -5,7 +5,7 @@
 }
 <div>
   <div class="field-card-body">
-    <fieldset [disabled]="!!field.publishedDefinition" class="border-0 m-0 p-0 min-w-0">
+    <fieldset [disabled]="!!field.publishedDefinition" class="field-edit-scope">
       <!-- Header Row: Icon and Name editing -->
       <div appHeaderToggle (headerToggle)="toggleSettings()" class="field-header" [class.standalone]="standalone">
         <div class="field-heading">
@@ -21,16 +21,15 @@
             spellcheck="false"
             type="text"
             [appArtifactName]="field.id"
-            aria-required="true"
             [attr.aria-invalid]="!!service.nameError(field.id, field.name, 'field')"
             [attr.aria-describedby]="service.nameError(field.id, field.name, 'field') ? 'name-error-' + field.id : null"
-            [ngModel]="field.name"
-            (ngModelChange)="service.updateFieldName(field.id, $event)"
-            class="text-sm font-medium text-gray-900 border-none outline-none pb-0.5 flex-1 min-w-0 bg-transparent border-b-2"
-            [style.borderBottomColor]="service.selectedField() === field.id ? 'var(--cedar-color-primary)' : '#d1d5db'"
+            [ngModel]="displayName(field)"
+            (ngModelChange)="updateDisplayName($event)"
+            class="field-name"
+            [class.selected]="service.selectedField() === field.id"
             (focus)="service.selectedField.set(field.id)"
             [placeholder]="'fieldCard.namePlaceholder' | translate"
-            [attr.aria-label]="'fieldCard.name' | translate"
+            [attr.aria-label]="'fieldCard.displayName' | translate"
           />
           @if (field.status === 'required' && allowsStatus(field.type)) {
             <sup class="required-mark" [attr.aria-label]="'common.required' | translate">*</sup>
@@ -82,7 +81,7 @@
                 [attr.aria-label]="'fieldCard.requirement' | translate"
                 [ngModel]="field.status"
                 (ngModelChange)="service.updateFieldStatus(field.id, $event)"
-                class="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded px-1 py-0.5"
+                class="field-requirement"
               >
                 <option value="optional">{{ 'fieldCard.optional' | translate }}</option>
                 <option value="recommended">{{ 'fieldCard.recommended' | translate }}</option>
@@ -92,23 +91,21 @@
             @if (
               !service.fieldDocumentMode() && service.preferences().showAllowMultiple && allowsMultiple(field.type)
             ) {
-              <label class="flex items-center gap-1 cursor-pointer group shrink-0">
+              <label class="field-repetition group">
                 <input
                   spellcheck="false"
                   type="checkbox"
                   [checked]="field.allowMultiple"
                   (change)="service.toggleAllowMultiple(field.id)"
-                  class="w-3.5 h-3.5 checkbox-white"
+                  class="checkbox-white field-repetition-check"
                 />
-                <span class="text-xs text-gray-600 group-hover:text-gray-900 whitespace-nowrap">{{
-                  'settings.allowMultiple' | translate
-                }}</span>
+                <span class="field-repetition-label">{{ 'settings.allowMultiple' | translate }}</span>
               </label>
             }
             @if (!standalone) {
               <button
                 (click)="service.deleteField(field.id)"
-                class="inline-flex items-center justify-center text-black disabled:text-gray-400 p-0.5 transition-colors border-none bg-transparent cursor-pointer shrink-0"
+                class="field-icon-action shrink-0"
                 [title]="'fieldCard.delete' | translate"
                 [attr.aria-label]="'fieldCard.delete' | translate"
               >
@@ -121,7 +118,7 @@
     </fieldset>
     <!-- Reuse CEE's read-only specification; options remain editable below. -->
     @if (!contentLabel(field.type)) {
-      <app-field-summary class="mt-1" [field]="field" />
+      <app-field-summary [field]="field" />
     }
     @if (service.nameError(field.id, field.name, 'field'); as error) {
       <p class="ced-field-error" [id]="'name-error-' + field.id">{{ error }}</p>
@@ -131,13 +128,13 @@
       [field]="field"
       [hasValues]="allowsOptions(field.type) || allowsControlledTerms(field.type) || !!contentLabel(field.type)"
     >
-      <fieldset field-values [disabled]="!!field.publishedDefinition" class="border-0 m-0 p-0 min-w-0">
+      <fieldset field-values [disabled]="!!field.publishedDefinition" class="field-edit-scope">
         <!-- Field Preview / Options Editing Inside Card -->
         <!-- Option Editing for Multiple Choice / Checkboxes -->
         @if (allowsOptions(field.type)) {
-          <div class="choice-options px-1">
+          <div class="choice-options">
             @for (option of field.options; track $index; let optIdx = $index) {
-              <div class="choice-option-row flex items-center gap-3 group/option px-1">
+              <div class="choice-option-row group/option">
                 <app-icon
                   [key]="
                     field.type === 'singleChoiceList' || field.type === 'multipleChoice'
@@ -145,16 +142,21 @@
                       : 'checkboxes'
                   "
                   size="default"
-                  className="text-gray-400"
+                  class="choice-option-icon"
                 ></app-icon>
                 <input
                   spellcheck="false"
                   type="text"
                   [ngModel]="option"
-                  [attr.aria-invalid]="!option.trim()"
-                  [attr.aria-describedby]="!option.trim() ? 'option-error-' + field.id + '-' + optIdx : null"
+                  [attr.aria-invalid]="!option.trim() && service.optionErrorVisible(field.id, optIdx)"
+                  [attr.aria-describedby]="
+                    !option.trim() && service.optionErrorVisible(field.id, optIdx)
+                      ? 'option-error-' + field.id + '-' + optIdx
+                      : null
+                  "
+                  (blur)="service.touchOption(field.id, optIdx)"
                   (ngModelChange)="service.updateOption(field.id, optIdx, $event)"
-                  class="border-none outline-none bg-transparent flex-1 min-w-0 border-b border-gray-200 focus:border-teal-500"
+                  class="choice-option-input"
                   (focus)="service.selectedField.set(field.id)"
                   [placeholder]="'fieldCard.option' | translate: { number: optIdx + 1 }"
                   [attr.aria-label]="'fieldCard.option' | translate: { number: optIdx + 1 }"
@@ -163,7 +165,7 @@
                 @if (field.options.length > 0) {
                   <button
                     (click)="service.deleteOption(field.id, optIdx)"
-                    class="text-black disabled:text-gray-400 transition-colors cursor-pointer border-none bg-transparent flex items-center justify-center p-0.5"
+                    class="field-icon-action"
                     [title]="'fieldCard.deleteOption' | translate"
                     [attr.aria-label]="'fieldCard.deleteOption' | translate"
                   >
@@ -171,7 +173,7 @@
                   </button>
                 }
               </div>
-              @if (!option.trim()) {
+              @if (!option.trim() && service.optionErrorVisible(field.id, optIdx)) {
                 <p class="ced-field-error" [id]="'option-error-' + field.id + '-' + optIdx" role="alert">
                   {{ 'validation.optionName' | translate: { number: optIdx + 1 } }}
                 </p>
@@ -180,7 +182,7 @@
             <!-- Add Option Button -->
             <button
               (click)="service.addOption(field.id); service.selectedField.set(field.id)"
-              class="choice-add-action flex items-center px-1 text-xs text-gray-500 hover:text-teal-600 transition-colors border-none bg-transparent cursor-pointer font-medium"
+              class="choice-add-action"
             >
               <app-icon key="add" size="default" /> {{ 'fieldCard.addOption' | translate }}
             </button>
@@ -201,10 +203,8 @@
     hint about what a form-filler will type.
   -->
         @if (contentLabel(field.type); as label) {
-          <div class="mt-1 px-1">
-            <label [for]="'field-content-' + field.id" class="content-label mb-0.5 block">{{
-              label | translate
-            }}</label>
+          <div class="field-content">
+            <label [for]="'field-content-' + field.id" class="content-label">{{ label | translate }}</label>
             @if (hasMarkupContent(field.type)) {
               <textarea
                 spellcheck="false"
@@ -212,7 +212,7 @@
                 rows="4"
                 [ngModel]="field.content || ''"
                 (ngModelChange)="service.updateContent(field.id, $event)"
-                class="text-sm w-full border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:border-teal-600"
+                class="field-content-control"
               ></textarea>
             } @else {
               <input
@@ -222,7 +222,7 @@
                 [ngModel]="field.content || ''"
                 (ngModelChange)="service.updateContent(field.id, $event)"
                 [placeholder]="FIELD_TYPES_LIST[field.type]?.previewKey || '' | translate"
-                class="text-sm w-full border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:border-teal-600"
+                class="field-content-control"
               />
             }
           </div>
@@ -232,7 +232,7 @@
   </div>
 
   @if (choiceDefaultConflict(field); as conflict) {
-    <div class="mt-1 px-1">
+    <div class="field-content">
       <p role="alert" class="ced-field-error">{{ conflict }}</p>
       <button type="button" class="ced-text-action" (click)="service.updateDefaultValue(field.id, { kind: 'none' })">
         {{ 'fieldCard.clearConflict' | translate }}

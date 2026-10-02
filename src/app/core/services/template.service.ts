@@ -1,7 +1,8 @@
 import { childKeyError } from '../model/child-key-policy';
+import { elementDisplayOverride, fieldDisplayOverride } from '../model/field-display-name';
 import { reducePrecision } from '../model/precision-change';
 import { artifactNameError, validateDocument } from '../model/document-validation';
-import { CedChildSource, CedJsonObject, CedValidationIssue } from '../../ced-public-api';
+import { CedChildSource, CedJsonObject, CedValidationIssue, CedValidationReport } from '../../ced-public-api';
 import { EditorSession } from './editor-session';
 import {
   containerFromFlat,
@@ -43,6 +44,16 @@ import {
 } from '../model/cedar-template';
 
 export { FIELD_TYPES } from '../models/types';
+
+/** Every container and child whose name the author can see, throughout the document. */
+function namedIds(container: ContainerDraft): number[] {
+  return [
+    container.id,
+    ...container.children.flatMap((node) =>
+      node.kind === 'element' ? [node.id, ...namedIds(node.definition)] : [node.id],
+    ),
+  ];
+}
 
 /**
  * The three fields a new template opens with.
@@ -105,6 +116,7 @@ function choiceDefault(field: Field, options: string[], renamed?: { from: string
 })
 export class TemplateService {
   private readonly automaticKeys = new Set<number>();
+  private readonly automaticFieldNames = new Set<number>();
 
   private generatedKey(id: number, name: string): string {
     const candidate = name.trim().toLowerCase().replace(/\s+/g, '_');
@@ -152,9 +164,16 @@ export class TemplateService {
   nameError(id: number, name: string, kind: 'field' | 'element' | 'template'): string | null {
     return this.touchedNames().has(id) ? artifactNameError(name, kind, this.i18n.t) : null;
   }
-  readonly visibleIssues = computed(() =>
-    this.validationReport().issues.filter((issue) => issue.setting !== 'name' || this.touchedNames().has(issue.nodeId)),
-  );
+  // A newly inserted choice field has one blank starter option, not an author error yet.
+  private readonly pristineStarterOptions = signal<ReadonlySet<number>>(new Set());
+  touchOption(id: number, index: number): void {
+    if (index !== 0 || !this.pristineStarterOptions().has(id)) return;
+    this.pristineStarterOptions.update((ids) => new Set([...ids].filter((candidate) => candidate !== id)));
+  }
+  optionErrorVisible(id: number, index: number): boolean {
+    return index !== 0 || !this.pristineStarterOptions().has(id);
+  }
+  readonly visibleIssues = computed(() => this.validationReport().issues.filter((issue) => issue.shown));
   visibleIssuesFor(id: number): CedValidationIssue[] {
     return this.visibleIssues().filter((issue) => issue.path.includes(id));
   }
@@ -173,12 +192,27 @@ export class TemplateService {
       return next;
     });
   }
-  readonly validationReport = computed(() => validateDocument(this.document(), this.draftIssues(), this.i18n.t));
+  private readonly documentReport = computed(() => validateDocument(this.document(), this.draftIssues(), this.i18n.t));
+  /** The document's issues, each marked with whether the summary lists it yet. */
+  readonly validationReport = computed((): CedValidationReport => {
+    const report = this.documentReport();
+    return {
+      ...report,
+      issues: report.issues.map((issue) => ({
+        ...issue,
+        shown:
+          issue.setting === 'name'
+            ? this.touchedNames().has(issue.nodeId)
+            : issue.setting !== 'option-0' || this.optionErrorVisible(issue.nodeId, 0),
+      })),
+    };
+  });
   issuesFor(id: number): CedValidationIssue[] {
     return this.validationReport().issues.filter((issue) => issue.path.includes(id));
   }
   revealIssue(issue: CedValidationIssue): void {
     if (issue.setting === 'name') this.touchName(issue.nodeId);
+    if (issue.setting === 'option-0') this.touchOption(issue.nodeId, 0);
     this.openContainer(this.parentContainerId(issue.nodeId));
     this.selectedField.set(issue.nodeId);
     this.scrollRequest.set(issue.nodeId);
@@ -381,7 +415,9 @@ export class TemplateService {
       allowMultiple: false,
     };
 
+    if (newField.options[0] === '') this.pristineStarterOptions.update((ids) => new Set([...ids, newField.id]));
     this.automaticKeys.add(newField.id);
+    this.automaticFieldNames.add(newField.id);
     this.insertNode(fieldNode(newField), position, targetId, false);
     this.nameFocusRequest.set(newField.id);
 
@@ -420,6 +456,33 @@ export class TemplateService {
     }
   }
 
+  updateFieldDisplayName(id: number, value: string): string | null {
+    const field = this.fieldsFor(id)().find((item) => item.id === id);
+    if (!field) return null;
+    if (this.automaticFieldNames.has(id)) this.updateFieldName(id, value);
+    return this.updateFieldSettings(
+      id,
+      fieldDisplayOverride(field) ? { displayLabel: value } : { preferredLabel: value },
+    );
+  }
+
+  /**
+   * Edits the name an element placement shows, from its header or its Display tab alike: the
+   * parent's override where there is one, otherwise the element's own name.
+   */
+  updateElementDisplayName(node: ElementNode, value: string): string | null {
+    if (elementDisplayOverride(node)) {
+      return this.updateElementPlacement(node.id, { ...node.placement, displayLabel: value });
+    }
+    // A filler label repeating the old name would otherwise outlive the rename as an override.
+    if (node.placement.displayLabel !== undefined) {
+      const error = this.updateElementPlacement(node.id, { ...node.placement, displayLabel: undefined });
+      if (error) return error;
+    }
+    this.updateContainerDefinition(node.definition.id, { name: value });
+    return null;
+  }
+
   updateFieldName(id: number, name: string) {
     if (this.isPublished(id)) return;
     const deploymentName = this.automaticKeys.has(id) ? this.generatedKey(id, name) : undefined;
@@ -446,6 +509,7 @@ export class TemplateService {
   }
 
   updateOption(fieldId: number, optionIndex: number, value: string) {
+    this.touchOption(fieldId, optionIndex);
     if (this.isPublished(fieldId)) return;
     this.fieldsFor(fieldId).update((prev) =>
       prev.map((f) => {
@@ -484,6 +548,7 @@ export class TemplateService {
   }
 
   deleteOption(fieldId: number, optionIndex: number) {
+    this.touchOption(fieldId, optionIndex);
     if (this.isPublished(fieldId)) return;
     this.fieldsFor(fieldId).update((prev) =>
       prev.map((f) => {
@@ -504,6 +569,40 @@ export class TemplateService {
 
   isPublished(id: number): boolean {
     return !!this.fieldsFor(id)().find((field) => field.id === id)?.publishedDefinition;
+  }
+
+  /**
+   * The property keys from the template to this field or element, which is how the CEE
+   * preview addresses it. Null for the template itself, or while two siblings share a key.
+   *
+   * An element designed on its own is previewed inside a template that holds it under
+   * its name, so its path starts there.
+   */
+  previewPath(id: number): string[] | null {
+    const document = this.session.document();
+    const search = (container: ContainerDraft, prefix: string[]): string[] | null => {
+      let keys: string[];
+      try {
+        keys = deploymentKeys(
+          container.children.map((node) => ({
+            name: node.definition.name,
+            deploymentName: node.placement.deploymentName,
+          })),
+        );
+      } catch {
+        return null;
+      }
+      for (const [index, node] of container.children.entries()) {
+        const path = [...prefix, keys[index]];
+        if (node.id === id) return path;
+        if (node.kind === 'element') {
+          const found = search(node.definition, path);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    return search(document, document.kind === 'element' ? [document.name || 'Element'] : []);
   }
 
   childKey(id: number): string {
@@ -648,6 +747,7 @@ export class TemplateService {
     }
     this.draftIssues.set({});
     this.touchedNames.set(new Set());
+    this.pristineStarterOptions.set(new Set());
     this.nameFocusRequest.set(null);
     this.childPicker.set(null);
     this.session.replace(document);
@@ -681,7 +781,11 @@ export class TemplateService {
 
     this.initialInsertionId.set(null);
     this.draftIssues.set({});
-    this.touchedNames.set(new Set());
+    // A name the template arrived with is the author's, not a blank the designer has just
+    // put in front of them, so a missing one is stated at once. Held back like a new
+    // field's, it refused Save with nothing on screen to say why.
+    this.touchedNames.set(new Set(namedIds(state)));
+    this.pristineStarterOptions.set(new Set());
     this.nameFocusRequest.set(null);
     this.childPicker.set(null);
     this.session.replace(state);
@@ -734,8 +838,14 @@ export class TemplateService {
   ): void {
     const target = findContainer(this.session.document(), targetId);
     if (!target) throw new LocalizedError(message('errors.importDestinationMissing'));
-    if (target.kind === 'element' && node.kind === 'field' && !target.children.length && !target.name.trim()) {
-      this.touchName(target.id);
+    // Beginning child authoring must explain why Save is blocked even when the
+    // author never focused the containing template or element's name.
+    for (
+      let ancestor: ContainerDraft | undefined = target;
+      ancestor;
+      ancestor = parentOf(this.document(), ancestor.id)
+    ) {
+      if (!ancestor.name.trim()) this.touchName(ancestor.id);
     }
     this.loadError.set(null);
     if (namePlacement) {

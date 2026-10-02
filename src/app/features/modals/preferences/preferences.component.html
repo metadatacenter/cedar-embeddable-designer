@@ -1,51 +1,35 @@
 @if (service.showPreferencesModal()) {
   <!-- Backdrop -->
-  <div class="cedar-modal-backdrop fixed inset-0 z-50 animate-backdrop-fade-in" (click)="close()"></div>
+  <div class="cedar-modal-backdrop settings-dialog-backdrop animate-backdrop-fade-in" (click)="close()"></div>
   <!-- Modal -->
   <div
-    class="cedar-modal-surface fixed z-50 max-w-2xl w-full max-h-[85vh] overflow-hidden animate-modal-fade-in"
+    class="cedar-modal-surface settings-dialog-panel max-w-2xl animate-modal-fade-in"
     style="left: 50%; top: 50%; transform: translate(-50%, -50%)"
   >
     <!-- Header -->
-    <div
-      class="px-6 py-4 border-b preferences-border flex items-center justify-between sticky top-0 preferences-surface z-10"
-    >
-      <div class="flex items-center gap-3">
-        <div
-          class="w-10 h-10 rounded-full flex items-center justify-center"
-          [style.backgroundColor]="'var(--cedar-primary-50)'"
-        >
+    <div class="settings-dialog-header">
+      <div class="settings-dialog-heading">
+        <div class="settings-dialog-badge">
           <app-icon key="settings" [style.color]="'var(--cedar-color-primary)'" size="default"></app-icon>
         </div>
         <h2 class="preferences-title">{{ 'preferences.title' | translate }}</h2>
       </div>
-      <button
-        [attr.aria-label]="'preferences.close' | translate"
-        (click)="close()"
-        class="preferences-muted transition-colors p-1"
-      >
+      <button [attr.aria-label]="'preferences.close' | translate" (click)="close()" class="settings-dialog-close">
         <app-icon key="close" size="default"></app-icon>
       </button>
     </div>
     <!-- Content -->
     <div class="overflow-y-auto custom-scrollbar" style="max-height: calc(85vh - 130px)">
-      <div class="p-6 space-y-6">
+      <div class="settings-dialog-body settings-dialog-stack">
         <!-- Preset configurations -->
         <div>
-          <h3 class="preferences-label mb-3">{{ 'preferences.presets.heading' | translate }}</h3>
-          <div class="flex gap-2">
+          <h3 class="preferences-label preferences-spaced">{{ 'preferences.presets.heading' | translate }}</h3>
+          <div class="preferences-actions">
             @for (preset of presets; track preset) {
               <button
                 (click)="service.applyPreset(preset)"
-                class="px-3 py-2 text-sm font-medium rounded transition-colors cursor-pointer capitalize"
-                [style.backgroundColor]="
-                  service.getActivePreset() === preset ? 'var(--cedar-color-primary)' : 'var(--cedar-surface-authoring)'
-                "
-                [style.color]="
-                  service.getActivePreset() === preset
-                    ? 'var(--cedar-action-primary-text)'
-                    : 'var(--cedar-text-primary)'
-                "
+                class="preferences-preset"
+                [class.active]="service.getActivePreset() === preset"
               >
                 {{ 'preferences.presets.' + preset | translate }}
               </button>
@@ -54,54 +38,54 @@
         </div>
         <!-- Field configuration options -->
         <div>
-          <h3 class="preferences-label mb-3">{{ 'preferences.fieldOptions.heading' | translate }}</h3>
-          <div class="space-y-3 preferences-group rounded-lg p-4">
-            <label class="flex items-center gap-3 cursor-pointer group">
+          <h3 class="preferences-label preferences-spaced">{{ 'preferences.fieldOptions.heading' | translate }}</h3>
+          <div class="settings-dialog-group preferences-choice-list">
+            <label class="preferences-option group">
               <input
                 spellcheck="false"
                 type="checkbox"
                 [ngModel]="service.preferences().showRequired"
                 (ngModelChange)="updatePref('showRequired', $event)"
-                class="w-4 h-4 checkbox-white"
+                class="settings-dialog-check checkbox-white"
               />
               <div class="flex-1">
                 <span class="preferences-label">{{ 'preferences.fieldOptions.required.label' | translate }}</span>
                 <p class="preferences-help">{{ 'preferences.fieldOptions.required.help' | translate }}</p>
               </div>
             </label>
-            <label class="flex items-center gap-3 cursor-pointer group">
+            <label class="preferences-option group">
               <input
                 spellcheck="false"
                 type="checkbox"
                 [ngModel]="service.preferences().showAllowMultiple"
                 (ngModelChange)="updatePref('showAllowMultiple', $event)"
-                class="w-4 h-4 checkbox-white"
+                class="settings-dialog-check checkbox-white"
               />
               <div class="flex-1">
                 <span class="preferences-label">{{ 'preferences.fieldOptions.allowMultiple.label' | translate }}</span>
                 <p class="preferences-help">{{ 'preferences.fieldOptions.allowMultiple.help' | translate }}</p>
               </div>
             </label>
-            <label class="flex items-center gap-3 cursor-pointer group">
+            <label class="preferences-option group">
               <input
                 spellcheck="false"
                 type="checkbox"
                 [ngModel]="service.preferences().showHelpText"
                 (ngModelChange)="updatePref('showHelpText', $event)"
-                class="w-4 h-4 checkbox-white"
+                class="settings-dialog-check checkbox-white"
               />
               <div class="flex-1">
                 <span class="preferences-label">{{ 'preferences.fieldOptions.helpText.label' | translate }}</span>
                 <p class="preferences-help">{{ 'preferences.fieldOptions.helpText.help' | translate }}</p>
               </div>
             </label>
-            <label class="flex items-center gap-3 cursor-pointer group">
+            <label class="preferences-option group">
               <input
                 spellcheck="false"
                 type="checkbox"
                 [ngModel]="service.preferences().showDefaultValue"
                 (ngModelChange)="updatePref('showDefaultValue', $event)"
-                class="w-4 h-4 checkbox-white"
+                class="settings-dialog-check checkbox-white"
               />
               <div class="flex-1">
                 <span class="preferences-label">{{ 'preferences.fieldOptions.defaultValue.label' | translate }}</span>
@@ -112,15 +96,15 @@
         </div>
         <!-- Feature visibility -->
         <div>
-          <h3 class="preferences-label mb-3">{{ 'preferences.features.heading' | translate }}</h3>
-          <div class="preferences-group rounded-lg p-4 space-y-3">
-            <label class="flex items-center gap-3 cursor-pointer group">
+          <h3 class="preferences-label preferences-spaced">{{ 'preferences.features.heading' | translate }}</h3>
+          <div class="settings-dialog-group preferences-choice-list">
+            <label class="preferences-option group">
               <input
                 spellcheck="false"
                 type="checkbox"
                 [ngModel]="service.preferences().showElements"
                 (ngModelChange)="updatePref('showElements', $event)"
-                class="w-4 h-4 checkbox-white"
+                class="settings-dialog-check checkbox-white"
               />
               <div class="flex-1">
                 <span class="preferences-label">{{ 'preferences.features.elements.label' | translate }}</span>
@@ -131,36 +115,32 @@
         </div>
         <!-- Field selection style -->
         <div>
-          <h3 class="preferences-label mb-3">{{ 'preferences.selection.heading' | translate }}</h3>
-          <div class="preferences-group rounded-lg p-4">
-            <p class="preferences-help mb-3">{{ 'preferences.selection.help' | translate }}</p>
-            <div class="space-y-2">
-              <label
-                class="flex items-center gap-3 cursor-pointer group p-2 rounded preferences-surface preferences-choice transition-colors"
-              >
+          <h3 class="preferences-label preferences-spaced">{{ 'preferences.selection.heading' | translate }}</h3>
+          <div class="settings-dialog-group">
+            <p class="preferences-help preferences-spaced">{{ 'preferences.selection.help' | translate }}</p>
+            <div class="preferences-selection-list">
+              <label class="preferences-option preferences-choice group">
                 <input
                   spellcheck="false"
                   type="radio"
                   name="fieldSelectionStyle"
                   [checked]="service.preferences().fieldSelectionStyle === 'modal'"
                   (change)="updatePref('fieldSelectionStyle', 'modal')"
-                  class="w-4 h-4 radio-white text-emerald-700"
+                  class="settings-dialog-check radio-white"
                 />
                 <div class="flex-1">
                   <span class="preferences-label">{{ 'preferences.selection.inline.label' | translate }}</span>
                   <p class="preferences-help">{{ 'preferences.selection.inline.help' | translate }}</p>
                 </div>
               </label>
-              <label
-                class="flex items-center gap-3 cursor-pointer group p-2 rounded preferences-surface preferences-choice transition-colors"
-              >
+              <label class="preferences-option preferences-choice group">
                 <input
                   spellcheck="false"
                   type="radio"
                   name="fieldSelectionStyle"
                   [checked]="service.preferences().fieldSelectionStyle === 'sidebar'"
                   (change)="updatePref('fieldSelectionStyle', 'sidebar')"
-                  class="w-4 h-4 radio-white text-emerald-700"
+                  class="settings-dialog-check radio-white"
                 />
                 <div class="flex-1">
                   <span class="preferences-label">{{ 'preferences.selection.sidebar.label' | translate }}</span>
@@ -172,40 +152,39 @@
         </div>
         <!-- Visible field types -->
         <div>
-          <div class="flex items-center justify-between mb-3">
+          <div class="preferences-section-header">
             <h3 class="preferences-label">{{ 'preferences.fieldTypes.heading' | translate }}</h3>
-            <div class="flex gap-2">
+            <div class="preferences-actions">
               <button
                 (click)="service.toggleAllFieldTypes(true)"
-                class="text-xs px-2 py-1 rounded transition-colors"
+                class="preferences-small-action"
                 [style.color]="'var(--cedar-color-primary)'"
-                [style.backgroundColor]="'var(--cedar-primary-50)'"
               >
                 {{ 'preferences.fieldTypes.selectAll' | translate }}
               </button>
               <button
                 (click)="service.toggleAllFieldTypes(false)"
-                class="text-xs px-2 py-1 rounded preferences-secondary transition-colors"
+                class="preferences-small-action preferences-secondary"
               >
                 {{ 'preferences.fieldTypes.deselectAll' | translate }}
               </button>
             </div>
           </div>
-          <div class="preferences-group rounded-lg p-4">
-            <p class="preferences-help mb-3">
+          <div class="settings-dialog-group">
+            <p class="preferences-help preferences-spaced">
               {{ 'preferences.fieldTypes.help' | translate }}
             </p>
-            <div class="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto custom-scrollbar pr-2 pb-2">
+            <div class="preferences-field-grid max-h-60 custom-scrollbar">
               @for (item of fieldTypesList; track item) {
-                <label class="flex items-center gap-2 cursor-pointer group">
+                <label class="preferences-field-option group">
                   <input
                     spellcheck="false"
                     type="checkbox"
                     [checked]="service.preferences().visibleFieldTypes[item.key] ?? true"
                     (change)="updateFieldVisibility(item.key, $any($event.target).checked)"
-                    class="w-4 h-4 checkbox-white"
+                    class="settings-dialog-check checkbox-white"
                   />
-                  <div class="flex items-center gap-2 preferences-muted">
+                  <div class="preferences-field-icon">
                     <app-icon [key]="item.key" size="default"></app-icon>
                     <span class="preferences-field-type">{{ item.value.labelKey | translate }}</span>
                   </div>
@@ -217,12 +196,8 @@
       </div>
     </div>
     <!-- Footer -->
-    <div class="px-6 py-4 border-t preferences-border flex justify-end gap-3 sticky bottom-0 preferences-surface z-10">
-      <button
-        (click)="close()"
-        class="px-4 py-2 text-sm font-medium text-white rounded-lg transition-all shadow hover:shadow-md cursor-pointer"
-        [style.backgroundColor]="'var(--cedar-color-primary)'"
-      >
+    <div class="settings-dialog-footer sticky bottom-0">
+      <button (click)="close()" class="settings-dialog-done">
         {{ 'common.done' | translate }}
       </button>
     </div>

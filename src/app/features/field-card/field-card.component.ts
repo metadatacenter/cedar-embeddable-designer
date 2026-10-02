@@ -1,3 +1,4 @@
+import { fieldDisplayName } from '../../core/model/field-display-name';
 import { ArtifactNameDirective } from '../../shared/artifact-name.directive';
 import { FieldSummaryComponent } from '../field-summary/field-summary.component';
 import { HeaderToggleDirective } from '../../shared/header-toggle.directive';
@@ -58,6 +59,11 @@ export class FieldCardComponent {
   readonly service = inject(TemplateService);
 
   readonly FIELD_TYPES_LIST = FIELD_TYPES;
+  readonly displayName = fieldDisplayName;
+
+  updateDisplayName(value: string): void {
+    this.service.updateFieldDisplayName(this.field.id, value);
+  }
 
   /*
    * What a type will actually accept, asked of the same table that builds it.

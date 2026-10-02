@@ -43,7 +43,7 @@ test('Overview heading and rows follow the same shared spacing and color tokens'
   const designer = await openDesigner(page);
   await designer.evaluate((el) => {
     el.style.setProperty('--cedar-space-2', '12px');
-    el.style.setProperty('--cedar-text-authoring', 'rgb(30, 40, 50)');
+    el.style.setProperty('--cedar-text-primary', 'rgb(30, 40, 50)');
   });
   const header = designer.locator('.overview-panel__header-left app-icon');
   const row = designer.locator('.select-node').first();

@@ -7,19 +7,19 @@ import { AlternateQuestionsComponent } from '../alternate-questions/alternate-qu
   imports: [AlternateQuestionsComponent],
   template: ` <app-alternate-questions [container]="container()" /> `,
   styles: `
-    @use '../../shared/control-style';
+    @use '@org.metadatacenter/cedar-design-tokens/authoring';
     :host {
       display: block;
-      margin-top: 8px;
+      margin-top: var(--cedar-space-2);
     }
     label {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: var(--cedar-space-1);
       font-size: var(--cedar-font-size);
     }
     input {
-      @include control-style.compact-control;
+      @include authoring.compact-control;
       width: 100%;
     }
   `,

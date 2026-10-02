@@ -46,6 +46,7 @@ describe('the editor the preview builds', () => {
 
   it('can create an editable preview without changing the read-only default', () => {
     expect(createCeePreview(factory, false).config.readOnlyMode).toBe(false);
+    expect(createCeePreview(factory, false).config.suppressEmptyFieldErrors).toBe(true);
     expect(createCeePreview(factory).config.readOnlyMode).toBe(true);
   });
 
