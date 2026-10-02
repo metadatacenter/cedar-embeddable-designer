@@ -118,6 +118,7 @@
           would refuse.
         */
         window.__ceeMounts = [];
+        window.__ceeReveals = [];
         window.__ceeElements = 0;
         window.__ceeConfigs = 0;
         class StubEditor extends HTMLElement {
@@ -144,6 +145,11 @@
           }
           get templateObject() {
             return this._template;
+          }
+          // Recorded rather than performed: where CEE scrolls is CEE's own suite's question.
+          reveal(location, options) {
+            window.__ceeReveals.push({ location, options, template: this._template['schema:name'] || '' });
+            return Promise.resolve(true);
           }
           _recordWhenComplete() {
             if (!this._config || !this._template) {

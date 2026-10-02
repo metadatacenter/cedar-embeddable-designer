@@ -1,7 +1,16 @@
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { TranslatePipe } from '@ngx-translate/core';
 import { CedLanguageService } from '../../i18n/ced-language.service';
-import { ChangeDetectionStrategy, Component, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  effect,
+  ElementRef,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 
 import { TemplateService } from '../../core/services/template.service';
 import {
@@ -55,8 +64,16 @@ export class CeePreviewComponent {
   private readonly mount = viewChild<ElementRef<HTMLDivElement>>('mount');
 
   private editor: CeePreviewElement | null = null;
+  private revealTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor() {
+    // The preview follows the designer's selection, so the field being edited is the one
+    // on screen beside it. One way only: the designer's selection does not follow the preview.
+    effect(() => {
+      this.service.selectedField();
+      this.revealSelection();
+    });
+    inject(DestroyRef).onDestroy(() => clearTimeout(this.revealTimer));
     effect((onCleanup) => {
       const host = this.mount()?.nativeElement;
       const template = this.service.previewJson();
@@ -92,5 +109,22 @@ export class CeePreviewComponent {
       host.replaceChildren(this.editor);
     }
     this.editor.templateObject = template;
+    // A field just added reaches the preview only now, with the template that holds it.
+    this.revealSelection();
+  }
+
+  /**
+   * Scroll the preview to the selected field or element, leaving focus in the designer.
+   *
+   * On the next task, by which time CEE has rendered a template assigned in this one, and
+   * once for a burst of changes.
+   */
+  private revealSelection(): void {
+    clearTimeout(this.revealTimer);
+    this.revealTimer = setTimeout(() => {
+      const id = this.service.selectedField();
+      const path = id === null ? null : this.service.previewPath(id);
+      if (path !== null) void this.editor?.reveal?.({ path }, { focus: false });
+    });
   }
 }

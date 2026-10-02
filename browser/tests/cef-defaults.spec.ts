@@ -432,6 +432,49 @@ test('previews an element document through CEE while publishing element artifact
   expect((await currentTemplate(page))['@type']).toBe('https://schema.metadatacenter.org/core/TemplateElement');
 });
 
+test('the CEE preview follows the selected field onto the page that holds it', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
+  await page.waitForFunction(() => !!customElements.get('cedar-embeddable-editor'));
+  const template = newContainer('template', 'Paged study');
+  for (const [name, type] of [
+    ['First question', 'text'],
+    ['Break', 'pageBreak'],
+    ['Second question', 'text'],
+  ]) {
+    template.children.push(
+      fieldNode({
+        id: newNodeId(),
+        name,
+        type,
+        status: 'optional',
+        allowMultiple: false,
+        options: [],
+        defaultValue: { kind: 'none' },
+      }),
+    );
+  }
+  await page.evaluate(
+    (artifact) => {
+      const host = document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object };
+      host.artifact = artifact;
+    },
+    templateToJson(buildContainer(template)),
+  );
+  const preview = await openPreview(page);
+  const first = preview.locator('.title-label').filter({ hasText: 'First question' });
+  await expect(first).toBeVisible();
+  const cards = designer.locator('.field-drag-container');
+
+  await cards.nth(2).locator('.field-type-icon').click();
+
+  const second = preview.locator('.title-label').filter({ hasText: 'Second question' });
+  await expect(second).toBeInViewport();
+  await expect(first).toHaveCount(0);
+  // The author is still working in the designer.
+  await expect(cards.nth(2)).toBeFocused();
+});
+
 for (const type of ['number', 'date']) {
   test(`${type} default aligns with its neighboring settings controls`, async ({ page }) => {
     const control = await openField(

@@ -571,6 +571,40 @@ export class TemplateService {
     return !!this.fieldsFor(id)().find((field) => field.id === id)?.publishedDefinition;
   }
 
+  /**
+   * The property keys from the template to this field or element, which is how the CEE
+   * preview addresses it. Null for the template itself, or while two siblings share a key.
+   *
+   * An element designed on its own is previewed inside a template that holds it under
+   * its name, so its path starts there.
+   */
+  previewPath(id: number): string[] | null {
+    const document = this.session.document();
+    const search = (container: ContainerDraft, prefix: string[]): string[] | null => {
+      let keys: string[];
+      try {
+        keys = deploymentKeys(
+          container.children.map((node) => ({
+            name: node.definition.name,
+            deploymentName: node.placement.deploymentName,
+          })),
+        );
+      } catch {
+        return null;
+      }
+      for (const [index, node] of container.children.entries()) {
+        const path = [...prefix, keys[index]];
+        if (node.id === id) return path;
+        if (node.kind === 'element') {
+          const found = search(node.definition, path);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    return search(document, document.kind === 'element' ? [document.name || 'Element'] : []);
+  }
+
   childKey(id: number): string {
     const siblings = parentOf(this.session.document(), id)?.children ?? [];
     const keys = deploymentKeys(

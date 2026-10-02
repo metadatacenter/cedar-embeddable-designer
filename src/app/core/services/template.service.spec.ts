@@ -381,6 +381,39 @@ describe('TemplateService', () => {
   });
 });
 
+describe('preview paths', () => {
+  let service: TemplateService;
+
+  beforeEach(() => {
+    localStorage.clear();
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(TemplateService);
+  });
+
+  it('names a field inside an element by the keys the written template holds it under', () => {
+    service.loadTemplate(nestedTemplate);
+    const element = service.children().find((child) => child.kind === 'element')!;
+    const child = element.definition.children[0];
+
+    const path = service.previewPath(child.id)!;
+
+    type Holder = { properties?: Record<string, unknown>; items?: { properties?: Record<string, unknown> } };
+    const holder = (service.templateJson()['properties'] as Record<string, Holder>)[path[0]];
+    expect((holder.items ?? holder).properties?.[path[1]]).toBeDefined();
+    expect(service.previewPath(element.id)).toEqual([path[0]]);
+    expect(service.previewPath(service.session.document().id)).toBeNull();
+  });
+
+  it('starts an element designed on its own with the name the preview holds it under', () => {
+    service.resetTemplate('element');
+    service.templateName.set('Address');
+    service.addField('text', 0);
+    const id = service.selectedField()!;
+
+    expect(service.previewPath(id)).toEqual(['Address', service.childKey(id)]);
+  });
+});
+
 describe('default editing', () => {
   let service: TemplateService;
   beforeEach(() => {
