@@ -42,6 +42,11 @@ h3 {
   margin-bottom: var(--cedar-space-3);
   flex-wrap: wrap;
 }
+// Cancel and Done close the dialog at its bottom right, as in the designer's other dialogs.
+.actions {
+  @include dialog-style.actions;
+  margin-top: var(--cedar-space-6);
+}
 button {
   @include dialog-style.button;
 }

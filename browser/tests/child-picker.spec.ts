@@ -69,6 +69,16 @@ for (const width of [1280, 375])
 
     const dialog = designer.getByRole('dialog', { name: 'Import Fields and Elements' });
     await expect(dialog.getByRole('searchbox', { name: 'Search for fields or elements' })).toBeVisible();
+    // Cancel and Done close the dialog from its bottom right, as the designer's other dialogs do.
+    const frame = (await dialog.boundingBox())!;
+    const results = (await dialog.locator('table').last().boundingBox())!;
+    const cancelBox = (await dialog.getByRole('button', { name: 'Cancel', exact: true }).boundingBox())!;
+    const doneBox = (await dialog.getByRole('button', { name: 'Done', exact: true }).boundingBox())!;
+    expect(doneBox.y).toBeGreaterThan(results.y + results.height);
+    expect(Math.abs(cancelBox.y - doneBox.y)).toBeLessThanOrEqual(1);
+    expect(cancelBox.x + cancelBox.width).toBeLessThan(doneBox.x);
+    expect(frame.x + frame.width - (doneBox.x + doneBox.width)).toBeLessThan(40);
+    await dialog.screenshot({ path: test.info().outputPath('import-dialog.png') });
     // The search field clears with the registry's close glyph, drawn as a mask, rather than the
     // browser's own button. Chromium reports no computed style for that pseudo-element, so the
     // rule that draws it is read instead.

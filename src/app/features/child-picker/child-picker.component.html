@@ -7,12 +7,6 @@
   </div>
   <div class="selection-heading">
     <h3>{{ 'childPicker.selectedHeading' | translate: { count: selected().length } }}</h3>
-    <div class="actions">
-      <button type="button" (click)="close()">{{ 'common.cancel' | translate }}</button>
-      <button type="button" class="primary" [disabled]="!selected().length || saving()" (click)="done()">
-        {{ (saving() ? 'childPicker.adding' : 'common.done') | translate }}
-      </button>
-    </div>
   </div>
   <div class="table-scroll">
     <table [attr.aria-label]="'childPicker.selectedTable' | translate" class="selected-table">
@@ -158,4 +152,10 @@
   @if (error()) {
     <p role="alert" class="error">{{ error() }}</p>
   }
+  <div class="actions">
+    <button type="button" (click)="close()">{{ 'common.cancel' | translate }}</button>
+    <button type="button" class="primary" [disabled]="!selected().length || saving()" (click)="done()">
+      {{ (saving() ? 'childPicker.adding' : 'common.done') | translate }}
+    </button>
+  </div>
 </dialog>
