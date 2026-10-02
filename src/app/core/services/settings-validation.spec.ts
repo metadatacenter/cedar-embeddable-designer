@@ -24,6 +24,17 @@ describe('settings validation report', () => {
     service.setSettingsError(id, 'occurrences', null);
     expect(service.validationReport().valid).toBe(true);
   });
+  it('reports an untouched blank name as blocking but not yet shown, and shows it once touched', () => {
+    const root = service.session.document().id;
+    service.updateContainerDefinition(root, { name: '' });
+    const nameIssue = () => service.validationReport().issues.find((issue) => issue.setting === 'name');
+    expect(service.validationReport().canSave).toBe(false);
+    expect(nameIssue()?.shown).toBe(false);
+    expect(service.visibleIssues()).toEqual([]);
+    service.touchName(root);
+    expect(nameIssue()?.shown).toBe(true);
+    expect(service.visibleIssues()).toEqual([nameIssue()]);
+  });
   it("names an issue's field by the display name its card shows, not by its plain name", () => {
     const id = service.fields()[0].id;
     service.updateFieldName(id, 'parent_sample_id');

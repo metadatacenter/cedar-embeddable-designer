@@ -342,8 +342,12 @@ events alone are therefore not a save-readiness check.
 Listen for `validationChange` to update the wrapper's Save button and error list.
 Its detail is the same report: `{ valid, canSave, issues }`. Each issue includes a
 session `nodeId`, an ancestor-ID `path`, a display `label`, `setting`, settings `tab`,
-stable category `code`, user-facing `message`, `severity: 'error'`, and `source`
-(`model` or `draft`). Do not parse messages or persist session IDs across documents.
+stable category `code`, user-facing `message`, `severity: 'error'`, `source`
+(`model` or `draft`), and `shown`. An issue that is not `shown` still blocks saving,
+but CED's error summary holds it back until the author reaches it: a name nobody has
+touched yet, or a new choice field's blank starter option. A host that explains a
+disabled Save by pointing at errors should count only the shown ones. Do not parse
+messages or persist session IDs across documents.
 Validation checks the settings CED supports; it does not replace server validation,
 permission checks, or save/publish lifecycle rules.
 

@@ -67,6 +67,7 @@ export function validateDocument(
         code: `${setting}.invalid`,
         severity: 'error',
         source,
+        shown: true,
       });
     };
     const pending = (id: number, label: string, nodePath: number[], name = label) => {
@@ -211,6 +212,7 @@ export function validateDocument(
         message: describeError(error, t),
         severity: 'error',
         source: 'model',
+        shown: true,
       });
     }
   }

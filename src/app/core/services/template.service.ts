@@ -2,7 +2,7 @@ import { childKeyError } from '../model/child-key-policy';
 import { elementDisplayOverride, fieldDisplayOverride } from '../model/field-display-name';
 import { reducePrecision } from '../model/precision-change';
 import { artifactNameError, validateDocument } from '../model/document-validation';
-import { CedChildSource, CedJsonObject, CedValidationIssue } from '../../ced-public-api';
+import { CedChildSource, CedJsonObject, CedValidationIssue, CedValidationReport } from '../../ced-public-api';
 import { EditorSession } from './editor-session';
 import {
   containerFromFlat,
@@ -163,13 +163,7 @@ export class TemplateService {
   optionErrorVisible(id: number, index: number): boolean {
     return index !== 0 || !this.pristineStarterOptions().has(id);
   }
-  readonly visibleIssues = computed(() =>
-    this.validationReport().issues.filter((issue) =>
-      issue.setting === 'name'
-        ? this.touchedNames().has(issue.nodeId)
-        : issue.setting !== 'option-0' || this.optionErrorVisible(issue.nodeId, 0),
-    ),
-  );
+  readonly visibleIssues = computed(() => this.validationReport().issues.filter((issue) => issue.shown));
   visibleIssuesFor(id: number): CedValidationIssue[] {
     return this.visibleIssues().filter((issue) => issue.path.includes(id));
   }
@@ -188,7 +182,21 @@ export class TemplateService {
       return next;
     });
   }
-  readonly validationReport = computed(() => validateDocument(this.document(), this.draftIssues(), this.i18n.t));
+  private readonly documentReport = computed(() => validateDocument(this.document(), this.draftIssues(), this.i18n.t));
+  /** The document's issues, each marked with whether the summary lists it yet. */
+  readonly validationReport = computed((): CedValidationReport => {
+    const report = this.documentReport();
+    return {
+      ...report,
+      issues: report.issues.map((issue) => ({
+        ...issue,
+        shown:
+          issue.setting === 'name'
+            ? this.touchedNames().has(issue.nodeId)
+            : issue.setting !== 'option-0' || this.optionErrorVisible(issue.nodeId, 0),
+      })),
+    };
+  });
   issuesFor(id: number): CedValidationIssue[] {
     return this.validationReport().issues.filter((issue) => issue.path.includes(id));
   }
