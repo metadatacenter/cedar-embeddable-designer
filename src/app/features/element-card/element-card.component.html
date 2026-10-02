@@ -90,7 +90,7 @@
             <div class="settings-fields display-fields">
               <label
                 >{{ 'settings.displayLabel' | translate }}
-                <input spellcheck="false" [(ngModel)]="draft().displayLabel" (ngModelChange)="apply()"
+                <input spellcheck="false" [ngModel]="displayName()" (ngModelChange)="rename($event)"
               /></label>
               <label
                 >{{ 'settings.displayDescription' | translate }}

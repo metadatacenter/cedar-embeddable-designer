@@ -94,7 +94,7 @@ for (const width of [1280, 375]) {
     await placement.getByLabel('Minimum occurrences', { exact: true }).fill('2');
     await expect(placement.getByRole('alert')).toHaveCount(0);
     const display = await openSettings(moved, 'Display');
-    await display.getByLabel('Display label', { exact: true }).fill('Nested display');
+    await display.getByLabel('Name', { exact: true }).fill('Nested display');
     await directHeader(parent).getByRole('button', { name: 'Collapse Samples', exact: true }).click();
     await expect(directContent(parent)).toBeHidden();
     const collapsed = await currentTemplate(page);
@@ -112,7 +112,8 @@ for (const width of [1280, 375]) {
     expect(properties.element.properties.element.minItems).toBe(2);
     expect(properties.element.properties.element.maxItems).toBe(4);
     expect(properties.element.properties.element.items['schema:name']).toBe('Sample');
-    expect(properties.element.properties.element.items._ui.propertyLabels.Title).toBe('Nested display');
+    const nestedTitle = properties.element.properties.element.items.properties.Title;
+    expect((nestedTitle.items ?? nestedTitle)['skos:prefLabel']).toBe('Nested display');
     expect(
       Object.values(properties).some((field: any) => (field.items ?? field)['skos:prefLabel'] === 'Root category'),
     ).toBe(true);
@@ -372,4 +373,54 @@ test('confirms deletion of an element subtree, but deletes empty elements immedi
     .click();
   await expect(nestedEditors(root)).toHaveCount(0);
   await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+test('an element shows one name in its header and its Display tab, and either edits it', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await applyPreset(page, 'modular');
+  await addElementFixture(page, designer);
+  const header = designer.getByRole('textbox', { name: 'Element name', exact: true }).first();
+  const displayName = async () => {
+    const settings = designer.locator('app-element-card').first();
+    // A reloaded template re-renders the card, so wait for its toggle before reading its state.
+    await expect(settings.getByRole('button', { name: /^(Expand|Collapse) element settings$/ })).toBeVisible();
+    const expand = settings.getByRole('button', { name: 'Expand element settings', exact: true });
+    if (await expand.count()) await expand.click();
+    await settings.getByRole('tab', { name: 'Display', exact: true }).click();
+    return settings.getByRole('tabpanel', { name: 'Display', exact: true }).getByLabel('Name', { exact: true });
+  };
+  const element = async () => {
+    const template = await currentTemplate(page);
+    const key = (template._ui as { order: string[] }).order.find((k) =>
+      String((child(template, k) as { '@type'?: string })['@type']).endsWith('TemplateElement'),
+    )!;
+    return { template, key, element: child(template, key) as Record<string, unknown> };
+  };
+
+  let name = await displayName();
+  await expect(name).toHaveValue('Element');
+  await header.fill('Sample');
+  await expect(name).toHaveValue('Sample');
+  await name.fill('Specimen');
+  await expect(header).toHaveValue('Specimen');
+  // Without an authored override, the name both places edit is the element's own.
+  await expect.poll(async () => (await element()).element['schema:name']).toBe('Specimen');
+
+  // An override the template already carries is the name both places show, and both edit it.
+  const { template, key } = await element();
+  (template._ui as { propertyLabels: Record<string, string> }).propertyLabels[key] = 'Collected specimen';
+  await page.evaluate((value) => {
+    (document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object }).artifact = value;
+  }, template);
+  name = await displayName();
+  await expect(name).toHaveValue('Collected specimen');
+  await expect(header).toHaveValue('Collected specimen');
+  await header.fill('Stored specimen');
+  await expect(name).toHaveValue('Stored specimen');
+  await expect
+    .poll(async () => {
+      const current = await element();
+      return [(current.template._ui as any).propertyLabels[current.key], current.element['schema:name']];
+    })
+    .toEqual(['Stored specimen', 'Specimen']);
 });

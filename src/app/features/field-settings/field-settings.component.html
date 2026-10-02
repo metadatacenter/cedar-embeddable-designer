@@ -324,8 +324,8 @@
           }}<input
             spellcheck="false"
             name="displayLabel"
-            [(ngModel)]="displayLabel"
-            (ngModelChange)="saveLayout()"
+            [ngModel]="displayName()"
+            (ngModelChange)="rename($event)"
             [placeholder]="'fieldSettings.display.labelPlaceholder' | translate"
         /></label>
         <label

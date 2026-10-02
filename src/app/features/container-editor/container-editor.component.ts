@@ -9,6 +9,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService } from '../../core/services/template.service';
 import { fieldView, findContainer } from '../../core/model/container-draft';
+import { elementDisplayName } from '../../core/model/field-display-name';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { FieldCardComponent } from '../field-card/field-card.component';
 import { FieldTypePickerComponent } from '../field-type-picker/field-type-picker.component';
@@ -85,6 +86,16 @@ export class ContainerEditorComponent {
     >,
   ): void {
     this.service.updateContainerDefinition(this.container().id, changes);
+  }
+  /** A nested element shows the same name in this header as in its Display tab. */
+  readonly shownName = computed(() => {
+    const node = this.placementNode();
+    return node ? elementDisplayName(node) : this.container().name;
+  });
+  rename(value: string): void {
+    const node = this.placementNode();
+    if (node) this.service.updateElementDisplayName(node, value);
+    else this.update({ name: value });
   }
   activate(): void {
     this.service.session.activeId.set(this.container().id);

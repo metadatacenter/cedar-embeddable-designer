@@ -82,8 +82,8 @@ for (const [type, text, stored] of [
 test('real CEE preview honors deployment display overrides over field metadata', async ({ page }) => {
   await openField(page, 'shortText', { preferredLabel: 'Semantic label', helpText: 'Artifact description' });
   const section = await openSettings(page.locator('app-field-card').first(), 'Display');
-  await section.getByLabel('Display label', { exact: true }).fill('Deployment heading');
-  await section.getByLabel('Display description', { exact: true }).fill('Deployment help');
+  await section.getByLabel('Name', { exact: true }).fill('Deployment heading');
+  await section.getByLabel('Description', { exact: true }).fill('Deployment help');
   const preview = await openPreview(page);
   await expect(preview.locator('.title-label')).toContainText('Deployment heading');
   await expect(preview.locator('.cee-field-spec-description')).toHaveText('Deployment help');

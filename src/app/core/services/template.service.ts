@@ -1,5 +1,5 @@
 import { childKeyError } from '../model/child-key-policy';
-import { fieldDisplayOverride } from '../model/field-display-name';
+import { elementDisplayOverride, fieldDisplayOverride } from '../model/field-display-name';
 import { reducePrecision } from '../model/precision-change';
 import { artifactNameError, validateDocument } from '../model/document-validation';
 import { CedChildSource, CedJsonObject, CedValidationIssue } from '../../ced-public-api';
@@ -446,6 +446,23 @@ export class TemplateService {
       id,
       fieldDisplayOverride(field) ? { displayLabel: value } : { preferredLabel: value },
     );
+  }
+
+  /**
+   * Edits the name an element placement shows, from its header or its Display tab alike: the
+   * parent's override where there is one, otherwise the element's own name.
+   */
+  updateElementDisplayName(node: ElementNode, value: string): string | null {
+    if (elementDisplayOverride(node)) {
+      return this.updateElementPlacement(node.id, { ...node.placement, displayLabel: value });
+    }
+    // A filler label repeating the old name would otherwise outlive the rename as an override.
+    if (node.placement.displayLabel !== undefined) {
+      const error = this.updateElementPlacement(node.id, { ...node.placement, displayLabel: undefined });
+      if (error) return error;
+    }
+    this.updateContainerDefinition(node.definition.id, { name: value });
+    return null;
   }
 
   updateFieldName(id: number, name: string) {

@@ -433,20 +433,19 @@ const LIFECYCLES: readonly Lifecycle[] = [
 
   // ── Display ─────────────────────────────────────────────────────────────────
   {
-    control: 'display label',
+    // The Display tab edits the name the card's header shows, so this mirrors the header's row.
+    control: 'display name',
     paletteType: 'text',
     prepare: (page) => open(page, 'Display'),
-    set: async (page) => setIn(page, 'Display', 'Display label', 'Shown'),
-    restore: async (page) => setIn(page, 'Display', 'Display label', ''),
-    read: (template) => (template['_ui'] as { propertyLabels?: Record<string, string> }).propertyLabels?.['text'],
-    whenSet: 'Shown',
+    set: async (page) => setIn(page, 'Display', 'Name', 'Shown'),
+    restore: async (page) => setIn(page, 'Display', 'Name', 'Text'),
   },
   {
     control: 'display description',
     paletteType: 'text',
     prepare: (page) => open(page, 'Display'),
-    set: async (page) => setIn(page, 'Display', 'Display description', 'Shown help'),
-    restore: async (page) => setIn(page, 'Display', 'Display description', ''),
+    set: async (page) => setIn(page, 'Display', 'Description', 'Shown help'),
+    restore: async (page) => setIn(page, 'Display', 'Description', ''),
   },
   {
     control: 'hidden',

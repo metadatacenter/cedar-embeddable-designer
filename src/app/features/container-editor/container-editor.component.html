@@ -44,8 +44,8 @@
                 ? 'name-error-' + container().id
                 : null
             "
-            [ngModel]="container().name"
-            (ngModelChange)="update({ name: $event })"
+            [ngModel]="shownName()"
+            (ngModelChange)="rename($event)"
             class="template-input template-input--name"
             [placeholder]="
               (container().kind === 'element'

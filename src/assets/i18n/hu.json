@@ -427,8 +427,8 @@
       "max": "Legfeljebb"
     },
     "display": {
-      "labelPlaceholder": "A mező megjelenített neve",
-      "descriptionPlaceholder": "A mező súgója",
+      "labelPlaceholder": "Mező neve",
+      "descriptionPlaceholder": "Mező leírása",
       "hidden": "Rejtett",
       "continueLine": "Folytatás az előző sorban",
       "helpText": "Súgószöveg",
@@ -676,8 +676,8 @@
     "previousVersion": "Előző verzió",
     "propertyIri": "Tulajdonság IRI",
     "types": "Típusok",
-    "displayLabel": "Megjelenített címke",
-    "displayDescription": "Megjelenített leírás",
+    "displayLabel": "Név",
+    "displayDescription": "Leírás",
     "allowMultiple": "Több érték engedélyezése",
     "minOccurrences": "Előfordulások minimális száma",
     "minOccurrencesPlaceholder": "Alapértelmezett (0)",

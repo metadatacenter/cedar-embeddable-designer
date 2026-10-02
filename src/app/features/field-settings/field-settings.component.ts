@@ -1,4 +1,5 @@
 import { publicationStatusLabel } from '../../shared/publication-status';
+import { fieldDisplayName } from '../../core/model/field-display-name';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 import { AlternateQuestionsComponent } from '../alternate-questions/alternate-questions.component';
@@ -109,7 +110,6 @@ export class FieldSettingsComponent implements OnChanges {
   }
   deploymentName = '';
   schemaIdentifier = '';
-  displayLabel = '';
   displayDescription = '';
   hidden = false;
   continuePreviousLine = false;
@@ -251,11 +251,6 @@ export class FieldSettingsComponent implements OnChanges {
 
     this.deploymentName = take('deploymentName', this.deploymentName, this.service.childKey(this.field.id));
     this.schemaIdentifier = take('schemaIdentifier', this.schemaIdentifier, this.field.schemaIdentifier ?? '');
-    // Writers may populate a fallback equal to the artifact name or placement key.
-    // As in CEE, that is not an authored display override.
-    const label = this.field.displayLabel;
-    const override = label === this.field.name || label === this.service.childKey(this.field.id) ? '' : (label ?? '');
-    this.displayLabel = take('displayLabel', this.displayLabel, override);
     this.displayDescription = take('displayDescription', this.displayDescription, this.field.displayDescription ?? '');
     this.hidden = take('hidden', this.hidden, this.field.hidden ?? false);
     this.continuePreviousLine = take(
@@ -366,11 +361,17 @@ export class FieldSettingsComponent implements OnChanges {
       }),
     );
   }
+  /** The same name the field's header shows, edited through the same update. */
+  displayName(): string {
+    return fieldDisplayName(this.field);
+  }
+  rename(value: string): void {
+    this.report('Display', this.service.updateFieldDisplayName(this.field.id, value));
+  }
   saveLayout(): void {
     this.report(
       'Display',
       this.service.updateFieldSettings(this.field.id, {
-        displayLabel: this.displayLabel || undefined,
         displayDescription: this.displayDescription || undefined,
         hidden: this.hidden,
         continuePreviousLine: this.continuePreviousLine,

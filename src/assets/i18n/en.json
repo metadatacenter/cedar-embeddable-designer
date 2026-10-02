@@ -427,8 +427,8 @@
       "max": "Maximum"
     },
     "display": {
-      "labelPlaceholder": "Field display name",
-      "descriptionPlaceholder": "Field help",
+      "labelPlaceholder": "Field name",
+      "descriptionPlaceholder": "Field description",
       "hidden": "Hidden",
       "continueLine": "Continue previous line",
       "helpText": "Help text",
@@ -676,8 +676,8 @@
     "previousVersion": "Previous version",
     "propertyIri": "Property IRI",
     "types": "Types",
-    "displayLabel": "Display label",
-    "displayDescription": "Display description",
+    "displayLabel": "Name",
+    "displayDescription": "Description",
     "allowMultiple": "Allow multiple",
     "minOccurrences": "Minimum occurrences",
     "minOccurrencesPlaceholder": "Default (0)",
