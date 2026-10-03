@@ -48,13 +48,30 @@ test('invalid edits reach wrappers, cards and overview; summary opens the affect
   await expect.poll(async () => (await report(page)).canSave).toBe(false);
   expect((await report(page)).issues[0]).toMatchObject({ setting: 'defaultValue', source: 'draft', severity: 'error' });
   await expect(card.locator('.validation-badge')).toContainText('1 error');
-  await expect(designer.locator('.field-drag-container.invalid')).toHaveCount(1);
-  await expect(designer.locator('.field-drag-container.invalid')).toHaveCSS('outline-color', 'rgb(180, 35, 24)');
-  await expect(designer.locator('.field-drag-container.invalid')).toHaveCSS('--tw-ring-color', '#b42318');
-  await expect(designer.locator('.field-drag-container.invalid .field-selection-bar')).toHaveCSS(
-    'background-color',
-    'rgb(180, 35, 24)',
+  const invalidCard = designer.locator('.field-drag-container.invalid');
+  await expect(invalidCard).toHaveCount(1);
+  await expect(invalidCard).toHaveClass(/\bselected\b/);
+  const cardColours = async (colour: string) => {
+    await expect(invalidCard).toHaveCSS('outline-color', colour);
+    await expect(invalidCard).toHaveCSS('border-top-color', colour);
+    await expect(invalidCard.locator('.field-selection-bar')).toHaveCSS('background-color', colour);
+    await expect(card.locator('.validation-badge')).toHaveCSS('color', colour);
+  };
+  await cardColours('rgb(180, 35, 24)');
+  // A host's error colour reaches the selected card's outline, border and bar as it reaches the badge.
+  await page.evaluate(() =>
+    document
+      .querySelector<HTMLElement>('cedar-embeddable-designer')!
+      .style.setProperty('--cedar-control-error', '#993311'),
   );
+  await cardColours('rgb(153, 51, 17)');
+  // Focusing the card leaves the error colour in place of the focus ring's.
+  await invalidCard.focus();
+  await cardColours('rgb(153, 51, 17)');
+  await page.evaluate(() =>
+    document.querySelector<HTMLElement>('cedar-embeddable-designer')!.style.removeProperty('--cedar-control-error'),
+  );
+  await cardColours('rgb(180, 35, 24)');
   await expect(designer.locator('.outline-row.invalid').first()).toBeAttached();
   expect(await currentTemplate(page)).toEqual(saved);
   expect(

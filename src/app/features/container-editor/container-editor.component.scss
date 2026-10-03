@@ -208,16 +208,15 @@
   line-height: var(--cedar-control-line-height-default);
 }
 
-/* The card's outline, border and selection bar keep the shared error colour over the selected and
-   focused states. A host's --cedar-control-error recolours the badge, not the card. */
+/* The card's outline, border and selection bar keep the error colour over the selected and focused
+   states. Like the badge, they follow a host's --cedar-control-error before the shared error role. */
 .field-drag-container.invalid {
   outline: 2px solid var(--cedar-control-error, var(--cedar-status-error-text));
   outline-offset: 1px;
-  outline-color: var(--cedar-status-error-text);
-  border-color: var(--cedar-status-error-text);
+  border-color: var(--cedar-control-error, var(--cedar-status-error-text));
 }
 .field-drag-container.invalid > .field-selection-bar {
-  background-color: var(--cedar-status-error-text);
+  background-color: var(--cedar-control-error, var(--cedar-status-error-text));
 }
 .validation-badge {
   --cedar-icon-color: var(--cedar-control-error, var(--cedar-status-error-text));
