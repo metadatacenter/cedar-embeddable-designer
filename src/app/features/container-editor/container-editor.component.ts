@@ -100,10 +100,6 @@ export class ContainerEditorComponent {
   activate(): void {
     this.service.session.activeId.set(this.container().id);
   }
-  chooseField(index: number): void {
-    this.activate();
-    this.service.showPicker.set(index);
-  }
   pickerAt(index: number): boolean {
     return this.service.session.active().id === this.container().id && this.service.showPicker() === index;
   }

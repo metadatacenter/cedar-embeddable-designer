@@ -6,7 +6,6 @@ import { CedChildSource, CedJsonObject, CedValidationIssue, CedValidationReport 
 import { EditorSession } from './editor-session';
 import {
   containerFromFlat,
-  flatView,
   newNodeId,
   ContainerDraft,
   ChildNode,
@@ -29,7 +28,6 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { Field, FieldDefaultValue, CustomField, ControlledTermSet, UserPreferences } from '../models/types';
 import { PreferencesService } from './preferences.service';
 import {
-  DesignerTemplate,
   deploymentKeys,
   newFieldIdentity,
   newTemplateIdentifier,
@@ -150,9 +148,6 @@ export class TemplateService {
     }),
   );
   readonly templateName = this.session.property('name');
-  readonly templateDesc = this.session.property('description');
-  readonly templateSchemaIdentifier = this.session.property('schemaIdentifier');
-  readonly templateVersion = this.session.property('version');
   readonly loadError = signal<string | null>(null);
   private readonly draftIssues = signal<Record<string, { message: string; tab: string }>>({});
   readonly nameFocusRequest = signal<number | null>(null);
@@ -267,11 +262,6 @@ export class TemplateService {
    */
   private readonly mintedIdentifier = signal<string>(newTemplateIdentifier());
 
-  readonly designerTemplate = computed<DesignerTemplate>(() => ({
-    ...flatView(this.session.document()),
-    identifier: this.session.document().identifier || this.mintedIdentifier(),
-  }));
-
   readonly document = computed(() => ({
     ...this.session.document(),
     identifier: this.session.document().identifier || this.mintedIdentifier(),
@@ -284,7 +274,6 @@ export class TemplateService {
   readonly fieldLibrary = inject(FieldLibraryService);
   readonly libraries = this.fieldLibrary.libraries;
   readonly customFields = this.fieldLibrary.fields;
-  readonly selectedLibraryId = signal<number | null>(null);
   readonly sidebarCollapsed = signal<boolean>(false);
 
   // Modal & Navigation States
@@ -795,19 +784,6 @@ export class TemplateService {
   readonly children = computed(() => this.session.active().children);
   readonly containerChoices = computed(() => containers(this.session.document()));
   readonly hasElements = computed(() => this.containerChoices().length > 1);
-  readonly breadcrumbs = computed(() => {
-    const active = this.session.active().id;
-    const path: ContainerDraft[] = [];
-    let current = this.session.active();
-    path.unshift(current);
-    while (current.id !== this.session.document().id) {
-      const parent = parentOf(this.session.document(), current.id);
-      if (!parent) break;
-      path.unshift(parent);
-      current = parent;
-    }
-    return active === this.session.document().id ? [this.session.document()] : path;
-  });
   canAddField(type: string, targetId = this.session.active().id): boolean {
     return allowedInContainer(
       type,
