@@ -147,7 +147,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       text-decoration: none;
     }
     .placeholder {
-      color: var(--cedar-control-border-default);
+      color: var(--cedar-text-muted);
     }
     .overlay {
       position: fixed;

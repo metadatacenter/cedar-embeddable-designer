@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
 @use '@org.metadatacenter/cedar-design-tokens/spacing';
 @use '../../shared/dialog-style';
 :host {
@@ -15,7 +16,7 @@
 .template-header-card::before {
   content: '';
   display: block;
-  height: var(--cedar-space-1);
+  height: spacing.$template-card-accent-height;
   background: linear-gradient(90deg, var(--cedar-color-primary), var(--cedar-surface-selected));
 }
 .template-header-card__body {
@@ -36,8 +37,8 @@
 }
 .template-header-card__icon {
   display: flex;
-  width: var(--cedar-control-height-default);
-  height: var(--cedar-control-height-default);
+  width: spacing.$template-icon-tile-size;
+  height: spacing.$template-icon-tile-size;
   border-radius: var(--cedar-radius);
   background: var(--cedar-surface-selected);
   color: var(--cedar-color-primary);
@@ -94,7 +95,7 @@
 
 @container (min-width: 680px) {
   .template-header-card__inputs {
-    grid-template-columns: minmax(0, 1fr) minmax(0, calc(11 * var(--cedar-space-4))) auto;
+    grid-template-columns: minmax(0, 1fr) minmax(0, #{spacing.$template-header-field-width}) auto;
   }
   .template-header-row > .template-field-group.w-44 {
     grid-column: 2;
@@ -161,12 +162,7 @@
   top: calc(var(--cedar-space-3) + var(--cedar-space-1));
   left: 50%;
   transform: translateX(-50%);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--cedar-space-6);
-  height: var(--cedar-space-6);
-  padding: 0;
+  @include patterns.icon-button;
   color: var(--cedar-text-muted);
   cursor: grab;
   z-index: var(--cedar-layer-sticky);
@@ -232,12 +228,7 @@ textarea.template-input {
   position: absolute;
   top: 0;
   left: calc(100% + var(--cedar-space-3));
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--cedar-space-6);
-  height: var(--cedar-space-6);
-  padding: 0;
+  @include patterns.icon-button;
   border: 0;
   background: transparent;
   color: var(--cedar-text-primary);

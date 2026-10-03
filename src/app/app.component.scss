@@ -185,7 +185,7 @@
 
 .overview-panel__close {
   @apply cursor-pointer;
-  color: var(--cedar-control-border-default);
+  color: var(--cedar-text-muted);
   &:hover {
     color: var(--cedar-text-muted);
   }
@@ -234,17 +234,17 @@
 // Divide the space left after navigation equally between editing and preview.
 .main-content {
   --overview-width: 0px;
-  --preferred-overview-width: calc(56 * var(--cedar-space-1));
+  --preferred-overview-width: #{spacing.$designer-overview-width};
   --library-width: 0px;
 }
 .main-content.has-overview {
   --overview-width: var(--preferred-overview-width, 224px);
 }
 .main-content.has-library {
-  --library-width: calc(72 * var(--cedar-space-1));
+  --library-width: #{spacing.$designer-library-width};
 }
 .main-content.has-library.library-collapsed {
-  --library-width: calc(12 * var(--cedar-space-1));
+  --library-width: #{spacing.$designer-library-rail-width};
 }
 .designer-scroll--split {
   flex: 1 1 0;
@@ -262,8 +262,6 @@
 }
 
 .designer-mark {
-  @apply w-7;
-  height: var(--cedar-row-height-compact);
   border-radius: var(--cedar-radius-pill);
 }
 
@@ -388,22 +386,22 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  width: calc(18 * var(--cedar-space-1));
+  width: spacing.$designer-identity-width;
   min-width: 0;
   gap: 0;
 }
 .designer-identity > svg {
-  width: calc(10 * var(--cedar-space-1));
-  height: calc(10 * var(--cedar-space-1));
+  width: spacing.$designer-identity-mark-size;
+  height: spacing.$designer-identity-mark-size;
   flex: none;
   box-shadow: none;
 }
 .designer-identity__name,
 .designer-identity__version {
-  min-width: calc(10 * var(--cedar-space-1));
+  min-width: spacing.$designer-identity-mark-size;
   max-width: 100%;
   text-align: center;
-  line-height: var(--cedar-font-size);
+  line-height: var(--cedar-line-height-tight);
 }
 .designer-identity__name {
   margin-top: var(--cedar-space-1);
@@ -457,7 +455,7 @@
   top: var(--cedar-space-3);
   bottom: var(--cedar-space-3);
   right: 0;
-  width: var(--cedar-space-2);
+  width: spacing.$resize-handle-width;
   min-height: var(--cedar-control-height-default);
   cursor: col-resize;
   touch-action: none;
@@ -469,7 +467,7 @@
   position: absolute;
   inset: 0;
   margin: auto;
-  width: calc(var(--cedar-space-1) / 4);
+  width: 1px;
   background: var(--cedar-border-rule);
 }
 .overview-panel__resize:hover::after,

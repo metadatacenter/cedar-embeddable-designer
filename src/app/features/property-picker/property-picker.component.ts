@@ -112,7 +112,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       cursor: pointer;
     }
     .placeholder {
-      color: var(--cedar-control-border-default);
+      color: var(--cedar-text-muted);
     }
     button:disabled {
       opacity: var(--cedar-control-disabled-opacity);

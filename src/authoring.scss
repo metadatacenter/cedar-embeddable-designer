@@ -13,8 +13,8 @@
   @include authoring.select-arrow;
 }
 
-/* One density contract for all CED authoring tables and their entry forms. */
-:is(app-annotations-editor, app-alternate-questions, app-preset-definitions) {
+/* One density contract for all CED authoring tables, their entry forms and the insertion actions. */
+:is(app-annotations-editor, app-alternate-questions, app-preset-definitions, app-insertion-actions) {
   @include authoring.density;
 }
 :is(app-annotations-editor, app-alternate-questions) .add-row {

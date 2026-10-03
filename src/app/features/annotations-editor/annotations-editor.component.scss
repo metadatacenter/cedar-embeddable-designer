@@ -37,11 +37,11 @@ th:nth-child(1) {
   width: 28%;
 }
 th:nth-child(2) {
-  width: calc(12 * var(--cedar-space-2));
+  width: spacing.$annotation-type-column-width;
   white-space: nowrap;
 }
 th:nth-child(4) {
-  width: calc(var(--cedar-control-height-default) + 2 * var(--cedar-space-2));
+  width: spacing.$control-cell-width;
 }
 th,
 td {
@@ -69,7 +69,7 @@ button:disabled {
 }
 .add-row {
   display: grid;
-  grid-template-columns: minmax(100px, 1fr) calc(12 * var(--cedar-space-2)) minmax(100px, 2fr) auto;
+  grid-template-columns: minmax(100px, 1fr) spacing.$annotation-type-column-width minmax(100px, 2fr) auto;
   align-items: end;
 }
 .add-row label {
@@ -87,7 +87,7 @@ button:disabled {
 }
 @container (max-width: 500px) {
   .add-row {
-    grid-template-columns: minmax(0, 1fr) calc(12 * var(--cedar-space-2));
+    grid-template-columns: minmax(0, 1fr) spacing.$annotation-type-column-width;
   }
   .add-row label:nth-child(3) {
     grid-column: 1 / -1;
