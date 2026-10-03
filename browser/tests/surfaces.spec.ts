@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { test, expect, type Page } from '@playwright/test';
-import { openDesigner, openSettings, applyPreset, addElementFixture } from './support';
+import { openDesigner, openSettings, openPreview, applyPreset, addElementFixture } from './support';
 import { buildTemplate, templateToJson } from '../../src/app/core/model/cedar-template';
 import { surfaceCases, checkSurface } from './surface-contracts.generated.mjs';
 const registry = JSON.parse(readFileSync(new URL('../../.ui-surfaces.json', import.meta.url), 'utf8'));
@@ -110,6 +110,59 @@ scenarios.constraints = async (page) => {
 scenarios['default-term'] = async (page) => {
   await termField(page);
   await page.getByRole('button', { name: 'Edit default term', exact: true }).click();
+};
+scenarios['field-library'] = async (page) => {
+  const d = await openDesigner(page);
+  await d.getByRole('button', { name: 'User Menu', exact: true }).click();
+  await d.locator('.user-menu-dropdown').getByRole('button', { name: 'Preferences', exact: true }).click();
+  await d.getByRole('radio', { name: /Library Sidebar/ }).check();
+  await d.getByRole('button', { name: 'Done', exact: true }).click();
+};
+scenarios['default-value-error'] = async (page) => {
+  const d = await openDesigner(page);
+  await applyPreset(page, 'semantic');
+  const panel = await openSettings(d.locator('app-field-card').first(), 'Constraints');
+  await panel.getByLabel('Minimum length', { exact: true }).fill('8');
+  await panel.getByRole('textbox', { name: 'Default value', exact: true }).fill('abc');
+};
+scenarios['import-error'] = async (page) => {
+  const d = await openDesigner(page);
+  await applyPreset(page, 'modular');
+  await page.evaluate(() => {
+    (document.querySelector('cedar-embeddable-designer') as any).childSource = {
+      async search() {
+        throw new Error('The repository is unreachable.');
+      },
+      async load() {
+        throw new Error('The repository is unreachable.');
+      },
+    };
+  });
+  await d.getByRole('button', { name: 'Add field', exact: true }).first().click();
+  await d.getByRole('button', { name: 'Import fields and elements', exact: true }).first().click();
+  await page.getByRole('button', { name: 'Search', exact: true }).click();
+};
+// The test host loads no CEE, so the preview reports the component it needs.
+scenarios['preview-unavailable'] = async (page) => {
+  const d = await openDesigner(page);
+  await openPreview(page);
+  await expect(d.locator('app-cee-preview .cee-preview__missing')).toBeVisible();
+};
+// Without `?picker=stub` the host has not loaded the term picker.
+scenarios['picker-unavailable'] = async (page) => {
+  const d = await openDesigner(page);
+  await applyPreset(page, 'semantic');
+  await d.getByRole('button', { name: /^Add field$/ }).click();
+  await d.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
+  const card = d.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') });
+  await card.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Controlled Terms');
+  await openSettings(card);
+};
+scenarios['invalid-field'] = async (page) => {
+  const d = await openDesigner(page);
+  const panel = await openSettings(d.locator('app-field-card').first(), 'Constraints');
+  await panel.getByLabel('Minimum length', { exact: true }).fill('8');
+  await panel.getByLabel('Maximum length', { exact: true }).fill('2');
 };
 for (const { surface, state, width, title } of surfaceCases(registry, scenarios))
   test(title, async ({ page }, testInfo) => {

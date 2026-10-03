@@ -38,12 +38,34 @@
     {
       "id": "ced.field-library-ced",
       "name": "Field Library (CED)",
-      "section": "Management"
+      "section": "Management",
+      "contract": "page",
+      "scenario": "field-library",
+      "selector": "app-field-library-sidebar .sidebar-container",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.html",
+          "anchor": "class=\"sidebar-container\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.ced",
       "name": "CED",
-      "section": "Menus"
+      "section": "Menus",
+      "contract": "page",
+      "scenario": "designer-page",
+      "selector": "cedar-embeddable-designer .app-header",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/app.component.html",
+          "anchor": "class=\"app-header\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.user-menu",
@@ -241,30 +263,85 @@
       "id": "ced.settings-default-value-errors",
       "name": "Settings / Default Value Errors",
       "section": "Confirmation / Warning / Error",
-      "parent": "ced.template-designer-ced"
+      "parent": "ced.template-designer-ced",
+      "contract": "page",
+      "scenario": "default-value-error",
+      "selector": "app-field-default-value [role=\"alert\"]",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-default-value/field-default-value.component.html",
+          "anchor": "role=\"alert\" class=\"ced-field-error\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.import-field-library-errors",
       "name": "Import / Field Library Errors",
       "section": "Confirmation / Warning / Error",
-      "parent": "ced.template-designer-ced"
+      "parent": "ced.template-designer-ced",
+      "contract": "page",
+      "scenario": "import-error",
+      "selector": "app-child-picker [role=\"alert\"]",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/child-picker/child-picker.component.html",
+          "anchor": "role=\"alert\" class=\"error\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.preview-component-unavailable",
       "name": "Preview / Component Unavailable",
       "section": "Confirmation / Warning / Error",
-      "parent": "ced.template-designer-ced"
+      "parent": "ced.template-designer-ced",
+      "contract": "page",
+      "scenario": "preview-unavailable",
+      "selector": "app-cee-preview .cee-preview",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/cee-preview/cee-preview.component.html",
+          "anchor": "class=\"cee-preview__missing\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.term-picker-errors-warnings",
       "name": "Term Picker Errors / Warnings",
       "section": "Confirmation / Warning / Error",
-      "parent": "ced.template-designer-ced"
+      "parent": "ced.template-designer-ced",
+      "contract": "page",
+      "scenario": "picker-unavailable",
+      "selector": "app-controlled-term-config .picker-unavailable",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/controlled-term-config/controlled-term-config.component.html",
+          "anchor": "class=\"picker-unavailable\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.designer-errors-warnings",
       "name": "Designer Errors / Warnings",
-      "section": "Template Designer"
+      "section": "Template Designer",
+      "contract": "page",
+      "scenario": "invalid-field",
+      "selector": ".field-drag-container.invalid .validation-badge",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-card/field-card.component.html",
+          "anchor": "class=\"validation-badge\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.ced-view",
