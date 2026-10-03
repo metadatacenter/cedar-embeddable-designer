@@ -220,6 +220,15 @@
     line-height: var(--cedar-control-line-height-default);
   }
 
+  /*
+    Placeholders take the shared muted text role, as Workspace's do. Tailwind's preflight draws them
+    at half the strength of the surrounding text, a colour the shared vocabulary does not contain.
+  */
+  ::placeholder {
+    color: var(--cedar-text-muted);
+    opacity: 1;
+  }
+
   input[type='checkbox'],
   input[type='radio'] {
     accent-color: var(--cedar-color-primary);

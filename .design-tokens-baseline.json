@@ -50,13 +50,6 @@
       "value": "0.25rem",
       "count": 1
     },
-    "3d7b977f529f78db3e59": {
-      "file": "src/app/features/field-type-picker/field-type-picker.component.scss",
-      "rule": "color",
-      "property": "box-shadow",
-      "value": "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-      "count": 1
-    },
     "3f264d923175cc10b439": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
       "rule": "geometry",
