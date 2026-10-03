@@ -22,7 +22,8 @@
     },
     "anUnnamedField": "an unnamed field",
     "quoted": "“{{value}}”",
-    "close": "Close"
+    "close": "Close",
+    "actions": "Actions"
   },
   "app": {
     "overview": {
@@ -307,7 +308,6 @@
     "importDestinationMissing": "The import destination no longer exists.",
     "destinationMissing": "The destination no longer exists.",
     "chooseFieldOrElement": "Choose a field or element artifact.",
-    "chooseElementDocument": "Choose an element document to insert into this container.",
     "elementMissing": "The element no longer exists."
   },
   "fieldCard": {
@@ -330,28 +330,6 @@
       "url": "Image URL",
       "videoId": "YouTube video ID"
     }
-  },
-  "fieldDesigner": {
-    "title": "Field library",
-    "back": "Back to Template Builder",
-    "hint": "Reusable field specifications saved in this browser, including template display and occurrence settings.",
-    "createLibrary": "Create library",
-    "libraryName": "Library name",
-    "description": "Description",
-    "library": "Library",
-    "chooseLibrary": "Choose a library",
-    "saveField": "Save field",
-    "createField": "Create field",
-    "columns": {
-      "field": "Field",
-      "actions": "Actions"
-    },
-    "view": "View",
-    "edit": "Edit",
-    "addToTemplate": "Add to template",
-    "remove": "Remove",
-    "nameRequired": "Give the field a name.",
-    "libraryRequired": "Choose a library, or create one first."
   },
   "fieldElement": {
     "label": "Field designer",

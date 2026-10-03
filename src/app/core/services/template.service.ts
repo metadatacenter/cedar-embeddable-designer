@@ -37,7 +37,6 @@ import {
   containerPreview,
   newContainer,
   templateToJson,
-  templateToYaml,
   defaultValueError,
 } from '../model/cedar-template';
 
@@ -202,9 +201,6 @@ export class TemplateService {
       })),
     };
   });
-  issuesFor(id: number): CedValidationIssue[] {
-    return this.validationReport().issues.filter((issue) => issue.path.includes(id));
-  }
   revealIssue(issue: CedValidationIssue): void {
     if (issue.setting === 'name') this.touchName(issue.nodeId);
     if (issue.setting === 'option-0') this.touchOption(issue.nodeId, 0);
@@ -269,7 +265,6 @@ export class TemplateService {
   readonly template = computed(() => buildContainer(this.document()));
   readonly previewJson = computed(() => templateToJson(containerPreview(this.document())));
   readonly templateJson = computed(() => templateToJson(this.template()));
-  readonly templateYaml = computed(() => templateToYaml(this.template()));
 
   readonly fieldLibrary = inject(FieldLibraryService);
   readonly libraries = this.fieldLibrary.libraries;
@@ -279,15 +274,6 @@ export class TemplateService {
   // Modal & Navigation States
   readonly showPicker = signal<number | null>(null);
   readonly showPreview = signal<boolean>(false);
-  readonly showFieldDesigner = signal<boolean>(false);
-  readonly libraryDraft = signal<Field | null>(null);
-  saveFieldToLibrary(id: number): void {
-    const field = this.fieldsFor(id)().find((field) => field.id === id);
-    if (field) {
-      this.libraryDraft.set(structuredClone(field));
-      this.showFieldDesigner.set(true);
-    }
-  }
   readonly selectedField = signal<number | null>(null);
   readonly fieldTypeDropdownLibrary = signal<number | null>(null);
 
@@ -478,18 +464,6 @@ export class TemplateService {
     this.fieldsFor(id).update((prev) =>
       prev.map((f) => (f.id === id ? { ...f, name, ...(deploymentName ? { deploymentName } : {}) } : f)),
     );
-  }
-
-  updateCustomField(updated: CustomField) {
-    this.customFields.update((fields) =>
-      fields.map((field) => (field.id === updated.id ? structuredClone(updated) : field)),
-    );
-    // Existing template deployments are independent copies. Editing a library field
-    // must not silently overwrite changes made in a template that already uses it.
-  }
-
-  deleteCustomField(id: number) {
-    this.customFields.update((prev) => prev.filter((cf) => cf.id !== id));
   }
 
   updateFieldStatus(id: number, status: string) {
@@ -915,67 +889,6 @@ export class TemplateService {
     this.nameFocusRequest.set(definition.id);
     return definition.id;
   }
-  importElement(source: string | object, targetId = this.session.active().id): void {
-    const definition = readContainer(source);
-    if (definition.kind !== 'element') throw new LocalizedError(message('errors.chooseElementDocument'));
-    // Import is an independent local copy retaining its source artifact identity.
-    this.insertNode(
-      {
-        kind: 'element',
-        id: definition.id,
-        definition,
-        placement: { allowMultiple: false, propertyIri: newFieldIdentity().propertyIri },
-      },
-      Number.MAX_SAFE_INTEGER,
-      targetId,
-    );
-  }
-  duplicateElement(id: number): void {
-    const parent = parentOf(this.session.document(), id);
-    const node = parent?.children.find((child): child is ElementNode => child.kind === 'element' && child.id === id);
-    if (!node) return;
-    const clone = (source: ChildNode): ChildNode => {
-      const copy = structuredClone(source);
-      copy.id = newNodeId();
-      copy.placement.propertyIri = newFieldIdentity().propertyIri;
-      const resetMetadata = (metadata: NonNullable<Field['artifact']>, sourceId: string) => ({
-        ...metadata,
-        publicationStatus: 'bibo:draft' as const,
-        version: '0.0.1',
-        createdOn: null,
-        createdBy: null,
-        modifiedOn: null,
-        modifiedBy: null,
-        derivedFrom: sourceId || null,
-        previousVersion: null,
-      });
-      if (copy.kind === 'field') {
-        const previousId = copy.definition.atId ?? '';
-        copy.definition.atId = newFieldIdentity().atId;
-        copy.definition.publishedDefinition = undefined;
-        if (copy.definition.artifact) copy.definition.artifact = resetMetadata(copy.definition.artifact, previousId);
-      } else {
-        const previousId = copy.definition.identifier;
-        copy.definition.id = copy.id;
-        copy.definition.identifier = newContainer('element').identifier;
-        copy.definition.version = '0.0.1';
-        if (copy.definition.metadata)
-          copy.definition.metadata.artifact = resetMetadata(copy.definition.metadata.artifact, previousId);
-        copy.definition.children = copy.definition.children.map(clone);
-      }
-      return copy;
-    };
-    try {
-      this.insertNode(
-        clone({ ...node, definition: readContainer(templateToJson(buildContainer(node.definition))) }),
-        parent!.children.findIndex((child) => child.id === id) + 1,
-        parent!.id,
-      );
-    } catch (error) {
-      this.loadError.set(this.i18n.describe(error));
-    }
-  }
-
   deleteChild(id: number): void {
     const parent = parentOf(this.session.document(), id);
     if (!parent) return;

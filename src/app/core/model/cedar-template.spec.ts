@@ -14,7 +14,12 @@
  * the same model, which is the claim that adopting the library buys and the one
  * that fails loudest if anything here still thinks in terms of JSON keys.
  */
-import { ControlledTermField, TemporalField, Template } from 'cedar-model-typescript-library';
+import {
+  AbstractDynamicChildDeploymentInfo,
+  ControlledTermField,
+  TemporalField,
+  Template,
+} from 'cedar-model-typescript-library';
 import { Field } from '../models/types';
 import { FIELD_TYPES } from '../models/types';
 import {
@@ -25,7 +30,6 @@ import {
   buildTemplate,
   contentKindOf,
   descriptorOf,
-  fieldDeployment,
   fieldToJson,
   readField,
   newFieldIdentity,
@@ -59,6 +63,18 @@ function templateOf(...fields: Field[]): DesignerTemplate {
     version: '0.0.1',
     fields,
   };
+}
+
+/**
+ * How one child is deployed in its template.
+ *
+ * The container types its children as `AbstractChildDeploymentInfo`, the base every
+ * child shares, which carries none of the settings a field deployment has. Every child
+ * these tests build is a field, so the narrowing is safe here.
+ */
+function fieldDeployment(template: Template, key: string): AbstractDynamicChildDeploymentInfo | null {
+  const info = template.getChildrenInfo().get(key);
+  return info === null ? null : (info as AbstractDynamicChildDeploymentInfo);
 }
 
 /** The JSON a host would receive, as a plain record for indexing. */

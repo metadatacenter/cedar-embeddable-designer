@@ -499,11 +499,6 @@ export function accepts(paletteType: string, parameter: FieldParameter): boolean
   return descriptorOf(paletteType).parameters?.includes(parameter) ?? false;
 }
 
-/** Every parameter a type accepts, for a caller enumerating rather than asking. */
-export function parametersOf(paletteType: string): readonly FieldParameter[] {
-  return descriptorOf(paletteType).parameters ?? [];
-}
-
 export function temporalGranularities(type: string) {
   const time = TemporalGranularity.valuesWithTimes();
   const choices =
@@ -1159,19 +1154,6 @@ function buildContainerArtifact(
   }
   template.schema_identifier = state.schemaIdentifier || null;
   return template;
-}
-
-/**
- * How one child is deployed in its template.
- *
- * The container types its children as `AbstractChildDeploymentInfo`, which is the
- * base every child shares and carries none of the settings a field deployment
- * has. Every child the designer writes is a field, so the narrowing is safe here
- * and belongs here rather than at each call site.
- */
-export function fieldDeployment(template: Template, key: string): AbstractDynamicChildDeploymentInfo | null {
-  const info = template.getChildrenInfo().get(key);
-  return info === null ? null : (info as AbstractDynamicChildDeploymentInfo);
 }
 
 export function templateToJson(template: Template | TemplateElement): JsonNode {

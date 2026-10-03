@@ -53,7 +53,6 @@ describe('settings validation report', () => {
     service.updateContainerDefinition(element.id, { name: 'Element' });
     service.updateFieldName(id, 'Field');
     service.setSettingsError(id, 'defaultValue', 'Invalid default.');
-    expect(service.issuesFor(element.id)).toHaveLength(1);
     expect(service.validationReport().issues[0].path).toEqual([root, element.id, id]);
     service.toggleElement(element.id);
     service.revealIssue(service.validationReport().issues[0]);

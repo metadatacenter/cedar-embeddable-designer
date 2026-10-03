@@ -1,4 +1,4 @@
-import { buildContainer, readContainer, templateToJson } from '../../core/model/cedar-template';
+import { buildContainer, readContainer, templateToJson, templateToYaml } from '../../core/model/cedar-template';
 import { TestBed } from '@angular/core/testing';
 import { AnnotationsEditorComponent } from './annotations-editor.component';
 import { TemplateService } from '../../core/services/template.service';
@@ -59,7 +59,7 @@ for (const kind of ['field', 'template', 'element'] as const) {
       expect(json).toContain('urn:source');
       expect(json).toContain('Reviewed');
       const artifact = service.templateJson();
-      for (const source of [artifact, service.templateYaml()]) {
+      for (const source of [artifact, templateToYaml(service.template())]) {
         expect(templateToJson(buildContainer(readContainer(source)))).toEqual(artifact);
       }
 

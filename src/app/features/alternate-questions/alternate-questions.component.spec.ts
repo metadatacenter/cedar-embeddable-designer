@@ -2,7 +2,7 @@ import { FieldSettingsComponent } from '../field-settings/field-settings.compone
 import { TestBed } from '@angular/core/testing';
 import { AlternateQuestionsComponent } from './alternate-questions.component';
 import { TemplateService } from '../../core/services/template.service';
-import { buildContainer, readContainer, templateToJson } from '../../core/model/cedar-template';
+import { buildContainer, readContainer, templateToJson, templateToYaml } from '../../core/model/cedar-template';
 
 it('rejects blank questions on Add, saves alternate labels, and supports round trips and removal', async () => {
   localStorage.clear();
@@ -43,7 +43,7 @@ it('rejects blank questions on Add, saves alternate labels, and supports round t
   await refresh();
   expect(editor.questions()).toEqual(['What is your name?', 'How should we address you?']);
   const artifact = service.templateJson();
-  for (const source of [artifact, service.templateYaml()]) {
+  for (const source of [artifact, templateToYaml(service.template())]) {
     expect(templateToJson(buildContainer(readContainer(source)))).toEqual(artifact);
   }
   editor.remove(0);

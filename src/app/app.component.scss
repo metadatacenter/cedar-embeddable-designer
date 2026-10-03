@@ -267,12 +267,6 @@
   border-radius: var(--cedar-radius-pill);
 }
 
-.field-designer-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: var(--cedar-layer-modal);
-}
-
 /* ─── Template Header Card ────────────────────────────────────────────────── */
 .template-header-card {
   @apply relative;

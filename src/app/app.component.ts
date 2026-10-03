@@ -23,7 +23,6 @@ import { FieldLibrarySidebarComponent } from './features/field-library-sidebar/f
 import { PreferencesModalComponent } from './features/modals/preferences/preferences.component';
 import { PresetDefinitionsModalComponent } from './features/modals/preset-definitions/preset-definitions.component';
 import { CeePreviewComponent } from './features/cee-preview/cee-preview.component';
-import { FieldDesignerComponent } from './features/field-designer/field-designer.component';
 import { ContainerEditorComponent } from './features/container-editor/container-editor.component';
 import { ContainerOutlineComponent } from './features/container-outline/container-outline.component';
 
@@ -40,7 +39,6 @@ import { ContainerOutlineComponent } from './features/container-outline/containe
     PreferencesModalComponent,
     PresetDefinitionsModalComponent,
     CeePreviewComponent,
-    FieldDesignerComponent,
     ContainerEditorComponent,
     ContainerOutlineComponent,
   ],

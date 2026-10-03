@@ -22,7 +22,8 @@
     },
     "anUnnamedField": "egy névtelen mező",
     "quoted": "„{{value}}”",
-    "close": "Bezárás"
+    "close": "Bezárás",
+    "actions": "Műveletek"
   },
   "app": {
     "overview": {
@@ -307,7 +308,6 @@
     "importDestinationMissing": "Az importálás célja már nem létezik.",
     "destinationMissing": "A cél már nem létezik.",
     "chooseFieldOrElement": "Válasszon mező- vagy elemartefaktumot.",
-    "chooseElementDocument": "Válasszon elemdokumentumot, amelyet ebbe a tárolóba illeszt.",
     "elementMissing": "Az elem már nem létezik."
   },
   "fieldCard": {
@@ -330,28 +330,6 @@
       "url": "Kép webcíme",
       "videoId": "YouTube-videó azonosítója"
     }
-  },
-  "fieldDesigner": {
-    "title": "Mezőkönyvtár",
-    "back": "Vissza a sablonszerkesztőhöz",
-    "hint": "Ebben a böngészőben mentett, újrafelhasználható mezőspecifikációk, a sablonbeli megjelenítési és előfordulási beállításokkal együtt.",
-    "createLibrary": "Könyvtár létrehozása",
-    "libraryName": "Könyvtár neve",
-    "description": "Leírás",
-    "library": "Könyvtár",
-    "chooseLibrary": "Válasszon könyvtárat",
-    "saveField": "Mező mentése",
-    "createField": "Mező létrehozása",
-    "columns": {
-      "field": "Mező",
-      "actions": "Műveletek"
-    },
-    "view": "Megtekintés",
-    "edit": "Szerkesztés",
-    "addToTemplate": "Hozzáadás a sablonhoz",
-    "remove": "Eltávolítás",
-    "nameRequired": "Adjon nevet a mezőnek.",
-    "libraryRequired": "Válasszon könyvtárat, vagy előbb hozzon létre egyet."
   },
   "fieldElement": {
     "label": "Mezőtervező",

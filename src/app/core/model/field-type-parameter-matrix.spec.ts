@@ -31,8 +31,8 @@ import {
   allowsOptions,
   buildTemplate,
   contentKindOf,
+  descriptorOf,
   newFieldIdentity,
-  parametersOf,
   readTemplate,
   templateToJson,
   templateToYaml,
@@ -231,7 +231,7 @@ const CASES: Record<Parameter, ParameterCase> = {
 /** Every parameter a type accepts, however the descriptor records it. */
 function parametersFor(paletteType: string): Parameter[] {
   return [
-    ...parametersOf(paletteType),
+    ...(descriptorOf(paletteType).parameters ?? []),
     ...(allowsOptions(paletteType) ? (['options'] as const) : []),
     ...(contentKindOf(paletteType) ? (['content'] as const) : []),
   ];
@@ -274,7 +274,7 @@ describe('the per-type matrix', () => {
   });
 
   it('covers every parameter the descriptor can name', () => {
-    const covered = new Set(paletteTypes.flatMap((type) => parametersOf(type)));
+    const covered = new Set(paletteTypes.flatMap((type) => descriptorOf(type).parameters ?? []));
     const named = Object.keys(PARAMETER_SETTERS) as FieldParameter[];
     expect(named.filter((parameter) => !covered.has(parameter))).toEqual([]);
   });

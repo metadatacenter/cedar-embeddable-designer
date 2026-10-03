@@ -8,23 +8,16 @@
 }
 
 /* Shared authoring select arrow; reserve space for long selected values. */
-:is(
-    app-annotations-editor,
-    app-field-card,
-    app-field-settings,
-    app-container-settings,
-    app-language-selector,
-    app-field-designer
-  )
+:is(app-annotations-editor, app-field-card, app-field-settings, app-container-settings, app-language-selector)
   select:not([multiple]):not([size]) {
   @include authoring.select-arrow;
 }
 
 /* One density contract for all CED authoring tables and their entry forms. */
-:is(app-annotations-editor, app-alternate-questions, app-field-designer, app-preset-definitions) {
+:is(app-annotations-editor, app-alternate-questions, app-preset-definitions) {
   @include authoring.density;
 }
-:is(app-annotations-editor, app-alternate-questions, app-field-designer) .add-row {
+:is(app-annotations-editor, app-alternate-questions) .add-row {
   @include authoring.entry-row;
 }
 app-annotations-editor .add-row label {

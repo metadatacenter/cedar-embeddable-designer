@@ -6,7 +6,7 @@ import { TestBed } from '@angular/core/testing';
 import nestedTemplate from '../model/fixtures/corpus/template-028.json';
 import { TemplateService } from './template.service';
 import { Field } from '../models/types';
-import { templateToJson } from '../model/cedar-template';
+import { templateToJson, templateToYaml } from '../model/cedar-template';
 
 /**
  * The service as the rest of the application sees it: one template, built once,
@@ -177,7 +177,7 @@ describe('TemplateService', () => {
     });
     copy.annotations![0].value = 'copy only';
     expect(definition.annotations![0].value).toBe('original');
-    service.updateCustomField({ ...custom, definition: { ...definition, name: 'Library revision' } });
+    service.customFields.set([{ ...custom, definition: { ...definition, name: 'Library revision' } }]);
     expect(service.fields()[0].name).toBe(definition.name);
   });
 
@@ -341,7 +341,7 @@ describe('TemplateService', () => {
     it('reads the YAML it wrote', () => {
       service.templateName.set('Study');
       const written = templateToJson(service.template());
-      const yaml = service.templateYaml();
+      const yaml = templateToYaml(service.template());
 
       service.resetTemplate();
       service.loadTemplate(yaml);
@@ -477,28 +477,6 @@ describe('default editing', () => {
     expect(service.fields()[0].defaultValue).toEqual({ kind: 'none' });
     expect(() => service.templateJson()).not.toThrow();
   });
-  it('duplicates element subtrees with fresh identities and source provenance', () => {
-    service.updateContainerDefinition(service.addElement(), { name: 'Element' });
-    const original = service.children().find((node) => node.kind === 'element')!;
-    if (original.kind !== 'element') throw new Error('Expected element');
-    service.openContainer(original.id);
-    service.addField('text', 0);
-    const field = service.fields()[0];
-    service.openContainer(service.session.document().id);
-    service.duplicateElement(original.id);
-    const nodes = service.children().filter((node) => node.kind === 'element');
-    const copy = nodes[1];
-    expect(copy.id).not.toBe(original.id);
-    expect(copy.definition.identifier).not.toBe(original.definition.identifier);
-    expect(copy.definition.metadata?.artifact.derivedFrom).toBe(original.definition.identifier);
-    expect(copy.definition.metadata?.artifact.publicationStatus).toBe('bibo:draft');
-    expect(copy.placement.deploymentName).toBe('element_2');
-    const copiedField = copy.definition.children[0];
-    if (copiedField.kind !== 'field') throw new Error('Expected field');
-    expect(copiedField.definition.atId).not.toBe(field.atId);
-    expect(copiedField.definition.artifact?.derivedFrom).toBe(field.atId);
-    expect(copiedField.placement.propertyIri).not.toBe(field.propertyIri);
-  });
   it('rejects invalid element cardinality without modifying the document', () => {
     service.updateContainerDefinition(service.addElement(), { name: 'Element' });
     const node = service.children().find((child) => child.kind === 'element')!;
@@ -506,28 +484,6 @@ describe('default editing', () => {
     expect(
       service.updateElementPlacement(node.id, { ...node.placement, allowMultiple: true, minItems: 5, maxItems: 2 }),
     ).toMatch(/minimum/);
-    expect(service.templateJson()).toEqual(before);
-  });
-  it('inserts an imported element into the captured parent even after navigation', () => {
-    service.updateContainerDefinition(service.addElement(), { name: 'Element' });
-    const parent = service.children().find((node) => node.kind === 'element')!;
-    if (parent.kind !== 'element') throw new Error('Expected element');
-    const source = templateToJson(buildContainer(parent.definition));
-    service.openContainer(parent.id);
-    const destination = service.session.active().id;
-    service.openContainer(service.session.document().id);
-    service.importElement(source, destination);
-    expect(service.children()).toHaveLength(4);
-    service.openContainer(destination);
-    expect(service.children()).toHaveLength(1);
-    const inserted = service.children()[0];
-    expect(inserted.id).not.toBe(parent.id);
-    if (inserted.kind !== 'element') throw new Error('Expected element');
-    expect(inserted.definition.identifier).toBe(parent.definition.identifier);
-    service.openContainer(service.session.document().id);
-    service.deleteChild(parent.id);
-    const before = service.templateJson();
-    expect(() => service.importElement(source, destination)).toThrow(/no longer exists/);
     expect(service.templateJson()).toEqual(before);
   });
   it('rejects property-name collisions between fields and elements', () => {

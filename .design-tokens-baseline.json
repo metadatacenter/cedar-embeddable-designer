@@ -232,13 +232,6 @@
       "value": "1.3",
       "count": 1
     },
-    "de38628f4ec6178754c7": {
-      "file": "src/app/features/types-picker/types-picker.component.ts",
-      "rule": "geometry",
-      "property": "opacity",
-      "value": "0.5",
-      "count": 1
-    },
     "e1740c6e7463044f5287": {
       "file": "src/app/features/cee-preview/cee-preview.component.scss",
       "rule": "typography",
