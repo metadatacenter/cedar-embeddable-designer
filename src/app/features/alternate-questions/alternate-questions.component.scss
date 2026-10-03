@@ -74,10 +74,13 @@ td {
 .empty {
   color: var(--cedar-text-muted);
 }
+// The shared field-error role, with the host's override of its colour as the designer's other
+// errors take it. A gap separates it from the table below.
 p[role='alert'] {
+  @include patterns.field-error;
   --cedar-icon-color: var(--cedar-control-error, var(--cedar-status-error-text));
   color: var(--cedar-control-error, var(--cedar-status-error-text));
-  margin: var(--cedar-space-1) 0;
+  margin-bottom: var(--cedar-space-1);
 }
 .sr-only {
   @include patterns.visually-hidden;

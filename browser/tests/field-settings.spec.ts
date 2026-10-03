@@ -13,6 +13,7 @@ test('authors occurrence limits and rejects an inverted range', async ({ page })
   await expect.poll(async () => ((await currentTemplate(page)).properties as any).Title.maxItems).toBe(5);
   await settings.getByLabel('Minimum', { exact: true }).fill('8');
   await expect(settings.getByRole('alert')).toContainText('minimum no greater');
+  await expect(settings.getByRole('alert')).toHaveCSS('font-size', '12px');
   expect(((await currentTemplate(page)).properties as any).Title.minItems).toBe(2);
   const display = await openSettings(card, 'Display');
   await display.getByLabel('Name', { exact: true }).fill('Immediate label');

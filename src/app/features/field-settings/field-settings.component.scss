@@ -57,12 +57,12 @@ button {
   background: var(--cedar-surface-raised);
   cursor: pointer;
 }
+// The shared field-error role, with the host's override of its colour as the designer's other
+// errors take it.
 p[role='alert'] {
-  margin: var(--cedar-space-1) 0 0;
+  @include patterns.field-error;
   --cedar-icon-color: var(--cedar-control-error, var(--cedar-status-error-text));
   color: var(--cedar-control-error, var(--cedar-status-error-text));
-  font-size: var(--cedar-font-size);
-  line-height: 1.3;
 }
 
 /* A checkbox's label names an option, so it takes an option's regular text rather than a label's weight. */
