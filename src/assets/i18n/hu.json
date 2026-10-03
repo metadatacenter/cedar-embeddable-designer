@@ -35,23 +35,6 @@
       "expandAll": "Minden elem kinyitása",
       "collapseAll": "Minden elem összecsukása"
     },
-    "profile": {
-      "menuTitle": "Az ebben a profilban elérhető mezőtípusok és vezérlők",
-      "basic": {
-        "label": "Alap",
-        "summary": "Egyszerű mezők, szókészletek nélkül"
-      },
-      "semantic": {
-        "label": "Szemantikus",
-        "summary": "Kontrollált fogalmakkal és súgószöveggel bővül"
-      },
-      "modular": {
-        "label": "Moduláris",
-        "summary": "Sablonelemekkel bővül"
-      },
-      "custom": "Egyéni",
-      "customize": "Testreszabás…"
-    },
     "userMenu": {
       "title": "Felhasználói menü",
       "preferences": "Beállítások",
@@ -155,16 +138,11 @@
     "columns": {
       "name": "Név",
       "type": "Típus",
-      "created": "Létrehozva",
       "modified": "Utoljára módosítva",
       "version": "Verzió",
       "status": "Állapot",
       "remove": "Eltávolítás",
       "reorder": "Átrendezés"
-    },
-    "kind": {
-      "field": "Mező",
-      "element": "Elem"
     },
     "removeRow": "{{name}} eltávolítása",
     "selectRow": "{{name}} kiválasztása",
@@ -336,7 +314,6 @@
     "displayName": "Mező megjelenítési neve",
     "published": "Közzétett mező – csak olvasható. Vázlatverzió szerkesztése még nem érhető el.",
     "namePlaceholder": "Adja meg a mező nevét",
-    "name": "Mező neve",
     "occurrenceRange": "Előfordulási tartomány",
     "dragToReorder": "Húzza az átrendezéshez",
     "requirement": "Kitöltési követelmény",

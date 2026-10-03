@@ -35,23 +35,6 @@
       "expandAll": "Expand all elements",
       "collapseAll": "Collapse all elements"
     },
-    "profile": {
-      "menuTitle": "The field types and controls this profile offers",
-      "basic": {
-        "label": "Basic",
-        "summary": "Plain fields, no vocabularies"
-      },
-      "semantic": {
-        "label": "Semantic",
-        "summary": "Adds controlled terms and help text"
-      },
-      "modular": {
-        "label": "Modular",
-        "summary": "Adds template elements"
-      },
-      "custom": "Custom",
-      "customize": "Customize…"
-    },
     "userMenu": {
       "title": "User Menu",
       "preferences": "Preferences",
@@ -155,16 +138,11 @@
     "columns": {
       "name": "Name",
       "type": "Type",
-      "created": "Created",
       "modified": "Last modified",
       "version": "Version",
       "status": "Status",
       "remove": "Remove",
       "reorder": "Reorder"
-    },
-    "kind": {
-      "field": "Field",
-      "element": "Element"
     },
     "removeRow": "Remove {{name}}",
     "selectRow": "Select {{name}}",
@@ -336,7 +314,6 @@
     "displayName": "Field display name",
     "published": "Published field — read-only. Editing a draft version is not available yet.",
     "namePlaceholder": "Enter field name",
-    "name": "Field name",
     "occurrenceRange": "Occurrence range",
     "dragToReorder": "Drag to reorder",
     "requirement": "Requirement",
