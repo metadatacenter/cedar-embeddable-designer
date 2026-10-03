@@ -54,27 +54,6 @@
   --color-gray-900: var(--cedar-text-primary);
   --color-white: var(--cedar-surface-raised);
 
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-input-background: var(--input-background);
-  --color-switch-background: var(--switch-background);
-  --color-ring: var(--ring);
   /* One elevation for anything that floats, and one corner for every box; `rounded-full` remains the pill. */
   --shadow-2xs: var(--cedar-shadow-overlay);
   --shadow-xs: var(--cedar-shadow-overlay);
@@ -98,8 +77,7 @@
   were copied from the term picker, which had copied them from the editor, and
   three copies of one palette drifted exactly as three copies do: this file still
   said #856404 for the advisory colour a month after the editor chose #b45309.
-  What remains below is this application's own — the semantic names its utility
-  layer is built from, and the radius and weights that go with them.
+  What remains below is this application's own type scale, weights and radius.
 
   What was here before all of that was shadcn's default theme, shipped by the
   Figma Make export: a near-black `--primary`, a lavender-grey scale, and five
@@ -135,7 +113,6 @@
   --text-xl: var(--cedar-font-size-element-heading);
   --text-2xl: var(--cedar-font-size-heading);
 
-  --font-size: var(--cedar-font-size);
   --font-weight-normal: var(--cedar-font-weight-regular, 400);
   --font-weight-medium: var(--cedar-font-weight-medium, 500);
 
@@ -151,28 +128,6 @@
   */
   --font-sans: var(--cedar-font-family);
 
-  /* The names the utility layer below is built from, resolved to the values above. */
-  --background: var(--cedar-surface-raised);
-  --foreground: var(--cedar-text-primary);
-  --card: var(--cedar-surface-raised);
-  --card-foreground: var(--cedar-text-primary);
-  --popover: var(--cedar-surface-raised);
-  --popover-foreground: var(--cedar-text-primary);
-  --primary: var(--cedar-color-primary);
-  --primary-foreground: var(--cedar-color-on-primary);
-  --secondary: var(--cedar-surface-selected);
-  --secondary-foreground: var(--cedar-text-title);
-  --muted: var(--cedar-surface-subtle);
-  --muted-foreground: var(--cedar-text-muted);
-  --accent: var(--cedar-surface-selected);
-  --accent-foreground: var(--cedar-text-title);
-  --destructive: var(--cedar-status-error-text);
-  --destructive-foreground: var(--cedar-color-on-primary);
-  --border: var(--cedar-border-rule);
-  --input: transparent;
-  --input-background: var(--cedar-surface-subtle);
-  --switch-background: var(--cedar-control-border-default);
-  --ring: var(--cedar-color-primary);
   --radius: var(--cedar-radius);
 }
 
