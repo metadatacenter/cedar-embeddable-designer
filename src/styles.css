@@ -1,4 +1,8 @@
-@import 'tailwindcss';
+/*
+  Only the application's own sources: Tailwind otherwise detects every file in the repository,
+  and the browser suites' selector strings then compile into rules nothing uses.
+*/
+@import 'tailwindcss' source(none);
 /*
   CEDAR's design values, from the package that holds them for every component that
   draws CEDAR. The file is the Sass partial compiled to custom properties, because
@@ -11,6 +15,7 @@
 @import '@org.metadatacenter/cedar-design-tokens/icon-contract.css';
 @import '@org.metadatacenter/cedar-design-tokens/motion.css';
 @source "./app/**/*.{html,ts}";
+@source not "./app/**/*.spec.ts";
 
 @theme inline {
   --spacing: var(--cedar-space-1);
