@@ -33,7 +33,6 @@
     background: none;
     border: 0;
     cursor: pointer;
-    font-size: var(--cedar-font-size-heading);
   }
   p {
     @include spacing.apply(margin, control-row);

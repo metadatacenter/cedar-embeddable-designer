@@ -115,8 +115,8 @@
   --text-sm: var(--cedar-font-size);
   --text-base: var(--cedar-font-size);
   --text-lg: var(--cedar-font-size);
-  --text-xl: var(--cedar-font-size-element-heading);
-  --text-2xl: var(--cedar-font-size-heading);
+  --text-xl: var(--cedar-font-size-large);
+  --text-2xl: var(--cedar-font-size-large);
 
   --font-weight-normal: var(--cedar-font-weight-regular, 400);
   --font-weight-medium: var(--cedar-font-weight-medium, 500);
