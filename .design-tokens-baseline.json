@@ -225,13 +225,6 @@
       "value": "1.6",
       "count": 1
     },
-    "e1740c6e7463044f5287": {
-      "file": "src/app/features/cee-preview/cee-preview.component.scss",
-      "rule": "typography",
-      "property": "line-height",
-      "value": "1",
-      "count": 2
-    },
     "e4602bae0f903d5a9f74": {
       "file": "src/app/app.component.dev.ts",
       "rule": "typography",
