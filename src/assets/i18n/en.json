@@ -508,10 +508,6 @@
     "label": "Language",
     "current": "{{code}} (current)"
   },
-  "fieldLibrary": {
-    "loadFailed": "The saved field library could not be loaded. Its stored data has been left unchanged.",
-    "saveFailed": "The browser could not save the field library. Keep this page open and try again."
-  },
   "terminology": {
     "notConfigured": "Terminology server is not configured.",
     "checkFailed": "Could not check the default term ({{status}}).",

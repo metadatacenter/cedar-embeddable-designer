@@ -508,10 +508,6 @@
     "label": "Nyelv",
     "current": "{{code}} (jelenlegi)"
   },
-  "fieldLibrary": {
-    "loadFailed": "A mentett mezőkönyvtárat nem sikerült betölteni. A tárolt adatai változatlanok maradtak.",
-    "saveFailed": "A böngésző nem tudta menteni a mezőkönyvtárat. Hagyja nyitva ezt az oldalt, és próbálja újra."
-  },
   "terminology": {
     "notConfigured": "A terminológiai kiszolgáló nincs beállítva.",
     "checkFailed": "Az alapértelmezett fogalmat nem sikerült ellenőrizni ({{status}}).",

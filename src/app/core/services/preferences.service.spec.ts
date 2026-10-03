@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { PreferencesService } from './preferences.service';
-import { FIELD_TYPES } from '../models/types';
+import { FIELD_TYPES, UserPreferences } from '../models/types';
 
 /**
  * The presets and the preference state they write.
@@ -39,6 +39,19 @@ describe('PreferencesService', () => {
     service.applyPreset('modular');
     service.updatePreference('showHelpText', false);
     expect(service.getActivePreset()).toBeNull();
+  });
+
+  it('names a preset reached by hand from another', () => {
+    service.applyPreset('basic');
+    service.updatePreference('showHelpText', true);
+    service.updatePreference('showDefaultValue', true);
+    service.updateFieldTypeVisibility('controlledTerms', true);
+    expect(service.getActivePreset()).toBe('semantic');
+  });
+
+  it('ignores a preference the designer no longer reads', () => {
+    service.preferences.update((current) => ({ ...current, showFieldDesigner: false }) as UserPreferences);
+    expect(service.getActivePreset()).toBe('modular');
   });
 
   it('stops reporting a preset once a field type is hidden by hand', () => {

@@ -17,7 +17,6 @@ export class PreferencesService {
       showAllowMultiple: true,
       showHelpText: false,
       showDefaultValue: false,
-      showFieldDesigner: false,
       showElements: false,
       hiddenFieldTypes: ['controlledTerms'],
     },
@@ -26,7 +25,6 @@ export class PreferencesService {
       showAllowMultiple: true,
       showHelpText: true,
       showDefaultValue: true,
-      showFieldDesigner: true,
       showElements: false,
       hiddenFieldTypes: [],
     },
@@ -35,7 +33,6 @@ export class PreferencesService {
       showAllowMultiple: true,
       showHelpText: true,
       showDefaultValue: true,
-      showFieldDesigner: true,
       showElements: true,
       hiddenFieldTypes: [],
     },
@@ -131,7 +128,6 @@ export class PreferencesService {
       showAllowMultiple: definition.showAllowMultiple,
       showHelpText: definition.showHelpText,
       showDefaultValue: definition.showDefaultValue,
-      showFieldDesigner: definition.showFieldDesigner,
       showElements: definition.showElements,
       visibleFieldTypes,
     }));
@@ -149,7 +145,6 @@ export class PreferencesService {
         current.showAllowMultiple === def.showAllowMultiple &&
         current.showHelpText === def.showHelpText &&
         current.showDefaultValue === def.showDefaultValue &&
-        current.showFieldDesigner === def.showFieldDesigner &&
         current.showElements === def.showElements;
 
       if (!matchConfig) continue;
