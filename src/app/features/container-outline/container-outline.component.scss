@@ -102,5 +102,5 @@ app-container-outline {
 }
 button:focus-visible {
   outline: var(--cedar-focus-ring-width) solid var(--cedar-color-primary);
-  outline-offset: 1px;
+  outline-offset: var(--cedar-focus-ring-offset);
 }

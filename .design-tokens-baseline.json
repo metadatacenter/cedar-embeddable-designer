@@ -8,13 +8,6 @@
       "value": "hover:opacity-80",
       "count": 1
     },
-    "153705e130c9b5c25398": {
-      "file": "src/app/features/property-picker/property-picker.component.ts",
-      "rule": "geometry",
-      "property": "opacity",
-      "value": "0.5",
-      "count": 1
-    },
     "1fb7ccd00acf3ef67118": {
       "file": "src/app/features/container-outline/container-outline.component.ts",
       "rule": "utility-style",
@@ -104,13 +97,6 @@
       "rule": "color",
       "property": "background",
       "value": "#0f172a",
-      "count": 1
-    },
-    "6a3d7b15ea8a41f42201": {
-      "file": "src/app/features/container-outline/container-outline.component.scss",
-      "rule": "geometry",
-      "property": "outline-offset",
-      "value": "1px",
       "count": 1
     },
     "7228666fb41cf8b8160e": {
@@ -211,13 +197,6 @@
       "value": "#94a3b8",
       "count": 1
     },
-    "bb9ab8e6ad3c25e11f71": {
-      "file": "src/app/features/annotations-editor/annotations-editor.component.scss",
-      "rule": "geometry",
-      "property": "opacity",
-      "value": "0.5",
-      "count": 1
-    },
     "bd9600b167a429fb1d6b": {
       "file": "src/app/app.component.scss",
       "rule": "geometry",
@@ -251,13 +230,6 @@
       "rule": "typography",
       "property": "line-height",
       "value": "1.3",
-      "count": 1
-    },
-    "dd9a5819bc25f51ce7c8": {
-      "file": "src/app/features/manual-iri/manual-iri.component.ts",
-      "rule": "geometry",
-      "property": "opacity",
-      "value": "0.5",
       "count": 1
     },
     "de38628f4ec6178754c7": {
@@ -314,13 +286,6 @@
       "rule": "geometry",
       "property": "min-height",
       "value": "500px",
-      "count": 1
-    },
-    "fc2f015f1d44ada1eb55": {
-      "file": "src/app/features/alternate-questions/alternate-questions.component.scss",
-      "rule": "geometry",
-      "property": "opacity",
-      "value": "0.5",
       "count": 1
     },
     "fd1bbd3d0ee3ccef3ce7": {

@@ -66,7 +66,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       color: var(--cedar-color-primary);
     }
     button:disabled {
-      opacity: 0.5;
+      opacity: var(--cedar-control-disabled-opacity);
       cursor: default;
     }
     // The shared field-error role, with the host's override of its colour as the designer's other

@@ -37,7 +37,7 @@ button {
   cursor: pointer;
 }
 button:disabled {
-  opacity: 0.5;
+  opacity: var(--cedar-control-disabled-opacity);
   cursor: default;
 }
 table {

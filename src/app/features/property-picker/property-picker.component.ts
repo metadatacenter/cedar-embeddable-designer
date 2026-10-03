@@ -115,7 +115,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       color: var(--cedar-control-border-default);
     }
     button:disabled {
-      opacity: 0.5;
+      opacity: var(--cedar-control-disabled-opacity);
       cursor: default;
     }
     .overlay {
