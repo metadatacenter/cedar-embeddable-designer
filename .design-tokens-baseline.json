@@ -8,6 +8,13 @@
       "value": "#8b949e",
       "count": 3
     },
+    "153705e130c9b5c25398": {
+      "file": "src/app/features/property-picker/property-picker.component.ts",
+      "rule": "geometry",
+      "property": "opacity",
+      "value": "0.5",
+      "count": 1
+    },
     "182cbb77006c0f62f6fe": {
       "file": "src/app/features/container-editor/container-editor.component.html",
       "rule": "dynamic-style",
@@ -27,6 +34,20 @@
       "rule": "geometry",
       "property": "z-index",
       "value": "30",
+      "count": 1
+    },
+    "289cd52dae0d8f276c52": {
+      "file": "src/app/app.component.scss",
+      "rule": "geometry",
+      "property": "outline",
+      "value": "1px solid var(--cedar-color-primary)",
+      "count": 1
+    },
+    "2ba7cb24714134eb068c": {
+      "file": "src/app/features/container-editor/container-editor.component.scss",
+      "rule": "geometry",
+      "property": "outline-offset",
+      "value": "1px",
       "count": 1
     },
     "2f8f733c2a7815f5cad3": {
@@ -99,6 +120,13 @@
       "value": "#0f172a",
       "count": 1
     },
+    "6a3d7b15ea8a41f42201": {
+      "file": "src/app/features/container-outline/container-outline.component.scss",
+      "rule": "geometry",
+      "property": "outline-offset",
+      "value": "1px",
+      "count": 1
+    },
     "6a6a06334cb800c18955": {
       "file": "src/app/shared/_code-highlight.scss",
       "rule": "color",
@@ -106,11 +134,53 @@
       "value": "#79c0ff",
       "count": 1
     },
+    "71cf1aa78cf262883f5f": {
+      "file": "src/app/features/field-settings/field-settings.component.scss",
+      "rule": "geometry",
+      "property": "outline",
+      "value": "2px solid var(--cedar-color-primary)",
+      "count": 1
+    },
+    "71e450b2a9f59fda1e10": {
+      "file": "src/app/features/container-editor/container-editor.component.html",
+      "rule": "dynamic-style",
+      "property": "outline-color",
+      "value": "uninspectable-binding",
+      "count": 1
+    },
+    "7228666fb41cf8b8160e": {
+      "file": "src/app/features/container-outline/container-outline.component.scss",
+      "rule": "geometry",
+      "property": "opacity",
+      "value": "0.25",
+      "count": 1
+    },
+    "768f3f29029c653f7afa": {
+      "file": "src/styles.css",
+      "rule": "color",
+      "property": "outline-color",
+      "value": "color-mix(in srgb, var(--cedar-color-primary) 50%, transparent)",
+      "count": 1
+    },
     "7c4547a7a98ff1a6bdb5": {
       "file": "src/app/features/container-editor/container-editor.component.scss",
       "rule": "geometry",
       "property": "height",
       "value": "24px",
+      "count": 1
+    },
+    "7fc9585c4444ece8a70d": {
+      "file": "src/app/features/child-picker/child-picker.component.scss",
+      "rule": "geometry",
+      "property": "outline-offset",
+      "value": "-2px",
+      "count": 1
+    },
+    "80947f19d3728f821434": {
+      "file": "src/app/features/container-outline/container-outline.component.scss",
+      "rule": "geometry",
+      "property": "outline",
+      "value": "2px solid var(--cedar-color-primary)",
       "count": 1
     },
     "81c3620936d3e9bb3039": {
@@ -139,6 +209,13 @@
       "rule": "geometry",
       "property": "height",
       "value": "1px",
+      "count": 1
+    },
+    "8c47ddcd9e7845b5f914": {
+      "file": "src/app/features/container-editor/container-editor.component.scss",
+      "rule": "geometry",
+      "property": "outline",
+      "value": "2px solid var(--cedar-control-error, var(--cedar-status-error-text))",
       "count": 1
     },
     "95a655f7d6e4650d75cf": {
@@ -197,12 +274,47 @@
       "value": "#94a3b8",
       "count": 1
     },
+    "ae92b53172c2e0427526": {
+      "file": "src/app/features/field-settings/field-settings.component.scss",
+      "rule": "geometry",
+      "property": "outline-offset",
+      "value": "2px",
+      "count": 1
+    },
+    "bb9ab8e6ad3c25e11f71": {
+      "file": "src/app/features/annotations-editor/annotations-editor.component.scss",
+      "rule": "geometry",
+      "property": "opacity",
+      "value": "0.5",
+      "count": 1
+    },
+    "bd185d48f2d3e048d58c": {
+      "file": "src/app/app.component.scss",
+      "rule": "geometry",
+      "property": "outline-offset",
+      "value": "2px",
+      "count": 1
+    },
+    "bd9600b167a429fb1d6b": {
+      "file": "src/app/app.component.scss",
+      "rule": "geometry",
+      "property": "outline-offset",
+      "value": "-1px",
+      "count": 1
+    },
     "bdfc32f6dd0cc875fddc": {
       "file": "src/styles.css",
       "rule": "geometry",
       "property": "height",
       "value": "6px",
       "count": 1
+    },
+    "c034d74422751d58d246": {
+      "file": "src/app/app.component.scss",
+      "rule": "geometry",
+      "property": "outline",
+      "value": "2px solid var(--cedar-color-primary)",
+      "count": 2
     },
     "c73b981ef691c39e596f": {
       "file": "src/app/features/annotations-editor/annotations-editor.component.scss",
@@ -232,6 +344,20 @@
       "value": "1.3",
       "count": 1
     },
+    "dd9a5819bc25f51ce7c8": {
+      "file": "src/app/features/manual-iri/manual-iri.component.ts",
+      "rule": "geometry",
+      "property": "opacity",
+      "value": "0.5",
+      "count": 1
+    },
+    "de38628f4ec6178754c7": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "geometry",
+      "property": "opacity",
+      "value": "0.5",
+      "count": 1
+    },
     "e1740c6e7463044f5287": {
       "file": "src/app/features/cee-preview/cee-preview.component.scss",
       "rule": "typography",
@@ -251,6 +377,20 @@
       "rule": "typography",
       "property": "font",
       "value": "12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace",
+      "count": 1
+    },
+    "ecffab35384f3a419e29": {
+      "file": "src/app/features/child-picker/child-picker.component.scss",
+      "rule": "geometry",
+      "property": "outline",
+      "value": "2px solid var(--cedar-color-primary)",
+      "count": 1
+    },
+    "f04f7fbf760e651e3081": {
+      "file": "src/app/features/child-picker/child-picker.component.scss",
+      "rule": "geometry",
+      "property": "opacity",
+      "value": "0.3",
       "count": 1
     },
     "f3bcf57ea2a464bffd1e": {
@@ -281,6 +421,13 @@
       "value": "500px",
       "count": 1
     },
+    "fc2f015f1d44ada1eb55": {
+      "file": "src/app/features/alternate-questions/alternate-questions.component.scss",
+      "rule": "geometry",
+      "property": "opacity",
+      "value": "0.5",
+      "count": 1
+    },
     "fd1bbd3d0ee3ccef3ce7": {
       "file": "src/app/features/field-settings/field-settings.component.scss",
       "rule": "geometry",
@@ -290,5 +437,5 @@
     }
   },
   "exceptions": {},
-  "policy": 2
+  "policy": 3
 }

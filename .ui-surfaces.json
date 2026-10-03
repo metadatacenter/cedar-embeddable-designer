@@ -77,7 +77,19 @@
           "anchor": "class=\"dropdown-panel"
         }
       ],
-      "test": "browser/tests/surfaces.spec.ts"
+      "test": "browser/tests/surfaces.spec.ts",
+      "scaleDebt": [
+        {
+          "property": "box-shadow",
+          "value": "rgba(0, 0, 0, 0.1)",
+          "reason": "The type picker's own shadow literal, found when the walk began reading shadows; the shared overlay shadow would replace it"
+        },
+        {
+          "property": "color",
+          "value": "oklab(0.520477 -0.0742004 -0.0458868 / 0.5)",
+          "reason": "Tailwind's default placeholder, half the text colour, found when the walk began reading placeholders; the shared muted text role would replace it"
+        }
+      ]
     },
     {
       "id": "ced.ced-field-designer",
@@ -268,7 +280,14 @@
           "anchor": "class=\"app-shell\""
         }
       ],
-      "test": "browser/tests/surfaces.spec.ts"
+      "test": "browser/tests/surfaces.spec.ts",
+      "scaleDebt": [
+        {
+          "property": "color",
+          "value": "oklab(0.44953 0.0000205487 0.0000089705 / 0.5)",
+          "reason": "Tailwind's default placeholder, half the text colour, found when the walk began reading placeholders; the shared muted text role would replace it"
+        }
+      ]
     },
     {
       "id": "ced.field-designer",
