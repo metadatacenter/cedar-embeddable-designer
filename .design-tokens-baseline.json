@@ -71,26 +71,12 @@
       "value": "14px",
       "count": 1
     },
-    "515ddb2cbada83b118b1": {
-      "file": "src/app/app.component.dev.ts",
-      "rule": "spacing",
-      "property": "padding",
-      "value": "4px 12px",
-      "count": 1
-    },
     "5aef387fdb216dac4c64": {
       "file": "src/styles.css",
       "rule": "geometry",
       "property": "height",
       "value": "8px",
       "count": 2
-    },
-    "665a5f43c5e491bfdb45": {
-      "file": "src/app/app.component.dev.ts",
-      "rule": "color",
-      "property": "background",
-      "value": "#0f172a",
-      "count": 1
     },
     "7228666fb41cf8b8160e": {
       "file": "src/app/features/container-outline/container-outline.component.scss",
@@ -183,13 +169,6 @@
       "value": "divide-gray-100",
       "count": 1
     },
-    "ac0afb58ef593fbd6bfa": {
-      "file": "src/app/app.component.dev.ts",
-      "rule": "color",
-      "property": "color",
-      "value": "#94a3b8",
-      "count": 1
-    },
     "bd9600b167a429fb1d6b": {
       "file": "src/app/app.component.scss",
       "rule": "geometry",
@@ -218,13 +197,6 @@
       "value": "1.6",
       "count": 1
     },
-    "e4602bae0f903d5a9f74": {
-      "file": "src/app/app.component.dev.ts",
-      "rule": "typography",
-      "property": "font",
-      "value": "12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace",
-      "count": 1
-    },
     "f04f7fbf760e651e3081": {
       "file": "src/app/features/child-picker/child-picker.component.scss",
       "rule": "geometry",
@@ -244,13 +216,6 @@
       "rule": "geometry",
       "property": "height",
       "value": "24px",
-      "count": 1
-    },
-    "f7875568db5384e058ac": {
-      "file": "src/app/app.component.dev.ts",
-      "rule": "color",
-      "property": "color",
-      "value": "#a5dce3",
       "count": 1
     },
     "fb0df96f25c062f6a2ed": {

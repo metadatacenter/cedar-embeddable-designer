@@ -1,0 +1,26 @@
+@use '@org.metadatacenter/cedar-design-tokens/custom-properties';
+
+// The host page declares no shared properties of its own, so this component declares them for its
+// status line, as an embedding page that uses them would.
+:host {
+  @include custom-properties.declare;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+cedar-embeddable-designer {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.dev-host__status {
+  margin: 0;
+  padding: var(--cedar-space-1) var(--cedar-space-3);
+  border-top: 1px solid var(--cedar-border-rule);
+  background: var(--cedar-surface-subtle);
+  color: var(--cedar-text-muted);
+  font-family: var(--cedar-font-family-monospace);
+  font-size: var(--cedar-font-size-small);
+}
+.dev-host__status a {
+  color: var(--cedar-color-primary);
+}
