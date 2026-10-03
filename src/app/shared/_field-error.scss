@@ -1,11 +1,9 @@
-@use '@org.metadatacenter/cedar-design-tokens/spacing';
-// Shared invalid-control role, with the public host override.
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
+// The shared field-error role, then the public host override of its colour.
 .ced-field-error {
+  @include patterns.field-error;
   --cedar-icon-color: var(--cedar-control-error, var(--cedar-status-error-text));
   color: var(--cedar-control-error, var(--cedar-status-error-text));
-  font-size: var(--cedar-font-size);
-  line-height: var(--cedar-control-line-height-authoring);
-  margin: var(--cedar-space-1) 0 0;
 }
 
 // CEDAR's advisory colour; this explains a read-only state rather than an invalid
@@ -17,6 +15,6 @@
   background: var(--cedar-status-warning-surface);
   font-size: var(--cedar-font-size);
   line-height: var(--cedar-control-line-height-authoring);
-  @include spacing.apply(margin, field-error);
+  margin: var(--cedar-space-1) var(--cedar-space-2) 0;
   padding: var(--cedar-space-1) var(--cedar-space-2);
 }
