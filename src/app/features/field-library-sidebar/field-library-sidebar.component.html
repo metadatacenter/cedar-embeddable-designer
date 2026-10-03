@@ -34,7 +34,7 @@
           <div
             cdkDrag
             (click)="service.selectedField.set(field.id)"
-            class="draggable-field-item group"
+            class="draggable-field-item"
             [class.active]="service.selectedField() === field.id"
           >
             <span class="draggable-icon">
@@ -72,7 +72,7 @@
           @if (expandedBuiltIn()) {
             <div class="library-content animate-fade-in">
               @for (item of visibleFieldTypesList(); track item) {
-                <button (click)="service.addField(item.key, service.children().length)" class="btn-add-item group">
+                <button (click)="service.addField(item.key, service.children().length)" class="btn-add-item">
                   <span class="add-item-icon">
                     <app-icon [key]="item.key" size="default"></app-icon>
                   </span>
@@ -98,7 +98,7 @@
                 @for (field of getFieldsForLibrary(library.id); track field) {
                   <button
                     (click)="service.addCustomFieldToTemplate(field, service.children().length)"
-                    class="btn-add-item group"
+                    class="btn-add-item"
                   >
                     <span class="add-item-icon">
                       <app-icon [key]="field.definition.type" size="default"></app-icon>

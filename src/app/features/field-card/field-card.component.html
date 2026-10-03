@@ -91,7 +91,7 @@
             @if (
               !service.fieldDocumentMode() && service.preferences().showAllowMultiple && allowsMultiple(field.type)
             ) {
-              <label class="field-repetition group">
+              <label class="field-repetition">
                 <input
                   spellcheck="false"
                   type="checkbox"
@@ -134,7 +134,7 @@
         @if (allowsOptions(field.type)) {
           <div class="choice-options">
             @for (option of field.options; track $index; let optIdx = $index) {
-              <div class="choice-option-row group/option">
+              <div class="choice-option-row">
                 <app-icon
                   [key]="
                     field.type === 'singleChoiceList' || field.type === 'multipleChoice'

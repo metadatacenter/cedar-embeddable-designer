@@ -68,7 +68,7 @@ async function paletteLabels(page: Page): Promise<string[]> {
     .click();
   const picker = designer.locator('app-field-type-picker');
   await picker.locator('.btn-field-item').first().waitFor({ state: 'visible' });
-  const labels = await picker.locator('.btn-field-item:not(.btn-existing-child) .field-item-label').allTextContents();
+  const labels = await picker.locator('.btn-field-item .field-item-label').allTextContents();
   await page.keyboard.press('Escape');
   return labels.map((label) => label.trim()).filter(Boolean);
 }

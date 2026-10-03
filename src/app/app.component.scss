@@ -45,42 +45,10 @@
   gap: var(--cedar-space-3);
 }
 
-.app-header__title {
-  font-size: var(--cedar-font-size);
-  font-weight: var(--cedar-font-weight-medium);
-  color: var(--cedar-text-primary);
-}
-
 .app-header__actions {
   /* `min-w-0` so the group may shrink rather than insisting on its content's width. */
   @apply flex min-w-0 flex-wrap items-center;
   gap: var(--cedar-space-2);
-}
-
-/* ─── Header Buttons ──────────────────────────────────────────────────────── */
-.btn-header {
-  @apply flex items-center cursor-pointer;
-  gap: var(--cedar-space-2);
-  padding: var(--cedar-space-1) var(--cedar-space-2);
-  min-height: var(--cedar-control-height-default);
-  font-size: var(--cedar-font-size);
-  font-weight: var(--cedar-font-weight-medium);
-  border-radius: var(--cedar-radius);
-  border: 0;
-}
-
-.btn-header--primary {
-  @apply border-transparent;
-  color: var(--cedar-color-on-primary);
-  /* background-color set via [style.backgroundColor] binding */
-}
-
-.btn-header--secondary {
-  background: transparent;
-  color: var(--cedar-text-primary);
-  &:hover {
-    background: var(--cedar-surface-selected);
-  }
 }
 
 /* ─── User Menu ───────────────────────────────────────────────────────────── */
@@ -382,17 +350,6 @@
   opacity: 1;
 }
 
-.btn-insert-here {
-  @apply border-none cursor-pointer;
-  color: var(--cedar-color-on-primary);
-  border-radius: var(--cedar-radius-pill);
-  padding-inline: var(--cedar-space-3);
-  padding-block: var(--cedar-space-1);
-  box-shadow: var(--cedar-shadow-overlay);
-  font-weight: var(--cedar-font-weight-medium);
-  font-size: var(--cedar-font-size);
-}
-
 /* ─── Field Drag Container ────────────────────────────────────────────────── */
 .field-drag-container {
   @apply relative;
@@ -426,21 +383,6 @@
 .add-field-section {
   @apply flex flex-col items-center;
   margin-top: var(--cedar-space-6);
-}
-
-.btn-add-field {
-  @apply flex items-center cursor-pointer;
-  gap: var(--cedar-space-2);
-  min-height: var(--cedar-control-height-default);
-  padding: var(--cedar-space-2) var(--cedar-space-3);
-  border-radius: var(--cedar-radius);
-  border: 0;
-  --cedar-icon-color: var(--cedar-color-on-primary);
-  color: var(--cedar-color-on-primary);
-
-  &:hover {
-    filter: brightness(0.95);
-  }
 }
 
 .add-field-section__picker {

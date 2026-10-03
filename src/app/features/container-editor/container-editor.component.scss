@@ -21,27 +21,6 @@
 .template-header-card__body {
   padding-bottom: var(--cedar-space-1);
 }
-.container-path,
-.container-path button {
-  padding: var(--cedar-space-1) var(--cedar-space-2);
-  color: var(--cedar-color-primary);
-  border: 1px solid var(--cedar-border-rule);
-  border-radius: var(--cedar-radius);
-  background: var(--cedar-surface-raised);
-}
-.container-path button[aria-current] {
-  font-weight: var(--cedar-font-weight-medium, 500);
-}
-
-.container-path button {
-  max-width: 100%;
-  overflow-wrap: anywhere;
-}
-
-.element-child-move {
-  @include spacing.apply(padding, element-header);
-}
-
 .template-header-row {
   align-items: flex-start;
 }

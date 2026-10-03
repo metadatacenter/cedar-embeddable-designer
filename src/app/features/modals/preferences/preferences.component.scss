@@ -15,18 +15,9 @@
   color: var(--cedar-text-primary);
   font-size: var(--cedar-font-size);
 }
-.preferences-muted {
-  color: var(--cedar-text-muted);
-}
-.preferences-border {
-  border-color: var(--cedar-border-rule);
-}
 .preferences-secondary {
   background: var(--cedar-surface-subtle);
   color: var(--cedar-text-primary);
-}
-.preferences-surface {
-  background: var(--cedar-surface-raised);
 }
 .preferences-secondary:hover,
 .preferences-choice:hover {
