@@ -30,7 +30,6 @@ h2 {
   align-items: center;
   gap: var(--cedar-space-2);
   @include dialog-style.heading;
-  color: var(--cedar-text-title);
   margin: 0;
 }
 h3 {

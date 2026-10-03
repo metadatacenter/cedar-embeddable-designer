@@ -6,9 +6,9 @@
   margin: auto;
 }
 
+// A dialog's title takes the shared title role.
 @mixin heading {
-  font-size: var(--cedar-font-size-heading);
-  font-weight: var(--cedar-font-weight-medium);
+  @include patterns.artifact-title;
   margin: 0 0 var(--cedar-space-6);
 }
 

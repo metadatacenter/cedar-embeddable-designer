@@ -1,9 +1,7 @@
 @use '@org.metadatacenter/cedar-design-tokens/patterns';
 
 .preferences-title {
-  font-size: var(--cedar-font-size-heading);
-  font-weight: var(--cedar-font-weight-medium);
-  color: var(--cedar-text-title);
+  @include patterns.artifact-title;
 }
 .preferences-label {
   @include patterns.field-label($size: body);
