@@ -50,13 +50,6 @@
       "value": "1px",
       "count": 1
     },
-    "2f8f733c2a7815f5cad3": {
-      "file": "src/app/features/field-type-picker/field-type-picker.component.scss",
-      "rule": "geometry",
-      "property": "z-index",
-      "value": "20",
-      "count": 1
-    },
     "304aeb4d62f704889f9c": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
       "rule": "geometry",

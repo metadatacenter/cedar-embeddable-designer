@@ -81,7 +81,7 @@
   border-radius: var(--cedar-radius);
   border: 1px solid var(--cedar-control-border-default);
   box-shadow: var(--cedar-shadow-overlay);
-  z-index: 20;
+  z-index: var(--cedar-layer-menu);
   min-width: 200px;
 }
 
