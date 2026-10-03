@@ -1,13 +1,6 @@
 {
   "schema": 1,
   "findings": {
-    "1257eedae8fac66e9b10": {
-      "file": "src/app/shared/_code-highlight.scss",
-      "rule": "color",
-      "property": "color",
-      "value": "#8b949e",
-      "count": 3
-    },
     "153705e130c9b5c25398": {
       "file": "src/app/features/property-picker/property-picker.component.ts",
       "rule": "geometry",
@@ -57,13 +50,6 @@
       "value": "0.25rem",
       "count": 1
     },
-    "3378fe0a0e805fd8f6fc": {
-      "file": "src/app/shared/_code-highlight.scss",
-      "rule": "color",
-      "property": "color",
-      "value": "#a5d6ff",
-      "count": 1
-    },
     "3d7b977f529f78db3e59": {
       "file": "src/app/features/field-type-picker/field-type-picker.component.scss",
       "rule": "color",
@@ -99,13 +85,6 @@
       "value": "8px",
       "count": 2
     },
-    "5eb336ea5bee024d72a9": {
-      "file": "src/app/shared/_code-highlight.scss",
-      "rule": "color",
-      "property": "color",
-      "value": "#f2cc60",
-      "count": 1
-    },
     "665a5f43c5e491bfdb45": {
       "file": "src/app/app.component.dev.ts",
       "rule": "color",
@@ -118,13 +97,6 @@
       "rule": "geometry",
       "property": "outline-offset",
       "value": "1px",
-      "count": 1
-    },
-    "6a6a06334cb800c18955": {
-      "file": "src/app/shared/_code-highlight.scss",
-      "rule": "color",
-      "property": "color",
-      "value": "#79c0ff",
       "count": 1
     },
     "7228666fb41cf8b8160e": {
@@ -216,13 +188,6 @@
       "rule": "geometry",
       "property": "min-height",
       "value": "40px",
-      "count": 1
-    },
-    "abc4de5433b7c2d7240b": {
-      "file": "src/app/shared/_code-highlight.scss",
-      "rule": "color",
-      "property": "color",
-      "value": "#ff7b72",
       "count": 1
     },
     "ac0afb58ef593fbd6bfa": {
