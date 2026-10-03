@@ -162,13 +162,6 @@
       "value": "40px",
       "count": 1
     },
-    "abd3c7719bbe0f77ff24": {
-      "file": "src/app/app.component.scss",
-      "rule": "utility-style",
-      "property": "utility-style",
-      "value": "divide-gray-100",
-      "count": 1
-    },
     "bd9600b167a429fb1d6b": {
       "file": "src/app/app.component.scss",
       "rule": "geometry",

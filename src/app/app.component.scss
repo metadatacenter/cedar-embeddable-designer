@@ -192,7 +192,7 @@
 }
 
 .overview-panel__list {
-  @apply divide-y divide-gray-100;
+  @apply divide-y divide-[var(--cedar-border-rule)];
 }
 
 /* Header panel controls mirror the side they open. */
