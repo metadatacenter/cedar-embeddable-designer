@@ -39,7 +39,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
               [attr.aria-label]="'typesPicker.remove' | translate: { iri: iri }"
               (click)="remove(iri)"
             >
-              <app-icon key="trash" className="w-4 h-4" />
+              <app-icon key="trash" size="small" />
             </button>
           </div>
         } @empty {

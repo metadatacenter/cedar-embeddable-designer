@@ -18,7 +18,7 @@ import { TranslatePipe } from '@ngx-translate/core';
           [class.invalid]="service.visibleIssuesFor(node.id).length > 0"
         >
           <button type="button" class="select-node" (click)="select(node)">
-            <app-icon [key]="node.kind === 'field' ? node.definition.type : 'folder'" className="w-4 h-4" />
+            <app-icon [key]="node.kind === 'field' ? node.definition.type : 'folder'" size="small" />
             <span class="node-name">{{
               displayName(node) ||
                 ((node.kind === 'field' ? 'validation.unnamed.field' : 'validation.unnamed.element') | translate)
@@ -63,7 +63,7 @@ import { TranslatePipe } from '@ngx-translate/core';
             [title]="'outline.reorderHint' | translate"
             (keydown)="moveWithKeyboard($event, node)"
           >
-            <app-icon key="list" className="w-4 h-4" />
+            <app-icon key="list" size="small" />
           </button>
         </div>
         @if (node.kind === 'element') {

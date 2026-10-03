@@ -8,13 +8,6 @@
       "value": "hover:opacity-80",
       "count": 1
     },
-    "1fb7ccd00acf3ef67118": {
-      "file": "src/app/features/container-outline/container-outline.component.ts",
-      "rule": "utility-style",
-      "property": "utility-style",
-      "value": "h-4",
-      "count": 2
-    },
     "2618584b089ce8f7cb1d": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
       "rule": "geometry",
@@ -139,13 +132,6 @@
       "rule": "geometry",
       "property": "height",
       "value": "24px",
-      "count": 1
-    },
-    "a25a869e7d59434a57d7": {
-      "file": "src/app/features/types-picker/types-picker.component.ts",
-      "rule": "utility-style",
-      "property": "utility-style",
-      "value": "h-4",
       "count": 1
     },
     "a68276631bc8463265ec": {
