@@ -1,6 +1,13 @@
 {
   "schema": 1,
   "findings": {
+    "04209051ccb0788ba987": {
+      "file": "src/app/app.component.scss",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "hover:opacity-80",
+      "count": 1
+    },
     "153705e130c9b5c25398": {
       "file": "src/app/features/property-picker/property-picker.component.ts",
       "rule": "geometry",
@@ -8,12 +15,26 @@
       "value": "0.5",
       "count": 1
     },
+    "1fb7ccd00acf3ef67118": {
+      "file": "src/app/features/container-outline/container-outline.component.ts",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "h-4",
+      "count": 2
+    },
     "2618584b089ce8f7cb1d": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
       "rule": "geometry",
       "property": "height",
       "value": "0.5rem",
       "count": 2
+    },
+    "268ba3e799f338b5820c": {
+      "file": "src/app/features/container-outline/container-outline.component.ts",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "h-3",
+      "count": 1
     },
     "26df980f8ce4f59d5183": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
@@ -155,6 +176,13 @@
       "value": "24px",
       "count": 1
     },
+    "a25a869e7d59434a57d7": {
+      "file": "src/app/features/types-picker/types-picker.component.ts",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "h-4",
+      "count": 1
+    },
     "a68276631bc8463265ec": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.html",
       "rule": "dynamic-style",
@@ -167,6 +195,13 @@
       "rule": "geometry",
       "property": "min-height",
       "value": "40px",
+      "count": 1
+    },
+    "abd3c7719bbe0f77ff24": {
+      "file": "src/app/app.component.scss",
+      "rule": "utility-style",
+      "property": "utility-style",
+      "value": "divide-gray-100",
       "count": 1
     },
     "ac0afb58ef593fbd6bfa": {
@@ -297,5 +332,5 @@
     }
   },
   "exceptions": {},
-  "policy": 3
+  "policy": 4
 }
