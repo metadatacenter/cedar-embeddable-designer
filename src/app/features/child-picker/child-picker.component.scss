@@ -1,6 +1,7 @@
 @use '../../shared/dialog-style';
 @use '@org.metadatacenter/cedar-design-tokens/controls';
 @use '@org.metadatacenter/cedar-design-tokens/patterns';
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
 :host {
   display: contents;
 }
@@ -88,7 +89,7 @@ th {
   z-index: 1;
 }
 td {
-  height: var(--cedar-table-row-height);
+  height: spacing.$table-row-height;
 }
 .icon-cell {
   width: 1%;
@@ -165,7 +166,7 @@ input[type='search'] {
 }
 .cdk-drag-preview {
   background: var(--cedar-surface-raised);
-  box-shadow: var(--cedar-shadow-dialog);
+  box-shadow: var(--cedar-shadow-overlay);
 }
 .cdk-drag-placeholder {
   opacity: 0.3;

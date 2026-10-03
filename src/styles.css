@@ -274,7 +274,7 @@
 }
 
 .animate-fade-in {
-  animation: fade-in var(--cedar-motion-duration-normal) var(--cedar-motion-ease-enter);
+  animation: fade-in var(--cedar-motion-duration-normal) var(--cedar-motion-ease-standard);
 }
 
 @keyframes backdrop-fade-in {
@@ -302,7 +302,7 @@
 }
 
 .animate-modal-fade-in {
-  animation: modal-fade-in var(--cedar-motion-duration-normal) var(--cedar-motion-ease-enter);
+  animation: modal-fade-in var(--cedar-motion-duration-normal) var(--cedar-motion-ease-standard);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -354,7 +354,7 @@ textarea:disabled {
   background: var(--cedar-surface-raised);
   border: 1px solid var(--cedar-border-rule);
   border-radius: var(--cedar-radius);
-  box-shadow: var(--cedar-shadow-dialog);
+  box-shadow: var(--cedar-shadow-overlay);
 }
 
 .cedar-modal-backdrop,

@@ -74,7 +74,7 @@
   border-radius: var(--cedar-radius);
   box-shadow: var(--cedar-shadow-overlay);
   padding: var(--cedar-space-1);
-  animation: fade-in var(--cedar-motion-duration-normal) var(--cedar-motion-ease-enter);
+  animation: fade-in var(--cedar-motion-duration-normal) var(--cedar-motion-ease-standard);
 }
 
 .user-menu-item app-icon {
