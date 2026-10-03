@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
 @use '@org.metadatacenter/cedar-design-tokens/spacing';
 @use '@org.metadatacenter/cedar-design-tokens/authoring';
 :host {
@@ -105,11 +106,7 @@ p[role='alert'] {
   margin: var(--cedar-space-1) 0 0;
 }
 .sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
+  @include patterns.visually-hidden;
 }
 
 .remove {

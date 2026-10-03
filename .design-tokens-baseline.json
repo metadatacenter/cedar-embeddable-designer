@@ -134,13 +134,6 @@
       "value": "1",
       "count": 1
     },
-    "887b606dc0d8ae65784a": {
-      "file": "src/app/features/child-picker/child-picker.component.scss",
-      "rule": "geometry",
-      "property": "height",
-      "value": "1px",
-      "count": 1
-    },
     "8c47ddcd9e7845b5f914": {
       "file": "src/app/features/container-editor/container-editor.component.scss",
       "rule": "geometry",
@@ -154,13 +147,6 @@
       "property": "height",
       "value": "28px",
       "count": 2
-    },
-    "95e30963b2a086a68359": {
-      "file": "src/app/features/alternate-questions/alternate-questions.component.scss",
-      "rule": "geometry",
-      "property": "height",
-      "value": "1px",
-      "count": 1
     },
     "98ac8e986b67f3dd2a6d": {
       "file": "src/app/features/annotations-editor/annotations-editor.component.scss",
@@ -209,13 +195,6 @@
       "rule": "geometry",
       "property": "height",
       "value": "6px",
-      "count": 1
-    },
-    "c73b981ef691c39e596f": {
-      "file": "src/app/features/annotations-editor/annotations-editor.component.scss",
-      "rule": "geometry",
-      "property": "height",
-      "value": "1px",
       "count": 1
     },
     "ca5cb8d848b5490f87d1": {
