@@ -217,15 +217,10 @@
           class="field-drag-container"
           [class.selected]="service.selectedField() === node.id"
           [class.invalid]="service.visibleIssuesFor(node.id).length > 0"
-          [style.outline-color]="service.visibleIssuesFor(node.id).length ? '#b42318' : null"
           [style.--tw-ring-color]="service.visibleIssuesFor(node.id).length ? '#b42318' : null"
-          [style.border-color]="service.visibleIssuesFor(node.id).length ? '#b42318' : null"
         >
           @if (service.selectedField() === node.id) {
-            <div
-              class="field-selection-bar"
-              [style.background-color]="service.visibleIssuesFor(node.id).length ? '#b42318' : null"
-            ></div>
+            <div class="field-selection-bar"></div>
           }
           @if (node.kind === 'field') {
             <app-field-card [field]="fieldView(node)" />

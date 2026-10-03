@@ -248,8 +248,8 @@
   background: var(--cedar-surface-subtle);
 }
 .panel-toggle:focus-visible {
-  outline: 2px solid var(--cedar-color-primary);
-  outline-offset: 2px;
+  outline: var(--cedar-focus-ring-width) solid var(--cedar-color-primary);
+  outline-offset: var(--cedar-focus-ring-offset);
 }
 @media (max-width: 767px) {
   .overview-toggle {
@@ -541,5 +541,5 @@
   background: var(--cedar-color-primary);
 }
 .overview-panel__resize:focus-visible {
-  outline: 2px solid var(--cedar-color-primary);
+  outline: var(--cedar-focus-ring-width) solid var(--cedar-color-primary);
 }

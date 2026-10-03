@@ -101,6 +101,6 @@ app-container-outline {
   list-style: none;
 }
 button:focus-visible {
-  outline: 2px solid var(--cedar-color-primary);
+  outline: var(--cedar-focus-ring-width) solid var(--cedar-color-primary);
   outline-offset: 1px;
 }

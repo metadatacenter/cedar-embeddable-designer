@@ -162,8 +162,8 @@ input[type='search'] {
   background: var(--cedar-surface-selected);
 }
 .result-row:focus-visible {
-  outline: 2px solid var(--cedar-color-primary);
-  outline-offset: -2px;
+  outline: var(--cedar-focus-ring-width) solid var(--cedar-color-primary);
+  outline-offset: calc(-1 * var(--cedar-focus-ring-width));
 }
 .result-row[aria-disabled='true'] {
   cursor: default;

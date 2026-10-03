@@ -116,8 +116,8 @@ p[role='alert'] {
   border-bottom-color: var(--cedar-control-error, var(--cedar-status-error-text));
 }
 button:focus-visible {
-  outline: 2px solid var(--cedar-color-primary);
-  outline-offset: 2px;
+  outline: var(--cedar-focus-ring-width) solid var(--cedar-color-primary);
+  outline-offset: var(--cedar-focus-ring-offset);
 }
 .settings-toggle {
   /* Keep the compact toggle above the between-card insertion hover area. */
