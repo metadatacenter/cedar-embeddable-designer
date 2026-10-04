@@ -99,3 +99,83 @@ it('blocks saving while terminology validation is pending and clears the report 
   await pending;
   expect(service.validationReport().canSave).toBe(true);
 });
+
+for (const outcome of ['accept', 'reject', 'offline'])
+  for (const transition of ['rename', 'edit', 'reject-edit', 'delete', 'reset', 'cancel', 'destroy']) {
+    it(`ignores a late ${outcome} after ${transition}, including before the next input render`, async () => {
+      const { panel, service, allows, fixture } = setup();
+      let resolve!: (value: boolean) => void;
+      let reject!: (error: Error) => void;
+      allows.mockReturnValue(
+        new Promise<boolean>((done, fail) => {
+          resolve = done;
+          reject = fail;
+        }),
+      );
+      const pending = panel.selectTerm(selection());
+      expect(service.validationReport().canSave).toBe(false);
+      if (transition === 'rename') service.updateFieldDisplayName(1, 'Renamed');
+      if (transition === 'edit') service.updateFieldSettings(1, { schemaIdentifier: 'Changed' });
+      if (transition === 'reject-edit')
+        service.updateFieldSettings(1, { annotations: [{ name: 'bad', kind: 'iri', value: 'relative' }] });
+      if (transition === 'delete') service.deleteField(1);
+      if (transition === 'reset') service.resetTemplate();
+      if (transition === 'cancel') panel.cancelPicker();
+      if (transition === 'destroy') fixture.destroy();
+      expect(service.validation.isChecking(1, 'defaultValue')).toBe(false);
+      const before = structuredClone(service.document());
+      const report = service.validationReport();
+      if (outcome === 'offline') reject(new Error('Old outage'));
+      else resolve(outcome === 'accept');
+      await pending;
+      expect(service.document()).toEqual(before);
+      expect(service.validationReport()).toEqual(report);
+    });
+  }
+for (const earlier of ['accept', 'reject', 'offline']) {
+  it(`an earlier ${earlier} cannot clear or overwrite a second selection`, async () => {
+    const { panel, service, allows } = setup();
+    let firstResolve!: (value: boolean) => void;
+    let firstReject!: (error: Error) => void;
+    let secondResolve!: (value: boolean) => void;
+    allows
+      .mockReturnValueOnce(
+        new Promise<boolean>((done, fail) => {
+          firstResolve = done;
+          firstReject = fail;
+        }),
+      )
+      .mockReturnValueOnce(
+        new Promise<boolean>((done) => {
+          secondResolve = done;
+        }),
+      );
+    const first = panel.selectTerm(selection());
+    panel.cancelPicker();
+    panel.openPicker();
+    const second = panel.selectTerm(selection());
+    if (earlier === 'offline') firstReject(new Error('Old outage'));
+    else firstResolve(earlier === 'accept');
+    await first;
+    expect(panel.checking()).toBe(true);
+    expect(service.validationReport().canSave).toBe(false);
+    expect(service.fields()[0].defaultValue).toEqual({ kind: 'none' });
+    secondResolve(true);
+    await second;
+    expect(service.validationReport().canSave).toBe(true);
+    expect(service.fields()[0].defaultValue).toMatchObject({ iri: 'urn:cancer' });
+  });
+}
+
+it('does not offer to clear a valid default because another setting is broken', () => {
+  const { panel, service, fixture, field } = setup();
+  const imported: Field = {
+    ...field,
+    defaultValue: { kind: 'iri', iri: 'urn:valid', label: 'Valid' },
+    annotations: [{ name: 'source', kind: 'iri', value: 'relative' }],
+  };
+  service.fields.set([imported]);
+  fixture.componentRef.setInput('field', imported);
+  expect(service.validationReport().canSave).toBe(false);
+  expect(panel.invalidDefaultText()).toBeNull();
+});

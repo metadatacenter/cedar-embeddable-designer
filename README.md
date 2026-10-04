@@ -357,6 +357,14 @@ provides a summary linking to the relevant settings. One coordinator retains rej
 settings, retries them when related values change, and supplies the report to every
 panel. Correcting or clearing an edit removes its issue; deleting an item, hiding an
 inapplicable setting, or loading another document removes its pending issues.
+Schema-valid input can still contain authoring errors. Imported JSON preserves
+numeric and temporal defaults that conflict with their constraints so they can be
+repaired; invalid IRI defaults are reported before any settings panel opens.
+Independent errors are reported together, including children nested several levels
+deep. The summary opens collapsed ancestors and the affected setting. Invalid
+supplied defaults remain visible and can be cleared even without the optional CEF
+control. Pending-only edits count as dirty. Terminology replies are ignored after
+an intervening edit, replacement, cancellation, or destruction of their control.
 Invalid imported children can be repaired independently. If the document cannot be
 serialized, the preview explains why it is unavailable and resumes after repair;
 artifact change events wait until serialization succeeds.

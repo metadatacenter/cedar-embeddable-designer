@@ -1,18 +1,10 @@
+import { annotationError } from './annotations';
 import { childKeyError } from './child-key-policy';
 import type { CedValidationIssue, CedValidationReport } from '../../ced-public-api';
 import { ChildNode, ContainerDraft, fieldView } from './container-draft';
 import { elementDisplayName, fieldDisplayName } from './field-display-name';
-import type { Field } from '../models/types';
-import {
-  deploymentKeys,
-  descriptorOf,
-  buildContainer,
-  buildTemplate,
-  fieldToJson,
-  choiceDefaultConflict,
-  defaultValueError,
-  allowsOptions,
-} from './cedar-template';
+import { fieldValidationIssues } from './field-validation';
+import { deploymentKeys, descriptorOf, buildContainer, buildTemplate, allowsOptions } from './cedar-template';
 import { Translate, describeError, english } from '../../i18n/messages';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
 
@@ -44,6 +36,7 @@ export function validateDocument(
   t: Translate = english,
 ): CedValidationReport {
   const issues: CedValidationIssue[] = [];
+  let modelInvalid = false;
   const visit = (container: ContainerDraft, ancestors: number[]) => {
     const path = [...ancestors, container.id];
     const add = (
@@ -57,6 +50,14 @@ export function validateDocument(
       // The model names an artifact by its plain name when it prefixes a message.
       name = label,
     ) => {
+      if (source === 'model') modelInvalid = true;
+      // A control has one current verdict. Its rejected draft supersedes the
+      // accepted model's error for that same setting, not errors in other settings.
+      if (
+        source === 'model' &&
+        issues.some((issue) => issue.nodeId === id && issue.setting === setting && issue.source === 'draft')
+      )
+        return;
       const prefix = t('errors.namedField', { name: name.trim() || t('common.anUnnamedField'), message: '' });
       issues.push({
         nodeId: id,
@@ -89,6 +90,27 @@ export function validateDocument(
         'model',
       );
     pending(container.id, container.name, path);
+    const annotations = annotationError(container.metadata?.annotations ?? []);
+    if (annotations)
+      add(
+        container.id,
+        container.name,
+        path,
+        'annotations',
+        t(annotations.key, annotations.params),
+        SETTINGS_TABS.annotations,
+        'model',
+      );
+    try {
+      buildContainer({
+        ...container,
+        children: [],
+        metadata: container.metadata ? { ...container.metadata, annotations: undefined } : undefined,
+      });
+    } catch (error) {
+      add(container.id, container.name, path, 'artifact', describeError(error, t), SETTINGS_TABS.display, 'model');
+    }
+
     const keyFields = container.children.map((node) => ({
       name: node.definition.name,
       deploymentName: node.placement.deploymentName,
@@ -118,7 +140,26 @@ export function validateDocument(
       if (node.kind === 'element') {
         visit(node.definition, path);
         try {
-          buildContainer({ ...container, children: [{ ...node, definition: { ...node.definition, children: [] } }] });
+          buildContainer({
+            id: -1,
+            kind: container.kind,
+            name: 'Validation',
+            description: '',
+            identifier: 'urn:ced:validation',
+            version: '0.0.1',
+            children: [
+              {
+                ...node,
+                definition: {
+                  ...node.definition,
+                  name: 'Validation',
+                  version: '0.0.1',
+                  metadata: undefined,
+                  children: [],
+                },
+              },
+            ],
+          });
         } catch (error) {
           add(
             node.id,
@@ -153,24 +194,8 @@ export function validateDocument(
             );
         });
       }
-      const settingsField: Field = { ...field, defaultValue: { kind: 'none' }, importedChoiceDefault: undefined };
-      let settingsValid = true;
-      try {
-        fieldToJson(settingsField);
-      } catch (error) {
-        settingsValid = false;
-        const media = ['image', 'youtube', 'richText'].includes(field.type);
-        add(
-          node.id,
-          issueLabel(node),
-          nodePath,
-          'settings',
-          describeError(error, t),
-          media ? 'Content' : 'Constraints',
-          'model',
-          field.name,
-        );
-      }
+      for (const issue of fieldValidationIssues(field, t))
+        add(node.id, issueLabel(node), nodePath, issue.setting, issue.message, issue.tab, 'model', field.name);
       if (descriptorOf(field.type).deployment !== 'static') {
         try {
           buildTemplate({
@@ -207,17 +232,13 @@ export function validateDocument(
           );
         }
       }
-      if (settingsValid) {
-        const error = choiceDefaultConflict(field, t) ?? defaultValueError(field, field.defaultValue, t);
-        if (error) add(node.id, issueLabel(node), nodePath, 'defaultValue', error, 'Constraints', 'model', field.name);
-      }
     }
   };
   visit(document, []);
   try {
     buildContainer(document);
   } catch (error) {
-    if (!issues.some((issue) => issue.source === 'model')) {
+    if (!modelInvalid) {
       const root = document;
       issues.push({
         nodeId: root.id,

@@ -234,7 +234,12 @@
       "time": "Az alapértelmezéshez adjon meg érvényes időpontot.",
       "timezoneDisabled": "Kapcsolja be az Időzóna megjelenítése beállítást, vagy távolítsa el az időzónát az alapértelmezésből.",
       "offset": "Adjon meg −14:00 és +14:00 közötti időzóna-eltolást."
-    }
+    },
+    "invalidIri": "Az alapértelmezett értéknek érvényes abszolút IRI-nek kell lennie.",
+    "invalidEmail": "Az alapértelmezett értéknek érvényes e-mail-címnek kell lennie.",
+    "invalidPhone": "Az alapértelmezett értéknek érvényes telefonszámnak kell lennie.",
+    "suppliedValue": "Alapértelmezett érték: {{value}}",
+    "clearInvalid": "Hibás alapértelmezett érték törlése"
   },
   "elementCard": {
     "settings": "Elem beállításai",

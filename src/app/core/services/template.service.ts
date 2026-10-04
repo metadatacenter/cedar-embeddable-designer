@@ -209,7 +209,7 @@ export class TemplateService {
    */
   private readonly savedState = signal<string>('');
 
-  readonly isDirty = computed(() => this.stateKey() !== this.savedState());
+  readonly isDirty = computed(() => this.validation.hasPendingEdits() || this.stateKey() !== this.savedState());
 
   /**
    * The field a newly added card should be scrolled to, or null.

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { CedLanguageService } from '../../i18n/ced-language.service';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
+import { annotationError } from '../../core/model/annotations';
 import { Field } from '../../core/models/types';
 import { ContainerDraft } from '../../core/model/container-draft';
 import { containerArtifactMetadata } from '../../core/model/cedar-template';
@@ -73,29 +74,10 @@ export class AnnotationsEditorComponent {
     this.save();
   }
   private validate(rows: Annotation[]): string | null {
-    const names = new Set<string>();
-    let error: string | null = null;
-    for (const row of rows) {
-      if (!row.name.trim()) {
-        error = this.i18n.t('annotations.nameRequired');
-        break;
-      }
-      if (names.has(row.name)) {
-        error = this.i18n.t('annotations.nameUnique');
-        break;
-      }
-      names.add(row.name);
-      if (!row.value.trim()) {
-        error = this.i18n.t('annotations.valueRequired');
-        break;
-      }
-      if (row.kind === 'iri' && !/^[a-z][a-z0-9+.-]*:\S+$/i.test(row.value)) {
-        error = this.i18n.t('annotations.valueIri');
-        break;
-      }
-    }
-    return error;
+    const error = annotationError(rows);
+    return error ? this.i18n.t(error.key, error.params) : null;
   }
+
   private save(rows = this.rows()): boolean {
     const owner = this.field() ?? this.container();
     if (!owner) return false;

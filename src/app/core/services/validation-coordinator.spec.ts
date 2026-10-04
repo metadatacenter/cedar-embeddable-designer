@@ -145,9 +145,9 @@ describe('central editing validation', () => {
           : field,
       ),
     );
-    expect(service.validationReport().issues.map((issue) => issue.setting)).toEqual(['settings', 'occurrences']);
+    expect(service.validationReport().issues.map((issue) => issue.setting)).toEqual(['textConstraints', 'occurrences']);
     expect(service.updateFieldSettings(id, { minItems: 2, maxItems: 3 })).toBeNull();
-    expect(service.validationReport().issues.map((issue) => issue.setting)).toEqual(['settings']);
+    expect(service.validationReport().issues.map((issue) => issue.setting)).toEqual(['textConstraints']);
     expect(
       service.updateFieldSettings(id, { textConstraints: { minLength: 2, maxLength: 3, regex: null } }),
     ).toBeNull();

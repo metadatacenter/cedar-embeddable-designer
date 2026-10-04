@@ -102,7 +102,7 @@
             </div>
           }
         }
-        @if (field().defaultValue.kind !== 'none') {
+        @if (field().defaultValue.kind !== 'none' && invalidDefaultText() === null) {
           <button type="button" class="ced-text-action" (click)="clear()">
             {{ 'defaultValue.clear' | translate }}
           </button>
@@ -118,4 +118,15 @@
   }
 } @else {
   <p role="status" class="default-help">{{ 'defaultValue.editorUnavailable' | translate }}</p>
+}
+@if (!native() && invalidDefaultText() !== null) {
+  <div class="invalid-default-recovery">
+    @if (!available() && !allowsControlledTerms()) {
+      <p role="alert" class="ced-field-error">{{ error() }}</p>
+    }
+    <p class="default-help">{{ 'defaultValue.suppliedValue' | translate: { value: invalidDefaultText() } }}</p>
+    <button type="button" class="ced-text-action" [disabled]="!!field().publishedDefinition" (click)="clear()">
+      {{ 'defaultValue.clearInvalid' | translate }}
+    </button>
+  </div>
 }

@@ -234,7 +234,12 @@
       "time": "Enter a valid time for the default.",
       "timezoneDisabled": "Enable Show timezone or remove the timezone from the default.",
       "offset": "Enter a timezone offset between −14:00 and +14:00."
-    }
+    },
+    "invalidIri": "The default must be a well-formed absolute IRI.",
+    "invalidEmail": "The default must be a valid email address.",
+    "invalidPhone": "The default must be a valid phone number.",
+    "suppliedValue": "Default value: {{value}}",
+    "clearInvalid": "Clear invalid default"
   },
   "elementCard": {
     "settings": "Element settings",

@@ -1,4 +1,5 @@
-import { temporalDefaultError } from './field-default';
+import { annotationError } from './annotations';
+import { defaultFormatError } from './field-default';
 import { LocalizedError, Message, Translate, describeError, english, errorParam, message } from '../../i18n/messages';
 import {
   ContainerDraft,
@@ -853,6 +854,8 @@ function buildField(field: Field): TemplateField {
   if (field.publishedDefinition)
     return CedarReaders.json().getStrict().getTemplateFieldReader().readFromString(field.publishedDefinition).field;
   const descriptor = descriptorOf(field.type);
+  const formatError = defaultFormatError(field, field.defaultValue, (key) => key);
+  if (formatError) throw new LocalizedError(message(formatError));
   const builder = descriptor.build();
 
   builder
@@ -961,12 +964,10 @@ function buildField(field: Field): TemplateField {
   if (field.artifact) applyArtifactMetadata(built, field.artifact);
   built.language = Language.forValue(field.language || null);
   if (field.annotations?.length) {
+    const error = annotationError(field.annotations);
+    if (error) throw new LocalizedError(error);
     const annotations = new Annotations();
     for (const annotation of field.annotations) {
-      if (!annotation.name.trim()) throw new LocalizedError(message('annotations.nameRequired'));
-      if (annotations.get(annotation.name)) throw new LocalizedError(message('annotations.nameUnique'));
-      if (annotation.kind === 'iri' && !/^[a-z][a-z0-9+.-]*:\S+$/i.test(annotation.value))
-        throw new LocalizedError(message('annotations.iriAbsolute'));
       annotations.add(
         annotation.kind === 'iri'
           ? new AnnotationAtId(annotation.name, annotation.value)
@@ -986,8 +987,8 @@ function buildField(field: Field): TemplateField {
  */
 export function defaultValueError(field: Field, value: FieldDefaultValue, t: Translate = english): string | null {
   try {
-    const temporalError = temporalDefaultError(field, value, t);
-    if (temporalError) return temporalError;
+    const formatError = defaultFormatError(field, value, t);
+    if (formatError) return formatError;
     if (allowsOptions(field.type)) {
       const values = value.kind === 'literal' ? [value.value] : value.kind === 'literals' ? value.values : [];
       if (values.some((option) => !field.options.includes(option))) return t('errors.default.notAnOption');
@@ -1142,6 +1143,8 @@ function buildContainerArtifact(
       template.footer = metadata.footer;
     }
     if (metadata.annotations) {
+      const error = annotationError(metadata.annotations);
+      if (error) throw new LocalizedError(error);
       template.annotations = new Annotations();
       for (const annotation of metadata.annotations) {
         template.annotations.add(
@@ -1241,7 +1244,11 @@ export function readTemplate(source: string | object): Template {
   const trimmed = typeof source === 'string' ? source.trim() : null;
   if (trimmed === null || trimmed.startsWith('{')) {
     const json = (trimmed === null ? source : JSON.parse(trimmed)) as JsonNode;
-    const template = CedarReaders.json().getStrict().getTemplateReader().readFromObject(json).template;
+    const template = CedarReaders.json()
+      .getStrict()
+      .getTemplateReader()
+      .readFromObject(withoutCheckedDefaults(json)).template;
+    restoreDeclaredDefaults(template, json);
     // The model writer places container language in the instance context; its
     // current JSON reader only consults the top-level context.
     const context = (json['properties'] as JsonNode | undefined)?.['@context'] as JsonNode | undefined;
@@ -1557,7 +1564,10 @@ export function readField(source: string): Field {
   const text = source.trim();
   if (text.startsWith('{')) {
     const sourceNode = JSON.parse(text);
-    const field = CedarReaders.json().getStrict().getTemplateFieldReader().readFromObject(sourceNode).field;
+    const field = CedarReaders.json()
+      .getStrict()
+      .getTemplateFieldReader()
+      .readFromObject(withoutCheckedDefaults(sourceNode)).field;
     if (!field.schema_name) throw new LocalizedError(message('errors.open.fieldNeedsName'));
     const container = CedarBuilders.templateBuilder().withSchemaName('Field import').build();
     container.addChild(field, field.createDeploymentBuilder(field.schema_name).build());
@@ -1682,8 +1692,10 @@ export function readContainer(source: string | object): ContainerDraft {
       throw new LocalizedError(message('errors.open.notContainer'));
     const model =
       type === 'https://schema.metadatacenter.org/core/TemplateElement'
-        ? CedarReaders.json().getStrict().getTemplateElementReader().readFromObject(json).element
+        ? CedarReaders.json().getStrict().getTemplateElementReader().readFromObject(withoutCheckedDefaults(json))
+            .element
         : readTemplate(json);
+    restoreDeclaredDefaults(model, json);
     restoreContainerLanguages(model, json);
     return toContainerDraft(model);
   }
@@ -1697,6 +1709,56 @@ export function readContainer(source: string | object): ContainerDraft {
       : parsed.template;
   if (!model.schema_name) throw new LocalizedError(message('errors.open.notContainer'));
   return toContainerDraft(model);
+}
+
+/**
+ * Numeric/temporal readers validate defaults against their constraints while
+ * reading. Authoring must retain a well-shaped but invalid supplied value so it
+ * can be repaired. Read the schema without those values, then restore them on
+ * the model before projection; never change the caller's object or its rules.
+ */
+function deferredDefault(source: JsonNode): number | string | undefined {
+  const type = (source['_ui'] as JsonNode | undefined)?.['inputType'];
+  const value = (source['_valueConstraints'] as JsonNode | undefined)?.['defaultValue'];
+  if (type === 'temporal' && typeof value === 'string') return value;
+  if (
+    type === 'numeric' &&
+    (typeof value === 'number' ||
+      (typeof value === 'string' && /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(value))) &&
+    Number.isFinite(Number(value))
+  )
+    return Number(value);
+  return undefined;
+}
+function withoutCheckedDefaults(source: JsonNode): JsonNode {
+  const copy = structuredClone(source);
+  const visit = (node: JsonNode) => {
+    if (deferredDefault(node) !== undefined) delete (node['_valueConstraints'] as JsonNode)['defaultValue'];
+    const properties = node['properties'] as JsonNode | undefined;
+    for (const value of Object.values(properties ?? {}))
+      if (value && typeof value === 'object' && !Array.isArray(value)) visit(value as JsonNode);
+    if (node['items'] && typeof node['items'] === 'object') visit(node['items'] as JsonNode);
+  };
+  visit(copy);
+  return copy;
+}
+function restoreDeclaredDefaults(model: Template | TemplateElement | TemplateField, source: JsonNode): void {
+  const definition = (source['items'] ?? source) as JsonNode;
+  if (model instanceof Template || model instanceof TemplateElement) {
+    const properties = definition['properties'] as JsonNode | undefined;
+    for (const child of model.getChildrenInfo().children) {
+      const artifact = model.getChild(child.name);
+      const original = properties?.[child.name];
+      if (artifact && original)
+        restoreDeclaredDefaults(artifact as TemplateElement | TemplateField, original as JsonNode);
+    }
+  } else {
+    const value = deferredDefault(definition);
+    if (model.cedarFieldType === CedarFieldType.NUMERIC && typeof value === 'number')
+      (model as NumericField).valueConstraints.defaultValue = value;
+    if (model.cedarFieldType === CedarFieldType.TEMPORAL && typeof value === 'string')
+      (model as TemporalField).valueConstraints.defaultValue = value;
+  }
 }
 
 function restoreContainerLanguages(model: Template | TemplateElement, source: JsonNode): void {

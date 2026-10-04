@@ -1,7 +1,7 @@
 <div class="constraint-summary" [attr.aria-label]="'controlledTerms.constraints' | translate">
   @if (!field.controlledTermConstraints?.constraints?.length) {
     <span class="empty-constraint">{{ 'controlledTerms.chooseConstraint' | translate }}</span>
-  } @else if (summaryAvailable) {
+  } @else if (summaryAvailable && summaryArtifact) {
     <!-- CEF applies its configuration once, so a new language needs a new element. -->
     @for (config of [summaryConfig()]; track config.defaultLanguage) {
       <cedar-embeddable-field

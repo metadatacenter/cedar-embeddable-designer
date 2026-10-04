@@ -1,7 +1,7 @@
 import { computed, signal } from '@angular/core';
 import { CedValidationReport } from '../../ced-public-api';
 import { Translate } from '../../i18n/messages';
-import { Field } from '../models/types';
+import { Field, FieldDefaultValue } from '../models/types';
 import { ChildNode, ContainerDraft, fieldNode, fieldView, parentOf, updateContainer } from '../model/container-draft';
 import { artifactNameError, DraftIssues, validateDocument } from '../model/document-validation';
 import { childKeyError } from '../model/child-key-policy';
@@ -16,6 +16,19 @@ interface Edit {
   tab: string;
   changes: Partial<Field>;
 }
+export interface ValidationCheck {
+  active(): boolean;
+  unchanged(): boolean;
+  cancel(): void;
+}
+interface PendingCheck {
+  id: number;
+  node: ChildNode | ContainerDraft;
+  message: string;
+  tab: string;
+}
+const nodeOf = (document: ContainerDraft, id: number) =>
+  document.id === id ? document : parentOf(document, id)?.children.find((child) => child.id === id);
 
 /** The stable setting identity used by controls, pending edits and the public report. */
 export function fieldSetting(changes: Partial<Field>): { setting: string; tab: string } {
@@ -44,8 +57,10 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
  */
 export class ValidationCoordinator {
   private readonly edits = signal<Record<string, Edit>>({});
-  private readonly inputErrors = signal<DraftIssues>({});
-  private readonly checks = signal<DraftIssues>({});
+  private readonly inputErrors = signal<
+    Record<string, { message: string; tab: string; value?: string | FieldDefaultValue }>
+  >({});
+  private readonly checks = signal<Record<string, PendingCheck>>({});
   private readonly touchedNames = signal<ReadonlySet<number>>(new Set());
   private readonly quietOptions = signal<ReadonlySet<number>>(new Set());
 
@@ -66,9 +81,24 @@ export class ValidationCoordinator {
     }
     return issues;
   });
-  readonly pendingIssues = computed((): DraftIssues => ({ ...this.checks(), ...this.draftIssues() }));
+  readonly pendingIssues = computed((): DraftIssues => ({
+    ...Object.fromEntries(
+      Object.entries(this.checks()).map(([key, check]) => [key, { message: check.message, tab: check.tab }]),
+    ),
+    ...this.draftIssues(),
+  }));
+  readonly hasPendingEdits = computed(
+    () =>
+      Object.keys(this.edits()).length > 0 ||
+      Object.keys(this.inputErrors()).length > 0 ||
+      Object.keys(this.checks()).length > 0,
+  );
+  readonly modelReport = computed(() => validateDocument(this.session.document(), {}, this.t));
   readonly report = computed((): CedValidationReport => {
-    const report = validateDocument(this.session.document(), this.pendingIssues(), this.t);
+    const pending = this.pendingIssues();
+    const report = Object.keys(pending).length
+      ? validateDocument(this.session.document(), pending, this.t)
+      : this.modelReport();
     return {
       ...report,
       issues: report.issues.map((issue) => ({
@@ -108,15 +138,24 @@ export class ValidationCoordinator {
   }
 
   /** Syntax and asynchronous failures have no typed value to retry. */
-  setInputError(id: number, setting: string, message: string | null, tab: string): void {
+  setInputError(
+    id: number,
+    setting: string,
+    message: string | null,
+    tab: string,
+    value?: string | FieldDefaultValue,
+  ): void {
     const key = keyOf(id, setting);
     this.inputErrors.update((previous) => {
       const next = { ...previous };
-      if (message) next[key] = { message, tab };
+      if (message) next[key] = { message, tab, ...(value === undefined ? {} : { value: structuredClone(value) }) };
       else delete next[key];
       return same(previous, next) ? previous : next;
     });
-    if (message) this.discardEdit(key);
+    if (message) {
+      this.discardEdit(key);
+      this.checks.update((checks) => Object.fromEntries(Object.entries(checks).filter(([, check]) => check.id !== id)));
+    }
   }
   private discardEdit(key: string): void {
     if (!this.edits()[key]) return;
@@ -124,16 +163,32 @@ export class ValidationCoordinator {
     delete next[key];
     this.edits.set(next);
   }
+  inputValue(id: number, setting: string): string | FieldDefaultValue | undefined {
+    return structuredClone(this.inputErrors()[keyOf(id, setting)]?.value);
+  }
   inputError(id: number, setting: string): string | null {
     return this.inputErrors()[keyOf(id, setting)]?.message ?? null;
   }
-  setChecking(id: number, setting: string, message: string | null, tab = 'Constraints'): void {
-    this.checks.update((previous) => {
-      const next = { ...previous };
-      if (message) next[keyOf(id, setting)] = { message, tab };
-      else delete next[keyOf(id, setting)];
-      return same(previous, next) ? previous : next;
-    });
+  beginCheck(id: number, setting: string, message: string, tab = 'Constraints'): ValidationCheck {
+    const node = nodeOf(this.session.document(), id);
+    if (!node) return { active: () => false, unchanged: () => false, cancel: () => {} };
+    const key = keyOf(id, setting);
+    const check = { id, node, message, tab };
+    this.checks.update((previous) => ({ ...previous, [key]: check }));
+    const unchanged = () => nodeOf(this.session.document(), id) === node;
+    return {
+      active: () => this.checks()[key] === check && unchanged(),
+      unchanged,
+      cancel: () => {
+        if (this.checks()[key] !== check) return;
+        const next = { ...this.checks() };
+        delete next[key];
+        this.checks.set(next);
+      },
+    };
+  }
+  isChecking(id: number, setting: string): boolean {
+    return !!this.checks()[keyOf(id, setting)];
   }
   error(id: number, setting: string): string | null {
     return this.draftIssues()[keyOf(id, setting)]?.message ?? null;
@@ -150,6 +205,9 @@ export class ValidationCoordinator {
   }
   submit(id: number, changes: Partial<Field>, setting: string, tab: string): string | null {
     if (!parentOf(this.session.document(), id)) return this.t('errors.elementMissing');
+    // A new editing intent supersedes checks of the previous field, even if
+    // this edit is held as a draft instead of changing the accepted document.
+    this.checks.update((checks) => Object.fromEntries(Object.entries(checks).filter(([, check]) => check.id !== id)));
     const key = keyOf(id, setting);
     this.setInputError(id, setting, null, tab);
     this.edits.update((previous) => ({ ...previous, [key]: { id, changes: structuredClone(changes), setting, tab } }));
@@ -260,10 +318,6 @@ export class ValidationCoordinator {
       const [id, setting] = key.split(':');
       if (!available(Number(id), setting)) delete inputs[key];
     }
-    for (const key of Object.keys(checks)) {
-      const [id, setting] = key.split(':');
-      if (!available(Number(id), setting)) delete checks[key];
-    }
     const commit = (id: number, changes: Partial<Field>): boolean => {
       const result = this.candidate(document, id, changes);
       if (result.error || !result.node) return false;
@@ -296,7 +350,9 @@ export class ValidationCoordinator {
     }
     if (!same(this.edits(), edits)) this.edits.set(edits);
     if (!same(this.inputErrors(), inputs)) this.inputErrors.set(inputs);
-    if (!same(this.checks(), checks)) this.checks.set(checks);
+    for (const [key, check] of Object.entries(checks))
+      if (nodeOf(document, check.id) !== check.node) delete checks[key];
+    if (Object.keys(this.checks()).length !== Object.keys(checks).length) this.checks.set(checks);
     return document;
   }
 }
