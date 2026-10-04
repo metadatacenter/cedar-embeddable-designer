@@ -139,7 +139,7 @@ for (const kind of ['Template', 'Element']) {
     const settings = root.locator(':scope > .template-header-card > app-container-settings');
     await settings.getByRole('button', { name: `Expand ${kind.toLowerCase()} settings`, exact: true }).click();
     await settings
-      .getByRole('tab', { name: kind === 'Template' ? 'Template Metadata' : 'Element metadata', exact: true })
+      .getByRole('tab', { name: kind === 'Template' ? 'Template metadata' : 'Element metadata', exact: true })
       .click();
     const identifier = settings.getByLabel('Identifier', { exact: true });
     await expect(identifier).toHaveValue('');

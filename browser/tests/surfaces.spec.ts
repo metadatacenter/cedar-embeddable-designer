@@ -47,7 +47,7 @@ const scenarios: Record<string, (page: Page) => Promise<void>> = {
     const d = await openDesigner(page, '?picker=stub');
     const settings = d.locator('app-container-settings').first();
     await settings.getByRole('button', { name: 'Expand template settings', exact: true }).click();
-    await settings.getByRole('tab', { name: 'Template Metadata', exact: true }).click();
+    await settings.getByRole('tab', { name: 'Template metadata', exact: true }).click();
     await settings.getByRole('button', { name: 'Add types', exact: true }).click();
   },
   validation: async (page) => {

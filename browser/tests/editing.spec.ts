@@ -301,7 +301,7 @@ test('template identity keeps the compact authoring header layout', async ({ pag
       return { top: box.top, right: box.right, left: box.left };
     }),
   );
-  // Name and version share the row; the identifier sits in the Template Metadata tab.
+  // Name and version share the row; the identifier sits in the Template metadata tab.
   expect(boxes).toHaveLength(2);
   expect(Math.max(...boxes.map((box) => box.top)) - Math.min(...boxes.map((box) => box.top))).toBeLessThanOrEqual(1);
   expect(boxes[0].right).toBeLessThanOrEqual(boxes[1].left);
