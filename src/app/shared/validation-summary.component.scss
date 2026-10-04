@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/controls';
 @use '@org.metadatacenter/cedar-design-tokens/patterns';
 
 :host {
@@ -6,4 +7,7 @@
 
 .validation-summary {
   @include patterns.validation-summary;
+}
+.validation-summary summary:focus-visible {
+  @include controls.focus-ring(var(--cedar-color-primary));
 }

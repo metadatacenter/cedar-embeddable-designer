@@ -196,6 +196,9 @@ app-icon {
   border: 1px solid var(--cedar-border-rule);
   border-radius: var(--cedar-radius);
   @include spacing.apply(padding, compact-cell);
+  &:focus-visible {
+    @include controls.focus-ring(var(--cedar-control-focus, var(--cedar-color-primary)));
+  }
 }
 .field-repetition {
   display: flex;
@@ -290,4 +293,7 @@ app-field-summary {
 .field-repetition-check {
   width: var(--cedar-icon-size-small);
   height: var(--cedar-icon-size-small);
+  &:focus-visible {
+    @include controls.focus-ring(var(--cedar-control-focus, var(--cedar-color-primary)));
+  }
 }
