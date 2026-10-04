@@ -120,13 +120,6 @@
       "value": "20px",
       "count": 1
     },
-    "d6fb4f3e840f4d51f0a2": {
-      "file": "src/app/features/cee-preview/cee-preview.component.scss",
-      "rule": "typography",
-      "property": "line-height",
-      "value": "1.6",
-      "count": 1
-    },
     "fb0df96f25c062f6a2ed": {
       "file": "src/app/element/cedar-embeddable-designer.element.scss",
       "rule": "geometry",
