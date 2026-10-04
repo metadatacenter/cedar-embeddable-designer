@@ -275,6 +275,7 @@ test('the real picker selects a default within the field vocabulary', async ({ p
     expect(request.sources).toEqual([{ sourceAcronym: 'DOID', version: { id: 'pinned-release' } }]);
     await route.fulfill({
       json: {
+        query: request.query,
         sources: [
           {
             sourceSystem: 'bioportal',
