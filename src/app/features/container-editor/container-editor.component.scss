@@ -196,18 +196,17 @@ textarea.template-input {
   overflow: hidden;
 }
 
-.version-group {
-  position: relative;
-}
 .version-value-row {
   display: flex;
   justify-content: flex-end;
   align-items: center;
 }
+// Anchored to the card, as the drag handle and the children toggle are, so the bin
+// shares the handle's top and the toggle's right edge rather than the version's.
 .element-delete {
   position: absolute;
-  top: 0;
-  left: calc(100% + var(--cedar-space-3));
+  top: calc(var(--cedar-space-3) + var(--cedar-space-1));
+  right: var(--cedar-space-1);
   @include patterns.icon-button;
   border: 0;
   background: transparent;

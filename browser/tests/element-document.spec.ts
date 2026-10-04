@@ -275,6 +275,7 @@ for (const width of [1280, 375]) {
         headerInset: header.left - edge,
         childInset: child.left - edge,
         binAlignment: Math.abs(bin.top - version.top),
+        binOverToggle: Math.abs(bin.left + bin.width / 2 - (toggle.left + toggle.width / 2)),
         toggleBottom: header.bottom - toggle.bottom,
         toggleRight: header.right - toggle.right,
       };
@@ -282,6 +283,7 @@ for (const width of [1280, 375]) {
     expect(geometry.headerInset).toBeGreaterThan(0);
     expect(geometry.headerInset * 2).toBeCloseTo(geometry.childInset, 1);
     expect(geometry.binAlignment).toBeLessThan(1);
+    expect(geometry.binOverToggle).toBeLessThan(0.5);
     expect(geometry.toggleBottom).toBeLessThanOrEqual(6);
     expect(geometry.toggleRight).toBeLessThanOrEqual(6);
     await header.getByRole('button', { name: 'Collapse Element', exact: true }).click();
