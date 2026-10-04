@@ -12,6 +12,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
         >{{ 'manualIri.label' | translate }}
         <input
           spellcheck="false"
+          autocomplete="off"
           #control
           type="text"
           [disabled]="disabled()"

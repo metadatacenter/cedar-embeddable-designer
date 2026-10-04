@@ -45,6 +45,7 @@
           >{{ 'containerSettings.header' | translate }}
           <textarea
             spellcheck="false"
+            autocomplete="off"
             rows="1"
             [ngModel]="container().metadata?.header ?? ''"
             (ngModelChange)="update('header', $event)"
@@ -54,6 +55,7 @@
           >{{ 'containerSettings.footer' | translate }}
           <textarea
             spellcheck="false"
+            autocomplete="off"
             rows="1"
             [ngModel]="container().metadata?.footer ?? ''"
             (ngModelChange)="update('footer', $event)"

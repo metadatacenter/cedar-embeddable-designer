@@ -3,6 +3,7 @@
   <div class="add-row">
     <input
       spellcheck="false"
+      autocomplete="off"
       [attr.aria-label]="keys() + 'newLabel' | translate"
       [ngModel]="question()"
       (ngModelChange)="edit($event)"

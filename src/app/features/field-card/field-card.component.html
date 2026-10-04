@@ -19,6 +19,7 @@
           <!-- Field Title Name editing -->
           <input
             spellcheck="false"
+            autocomplete="off"
             type="text"
             [appArtifactName]="field.id"
             [attr.aria-invalid]="!!service.nameError(field.id, field.name, 'field')"
@@ -146,6 +147,7 @@
                 ></app-icon>
                 <input
                   spellcheck="false"
+                  autocomplete="off"
                   type="text"
                   [ngModel]="option"
                   [attr.aria-invalid]="!option.trim() && service.optionErrorVisible(field.id, optIdx)"
@@ -208,6 +210,7 @@
             @if (hasMarkupContent(field.type)) {
               <textarea
                 spellcheck="false"
+                autocomplete="off"
                 [id]="'field-content-' + field.id"
                 rows="4"
                 [ngModel]="field.content || ''"
@@ -217,6 +220,7 @@
             } @else {
               <input
                 spellcheck="false"
+                autocomplete="off"
                 [id]="'field-content-' + field.id"
                 type="text"
                 [ngModel]="field.content || ''"

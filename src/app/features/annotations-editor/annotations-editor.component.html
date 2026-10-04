@@ -4,6 +4,7 @@
       >{{ 'annotations.name' | translate
       }}<input
         spellcheck="false"
+        autocomplete="off"
         [attr.aria-label]="'annotations.newName' | translate"
         [ngModel]="draft().name"
         (ngModelChange)="editDraft({ name: $event })"
@@ -23,6 +24,7 @@
       >{{ 'annotations.value' | translate
       }}<input
         spellcheck="false"
+        autocomplete="off"
         type="text"
         [attr.aria-label]="'annotations.newValue' | translate"
         [ngModel]="draft().value"

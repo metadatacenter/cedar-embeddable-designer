@@ -3,6 +3,7 @@
     @if (field().type === 'paragraph') {
       <textarea
         spellcheck="false"
+        autocomplete="off"
         #control
         [attr.aria-label]="'defaultValue.label' | translate"
         rows="1"
@@ -14,6 +15,7 @@
     } @else {
       <input
         spellcheck="false"
+        autocomplete="off"
         #control
         type="text"
         [attr.aria-label]="'defaultValue.label' | translate"
@@ -35,6 +37,7 @@
         <input
           class="default-value-control controlled-default"
           spellcheck="false"
+          autocomplete="off"
           type="text"
           readonly
           [attr.aria-label]="'defaultValue.label' | translate"

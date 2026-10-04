@@ -30,7 +30,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
         <cedar-embeddable-field [config]="config()" [fieldObject]="definition" [value]="emptyValue" />
       }
     } @else {
-      <input spellcheck="false" type="text" disabled [placeholder]="placeholder() | translate" />
+      <input spellcheck="false" autocomplete="off" type="text" disabled [placeholder]="placeholder() | translate" />
     }
   `,
   styles: `

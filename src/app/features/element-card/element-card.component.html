@@ -40,6 +40,7 @@
               <dd>
                 <input
                   spellcheck="false"
+                  autocomplete="off"
                   [id]="'element-key-' + node().id"
                   name="deploymentName"
                   [ngModel]="keyDraft() ?? service.childKey(node().id)"
@@ -90,11 +91,15 @@
             <div class="settings-fields display-fields">
               <label
                 >{{ 'settings.displayLabel' | translate }}
-                <input spellcheck="false" [ngModel]="displayName()" (ngModelChange)="rename($event)"
+                <input spellcheck="false" autocomplete="off" [ngModel]="displayName()" (ngModelChange)="rename($event)"
               /></label>
               <label
                 >{{ 'settings.displayDescription' | translate }}
-                <input spellcheck="false" [(ngModel)]="draft().displayDescription" (ngModelChange)="apply()"
+                <input
+                  spellcheck="false"
+                  autocomplete="off"
+                  [(ngModel)]="draft().displayDescription"
+                  (ngModelChange)="apply()"
               /></label>
             </div>
             <app-language-selector [container]="node().definition" />
@@ -116,6 +121,7 @@
                   >{{ 'settings.minOccurrences' | translate }}
                   <input
                     spellcheck="false"
+                    autocomplete="off"
                     type="number"
                     min="0"
                     step="1"
@@ -127,6 +133,7 @@
                   >{{ 'settings.maxOccurrences' | translate }}
                   <input
                     spellcheck="false"
+                    autocomplete="off"
                     type="number"
                     min="0"
                     step="1"

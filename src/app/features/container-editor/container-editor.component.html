@@ -31,6 +31,7 @@
           <label class="template-field-label">{{ 'containerEditor.name' | translate }}</label>
           <input
             spellcheck="false"
+            autocomplete="off"
             type="text"
             [appArtifactName]="container().id"
             [attr.aria-label]="
@@ -63,6 +64,7 @@
           <label class="template-field-label">{{ 'containerEditor.identifier' | translate }}</label>
           <input
             spellcheck="false"
+            autocomplete="off"
             type="text"
             [ngModel]="container().schemaIdentifier"
             (ngModelChange)="update({ schemaIdentifier: $event })"
@@ -76,6 +78,7 @@
           <div class="version-value-row">
             <input
               spellcheck="false"
+              autocomplete="off"
               type="text"
               [ngModel]="container().version"
               (ngModelChange)="update({ version: $event })"
@@ -141,6 +144,7 @@
         <label class="template-field-label">{{ 'containerEditor.description' | translate }}</label>
         <textarea
           spellcheck="false"
+          autocomplete="off"
           rows="1"
           [ngModel]="container().description"
           (ngModelChange)="update({ description: $event })"
