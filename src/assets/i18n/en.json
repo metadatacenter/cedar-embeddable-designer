@@ -100,6 +100,7 @@
     "valueIri": "Annotation value must be a valid IRI."
   },
   "ceePreview": {
+    "invalidDocument": "Preview is unavailable until the document’s invalid settings are corrected.",
     "title": "Preview",
     "mode": "Preview mode",
     "readOnly": "Read-only",

@@ -1,3 +1,4 @@
+import { fieldDisplayName } from '../../core/model/field-display-name';
 import { InsertionActionsComponent } from '../insertion-actions/insertion-actions.component';
 import { FieldTypePickerComponent } from '../field-type-picker/field-type-picker.component';
 import { PALETTE_FIELD_TYPES } from '../../core/models/types';
@@ -19,6 +20,13 @@ import { TranslatePipe } from '@ngx-translate/core';
 })
 export class FieldLibrarySidebarComponent {
   readonly service = inject(TemplateService);
+  readonly displayName = fieldDisplayName;
+
+  select(id: number): void {
+    this.service.openContainer(this.service.parentContainerId(id));
+    this.service.selectedField.set(id);
+    this.service.scrollRequest.set(id);
+  }
   private readonly host = inject(ElementRef<HTMLElement>);
 
   fieldListHeight = 33.33; // percentage

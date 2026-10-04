@@ -5,6 +5,7 @@ import { elementDisplayName, fieldDisplayName } from './field-display-name';
 import type { Field } from '../models/types';
 import {
   deploymentKeys,
+  descriptorOf,
   buildContainer,
   buildTemplate,
   fieldToJson,
@@ -170,14 +171,28 @@ export function validateDocument(
           field.name,
         );
       }
-      if (settingsValid) {
+      if (descriptorOf(field.type).deployment !== 'static') {
         try {
           buildTemplate({
             name: 'Validation',
             description: '',
             identifier: 'urn:ced:validation',
             version: '0.0.1',
-            fields: [settingsField],
+            // Occurrences are independent of definition errors. A broken
+            // definition must not conceal a second, repairable placement error.
+            fields: [
+              {
+                id: field.id,
+                name: field.name,
+                type: 'text',
+                status: field.status,
+                options: [],
+                defaultValue: { kind: 'none' },
+                allowMultiple: field.allowMultiple || descriptorOf(field.type).deployment === 'alwaysMultiple',
+                minItems: field.minItems,
+                maxItems: field.maxItems,
+              },
+            ],
           });
         } catch (error) {
           add(
@@ -191,6 +206,8 @@ export function validateDocument(
             field.name,
           );
         }
+      }
+      if (settingsValid) {
         const error = choiceDefaultConflict(field, t) ?? defaultValueError(field, field.defaultValue, t);
         if (error) add(node.id, issueLabel(node), nodePath, 'defaultValue', error, 'Constraints', 'model', field.name);
       }

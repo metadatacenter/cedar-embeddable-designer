@@ -147,9 +147,7 @@ export class FieldSettingsComponent implements OnChanges {
   height: number | null = null;
   min: number | null = null;
   max: number | null = null;
-  private errors: Record<string, string | null> = {};
   private report(tab: string, message: string | null): void {
-    this.errors[tab] = message;
     this.service.setSettingsError(
       this.field.id,
       tab === 'Constraints'
@@ -199,20 +197,18 @@ export class FieldSettingsComponent implements OnChanges {
   }
   get error(): string | null {
     const message =
-      (this.errors[this.selectedTab] ??
-        this.service
-          .visibleIssues()
-          .filter(
-            (issue) =>
-              issue.nodeId === this.field.id &&
-              issue.source === 'model' &&
-              issue.setting !== 'name' &&
-              issue.setting !== 'key' &&
-              issue.tab === this.selectedTab,
-          )
-          .map((issue) => issue.message)
-          .join(' ')) ||
-      null;
+      this.service
+        .visibleIssues()
+        .filter(
+          (issue) =>
+            issue.nodeId === this.field.id &&
+            issue.setting !== 'name' &&
+            issue.setting !== 'key' &&
+            issue.setting !== 'defaultValue' &&
+            issue.tab === this.selectedTab,
+        )
+        .map((issue) => issue.message)
+        .join(' ') || null;
     const prefix = this.i18n.t('errors.namedField', {
       name: this.field.name.trim() || this.i18n.t('common.anUnnamedField'),
       message: '',
@@ -222,64 +218,64 @@ export class FieldSettingsComponent implements OnChanges {
   get multiple(): boolean {
     return descriptorOf(this.field.type).deployment === 'alwaysMultiple' || this.field.allowMultiple;
   }
-  /** Keep invalid/incomplete input while valid edits update the field immediately. */
-  private loaded: Record<string, unknown> = {};
   private loadedFieldId: number | null = null;
-
-  private adopt<T>(key: string, current: T, incoming: T): T {
-    const untouched = JSON.stringify(current) === JSON.stringify(this.loaded[key]);
-    this.loaded[key] = incoming;
-    return untouched ? incoming : current;
-  }
 
   ngOnChanges(): void {
     const first = this.loadedFieldId !== this.field.id;
     if (first) {
-      // A different field: the previous draft belonged to the previous card.
-      // A standalone field opens directly into its settings; later edits preserve the author's toggle.
       this.expanded = this.service.fieldDocumentMode();
-      this.loaded = {};
-      this.keyDraftError = null;
       this.loadedFieldId = this.field.id;
     }
-    const take = <T>(key: string, current: T, incoming: T, discard = first): T => {
-      if (!discard) return this.adopt(key, current, incoming);
-      this.loaded[key] = incoming;
-      return incoming;
+    const editing = this.service.editingField(this.field);
+    const groups: Record<string, string> = {
+      text: 'textConstraints',
+      numeric: 'numeric',
+      temporal: 'temporal',
+      min: 'occurrences',
+      max: 'occurrences',
+      width: 'media',
+      height: 'media',
     };
-    if (first) this.loaded = {};
+    const take = <T>(key: string, current: T, incoming: T, discard = first): T => {
+      // An unparseable number has no typed draft. Retain its input buffer until
+      // that control changes; typed rejected values belong to the coordinator.
+      if (!discard && this.service.validation.inputError(this.field.id, groups[key] ?? key)) return current;
+      return structuredClone(incoming);
+    };
 
-    this.deploymentName = take('deploymentName', this.deploymentName, this.service.childKey(this.field.id));
-    this.schemaIdentifier = take('schemaIdentifier', this.schemaIdentifier, this.field.schemaIdentifier ?? '');
-    this.displayDescription = take('displayDescription', this.displayDescription, this.field.displayDescription ?? '');
-    this.hidden = take('hidden', this.hidden, this.field.hidden ?? false);
+    this.deploymentName = take(
+      'deploymentName',
+      this.deploymentName,
+      editing.deploymentName ?? this.service.childKey(editing.id),
+    );
+    this.schemaIdentifier = take('schemaIdentifier', this.schemaIdentifier, editing.schemaIdentifier ?? '');
+    this.displayDescription = take('displayDescription', this.displayDescription, editing.displayDescription ?? '');
+    this.hidden = take('hidden', this.hidden, editing.hidden ?? false);
     this.continuePreviousLine = take(
       'continuePreviousLine',
       this.continuePreviousLine,
-      this.field.continuePreviousLine ?? false,
+      editing.continuePreviousLine ?? false,
     );
     this.text = take('text', this.text, {
-      ...(this.field.textConstraints ?? { minLength: null, maxLength: null, regex: null }),
+      ...(editing.textConstraints ?? { minLength: null, maxLength: null, regex: null }),
     });
     this.numeric = take('numeric', this.numeric, {
-      ...(this.field.numeric ?? { type: 'xsd:decimal', min: null, max: null, decimalPlaces: null, unit: null }),
+      ...(editing.numeric ?? { type: 'xsd:decimal', min: null, max: null, decimalPlaces: null, unit: null }),
     });
     this.temporal = take('temporal', this.temporal, {
-      ...(this.field.temporal ?? {
-        type: this.field.type === 'time' ? 'xsd:time' : 'xsd:date',
-        granularity: this.field.type === 'time' ? 'minute' : 'day',
+      ...(editing.temporal ?? {
+        type: editing.type === 'time' ? 'xsd:time' : 'xsd:date',
+        granularity: editing.type === 'time' ? 'minute' : 'day',
         timezoneEnabled: false,
         inputTimeFormat: null,
       }),
     });
-    this.width = take('width', this.width, this.field.width ?? null);
-    this.height = take('height', this.height, this.field.height ?? null);
+    this.width = take('width', this.width, editing.width ?? null);
+    this.height = take('height', this.height, editing.height ?? null);
     // Turning Allow multiple off removes the Occurrences tab, and a refused bound goes with it.
     // Turned back on, the tab shows the bounds the field kept.
-    this.min = take('min', this.min, this.field.minItems ?? null, first || !this.multiple);
-    this.max = take('max', this.max, this.field.maxItems ?? null, first || !this.multiple);
-    if (first) this.errors = {};
-    else if (!this.multiple) this.errors['Occurrences'] = null;
+    this.min = take('min', this.min, editing.minItems ?? null, first || !this.multiple);
+    this.max = take('max', this.max, editing.maxItems ?? null, first || !this.multiple);
   }
 
   private badInput(form: HTMLFormElement | undefined, tab: string): boolean {
@@ -294,101 +290,55 @@ export class FieldSettingsComponent implements OnChanges {
     return true;
   }
   saveIdentifier(): void {
-    this.report(
-      SETTINGS_TABS.fieldMetadata,
-      this.service.updateFieldSettings(this.field.id, {
-        schemaIdentifier: this.schemaIdentifier || undefined,
-      }),
-    );
+    this.service.updateFieldSettings(this.field.id, { schemaIdentifier: this.schemaIdentifier || undefined });
   }
-  private keyDraftError: string | null = null;
   get keyError(): string | null {
     return (
-      this.keyDraftError ??
-      this.service
-        .validationReport()
-        .issues.find((issue) => issue.nodeId === this.field.id && issue.setting === 'key' && issue.source === 'model')
-        ?.message ??
-      null
+      this.service.validationReport().issues.find((issue) => issue.nodeId === this.field.id && issue.setting === 'key')
+        ?.message ?? null
     );
   }
   saveKey(): void {
-    this.keyDraftError = this.service.updateFieldSettings(this.field.id, { deploymentName: this.deploymentName });
-    this.service.setSettingsError(this.field.id, 'key', this.keyDraftError, SETTINGS_TABS.fieldMetadata);
+    this.service.updateFieldSettings(this.field.id, { deploymentName: this.deploymentName });
   }
-
   saveProperty(iri: string): void {
-    this.report(SETTINGS_TABS.fieldMetadata, this.service.updateFieldSettings(this.field.id, { propertyIri: iri }));
+    this.service.updateFieldSettings(this.field.id, { propertyIri: iri });
   }
   saveMedia(form?: HTMLFormElement): void {
     if (this.badInput(form, 'Content')) return;
-    this.report(
-      'Content',
-      this.service.updateFieldSettings(this.field.id, {
-        width: this.width,
-        height: this.height,
-      }),
-    );
+    this.service.updateFieldSettings(this.field.id, { width: this.width, height: this.height });
   }
   saveTemporal(): void {
-    this.report(
-      'Constraints',
-      this.service.updateFieldSettings(this.field.id, {
-        temporal: { ...this.temporal },
-        type: this.temporal.type === 'xsd:time' ? 'time' : 'date',
-      }),
-    );
+    this.service.updateFieldSettings(this.field.id, {
+      temporal: { ...this.temporal },
+      type: this.temporal.type === 'xsd:time' ? 'time' : 'date',
+    });
   }
   saveNumeric(form?: HTMLFormElement): void {
-    // Number inputs expose malformed text (e.g., an incomplete exponent) as null.
-    // Keep that draft out of the model instead of treating it as a cleared bound.
-    const invalid = form && Array.from(form.querySelectorAll('input')).find((input) => input.validity.badInput);
-    if (invalid) {
-      const label = invalid.closest('label')?.textContent?.trim() || this.i18n.t('fieldTypes.number.preview');
-      this.report('Constraints', this.i18n.t('settings.invalidNumber', { label }));
-      return;
-    }
-    this.report(
-      'Constraints',
-      this.service.updateFieldSettings(this.field.id, {
-        numeric: { ...this.numeric, unit: this.numeric.unit || null },
-      }),
-    );
+    if (this.badInput(form, 'Constraints')) return;
+    this.service.updateFieldSettings(this.field.id, { numeric: { ...this.numeric, unit: this.numeric.unit || null } });
   }
   saveText(form?: HTMLFormElement): void {
     if (this.badInput(form, 'Constraints')) return;
-    this.report(
-      'Constraints',
-      this.service.updateFieldSettings(this.field.id, {
-        textConstraints: { ...this.text, regex: this.accepts('textPattern') ? this.text.regex || null : null },
-      }),
-    );
+    this.service.updateFieldSettings(this.field.id, {
+      textConstraints: { ...this.text, regex: this.accepts('textPattern') ? this.text.regex || null : null },
+    });
   }
-  /** The same name the field's header shows, edited through the same update. */
   displayName(): string {
     return fieldDisplayName(this.field);
   }
   rename(value: string): void {
-    this.report('Display', this.service.updateFieldDisplayName(this.field.id, value));
+    this.service.updateFieldDisplayName(this.field.id, value);
   }
   saveLayout(): void {
-    this.report(
-      'Display',
-      this.service.updateFieldSettings(this.field.id, {
-        displayDescription: this.displayDescription || undefined,
-        hidden: this.hidden,
-        continuePreviousLine: this.continuePreviousLine,
-      }),
-    );
+    this.service.updateFieldSettings(this.field.id, {
+      displayDescription: this.displayDescription || undefined,
+      hidden: this.hidden,
+      continuePreviousLine: this.continuePreviousLine,
+    });
   }
   saveBounds(form?: HTMLFormElement): void {
     if (this.badInput(form, 'Occurrences')) return;
-    this.report(
-      'Occurrences',
-      this.service.updateFieldSettings(this.field.id, {
-        minItems: this.min,
-        maxItems: this.max,
-      }),
-    );
+    this.service.updateFieldSettings(this.field.id, { minItems: this.min, maxItems: this.max });
   }
 }

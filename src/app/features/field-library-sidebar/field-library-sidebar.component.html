@@ -33,15 +33,21 @@
         @for (field of service.fields(); track field.id; let idx = $index) {
           <div
             cdkDrag
-            (click)="service.selectedField.set(field.id)"
+            (click)="select(field.id)"
             class="draggable-field-item"
             [class.active]="service.selectedField() === field.id"
+            [class.invalid]="service.visibleIssuesFor(field.id).length > 0"
           >
             <span class="draggable-icon">
               <app-icon [key]="getFieldIconKey(field)" size="default"></app-icon>
             </span>
             <div class="draggable-name-container">
-              <div class="draggable-name">{{ field.name }}</div>
+              <div class="draggable-name">{{ displayName(field) || ('validation.unnamed.field' | translate) }}</div>
+              @if (service.visibleIssuesFor(field.id).length; as count) {
+                <span class="validation-badge">{{
+                  (count === 1 ? 'common.errorCount.one' : 'common.errorCount.other') | translate: { count: count }
+                }}</span>
+              }
             </div>
             <div class="draggable-indicator"></div>
             <div class="draggable-handle" cdkDragHandle>

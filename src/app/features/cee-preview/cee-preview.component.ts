@@ -76,13 +76,20 @@ export class CeePreviewComponent {
     inject(DestroyRef).onDestroy(() => clearTimeout(this.revealTimer));
     effect((onCleanup) => {
       const host = this.mount()?.nativeElement;
-      const template = this.service.previewJson();
+      const state = this.service.previewState();
       const readOnly = this.readOnly();
       const language = this.language();
       if (host === undefined) {
         return;
       }
 
+      if (!state.artifact) {
+        clearTimeout(this.revealTimer);
+        host.replaceChildren();
+        this.editor = null;
+        return;
+      }
+      const template = state.artifact;
       const timer = setTimeout(() => this.show(host, template, readOnly, language), REBUILD_QUIET_MS);
       onCleanup(() => clearTimeout(timer));
     });

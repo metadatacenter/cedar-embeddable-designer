@@ -370,3 +370,11 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: var(--cedar-text-muted);
 }
+
+.draggable-field-item.invalid,
+.validation-badge {
+  color: var(--cedar-status-error-text);
+}
+.validation-badge {
+  font-size: var(--cedar-font-size);
+}

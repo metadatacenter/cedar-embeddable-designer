@@ -96,6 +96,8 @@ export class ContainerEditorComponent {
   }
   activate(): void {
     this.service.session.activeId.set(this.container().id);
+    const node = this.placementNode();
+    if (node) this.service.selectedField.set(node.id);
   }
   pickerAt(index: number): boolean {
     return this.service.session.active().id === this.container().id && this.service.showPicker() === index;

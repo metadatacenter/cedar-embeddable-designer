@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Field } from '../../core/models/types';
 import { ContainerDraft } from '../../core/model/container-draft';
@@ -81,14 +81,17 @@ export class LanguageSelectorComponent {
   readonly custom = computed(() =>
     this.value() && !LANGUAGES.some((l) => l.code === this.value()) ? this.value() : '',
   );
-  readonly error = signal<string | null>(null);
+  readonly error = computed(() => {
+    const field = this.field();
+    return field ? this.service.settingError(field.id, 'language') : null;
+  });
   private readonly service = inject(TemplateService);
   change(value: string): void {
     if (this.field()?.publishedDefinition) return;
     if (value && !LANGUAGES.some((l) => l.code === value) && value !== this.value()) return;
     const field = this.field();
     if (field) {
-      this.error.set(this.service.updateFieldSettings(field.id, { language: value || undefined }));
+      this.service.updateFieldSettings(field.id, { language: value || undefined });
     } else {
       const container = this.container();
       if (!container) return;

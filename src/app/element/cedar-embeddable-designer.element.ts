@@ -167,7 +167,14 @@ export class CedarEmbeddableDesignerElementComponent {
     inject(DestroyRef).onDestroy(() => validation.destroy());
     const changes = effect(
       () => {
-        const artifact = this.cedarTemplate();
+        // A loaded document can be editable before it is serializable. The
+        // validation report communicates that state; never publish an old artifact.
+        let artifact: object;
+        try {
+          artifact = this.cedarTemplate();
+        } catch {
+          return;
+        }
         this.templateChange.emit(artifact);
         this.artifactChange.emit(artifact);
       },

@@ -345,16 +345,21 @@ session `nodeId`, an ancestor-ID `path`, a display `label`, `setting`, settings 
 stable category `code`, user-facing `message`, `severity: 'error'`, `source`
 (`model` or `draft`), and `shown`. An issue that is not `shown` still blocks saving,
 but CED's error summary holds it back until the author reaches it: a name nobody has
-touched yet, or a new choice field's blank starter option. A host that explains a
+touched yet, or a new choice field's blank starter option while its name is still
+being entered. Leaving the name reveals any unfinished option. A host that explains a
 disabled Save by pointing at errors should count only the shown ones. Do not parse
 messages or persist session IDs across documents.
 Validation checks the settings CED supports; it does not replace server validation,
 permission checks, or save/publish lifecycle rules.
 
 CED marks affected cards and Overview entries, including ancestor elements, and
-provides a summary linking to the relevant settings. Correcting or clearing an edit
-removes its issue; deleting an item or loading another document removes its pending
-issues from the report.
+provides a summary linking to the relevant settings. One coordinator retains rejected
+settings, retries them when related values change, and supplies the report to every
+panel. Correcting or clearing an edit removes its issue; deleting an item, hiding an
+inapplicable setting, or loading another document removes its pending issues.
+Invalid imported children can be repaired independently. If the document cannot be
+serialized, the preview explains why it is unavailable and resumes after repair;
+artifact change events wait until serialization succeeds.
 The wrapper remains responsible for saving and can display
 the report when a save is attempted.
 

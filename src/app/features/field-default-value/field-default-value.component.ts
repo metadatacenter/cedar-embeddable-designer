@@ -14,7 +14,7 @@ import {
   untracked,
 } from '@angular/core';
 import { defaultFromCef, defaultToCef } from '../../core/model/field-default';
-import { accepts, defaultValueError, fieldToJson } from '../../core/model/cedar-template';
+import { accepts, fieldToJson } from '../../core/model/cedar-template';
 import { CeeTemplateObject } from '../../core/model/cee-preview';
 import { Field, FieldDefaultValue } from '../../core/models/types';
 import { TemplateService } from '../../core/services/template.service';
@@ -91,7 +91,10 @@ export class FieldDefaultValueComponent {
   readonly available = signal(customElements.get(FIELD_TAG) !== undefined);
   readonly pickerAvailable = signal(customElements.get('cedar-embeddable-term-picker') !== undefined);
   readonly pickerOpen = signal(false);
-  readonly error = signal<string | null>(null);
+  readonly error = computed(() => {
+    const id = this.field().id;
+    return this.service.settingError(id, 'defaultValue');
+  });
   readonly editorReportsError = signal(false);
   private readonly mount = viewChild<ElementRef<HTMLDivElement>>('mount');
   private pending: object | null = null;
@@ -99,21 +102,19 @@ export class FieldDefaultValueComponent {
   private artifactKey: string | null = null;
   private configKey: string | null = null;
 
-  private reportValidation(): void {
-    this.service.setSettingsError(
-      this.field().id,
-      'defaultValue',
-      this.error() ?? (this.checking() ? this.i18n.t('controlledTerms.checkingConstraints') : null),
-    );
-  }
   private setError(message: string | null, editorReportsError = false): void {
     this.editorReportsError.set(editorReportsError);
-    this.error.set(message);
-    untracked(() => this.reportValidation());
+    untracked(() => this.service.setSettingsError(this.field().id, 'defaultValue', message));
   }
   private setChecking(checking: boolean): void {
     this.checking.set(checking);
-    untracked(() => this.reportValidation());
+    untracked(() =>
+      this.service.validation.setChecking(
+        this.field().id,
+        'defaultValue',
+        checking ? this.i18n.t('controlledTerms.checkingConstraints') : null,
+      ),
+    );
   }
 
   constructor() {
@@ -129,14 +130,13 @@ export class FieldDefaultValueComponent {
     destroyRef.onDestroy(() => this.editor?.removeEventListener('valueChange', this.acceptValue));
 
     effect(() => {
-      const field = this.field();
+      const field = this.service.editingField(this.field());
       if (!this.native()) return;
       const key = JSON.stringify([field.id, field.defaultValue]);
       if (key !== this.defaultKey) {
         this.defaultKey = key;
         const value = field.defaultValue;
         this.draft.set(value.kind === 'literal' || value.kind === 'number' ? String(value.value) : '');
-        this.setError(null);
       }
     });
 
@@ -162,14 +162,22 @@ export class FieldDefaultValueComponent {
       }
       if (this.editor.parentNode !== host) host.replaceChildren(this.editor);
       // The default is the value being edited, not a reason to rebuild its control.
-      const artifact = fieldToJson({ ...field, defaultValue: { kind: 'none' }, importedChoiceDefault: undefined });
+      let artifact: CeeTemplateObject;
+      try {
+        artifact = fieldToJson({ ...field, defaultValue: { kind: 'none' }, importedChoiceDefault: undefined });
+      } catch {
+        // The report already identifies invalid imported settings. Keep them
+        // editable without leaving a control for the previous field on screen.
+        host.replaceChildren();
+        this.artifactKey = null;
+        return;
+      }
       const key = JSON.stringify(artifact);
       if (key !== this.artifactKey) {
         this.editor.fieldObject = artifact;
         this.artifactKey = key;
-        this.setError(null);
       }
-      const value = defaultToCef(field);
+      const value = defaultToCef(this.service.editingField(field));
       if (JSON.stringify(this.editor.currentValue) !== JSON.stringify(value)) {
         this.editor.value = value;
       }
@@ -202,9 +210,8 @@ export class FieldDefaultValueComponent {
   }
 
   private save(value: FieldDefaultValue): void {
-    const error = defaultValueError(this.field(), value, this.i18n.t);
-    this.setError(error);
-    if (error === null) this.service.updateDefaultValue(this.field().id, value);
+    this.setError(null);
+    this.service.updateDefaultValue(this.field().id, value);
   }
 
   openPicker(): void {

@@ -1,7 +1,7 @@
-import { fieldDisplayName } from '../../core/model/field-display-name';
+import { elementDisplayName, fieldDisplayName } from '../../core/model/field-display-name';
 import { Component, input, inject } from '@angular/core';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
-import { ContainerDraft, ChildNode, childName, fieldView } from '../../core/model/container-draft';
+import { ContainerDraft, ChildNode, fieldView } from '../../core/model/container-draft';
 import { TemplateService } from '../../core/services/template.service';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -78,7 +78,7 @@ export class ContainerOutlineComponent {
   readonly container = input.required<ContainerDraft>();
   readonly service = inject(TemplateService);
   displayName(node: ChildNode): string {
-    return node.kind === 'field' ? fieldDisplayName(fieldView(node)) : (node.placement.displayLabel ?? childName(node));
+    return node.kind === 'field' ? fieldDisplayName(fieldView(node)) : elementDisplayName(node);
   }
   locked(node: ChildNode): boolean {
     return node.kind === 'field' && !!node.definition.publishedDefinition;
@@ -99,9 +99,7 @@ export class ContainerOutlineComponent {
   }
   select(node: ChildNode): void {
     this.service.openContainer(node.kind === 'element' ? node.id : this.container().id);
-    if (node.kind === 'field') {
-      this.service.selectedField.set(node.id);
-      this.service.scrollRequest.set(node.id);
-    }
+    this.service.selectedField.set(node.id);
+    this.service.scrollRequest.set(node.id);
   }
 }
