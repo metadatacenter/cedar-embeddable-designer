@@ -647,7 +647,11 @@ export class TemplateService {
 
   toggleAllowMultiple(id: number) {
     if (this.isPublished(id)) return;
-    this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, allowMultiple: !f.allowMultiple } : f)));
+    const multiple = !this.fieldsFor(id)().find((field) => field.id === id)?.allowMultiple;
+    this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, allowMultiple: multiple } : f)));
+    // A single-valued field has no Occurrences tab, so a bound refused there would leave an
+    // error the author can no longer see or correct.
+    if (!multiple) this.setSettingsError(id, 'occurrences', null);
   }
 
   /** The one value a static field shows. */

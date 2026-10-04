@@ -242,8 +242,8 @@ export class FieldSettingsComponent implements OnChanges {
       this.keyDraftError = null;
       this.loadedFieldId = this.field.id;
     }
-    const take = <T>(key: string, current: T, incoming: T): T => {
-      if (!first) return this.adopt(key, current, incoming);
+    const take = <T>(key: string, current: T, incoming: T, discard = first): T => {
+      if (!discard) return this.adopt(key, current, incoming);
       this.loaded[key] = incoming;
       return incoming;
     };
@@ -274,9 +274,12 @@ export class FieldSettingsComponent implements OnChanges {
     });
     this.width = take('width', this.width, this.field.width ?? null);
     this.height = take('height', this.height, this.field.height ?? null);
-    this.min = take('min', this.min, this.field.minItems ?? null);
-    this.max = take('max', this.max, this.field.maxItems ?? null);
+    // Turning Allow multiple off removes the Occurrences tab, and a refused bound goes with it.
+    // Turned back on, the tab shows the bounds the field kept.
+    this.min = take('min', this.min, this.field.minItems ?? null, first || !this.multiple);
+    this.max = take('max', this.max, this.field.maxItems ?? null, first || !this.multiple);
     if (first) this.errors = {};
+    else if (!this.multiple) this.errors['Occurrences'] = null;
   }
 
   private badInput(form: HTMLFormElement | undefined, tab: string): boolean {

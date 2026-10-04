@@ -309,6 +309,28 @@ test('tabs retain their error marker when another tab is selected', async ({ pag
   await expect(tab).not.toHaveCSS('border-bottom-color', 'rgb(180, 35, 24)');
 });
 
+test('turning Allow multiple off drops a refused occurrence bound with its tab', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await designer.getByLabel('Template name', { exact: true }).fill('Study');
+  const card = designer.locator('app-field-card').first();
+  const multiple = card.getByLabel('Allow multiple', { exact: true });
+  await multiple.check();
+  const panel = await openSettings(card, 'Occurrences');
+  await panel.getByLabel('Minimum', { exact: true }).fill('2');
+  await panel.getByLabel('Maximum', { exact: true }).fill('1');
+  await expect.poll(async () => (await report(page)).canSave).toBe(false);
+  await multiple.uncheck();
+  await expect(card.getByRole('tab', { name: 'Occurrences', exact: true })).toHaveCount(0);
+  await expect.poll(async () => (await report(page)).valid).toBe(true);
+  // Turned back on, the tab shows the bounds the field kept, not the draft it refused.
+  await multiple.check();
+  const restored = await openSettings(card, 'Occurrences');
+  await expect(restored.getByLabel('Minimum', { exact: true })).toHaveValue('2');
+  await expect(restored.getByLabel('Maximum', { exact: true })).toHaveValue('');
+  await expect(card.getByRole('tab', { name: 'Occurrences', exact: true })).not.toHaveAttribute('aria-description');
+  expect((await report(page)).valid).toBe(true);
+});
+
 for (const inputType of ['radio', 'checkbox', 'list']) {
   test(`unnamed ${inputType} options remain invalid when settings close and recover when named or removed`, async ({
     page,

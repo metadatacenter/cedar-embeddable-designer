@@ -76,6 +76,16 @@ describe('settings validation report', () => {
     expect(service.validationReport().issues[0].nodeId).toBe(service.fields()[0].id);
     expect(service.validationReport().issues[0].source).toBe('model');
   });
+  it('drops a refused occurrence bound, and only that, when Allow multiple is turned off', () => {
+    const id = service.fields()[0].id;
+    service.toggleAllowMultiple(id);
+    service.setSettingsError(id, 'occurrences', 'Minimum exceeds maximum.', 'Occurrences');
+    service.setSettingsError(id, 'defaultValue', 'Default exceeds maximum.');
+    service.toggleAllowMultiple(id);
+    expect(service.validationReport().issues.map((issue) => issue.setting)).toEqual(['defaultValue']);
+    service.setSettingsError(id, 'defaultValue', null);
+    expect(service.validationReport().canSave).toBe(true);
+  });
   it('attributes invalid occurrence settings to the field even with no panel mounted', () => {
     service.fields.update((fields) =>
       fields.map((field, index) =>
