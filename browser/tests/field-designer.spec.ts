@@ -223,16 +223,17 @@ for (const type of Object.keys(FIELD_TYPES)) {
   });
 }
 for (const label of ['Multiple Choice', 'Checkboxes']) {
-  test(`${label} starter option waits for interaction, then reports and recovers`, async ({ page }) => {
+  test(`${label} starter option waits until naming finishes, then reports and recovers`, async ({ page }) => {
     await page.getByRole('button', { name: label, exact: true }).click();
     await page.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Choice');
+    // While the name is still being typed, the blank starter option blocks saving without an error.
+    await expect(page.locator('.validation-summary')).toHaveCount(0);
+    expect(
+      await page.evaluate(() => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).canSave),
+    ).toBe(false);
+    // Leaving the name finishes it, so the option must now explain why saving is blocked.
     await page.getByRole('tab', { name: 'Constraints', exact: true }).click();
     const option = page.getByLabel('Option 1', { exact: true });
-    await expect(option).toHaveAttribute('aria-invalid', 'false');
-    await expect(page.locator('.validation-summary')).toHaveCount(0);
-    await option.click();
-    await page.getByRole('tab', { name: 'Display', exact: true }).click();
-    await page.getByRole('tab', { name: 'Constraints', exact: true }).click();
     await expect(option).toHaveAttribute('aria-invalid', 'true');
     await expect(page.locator('.validation-summary')).toBeVisible();
     await option.fill('First');
