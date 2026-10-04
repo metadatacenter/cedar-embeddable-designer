@@ -26,7 +26,17 @@ async function addRows(editor: Locator) {
   await expectValueTypeFits(editor);
   const valueType = editor.getByRole('combobox', { name: 'New annotation value type', exact: true });
   await expect(valueType).toHaveCSS('appearance', 'none');
-  await expect(valueType).toHaveCSS('padding-right', '24px');
+  // An authoring select reserves its compact inset and the small icon box for the chevron.
+  const reserve = await valueType.evaluate((node) => {
+    const probe = document.createElement('span');
+    probe.style.paddingInlineEnd = 'calc(var(--cedar-space-2) + var(--cedar-icon-size-small))';
+    node.parentElement!.append(probe);
+    const value = getComputedStyle(probe).paddingInlineEnd;
+    probe.remove();
+    return value;
+  });
+  expect(reserve).not.toBe('0px');
+  await expect(valueType).toHaveCSS('padding-right', reserve);
   await expect(valueType).toHaveCSS('height', '32px');
   await expect(editor.locator('.add-row label').first()).toHaveCSS('gap', '2px');
   const controls = await editor
