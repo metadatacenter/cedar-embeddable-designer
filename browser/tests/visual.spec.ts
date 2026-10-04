@@ -104,6 +104,8 @@ async function designerShowing(
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
     grid.parentElement!.scrollTo({ top: 0, behavior: 'instant' });
   });
+  // The last click leaves the pointer over the canvas, where it can reveal an insertion zone.
+  await page.mouse.move(0, 0);
   return designer;
 }
 
