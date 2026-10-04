@@ -164,6 +164,76 @@ scenarios['invalid-field'] = async (page) => {
   await panel.getByLabel('Minimum length', { exact: true }).fill('8');
   await panel.getByLabel('Maximum length', { exact: true }).fill('2');
 };
+// One of each authoring control kind in each context the authoring matrix spans. The field-type
+// and label-weight suites cover every type and tab; these hold representatives to the central contracts.
+scenarios['field-metadata'] = async (page) => {
+  const d = await openDesigner(page);
+  await openSettings(d.locator('app-field-card').first(), 'Field metadata');
+};
+scenarios['temporal-constraints'] = async (page) => {
+  const d = await openDesigner(page);
+  await d.getByRole('button', { name: /^Add field$/ }).click();
+  await d.getByRole('button', { name: 'Temporal', exact: true }).click();
+  const card = d.locator('app-field-card').last();
+  await card.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Temporal');
+  await openSettings(card);
+};
+scenarios['element-metadata'] = async (page) => {
+  const d = await openDesigner(page);
+  await applyPreset(page, 'modular');
+  await addElementFixture(page, d);
+  const card = d.locator('app-element-card').first();
+  await card.getByRole('button', { name: 'Expand element settings', exact: true }).click();
+  await card.getByRole('tab', { name: 'Element metadata', exact: true }).click();
+};
+scenarios['nested-field'] = async (page) => {
+  const d = await openDesigner(page);
+  await applyPreset(page, 'modular');
+  await addElementFixture(page, d);
+  const nested = d.locator('app-container-editor').nth(1);
+  await nested.getByRole('button', { name: 'Add field', exact: true }).click();
+  await nested.getByRole('button', { name: 'Text', exact: true }).click();
+  await openSettings(nested.locator('app-field-card').first());
+};
+// CI supplies the real sibling bundle; local runs opt in by setting CEF_BUNDLE.
+scenarios['cef-default'] = async (page) => {
+  test.skip(!process.env.CEF_BUNDLE, 'CEF_BUNDLE names the real CEF bundle.');
+  const d = await openDesigner(page);
+  await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
+  await page.waitForFunction(() => !!customElements.get('cedar-embeddable-field'));
+  const artifact = templateToJson(
+    buildTemplate({
+      name: 'Defaults',
+      description: '',
+      identifier: 'urn:template:defaults',
+      version: '0.0.1',
+      fields: [
+        {
+          id: 1,
+          type: 'singleChoiceList',
+          name: 'Value',
+          status: 'optional',
+          allowMultiple: false,
+          options: ['A', 'B'],
+          defaultValue: { kind: 'none' },
+        },
+      ],
+    }),
+  );
+  await page.evaluate((artifact) => {
+    (document.querySelector('cedar-embeddable-designer') as any).template = artifact;
+  }, artifact);
+  await openSettings(d.locator('app-field-card').first());
+  await expect(d.locator('app-field-default-value cedar-embeddable-field')).toBeVisible();
+};
+// The contracts resolve each token where the surface sits, so a host's override of a shared role
+// must reach the authoring surfaces. Asserting the override arrived keeps the check from passing vacuously.
+scenarios['host-override'] = async (page) => {
+  const d = await openDesigner(page);
+  await d.evaluate((host) => (host as HTMLElement).style.setProperty('--cedar-font-size', '16px'));
+  const panel = await openSettings(d.locator('app-field-card').first(), 'Field metadata');
+  await expect(panel.locator('label[for^="field-key-"]')).toHaveCSS('font-size', '16px');
+};
 for (const { surface, state, width, title } of surfaceCases(registry, scenarios))
   test(title, async ({ page }, testInfo) => {
     await page.setViewportSize({ width, height: 1000 });

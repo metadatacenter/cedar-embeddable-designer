@@ -147,11 +147,16 @@ recipes apply. Keep shared geometry and typography in the central recipes, not i
 copies under `src/app/shared` or corrective declarations in `src/styles.css`.
 Component styles still own their layout and content-specific widths.
 
-The surface registry verifies annotation labels, control typography and table-cell
-density against central contracts at desktop and narrow widths. The field-type and
-label-weight browser suites cover the broader authoring matrix. Preserve their
-rendered expectations when consolidating styles; do not update visual baselines to
-accept an unintended change.
+The surface registry checks representative authoring surfaces against central
+contracts at desktop and narrow widths. They cover labels and controls in the
+annotation entry row, a field's and an element's metadata and a nested field's
+constraints, a field's constraint select, a default-value label beside real CEF,
+and a field's metadata under a host override of the shared type size. The
+field-type and label-weight browser suites cover the broader authoring matrix,
+every field type in every settings tab. A central contract compares each property
+with a single token, so CED's own browser tests check select-arrow clearance and
+controlled-term default-row alignment. Preserve these rendered expectations when
+consolidating styles; do not update visual baselines to accept an unintended change.
 
 ## The Sibling Components It Works With
 

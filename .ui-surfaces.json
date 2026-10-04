@@ -399,6 +399,166 @@
         }
       ],
       "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.field-metadata-label",
+      "name": "Field metadata label",
+      "section": "Template Designer",
+      "contract": "authoring-label",
+      "scenario": "field-metadata",
+      "selector": "label[for^=\"field-key-\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-settings/field-settings.component.html",
+          "anchor": "[for]=\"'field-key-' + field.id\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.field-metadata-control",
+      "name": "Field metadata control",
+      "section": "Template Designer",
+      "contract": "authoring-control",
+      "scenario": "field-metadata",
+      "selector": "input[id^=\"field-key-\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-settings/field-settings.component.html",
+          "anchor": "[id]=\"'field-key-' + field.id\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.temporal-type-select",
+      "name": "Field constraint select",
+      "section": "Template Designer",
+      "contract": "authoring-control",
+      "scenario": "temporal-constraints",
+      "selector": "select[name=\"temporalType\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-settings/field-settings.component.html",
+          "anchor": "name=\"temporalType\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.element-metadata-label",
+      "name": "Element metadata label",
+      "section": "Template Designer",
+      "contract": "authoring-label",
+      "scenario": "element-metadata",
+      "selector": "label[for^=\"element-key-\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/element-card/element-card.component.html",
+          "anchor": "[for]=\"'element-key-' + node().id\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.element-metadata-control",
+      "name": "Element metadata control",
+      "section": "Template Designer",
+      "contract": "authoring-control",
+      "scenario": "element-metadata",
+      "selector": "input[id^=\"element-key-\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/element-card/element-card.component.html",
+          "anchor": "[id]=\"'element-key-' + node().id\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.nested-field-label",
+      "name": "Nested field constraint label",
+      "section": "Template Designer",
+      "contract": "authoring-label",
+      "scenario": "nested-field",
+      "selector": "app-container-editor app-container-editor label:has(input[name=\"minLength\"]):visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-settings/field-settings.component.html",
+          "anchor": "name=\"minLength\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.nested-field-control",
+      "name": "Nested field constraint control",
+      "section": "Template Designer",
+      "contract": "authoring-control",
+      "scenario": "nested-field",
+      "selector": "app-container-editor app-container-editor input[name=\"minLength\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-settings/field-settings.component.html",
+          "anchor": "name=\"minLength\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.cef-default-label",
+      "name": "Default value label beside real CEF",
+      "section": "Template Designer",
+      "contract": "authoring-label",
+      "scenario": "cef-default",
+      "selector": "[id^=\"field-default-label-\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-settings/field-settings.component.html",
+          "anchor": "'field-default-label-' + field.id"
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.host-override-label",
+      "name": "Field metadata label under a host override",
+      "section": "Template Designer",
+      "contract": "authoring-label",
+      "scenario": "host-override",
+      "selector": "label[for^=\"field-key-\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-settings/field-settings.component.html",
+          "anchor": "[for]=\"'field-key-' + field.id\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.host-override-control",
+      "name": "Field metadata control under a host override",
+      "section": "Template Designer",
+      "contract": "authoring-control",
+      "scenario": "host-override",
+      "selector": "input[id^=\"field-key-\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-settings/field-settings.component.html",
+          "anchor": "[id]=\"'field-key-' + field.id\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
     }
   ]
 }
