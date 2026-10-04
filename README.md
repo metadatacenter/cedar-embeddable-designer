@@ -496,10 +496,11 @@ highlighting owns a content palette, and the demo host deliberately uses differe
 styles to test embedding. Those are not reasons to duplicate control typography,
 theme colors, focus rings or dialog geometry.
 
-The adoption baseline still contains migration debt: residual utility styles,
-compact toolbar/chip measurements, picker styling and global type rules. It is not
-a list of approved exceptions. Keep resolved entries pruned, document any necessary
+The adoption baseline still contains migration debt: outline, toolbar, glyph and
+badge measurements, sidebar resizing geometry, two stacking indices and one hover
+treatment. The token gate admits no exceptions, so a finding leaves the baseline
+only when a shared role, a recipe or a designer size in the tokens package's
+`spacing` export replaces it. Keep resolved entries pruned, document any necessary
 local rule at its owner, and retain desktop/narrow-width, host-override and real-CEF
-checks. An approved exception covers only its reviewed occurrences; additional
-copies are new drift. Do not substitute an unrelated token merely because its
-current numeric value happens to match.
+checks. Do not substitute an unrelated token merely because its current numeric
+value happens to match.
