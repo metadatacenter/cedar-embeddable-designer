@@ -79,10 +79,7 @@ export class ContainerEditorComponent {
   readonly fieldView = fieldView;
   update(
     changes: Partial<
-      Pick<
-        import('../../core/model/container-draft').ContainerDraft,
-        'name' | 'description' | 'schemaIdentifier' | 'version'
-      >
+      Pick<import('../../core/model/container-draft').ContainerDraft, 'name' | 'description' | 'version'>
     >,
   ): void {
     this.service.updateContainerDefinition(this.container().id, changes);

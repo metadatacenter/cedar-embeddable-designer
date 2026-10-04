@@ -298,10 +298,10 @@ test('template identity keeps the compact authoring header layout', async ({ pag
       return { top: box.top, right: box.right, left: box.left };
     }),
   );
-  expect(boxes).toHaveLength(3);
+  // Name and version share the row; the identifier sits in the Template Metadata tab.
+  expect(boxes).toHaveLength(2);
   expect(Math.max(...boxes.map((box) => box.top)) - Math.min(...boxes.map((box) => box.top))).toBeLessThanOrEqual(1);
   expect(boxes[0].right).toBeLessThanOrEqual(boxes[1].left);
-  expect(boxes[1].right).toBeLessThanOrEqual(boxes[2].left);
   await expect(inputs.first()).toHaveCSS('font-size', '14px');
   await expect(header.locator('.template-header-card__icon')).toBeVisible();
   await expect(header).toHaveCSS('border-top-width', '1px');

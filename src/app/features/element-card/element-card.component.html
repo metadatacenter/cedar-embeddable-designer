@@ -76,6 +76,21 @@
                 <dt>{{ 'settings.previousVersion' | translate }}</dt>
                 <dd>{{ artifact().previousVersion }}</dd>
               }
+              <dt class="editable">
+                <label [for]="'element-identifier-' + node().id">{{ 'containerEditor.identifier' | translate }}</label>
+              </dt>
+              <dd>
+                <input
+                  spellcheck="false"
+                  autocomplete="off"
+                  [id]="'element-identifier-' + node().id"
+                  name="schemaIdentifier"
+                  [ngModel]="node().definition.schemaIdentifier"
+                  (ngModelChange)="
+                    service.updateContainerDefinition(node().definition.id, { schemaIdentifier: $event })
+                  "
+                />
+              </dd>
               <dt class="editable first-line">{{ 'settings.propertyIri' | translate }}</dt>
               <dd>
                 <app-property-picker [iri]="node().placement.propertyIri" (propertySelected)="saveProperty($event)" />

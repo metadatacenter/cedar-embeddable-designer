@@ -25,7 +25,7 @@
       />
     </div>
     <div class="template-header-card__inputs">
-      <!-- Top Row: Name, Identifier, Version -->
+      <!-- Top Row: Name, Version -->
       <div class="template-header-row">
         <div class="template-field-group flex-1">
           <label class="template-field-label">{{ 'containerEditor.name' | translate }}</label>
@@ -58,19 +58,6 @@
           @if (service.nameError(container().id, container().name, container().kind); as error) {
             <p class="ced-field-error" [id]="'name-error-' + container().id">{{ error }}</p>
           }
-        </div>
-
-        <div class="template-field-group w-44">
-          <label class="template-field-label">{{ 'containerEditor.identifier' | translate }}</label>
-          <input
-            spellcheck="false"
-            autocomplete="off"
-            type="text"
-            [ngModel]="container().schemaIdentifier"
-            (ngModelChange)="update({ schemaIdentifier: $event })"
-            class="template-input template-input--fact"
-            [placeholder]="'containerEditor.identifier' | translate"
-          />
         </div>
 
         <div class="template-field-group version-group w-24">
