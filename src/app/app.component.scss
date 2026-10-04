@@ -382,37 +382,36 @@
   margin-top: var(--cedar-space-4);
 }
 
+/* The CEDAR mark, with the name and the build beside it. The text column has a fixed width, so a
+   longer version ellipses within it rather than moving the header. */
 .designer-identity {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: spacing.$designer-identity-width;
+  display: grid;
+  grid-template-columns: spacing.$designer-identity-mark-size spacing.$designer-identity-width;
+  grid-template-rows: 1fr 1fr;
+  @include spacing.apply(gap, compact);
+  column-gap: var(--cedar-space-2);
   min-width: 0;
-  gap: 0;
 }
 .designer-identity > svg {
+  grid-row: 1 / span 2;
   width: spacing.$designer-identity-mark-size;
   height: spacing.$designer-identity-mark-size;
-  flex: none;
   box-shadow: none;
 }
 .designer-identity__name,
 .designer-identity__version {
-  min-width: spacing.$designer-identity-mark-size;
-  max-width: 100%;
-  text-align: center;
+  min-width: 0;
   line-height: var(--cedar-line-height-tight);
 }
 .designer-identity__name {
-  margin-top: var(--cedar-space-1);
+  align-self: end;
   font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-medium);
   color: var(--cedar-text-title);
 }
 
 .designer-identity__version {
-  @include spacing.apply(margin-top, compact);
-  max-width: 100%;
+  align-self: start;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
