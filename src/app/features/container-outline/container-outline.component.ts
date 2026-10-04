@@ -49,7 +49,8 @@ import { TranslatePipe } from '@ngx-translate/core';
             >
               <app-icon
                 key="chevronDown"
-                className="w-3 h-3"
+                size="fill"
+                class="outline-chevron"
                 [style.transform]="service.collapsedElements().has(node.id) ? 'rotate(-90deg)' : ''"
               />
             </button>

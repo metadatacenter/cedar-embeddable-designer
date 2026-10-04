@@ -1,10 +1,16 @@
 @use '@org.metadatacenter/cedar-design-tokens/spacing';
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
 :host {
   display: block;
   min-width: 0;
 }
 :host([hidden]) {
   display: none;
+}
+// The chevron fills its icon element, which takes the outline's own size.
+.outline-chevron {
+  width: spacing.$designer-outline-chevron-size;
+  height: spacing.$designer-outline-chevron-size;
 }
 .outline-toggle {
   display: flex;
@@ -92,7 +98,7 @@ app-container-outline {
   margin-left: var(--cedar-space-3);
 }
 .cdk-drag-placeholder {
-  opacity: 0.25;
+  @include patterns.drag-placeholder;
 }
 .cdk-drag-preview {
   box-sizing: border-box;

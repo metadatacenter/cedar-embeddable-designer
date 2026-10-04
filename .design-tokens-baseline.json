@@ -15,13 +15,6 @@
       "value": "0.5rem",
       "count": 2
     },
-    "268ba3e799f338b5820c": {
-      "file": "src/app/features/container-outline/container-outline.component.ts",
-      "rule": "utility-style",
-      "property": "utility-style",
-      "value": "h-3",
-      "count": 1
-    },
     "26df980f8ce4f59d5183": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
       "rule": "geometry",
@@ -70,13 +63,6 @@
       "property": "height",
       "value": "8px",
       "count": 2
-    },
-    "7228666fb41cf8b8160e": {
-      "file": "src/app/features/container-outline/container-outline.component.scss",
-      "rule": "geometry",
-      "property": "opacity",
-      "value": "0.25",
-      "count": 1
     },
     "8231c0886c09a2f55234": {
       "file": "src/app/app.component.scss",
@@ -139,13 +125,6 @@
       "rule": "typography",
       "property": "line-height",
       "value": "1.6",
-      "count": 1
-    },
-    "f04f7fbf760e651e3081": {
-      "file": "src/app/features/child-picker/child-picker.component.scss",
-      "rule": "geometry",
-      "property": "opacity",
-      "value": "0.3",
       "count": 1
     },
     "fb0df96f25c062f6a2ed": {

@@ -169,5 +169,5 @@ input[type='search'] {
   box-shadow: var(--cedar-shadow-overlay);
 }
 .cdk-drag-placeholder {
-  opacity: 0.3;
+  @include patterns.drag-placeholder;
 }
