@@ -94,6 +94,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
     }
   `,
   styles: `
+    @use '@org.metadatacenter/cedar-design-tokens/patterns';
     .property {
       display: flex;
       align-items: center;
@@ -138,11 +139,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       margin-top: var(--cedar-space-1);
     }
     .remove {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 24px;
-      height: 24px;
+      @include patterns.icon-button;
       color: var(--cedar-color-primary);
       text-decoration: none;
     }

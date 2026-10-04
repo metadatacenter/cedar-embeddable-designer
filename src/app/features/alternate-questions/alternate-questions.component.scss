@@ -61,12 +61,7 @@ td {
   white-space: pre-wrap;
 }
 .remove {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  @include spacing.apply(padding, compact);
+  @include patterns.icon-button;
   border: 0;
   background: transparent;
   color: var(--cedar-color-primary);

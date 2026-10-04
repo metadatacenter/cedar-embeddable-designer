@@ -111,13 +111,7 @@
   position: absolute;
   bottom: var(--cedar-space-1);
   right: var(--cedar-space-1);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  flex: none;
-  padding: 0;
+  @include patterns.icon-button;
   border: 0;
   background: transparent;
   color: var(--cedar-text-muted);

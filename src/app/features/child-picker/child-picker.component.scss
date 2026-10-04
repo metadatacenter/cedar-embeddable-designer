@@ -86,7 +86,7 @@ th {
   font-weight: var(--cedar-font-weight-medium);
   border-bottom: 2px solid var(--cedar-border-rule);
   white-space: nowrap;
-  z-index: 1;
+  z-index: var(--cedar-layer-sticky);
 }
 td {
   height: spacing.$table-row-height;
