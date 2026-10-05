@@ -175,7 +175,8 @@ export class CedarEmbeddableDesignerElementComponent {
         } catch {
           return;
         }
-        this.templateChange.emit(artifact);
+        // Each public channel owns its snapshot, including synchronous subscribers.
+        this.templateChange.emit(structuredClone(artifact));
         this.artifactChange.emit(artifact);
       },
       {
@@ -186,6 +187,6 @@ export class CedarEmbeddableDesignerElementComponent {
   }
 
   private cedarTemplate(): object {
-    return this.service.templateJson();
+    return structuredClone(this.service.templateJson());
   }
 }
