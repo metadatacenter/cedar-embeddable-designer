@@ -209,7 +209,7 @@ it('keys are unique across sibling fields and elements, independently of names a
   const [first, second] = service.fields();
   service.updateFieldName(second.id, first.name);
   expect(service.childKey(first.id)).toBe('Title');
-  expect(service.childKey(second.id)).toBe('Title 2');
+  expect(service.childKey(second.id)).toBe('Title_2');
   expect(service.updateFieldSettings(first.id, { deploymentName: 'subject', displayLabel: 'Label' })).toBeNull();
   expect(service.updateFieldSettings(second.id, { deploymentName: 'subject' })).toContain('already uses');
   expect(service.updateFieldSettings(second.id, { deploymentName: '   ' })).toBe('Key is required.');

@@ -1,6 +1,6 @@
 import { annotationError } from './annotations';
 import { defaultFormatError } from './field-default';
-import { childKeyError, freshChildKey } from './child-key-policy';
+import { childKeys, deploymentKeys, keyedChild } from './child-key-policy';
 import { LocalizedError, Message, Translate, describeError, english, errorParam, message } from '../../i18n/messages';
 import {
   ContainerDraft,
@@ -624,34 +624,6 @@ export function contentKindOf(paletteType: string): 'markup' | 'url' | 'videoId'
   return descriptorOf(paletteType).content;
 }
 
-/**
- * The key a field is deployed under, which must be unique within the template.
- *
- * The field's name, because that is what a CEDAR author sees in the artifact and
- * what the corpus uses. Names are not unique in the designer, so a repeat takes a
- * numeric suffix: the serializer used the raw name and two fields called "Title"
- * silently became one.
- */
-export function deploymentKeys(fields: Pick<Field, 'name' | 'deploymentName'>[]): string[] {
-  const used = new Set<string>();
-  for (const field of fields) {
-    if (field.deploymentName === undefined) continue;
-    const key = field.deploymentName;
-    if (!key.trim()) throw new LocalizedError(message('validation.key.required'));
-    if (used.has(key)) throw new LocalizedError(message('validation.key.duplicate'));
-    used.add(key);
-  }
-  return fields.map((field, index) => {
-    if (field.deploymentName !== undefined) return field.deploymentName;
-    const base = field.name.trim() || `field_${index + 1}`;
-    let key = base;
-    let suffix = 2;
-    while (used.has(key)) key = `${base} ${suffix++}`;
-    used.add(key);
-    return key;
-  });
-}
-
 function buildTemporal(builder: FieldBuilder, field: Field): void {
   const paletteType = field.type;
   const temporal = builder as TemporalFieldBuilder;
@@ -1062,7 +1034,7 @@ function buildContainerArtifact(
 
   const members = children ?? state.fields.map(fieldNode);
   const views = members.map((node) => (node.kind === 'field' ? fieldView(node) : elementView(node)));
-  const keys = deploymentKeys(views);
+  const keys = deploymentKeys(members.map(keyedChild), kind);
   members.forEach((node, index) => {
     const field = views[index];
     const built =
@@ -1570,10 +1542,8 @@ export function choiceDefaultConflict(field: Field, t: Translate = english): str
  * read back.
  */
 function readingKey(field: TemplateField): string {
-  const name = field.schema_name ?? '';
   const attributeValue = field.cedarFieldType === CedarFieldType.ATTRIBUTE_VALUE;
-  if (!childKeyError(name, attributeValue)) return name;
-  return freshChildKey(name, 'field', (key) => !!childKeyError(key, attributeValue));
+  return childKeys([{ name: field.schema_name ?? '', kind: 'field', attributeValue }], 'template')[0];
 }
 
 export function readField(source: string): Field {

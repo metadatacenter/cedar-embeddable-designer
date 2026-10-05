@@ -89,6 +89,34 @@ for (const [label, type] of [
   });
 }
 
+// A name is a label, not a key, so a field may be named as a reserved key and still be saved and reopened.
+for (const name of ['@id', 'schema:name', '__proto__']) {
+  test(`saves and reopens a field named ${name}`, async ({ page }) => {
+    await page.getByRole('button', { name: 'Text', exact: true }).click();
+    const input = page.getByRole('textbox', { name: 'Field display name', exact: true });
+    await input.fill(name);
+    await expect
+      .poll(() =>
+        page.evaluate(() => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).canSave),
+      )
+      .toBe(true);
+    const artifact = await page.evaluate(
+      () => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).currentArtifact!,
+    );
+    expect(artifact['schema:name']).toBe(name);
+    await page.evaluate(
+      (artifact) => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).loadArtifact(artifact),
+      artifact,
+    );
+    await expect(input).toHaveValue(name);
+    expect(
+      await page.evaluate(
+        () => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).currentArtifact,
+      ),
+    ).toEqual(artifact);
+  });
+}
+
 test('preserves a manual collapse during edits and opens settings for the next field', async ({ page }) => {
   await page.getByRole('button', { name: 'Text', exact: true }).click();
   await page.getByRole('button', { name: 'Collapse field settings' }).click();

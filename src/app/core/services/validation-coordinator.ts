@@ -4,8 +4,8 @@ import { Translate } from '../../i18n/messages';
 import { Field, FieldDefaultValue } from '../models/types';
 import { ChildNode, ContainerDraft, fieldNode, fieldView, parentOf, updateContainer } from '../model/container-draft';
 import { artifactNameError, DraftIssues, validateDocument } from '../model/document-validation';
-import { childKeyError } from '../model/child-key-policy';
-import { deploymentKeys, descriptorOf } from '../model/cedar-template';
+import { childKeyError, childKeys, keyedChild } from '../model/child-key-policy';
+import { descriptorOf } from '../model/cedar-template';
 import { reducePrecision } from '../model/precision-change';
 import { EditorSession } from './editor-session';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
@@ -227,19 +227,8 @@ export class ValidationCoordinator {
       parent.kind,
     );
     if (invalid) return invalid;
-    let keys: string[];
-    try {
-      keys = deploymentKeys(
-        parent.children.map((child) => ({
-          name: child.definition.name,
-          deploymentName: child.placement.deploymentName,
-        })),
-      );
-    } catch {
-      keys = parent.children.map(
-        (child, index) => child.placement.deploymentName ?? (child.definition.name.trim() || `field_${index + 1}`),
-      );
-    }
+    // The parent may already hold a blank or repeated key; that is reported elsewhere, so read leniently.
+    const keys = childKeys(parent.children.map(keyedChild), parent.kind);
     return parent.children.some((child, index) => child.id !== id && keys[index] === key)
       ? this.t('validation.key.duplicate')
       : null;

@@ -187,6 +187,19 @@ describe('child keys', () => {
     expectSoundKeys();
   });
 
+  // A child added and not yet named holds a key all the same, and it must be one the policy accepts.
+  it.each(KINDS.flatMap((kind) => (Object.keys(CONTAINERS) as Container[]).map((where) => [kind, where] as const)))(
+    '%s added to %s and left unnamed takes its kind as its key',
+    (kind, where) => {
+      const target = container(CONTAINERS[where]);
+      const first = add(kind, target);
+      const second = add(kind, container(CONTAINERS[where]));
+      const word = kind === 'an element' ? 'element' : 'field';
+      expect([service.childKey(first), service.childKey(second)]).toEqual([word, `${word}_2`]);
+      expectSoundKeys();
+    },
+  );
+
   it.each(cross(NAMES))('%s in %s renamed to %j has its key follow the name', (kind, where, name) => {
     const target = container(CONTAINERS[where]);
     const id = add(kind, target);

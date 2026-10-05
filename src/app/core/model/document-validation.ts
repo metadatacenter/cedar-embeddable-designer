@@ -1,10 +1,10 @@
 import { annotationError } from './annotations';
-import { childKeyError } from './child-key-policy';
+import { childKeyError, childKeys, keyedChild } from './child-key-policy';
 import type { CedValidationIssue, CedValidationReport } from '../../ced-public-api';
 import { ChildNode, ContainerDraft, fieldView } from './container-draft';
 import { elementDisplayName, fieldDisplayName } from './field-display-name';
 import { fieldValidationIssues } from './field-validation';
-import { deploymentKeys, descriptorOf, buildContainer, buildTemplate, allowsOptions } from './cedar-template';
+import { descriptorOf, buildContainer, buildTemplate, allowsOptions } from './cedar-template';
 import { Translate, describeError, english } from '../../i18n/messages';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
 
@@ -111,16 +111,8 @@ export function validateDocument(
       add(container.id, container.name, path, 'artifact', describeError(error, t), SETTINGS_TABS.display, 'model');
     }
 
-    const keyFields = container.children.map((node) => ({
-      name: node.definition.name,
-      deploymentName: node.placement.deploymentName,
-    }));
-    let keys: string[];
-    try {
-      keys = deploymentKeys(keyFields);
-    } catch {
-      keys = keyFields.map((field, index) => field.deploymentName ?? (field.name.trim() || `field_${index + 1}`));
-    }
+    // A blank or repeated key of a child's own is reported below, so the keys are read leniently.
+    const keys = childKeys(container.children.map(keyedChild), container.kind);
     for (const node of container.children) {
       const key = keys[container.children.indexOf(node)];
       const keyError =

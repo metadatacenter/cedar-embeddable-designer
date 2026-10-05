@@ -18,14 +18,13 @@ import {
   findContainer,
 } from '../model/container-draft';
 import { FieldLibraryService } from './field-library.service';
-import { childKeyError, freshChildKey } from '../model/child-key-policy';
+import { childKeys, deploymentKeys, freshChildKey, keyedChild } from '../model/child-key-policy';
 import { CedLanguageService } from '../../i18n/ced-language.service';
 import { LocalizedError, message } from '../../i18n/messages';
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { Field, FieldDefaultValue, CustomField, ControlledTermSet, UserPreferences } from '../models/types';
 import { PreferencesService } from './preferences.service';
 import {
-  deploymentKeys,
   newFieldIdentity,
   newTemplateIdentifier,
   readContainer,
@@ -112,9 +111,10 @@ export class TemplateService {
   private readonly automaticFieldNames = new Set<number>();
 
   private generatedKey(id: number, name: string): string {
-    // A name no suffix can repair falls back to the child's own kind, as an imported child's does.
-    const node = parentOf(this.session.document(), id)?.children.find((child) => child.id === id);
-    return freshChildKey(name, node?.kind === 'element' ? 'element' : 'field', (key) => !!this.keyError(id, key));
+    const parent = parentOf(this.session.document(), id);
+    const node = parent?.children.find((child) => child.id === id);
+    const child = node ? keyedChild(node) : { kind: 'field' as const, attributeValue: false };
+    return freshChildKey(name, child, parent?.kind ?? 'template', (key) => !!this.keyError(id, key));
   }
 
   // Inject PreferencesService
@@ -531,12 +531,7 @@ export class TemplateService {
     const search = (container: ContainerDraft, prefix: string[]): string[] | null => {
       let keys: string[];
       try {
-        keys = deploymentKeys(
-          container.children.map((node) => ({
-            name: node.definition.name,
-            deploymentName: node.placement.deploymentName,
-          })),
-        );
+        keys = deploymentKeys(container.children.map(keyedChild), container.kind);
       } catch {
         return null;
       }
@@ -554,13 +549,9 @@ export class TemplateService {
   }
 
   childKey(id: number): string {
-    const siblings = parentOf(this.session.document(), id)?.children ?? [];
-    const keys = deploymentKeys(
-      siblings.map((node) => ({
-        name: node.definition.name,
-        deploymentName: node.placement.deploymentName,
-      })),
-    );
+    const parent = parentOf(this.session.document(), id);
+    const siblings = parent?.children ?? [];
+    const keys = deploymentKeys(siblings.map(keyedChild), parent?.kind ?? 'template');
     return keys[siblings.findIndex((node) => node.id === id)] ?? '';
   }
 
@@ -738,14 +729,9 @@ export class TemplateService {
     }
     this.loadError.set(null);
     if (namePlacement) {
-      // The key must satisfy the same policy a rename does, here in the container the child joins.
-      const used = new Set(target.children.map((child) => this.childKey(child.id)));
-      const attributeValue = node.kind === 'field' && node.definition.type === 'attributeValue';
-      const name = freshChildKey(
-        childName(node),
-        node.kind === 'element' ? 'element' : 'field',
-        (key) => used.has(key) || !!childKeyError(key, attributeValue, undefined, target.kind),
-      );
+      // The key a rename would give it, in the container the child joins.
+      const used = new Set(childKeys(target.children.map(keyedChild), target.kind));
+      const name = freshChildKey(childName(node), keyedChild(node), target.kind, (key) => used.has(key));
       if (node.kind === 'field') {
         node = { ...node, placement: { ...node.placement, deploymentName: name } };
       } else {
