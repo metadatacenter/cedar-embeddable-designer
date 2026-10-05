@@ -408,7 +408,7 @@ export class TemplateService {
   }
 
   deleteField(id: number) {
-    if (this.isPublished(id)) return;
+    if (!this.validation.canEdit(id)) return;
     this.fieldsFor(id).update((prev) => prev.filter((f) => f.id !== id));
     this.pruneCollapsed();
     if (this.selectedField() === id) {
@@ -444,7 +444,7 @@ export class TemplateService {
   }
 
   updateFieldName(id: number, name: string) {
-    if (this.isPublished(id)) return;
+    if (!this.validation.canEdit(id)) return;
     const deploymentName = this.automaticKeys.has(id) ? this.generatedKey(id, name) : undefined;
     this.fieldsFor(id).update((prev) =>
       prev.map((f) => (f.id === id ? { ...f, name, ...(deploymentName ? { deploymentName } : {}) } : f)),
@@ -452,13 +452,13 @@ export class TemplateService {
   }
 
   updateFieldStatus(id: number, status: string) {
-    if (this.isPublished(id)) return;
+    if (!this.validation.canEdit(id)) return;
     this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, status } : f)));
   }
 
   updateOption(fieldId: number, optionIndex: number, value: string) {
     this.touchOption(fieldId, optionIndex);
-    if (this.isPublished(fieldId)) return;
+    if (!this.validation.canEdit(fieldId)) return;
     this.fieldsFor(fieldId).update((prev) =>
       prev.map((f) => {
         if (f.id === fieldId) {
@@ -478,7 +478,7 @@ export class TemplateService {
   }
 
   addOption(fieldId: number) {
-    if (this.isPublished(fieldId)) return;
+    if (!this.validation.canEdit(fieldId)) return;
     this.fieldsFor(fieldId).update((prev) =>
       prev.map((f) => {
         if (f.id === fieldId) {
@@ -497,7 +497,7 @@ export class TemplateService {
 
   deleteOption(fieldId: number, optionIndex: number) {
     this.touchOption(fieldId, optionIndex);
-    if (this.isPublished(fieldId)) return;
+    if (!this.validation.canEdit(fieldId)) return;
     this.fieldsFor(fieldId).update((prev) =>
       prev.map((f) => {
         if (f.id === fieldId) {
@@ -573,24 +573,24 @@ export class TemplateService {
   }
 
   toggleAllowMultiple(id: number) {
-    if (this.isPublished(id)) return;
+    if (!this.validation.canEdit(id)) return;
     const multiple = !this.fieldsFor(id)().find((field) => field.id === id)?.allowMultiple;
     this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, allowMultiple: multiple } : f)));
   }
 
   /** The one value a static field shows. */
   updateContent(id: number, content: string) {
-    if (this.isPublished(id)) return;
+    if (!this.validation.canEdit(id)) return;
     this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, content } : f)));
   }
 
   updateHelpText(id: number, helpText: string) {
-    if (this.isPublished(id)) return;
+    if (!this.validation.canEdit(id)) return;
     this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, helpText } : f)));
   }
 
   updateControlledTermConstraints(id: number, constraints: ControlledTermSet) {
-    if (this.isPublished(id)) return;
+    if (!this.validation.canEdit(id)) return;
     this.fieldsFor(id).update((prev) =>
       prev.map((f) => (f.id === id ? { ...f, controlledTermConstraints: constraints } : f)),
     );

@@ -56,6 +56,9 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
  * change-detection hook. Controls keep input buffers, not independent verdicts.
  */
 export class ValidationCoordinator {
+  private readonly locked = signal(false);
+  readonly readOnly = this.locked.asReadonly();
+  private editabilityRevision = 0;
   private readonly edits = signal<Record<string, Edit>>({});
   private readonly inputErrors = signal<
     Record<string, { message: string; tab: string; value?: string | FieldDefaultValue }>
@@ -101,6 +104,7 @@ export class ValidationCoordinator {
       : this.modelReport();
     return {
       ...report,
+      canSave: !this.readOnly() && report.canSave,
       issues: report.issues.map((issue) => ({
         ...issue,
         shown:
@@ -110,6 +114,19 @@ export class ValidationCoordinator {
       })),
     };
   });
+
+  setReadOnly(value: boolean): void {
+    if (value === this.readOnly()) return;
+    this.editabilityRevision++;
+    this.locked.set(value);
+    this.checks.set({});
+  }
+  canEdit(id: number): boolean {
+    const node = nodeOf(this.session.document(), id);
+    return (
+      !this.readOnly() && !!node && !('kind' in node && node.kind === 'field' && node.definition.publishedDefinition)
+    );
+  }
 
   reset(touched: number[] = []): void {
     this.edits.set({});
@@ -171,11 +188,13 @@ export class ValidationCoordinator {
   }
   beginCheck(id: number, setting: string, message: string, tab = 'Constraints'): ValidationCheck {
     const node = nodeOf(this.session.document(), id);
-    if (!node) return { active: () => false, unchanged: () => false, cancel: () => {} };
+    if (!node || !this.canEdit(id)) return { active: () => false, unchanged: () => false, cancel: () => {} };
+    const revision = this.editabilityRevision;
     const key = keyOf(id, setting);
     const check = { id, node, message, tab };
     this.checks.update((previous) => ({ ...previous, [key]: check }));
-    const unchanged = () => nodeOf(this.session.document(), id) === node;
+    const unchanged = () =>
+      revision === this.editabilityRevision && this.canEdit(id) && nodeOf(this.session.document(), id) === node;
     return {
       active: () => this.checks()[key] === check && unchanged(),
       unchanged,
@@ -204,6 +223,7 @@ export class ValidationCoordinator {
     );
   }
   submit(id: number, changes: Partial<Field>, setting: string, tab: string): string | null {
+    if (this.readOnly()) return this.t('fieldElement.readOnly');
     if (!parentOf(this.session.document(), id)) return this.t('errors.elementMissing');
     // A new editing intent supersedes checks of the previous field, even if
     // this edit is held as a draft instead of changing the accepted document.
@@ -308,6 +328,7 @@ export class ValidationCoordinator {
       if (!available(Number(id), setting)) delete inputs[key];
     }
     const commit = (id: number, changes: Partial<Field>): boolean => {
+      if (this.readOnly()) return false;
       const result = this.candidate(document, id, changes);
       if (result.error || !result.node) return false;
       const parent = parentOf(document, id)!;
