@@ -279,6 +279,14 @@ possible, loading the distribution and nothing else.
 
 ## Testing
 
+The model adapter's public facade is `src/app/core/model/cedar-template.ts`.
+Its implementations under `core/model/cedar-model/` separate capabilities,
+metadata, terminology conversion, field writing, container writing and reading.
+Only that module imports the CEDAR model library. Implementations use each other
+directly rather than importing their facade; the key policy uses a leaf adapter
+for reserved names. `test:boundaries` enforces the library boundary and rejects
+dependency cycles reachable from the adapter.
+
 | Command                  | What it does                                                        |
 | ------------------------ | ------------------------------------------------------------------- |
 | `npm test`               | unit tests, through the Angular CLI's Vitest builder                |

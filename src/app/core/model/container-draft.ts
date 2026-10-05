@@ -1,5 +1,5 @@
 import type { Field } from '../models/types';
-import type { ContainerMetadata, DesignerTemplate } from './cedar-template';
+import type { ContainerMetadata, DesignerTemplate } from './cedar-model/types';
 import { LocalizedError, message } from '../../i18n/messages';
 import { childKeyError } from './child-key-policy';
 

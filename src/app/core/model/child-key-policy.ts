@@ -1,4 +1,4 @@
-import { AttributeValueFieldParent, ReservedNames } from './cedar-template';
+import { AttributeValueFieldParent, ReservedNames } from './cedar-model/reserved-names';
 import type { ChildNode } from './container-draft';
 import { LocalizedError, Translate, english, message } from '../../i18n/messages';
 
