@@ -178,10 +178,15 @@ app-icon {
   @include spacing.apply(padding-bottom, compact);
   min-width: 0;
   background: transparent;
-  border-bottom-width: 2px;
-  border-bottom-color: var(--cedar-border-rule);
+  // An unnamed field shows a line beneath its name to write on, in primary while the card is
+  // selected. A background draws it rather than a border, so the line adds no height and the name
+  // does not move when the first character takes the line away.
+  --unnamed-line: var(--cedar-border-rule);
   &.selected {
-    border-bottom-color: var(--cedar-color-primary);
+    --unnamed-line: var(--cedar-color-primary);
+  }
+  &:placeholder-shown {
+    background: linear-gradient(var(--unnamed-line), var(--unnamed-line)) bottom / 100% 2px no-repeat;
   }
 }
 /*
