@@ -17,11 +17,13 @@ interface Edit {
   changes: Partial<Field>;
 }
 export interface ValidationCheck {
+  readonly signal: AbortSignal;
   active(): boolean;
   unchanged(): boolean;
   cancel(): void;
 }
 interface PendingCheck {
+  controller: AbortController;
   id: number;
   node: ChildNode | ContainerDraft;
   message: string;
@@ -119,7 +121,7 @@ export class ValidationCoordinator {
     if (value === this.readOnly()) return;
     this.editabilityRevision++;
     this.locked.set(value);
-    this.checks.set({});
+    this.replaceChecks({});
   }
   canEdit(id: number): boolean {
     const node = nodeOf(this.session.document(), id);
@@ -131,7 +133,7 @@ export class ValidationCoordinator {
   reset(touched: number[] = []): void {
     this.edits.set({});
     this.inputErrors.set({});
-    this.checks.set({});
+    this.replaceChecks({});
     this.touchedNames.set(new Set(touched));
     this.quietOptions.set(new Set());
   }
@@ -171,7 +173,7 @@ export class ValidationCoordinator {
     });
     if (message) {
       this.discardEdit(key);
-      this.checks.update((checks) => Object.fromEntries(Object.entries(checks).filter(([, check]) => check.id !== id)));
+      this.replaceChecks(Object.fromEntries(Object.entries(this.checks()).filter(([, check]) => check.id !== id)));
     }
   }
   private discardEdit(key: string): void {
@@ -188,23 +190,30 @@ export class ValidationCoordinator {
   }
   beginCheck(id: number, setting: string, message: string, tab = 'Constraints'): ValidationCheck {
     const node = nodeOf(this.session.document(), id);
-    if (!node || !this.canEdit(id)) return { active: () => false, unchanged: () => false, cancel: () => {} };
+    if (!node || !this.canEdit(id))
+      return { signal: AbortSignal.abort(), active: () => false, unchanged: () => false, cancel: () => {} };
     const revision = this.editabilityRevision;
     const key = keyOf(id, setting);
-    const check = { id, node, message, tab };
-    this.checks.update((previous) => ({ ...previous, [key]: check }));
+    const check = { id, node, message, tab, controller: new AbortController() };
+    this.replaceChecks({ ...this.checks(), [key]: check });
     const unchanged = () =>
       revision === this.editabilityRevision && this.canEdit(id) && nodeOf(this.session.document(), id) === node;
     return {
+      signal: check.controller.signal,
       active: () => this.checks()[key] === check && unchanged(),
       unchanged,
       cancel: () => {
         if (this.checks()[key] !== check) return;
         const next = { ...this.checks() };
         delete next[key];
-        this.checks.set(next);
+        this.replaceChecks(next);
       },
     };
+  }
+  private replaceChecks(next: Record<string, PendingCheck>): void {
+    const previous = this.checks();
+    this.checks.set(next);
+    for (const [key, check] of Object.entries(previous)) if (next[key] !== check) check.controller.abort();
   }
   isChecking(id: number, setting: string): boolean {
     return !!this.checks()[keyOf(id, setting)];
@@ -227,7 +236,7 @@ export class ValidationCoordinator {
     if (!parentOf(this.session.document(), id)) return this.t('errors.elementMissing');
     // A new editing intent supersedes checks of the previous field, even if
     // this edit is held as a draft instead of changing the accepted document.
-    this.checks.update((checks) => Object.fromEntries(Object.entries(checks).filter(([, check]) => check.id !== id)));
+    this.replaceChecks(Object.fromEntries(Object.entries(this.checks()).filter(([, check]) => check.id !== id)));
     const key = keyOf(id, setting);
     this.setInputError(id, setting, null, tab);
     this.edits.update((previous) => ({ ...previous, [key]: { id, changes: structuredClone(changes), setting, tab } }));
@@ -362,7 +371,7 @@ export class ValidationCoordinator {
     if (!same(this.inputErrors(), inputs)) this.inputErrors.set(inputs);
     for (const [key, check] of Object.entries(checks))
       if (nodeOf(document, check.id) !== check.node) delete checks[key];
-    if (Object.keys(this.checks()).length !== Object.keys(checks).length) this.checks.set(checks);
+    if (Object.keys(this.checks()).length !== Object.keys(checks).length) this.replaceChecks(checks);
     return document;
   }
 }

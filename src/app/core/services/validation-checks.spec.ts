@@ -22,6 +22,7 @@ describe('asynchronous validation lifetime matrix', () => {
         if (transition === 'load') service.loadTemplate(saved);
         if (transition === 'reset') service.resetTemplate();
         expect(check.active()).toBe(false);
+        expect(check.signal.aborted).toBe(true);
         expect(service.validationReport().issues.some((issue) => issue.message === 'Checking')).toBe(false);
         const nextId = service.fields()[0].id;
         const next = service.validation.beginCheck(nextId, setting, 'New check');
@@ -38,10 +39,13 @@ describe('asynchronous validation lifetime matrix', () => {
       const first = service.validation.beginCheck(id, setting, 'First');
       service.updateFieldName(service.fields()[1].id, 'Other field');
       expect(first.active()).toBe(true);
+      expect(first.signal.aborted).toBe(false);
       const second = service.validation.beginCheck(id, setting, 'Second');
       expect(first.active()).toBe(false);
+      expect(first.signal.aborted).toBe(true);
       first.cancel();
       expect(second.active()).toBe(true);
+      expect(second.signal.aborted).toBe(false);
       second.cancel();
       expect(service.validationReport().canSave).toBe(true);
     });

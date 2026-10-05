@@ -5,6 +5,13 @@ import { LocalizedError, message } from '../../i18n/messages';
 
 /** How deep a default check reads before it gives up and reports the term as unverified. */
 const MEMBERSHIP_CHECK_DEPTH = 5_000;
+const LOOKUP_TIMEOUT_MS = 30_000;
+
+function checkAborted(signal: AbortSignal | null | undefined): void {
+  if (!signal?.aborted) return;
+  if (signal.reason?.name === 'TimeoutError') throw new LocalizedError(message('terminology.timedOut'));
+  signal.throwIfAborted();
+}
 
 /**
  * The terminology server's search route, under whatever base a host names.
@@ -54,14 +61,19 @@ async function answer(
 ): Promise<unknown> {
   let response: Response;
   try {
+    checkAborted(init.signal);
     response = await fetch(input, init);
   } catch (error) {
+    checkAborted(init.signal);
     throw new LocalizedError(message('terminology.unreachable'), { cause: error });
   }
   if (!response.ok) throw new LocalizedError(refused(response));
   try {
-    return await response.json();
+    const body: unknown = await response.json();
+    checkAborted(init.signal);
+    return body;
   } catch (error) {
+    checkAborted(init.signal);
     throw new LocalizedError(message('terminology.unreadable'), { cause: error });
   }
 }
@@ -95,15 +107,18 @@ export class TerminologyService {
    * Check membership with the same constrained endpoint that supplies CEE's values, walking its pages
    * by offset until the term turns up, a page comes back short, or the server's count is reached.
    */
-  async allowsDefault(field: CeeTemplateObject, iri: string, label: string): Promise<boolean> {
+  async allowsDefault(field: CeeTemplateObject, iri: string, label: string, signal?: AbortSignal): Promise<boolean> {
     const base = this.baseUrl();
     if (!base) throw new LocalizedError(message('terminology.notConfigured'));
     const limit = 50;
+    const deadline = AbortSignal.timeout(LOOKUP_TIMEOUT_MS);
+    const lifetime = signal ? AbortSignal.any([signal, deadline]) : deadline;
     for (let offset = 0; offset < MEMBERSHIP_CHECK_DEPTH; offset += limit) {
       const result = (await answer(
         `${base}bioportal/integrated-search`,
         {
           method: 'POST',
+          signal: lifetime,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             parameterObject: { inputText: label, valueConstraints: field['_valueConstraints'] },
@@ -158,8 +173,11 @@ export class TerminologyService {
      * gate turned a working search off, and the 401 and 403 branches beneath it
      * were unreachable. CEE reaches the same server the same way.
      */
-    const body = await answer(url, { method: 'GET', headers: { Accept: 'application/json' } }, (response) =>
-      message('terminology.answered', { status: String(response.status), statusText: response.statusText }),
+    const body = await answer(
+      url,
+      { method: 'GET', signal: AbortSignal.timeout(LOOKUP_TIMEOUT_MS), headers: { Accept: 'application/json' } },
+      (response) =>
+        message('terminology.answered', { status: String(response.status), statusText: response.statusText }),
     );
     const collection = (body as { collection?: unknown })?.collection;
     if (!Array.isArray(collection)) {

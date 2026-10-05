@@ -155,6 +155,7 @@ export class ControlledTermConfigComponent implements OnChanges {
             artifact,
             field.defaultValue.iri,
             field.defaultValue.label ?? field.defaultValue.iri,
+            check.signal,
           ));
         if (this.pending !== attempt || !attempt.check.active()) return;
         if (!allowed) {

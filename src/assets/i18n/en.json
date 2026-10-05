@@ -530,7 +530,8 @@
     "answered": "The terminology server answered {{status}} {{statusText}}.",
     "noResultsCollection": "The terminology server returned no results collection.",
     "unreachable": "The terminology server could not be reached. Check your connection and try again.",
-    "unreadable": "The terminology server sent an answer the designer cannot read. Try again."
+    "unreadable": "The terminology server sent an answer the designer cannot read. Try again.",
+    "timedOut": "The terminology lookup took too long. Try again."
   },
   "outline": {
     "errors": {

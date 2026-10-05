@@ -176,6 +176,48 @@ describe('TerminologyService', () => {
 
     beforeEach(() => service.configure({ terminologyBaseUrl: 'https://terminology.example.org/' }));
 
+    it('stops pagination after cancellation even if the transport completes its old request', async () => {
+      const controller = new AbortController();
+      let reply!: (response: Response) => void;
+      const fetcher = vi.fn().mockImplementation(
+        () =>
+          new Promise<Response>((done) => {
+            reply = done;
+          }),
+      );
+      globalThis.fetch = fetcher;
+      const pending = service.allowsDefault(field, 'urn:chosen', 'cancer', controller.signal);
+      const verdict = expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+      expect(fetcher.mock.calls[0][1].signal.aborted).toBe(false);
+      controller.abort();
+      expect(fetcher.mock.calls[0][1].signal.aborted).toBe(true);
+      reply(
+        new Response(JSON.stringify({ collection: Array.from({ length: 50 }, (_, i) => ({ '@id': `urn:${i}` })) })),
+      );
+      await verdict;
+      expect(fetcher).toHaveBeenCalledTimes(1);
+    });
+
+    it('reports expiration of the whole lookup deadline as a retryable timeout', async () => {
+      const deadline = new AbortController();
+      const timeout = vi.spyOn(AbortSignal, 'timeout').mockReturnValue(deadline.signal);
+      globalThis.fetch = vi.fn(
+        (_input, init) =>
+          new Promise<Response>((_resolve, reject) => {
+            init?.signal?.addEventListener('abort', () => reject(init.signal!.reason), { once: true });
+          }),
+      );
+      try {
+        const pending = service.allowsDefault(field, 'urn:chosen', 'cancer');
+        const verdict = expect(pending).rejects.toThrow('The terminology lookup took too long. Try again.');
+        expect(timeout).toHaveBeenCalledWith(30_000);
+        deadline.abort(new DOMException('Expired', 'TimeoutError'));
+        await verdict;
+      } finally {
+        timeout.mockRestore();
+      }
+    });
+
     it('checks every result page with the full field constraints', async () => {
       const bodies: Record<string, unknown>[] = [];
       globalThis.fetch = (async (_input, init) => {

@@ -530,7 +530,8 @@
     "answered": "A terminológiai kiszolgáló válasza: {{status}} {{statusText}}.",
     "noResultsCollection": "A terminológiai kiszolgáló nem adott vissza találati gyűjteményt.",
     "unreachable": "A terminológiai kiszolgáló nem érhető el. Ellenőrizze a kapcsolatot, és próbálja újra.",
-    "unreadable": "A terminológiai kiszolgáló olyan választ küldött, amelyet a tervező nem tud értelmezni. Próbálja újra."
+    "unreadable": "A terminológiai kiszolgáló olyan választ küldött, amelyet a tervező nem tud értelmezni. Próbálja újra.",
+    "timedOut": "A terminológiai lekérdezés túl sokáig tartott. Próbálja újra."
   },
   "outline": {
     "errors": {

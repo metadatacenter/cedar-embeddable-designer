@@ -280,6 +280,7 @@ export class FieldDefaultValueComponent {
         fieldToJson({ ...field, defaultValue: { kind: 'none' }, importedChoiceDefault: undefined }),
         picked.termIri,
         picked.termLabel,
+        attempt.signal,
       );
       // A response for a field the author has since changed cannot set its default.
       if (this.destroyRef.destroyed || this.pending !== attempt || !attempt.active()) return;
