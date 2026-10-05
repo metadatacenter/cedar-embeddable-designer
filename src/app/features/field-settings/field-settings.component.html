@@ -52,7 +52,7 @@
                   min="0"
                   step="1"
                   [(ngModel)]="text.minLength"
-                  (ngModelChange)="saveText(textForm)"
+                  (ngModelChange)="saveText(textForm, 'minLength')"
               /></label>
               <label
                 >{{ 'fieldSettings.text.maxLength' | translate
@@ -64,7 +64,7 @@
                   min="0"
                   step="1"
                   [(ngModel)]="text.maxLength"
-                  (ngModelChange)="saveText(textForm)"
+                  (ngModelChange)="saveText(textForm, 'maxLength')"
               /></label>
               @if (accepts('textPattern')) {
                 <label
@@ -75,7 +75,7 @@
                     class="wide"
                     name="regex"
                     [(ngModel)]="text.regex"
-                    (ngModelChange)="saveText(textForm)"
+                    (ngModelChange)="saveText(textForm, 'regex')"
                     [placeholder]="'fieldSettings.text.regexPlaceholder' | translate"
                 /></label>
               }
@@ -100,7 +100,7 @@
                   name="numericType"
                   [attr.aria-label]="'fieldSettings.numeric.datatype' | translate"
                   [(ngModel)]="numeric.type"
-                  (ngModelChange)="saveNumeric(numericForm)"
+                  (ngModelChange)="saveNumeric(numericForm, 'numericType')"
                 >
                   @for (type of numericTypes; track type) {
                     <option [value]="type">{{ type }}</option>
@@ -116,7 +116,7 @@
                   type="number"
                   step="any"
                   [(ngModel)]="numeric.min"
-                  (ngModelChange)="saveNumeric(numericForm)"
+                  (ngModelChange)="saveNumeric(numericForm, 'numericMin')"
               /></label>
               <label
                 >{{ 'fieldSettings.numeric.max' | translate
@@ -127,7 +127,7 @@
                   type="number"
                   step="any"
                   [(ngModel)]="numeric.max"
-                  (ngModelChange)="saveNumeric(numericForm)"
+                  (ngModelChange)="saveNumeric(numericForm, 'numericMax')"
               /></label>
               <div class="numeric-default" role="group" [attr.aria-labelledby]="'numeric-default-label-' + field.id">
                 <span class="default-label" [id]="'numeric-default-label-' + field.id">{{
@@ -145,7 +145,7 @@
                   min="0"
                   step="1"
                   [(ngModel)]="numeric.decimalPlaces"
-                  (ngModelChange)="saveNumeric(numericForm)"
+                  (ngModelChange)="saveNumeric(numericForm, 'decimalPlaces')"
               /></label>
               <label
                 >{{ 'fieldSettings.numeric.unit' | translate
@@ -154,7 +154,7 @@
                   autocomplete="off"
                   name="unit"
                   [(ngModel)]="numeric.unit"
-                  (ngModelChange)="saveNumeric(numericForm)"
+                  (ngModelChange)="saveNumeric(numericForm, 'unit')"
                   [placeholder]="'fieldSettings.numeric.unitPlaceholder' | translate"
               /></label>
             </fieldset>
@@ -248,7 +248,7 @@
                   min="1"
                   step="1"
                   [(ngModel)]="width"
-                  (ngModelChange)="saveMedia(mediaForm)"
+                  (ngModelChange)="saveMedia(mediaForm, 'width')"
                   [placeholder]="'fieldSettings.media.automatic' | translate"
               /></label>
               <label
@@ -261,7 +261,7 @@
                   min="1"
                   step="1"
                   [(ngModel)]="height"
-                  (ngModelChange)="saveMedia(mediaForm)"
+                  (ngModelChange)="saveMedia(mediaForm, 'height')"
                   [placeholder]="'fieldSettings.media.automatic' | translate"
               /></label>
             </fieldset>
@@ -293,7 +293,7 @@
               min="0"
               step="1"
               [(ngModel)]="min"
-              (ngModelChange)="saveBounds(boundsForm)"
+              (ngModelChange)="saveBounds(boundsForm, 'min')"
               [placeholder]="'settings.minOccurrencesPlaceholder' | translate"
           /></label>
           <label
@@ -306,7 +306,7 @@
               min="0"
               step="1"
               [(ngModel)]="max"
-              (ngModelChange)="saveBounds(boundsForm)"
+              (ngModelChange)="saveBounds(boundsForm, 'max')"
               [placeholder]="'settings.unlimited' | translate"
           /></label>
         </fieldset>

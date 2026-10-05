@@ -9,6 +9,7 @@ import { descriptorOf } from '../model/cedar-template';
 import { reducePrecision } from '../model/precision-change';
 import { EditorSession } from './editor-session';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
+import type { SettingsInputDraft } from '../../shared/settings-input';
 
 interface Edit {
   id: number;
@@ -63,7 +64,7 @@ export class ValidationCoordinator {
   private editabilityRevision = 0;
   private readonly edits = signal<Record<string, Edit>>({});
   private readonly inputErrors = signal<
-    Record<string, { message: string; tab: string; value?: string | FieldDefaultValue }>
+    Record<string, { message: string; tab: string; value?: string | FieldDefaultValue; settings?: SettingsInputDraft }>
   >({});
   private readonly checks = signal<Record<string, PendingCheck>>({});
   private readonly touchedNames = signal<ReadonlySet<number>>(new Set());
@@ -163,11 +164,18 @@ export class ValidationCoordinator {
     message: string | null,
     tab: string,
     value?: string | FieldDefaultValue,
+    settings?: SettingsInputDraft,
   ): void {
     const key = keyOf(id, setting);
     this.inputErrors.update((previous) => {
       const next = { ...previous };
-      if (message) next[key] = { message, tab, ...(value === undefined ? {} : { value: structuredClone(value) }) };
+      if (message)
+        next[key] = {
+          message,
+          tab,
+          ...(value === undefined ? {} : { value: structuredClone(value) }),
+          ...(settings ? { settings: structuredClone(settings) } : {}),
+        };
       else delete next[key];
       return same(previous, next) ? previous : next;
     });
@@ -187,6 +195,9 @@ export class ValidationCoordinator {
   }
   inputError(id: number, setting: string): string | null {
     return this.inputErrors()[keyOf(id, setting)]?.message ?? null;
+  }
+  settingsInput(id: number, setting: string): SettingsInputDraft | undefined {
+    return structuredClone(this.inputErrors()[keyOf(id, setting)]?.settings);
   }
   beginCheck(id: number, setting: string, message: string, tab = 'Constraints'): ValidationCheck {
     const node = nodeOf(this.session.document(), id);
@@ -228,6 +239,9 @@ export class ValidationCoordinator {
         ...Object.values(this.edits())
           .filter((edit) => edit.id === id)
           .map((edit) => edit.changes),
+        ...Object.entries(this.inputErrors())
+          .filter(([key]) => key.startsWith(`${id}:`))
+          .map(([, input]) => input.settings?.changes ?? {}),
       ),
     );
   }

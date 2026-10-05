@@ -1,3 +1,4 @@
+import { invalidSettingsInputs } from '../../shared/settings-input';
 import { publicationStatusLabel } from '../../shared/publication-status';
 import { fieldDisplayName } from '../../core/model/field-display-name';
 import { IconComponent } from '../../shared/components/icon/icon.component';
@@ -147,24 +148,6 @@ export class FieldSettingsComponent implements OnChanges {
   height: number | null = null;
   min: number | null = null;
   max: number | null = null;
-  private report(tab: string, message: string | null): void {
-    this.service.setSettingsError(
-      this.field.id,
-      tab === 'Constraints'
-        ? this.accepts('numericBounds')
-          ? 'numeric'
-          : this.accepts('textLength')
-            ? 'textConstraints'
-            : 'temporal'
-        : tab === 'Occurrences'
-          ? 'occurrences'
-          : tab === 'Content'
-            ? 'media'
-            : 'display',
-      message,
-      tab,
-    );
-  }
   private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
   private readonly changeDetector = inject(ChangeDetectorRef);
   constructor() {
@@ -278,14 +261,25 @@ export class FieldSettingsComponent implements OnChanges {
     this.max = take('max', this.max, editing.maxItems ?? null, first || !this.multiple);
   }
 
-  private badInput(form: HTMLFormElement | undefined, tab: string): boolean {
-    const invalid = form && Array.from(form.querySelectorAll('input')).find((input) => input.validity.badInput);
-    if (!invalid) return false;
-    this.report(
-      tab,
+  private badInput(
+    form: HTMLFormElement | undefined,
+    setting: string,
+    tab: string,
+    changes: Partial<Field>,
+    changed?: string,
+  ): boolean {
+    const previous = this.service.validation.settingsInput(this.field.id, setting);
+    const invalid = invalidSettingsInputs(form, previous?.invalid, changed);
+    if (!Object.keys(invalid).length) return false;
+    this.service.validation.setInputError(
+      this.field.id,
+      setting,
       this.i18n.t('settings.invalidNumber', {
-        label: invalid.closest('label')?.textContent?.trim() || this.i18n.t('settings.value'),
+        label: Object.values(invalid)[0] || this.i18n.t('settings.value'),
       }),
+      tab,
+      undefined,
+      { changes, invalid },
     );
     return true;
   }
@@ -304,8 +298,8 @@ export class FieldSettingsComponent implements OnChanges {
   saveProperty(iri: string): void {
     this.service.updateFieldSettings(this.field.id, { propertyIri: iri });
   }
-  saveMedia(form?: HTMLFormElement): void {
-    if (this.badInput(form, 'Content')) return;
+  saveMedia(form?: HTMLFormElement, changed?: string): void {
+    if (this.badInput(form, 'media', 'Content', { width: this.width, height: this.height }, changed)) return;
     this.service.updateFieldSettings(this.field.id, { width: this.width, height: this.height });
   }
   saveTemporal(): void {
@@ -314,12 +308,12 @@ export class FieldSettingsComponent implements OnChanges {
       type: this.temporal.type === 'xsd:time' ? 'time' : 'date',
     });
   }
-  saveNumeric(form?: HTMLFormElement): void {
-    if (this.badInput(form, 'Constraints')) return;
+  saveNumeric(form?: HTMLFormElement, changed?: string): void {
+    if (this.badInput(form, 'numeric', 'Constraints', { numeric: { ...this.numeric } }, changed)) return;
     this.service.updateFieldSettings(this.field.id, { numeric: { ...this.numeric, unit: this.numeric.unit || null } });
   }
-  saveText(form?: HTMLFormElement): void {
-    if (this.badInput(form, 'Constraints')) return;
+  saveText(form?: HTMLFormElement, changed?: string): void {
+    if (this.badInput(form, 'textConstraints', 'Constraints', { textConstraints: { ...this.text } }, changed)) return;
     this.service.updateFieldSettings(this.field.id, {
       textConstraints: { ...this.text, regex: this.accepts('textPattern') ? this.text.regex || null : null },
     });
@@ -337,8 +331,8 @@ export class FieldSettingsComponent implements OnChanges {
       continuePreviousLine: this.continuePreviousLine,
     });
   }
-  saveBounds(form?: HTMLFormElement): void {
-    if (this.badInput(form, 'Occurrences')) return;
+  saveBounds(form?: HTMLFormElement, changed?: string): void {
+    if (this.badInput(form, 'occurrences', 'Occurrences', { minItems: this.min, maxItems: this.max }, changed)) return;
     this.service.updateFieldSettings(this.field.id, { minItems: this.min, maxItems: this.max });
   }
 }

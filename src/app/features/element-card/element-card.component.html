@@ -142,7 +142,8 @@
                     step="1"
                     [placeholder]="'settings.minOccurrencesPlaceholder' | translate"
                     [(ngModel)]="draft().minItems"
-                    (ngModelChange)="apply()"
+                    name="minItems"
+                    (ngModelChange)="apply('minItems')"
                 /></label>
                 <label
                   >{{ 'settings.maxOccurrences' | translate }}
@@ -154,7 +155,8 @@
                     step="1"
                     [placeholder]="'settings.unlimited' | translate"
                     [(ngModel)]="draft().maxItems"
-                    (ngModelChange)="apply()"
+                    name="maxItems"
+                    (ngModelChange)="apply('maxItems')"
                 /></label>
               }
             </div>

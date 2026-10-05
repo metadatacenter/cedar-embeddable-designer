@@ -1,4 +1,5 @@
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { invalidSettingsInputs } from '../../shared/settings-input';
 import { ElementLabelsComponent } from '../element-labels/element-labels.component';
 import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 import { AnnotationsEditorComponent } from '../annotations-editor/annotations-editor.component';
@@ -104,7 +105,7 @@ export class ElementCardComponent {
       const signature = JSON.stringify([this.node().id, placement]);
       if (signature === this.loadedPlacement) return;
       this.loadedPlacement = signature;
-      if (!this.service.validation.inputError(this.node().id, 'placement')) this.draft.set(structuredClone(placement));
+      this.draft.set(structuredClone(placement));
       this.keyDraft.set(placement.deploymentName ?? null);
     });
   }
@@ -130,20 +131,24 @@ export class ElementCardComponent {
   rename(value: string): void {
     this.service.updateElementDisplayName(this.node(), value);
   }
-  apply(): void {
+  apply(changed?: string): void {
     const occurrences = this.activeTab === 'Occurrences';
     const setting = occurrences ? 'placement' : 'display';
-    const invalid = Array.from(this.host.nativeElement.querySelectorAll('input')).find(
-      (input) => input.validity.badInput,
+    const invalid = invalidSettingsInputs(
+      this.host.nativeElement,
+      this.service.validation.settingsInput(this.node().id, setting)?.invalid,
+      changed,
     );
-    if (invalid && occurrences && this.draft().allowMultiple) {
-      this.service.setSettingsError(
+    if (Object.keys(invalid).length && occurrences && this.draft().allowMultiple) {
+      this.service.validation.setInputError(
         this.node().id,
         setting,
         this.language.t('settings.invalidNumber', {
-          label: invalid.closest('label')?.textContent?.trim() || this.language.t('settings.value'),
+          label: Object.values(invalid)[0] || this.language.t('settings.value'),
         }),
         this.activeTab,
+        undefined,
+        { changes: { ...this.draft() }, invalid },
       );
       return;
     }
