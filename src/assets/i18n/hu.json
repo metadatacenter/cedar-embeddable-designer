@@ -272,8 +272,14 @@
     },
     "text": {
       "lengths": "A szöveghosszak nem lehetnek negatívak, és a minimum nem lehet nagyobb a maximumnál.",
-      "defaultTooShort": "Az alapértelmezett értéknek legalább {{count}} karaktert kell tartalmaznia.",
-      "defaultTooLong": "Az alapértelmezett érték legfeljebb {{count}} karaktert tartalmazhat.",
+      "defaultTooShort": {
+        "one": "Az alapértelmezett értéknek legalább {{count}} karaktert kell tartalmaznia.",
+        "other": "Az alapértelmezett értéknek legalább {{count}} karaktert kell tartalmaznia."
+      },
+      "defaultTooLong": {
+        "one": "Az alapértelmezett érték legfeljebb {{count}} karaktert tartalmazhat.",
+        "other": "Az alapértelmezett érték legfeljebb {{count}} karaktert tartalmazhat."
+      },
       "defaultPattern": "Az alapértelmezett értéknek illeszkednie kell a reguláris kifejezésre."
     },
     "media": {
@@ -527,7 +533,10 @@
     "unreadable": "A terminológiai kiszolgáló olyan választ küldött, amelyet a tervező nem tud értelmezni. Próbálja újra."
   },
   "outline": {
-    "errors": "{{count}} hiba",
+    "errors": {
+      "one": "{{count}} hiba",
+      "other": "{{count}} hiba"
+    },
     "expand": "Elem kinyitása",
     "collapse": "Elem összecsukása",
     "reorder": "{{name}} áthelyezése",

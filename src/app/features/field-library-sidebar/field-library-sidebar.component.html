@@ -45,7 +45,7 @@
               <div class="draggable-name">{{ displayName(field) || ('validation.unnamed.field' | translate) }}</div>
               @if (service.visibleIssuesFor(field.id).length; as count) {
                 <span class="validation-badge">{{
-                  (count === 1 ? 'common.errorCount.one' : 'common.errorCount.other') | translate: { count: count }
+                  'common.errorCount' | countKey: count | translate: { count: count }
                 }}</span>
               }
             </div>

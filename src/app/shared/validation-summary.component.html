@@ -3,9 +3,7 @@
     <summary>
       <app-icon key="chevron-down" size="small" class="validation-disclosure" />
       <app-icon key="warning" size="small" />
-      <span>{{
-        (count === 1 ? 'validation.summary.one' : 'validation.summary.other') | translate: { count: count }
-      }}</span>
+      <span>{{ 'validation.summary' | countKey: count | translate: { count: count } }}</span>
     </summary>
     <ul>
       @for (issue of service.visibleIssues(); track $index) {

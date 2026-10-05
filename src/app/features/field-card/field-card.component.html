@@ -47,9 +47,7 @@
               (click)="service.revealIssue(service.visibleIssuesFor(field.id)[0])"
             >
               <app-icon key="warning" size="small" />
-              <span>{{
-                (count === 1 ? 'common.errorCount.one' : 'common.errorCount.other') | translate: { count: count }
-              }}</span>
+              <span>{{ 'common.errorCount' | countKey: count | translate: { count: count } }}</span>
             </button>
           }
         </div>

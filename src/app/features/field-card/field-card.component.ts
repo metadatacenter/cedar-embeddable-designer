@@ -6,6 +6,7 @@ import { FieldSettingsComponent } from '../field-settings/field-settings.compone
 import { Component, Input, inject, ChangeDetectionStrategy, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
+import { CountKeyPipe } from '../../i18n/count-key.pipe';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService, FIELD_TYPES } from '../../core/services/template.service';
 import { Field } from '../../core/models/types';
@@ -33,6 +34,7 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
     IconComponent,
     ControlledTermConfigComponent,
     DragDropModule,
+    CountKeyPipe,
     TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

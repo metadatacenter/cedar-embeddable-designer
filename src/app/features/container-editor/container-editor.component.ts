@@ -6,6 +6,7 @@ import { publicationStatusLabel } from '../../shared/publication-status';
 import { Component, inject, input, computed, viewChild, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
+import { CountKeyPipe } from '../../i18n/count-key.pipe';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService } from '../../core/services/template.service';
 import { fieldView, findContainer } from '../../core/model/container-draft';
@@ -30,6 +31,7 @@ import { ElementCardComponent } from '../element-card/element-card.component';
     FieldTypePickerComponent,
     ElementCardComponent,
     ContainerSettingsComponent,
+    CountKeyPipe,
     TranslatePipe,
   ],
   templateUrl: './container-editor.component.html',

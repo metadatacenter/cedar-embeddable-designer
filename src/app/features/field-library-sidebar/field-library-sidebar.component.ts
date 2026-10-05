@@ -9,11 +9,19 @@ import { TemplateService } from '../../core/services/template.service';
 import { Field, CustomField } from '../../core/models/types';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { TranslatePipe } from '@ngx-translate/core';
+import { CountKeyPipe } from '../../i18n/count-key.pipe';
 
 @Component({
   selector: 'app-field-library-sidebar',
   standalone: true,
-  imports: [DragDropModule, IconComponent, InsertionActionsComponent, FieldTypePickerComponent, TranslatePipe],
+  imports: [
+    DragDropModule,
+    IconComponent,
+    InsertionActionsComponent,
+    FieldTypePickerComponent,
+    CountKeyPipe,
+    TranslatePipe,
+  ],
   templateUrl: './field-library-sidebar.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./field-library-sidebar.component.scss'],

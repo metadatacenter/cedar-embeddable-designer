@@ -5,10 +5,11 @@ import { ContainerDraft, ChildNode, fieldView } from '../../core/model/container
 import { TemplateService } from '../../core/services/template.service';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { TranslatePipe } from '@ngx-translate/core';
+import { CountKeyPipe } from '../../i18n/count-key.pipe';
 
 @Component({
   selector: 'app-container-outline',
-  imports: [DragDropModule, IconComponent, TranslatePipe],
+  imports: [DragDropModule, IconComponent, CountKeyPipe, TranslatePipe],
   template: `<ul cdkDropList [cdkDropListData]="container().children" (cdkDropListDropped)="drop($event)">
     @for (node of container().children; track node.id) {
       <li cdkDrag [cdkDragData]="node.id" [cdkDragDisabled]="locked(node)">
@@ -26,8 +27,8 @@ import { TranslatePipe } from '@ngx-translate/core';
             @if (service.visibleIssuesFor(node.id).length; as count) {
               <span
                 class="validation-badge"
-                [attr.aria-label]="'outline.errors' | translate: { count: count }"
-                [title]="'outline.errors' | translate: { count: count }"
+                [attr.aria-label]="'outline.errors' | countKey: count | translate: { count: count }"
+                [title]="'outline.errors' | countKey: count | translate: { count: count }"
                 ><app-icon key="warning" size="small" /> {{ count }}</span
               >
             }

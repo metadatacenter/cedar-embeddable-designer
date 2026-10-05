@@ -1,7 +1,16 @@
 import { annotationError } from './annotations';
 import { defaultFormatError } from './field-default';
 import { childKeys, deploymentKeys, keyedChild } from './child-key-policy';
-import { LocalizedError, Message, Translate, describeError, english, errorParam, message } from '../../i18n/messages';
+import {
+  LocalizedError,
+  Message,
+  Translate,
+  countKey,
+  describeError,
+  english,
+  errorParam,
+  message,
+} from '../../i18n/messages';
 import {
   ContainerDraft,
   ChildNode,
@@ -564,7 +573,7 @@ function validateNumericSettings(field: Field): void {
       const places = Math.max(0, (coefficient.split('.')[1]?.length ?? 0) - Number(exponent));
       if (places > decimalPlaces)
         throw new LocalizedError(
-          message(decimalPlaces === 1 ? 'errors.numeric.tooManyPlaces.one' : 'errors.numeric.tooManyPlaces.other', {
+          message(countKey('errors.numeric.tooManyPlaces', decimalPlaces), {
             label,
             count: String(decimalPlaces),
           }),
@@ -862,9 +871,13 @@ function buildField(field: Field): TemplateField {
     if (field.defaultValue.kind === 'literal') {
       const value = field.defaultValue.value;
       if (minLength !== null && value.length < minLength)
-        throw new LocalizedError(message('errors.text.defaultTooShort', { count: String(minLength) }));
+        throw new LocalizedError(
+          message(countKey('errors.text.defaultTooShort', minLength), { count: String(minLength) }),
+        );
       if (maxLength !== null && value.length > maxLength)
-        throw new LocalizedError(message('errors.text.defaultTooLong', { count: String(maxLength) }));
+        throw new LocalizedError(
+          message(countKey('errors.text.defaultTooLong', maxLength), { count: String(maxLength) }),
+        );
       if (pattern && !pattern.test(value)) throw new LocalizedError(message('errors.text.defaultPattern'));
     }
     (builder as TextFieldBuilder | TextAreaBuilder).withMinLength(minLength).withMaxLength(maxLength);

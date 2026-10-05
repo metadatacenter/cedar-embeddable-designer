@@ -272,8 +272,14 @@
     },
     "text": {
       "lengths": "Text lengths must be nonnegative numbers, with minimum no greater than maximum.",
-      "defaultTooShort": "Default value must contain at least {{count}} characters.",
-      "defaultTooLong": "Default value must contain no more than {{count}} characters.",
+      "defaultTooShort": {
+        "one": "Default value must contain at least {{count}} character.",
+        "other": "Default value must contain at least {{count}} characters."
+      },
+      "defaultTooLong": {
+        "one": "Default value must contain no more than {{count}} character.",
+        "other": "Default value must contain no more than {{count}} characters."
+      },
       "defaultPattern": "Default value must match the regular expression."
     },
     "media": {
@@ -527,7 +533,10 @@
     "unreadable": "The terminology server sent an answer the designer cannot read. Try again."
   },
   "outline": {
-    "errors": "{{count}} errors",
+    "errors": {
+      "one": "{{count}} error",
+      "other": "{{count}} errors"
+    },
     "expand": "Expand element",
     "collapse": "Collapse element",
     "reorder": "Reorder {{name}}",
