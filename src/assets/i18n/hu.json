@@ -307,7 +307,8 @@
     "move": {
       "missing": "A gyermekelem vagy a cél már nem létezik.",
       "intoItself": "Egy elem nem helyezhető át önmagába vagy a leszármazottai közé.",
-      "nameTaken": "A célban már van ilyen tulajdonságnevű gyermekelem. Először nevezze át az elhelyezést."
+      "nameTaken": "A célban már van ilyen tulajdonságnevű gyermekelem. Először nevezze át az elhelyezést.",
+      "nameReserved": "A célban ez a tulajdonságnév foglalt. Először nevezze át az elhelyezést."
     },
     "pageBreakPlacement": "Oldaltörés csak sablonban helyezhető el.",
     "publishedReadOnly": "A közzétett mezők csak olvashatók. Vázlatverzió szerkesztése még nem érhető el.",

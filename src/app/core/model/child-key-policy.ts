@@ -24,3 +24,20 @@ export function childKeyError(
     return t('validation.key.yamlMetadata');
   return null;
 }
+
+/**
+ * The key a child is given from its name: lower case, spaces as underscores, and a numeric suffix
+ * until `taken` refuses no more. Suffixing cannot repair a name that starts with @ or holds a control
+ * character, so such a name falls back to `fallback`. `taken` decides what a usable key is; callers
+ * pass the key policy and the keys their siblings already hold.
+ */
+export function freshChildKey(name: string, fallback: string, taken: (key: string) => boolean): string {
+  const candidate = name.trim().toLowerCase().replace(/\s+/g, '_');
+  const base =
+    candidate.startsWith('@') || [...candidate].some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127)
+      ? fallback
+      : candidate || fallback;
+  let key = base;
+  for (let suffix = 2; taken(key); suffix++) key = `${base}_${suffix}`;
+  return key;
+}

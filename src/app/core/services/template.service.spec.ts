@@ -1,6 +1,7 @@
 import { CedJsonObject } from '../../ced-public-api';
 import { fieldToJson, newContainer } from '../model/cedar-template';
 import { findContainer } from '../model/container-draft';
+import { childKeyError } from '../model/child-key-policy';
 import { buildContainer } from '../model/cedar-template';
 import { TestBed } from '@angular/core/testing';
 import nestedTemplate from '../model/fixtures/corpus/template-028.json';
@@ -114,6 +115,31 @@ describe('TemplateService', () => {
       'Publication Date',
     ]);
   });
+
+  // An imported child's key is made from its name, and a name can lower-case into a key no child may
+  // have. Import must choose a key the policy accepts, as a rename does.
+  it.each(['Prototype', 'Constructor', 'Schema:Name', 'Notes\u0007'])(
+    'imports a reusable field named %s under a key the key policy accepts',
+    (name) => {
+      const field = { ...(fieldToJson(service.fields()[0]) as CedJsonObject), 'schema:name': name };
+      const root = service.session.document();
+      service.importChildren([{ type: 'field', artifact: field }], root.id, 0);
+      const key = service.session.document().children[0].placement.deploymentName!;
+      expect(childKeyError(key)).toBeNull();
+    },
+  );
+  // The model refuses a field whose name is itself a reserved key, so such an import is refused whole.
+  it.each(['__proto__', '@type', '@Type', 'schema:name'])(
+    'refuses a reusable field named %s and inserts nothing',
+    (name) => {
+      const before = service.templateJson();
+      const field = { ...(fieldToJson(service.fields()[0]) as CedJsonObject), 'schema:name': name };
+      expect(() =>
+        service.importChildren([{ type: 'field', artifact: field }], service.session.document().id, 0),
+      ).toThrow();
+      expect(service.templateJson()).toEqual(before);
+    },
+  );
 
   it('does not insert any children when one selected artifact is invalid', () => {
     const before = service.templateJson();

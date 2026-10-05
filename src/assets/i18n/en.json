@@ -307,7 +307,8 @@
     "move": {
       "missing": "The child or destination no longer exists.",
       "intoItself": "An element cannot be moved into itself or one of its descendants.",
-      "nameTaken": "The destination already has a child with that property name. Rename the placement first."
+      "nameTaken": "The destination already has a child with that property name. Rename the placement first.",
+      "nameReserved": "The destination reserves that property name. Rename the placement first."
     },
     "pageBreakPlacement": "Page breaks can only be placed in templates.",
     "publishedReadOnly": "Published fields are read-only. Editing a draft version is not available yet.",

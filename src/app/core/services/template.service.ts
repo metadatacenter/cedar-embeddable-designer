@@ -18,6 +18,7 @@ import {
   findContainer,
 } from '../model/container-draft';
 import { FieldLibraryService } from './field-library.service';
+import { childKeyError, freshChildKey } from '../model/child-key-policy';
 import { CedLanguageService } from '../../i18n/ced-language.service';
 import { LocalizedError, message } from '../../i18n/messages';
 import { Injectable, signal, computed, inject } from '@angular/core';
@@ -111,15 +112,7 @@ export class TemplateService {
   private readonly automaticFieldNames = new Set<number>();
 
   private generatedKey(id: number, name: string): string {
-    const candidate = name.trim().toLowerCase().replace(/\s+/g, '_');
-    // Suffixing cannot repair a leading @ or an embedded control character.
-    const base =
-      candidate.startsWith('@') || [...candidate].some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127)
-        ? 'field'
-        : candidate || 'field';
-    let key = base;
-    for (let suffix = 2; this.keyError(id, key); suffix++) key = `${base}_${suffix}`;
-    return key;
+    return freshChildKey(name, 'field', (key) => !!this.keyError(id, key));
   }
 
   // Inject PreferencesService
@@ -743,11 +736,14 @@ export class TemplateService {
     }
     this.loadError.set(null);
     if (namePlacement) {
+      // The key must satisfy the same policy a rename does, here in the container the child joins.
       const used = new Set(target.children.map((child) => this.childKey(child.id)));
-      const base =
-        childName(node).trim().toLowerCase().replace(/\s+/g, '_') || (node.kind === 'element' ? 'element' : 'field');
-      let name = base;
-      for (let suffix = 2; used.has(name); suffix++) name = `${base}_${suffix}`;
+      const attributeValue = node.kind === 'field' && node.definition.type === 'attributeValue';
+      const name = freshChildKey(
+        childName(node),
+        node.kind === 'element' ? 'element' : 'field',
+        (key) => used.has(key) || !!childKeyError(key, attributeValue, undefined, target.kind),
+      );
       if (node.kind === 'field') {
         node = { ...node, placement: { ...node.placement, deploymentName: name } };
       } else {
