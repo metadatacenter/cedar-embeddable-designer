@@ -972,17 +972,24 @@ function buildField(field: Field): TemplateField {
  * designer's language.
  */
 export function defaultValueError(field: Field, value: FieldDefaultValue, t: Translate = english): string | null {
+  const failure = defaultValueFailure(field, value);
+  return failure === null ? null : describeError(failure, t);
+}
+
+/** The diagnostic stays structured until the presentation boundary renders it. */
+export function defaultValueFailure(field: Field, value: FieldDefaultValue): unknown | null {
   try {
-    const formatError = defaultFormatError(field, value, t);
-    if (formatError) return formatError;
+    const formatError = defaultFormatError(field, value, (key) => key);
+    if (formatError) return new LocalizedError(message(formatError));
     if (allowsOptions(field.type)) {
       const values = value.kind === 'literal' ? [value.value] : value.kind === 'literals' ? value.values : [];
-      if (values.some((option) => !field.options.includes(option))) return t('errors.default.notAnOption');
+      if (values.some((option) => !field.options.includes(option)))
+        return new LocalizedError(message('errors.default.notAnOption'));
     }
     buildField({ ...field, defaultValue: value, importedChoiceDefault: undefined });
     return null;
   } catch (error) {
-    return describeError(error, t);
+    return error;
   }
 }
 

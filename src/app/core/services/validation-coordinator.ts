@@ -1,9 +1,10 @@
+import { sameRule } from '../model/validation-rule';
 import { computed, signal } from '@angular/core';
 import { CedValidationReport } from '../../ced-public-api';
 import { Translate } from '../../i18n/messages';
 import { Field, FieldDefaultValue } from '../models/types';
 import { ChildNode, ContainerDraft, fieldNode, fieldView, parentOf, updateContainer } from '../model/container-draft';
-import { artifactNameError, DraftIssues, validateDocument } from '../model/document-validation';
+import { artifactNameError, DraftIssues, inspectDocument, validateDocument } from '../model/document-validation';
 import { childKeyError, childKeys, keyedChild } from '../model/child-key-policy';
 import { descriptorOf } from '../model/cedar-template';
 import { reducePrecision } from '../model/precision-change';
@@ -38,6 +39,7 @@ export function fieldSetting(changes: Partial<Field>): { setting: string; tab: s
   if ('deploymentName' in changes) return { setting: 'key', tab: SETTINGS_TABS.fieldMetadata };
   if ('schemaIdentifier' in changes) return { setting: 'identifier', tab: SETTINGS_TABS.fieldMetadata };
   if ('propertyIri' in changes) return { setting: 'propertyIri', tab: SETTINGS_TABS.fieldMetadata };
+  if ('controlledTermConstraints' in changes) return { setting: 'controlledTerms', tab: SETTINGS_TABS.constraints };
   if ('annotations' in changes) return { setting: 'annotations', tab: 'Annotations' };
   if ('numeric' in changes) return { setting: 'numeric', tab: 'Constraints' };
   if ('textConstraints' in changes) return { setting: 'textConstraints', tab: 'Constraints' };
@@ -83,7 +85,7 @@ export class ValidationCoordinator {
     const document = this.session.document();
     for (const [key, edit] of Object.entries(this.edits())) {
       const result = this.candidate(document, edit.id, edit.changes);
-      if (result.error) issues[key] = { message: result.error, tab: edit.tab };
+      if (result.error !== null) issues[key] = { message: result.error, tab: edit.tab };
     }
     return issues;
   });
@@ -306,7 +308,7 @@ export class ValidationCoordinator {
     // Validate this node, not its siblings or descendants. Existing defects may
     // remain while the author repairs a different setting on an imported node.
     const ownIssues = (child: ChildNode) =>
-      validateDocument(
+      inspectDocument(
         {
           id: -1,
           kind: parent.kind,
@@ -323,7 +325,7 @@ export class ValidationCoordinator {
       ).issues.filter((issue) => issue.setting !== 'name' && !issue.setting.startsWith('option-'));
     const before = ownIssues(node);
     const error = ownIssues(next).find(
-      (issue) => !before.some((old) => old.setting === issue.setting && old.message === issue.message),
+      (issue) => !before.some((old) => old.setting === issue.setting && sameRule(old.rule, issue.rule)),
     );
     return { node: next, error: error?.message ?? null };
   }
@@ -353,7 +355,7 @@ export class ValidationCoordinator {
     const commit = (id: number, changes: Partial<Field>): boolean => {
       if (this.readOnly()) return false;
       const result = this.candidate(document, id, changes);
-      if (result.error || !result.node) return false;
+      if (result.error !== null || !result.node) return false;
       const parent = parentOf(document, id)!;
       this.accepted(id, changes);
       document = updateContainer(document, parent.id, (container) => ({

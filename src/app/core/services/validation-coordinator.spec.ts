@@ -1,6 +1,47 @@
 import { TestBed } from '@angular/core/testing';
-import { fieldView } from '../model/container-draft';
+import { fieldView, containerFromFlat } from '../model/container-draft';
 import { TemplateService } from './template.service';
+import { EditorSession } from './editor-session';
+import { ValidationCoordinator } from './validation-coordinator';
+import { english, translateIn, Translate } from '../../i18n/messages';
+
+it.each<[string, Translate]>([
+  ['English', english],
+  ['Hungarian', (key, params) => translateIn('hu', key, params)],
+  ['identical display messages', () => 'Same text'],
+])('compares validation rules independently of %s', (_language, translate) => {
+  const session = new EditorSession(
+    containerFromFlat({
+      name: 'Study',
+      description: '',
+      identifier: 'urn:study',
+      version: '0.0.1',
+      fields: [
+        {
+          id: 1,
+          type: 'text',
+          name: 'Value',
+          status: 'optional',
+          allowMultiple: false,
+          options: [],
+          textConstraints: { minLength: 2, maxLength: 4, regex: null },
+          defaultValue: { kind: 'literal', value: 'a' },
+        },
+      ],
+    }),
+  );
+  const validation = new ValidationCoordinator(session, translate);
+  // An imported too-short default does not authorize a new too-long one, even
+  // when both rules happen to display the same sentence in the chosen language.
+  expect(
+    validation.submit(1, { defaultValue: { kind: 'literal', value: 'abcdef' } }, 'defaultValue', 'Constraints'),
+  ).not.toBeNull();
+  expect(session.fieldBinding()()[0].defaultValue).toEqual({ kind: 'literal', value: 'a' });
+  expect(
+    validation.submit(1, { defaultValue: { kind: 'literal', value: 'abc' } }, 'defaultValue', 'Constraints'),
+  ).toBeNull();
+  expect(validation.report().canSave).toBe(true);
+});
 
 describe('central editing validation', () => {
   let service: TemplateService;

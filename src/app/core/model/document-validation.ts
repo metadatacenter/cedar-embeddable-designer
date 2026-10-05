@@ -1,3 +1,4 @@
+import { failureRule, ValidationRule } from './validation-rule';
 import { annotationError } from './annotations';
 import { childKeyError, childKeys, keyedChild } from './child-key-policy';
 import type { CedValidationIssue, CedValidationReport } from '../../ced-public-api';
@@ -35,7 +36,12 @@ export function validateDocument(
   drafts: DraftIssues,
   t: Translate = english,
 ): CedValidationReport {
-  const issues: CedValidationIssue[] = [];
+  const report = inspectDocument(document, drafts, t);
+  return { ...report, issues: report.issues.map(({ rule: _rule, ...issue }) => issue) };
+}
+
+export function inspectDocument(document: ContainerDraft, drafts: DraftIssues, t: Translate = english) {
+  const issues: (CedValidationIssue & { rule: ValidationRule })[] = [];
   let modelInvalid = false;
   const visit = (container: ContainerDraft, ancestors: number[]) => {
     const path = [...ancestors, container.id];
@@ -49,6 +55,7 @@ export function validateDocument(
       source: 'model' | 'draft',
       // The model names an artifact by its plain name when it prefixes a message.
       name = label,
+      rule: ValidationRule = { code: `${setting}.invalid` },
     ) => {
       if (source === 'model') modelInvalid = true;
       // A control has one current verdict. Its rejected draft supersedes the
@@ -64,9 +71,10 @@ export function validateDocument(
         label,
         path: nodePath,
         setting,
-        message: message.startsWith(prefix) ? message.slice(prefix.length) : message,
+        message: message.startsWith(prefix) && message.length > prefix.length ? message.slice(prefix.length) : message,
         tab,
         code: `${setting}.invalid`,
+        rule,
         severity: 'error',
         source,
         shown: true,
@@ -108,7 +116,17 @@ export function validateDocument(
         metadata: container.metadata ? { ...container.metadata, annotations: undefined } : undefined,
       });
     } catch (error) {
-      add(container.id, container.name, path, 'artifact', describeError(error, t), SETTINGS_TABS.display, 'model');
+      add(
+        container.id,
+        container.name,
+        path,
+        'artifact',
+        describeError(error, t),
+        SETTINGS_TABS.display,
+        'model',
+        container.name,
+        failureRule(error, { ...container, children: [] }),
+      );
     }
 
     // A blank or repeated key of a child's own is reported below, so the keys are read leniently.
@@ -162,6 +180,7 @@ export function validateDocument(
             'Occurrences',
             'model',
             node.definition.name,
+            failureRule(error, node.placement),
           );
         }
         continue;
@@ -187,7 +206,17 @@ export function validateDocument(
         });
       }
       for (const issue of fieldValidationIssues(field, t))
-        add(node.id, issueLabel(node), nodePath, issue.setting, issue.message, issue.tab, 'model', field.name);
+        add(
+          node.id,
+          issueLabel(node),
+          nodePath,
+          issue.setting,
+          issue.message,
+          issue.tab,
+          'model',
+          field.name,
+          issue.rule,
+        );
       if (descriptorOf(field.type).deployment !== 'static') {
         try {
           buildTemplate({
@@ -221,6 +250,7 @@ export function validateDocument(
             'Occurrences',
             'model',
             field.name,
+            failureRule(error, { min: field.minItems, max: field.maxItems }),
           );
         }
       }
@@ -239,6 +269,7 @@ export function validateDocument(
         setting: 'artifact',
         tab: 'Display',
         code: 'artifact.invalid',
+        rule: failureRule(error, document),
         message: describeError(error, t),
         severity: 'error',
         source: 'model',

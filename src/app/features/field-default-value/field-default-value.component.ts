@@ -17,7 +17,7 @@ import { defaultFromCef, defaultToCef } from '../../core/model/field-default';
 import { accepts, allowsOptions, fieldToJson } from '../../core/model/cedar-template';
 import { CeeTemplateObject } from '../../core/model/cee-preview';
 import { Field, FieldDefaultValue } from '../../core/models/types';
-import { ValidationCheck } from '../../core/services/validation-coordinator';
+import { TerminologyEdit } from '../../core/services/terminology-edit-commands';
 import { TemplateService } from '../../core/services/template.service';
 import { TerminologyService } from '../../core/services/terminology.service';
 import { PickedConstraint } from '../../core/model/term-picker';
@@ -117,7 +117,7 @@ export class FieldDefaultValueComponent {
   });
   readonly editorReportsError = signal(false);
   private readonly mount = viewChild<ElementRef<HTMLDivElement>>('mount');
-  private pending: ValidationCheck | null = null;
+  private pending: TerminologyEdit | null = null;
   private editor: FieldElement | null = null;
   private artifactKey: string | null = null;
   private configKey: string | null = null;
@@ -268,34 +268,15 @@ export class FieldDefaultValueComponent {
     if (this.checking()) return;
     const field = this.field();
     if (field.publishedDefinition || !this.pickerOpen()) return;
-    const attempt = this.service.validation.beginCheck(
-      field.id,
-      'defaultValue',
-      this.i18n.t('controlledTerms.checkingConstraints'),
-    );
-    this.pending = attempt;
     this.setError(null);
-    try {
-      const allowed = await this.terminology.allowsDefault(
-        fieldToJson({ ...field, defaultValue: { kind: 'none' }, importedChoiceDefault: undefined }),
-        picked.termIri,
-        picked.termLabel,
-        attempt.signal,
-      );
-      // A response for a field the author has since changed cannot set its default.
-      if (this.destroyRef.destroyed || this.pending !== attempt || !attempt.active()) return;
-      if (!allowed) {
-        this.setError(this.i18n.t('defaultValue.termNotPermitted'));
-        return;
-      }
-      this.save({ kind: 'iri', iri: picked.termIri, label: picked.termLabel });
-      if (this.error() === null) this.pickerOpen.set(false);
-    } catch (error) {
-      if (this.destroyRef.destroyed || this.pending !== attempt || !attempt.active()) return;
-      this.setError(error instanceof Error ? this.i18n.describe(error) : this.i18n.t('defaultValue.termCheckFailed'));
-    } finally {
-      attempt.cancel();
-      if (this.pending === attempt) this.pending = null;
-    }
+    const attempt = this.service.terminologyEdits.selectDefault(field.id, {
+      iri: picked.termIri,
+      label: picked.termLabel,
+    });
+    this.pending = attempt;
+    const outcome = await attempt.result;
+    if (this.destroyRef.destroyed || this.pending !== attempt) return;
+    this.pending = null;
+    if (outcome === 'applied') this.pickerOpen.set(false);
   }
 }

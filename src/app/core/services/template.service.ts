@@ -2,6 +2,8 @@ import { elementDisplayOverride, fieldDisplayOverride } from '../model/field-dis
 import { fieldSetting, ValidationCoordinator } from './validation-coordinator';
 import { CedChildSource, CedJsonObject, CedValidationIssue } from '../../ced-public-api';
 import { EditorSession } from './editor-session';
+import { TerminologyService } from './terminology.service';
+import { TerminologyEditCommands } from './terminology-edit-commands';
 import {
   containerFromFlat,
   newNodeId,
@@ -141,6 +143,7 @@ export class TemplateService {
   readonly validation = new ValidationCoordinator(this.session, this.i18n.t, (id, changes) => {
     if (changes.deploymentName !== undefined) this.automaticKeys.delete(id);
   });
+  readonly terminologyEdits = new TerminologyEditCommands(this, inject(TerminologyService), this.i18n);
   readonly nameFocusRequest = signal<number | null>(null);
   readonly initialInsertionId = signal<number | null>(null);
   touchName(id: number): void {
