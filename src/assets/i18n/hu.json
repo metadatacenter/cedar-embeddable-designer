@@ -522,7 +522,9 @@
     "unverified": "A fogalmat nem sikerült igazolni a kapott találatok között.",
     "searchNotConfigured": "A kontrollált fogalmak keresése nincs beállítva.",
     "answered": "A terminológiai kiszolgáló válasza: {{status}} {{statusText}}.",
-    "noResultsCollection": "A terminológiai kiszolgáló nem adott vissza találati gyűjteményt."
+    "noResultsCollection": "A terminológiai kiszolgáló nem adott vissza találati gyűjteményt.",
+    "unreachable": "A terminológiai kiszolgáló nem érhető el. Ellenőrizze a kapcsolatot, és próbálja újra.",
+    "unreadable": "A terminológiai kiszolgáló olyan választ küldött, amelyet a tervező nem tud értelmezni. Próbálja újra."
   },
   "outline": {
     "errors": "{{count}} hiba",

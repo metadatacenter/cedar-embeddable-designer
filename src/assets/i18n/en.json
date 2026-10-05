@@ -522,7 +522,9 @@
     "unverified": "The term could not be verified in the returned results.",
     "searchNotConfigured": "Controlled-term search is not configured.",
     "answered": "The terminology server answered {{status}} {{statusText}}.",
-    "noResultsCollection": "The terminology server returned no results collection."
+    "noResultsCollection": "The terminology server returned no results collection.",
+    "unreachable": "The terminology server could not be reached. Check your connection and try again.",
+    "unreadable": "The terminology server sent an answer the designer cannot read. Try again."
   },
   "outline": {
     "errors": "{{count}} errors",

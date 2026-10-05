@@ -4,6 +4,7 @@ import { ControlledTermConfigComponent } from './controlled-term-config.componen
 import { TerminologyService } from '../../core/services/terminology.service';
 import { TemplateService } from '../../core/services/template.service';
 import { ControlledTermSet, Field } from '../../core/models/types';
+import { LocalizedError, english, message } from '../../i18n/messages';
 
 describe('applying complete constraints', () => {
   const set: ControlledTermSet = {
@@ -55,9 +56,10 @@ describe('applying complete constraints', () => {
     expect(service.fields()[0].controlledTermConstraints).toEqual(set);
   });
   it('keeps the existing field on a validation outage or cancellation', async () => {
-    allows.mockRejectedValue(new Error('Offline'));
+    // What the service raises when the terminology server does not answer.
+    allows.mockRejectedValue(new LocalizedError(message('terminology.unreachable')));
     await panel.applyPicked(new CustomEvent('constraintsSelected', { detail: set }));
-    expect(panel.error()).toBe('Offline');
+    expect(panel.error()).toBe(english('terminology.unreachable'));
     panel.closePicker();
     panel.clearDefaultAndApply();
     expect(service.fields()[0]).toEqual(panel.field);
