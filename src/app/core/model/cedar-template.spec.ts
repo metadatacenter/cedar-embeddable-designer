@@ -16,6 +16,7 @@
  */
 import {
   AbstractDynamicChildDeploymentInfo,
+  CedarWriters,
   ControlledTermField,
   TemporalField,
   Template,
@@ -1195,4 +1196,31 @@ it('preserves genuine description text when loading older artifacts', () => {
   const loaded = toDesignerTemplate(readTemplate(json(source)));
   expect(loaded.description).toBe(source.description);
   expect(loaded.fields[0].helpText).toBe('A helpful description');
+});
+
+/**
+ * A field's name is a label, and need not be a key the model accepts. The designer files a field
+ * named "@id", or an attribute-value field named "name", under a key derived from the name, so a
+ * standalone field with such a name is one the designer writes. Reading it back must not refuse it.
+ */
+describe('a standalone field whose name is not a usable key', () => {
+  const names = (type: string) => [
+    '@id',
+    'schema:name',
+    '__proto__',
+    ...(type === 'attributeValue' ? ['name', 'annotations'] : []),
+  ];
+  const cases = ['text', 'attributeValue'].flatMap((type) => names(type).map((name) => [type, name] as const));
+
+  it.each(cases)('a %s field named %j reads back from JSON', (type, name) => {
+    const original = field({ type, name, allowMultiple: type === 'attributeValue' });
+    expect(readField(JSON.stringify(fieldToJson(original))).name).toBe(name);
+  });
+
+  it.each(cases)('a %s field named %j reads back from YAML', (type, name) => {
+    const original = field({ type, name, deploymentName: 'value', allowMultiple: type === 'attributeValue' });
+    const built = buildTemplate(templateOf(original)).getField('value')!;
+    const yaml = CedarWriters.yaml().getStrict().getFieldWriterForField(built).getAsYamlString(built, false);
+    expect(readField(yaml).name).toBe(name);
+  });
 });

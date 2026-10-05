@@ -112,7 +112,9 @@ export class TemplateService {
   private readonly automaticFieldNames = new Set<number>();
 
   private generatedKey(id: number, name: string): string {
-    return freshChildKey(name, 'field', (key) => !!this.keyError(id, key));
+    // A name no suffix can repair falls back to the child's own kind, as an imported child's does.
+    const node = parentOf(this.session.document(), id)?.children.find((child) => child.id === id);
+    return freshChildKey(name, node?.kind === 'element' ? 'element' : 'field', (key) => !!this.keyError(id, key));
   }
 
   // Inject PreferencesService

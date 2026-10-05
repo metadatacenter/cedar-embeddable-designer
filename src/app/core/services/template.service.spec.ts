@@ -73,7 +73,7 @@ describe('TemplateService', () => {
     service.addElement(service.session.document().id);
     const element = service.session.document().children.find((n) => n.kind === 'element')!;
     service.updateContainerDefinition(element.id, { name: '@id' });
-    expect(service.childKey(element.id)).toMatch(/^field(?:_\d+)?$/);
+    expect(service.childKey(element.id)).toMatch(/^element(?:_\d+)?$/);
   });
 
   it('validates element field settings in their real parent', () => {
@@ -128,16 +128,15 @@ describe('TemplateService', () => {
       expect(childKeyError(key)).toBeNull();
     },
   );
-  // The model refuses a field whose name is itself a reserved key, so such an import is refused whole.
+  // A name is a label, not a key: a field named as a reserved key is imported under a usable key.
   it.each(['__proto__', '@type', '@Type', 'schema:name'])(
-    'refuses a reusable field named %s and inserts nothing',
+    'imports a reusable field named %s under a key the policy accepts',
     (name) => {
-      const before = service.templateJson();
       const field = { ...(fieldToJson(service.fields()[0]) as CedJsonObject), 'schema:name': name };
-      expect(() =>
-        service.importChildren([{ type: 'field', artifact: field }], service.session.document().id, 0),
-      ).toThrow();
-      expect(service.templateJson()).toEqual(before);
+      service.importChildren([{ type: 'field', artifact: field }], service.session.document().id, 0);
+      const imported = service.session.document().children[0];
+      expect(imported.definition.name).toBe(name);
+      expect(childKeyError(service.childKey(imported.id))).toBeNull();
     },
   );
 

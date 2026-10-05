@@ -1,5 +1,6 @@
 import { annotationError } from './annotations';
 import { defaultFormatError } from './field-default';
+import { childKeyError, freshChildKey } from './child-key-policy';
 import { LocalizedError, Message, Translate, describeError, english, errorParam, message } from '../../i18n/messages';
 import {
   ContainerDraft,
@@ -1560,6 +1561,21 @@ export function choiceDefaultConflict(field: Field, t: Translate = english): str
 }
 
 /** Read a first-class field through the model, then reuse the template field mapping. */
+/**
+ * The key a field is filed under while it is read through a template.
+ *
+ * A field's name need not be a key the model accepts. An author may name a field "@id", or an
+ * attribute-value field "name", and the designer files such a field under a key derived from the
+ * name instead. Reading it files it the same way, so a field the designer can write is one it can
+ * read back.
+ */
+function readingKey(field: TemplateField): string {
+  const name = field.schema_name ?? '';
+  const attributeValue = field.cedarFieldType === CedarFieldType.ATTRIBUTE_VALUE;
+  if (!childKeyError(name, attributeValue)) return name;
+  return freshChildKey(name, 'field', (key) => !!childKeyError(key, attributeValue));
+}
+
 export function readField(source: string): Field {
   const text = source.trim();
   if (text.startsWith('{')) {
@@ -1569,14 +1585,15 @@ export function readField(source: string): Field {
       .getTemplateFieldReader()
       .readFromObject(withoutCheckedDefaults(sourceNode)).field;
     if (!field.schema_name) throw new LocalizedError(message('errors.open.fieldNeedsName'));
+    const key = readingKey(field);
     const container = CedarBuilders.templateBuilder().withSchemaName('Field import').build();
-    container.addChild(field, field.createDeploymentBuilder(field.schema_name).build());
+    container.addChild(field, field.createDeploymentBuilder(key).build());
     const document = JSON.parse(JSON.stringify(templateToJson(container)));
-    const property = document.properties[field.schema_name];
+    const property = document.properties[key];
     // Attribute-value standalone artifacts already carry the deployment array
     // envelope. Reuse its definition rather than nesting one array inside another.
     if (property.items) property.items = sourceNode.type === 'array' ? sourceNode.items : sourceNode;
-    else document.properties[field.schema_name] = sourceNode;
+    else document.properties[key] = sourceNode;
     return toDesignerTemplate(readTemplate(JSON.stringify(document))).fields[0];
   }
   // A field document carries the same marker as a template, and the same reason applies.
@@ -1585,7 +1602,7 @@ export function readField(source: string): Field {
   }
   const reader = CedarReaders.yaml().getStrict().getTemplateFieldReader();
   const parsed = reader.readFromString(text);
-  const deployment = new ChildDeploymentInfo(parsed.field.schema_name ?? '');
+  const deployment = new ChildDeploymentInfo(readingKey(parsed.field));
   const field = reader.readFromObject(parsed.fieldSourceObject, deployment, new JsonPath()).field;
   if (!field.schema_name) throw new LocalizedError(message('errors.open.fieldNeedsName'));
   const container = CedarBuilders.templateBuilder().withSchemaName('Field import').build();
