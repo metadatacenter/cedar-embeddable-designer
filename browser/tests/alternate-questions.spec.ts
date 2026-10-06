@@ -13,6 +13,7 @@ for (const width of [1280, 375]) {
     await expect(editor.getByRole('alert')).toHaveCount(0);
     await editor.getByRole('button', { name: 'Add question', exact: true }).click();
     await expect(editor.getByRole('alert')).toHaveText('Question cannot be blank.');
+    await expect(editor.getByRole('alert')).toHaveCSS('font-size', '12px');
     await input.fill('What is the title?');
     await expect(editor.getByRole('alert')).toHaveCount(0);
     await editor.getByRole('button', { name: 'Add question', exact: true }).click();

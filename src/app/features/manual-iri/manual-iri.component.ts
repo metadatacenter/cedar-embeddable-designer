@@ -12,6 +12,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
         >{{ 'manualIri.label' | translate }}
         <input
           spellcheck="false"
+          autocomplete="off"
           #control
           type="text"
           [disabled]="disabled()"
@@ -34,6 +35,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
   `,
   styles: `
     @use '@org.metadatacenter/cedar-design-tokens/authoring';
+    @use '@org.metadatacenter/cedar-design-tokens/patterns';
     :host {
       display: block;
       margin-top: var(--cedar-space-2);
@@ -65,12 +67,14 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       color: var(--cedar-color-primary);
     }
     button:disabled {
-      opacity: 0.5;
+      opacity: var(--cedar-control-disabled-opacity);
       cursor: default;
     }
+    // The shared field-error role, with the host's override of its colour as the designer's other
+    // errors take it.
     p {
-      margin: var(--cedar-space-1) 0 0;
-      color: var(--cedar-status-error-text);
+      @include patterns.field-error;
+      color: var(--cedar-control-error, var(--cedar-status-error-text));
     }
   `,
 })

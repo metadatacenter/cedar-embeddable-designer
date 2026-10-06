@@ -14,9 +14,10 @@ import {
   untracked,
 } from '@angular/core';
 import { defaultFromCef, defaultToCef } from '../../core/model/field-default';
-import { accepts, defaultValueError, fieldToJson } from '../../core/model/cedar-template';
+import { accepts, allowsOptions, fieldToJson } from '../../core/model/cedar-template';
 import { CeeTemplateObject } from '../../core/model/cee-preview';
 import { Field, FieldDefaultValue } from '../../core/models/types';
+import { TerminologyEdit } from '../../core/services/terminology-edit-commands';
 import { TemplateService } from '../../core/services/template.service';
 import { TerminologyService } from '../../core/services/terminology.service';
 import { PickedConstraint } from '../../core/model/term-picker';
@@ -71,7 +72,7 @@ export class FieldDefaultValueComponent {
   readonly native = computed(() => ['text', 'paragraph', 'number'].includes(this.field().type));
   readonly draft = signal('');
   private defaultKey = '';
-  readonly checking = signal(false);
+  readonly checking = computed(() => this.service.validation.isChecking(this.field().id, 'defaultValue'));
   readonly pickerSources = computed(() => {
     const sources = (this.field().controlledTermConstraints?.constraints ?? []).flatMap((config) => {
       const source = config.sourceType === 'ontology-branch' ? config.sourceId : (config.ontologyId ?? config.sourceId);
@@ -91,29 +92,41 @@ export class FieldDefaultValueComponent {
   readonly available = signal(customElements.get(FIELD_TAG) !== undefined);
   readonly pickerAvailable = signal(customElements.get('cedar-embeddable-term-picker') !== undefined);
   readonly pickerOpen = signal(false);
-  readonly error = signal<string | null>(null);
+  readonly error = computed(() => {
+    const id = this.field().id;
+    return this.service.settingError(id, 'defaultValue');
+  });
+  readonly invalidDefaultText = computed(() => {
+    const field = this.field();
+    // Choice conflicts already have an always-visible repair action on the card.
+    if (allowsOptions(field.type)) return null;
+    if (
+      !this.service.validation
+        .modelReport()
+        .issues.some((issue) => issue.nodeId === field.id && issue.setting === 'defaultValue')
+    )
+      return null;
+    const value = field.defaultValue;
+    return value.kind === 'none'
+      ? null
+      : value.kind === 'iri'
+        ? value.iri
+        : value.kind === 'literals'
+          ? value.values.join(', ')
+          : String(value.value);
+  });
   readonly editorReportsError = signal(false);
   private readonly mount = viewChild<ElementRef<HTMLDivElement>>('mount');
-  private pending: object | null = null;
+  private pending: TerminologyEdit | null = null;
   private editor: FieldElement | null = null;
   private artifactKey: string | null = null;
   private configKey: string | null = null;
 
-  private reportValidation(): void {
-    this.service.setSettingsError(
-      this.field().id,
-      'defaultValue',
-      this.error() ?? (this.checking() ? this.i18n.t('controlledTerms.checkingConstraints') : null),
-    );
-  }
-  private setError(message: string | null, editorReportsError = false): void {
+  private setError(message: string | null, editorReportsError = false, value?: string | FieldDefaultValue): void {
     this.editorReportsError.set(editorReportsError);
-    this.error.set(message);
-    untracked(() => this.reportValidation());
-  }
-  private setChecking(checking: boolean): void {
-    this.checking.set(checking);
-    untracked(() => this.reportValidation());
+    untracked(() =>
+      this.service.validation.setInputError(this.field().id, 'defaultValue', message, 'Constraints', value),
+    );
   }
 
   constructor() {
@@ -126,17 +139,27 @@ export class FieldDefaultValueComponent {
         if (!destroyRef.destroyed) ready.set(true);
       });
     }
-    destroyRef.onDestroy(() => this.editor?.removeEventListener('valueChange', this.acceptValue));
+    destroyRef.onDestroy(() => {
+      this.pending?.cancel();
+      this.pending = null;
+      this.editor?.removeEventListener('valueChange', this.acceptValue);
+    });
 
     effect(() => {
-      const field = this.field();
+      const field = this.service.editingField(this.field());
       if (!this.native()) return;
-      const key = JSON.stringify([field.id, field.defaultValue]);
+      const input = this.service.validation.inputValue(field.id, 'defaultValue');
+      const key = JSON.stringify([field.id, field.defaultValue, input]);
       if (key !== this.defaultKey) {
         this.defaultKey = key;
         const value = field.defaultValue;
-        this.draft.set(value.kind === 'literal' || value.kind === 'number' ? String(value.value) : '');
-        this.setError(null);
+        this.draft.set(
+          typeof input === 'string'
+            ? input
+            : value.kind === 'literal' || value.kind === 'number'
+              ? String(value.value)
+              : '',
+        );
       }
     });
 
@@ -162,15 +185,25 @@ export class FieldDefaultValueComponent {
       }
       if (this.editor.parentNode !== host) host.replaceChildren(this.editor);
       // The default is the value being edited, not a reason to rebuild its control.
-      const artifact = fieldToJson({ ...field, defaultValue: { kind: 'none' }, importedChoiceDefault: undefined });
+      let artifact: CeeTemplateObject;
+      try {
+        artifact = fieldToJson({ ...field, defaultValue: { kind: 'none' }, importedChoiceDefault: undefined });
+      } catch {
+        // The report already identifies invalid imported settings. Keep them
+        // editable without leaving a control for the previous field on screen.
+        host.replaceChildren();
+        this.artifactKey = null;
+        return;
+      }
       const key = JSON.stringify(artifact);
-      if (key !== this.artifactKey) {
+      const rebuilt = key !== this.artifactKey;
+      if (rebuilt) {
         this.editor.fieldObject = artifact;
         this.artifactKey = key;
-        this.setError(null);
       }
-      const value = defaultToCef(field);
-      if (JSON.stringify(this.editor.currentValue) !== JSON.stringify(value)) {
+      const input = this.service.validation.inputValue(field.id, 'defaultValue');
+      const value = input && typeof input !== 'string' ? input : defaultToCef(this.service.editingField(field));
+      if (rebuilt || JSON.stringify(this.editor.currentValue) !== JSON.stringify(value)) {
         this.editor.value = value;
       }
     });
@@ -180,7 +213,7 @@ export class FieldDefaultValueComponent {
     const detail = (event as CustomEvent<{ value: FieldDefaultValue; valid: boolean }>).detail;
     if (this.allowsControlledTerms() || this.field().publishedDefinition) return;
     if (detail?.valid === true) this.save(defaultFromCef(this.field(), detail.value));
-    else this.setError(this.i18n.t('defaultValue.invalid'), true);
+    else this.setError(this.i18n.t('defaultValue.invalid'), true, detail?.value);
   };
 
   editNative(text: string): void {
@@ -192,7 +225,7 @@ export class FieldDefaultValueComponent {
     }
     if (this.field().type === 'number') {
       if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(text.trim()) || !Number.isFinite(Number(text))) {
-        this.setError(this.i18n.t('defaultValue.invalidNumber'));
+        this.setError(this.i18n.t('defaultValue.invalidNumber'), false, text);
         return;
       }
       this.save({ kind: 'number', value: Number(text) });
@@ -202,9 +235,8 @@ export class FieldDefaultValueComponent {
   }
 
   private save(value: FieldDefaultValue): void {
-    const error = defaultValueError(this.field(), value, this.i18n.t);
-    this.setError(error);
-    if (error === null) this.service.updateDefaultValue(this.field().id, value);
+    this.setError(null);
+    this.service.updateDefaultValue(this.field().id, value);
   }
 
   openPicker(): void {
@@ -214,9 +246,9 @@ export class FieldDefaultValueComponent {
   }
 
   cancelPicker(): void {
+    this.pending?.cancel();
     this.pending = null;
     this.pickerOpen.set(false);
-    this.setChecking(false);
     this.setError(null);
   }
 
@@ -236,32 +268,15 @@ export class FieldDefaultValueComponent {
     if (this.checking()) return;
     const field = this.field();
     if (field.publishedDefinition || !this.pickerOpen()) return;
-    const attempt = {};
-    this.pending = attempt;
-    this.setChecking(true);
     this.setError(null);
-    try {
-      const allowed = await this.terminology.allowsDefault(
-        fieldToJson({ ...field, defaultValue: { kind: 'none' }, importedChoiceDefault: undefined }),
-        picked.termIri,
-        picked.termLabel,
-      );
-      // A response for a field the author has since changed cannot set its default.
-      if (this.destroyRef.destroyed || this.pending !== attempt || this.field() !== field) return;
-      if (!allowed) {
-        this.setError(this.i18n.t('defaultValue.termNotPermitted'));
-        return;
-      }
-      this.save({ kind: 'iri', iri: picked.termIri, label: picked.termLabel });
-      if (this.error() === null) this.pickerOpen.set(false);
-    } catch (error) {
-      if (this.destroyRef.destroyed || this.pending !== attempt || this.field() !== field) return;
-      this.setError(error instanceof Error ? this.i18n.describe(error) : this.i18n.t('defaultValue.termCheckFailed'));
-    } finally {
-      if (this.pending === attempt) {
-        this.pending = null;
-        this.setChecking(false);
-      }
-    }
+    const attempt = this.service.terminologyEdits.selectDefault(field.id, {
+      iri: picked.termIri,
+      label: picked.termLabel,
+    });
+    this.pending = attempt;
+    const outcome = await attempt.result;
+    if (this.destroyRef.destroyed || this.pending !== attempt) return;
+    this.pending = null;
+    if (outcome === 'applied') this.pickerOpen.set(false);
   }
 }

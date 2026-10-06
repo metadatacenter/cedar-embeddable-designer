@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { LanguageSelectorComponent } from './language-selector.component';
 import { TemplateService } from '../../core/services/template.service';
-import { buildContainer, readContainer, templateToJson } from '../../core/model/cedar-template';
+import { buildContainer, readContainer, templateToJson, templateToYaml } from '../../core/model/cedar-template';
 
 for (const kind of ['text', 'richText', 'image', 'youtube', 'sectionBreak', 'pageBreak', 'template', 'element']) {
   it(`sets, preserves and clears language on ${kind}`, async () => {
@@ -32,7 +32,7 @@ for (const kind of ['text', 'richText', 'image', 'youtube', 'sectionBreak', 'pag
     await refresh();
     expect(editor.value()).toBe('fr');
     const artifact = service.templateJson();
-    for (const source of [artifact, service.templateYaml()]) {
+    for (const source of [artifact, templateToYaml(service.template())]) {
       expect(templateToJson(buildContainer(readContainer(source)))).toEqual(artifact);
     }
     editor.change('');

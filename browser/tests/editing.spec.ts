@@ -228,24 +228,27 @@ test('the field picker scrolls into a short designer and keeps its last option r
   await expect(designer.locator('app-field-card')).toHaveCount(count + 1);
 });
 
-test('CED identifies its build beneath the logo', async ({ page }) => {
+test('CED identifies its build beside the logo', async ({ page }) => {
   const designer = await openDesigner(page);
   const identity = designer.locator('.designer-identity');
   await expect(identity.locator('.designer-identity__name')).toHaveText('CED');
   const version = identity.locator('.designer-identity__version');
   await expect(version).toHaveText(/\d+\.\d+\.\d+/);
   expect(await version.getAttribute('title')).toBe(await version.textContent());
-  const logoBox = await identity.locator('svg').boundingBox();
-  const nameBox = await identity.locator('.designer-identity__name').boundingBox();
-  const versionBox = await version.boundingBox();
-  expect(nameBox!.y).toBeGreaterThanOrEqual(logoBox!.y + logoBox!.height);
-  expect(versionBox!.y).toBeGreaterThanOrEqual(nameBox!.y + nameBox!.height);
-  expect(logoBox!.width).toBe(40);
-  expect(logoBox!.height).toBe(40);
-  expect(nameBox!.x + nameBox!.width / 2).toBeCloseTo(logoBox!.x + logoBox!.width / 2, 0);
-  expect(nameBox!.y - logoBox!.y - logoBox!.height).toBe(4);
-  expect(versionBox!.y - nameBox!.y - nameBox!.height).toBe(2);
-  expect(versionBox!.width).toBeLessThanOrEqual(72);
+  const logoBox = (await identity.locator('svg').boundingBox())!;
+  const nameBox = (await identity.locator('.designer-identity__name').boundingBox())!;
+  const versionBox = (await version.boundingBox())!;
+  expect(logoBox.width).toBe(40);
+  expect(logoBox.height).toBe(40);
+  // The name and the version share a left edge to the right of the mark, the version beneath the name.
+  expect(nameBox.x).toBe(logoBox.x + logoBox.width + 8);
+  expect(versionBox.x).toBe(nameBox.x);
+  expect(versionBox.y - nameBox.y - nameBox.height).toBe(2);
+  // Together they sit within the mark's height, centred on it.
+  expect(nameBox.y).toBeGreaterThanOrEqual(logoBox.y);
+  expect(versionBox.y + versionBox.height).toBeLessThanOrEqual(logoBox.y + logoBox.height);
+  expect(nameBox.y - logoBox.y).toBeCloseTo(logoBox.y + logoBox.height - versionBox.y - versionBox.height, 0);
+  expect(versionBox.width).toBeLessThanOrEqual(72);
 });
 
 for (const width of [1440, 1024, 640]) {
@@ -298,10 +301,10 @@ test('template identity keeps the compact authoring header layout', async ({ pag
       return { top: box.top, right: box.right, left: box.left };
     }),
   );
-  expect(boxes).toHaveLength(3);
+  // Name and version share the row; the identifier sits in the Template metadata tab.
+  expect(boxes).toHaveLength(2);
   expect(Math.max(...boxes.map((box) => box.top)) - Math.min(...boxes.map((box) => box.top))).toBeLessThanOrEqual(1);
   expect(boxes[0].right).toBeLessThanOrEqual(boxes[1].left);
-  expect(boxes[1].right).toBeLessThanOrEqual(boxes[2].left);
   await expect(inputs.first()).toHaveCSS('font-size', '14px');
   await expect(header.locator('.template-header-card__icon')).toBeVisible();
   await expect(header).toHaveCSS('border-top-width', '1px');

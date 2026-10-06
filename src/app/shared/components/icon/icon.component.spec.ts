@@ -20,6 +20,17 @@ describe('shared icon adapter', () => {
       expect(svg.getAttribute('width')).toBe(String(iconStyle.default));
     }
   });
+  it('draws a shared size, or fills a host element whose own stylesheet sizes it', () => {
+    const fixture = TestBed.createComponent(IconComponent);
+    for (const size of ['small', 'default', 'large', 'fill'] as const) {
+      fixture.componentRef.setInput('size', size);
+      fixture.detectChanges();
+      const svg = fixture.nativeElement.querySelector('svg') as SVGElement;
+      const box = size === 'fill' ? '100%' : String(iconStyle[size]);
+      expect(svg.getAttribute('width')).toBe(box);
+      expect(svg.getAttribute('height')).toBe(box);
+    }
+  });
   it('rejects unknown names and markup before trusting HTML', () => {
     const fixture = TestBed.createComponent(IconComponent);
     for (const name of ['not-an-icon', '__proto__', '<img onerror="alert(1)">']) {

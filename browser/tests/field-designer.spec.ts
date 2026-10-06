@@ -89,6 +89,34 @@ for (const [label, type] of [
   });
 }
 
+// A name is a label, not a key, so a field may be named as a reserved key and still be saved and reopened.
+for (const name of ['@id', 'schema:name', '__proto__']) {
+  test(`saves and reopens a field named ${name}`, async ({ page }) => {
+    await page.getByRole('button', { name: 'Text', exact: true }).click();
+    const input = page.getByRole('textbox', { name: 'Field display name', exact: true });
+    await input.fill(name);
+    await expect
+      .poll(() =>
+        page.evaluate(() => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).canSave),
+      )
+      .toBe(true);
+    const artifact = await page.evaluate(
+      () => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).currentArtifact!,
+    );
+    expect(artifact['schema:name']).toBe(name);
+    await page.evaluate(
+      (artifact) => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).loadArtifact(artifact),
+      artifact,
+    );
+    await expect(input).toHaveValue(name);
+    expect(
+      await page.evaluate(
+        () => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).currentArtifact,
+      ),
+    ).toEqual(artifact);
+  });
+}
+
 test('preserves a manual collapse during edits and opens settings for the next field', async ({ page }) => {
   await page.getByRole('button', { name: 'Text', exact: true }).click();
   await page.getByRole('button', { name: 'Collapse field settings' }).click();
@@ -223,16 +251,17 @@ for (const type of Object.keys(FIELD_TYPES)) {
   });
 }
 for (const label of ['Multiple Choice', 'Checkboxes']) {
-  test(`${label} starter option waits for interaction, then reports and recovers`, async ({ page }) => {
+  test(`${label} starter option waits until naming finishes, then reports and recovers`, async ({ page }) => {
     await page.getByRole('button', { name: label, exact: true }).click();
     await page.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Choice');
+    // While the name is still being typed, the blank starter option blocks saving without an error.
+    await expect(page.locator('.validation-summary')).toHaveCount(0);
+    expect(
+      await page.evaluate(() => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).canSave),
+    ).toBe(false);
+    // Leaving the name finishes it, so the option must now explain why saving is blocked.
     await page.getByRole('tab', { name: 'Constraints', exact: true }).click();
     const option = page.getByLabel('Option 1', { exact: true });
-    await expect(option).toHaveAttribute('aria-invalid', 'false');
-    await expect(page.locator('.validation-summary')).toHaveCount(0);
-    await option.click();
-    await page.getByRole('tab', { name: 'Display', exact: true }).click();
-    await page.getByRole('tab', { name: 'Constraints', exact: true }).click();
     await expect(option).toHaveAttribute('aria-invalid', 'true');
     await expect(page.locator('.validation-summary')).toBeVisible();
     await option.fill('First');

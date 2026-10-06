@@ -29,33 +29,7 @@ import { LocalizedError, message } from './i18n/messages';
       }
     </p>
   `,
-  styles: [
-    `
-      :host {
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-      }
-      cedar-embeddable-designer {
-        flex: 1 1 auto;
-        min-height: 0;
-      }
-      .dev-host__status a {
-        color: #a5dce3;
-      }
-      .dev-host__status {
-        margin: 0;
-        padding: 4px 12px;
-        font:
-          12px/1.6 ui-monospace,
-          SFMono-Regular,
-          Menlo,
-          monospace;
-        color: #94a3b8;
-        background: #0f172a;
-      }
-    `,
-  ],
+  styleUrls: ['./app.component.dev.scss'],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   imports: [TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,

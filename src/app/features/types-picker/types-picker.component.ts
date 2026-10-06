@@ -36,11 +36,10 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
             <button
               type="button"
               class="remove"
-              [disabled]="disabled()"
               [attr.aria-label]="'typesPicker.remove' | translate: { iri: iri }"
               (click)="remove(iri)"
             >
-              <app-icon key="trash" className="w-4 h-4" />
+              <app-icon key="trash" size="small" />
             </button>
           </div>
         } @empty {
@@ -48,23 +47,16 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
         }
       </div>
       @if (available && baseUrl()) {
-        <button
-          #trigger
-          type="button"
-          [disabled]="disabled()"
-          (click)="open()"
-          [attr.aria-label]="'typesPicker.add' | translate"
-        >
+        <button #trigger type="button" (click)="open()" [attr.aria-label]="'typesPicker.add' | translate">
           {{ 'typesPicker.add' | translate }}
         </button>
       }
-      <button #manualTrigger type="button" [disabled]="disabled()" (click)="manualOpened.set(!manualOpened())">
+      <button #manualTrigger type="button" (click)="manualOpened.set(!manualOpened())">
         {{ 'manualIri.open' | translate }}
       </button>
     </div>
     @if (manualOpened()) {
       <app-manual-iri
-        [disabled]="disabled()"
         [existing]="types()"
         action="manualIri.addType"
         (accepted)="acceptManual($event)"
@@ -102,6 +94,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
     }
   `,
   styles: `
+    @use '@org.metadatacenter/cedar-design-tokens/patterns';
     .property {
       display: flex;
       align-items: center;
@@ -146,20 +139,12 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       margin-top: var(--cedar-space-1);
     }
     .remove {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 24px;
-      height: 24px;
+      @include patterns.icon-button;
       color: var(--cedar-color-primary);
       text-decoration: none;
     }
     .placeholder {
-      color: var(--cedar-control-border-default);
-    }
-    button:disabled {
-      opacity: 0.5;
-      cursor: default;
+      color: var(--cedar-text-muted);
     }
     .overlay {
       position: fixed;
@@ -193,7 +178,6 @@ export class TypesPickerComponent {
     ),
   ]);
   readonly emptySelection: ControlledTermSet = { constraints: [], actions: [] };
-  readonly disabled = input(false);
   readonly baseUrl = inject(TerminologyService).baseUrl;
   private readonly i18n = inject(CedLanguageService);
   /** The designer's language, which the term picker renders in. */
@@ -207,7 +191,6 @@ export class TypesPickerComponent {
     this.manualTrigger()?.nativeElement.focus();
   }
   acceptManual(iri: string): void {
-    if (this.disabled()) return;
     this.saveTypes([...new Set([...this.types(), iri])]);
     this.closeManual();
   }
@@ -218,7 +201,6 @@ export class TypesPickerComponent {
     effect(() => this.dialog()?.nativeElement.focus());
   }
   open(): void {
-    if (this.disabled()) return;
     this.manualOpened.set(false);
     this.error.set(null);
     this.opened.set(true);
@@ -235,11 +217,10 @@ export class TypesPickerComponent {
     } else if (this.dialog()) trapTab(this.dialog()!.nativeElement, event);
   }
   remove(iri: string): void {
-    if (this.disabled()) return;
     this.saveTypes(this.types().filter((type) => type !== iri));
   }
   select(event: Event): void {
-    if (this.disabled() || !this.opened()) return;
+    if (!this.opened()) return;
     const set = (event as CustomEvent<ControlledTermSet>).detail;
     if (
       !Array.isArray(set?.constraints) ||

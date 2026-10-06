@@ -10,9 +10,11 @@ import {
   ChangeDetectionStrategy,
   OnChanges,
   computed,
+  DestroyRef,
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { CedLanguageService } from '../../i18n/ced-language.service';
+import { TerminologyEdit } from '../../core/services/terminology-edit-commands';
 import { TemplateService } from '../../core/services/template.service';
 import { Field, ControlledTermSet } from '../../core/models/types';
 import { TerminologyService } from '../../core/services/terminology.service';
@@ -40,10 +42,13 @@ export class ControlledTermConfigComponent implements OnChanges {
   readonly terminologyBaseUrl = this.terminology.baseUrl;
   readonly pickerAvailable = termPickerAvailable();
   readonly pickerOpen = signal(false);
-  readonly checking = signal(false);
-  readonly error = signal<string | null>(null);
+  readonly checking = computed(() => this.service.validation.isChecking(this.field?.id, 'controlledTerms'));
+  readonly error = computed(() => {
+    const id = this.field?.id;
+    return this.service.settingError(id, 'controlledTerms');
+  });
   readonly invalidDefault = signal(false);
-  private pending: { field: Field; set: ControlledTermSet } | null = null;
+  private pending: TerminologyEdit | null = null;
   @Input() field!: Field;
   pickerConstraints: ControlledTermSet = { constraints: [], actions: [] };
 
@@ -67,26 +72,15 @@ export class ControlledTermConfigComponent implements OnChanges {
   private readonly dialog = viewChild<ElementRef<HTMLElement>>('dialog');
   private readonly editButton = viewChild<ElementRef<HTMLElement>>('editButton');
 
-  private reportValidation(): void {
-    this.service.setSettingsError(
-      this.field.id,
-      'controlledTerms',
-      this.error() ?? (this.checking() ? this.i18n.t('controlledTerms.checkingConstraints') : null),
-    );
-  }
   private setError(message: string | null): void {
-    this.error.set(message);
-    this.reportValidation();
-  }
-  private setChecking(checking: boolean): void {
-    this.checking.set(checking);
-    this.reportValidation();
+    this.service.setSettingsError(this.field.id, 'controlledTerms', message);
   }
 
   constructor() {
     // Runs when the dialog appears, which is after the click that opened it: the
     // view child resolves only once the overlay has rendered.
     effect(() => this.dialog()?.nativeElement.focus());
+    inject(DestroyRef).onDestroy(() => this.pending?.cancel());
   }
 
   /** Tab must not leave the overlay while it is covering the card behind it. */
@@ -111,13 +105,15 @@ export class ControlledTermConfigComponent implements OnChanges {
     this.pickerConstraints = this.orderedConstraints(
       this.field.controlledTermConstraints ?? { constraints: [], actions: [] },
     );
-    this.summaryArtifact = fieldToJson({ ...this.field, defaultValue: { kind: 'none' } });
+    try {
+      this.summaryArtifact = fieldToJson({ ...this.field, defaultValue: { kind: 'none' } });
+    } catch {
+      this.summaryArtifact = null;
+    }
   }
 
   openPicker(): void {
-    this.setError(null);
-    this.invalidDefault.set(false);
-    this.pending = null;
+    this.draftChanged();
     this.pickerOpen.set(true);
   }
 
@@ -128,8 +124,8 @@ export class ControlledTermConfigComponent implements OnChanges {
   }
 
   draftChanged(): void {
+    this.pending?.cancel();
     this.pending = null;
-    this.setChecking(false);
     this.invalidDefault.set(false);
     this.setError(null);
   }
@@ -137,47 +133,16 @@ export class ControlledTermConfigComponent implements OnChanges {
   async applyPicked(event: Event): Promise<void> {
     if (this.checking()) return;
     const set = this.orderedConstraints(structuredClone((event as CustomEvent<ControlledTermSet>).detail));
-    const field = this.field;
-    this.setError(null);
     this.invalidDefault.set(false);
-    const attempt = { field, set };
+    const attempt = this.service.terminologyEdits.changeConstraints(this.field.id, set);
     this.pending = attempt;
-    this.setChecking(true);
-    try {
-      const artifact = fieldToJson({ ...field, controlledTermConstraints: set, defaultValue: { kind: 'none' } });
-      if (
-        field.defaultValue.kind === 'iri' &&
-        JSON.stringify(set) !== JSON.stringify(field.controlledTermConstraints)
-      ) {
-        const allowed =
-          set.constraints.length > 0 &&
-          (await this.terminology.allowsDefault(
-            artifact,
-            field.defaultValue.iri,
-            field.defaultValue.label ?? field.defaultValue.iri,
-          ));
-        if (this.pending !== attempt || this.field !== field) return;
-        if (!allowed) {
-          this.invalidDefault.set(true);
-          this.setError(this.i18n.t('controlledTerms.defaultNotPermitted'));
-          return;
-        }
-      }
-      if (this.pending !== attempt || this.field !== field) return;
-      this.service.updateControlledTermConstraints(field.id, set);
-      this.closePicker();
-    } catch (error) {
-      if (this.pending !== attempt || this.field !== field) return;
-      this.setError(error instanceof Error ? this.i18n.describe(error) : this.i18n.t('controlledTerms.applyFailed'));
-    } finally {
-      if (this.pending === attempt) this.setChecking(false);
-    }
+    const outcome = await attempt.result;
+    if (this.pending !== attempt) return;
+    if (outcome === 'needs-clear') this.invalidDefault.set(true);
+    if (outcome === 'applied') this.closePicker();
   }
 
   clearDefaultAndApply(): void {
-    if (!this.invalidDefault() || !this.pending || this.field !== this.pending.field) return;
-    this.service.updateDefaultValue(this.field.id, { kind: 'none' });
-    this.service.updateControlledTermConstraints(this.field.id, this.pending.set);
-    this.closePicker();
+    if (this.pending?.clearDefaultAndApply()) this.closePicker();
   }
 }

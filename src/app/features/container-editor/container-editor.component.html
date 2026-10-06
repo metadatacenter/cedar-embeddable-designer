@@ -1,9 +1,7 @@
 <!-- Template Header Card -->
 <div class="template-header-card" [class.nested-header]="!!placementNode()" (focusin)="activate()">
   @if (placementNode() && service.visibleIssuesFor(container().id).length; as count) {
-    <span class="validation-badge">{{
-      (count === 1 ? 'common.errorBadge.one' : 'common.errorBadge.other') | translate: { count: count }
-    }}</span>
+    <span class="validation-badge">{{ 'common.errorBadge' | countKey: count | translate: { count: count } }}</span>
   }
   @if (placementNode()) {
     <span
@@ -25,12 +23,13 @@
       />
     </div>
     <div class="template-header-card__inputs">
-      <!-- Top Row: Name, Identifier, Version -->
+      <!-- Top Row: Name, Version -->
       <div class="template-header-row">
         <div class="template-field-group flex-1">
           <label class="template-field-label">{{ 'containerEditor.name' | translate }}</label>
           <input
             spellcheck="false"
+            autocomplete="off"
             type="text"
             [appArtifactName]="container().id"
             [attr.aria-label]="
@@ -59,23 +58,12 @@
           }
         </div>
 
-        <div class="template-field-group w-44">
-          <label class="template-field-label">{{ 'containerEditor.identifier' | translate }}</label>
-          <input
-            spellcheck="false"
-            type="text"
-            [ngModel]="container().schemaIdentifier"
-            (ngModelChange)="update({ schemaIdentifier: $event })"
-            class="template-input template-input--fact"
-            [placeholder]="'containerEditor.identifier' | translate"
-          />
-        </div>
-
         <div class="template-field-group version-group w-24">
           <label class="template-field-label">{{ 'containerEditor.version' | translate }}</label>
           <div class="version-value-row">
             <input
               spellcheck="false"
+              autocomplete="off"
               type="text"
               [ngModel]="container().version"
               (ngModelChange)="update({ version: $event })"
@@ -141,6 +129,7 @@
         <label class="template-field-label">{{ 'containerEditor.description' | translate }}</label>
         <textarea
           spellcheck="false"
+          autocomplete="off"
           rows="1"
           [ngModel]="container().description"
           (ngModelChange)="update({ description: $event })"
@@ -217,15 +206,9 @@
           class="field-drag-container"
           [class.selected]="service.selectedField() === node.id"
           [class.invalid]="service.visibleIssuesFor(node.id).length > 0"
-          [style.outline-color]="service.visibleIssuesFor(node.id).length ? '#b42318' : null"
-          [style.--tw-ring-color]="service.visibleIssuesFor(node.id).length ? '#b42318' : null"
-          [style.border-color]="service.visibleIssuesFor(node.id).length ? '#b42318' : null"
         >
           @if (service.selectedField() === node.id) {
-            <div
-              class="field-selection-bar"
-              [style.background-color]="service.visibleIssuesFor(node.id).length ? '#b42318' : null"
-            ></div>
+            <div class="field-selection-bar"></div>
           }
           @if (node.kind === 'field') {
             <app-field-card [field]="fieldView(node)" />

@@ -19,6 +19,7 @@
           <!-- Field Title Name editing -->
           <input
             spellcheck="false"
+            autocomplete="off"
             type="text"
             [appArtifactName]="field.id"
             [attr.aria-invalid]="!!service.nameError(field.id, field.name, 'field')"
@@ -46,9 +47,7 @@
               (click)="service.revealIssue(service.visibleIssuesFor(field.id)[0])"
             >
               <app-icon key="warning" size="small" />
-              <span>{{
-                (count === 1 ? 'common.errorCount.one' : 'common.errorCount.other') | translate: { count: count }
-              }}</span>
+              <span>{{ 'common.errorCount' | countKey: count | translate: { count: count } }}</span>
             </button>
           }
         </div>
@@ -91,7 +90,7 @@
             @if (
               !service.fieldDocumentMode() && service.preferences().showAllowMultiple && allowsMultiple(field.type)
             ) {
-              <label class="field-repetition group">
+              <label class="field-repetition">
                 <input
                   spellcheck="false"
                   type="checkbox"
@@ -134,7 +133,7 @@
         @if (allowsOptions(field.type)) {
           <div class="choice-options">
             @for (option of field.options; track $index; let optIdx = $index) {
-              <div class="choice-option-row group/option">
+              <div class="choice-option-row">
                 <app-icon
                   [key]="
                     field.type === 'singleChoiceList' || field.type === 'multipleChoice'
@@ -146,6 +145,7 @@
                 ></app-icon>
                 <input
                   spellcheck="false"
+                  autocomplete="off"
                   type="text"
                   [ngModel]="option"
                   [attr.aria-invalid]="!option.trim() && service.optionErrorVisible(field.id, optIdx)"
@@ -208,6 +208,7 @@
             @if (hasMarkupContent(field.type)) {
               <textarea
                 spellcheck="false"
+                autocomplete="off"
                 [id]="'field-content-' + field.id"
                 rows="4"
                 [ngModel]="field.content || ''"
@@ -217,6 +218,7 @@
             } @else {
               <input
                 spellcheck="false"
+                autocomplete="off"
                 [id]="'field-content-' + field.id"
                 type="text"
                 [ngModel]="field.content || ''"

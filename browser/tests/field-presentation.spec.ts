@@ -1,5 +1,13 @@
-import { test, expect } from '@playwright/test';
-import { openDesigner, openSettings, currentTemplate, applyPreset } from './support';
+import { test, expect, type Locator } from '@playwright/test';
+import {
+  openDesigner,
+  openSettings,
+  currentTemplate,
+  applyPreset,
+  addElementFixture,
+  templateName,
+  fieldName,
+} from './support';
 
 for (const width of [1440, 768, 375]) {
   test(`field settings start collapsed and tabs preserve live edits at ${width}`, async ({ page }) => {
@@ -131,6 +139,58 @@ test('field headers omit version and publication status', async ({ page }) => {
     const identity = designer.locator('app-field-card').first().getByLabel('Field version and publication status');
     await expect(identity).toHaveCount(0);
   }
+});
+
+test('an unnamed template, element or field shows a line to write its name on, without moving it', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const designer = await openDesigner(page);
+  const resolve = (token: string) =>
+    designer.evaluate((host, token) => {
+      const probe = document.createElement('span');
+      probe.style.color = `var(${token})`;
+      host.shadowRoot!.append(probe);
+      const colour = getComputedStyle(probe).color;
+      probe.remove();
+      return colour;
+    }, token);
+  const rule = await resolve('--cedar-border-rule');
+  const primary = await resolve('--cedar-color-primary');
+  const underline = (name: Locator) => name.evaluate((el) => getComputedStyle(el).borderBottomColor);
+  const line = (name: Locator) => name.evaluate((el) => getComputedStyle(el).backgroundImage);
+  const height = (name: Locator) => name.evaluate((el) => el.getBoundingClientRect().height);
+
+  // A template and an element use the header input's own underline, which focus turns primary.
+  const template = templateName(page);
+  await expect(template).toHaveValue('');
+  await expect.poll(() => underline(template)).toBe(rule);
+  await template.focus();
+  await expect.poll(() => underline(template)).toBe(primary);
+  const unnamed = await height(template);
+  await template.fill('Study');
+  await template.blur();
+  await expect.poll(() => underline(template)).toBe('rgba(0, 0, 0, 0)');
+  expect(await height(template)).toBe(unnamed);
+
+  await applyPreset(page, 'modular');
+  await addElementFixture(page, designer.locator('app-container-editor').first());
+  const element = designer.getByPlaceholder('Enter element name');
+  await expect.poll(() => underline(element)).toBe('rgba(0, 0, 0, 0)');
+  await element.fill('');
+  await expect.poll(() => underline(element)).toBe(primary);
+  await element.blur();
+  await expect.poll(() => underline(element)).toBe(rule);
+
+  // A field name has no border, so its line is drawn inside the box: primary while the card is selected.
+  const field = fieldName(page);
+  expect(await line(field)).toBe('none');
+  const named = await height(field);
+  await field.fill('');
+  expect(await line(field)).toBe(`linear-gradient(${primary}, ${primary})`);
+  expect(await height(field)).toBe(named);
+  await fieldName(page, 1).focus();
+  expect(await line(field)).toBe(`linear-gradient(${rule}, ${rule})`);
 });
 
 for (const width of [1440, 768, 375]) {

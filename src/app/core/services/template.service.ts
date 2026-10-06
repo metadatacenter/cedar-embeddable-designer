@@ -1,36 +1,32 @@
-import { childKeyError } from '../model/child-key-policy';
 import { elementDisplayOverride, fieldDisplayOverride } from '../model/field-display-name';
-import { reducePrecision } from '../model/precision-change';
-import { artifactNameError, validateDocument } from '../model/document-validation';
-import { CedChildSource, CedJsonObject, CedValidationIssue, CedValidationReport } from '../../ced-public-api';
+import { fieldSetting, ValidationCoordinator } from './validation-coordinator';
+import { CedChildSource, CedJsonObject, CedValidationIssue } from '../../ced-public-api';
 import { EditorSession } from './editor-session';
+import { TerminologyService } from './terminology.service';
+import { TerminologyEditCommands } from './terminology-edit-commands';
 import {
   containerFromFlat,
-  flatView,
   newNodeId,
   ContainerDraft,
   ChildNode,
   ElementNode,
   fieldNode,
-  fieldView,
   containers,
   childName,
   moveChild,
   parentOf,
   updateContainer,
-  replaceFields,
   allowedInContainer,
   findContainer,
 } from '../model/container-draft';
 import { FieldLibraryService } from './field-library.service';
+import { childKeys, deploymentKeys, freshChildKey, keyedChild } from '../model/child-key-policy';
 import { CedLanguageService } from '../../i18n/ced-language.service';
 import { LocalizedError, message } from '../../i18n/messages';
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { Field, FieldDefaultValue, CustomField, ControlledTermSet, UserPreferences } from '../models/types';
 import { PreferencesService } from './preferences.service';
 import {
-  DesignerTemplate,
-  deploymentKeys,
   newFieldIdentity,
   newTemplateIdentifier,
   readContainer,
@@ -39,8 +35,6 @@ import {
   containerPreview,
   newContainer,
   templateToJson,
-  templateToYaml,
-  defaultValueError,
 } from '../model/cedar-template';
 
 export { FIELD_TYPES } from '../models/types';
@@ -119,15 +113,10 @@ export class TemplateService {
   private readonly automaticFieldNames = new Set<number>();
 
   private generatedKey(id: number, name: string): string {
-    const candidate = name.trim().toLowerCase().replace(/\s+/g, '_');
-    // Suffixing cannot repair a leading @ or an embedded control character.
-    const base =
-      candidate.startsWith('@') || [...candidate].some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127)
-        ? 'field'
-        : candidate || 'field';
-    let key = base;
-    for (let suffix = 2; this.keyError(id, key); suffix++) key = `${base}_${suffix}`;
-    return key;
+    const parent = parentOf(this.session.document(), id);
+    const node = parent?.children.find((child) => child.id === id);
+    const child = node ? keyedChild(node) : { kind: 'field' as const, attributeValue: false };
+    return freshChildKey(name, child, parent?.kind ?? 'template', (key) => !!this.keyError(id, key));
   }
 
   // Inject PreferencesService
@@ -150,28 +139,24 @@ export class TemplateService {
     }),
   );
   readonly templateName = this.session.property('name');
-  readonly templateDesc = this.session.property('description');
-  readonly templateSchemaIdentifier = this.session.property('schemaIdentifier');
-  readonly templateVersion = this.session.property('version');
   readonly loadError = signal<string | null>(null);
-  private readonly draftIssues = signal<Record<string, { message: string; tab: string }>>({});
+  readonly validation = new ValidationCoordinator(this.session, this.i18n.t, (id, changes) => {
+    if (changes.deploymentName !== undefined) this.automaticKeys.delete(id);
+  });
+  readonly terminologyEdits = new TerminologyEditCommands(this, inject(TerminologyService), this.i18n);
   readonly nameFocusRequest = signal<number | null>(null);
   readonly initialInsertionId = signal<number | null>(null);
-  private readonly touchedNames = signal<ReadonlySet<number>>(new Set());
   touchName(id: number): void {
-    this.touchedNames.update((ids) => new Set([...ids, id]));
+    this.validation.touchName(id);
   }
   nameError(id: number, name: string, kind: 'field' | 'element' | 'template'): string | null {
-    return this.touchedNames().has(id) ? artifactNameError(name, kind, this.i18n.t) : null;
+    return this.validation.nameError(id, name, kind);
   }
-  // A newly inserted choice field has one blank starter option, not an author error yet.
-  private readonly pristineStarterOptions = signal<ReadonlySet<number>>(new Set());
   touchOption(id: number, index: number): void {
-    if (index !== 0 || !this.pristineStarterOptions().has(id)) return;
-    this.pristineStarterOptions.update((ids) => new Set([...ids].filter((candidate) => candidate !== id)));
+    this.validation.touchOption(id, index);
   }
   optionErrorVisible(id: number, index: number): boolean {
-    return index !== 0 || !this.pristineStarterOptions().has(id);
+    return this.validation.optionVisible(id, index);
   }
   readonly visibleIssues = computed(() => this.validationReport().issues.filter((issue) => issue.shown));
   visibleIssuesFor(id: number): CedValidationIssue[] {
@@ -182,33 +167,20 @@ export class TemplateService {
   }
   readonly validationTarget = signal<CedValidationIssue | null>(null);
   setSettingsError(id: number, setting: string, message: string | null, tab = 'Constraints'): void {
-    const key = `${id}:${setting}`;
-    this.draftIssues.update((previous) => {
-      if (previous[key]?.message === message && previous[key]?.tab === tab) return previous;
-      if (!message && !previous[key]) return previous;
-      const next = { ...previous };
-      if (message) next[key] = { message, tab };
-      else delete next[key];
-      return next;
-    });
+    this.validation.setInputError(id, setting, message, tab);
   }
-  private readonly documentReport = computed(() => validateDocument(this.document(), this.draftIssues(), this.i18n.t));
-  /** The document's issues, each marked with whether the summary lists it yet. */
-  readonly validationReport = computed((): CedValidationReport => {
-    const report = this.documentReport();
-    return {
-      ...report,
-      issues: report.issues.map((issue) => ({
-        ...issue,
-        shown:
-          issue.setting === 'name'
-            ? this.touchedNames().has(issue.nodeId)
-            : issue.setting !== 'option-0' || this.optionErrorVisible(issue.nodeId, 0),
-      })),
-    };
-  });
-  issuesFor(id: number): CedValidationIssue[] {
-    return this.validationReport().issues.filter((issue) => issue.path.includes(id));
+  readonly validationReport = this.validation.report;
+  settingError(id: number, setting: string): string | null {
+    return (
+      this.validation.error(id, setting) ??
+      this.validationReport().issues.find(
+        (issue) => issue.source === 'model' && issue.nodeId === id && issue.setting === setting,
+      )?.message ??
+      null
+    );
+  }
+  editingField(field: Field): Field {
+    return { ...field, ...this.validation.changes(field.id) };
   }
   revealIssue(issue: CedValidationIssue): void {
     if (issue.setting === 'name') this.touchName(issue.nodeId);
@@ -235,7 +207,7 @@ export class TemplateService {
    */
   private readonly savedState = signal<string>('');
 
-  readonly isDirty = computed(() => this.stateKey() !== this.savedState());
+  readonly isDirty = computed(() => this.validation.hasPendingEdits() || this.stateKey() !== this.savedState());
 
   /**
    * The field a newly added card should be scrolled to, or null.
@@ -267,38 +239,29 @@ export class TemplateService {
    */
   private readonly mintedIdentifier = signal<string>(newTemplateIdentifier());
 
-  readonly designerTemplate = computed<DesignerTemplate>(() => ({
-    ...flatView(this.session.document()),
-    identifier: this.session.document().identifier || this.mintedIdentifier(),
-  }));
-
   readonly document = computed(() => ({
     ...this.session.document(),
     identifier: this.session.document().identifier || this.mintedIdentifier(),
   }));
   readonly template = computed(() => buildContainer(this.document()));
-  readonly previewJson = computed(() => templateToJson(containerPreview(this.document())));
+  readonly previewState = computed(() => {
+    try {
+      return { artifact: templateToJson(containerPreview(this.document())), error: null };
+    } catch (error) {
+      return { artifact: null, error: this.i18n.describe(error) };
+    }
+  });
+  readonly previewJson = computed(() => this.previewState().artifact);
   readonly templateJson = computed(() => templateToJson(this.template()));
-  readonly templateYaml = computed(() => templateToYaml(this.template()));
 
   readonly fieldLibrary = inject(FieldLibraryService);
   readonly libraries = this.fieldLibrary.libraries;
   readonly customFields = this.fieldLibrary.fields;
-  readonly selectedLibraryId = signal<number | null>(null);
   readonly sidebarCollapsed = signal<boolean>(false);
 
   // Modal & Navigation States
   readonly showPicker = signal<number | null>(null);
   readonly showPreview = signal<boolean>(false);
-  readonly showFieldDesigner = signal<boolean>(false);
-  readonly libraryDraft = signal<Field | null>(null);
-  saveFieldToLibrary(id: number): void {
-    const field = this.fieldsFor(id)().find((field) => field.id === id);
-    if (field) {
-      this.libraryDraft.set(structuredClone(field));
-      this.showFieldDesigner.set(true);
-    }
-  }
   readonly selectedField = signal<number | null>(null);
   readonly fieldTypeDropdownLibrary = signal<number | null>(null);
 
@@ -415,10 +378,10 @@ export class TemplateService {
       allowMultiple: false,
     };
 
-    if (newField.options[0] === '') this.pristineStarterOptions.update((ids) => new Set([...ids, newField.id]));
     this.automaticKeys.add(newField.id);
     this.automaticFieldNames.add(newField.id);
     this.insertNode(fieldNode(newField), position, targetId, false);
+    if (newField.options[0] === '') this.validation.startOption(newField.id);
     this.nameFocusRequest.set(newField.id);
 
     this.showPicker.set(null);
@@ -448,7 +411,7 @@ export class TemplateService {
   }
 
   deleteField(id: number) {
-    if (this.isPublished(id)) return;
+    if (!this.validation.canEdit(id)) return;
     this.fieldsFor(id).update((prev) => prev.filter((f) => f.id !== id));
     this.pruneCollapsed();
     if (this.selectedField() === id) {
@@ -472,45 +435,33 @@ export class TemplateService {
    */
   updateElementDisplayName(node: ElementNode, value: string): string | null {
     if (elementDisplayOverride(node)) {
-      return this.updateElementPlacement(node.id, { ...node.placement, displayLabel: value });
+      return this.updateElementPlacement(node.id, { displayLabel: value }, 'display', 'Display');
     }
     // A filler label repeating the old name would otherwise outlive the rename as an override.
     if (node.placement.displayLabel !== undefined) {
-      const error = this.updateElementPlacement(node.id, { ...node.placement, displayLabel: undefined });
-      if (error) return error;
+      const failure = this.updateElementPlacement(node.id, { displayLabel: undefined }, 'display', 'Display');
+      if (failure) return failure;
     }
     this.updateContainerDefinition(node.definition.id, { name: value });
     return null;
   }
 
   updateFieldName(id: number, name: string) {
-    if (this.isPublished(id)) return;
+    if (!this.validation.canEdit(id)) return;
     const deploymentName = this.automaticKeys.has(id) ? this.generatedKey(id, name) : undefined;
     this.fieldsFor(id).update((prev) =>
       prev.map((f) => (f.id === id ? { ...f, name, ...(deploymentName ? { deploymentName } : {}) } : f)),
     );
   }
 
-  updateCustomField(updated: CustomField) {
-    this.customFields.update((fields) =>
-      fields.map((field) => (field.id === updated.id ? structuredClone(updated) : field)),
-    );
-    // Existing template deployments are independent copies. Editing a library field
-    // must not silently overwrite changes made in a template that already uses it.
-  }
-
-  deleteCustomField(id: number) {
-    this.customFields.update((prev) => prev.filter((cf) => cf.id !== id));
-  }
-
   updateFieldStatus(id: number, status: string) {
-    if (this.isPublished(id)) return;
+    if (!this.validation.canEdit(id)) return;
     this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, status } : f)));
   }
 
   updateOption(fieldId: number, optionIndex: number, value: string) {
     this.touchOption(fieldId, optionIndex);
-    if (this.isPublished(fieldId)) return;
+    if (!this.validation.canEdit(fieldId)) return;
     this.fieldsFor(fieldId).update((prev) =>
       prev.map((f) => {
         if (f.id === fieldId) {
@@ -530,7 +481,7 @@ export class TemplateService {
   }
 
   addOption(fieldId: number) {
-    if (this.isPublished(fieldId)) return;
+    if (!this.validation.canEdit(fieldId)) return;
     this.fieldsFor(fieldId).update((prev) =>
       prev.map((f) => {
         if (f.id === fieldId) {
@@ -549,7 +500,7 @@ export class TemplateService {
 
   deleteOption(fieldId: number, optionIndex: number) {
     this.touchOption(fieldId, optionIndex);
-    if (this.isPublished(fieldId)) return;
+    if (!this.validation.canEdit(fieldId)) return;
     this.fieldsFor(fieldId).update((prev) =>
       prev.map((f) => {
         if (f.id === fieldId) {
@@ -583,12 +534,7 @@ export class TemplateService {
     const search = (container: ContainerDraft, prefix: string[]): string[] | null => {
       let keys: string[];
       try {
-        keys = deploymentKeys(
-          container.children.map((node) => ({
-            name: node.definition.name,
-            deploymentName: node.placement.deploymentName,
-          })),
-        );
+        keys = deploymentKeys(container.children.map(keyedChild), container.kind);
       } catch {
         return null;
       }
@@ -606,100 +552,48 @@ export class TemplateService {
   }
 
   childKey(id: number): string {
-    const siblings = parentOf(this.session.document(), id)?.children ?? [];
-    const keys = deploymentKeys(
-      siblings.map((node) => ({
-        name: node.definition.name,
-        deploymentName: node.placement.deploymentName,
-      })),
-    );
+    const parent = parentOf(this.session.document(), id);
+    const siblings = parent?.children ?? [];
+    const keys = deploymentKeys(siblings.map(keyedChild), parent?.kind ?? 'template');
     return keys[siblings.findIndex((node) => node.id === id)] ?? '';
   }
 
   private keyError(id: number, value: string): string | null {
-    const key = value.trim();
-    const parent = parentOf(this.session.document(), id);
-    const siblings = parent?.children ?? [];
-    const node = siblings.find((child) => child.id === id);
-    const invalid = childKeyError(
-      key,
-      node?.kind === 'field' && fieldView(node).type === 'attributeValue',
-      this.i18n.t,
-      parent?.kind ?? 'template',
-    );
-    if (invalid) return invalid;
-    return siblings.some((node) => node.id !== id && this.childKey(node.id) === key)
-      ? this.i18n.t('validation.key.duplicate')
-      : null;
+    return this.validation.keyError(this.session.document(), id, value);
   }
 
   updateFieldSettings(id: number, changes: Partial<Field>): string | null {
     if (this.isPublished(id)) return this.i18n.t('errors.publishedReadOnly');
-    if (changes.deploymentName !== undefined) {
-      const error = this.keyError(id, changes.deploymentName);
-      if (error) return error;
-      this.automaticKeys.delete(id);
-      changes = { ...changes, deploymentName: changes.deploymentName.trim() };
-    }
     const current = this.fieldsFor(id)().find((field) => field.id === id);
     if (current && !this.canAddField(changes.type ?? current.type, this.parentContainerId(id)))
       return this.i18n.t('errors.pageBreakPlacement');
-    if (current) changes = reducePrecision(current, changes);
-    if (current && changes.temporal?.timezoneEnabled === false) {
-      const value = changes.defaultValue ?? current.defaultValue;
-      if (value.kind === 'temporal') {
-        changes = { ...changes, defaultValue: { ...value, value: value.value.replace(/(?:Z|[+-]\d{2}:\d{2})$/, '') } };
-      }
-    }
-    if (current) {
-      const error = defaultValueError(
-        { ...current, ...changes },
-        changes.defaultValue ?? current.defaultValue,
-        this.i18n.t,
-      );
-      if (error) return error;
-    }
-    const fields = this.fieldsFor(id)().map((field) => (field.id === id ? { ...field, ...changes } : field));
-    try {
-      const parent = findContainer(this.session.document(), this.parentContainerId(id));
-      if (!parent) return this.i18n.t('errors.elementMissing');
-      buildContainer(replaceFields(parent, fields));
-      this.fieldsFor(id).set(fields);
-      return null;
-    } catch (error) {
-      return this.i18n.describe(error);
-    }
+    const { setting, tab } = fieldSetting(changes);
+    return this.validation.submit(id, changes, setting, tab);
   }
 
-  updateDefaultValue(id: number, value: FieldDefaultValue) {
-    if (this.isPublished(id)) return;
-    this.fieldsFor(id).update((prev) =>
-      prev.map((f) =>
-        f.id === id && defaultValueError(f, value) === null
-          ? { ...f, defaultValue: value, importedChoiceDefault: undefined }
-          : f,
-      ),
-    );
+  updateDefaultValue(id: number, value: FieldDefaultValue): string | null {
+    return this.updateFieldSettings(id, { defaultValue: value, importedChoiceDefault: undefined });
   }
 
   toggleAllowMultiple(id: number) {
-    if (this.isPublished(id)) return;
-    this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, allowMultiple: !f.allowMultiple } : f)));
+    if (!this.validation.canEdit(id)) return;
+    const multiple = !this.fieldsFor(id)().find((field) => field.id === id)?.allowMultiple;
+    this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, allowMultiple: multiple } : f)));
   }
 
   /** The one value a static field shows. */
   updateContent(id: number, content: string) {
-    if (this.isPublished(id)) return;
+    if (!this.validation.canEdit(id)) return;
     this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, content } : f)));
   }
 
   updateHelpText(id: number, helpText: string) {
-    if (this.isPublished(id)) return;
+    if (!this.validation.canEdit(id)) return;
     this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, helpText } : f)));
   }
 
   updateControlledTermConstraints(id: number, constraints: ControlledTermSet) {
-    if (this.isPublished(id)) return;
+    if (!this.validation.canEdit(id)) return;
     this.fieldsFor(id).update((prev) =>
       prev.map((f) => (f.id === id ? { ...f, controlledTermConstraints: constraints } : f)),
     );
@@ -745,11 +639,12 @@ export class TemplateService {
       document.identifier = '';
       document.children = withStarterFields ? containerFromFlat({ ...document, fields: starterFields() }).children : [];
     }
-    this.draftIssues.set({});
-    this.touchedNames.set(new Set());
-    this.pristineStarterOptions.set(new Set());
+    this.validation.reset();
     this.nameFocusRequest.set(null);
     this.childPicker.set(null);
+    this.selectedField.set(null);
+    this.validationTarget.set(null);
+    this.showPicker.set(null);
     this.session.replace(document);
     this.collapsedElements.set(new Set());
     this.markSaved();
@@ -780,14 +675,15 @@ export class TemplateService {
     this.loadError.set(null);
 
     this.initialInsertionId.set(null);
-    this.draftIssues.set({});
     // A name the template arrived with is the author's, not a blank the designer has just
     // put in front of them, so a missing one is stated at once. Held back like a new
     // field's, it refused Save with nothing on screen to say why.
-    this.touchedNames.set(new Set(namedIds(state)));
-    this.pristineStarterOptions.set(new Set());
+    this.validation.reset(namedIds(state));
     this.nameFocusRequest.set(null);
     this.childPicker.set(null);
+    this.selectedField.set(null);
+    this.validationTarget.set(null);
+    this.showPicker.set(null);
     this.session.replace(state);
     this.collapsedElements.set(new Set());
     this.markSaved();
@@ -795,19 +691,6 @@ export class TemplateService {
   readonly children = computed(() => this.session.active().children);
   readonly containerChoices = computed(() => containers(this.session.document()));
   readonly hasElements = computed(() => this.containerChoices().length > 1);
-  readonly breadcrumbs = computed(() => {
-    const active = this.session.active().id;
-    const path: ContainerDraft[] = [];
-    let current = this.session.active();
-    path.unshift(current);
-    while (current.id !== this.session.document().id) {
-      const parent = parentOf(this.session.document(), current.id);
-      if (!parent) break;
-      path.unshift(parent);
-      current = parent;
-    }
-    return active === this.session.document().id ? [this.session.document()] : path;
-  });
   canAddField(type: string, targetId = this.session.active().id): boolean {
     return allowedInContainer(
       type,
@@ -849,11 +732,9 @@ export class TemplateService {
     }
     this.loadError.set(null);
     if (namePlacement) {
-      const used = new Set(target.children.map((child) => this.childKey(child.id)));
-      const base =
-        childName(node).trim().toLowerCase().replace(/\s+/g, '_') || (node.kind === 'element' ? 'element' : 'field');
-      let name = base;
-      for (let suffix = 2; used.has(name); suffix++) name = `${base}_${suffix}`;
+      // The key a rename would give it, in the container the child joins.
+      const used = new Set(childKeys(target.children.map(keyedChild), target.kind));
+      const name = freshChildKey(childName(node), keyedChild(node), target.kind, (key) => used.has(key));
       if (node.kind === 'field') {
         node = { ...node, placement: { ...node.placement, deploymentName: name } };
       } else {
@@ -939,67 +820,6 @@ export class TemplateService {
     this.nameFocusRequest.set(definition.id);
     return definition.id;
   }
-  importElement(source: string | object, targetId = this.session.active().id): void {
-    const definition = readContainer(source);
-    if (definition.kind !== 'element') throw new LocalizedError(message('errors.chooseElementDocument'));
-    // Import is an independent local copy retaining its source artifact identity.
-    this.insertNode(
-      {
-        kind: 'element',
-        id: definition.id,
-        definition,
-        placement: { allowMultiple: false, propertyIri: newFieldIdentity().propertyIri },
-      },
-      Number.MAX_SAFE_INTEGER,
-      targetId,
-    );
-  }
-  duplicateElement(id: number): void {
-    const parent = parentOf(this.session.document(), id);
-    const node = parent?.children.find((child): child is ElementNode => child.kind === 'element' && child.id === id);
-    if (!node) return;
-    const clone = (source: ChildNode): ChildNode => {
-      const copy = structuredClone(source);
-      copy.id = newNodeId();
-      copy.placement.propertyIri = newFieldIdentity().propertyIri;
-      const resetMetadata = (metadata: NonNullable<Field['artifact']>, sourceId: string) => ({
-        ...metadata,
-        publicationStatus: 'bibo:draft' as const,
-        version: '0.0.1',
-        createdOn: null,
-        createdBy: null,
-        modifiedOn: null,
-        modifiedBy: null,
-        derivedFrom: sourceId || null,
-        previousVersion: null,
-      });
-      if (copy.kind === 'field') {
-        const previousId = copy.definition.atId ?? '';
-        copy.definition.atId = newFieldIdentity().atId;
-        copy.definition.publishedDefinition = undefined;
-        if (copy.definition.artifact) copy.definition.artifact = resetMetadata(copy.definition.artifact, previousId);
-      } else {
-        const previousId = copy.definition.identifier;
-        copy.definition.id = copy.id;
-        copy.definition.identifier = newContainer('element').identifier;
-        copy.definition.version = '0.0.1';
-        if (copy.definition.metadata)
-          copy.definition.metadata.artifact = resetMetadata(copy.definition.metadata.artifact, previousId);
-        copy.definition.children = copy.definition.children.map(clone);
-      }
-      return copy;
-    };
-    try {
-      this.insertNode(
-        clone({ ...node, definition: readContainer(templateToJson(buildContainer(node.definition))) }),
-        parent!.children.findIndex((child) => child.id === id) + 1,
-        parent!.id,
-      );
-    } catch (error) {
-      this.loadError.set(this.i18n.describe(error));
-    }
-  }
-
   deleteChild(id: number): void {
     const parent = parentOf(this.session.document(), id);
     if (!parent) return;
@@ -1021,29 +841,12 @@ export class TemplateService {
       this.loadError.set(this.i18n.describe(error));
     }
   }
-  updateElementPlacement(id: number, placement: ElementNode['placement']): string | null {
-    const parent = parentOf(this.session.document(), id);
-    if (!parent) return this.i18n.t('errors.elementMissing');
-    const name = placement.deploymentName?.trim();
-    if (name !== undefined) {
-      const error = this.keyError(id, name);
-      if (error) return error;
-      this.automaticKeys.delete(id);
-    }
-    const next = updateContainer(this.session.document(), parent.id, (container) => ({
-      ...container,
-      children: container.children.map((node) =>
-        node.id === id && node.kind === 'element'
-          ? { ...node, placement: { ...placement, deploymentName: name } }
-          : node,
-      ),
-    }));
-    try {
-      buildContainer(next);
-      this.session.document.set(next);
-      return null;
-    } catch (error) {
-      return this.i18n.describe(error);
-    }
+  updateElementPlacement(
+    id: number,
+    placement: Partial<ElementNode['placement']>,
+    setting = 'placement',
+    tab = 'Occurrences',
+  ): string | null {
+    return this.validation.submit(id, placement, setting, tab);
   }
 }

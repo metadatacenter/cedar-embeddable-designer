@@ -60,6 +60,8 @@ const KEYS: ReadonlySet<string> = new Set(
  */
 const isKey = (literal: string): boolean =>
   KEYS.has(literal) ||
+  // A counted message's base, whose forms `countKey` chooses between.
+  (KEYS.has(`${literal}.one`) && KEYS.has(`${literal}.other`)) ||
   (literal.endsWith('.') && [...KEYS].some((key) => key.startsWith(literal))) ||
   (/^\.[\w$-]+$/.test(literal) && [...KEYS].some((key) => key.includes(`${literal}.`) || key.endsWith(literal)));
 

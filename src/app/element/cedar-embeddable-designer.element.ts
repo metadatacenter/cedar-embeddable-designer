@@ -167,8 +167,16 @@ export class CedarEmbeddableDesignerElementComponent {
     inject(DestroyRef).onDestroy(() => validation.destroy());
     const changes = effect(
       () => {
-        const artifact = this.cedarTemplate();
-        this.templateChange.emit(artifact);
+        // A loaded document can be editable before it is serializable. The
+        // validation report communicates that state; never publish an old artifact.
+        let artifact: object;
+        try {
+          artifact = this.cedarTemplate();
+        } catch {
+          return;
+        }
+        // Each public channel owns its snapshot, including synchronous subscribers.
+        this.templateChange.emit(structuredClone(artifact));
         this.artifactChange.emit(artifact);
       },
       {
@@ -179,6 +187,6 @@ export class CedarEmbeddableDesignerElementComponent {
   }
 
   private cedarTemplate(): object {
-    return this.service.templateJson();
+    return structuredClone(this.service.templateJson());
   }
 }

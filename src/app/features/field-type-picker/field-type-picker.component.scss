@@ -80,8 +80,8 @@
   background-color: var(--cedar-surface-raised);
   border-radius: var(--cedar-radius);
   border: 1px solid var(--cedar-control-border-default);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  z-index: 20;
+  box-shadow: var(--cedar-shadow-overlay);
+  z-index: var(--cedar-layer-menu);
   min-width: 200px;
 }
 
@@ -160,10 +160,6 @@
 }
 
 /* Fields Grid */
-.fields-section {
-  margin-bottom: var(--cedar-space-2);
-}
-
 .fields-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 110px), 1fr));
@@ -198,14 +194,4 @@
   text-align: center;
   word-break: break-word;
   width: 100%;
-}
-
-.btn-existing-child {
-  grid-column: span 2;
-}
-
-@container (max-width: 224px) {
-  .btn-existing-child {
-    grid-column: span 1;
-  }
 }

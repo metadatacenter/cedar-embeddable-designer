@@ -4,11 +4,21 @@ import type { Field } from '../models/types';
 
 /** One document tree and one navigation state per designer; nested containers share it. */
 export class EditorSession {
+  /** Commands reconcile pending edits before publishing the next document snapshot. */
+  reconcile = (document: ContainerDraft): ContainerDraft => document;
   readonly document;
   readonly activeId;
   readonly active;
   constructor(document: ContainerDraft) {
-    this.document = signal(document);
+    const state = signal(document);
+    const set = (next: ContainerDraft) => state.set(this.reconcile(next));
+    this.document = Object.assign(
+      computed(() => state()),
+      {
+        set,
+        update: (update: (previous: ContainerDraft) => ContainerDraft) => set(update(state())),
+      },
+    );
     this.activeId = signal(document.id);
     this.active = computed(() => findContainer(this.document(), this.activeId()) ?? this.document());
   }

@@ -38,6 +38,8 @@ import {
   templateToYaml,
   toDesignerTemplate,
 } from './cedar-template';
+import { allowedInContainer } from './container-draft';
+import { PLACEMENTS } from './field-placements.testing';
 
 const paletteTypes = Object.keys(FIELD_TYPES);
 
@@ -119,6 +121,8 @@ interface SharedParameter {
   readonly appliesTo?: (paletteType: string) => boolean;
   /** What a YAML export does with it. Lossless unless stated. */
   readonly yaml?: YamlOutcome;
+  /** Recorded by the field's parent rather than the field, so a standalone field has none. */
+  readonly placement?: true;
 }
 
 /**
@@ -176,6 +180,7 @@ const PARAMETERS: readonly SharedParameter[] = [
   },
   {
     name: 'display',
+    placement: true,
     set: () => ({ displayLabel: 'Shown', displayDescription: 'Shown help' }),
     read: (field) => [field.displayLabel, field.displayDescription],
   },
@@ -229,18 +234,21 @@ const PARAMETERS: readonly SharedParameter[] = [
   },
   {
     name: 'required',
+    placement: true,
     set: () => ({ status: 'required' }),
     read: (field) => field.status,
     appliesTo: allowsStatus,
   },
   {
     name: 'recommended',
+    placement: true,
     set: () => ({ status: 'recommended' }),
     read: (field) => field.status,
     appliesTo: allowsStatus,
   },
   {
     name: 'cardinality',
+    placement: true,
     set: () => ({ allowMultiple: true, minItems: 1, maxItems: 4 }),
     read: (field) => [field.allowMultiple, field.minItems, field.maxItems],
     appliesTo: allowsMultiple,
@@ -338,4 +346,77 @@ describe('through yaml', () => {
     expect(() => templateToYaml(buildTemplate(state))).toThrow(/YAML cannot preserve every property/);
     expect(() => templateToYaml(buildTemplate(state))).toThrow(/Export JSON/);
   });
+});
+
+/**
+ * The same parameters, wherever the field sits.
+ *
+ * Everything above writes a field at a template's root by the flat path. A parameter can survive
+ * the root and be lost one level down, so each placement in `field-placements.testing.ts` is its
+ * own axis. A standalone field has no parent to record a placement, so the designer offers none of
+ * the placement parameters for one, and the cross leaves them out.
+ */
+const placedCells = PLACEMENTS.flatMap((placement) =>
+  cells
+    .filter(({ paletteType, parameter }) =>
+      placement.parent ? allowedInContainer(paletteType, placement.parent) : !parameter.placement,
+    )
+    .flatMap((cell) => placement.forms.map((form) => ({ ...cell, placement, form }))),
+);
+
+describe('the placement axis admits the cells it should', () => {
+  it('crosses every placement with every type it may hold and every parameter it can record', () => {
+    for (const placement of PLACEMENTS) {
+      const here = placedCells.filter((cell) => cell.placement === placement && cell.form === 'json');
+      // An element cannot hold a page break; a standalone field records no placement.
+      expect(new Set(here.map((cell) => cell.paletteType)).size).toBe(
+        placement.parent === 'element' ? paletteTypes.length - 1 : paletteTypes.length,
+      );
+      if (!placement.parent) expect(here.some((cell) => cell.parameter.placement)).toBe(false);
+    }
+  });
+});
+
+const placed = (subset: typeof placedCells) =>
+  subset.map((cell) => [cell.placement.name, cell.form, cell.paletteType, cell.parameter.name, cell] as const);
+const keeps = placedCells.filter(
+  (cell) => cell.parameter.name !== 'schemaText' && (cell.form === 'json' || cell.parameter.yaml !== 'refused'),
+);
+
+describe('at each placement', () => {
+  it.each(placed(keeps))('at %s through %s, %s keeps its %s', (_placement, _form, _paletteType, _name, cell) => {
+    const original = fieldFor(cell.paletteType, cell.parameter);
+    const readBack = cell.placement.roundTrip(original, cell.form);
+
+    expect(cell.parameter.read(readBack)).toEqual(cell.parameter.read(original));
+  });
+
+  it.each(placed(placedCells.filter((cell) => cell.parameter.name === 'schemaText' && cell.form === 'json')))(
+    'at %s through %s, %s derives its title from its name and keeps its schema description',
+    (_placement, _form, _paletteType, _name, cell) => {
+      const readBack = cell.placement.roundTrip(fieldFor(cell.paletteType, cell.parameter), cell.form);
+
+      expect(cell.parameter.read(readBack)).toEqual(['F field schema', 'Custom schema description']);
+    },
+  );
+
+  it.each(placed(placedCells.filter((cell) => cell.form === 'json' || cell.parameter.yaml !== 'refused')))(
+    'at %s through %s, %s settles its %s after one write',
+    (_placement, _form, _paletteType, _name, cell) => {
+      const first = cell.placement.roundTrip(fieldFor(cell.paletteType, cell.parameter), cell.form);
+      const second = cell.placement.roundTrip(first, cell.form);
+
+      // Reading a container mints each node a new session id, which is not part of the artifact.
+      expect({ ...second, id: 0 }).toEqual({ ...first, id: 0 });
+    },
+  );
+
+  it.each(placed(placedCells.filter((cell) => cell.form === 'yaml' && cell.parameter.yaml === 'refused')))(
+    'at %s through %s, %s will not export its %s',
+    (_placement, _form, _paletteType, _name, cell) => {
+      expect(() => cell.placement.roundTrip(fieldFor(cell.paletteType, cell.parameter), 'yaml')).toThrow(
+        /YAML cannot preserve every property/,
+      );
+    },
+  );
 });

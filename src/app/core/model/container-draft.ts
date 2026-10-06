@@ -1,6 +1,7 @@
 import type { Field } from '../models/types';
-import type { ContainerMetadata, DesignerTemplate } from './cedar-template';
+import type { ContainerMetadata, DesignerTemplate } from './cedar-model/types';
 import { LocalizedError, message } from '../../i18n/messages';
+import { childKeyError } from './child-key-policy';
 
 /** Session identity, independent of reusable CEDAR artifact identifiers. */
 let nextId = 10000;
@@ -187,6 +188,16 @@ export function moveChild(root: ContainerDraft, childId: number, targetId: numbe
     )
   )
     throw new LocalizedError(message('errors.move.nameTaken'));
+  // A template reserves more attribute-value keys than an element does, so a key that is valid where
+  // the child sits may not be valid where it is going.
+  const key = node.placement.deploymentName;
+  const attributeValue = node.kind === 'field' && node.definition.type === 'attributeValue';
+  if (
+    key !== undefined &&
+    !childKeyError(key, attributeValue, undefined, parent.kind) &&
+    childKeyError(key, attributeValue, undefined, target.kind)
+  )
+    throw new LocalizedError(message('errors.move.nameReserved'));
   const removed = updateContainer(root, parent.id, (container) => ({
     ...container,
     children: container.children.filter((child) => child.id !== childId),

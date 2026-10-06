@@ -1,3 +1,4 @@
+import { fieldDisplayName } from '../../core/model/field-display-name';
 import { InsertionActionsComponent } from '../insertion-actions/insertion-actions.component';
 import { FieldTypePickerComponent } from '../field-type-picker/field-type-picker.component';
 import { PALETTE_FIELD_TYPES } from '../../core/models/types';
@@ -8,17 +9,32 @@ import { TemplateService } from '../../core/services/template.service';
 import { Field, CustomField } from '../../core/models/types';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { TranslatePipe } from '@ngx-translate/core';
+import { CountKeyPipe } from '../../i18n/count-key.pipe';
 
 @Component({
   selector: 'app-field-library-sidebar',
   standalone: true,
-  imports: [DragDropModule, IconComponent, InsertionActionsComponent, FieldTypePickerComponent, TranslatePipe],
+  imports: [
+    DragDropModule,
+    IconComponent,
+    InsertionActionsComponent,
+    FieldTypePickerComponent,
+    CountKeyPipe,
+    TranslatePipe,
+  ],
   templateUrl: './field-library-sidebar.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./field-library-sidebar.component.scss'],
 })
 export class FieldLibrarySidebarComponent {
   readonly service = inject(TemplateService);
+  readonly displayName = fieldDisplayName;
+
+  select(id: number): void {
+    this.service.openContainer(this.service.parentContainerId(id));
+    this.service.selectedField.set(id);
+    this.service.scrollRequest.set(id);
+  }
   private readonly host = inject(ElementRef<HTMLElement>);
 
   fieldListHeight = 33.33; // percentage

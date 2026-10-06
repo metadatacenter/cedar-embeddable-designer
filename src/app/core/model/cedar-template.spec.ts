@@ -14,7 +14,13 @@
  * the same model, which is the claim that adopting the library buys and the one
  * that fails loudest if anything here still thinks in terms of JSON keys.
  */
-import { ControlledTermField, TemporalField, Template } from 'cedar-model-typescript-library';
+import {
+  AbstractDynamicChildDeploymentInfo,
+  CedarWriters,
+  ControlledTermField,
+  TemporalField,
+  Template,
+} from 'cedar-model-typescript-library';
 import { Field } from '../models/types';
 import { FIELD_TYPES } from '../models/types';
 import {
@@ -25,7 +31,6 @@ import {
   buildTemplate,
   contentKindOf,
   descriptorOf,
-  fieldDeployment,
   fieldToJson,
   readField,
   newFieldIdentity,
@@ -59,6 +64,18 @@ function templateOf(...fields: Field[]): DesignerTemplate {
     version: '0.0.1',
     fields,
   };
+}
+
+/**
+ * How one child is deployed in its template.
+ *
+ * The container types its children as `AbstractChildDeploymentInfo`, the base every
+ * child shares, which carries none of the settings a field deployment has. Every child
+ * these tests build is a field, so the narrowing is safe here.
+ */
+function fieldDeployment(template: Template, key: string): AbstractDynamicChildDeploymentInfo | null {
+  const info = template.getChildrenInfo().get(key);
+  return info === null ? null : (info as AbstractDynamicChildDeploymentInfo);
 }
 
 /** The JSON a host would receive, as a plain record for indexing. */
@@ -1179,4 +1196,31 @@ it('preserves genuine description text when loading older artifacts', () => {
   const loaded = toDesignerTemplate(readTemplate(json(source)));
   expect(loaded.description).toBe(source.description);
   expect(loaded.fields[0].helpText).toBe('A helpful description');
+});
+
+/**
+ * A field's name is a label, and need not be a key the model accepts. The designer files a field
+ * named "@id", or an attribute-value field named "name", under a key derived from the name, so a
+ * standalone field with such a name is one the designer writes. Reading it back must not refuse it.
+ */
+describe('a standalone field whose name is not a usable key', () => {
+  const names = (type: string) => [
+    '@id',
+    'schema:name',
+    '__proto__',
+    ...(type === 'attributeValue' ? ['name', 'annotations'] : []),
+  ];
+  const cases = ['text', 'attributeValue'].flatMap((type) => names(type).map((name) => [type, name] as const));
+
+  it.each(cases)('a %s field named %j reads back from JSON', (type, name) => {
+    const original = field({ type, name, allowMultiple: type === 'attributeValue' });
+    expect(readField(JSON.stringify(fieldToJson(original))).name).toBe(name);
+  });
+
+  it.each(cases)('a %s field named %j reads back from YAML', (type, name) => {
+    const original = field({ type, name, deploymentName: 'value', allowMultiple: type === 'attributeValue' });
+    const built = buildTemplate(templateOf(original)).getField('value')!;
+    const yaml = CedarWriters.yaml().getStrict().getFieldWriterForField(built).getAsYamlString(built, false);
+    expect(readField(yaml).name).toBe(name);
+  });
 });

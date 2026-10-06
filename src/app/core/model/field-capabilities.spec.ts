@@ -21,7 +21,7 @@
 import { describe, expect, it } from 'vitest';
 import { CedarFieldType } from 'cedar-model-typescript-library';
 import { FIELD_TYPES } from '../models/types';
-import { FieldParameter, PARAMETER_SETTERS, descriptorOf, parametersOf } from './cedar-template';
+import { FieldParameter, PARAMETER_SETTERS, descriptorOf } from './cedar-template';
 
 const paletteTypes = Object.keys(FIELD_TYPES);
 
@@ -110,7 +110,7 @@ describe('the palette and the model library', () => {
 describe('the parameters a descriptor claims', () => {
   it.each(paletteTypes)('are all setters %s really has', (paletteType) => {
     const available = new Set(settersOf(paletteType));
-    const missing = parametersOf(paletteType).flatMap((parameter) =>
+    const missing = (descriptorOf(paletteType).parameters ?? []).flatMap((parameter) =>
       PARAMETER_SETTERS[parameter].filter((setter) => !available.has(setter)).map((setter) => `${parameter}/${setter}`),
     );
     expect(missing).toEqual([]);
@@ -123,7 +123,9 @@ describe('the parameters a descriptor claims', () => {
    * be.
    */
   it.each(paletteTypes)('account for every setter %s offers', (paletteType) => {
-    const claimed = new Set(parametersOf(paletteType).flatMap((parameter) => PARAMETER_SETTERS[parameter]));
+    const claimed = new Set(
+      (descriptorOf(paletteType).parameters ?? []).flatMap((parameter) => PARAMETER_SETTERS[parameter]),
+    );
     const unaccounted = settersOf(paletteType).filter(
       (setter) =>
         !claimed.has(setter) &&
@@ -145,7 +147,7 @@ describe('the parameter table', () => {
 
   /** A parameter no type claims is a row nothing reads, and a decision left half-made. */
   it('has a type behind every parameter it defines', () => {
-    const claimed = new Set(paletteTypes.flatMap((type) => parametersOf(type)));
+    const claimed = new Set(paletteTypes.flatMap((type) => descriptorOf(type).parameters ?? []));
     const orphans = (Object.keys(PARAMETER_SETTERS) as FieldParameter[]).filter((parameter) => !claimed.has(parameter));
     expect(orphans).toEqual([]);
   });

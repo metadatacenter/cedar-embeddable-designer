@@ -201,11 +201,6 @@
   <app-preset-definitions-modal></app-preset-definitions-modal>
 </div>
 
-<!-- Field Designer Overlay -->
-@if (service.showFieldDesigner()) {
-  <app-field-designer class="field-designer-overlay"></app-field-designer>
-}
-
 @if (service.childPicker(); as target) {
   <app-child-picker [target]="target" />
 }

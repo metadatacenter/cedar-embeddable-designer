@@ -38,12 +38,34 @@
     {
       "id": "ced.field-library-ced",
       "name": "Field Library (CED)",
-      "section": "Management"
+      "section": "Management",
+      "contract": "page",
+      "scenario": "field-library",
+      "selector": "app-field-library-sidebar .sidebar-container",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.html",
+          "anchor": "class=\"sidebar-container\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.ced",
       "name": "CED",
-      "section": "Menus"
+      "section": "Menus",
+      "contract": "page",
+      "scenario": "designer-page",
+      "selector": "cedar-embeddable-designer .app-header",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/app.component.html",
+          "anchor": "class=\"app-header\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.user-menu",
@@ -229,30 +251,85 @@
       "id": "ced.settings-default-value-errors",
       "name": "Settings / Default Value Errors",
       "section": "Confirmation / Warning / Error",
-      "parent": "ced.template-designer-ced"
+      "parent": "ced.template-designer-ced",
+      "contract": "page",
+      "scenario": "default-value-error",
+      "selector": "app-field-default-value [role=\"alert\"]",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-default-value/field-default-value.component.html",
+          "anchor": "role=\"alert\" class=\"ced-field-error\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.import-field-library-errors",
       "name": "Import / Field Library Errors",
       "section": "Confirmation / Warning / Error",
-      "parent": "ced.template-designer-ced"
+      "parent": "ced.template-designer-ced",
+      "contract": "page",
+      "scenario": "import-error",
+      "selector": "app-child-picker [role=\"alert\"]",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/child-picker/child-picker.component.html",
+          "anchor": "role=\"alert\" class=\"error\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.preview-component-unavailable",
       "name": "Preview / Component Unavailable",
       "section": "Confirmation / Warning / Error",
-      "parent": "ced.template-designer-ced"
+      "parent": "ced.template-designer-ced",
+      "contract": "page",
+      "scenario": "preview-unavailable",
+      "selector": "app-cee-preview .cee-preview",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/cee-preview/cee-preview.component.html",
+          "anchor": "class=\"cee-preview__missing\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.term-picker-errors-warnings",
       "name": "Term Picker Errors / Warnings",
       "section": "Confirmation / Warning / Error",
-      "parent": "ced.template-designer-ced"
+      "parent": "ced.template-designer-ced",
+      "contract": "page",
+      "scenario": "picker-unavailable",
+      "selector": "app-controlled-term-config .picker-unavailable",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/controlled-term-config/controlled-term-config.component.html",
+          "anchor": "class=\"picker-unavailable\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.designer-errors-warnings",
       "name": "Designer Errors / Warnings",
-      "section": "Template Designer"
+      "section": "Template Designer",
+      "contract": "page",
+      "scenario": "invalid-field",
+      "selector": ".field-drag-container.invalid .validation-badge",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-card/field-card.component.html",
+          "anchor": "class=\"validation-badge\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
     },
     {
       "id": "ced.ced-view",
@@ -319,6 +396,166 @@
         {
           "file": "src/app/features/annotations-editor/annotations-editor.component.html",
           "anchor": "add-row"
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.field-metadata-label",
+      "name": "Field metadata label",
+      "section": "Template Designer",
+      "contract": "authoring-label",
+      "scenario": "field-metadata",
+      "selector": "label[for^=\"field-key-\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-settings/field-settings.component.html",
+          "anchor": "[for]=\"'field-key-' + field.id\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.field-metadata-control",
+      "name": "Field metadata control",
+      "section": "Template Designer",
+      "contract": "authoring-control",
+      "scenario": "field-metadata",
+      "selector": "input[id^=\"field-key-\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-settings/field-settings.component.html",
+          "anchor": "[id]=\"'field-key-' + field.id\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.temporal-type-select",
+      "name": "Field constraint select",
+      "section": "Template Designer",
+      "contract": "authoring-control",
+      "scenario": "temporal-constraints",
+      "selector": "select[name=\"temporalType\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-settings/field-settings.component.html",
+          "anchor": "name=\"temporalType\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.element-metadata-label",
+      "name": "Element metadata label",
+      "section": "Template Designer",
+      "contract": "authoring-label",
+      "scenario": "element-metadata",
+      "selector": "label[for^=\"element-key-\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/element-card/element-card.component.html",
+          "anchor": "[for]=\"'element-key-' + node().id\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.element-metadata-control",
+      "name": "Element metadata control",
+      "section": "Template Designer",
+      "contract": "authoring-control",
+      "scenario": "element-metadata",
+      "selector": "input[id^=\"element-key-\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/element-card/element-card.component.html",
+          "anchor": "[id]=\"'element-key-' + node().id\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.nested-field-label",
+      "name": "Nested field constraint label",
+      "section": "Template Designer",
+      "contract": "authoring-label",
+      "scenario": "nested-field",
+      "selector": "app-container-editor app-container-editor label:has(input[name=\"minLength\"]):visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-settings/field-settings.component.html",
+          "anchor": "name=\"minLength\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.nested-field-control",
+      "name": "Nested field constraint control",
+      "section": "Template Designer",
+      "contract": "authoring-control",
+      "scenario": "nested-field",
+      "selector": "app-container-editor app-container-editor input[name=\"minLength\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-settings/field-settings.component.html",
+          "anchor": "name=\"minLength\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.cef-default-label",
+      "name": "Default value label beside real CEF",
+      "section": "Template Designer",
+      "contract": "authoring-label",
+      "scenario": "cef-default",
+      "selector": "[id^=\"field-default-label-\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-settings/field-settings.component.html",
+          "anchor": "'field-default-label-' + field.id"
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.host-override-label",
+      "name": "Field metadata label under a host override",
+      "section": "Template Designer",
+      "contract": "authoring-label",
+      "scenario": "host-override",
+      "selector": "label[for^=\"field-key-\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-settings/field-settings.component.html",
+          "anchor": "[for]=\"'field-key-' + field.id\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.host-override-control",
+      "name": "Field metadata control under a host override",
+      "section": "Template Designer",
+      "contract": "authoring-control",
+      "scenario": "host-override",
+      "selector": "input[id^=\"field-key-\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-settings/field-settings.component.html",
+          "anchor": "[id]=\"'field-key-' + field.id\""
         }
       ],
       "test": "browser/tests/surfaces.spec.ts"

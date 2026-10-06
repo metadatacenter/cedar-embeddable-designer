@@ -147,11 +147,16 @@ recipes apply. Keep shared geometry and typography in the central recipes, not i
 copies under `src/app/shared` or corrective declarations in `src/styles.css`.
 Component styles still own their layout and content-specific widths.
 
-The surface registry verifies annotation labels, control typography and table-cell
-density against central contracts at desktop and narrow widths. The field-type and
-label-weight browser suites cover the broader authoring matrix. Preserve their
-rendered expectations when consolidating styles; do not update visual baselines to
-accept an unintended change.
+The surface registry checks representative authoring surfaces against central
+contracts at desktop and narrow widths. They cover labels and controls in the
+annotation entry row, a field's and an element's metadata and a nested field's
+constraints, a field's constraint select, a default-value label beside real CEF,
+and a field's metadata under a host override of the shared type size. The
+field-type and label-weight browser suites cover the broader authoring matrix,
+every field type in every settings tab. A central contract compares each property
+with a single token, so CED's own browser tests check select-arrow clearance and
+controlled-term default-row alignment. Preserve these rendered expectations when
+consolidating styles; do not update visual baselines to accept an unintended change.
 
 ## The Sibling Components It Works With
 
@@ -274,6 +279,14 @@ possible, loading the distribution and nothing else.
 
 ## Testing
 
+The model adapter's public facade is `src/app/core/model/cedar-template.ts`.
+Its implementations under `core/model/cedar-model/` separate capabilities,
+metadata, terminology conversion, field writing, container writing and reading.
+Only that module imports the CEDAR model library. Implementations use each other
+directly rather than importing their facade; the key policy uses a leaf adapter
+for reserved names. `test:boundaries` enforces the library boundary and rejects
+dependency cycles reachable from the adapter.
+
 | Command                  | What it does                                                        |
 | ------------------------ | ------------------------------------------------------------------- |
 | `npm test`               | unit tests, through the Angular CLI's Vitest builder                |
@@ -345,16 +358,29 @@ session `nodeId`, an ancestor-ID `path`, a display `label`, `setting`, settings 
 stable category `code`, user-facing `message`, `severity: 'error'`, `source`
 (`model` or `draft`), and `shown`. An issue that is not `shown` still blocks saving,
 but CED's error summary holds it back until the author reaches it: a name nobody has
-touched yet, or a new choice field's blank starter option. A host that explains a
+touched yet, or a new choice field's blank starter option while its name is still
+being entered. Leaving the name reveals any unfinished option. A host that explains a
 disabled Save by pointing at errors should count only the shown ones. Do not parse
 messages or persist session IDs across documents.
 Validation checks the settings CED supports; it does not replace server validation,
 permission checks, or save/publish lifecycle rules.
 
 CED marks affected cards and Overview entries, including ancestor elements, and
-provides a summary linking to the relevant settings. Correcting or clearing an edit
-removes its issue; deleting an item or loading another document removes its pending
-issues from the report.
+provides a summary linking to the relevant settings. One coordinator retains rejected
+settings, retries them when related values change, and supplies the report to every
+panel. Correcting or clearing an edit removes its issue; deleting an item, hiding an
+inapplicable setting, or loading another document removes its pending issues.
+Schema-valid input can still contain authoring errors. Imported JSON preserves
+numeric and temporal defaults that conflict with their constraints so they can be
+repaired; invalid IRI defaults are reported before any settings panel opens.
+Independent errors are reported together, including children nested several levels
+deep. The summary opens collapsed ancestors and the affected setting. Invalid
+supplied defaults remain visible and can be cleared even without the optional CEF
+control. Pending-only edits count as dirty. Terminology replies are ignored after
+an intervening edit, replacement, cancellation, or destruction of their control.
+Invalid imported children can be repaired independently. If the document cannot be
+serialized, the preview explains why it is unavailable and resumes after repair;
+artifact change events wait until serialization succeeds.
 The wrapper remains responsible for saving and can display
 the report when a save is attempted.
 
@@ -478,10 +504,11 @@ highlighting owns a content palette, and the demo host deliberately uses differe
 styles to test embedding. Those are not reasons to duplicate control typography,
 theme colors, focus rings or dialog geometry.
 
-The adoption baseline still contains migration debt: residual utility styles,
-compact toolbar/chip measurements, picker styling and global type rules. It is not
-a list of approved exceptions. Keep resolved entries pruned, document any necessary
+The adoption baseline still contains migration debt: outline, toolbar, glyph and
+badge measurements, sidebar resizing geometry, two stacking indices and one hover
+treatment. The token gate admits no exceptions, so a finding leaves the baseline
+only when a shared role, a recipe or a designer size in the tokens package's
+`spacing` export replaces it. Keep resolved entries pruned, document any necessary
 local rule at its owner, and retain desktop/narrow-width, host-override and real-CEF
-checks. An approved exception covers only its reviewed occurrences; additional
-copies are new drift. Do not substitute an unrelated token merely because its
-current numeric value happens to match.
+checks. Do not substitute an unrelated token merely because its current numeric
+value happens to match.

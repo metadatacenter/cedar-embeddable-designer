@@ -1,5 +1,15 @@
 import { Field, FieldDefaultValue } from '../models/types';
 import { Translate, english } from '../../i18n/messages';
+import { validAbsoluteIri } from './cedar-model/iri-syntax';
+
+export function defaultFormatError(field: Field, value: FieldDefaultValue, t: Translate = english): string | null {
+  if (value.kind === 'iri' && !validAbsoluteIri(value.iri)) return t('defaultValue.invalidIri');
+  if (value.kind === 'literal' && field.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.value))
+    return t('defaultValue.invalidEmail');
+  if (value.kind === 'literal' && field.type === 'phone' && !/^[+0-9\s\-()]+$/.test(value.value))
+    return t('defaultValue.invalidPhone');
+  return temporalDefaultError(field, value, t);
+}
 
 function settings(field: Field) {
   return (

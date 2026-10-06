@@ -1,17 +1,11 @@
-import { childKeyError } from './child-key-policy';
+import { failureRule, ValidationRule } from './validation-rule';
+import { annotationError } from './annotations';
+import { childKeyError, childKeys, keyedChild } from './child-key-policy';
 import type { CedValidationIssue, CedValidationReport } from '../../ced-public-api';
 import { ChildNode, ContainerDraft, fieldView } from './container-draft';
 import { elementDisplayName, fieldDisplayName } from './field-display-name';
-import type { Field } from '../models/types';
-import {
-  deploymentKeys,
-  buildContainer,
-  buildTemplate,
-  fieldToJson,
-  choiceDefaultConflict,
-  defaultValueError,
-  allowsOptions,
-} from './cedar-template';
+import { fieldValidationIssues } from './field-validation';
+import { descriptorOf, buildContainer, buildTemplate, allowsOptions } from './cedar-template';
 import { Translate, describeError, english } from '../../i18n/messages';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
 
@@ -42,7 +36,13 @@ export function validateDocument(
   drafts: DraftIssues,
   t: Translate = english,
 ): CedValidationReport {
-  const issues: CedValidationIssue[] = [];
+  const report = inspectDocument(document, drafts, t);
+  return { ...report, issues: report.issues.map(({ rule: _rule, ...issue }) => issue) };
+}
+
+export function inspectDocument(document: ContainerDraft, drafts: DraftIssues, t: Translate = english) {
+  const issues: (CedValidationIssue & { rule: ValidationRule })[] = [];
+  let modelInvalid = false;
   const visit = (container: ContainerDraft, ancestors: number[]) => {
     const path = [...ancestors, container.id];
     const add = (
@@ -55,16 +55,26 @@ export function validateDocument(
       source: 'model' | 'draft',
       // The model names an artifact by its plain name when it prefixes a message.
       name = label,
+      rule: ValidationRule = { code: `${setting}.invalid` },
     ) => {
+      if (source === 'model') modelInvalid = true;
+      // A control has one current verdict. Its rejected draft supersedes the
+      // accepted model's error for that same setting, not errors in other settings.
+      if (
+        source === 'model' &&
+        issues.some((issue) => issue.nodeId === id && issue.setting === setting && issue.source === 'draft')
+      )
+        return;
       const prefix = t('errors.namedField', { name: name.trim() || t('common.anUnnamedField'), message: '' });
       issues.push({
         nodeId: id,
         label,
         path: nodePath,
         setting,
-        message: message.startsWith(prefix) ? message.slice(prefix.length) : message,
+        message: message.startsWith(prefix) && message.length > prefix.length ? message.slice(prefix.length) : message,
         tab,
         code: `${setting}.invalid`,
+        rule,
         severity: 'error',
         source,
         shown: true,
@@ -88,16 +98,39 @@ export function validateDocument(
         'model',
       );
     pending(container.id, container.name, path);
-    const keyFields = container.children.map((node) => ({
-      name: node.definition.name,
-      deploymentName: node.placement.deploymentName,
-    }));
-    let keys: string[];
+    const annotations = annotationError(container.metadata?.annotations ?? []);
+    if (annotations)
+      add(
+        container.id,
+        container.name,
+        path,
+        'annotations',
+        t(annotations.key, annotations.params),
+        SETTINGS_TABS.annotations,
+        'model',
+      );
     try {
-      keys = deploymentKeys(keyFields);
-    } catch {
-      keys = keyFields.map((field, index) => field.deploymentName ?? (field.name.trim() || `field_${index + 1}`));
+      buildContainer({
+        ...container,
+        children: [],
+        metadata: container.metadata ? { ...container.metadata, annotations: undefined } : undefined,
+      });
+    } catch (error) {
+      add(
+        container.id,
+        container.name,
+        path,
+        'artifact',
+        describeError(error, t),
+        SETTINGS_TABS.display,
+        'model',
+        container.name,
+        failureRule(error, { ...container, children: [] }),
+      );
     }
+
+    // A blank or repeated key of a child's own is reported below, so the keys are read leniently.
+    const keys = childKeys(container.children.map(keyedChild), container.kind);
     for (const node of container.children) {
       const key = keys[container.children.indexOf(node)];
       const keyError =
@@ -117,7 +150,26 @@ export function validateDocument(
       if (node.kind === 'element') {
         visit(node.definition, path);
         try {
-          buildContainer({ ...container, children: [{ ...node, definition: { ...node.definition, children: [] } }] });
+          buildContainer({
+            id: -1,
+            kind: container.kind,
+            name: 'Validation',
+            description: '',
+            identifier: 'urn:ced:validation',
+            version: '0.0.1',
+            children: [
+              {
+                ...node,
+                definition: {
+                  ...node.definition,
+                  name: 'Validation',
+                  version: '0.0.1',
+                  metadata: undefined,
+                  children: [],
+                },
+              },
+            ],
+          });
         } catch (error) {
           add(
             node.id,
@@ -128,6 +180,7 @@ export function validateDocument(
             'Occurrences',
             'model',
             node.definition.name,
+            failureRule(error, node.placement),
           );
         }
         continue;
@@ -152,32 +205,40 @@ export function validateDocument(
             );
         });
       }
-      const settingsField: Field = { ...field, defaultValue: { kind: 'none' }, importedChoiceDefault: undefined };
-      let settingsValid = true;
-      try {
-        fieldToJson(settingsField);
-      } catch (error) {
-        settingsValid = false;
-        const media = ['image', 'youtube', 'richText'].includes(field.type);
+      for (const issue of fieldValidationIssues(field, t))
         add(
           node.id,
           issueLabel(node),
           nodePath,
-          'settings',
-          describeError(error, t),
-          media ? 'Content' : 'Constraints',
+          issue.setting,
+          issue.message,
+          issue.tab,
           'model',
           field.name,
+          issue.rule,
         );
-      }
-      if (settingsValid) {
+      if (descriptorOf(field.type).deployment !== 'static') {
         try {
           buildTemplate({
             name: 'Validation',
             description: '',
             identifier: 'urn:ced:validation',
             version: '0.0.1',
-            fields: [settingsField],
+            // Occurrences are independent of definition errors. A broken
+            // definition must not conceal a second, repairable placement error.
+            fields: [
+              {
+                id: field.id,
+                name: field.name,
+                type: 'text',
+                status: field.status,
+                options: [],
+                defaultValue: { kind: 'none' },
+                allowMultiple: field.allowMultiple || descriptorOf(field.type).deployment === 'alwaysMultiple',
+                minItems: field.minItems,
+                maxItems: field.maxItems,
+              },
+            ],
           });
         } catch (error) {
           add(
@@ -189,10 +250,9 @@ export function validateDocument(
             'Occurrences',
             'model',
             field.name,
+            failureRule(error, { min: field.minItems, max: field.maxItems }),
           );
         }
-        const error = choiceDefaultConflict(field, t) ?? defaultValueError(field, field.defaultValue, t);
-        if (error) add(node.id, issueLabel(node), nodePath, 'defaultValue', error, 'Constraints', 'model', field.name);
       }
     }
   };
@@ -200,7 +260,7 @@ export function validateDocument(
   try {
     buildContainer(document);
   } catch (error) {
-    if (!issues.some((issue) => issue.source === 'model')) {
+    if (!modelInvalid) {
       const root = document;
       issues.push({
         nodeId: root.id,
@@ -209,6 +269,7 @@ export function validateDocument(
         setting: 'artifact',
         tab: 'Display',
         code: 'artifact.invalid',
+        rule: failureRule(error, document),
         message: describeError(error, t),
         severity: 'error',
         source: 'model',

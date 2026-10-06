@@ -28,7 +28,7 @@
   display: inline-flex;
   align-items: center;
   margin: 0;
-  line-height: 1;
+  line-height: var(--cedar-line-height-tight);
   font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-medium, 500);
   text-transform: none;
@@ -79,7 +79,7 @@
   margin: 0;
   padding: 0;
   flex: none;
-  line-height: 1;
+  line-height: var(--cedar-line-height-tight);
   border: 0;
   border-radius: var(--cedar-radius);
   background: transparent;
@@ -107,7 +107,6 @@
   margin: 0;
   padding: var(--cedar-space-4);
   font-size: var(--cedar-font-size);
-  line-height: 1.6;
   color: var(--cedar-text-muted);
 
   code {

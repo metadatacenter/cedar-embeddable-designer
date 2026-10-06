@@ -26,7 +26,17 @@ async function addRows(editor: Locator) {
   await expectValueTypeFits(editor);
   const valueType = editor.getByRole('combobox', { name: 'New annotation value type', exact: true });
   await expect(valueType).toHaveCSS('appearance', 'none');
-  await expect(valueType).toHaveCSS('padding-right', '24px');
+  // An authoring select reserves its compact inset and the small icon box for the chevron.
+  const reserve = await valueType.evaluate((node) => {
+    const probe = document.createElement('span');
+    probe.style.paddingInlineEnd = 'calc(var(--cedar-space-2) + var(--cedar-icon-size-small))';
+    node.parentElement!.append(probe);
+    const value = getComputedStyle(probe).paddingInlineEnd;
+    probe.remove();
+    return value;
+  });
+  expect(reserve).not.toBe('0px');
+  await expect(valueType).toHaveCSS('padding-right', reserve);
   await expect(valueType).toHaveCSS('height', '32px');
   await expect(editor.locator('.add-row label').first()).toHaveCSS('gap', '2px');
   const controls = await editor
@@ -163,6 +173,7 @@ test('the add row validates only on Add and keeps rejected drafts outside the ta
   await expect(editor.getByRole('alert')).toHaveCount(0);
   await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();
   await expect(editor.getByRole('alert')).toHaveText('An annotation value is required.');
+  await expect(editor.getByRole('alert')).toHaveCSS('font-size', '12px');
   await expect(editor.getByRole('button', { name: /Remove annotation/ })).toHaveCount(0);
   await editor.getByRole('combobox', { name: 'New annotation value type', exact: true }).selectOption('iri');
   await editor.getByRole('textbox', { name: 'New annotation value', exact: true }).fill('partial');

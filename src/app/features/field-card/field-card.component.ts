@@ -4,9 +4,9 @@ import { FieldSummaryComponent } from '../field-summary/field-summary.component'
 import { HeaderToggleDirective } from '../../shared/header-toggle.directive';
 import { FieldSettingsComponent } from '../field-settings/field-settings.component';
 import { Component, Input, inject, ChangeDetectionStrategy, viewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
+import { CountKeyPipe } from '../../i18n/count-key.pipe';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService, FIELD_TYPES } from '../../core/services/template.service';
 import { Field } from '../../core/models/types';
@@ -27,7 +27,6 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
   standalone: true,
   imports: [
     ArtifactNameDirective,
-    CommonModule,
     FieldSummaryComponent,
     HeaderToggleDirective,
     FieldSettingsComponent,
@@ -35,6 +34,7 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
     IconComponent,
     ControlledTermConfigComponent,
     DragDropModule,
+    CountKeyPipe,
     TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

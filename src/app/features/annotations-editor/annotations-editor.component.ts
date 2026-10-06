@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { CedLanguageService } from '../../i18n/ced-language.service';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
+import { annotationError } from '../../core/model/annotations';
 import { Field } from '../../core/models/types';
 import { ContainerDraft } from '../../core/model/container-draft';
 import { containerArtifactMetadata } from '../../core/model/cedar-template';
@@ -24,7 +25,10 @@ export class AnnotationsEditorComponent {
   private readonly i18n = inject(CedLanguageService);
   readonly addError = signal<string | null>(null);
   readonly rows = signal<Annotation[]>([]);
-  readonly error = signal<string | null>(null);
+  readonly error = computed(() => {
+    const id = (this.field() ?? this.container())?.id;
+    return id === undefined ? null : this.service.settingError(id, 'annotations');
+  });
   readonly disabled = computed(() => !!this.field()?.publishedDefinition);
   private readonly service = inject(TemplateService);
   private loaded = '';
@@ -38,12 +42,13 @@ export class AnnotationsEditorComponent {
         this.draft.set({ name: '', kind: 'literal', value: '' });
         this.addError.set(null);
       }
-      const annotations = this.field()?.annotations ?? this.container()?.metadata?.annotations ?? [];
+      const field = this.field();
+      const annotations =
+        (field ? this.service.editingField(field).annotations : this.container()?.metadata?.annotations) ?? [];
       const signature = JSON.stringify([owner?.id, annotations]);
       if (signature === this.loaded) return;
       this.loaded = signature;
       this.rows.set(annotations.map((row) => ({ ...row })));
-      this.error.set(null);
     });
   }
 
@@ -69,33 +74,15 @@ export class AnnotationsEditorComponent {
     this.save();
   }
   private validate(rows: Annotation[]): string | null {
-    const names = new Set<string>();
-    let error: string | null = null;
-    for (const row of rows) {
-      if (!row.name.trim()) {
-        error = this.i18n.t('annotations.nameRequired');
-        break;
-      }
-      if (names.has(row.name)) {
-        error = this.i18n.t('annotations.nameUnique');
-        break;
-      }
-      names.add(row.name);
-      if (!row.value.trim()) {
-        error = this.i18n.t('annotations.valueRequired');
-        break;
-      }
-      if (row.kind === 'iri' && !/^[a-z][a-z0-9+.-]*:\S+$/i.test(row.value)) {
-        error = this.i18n.t('annotations.valueIri');
-        break;
-      }
-    }
-    return error;
+    const error = annotationError(rows);
+    return error ? this.i18n.t(error.key, error.params) : null;
   }
+
   private save(rows = this.rows()): boolean {
     const owner = this.field() ?? this.container();
     if (!owner) return false;
-    let error = this.validate(rows);
+    const inputError = this.validate(rows);
+    let error = inputError;
     if (!error) {
       const annotations = rows.map((row) => ({ ...row }));
       if (this.field()) {
@@ -113,8 +100,10 @@ export class AnnotationsEditorComponent {
       }
       if (!error) this.loaded = JSON.stringify([owner.id, annotations]);
     }
-    this.error.set(error);
-    this.service.setSettingsError(owner.id, 'annotations', error, SETTINGS_TABS.annotations);
+    // Typed field failures already belong to the coordinator. Only parser/row
+    // failures need an explicit input error.
+    if (inputError || !this.field())
+      this.service.setSettingsError(owner.id, 'annotations', error, SETTINGS_TABS.annotations);
     return !error;
   }
 }

@@ -40,7 +40,7 @@
         <div>
           <h3 class="preferences-label preferences-spaced">{{ 'preferences.fieldOptions.heading' | translate }}</h3>
           <div class="settings-dialog-group preferences-choice-list">
-            <label class="preferences-option group">
+            <label class="preferences-option">
               <input
                 spellcheck="false"
                 type="checkbox"
@@ -53,7 +53,7 @@
                 <p class="preferences-help">{{ 'preferences.fieldOptions.required.help' | translate }}</p>
               </div>
             </label>
-            <label class="preferences-option group">
+            <label class="preferences-option">
               <input
                 spellcheck="false"
                 type="checkbox"
@@ -66,7 +66,7 @@
                 <p class="preferences-help">{{ 'preferences.fieldOptions.allowMultiple.help' | translate }}</p>
               </div>
             </label>
-            <label class="preferences-option group">
+            <label class="preferences-option">
               <input
                 spellcheck="false"
                 type="checkbox"
@@ -79,7 +79,7 @@
                 <p class="preferences-help">{{ 'preferences.fieldOptions.helpText.help' | translate }}</p>
               </div>
             </label>
-            <label class="preferences-option group">
+            <label class="preferences-option">
               <input
                 spellcheck="false"
                 type="checkbox"
@@ -98,7 +98,7 @@
         <div>
           <h3 class="preferences-label preferences-spaced">{{ 'preferences.features.heading' | translate }}</h3>
           <div class="settings-dialog-group preferences-choice-list">
-            <label class="preferences-option group">
+            <label class="preferences-option">
               <input
                 spellcheck="false"
                 type="checkbox"
@@ -119,7 +119,7 @@
           <div class="settings-dialog-group">
             <p class="preferences-help preferences-spaced">{{ 'preferences.selection.help' | translate }}</p>
             <div class="preferences-selection-list">
-              <label class="preferences-option preferences-choice group">
+              <label class="preferences-option preferences-choice">
                 <input
                   spellcheck="false"
                   type="radio"
@@ -133,7 +133,7 @@
                   <p class="preferences-help">{{ 'preferences.selection.inline.help' | translate }}</p>
                 </div>
               </label>
-              <label class="preferences-option preferences-choice group">
+              <label class="preferences-option preferences-choice">
                 <input
                   spellcheck="false"
                   type="radio"
@@ -176,7 +176,7 @@
             </p>
             <div class="preferences-field-grid max-h-60 custom-scrollbar">
               @for (item of fieldTypesList; track item) {
-                <label class="preferences-field-option group">
+                <label class="preferences-field-option">
                   <input
                     spellcheck="false"
                     type="checkbox"

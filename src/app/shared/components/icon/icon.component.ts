@@ -7,8 +7,8 @@ import { getIcon, iconStyle } from '@org.metadatacenter/cedar-design-tokens/icon
   standalone: true,
   template: `<svg
     [attr.viewBox]="style.viewBox"
-    [attr.width]="style[size]"
-    [attr.height]="style[size]"
+    [attr.width]="box"
+    [attr.height]="box"
     fill="none"
     stroke="currentColor"
     [attr.stroke-width]="style.strokeWidth"
@@ -27,8 +27,12 @@ import { getIcon, iconStyle } from '@org.metadatacenter/cedar-design-tokens/icon
 export class IconComponent {
   @Input() key = 'artifact-field';
   @Input() className = '';
-  @Input() size: 'small' | 'default' | 'large' = 'default';
+  /** A shared icon size, or `fill` for a host element whose own stylesheet sizes it. */
+  @Input() size: 'small' | 'default' | 'large' | 'fill' = 'default';
   readonly style = iconStyle;
+  get box(): number | string {
+    return this.size === 'fill' ? '100%' : this.style[this.size];
+  }
   private readonly sanitizer = inject(DomSanitizer);
   get definition() {
     return getIcon(this.key);

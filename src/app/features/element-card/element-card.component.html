@@ -40,6 +40,7 @@
               <dd>
                 <input
                   spellcheck="false"
+                  autocomplete="off"
                   [id]="'element-key-' + node().id"
                   name="deploymentName"
                   [ngModel]="keyDraft() ?? service.childKey(node().id)"
@@ -75,6 +76,21 @@
                 <dt>{{ 'settings.previousVersion' | translate }}</dt>
                 <dd>{{ artifact().previousVersion }}</dd>
               }
+              <dt class="editable">
+                <label [for]="'element-identifier-' + node().id">{{ 'containerEditor.identifier' | translate }}</label>
+              </dt>
+              <dd>
+                <input
+                  spellcheck="false"
+                  autocomplete="off"
+                  [id]="'element-identifier-' + node().id"
+                  name="schemaIdentifier"
+                  [ngModel]="node().definition.schemaIdentifier"
+                  (ngModelChange)="
+                    service.updateContainerDefinition(node().definition.id, { schemaIdentifier: $event })
+                  "
+                />
+              </dd>
               <dt class="editable first-line">{{ 'settings.propertyIri' | translate }}</dt>
               <dd>
                 <app-property-picker [iri]="node().placement.propertyIri" (propertySelected)="saveProperty($event)" />
@@ -90,11 +106,15 @@
             <div class="settings-fields display-fields">
               <label
                 >{{ 'settings.displayLabel' | translate }}
-                <input spellcheck="false" [ngModel]="displayName()" (ngModelChange)="rename($event)"
+                <input spellcheck="false" autocomplete="off" [ngModel]="displayName()" (ngModelChange)="rename($event)"
               /></label>
               <label
                 >{{ 'settings.displayDescription' | translate }}
-                <input spellcheck="false" [(ngModel)]="draft().displayDescription" (ngModelChange)="apply()"
+                <input
+                  spellcheck="false"
+                  autocomplete="off"
+                  [(ngModel)]="draft().displayDescription"
+                  (ngModelChange)="apply()"
               /></label>
             </div>
             <app-language-selector [container]="node().definition" />
@@ -116,23 +136,27 @@
                   >{{ 'settings.minOccurrences' | translate }}
                   <input
                     spellcheck="false"
+                    autocomplete="off"
                     type="number"
                     min="0"
                     step="1"
                     [placeholder]="'settings.minOccurrencesPlaceholder' | translate"
                     [(ngModel)]="draft().minItems"
-                    (ngModelChange)="apply()"
+                    name="minItems"
+                    (ngModelChange)="apply('minItems')"
                 /></label>
                 <label
                   >{{ 'settings.maxOccurrences' | translate }}
                   <input
                     spellcheck="false"
+                    autocomplete="off"
                     type="number"
                     min="0"
                     step="1"
                     [placeholder]="'settings.unlimited' | translate"
                     [(ngModel)]="draft().maxItems"
-                    (ngModelChange)="apply()"
+                    name="maxItems"
+                    (ngModelChange)="apply('maxItems')"
                 /></label>
               }
             </div>

@@ -1,10 +1,16 @@
 @use '@org.metadatacenter/cedar-design-tokens/spacing';
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
 :host {
   display: block;
   min-width: 0;
 }
 :host([hidden]) {
   display: none;
+}
+// The chevron fills its icon element, which takes the outline's own size.
+.outline-chevron {
+  width: spacing.$designer-outline-chevron-size;
+  height: spacing.$designer-outline-chevron-size;
 }
 .outline-toggle {
   display: flex;
@@ -32,7 +38,7 @@ li {
   padding: 0 var(--cedar-space-2);
 }
 .outline-row.invalid {
-  box-shadow: inset calc(var(--cedar-space-1) * 0.75) 0 var(--cedar-status-error-text);
+  box-shadow: inset spacing.$invalid-stripe-width 0 var(--cedar-status-error-text);
 }
 .validation-badge {
   display: inline-flex;
@@ -92,7 +98,7 @@ app-container-outline {
   margin-left: var(--cedar-space-3);
 }
 .cdk-drag-placeholder {
-  opacity: 0.25;
+  @include patterns.drag-placeholder;
 }
 .cdk-drag-preview {
   box-sizing: border-box;
@@ -101,6 +107,6 @@ app-container-outline {
   list-style: none;
 }
 button:focus-visible {
-  outline: 2px solid var(--cedar-color-primary);
-  outline-offset: 1px;
+  outline: var(--cedar-focus-ring-width) solid var(--cedar-color-primary);
+  outline-offset: var(--cedar-focus-ring-offset);
 }

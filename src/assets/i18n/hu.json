@@ -22,7 +22,8 @@
     },
     "anUnnamedField": "egy névtelen mező",
     "quoted": "„{{value}}”",
-    "close": "Bezárás"
+    "close": "Bezárás",
+    "actions": "Műveletek"
   },
   "app": {
     "overview": {
@@ -34,23 +35,6 @@
       "heading": "Áttekintés ({{count}})",
       "expandAll": "Minden elem kinyitása",
       "collapseAll": "Minden elem összecsukása"
-    },
-    "profile": {
-      "menuTitle": "Az ebben a profilban elérhető mezőtípusok és vezérlők",
-      "basic": {
-        "label": "Alap",
-        "summary": "Egyszerű mezők, szókészletek nélkül"
-      },
-      "semantic": {
-        "label": "Szemantikus",
-        "summary": "Kontrollált fogalmakkal és súgószöveggel bővül"
-      },
-      "modular": {
-        "label": "Moduláris",
-        "summary": "Sablonelemekkel bővül"
-      },
-      "custom": "Egyéni",
-      "customize": "Testreszabás…"
     },
     "userMenu": {
       "title": "Felhasználói menü",
@@ -116,6 +100,7 @@
     "valueIri": "Az annotáció értékének érvényes IRI-nek kell lennie."
   },
   "ceePreview": {
+    "invalidDocument": "Az előnézet a dokumentum hibás beállításainak javítása után lesz elérhető.",
     "title": "Előnézet",
     "mode": "Előnézeti mód",
     "readOnly": "Csak olvasható",
@@ -155,16 +140,11 @@
     "columns": {
       "name": "Név",
       "type": "Típus",
-      "created": "Létrehozva",
       "modified": "Utoljára módosítva",
       "version": "Verzió",
       "status": "Állapot",
       "remove": "Eltávolítás",
       "reorder": "Átrendezés"
-    },
-    "kind": {
-      "field": "Mező",
-      "element": "Elem"
     },
     "removeRow": "{{name}} eltávolítása",
     "selectRow": "{{name}} kiválasztása",
@@ -254,7 +234,12 @@
       "time": "Az alapértelmezéshez adjon meg érvényes időpontot.",
       "timezoneDisabled": "Kapcsolja be az Időzóna megjelenítése beállítást, vagy távolítsa el az időzónát az alapértelmezésből.",
       "offset": "Adjon meg −14:00 és +14:00 közötti időzóna-eltolást."
-    }
+    },
+    "invalidIri": "Az alapértelmezett értéknek érvényes abszolút IRI-nek kell lennie.",
+    "invalidEmail": "Az alapértelmezett értéknek érvényes e-mail-címnek kell lennie.",
+    "invalidPhone": "Az alapértelmezett értéknek érvényes telefonszámnak kell lennie.",
+    "suppliedValue": "Alapértelmezett érték: {{value}}",
+    "clearInvalid": "Hibás alapértelmezett érték törlése"
   },
   "elementCard": {
     "settings": "Elem beállításai",
@@ -287,8 +272,14 @@
     },
     "text": {
       "lengths": "A szöveghosszak nem lehetnek negatívak, és a minimum nem lehet nagyobb a maximumnál.",
-      "defaultTooShort": "Az alapértelmezett értéknek legalább {{count}} karaktert kell tartalmaznia.",
-      "defaultTooLong": "Az alapértelmezett érték legfeljebb {{count}} karaktert tartalmazhat.",
+      "defaultTooShort": {
+        "one": "Az alapértelmezett értéknek legalább {{count}} karaktert kell tartalmaznia.",
+        "other": "Az alapértelmezett értéknek legalább {{count}} karaktert kell tartalmaznia."
+      },
+      "defaultTooLong": {
+        "one": "Az alapértelmezett érték legfeljebb {{count}} karaktert tartalmazhat.",
+        "other": "Az alapértelmezett érték legfeljebb {{count}} karaktert tartalmazhat."
+      },
       "defaultPattern": "Az alapértelmezett értéknek illeszkednie kell a reguláris kifejezésre."
     },
     "media": {
@@ -322,21 +313,20 @@
     "move": {
       "missing": "A gyermekelem vagy a cél már nem létezik.",
       "intoItself": "Egy elem nem helyezhető át önmagába vagy a leszármazottai közé.",
-      "nameTaken": "A célban már van ilyen tulajdonságnevű gyermekelem. Először nevezze át az elhelyezést."
+      "nameTaken": "A célban már van ilyen tulajdonságnevű gyermekelem. Először nevezze át az elhelyezést.",
+      "nameReserved": "A célban ez a tulajdonságnév foglalt. Először nevezze át az elhelyezést."
     },
     "pageBreakPlacement": "Oldaltörés csak sablonban helyezhető el.",
     "publishedReadOnly": "A közzétett mezők csak olvashatók. Vázlatverzió szerkesztése még nem érhető el.",
     "importDestinationMissing": "Az importálás célja már nem létezik.",
     "destinationMissing": "A cél már nem létezik.",
     "chooseFieldOrElement": "Válasszon mező- vagy elemartefaktumot.",
-    "chooseElementDocument": "Válasszon elemdokumentumot, amelyet ebbe a tárolóba illeszt.",
     "elementMissing": "Az elem már nem létezik."
   },
   "fieldCard": {
     "displayName": "Mező megjelenítési neve",
     "published": "Közzétett mező – csak olvasható. Vázlatverzió szerkesztése még nem érhető el.",
     "namePlaceholder": "Adja meg a mező nevét",
-    "name": "Mező neve",
     "occurrenceRange": "Előfordulási tartomány",
     "dragToReorder": "Húzza az átrendezéshez",
     "requirement": "Kitöltési követelmény",
@@ -353,28 +343,6 @@
       "url": "Kép webcíme",
       "videoId": "YouTube-videó azonosítója"
     }
-  },
-  "fieldDesigner": {
-    "title": "Mezőkönyvtár",
-    "back": "Vissza a sablonszerkesztőhöz",
-    "hint": "Ebben a böngészőben mentett, újrafelhasználható mezőspecifikációk, a sablonbeli megjelenítési és előfordulási beállításokkal együtt.",
-    "createLibrary": "Könyvtár létrehozása",
-    "libraryName": "Könyvtár neve",
-    "description": "Leírás",
-    "library": "Könyvtár",
-    "chooseLibrary": "Válasszon könyvtárat",
-    "saveField": "Mező mentése",
-    "createField": "Mező létrehozása",
-    "columns": {
-      "field": "Mező",
-      "actions": "Műveletek"
-    },
-    "view": "Megtekintés",
-    "edit": "Szerkesztés",
-    "addToTemplate": "Hozzáadás a sablonhoz",
-    "remove": "Eltávolítás",
-    "nameRequired": "Adjon nevet a mezőnek.",
-    "libraryRequired": "Válasszon könyvtárat, vagy előbb hozzon létre egyet."
   },
   "fieldElement": {
     "label": "Mezőtervező",
@@ -553,10 +521,6 @@
     "label": "Nyelv",
     "current": "{{code}} (jelenlegi)"
   },
-  "fieldLibrary": {
-    "loadFailed": "A mentett mezőkönyvtárat nem sikerült betölteni. A tárolt adatai változatlanok maradtak.",
-    "saveFailed": "A böngésző nem tudta menteni a mezőkönyvtárat. Hagyja nyitva ezt az oldalt, és próbálja újra."
-  },
   "terminology": {
     "notConfigured": "A terminológiai kiszolgáló nincs beállítva.",
     "checkFailed": "Az alapértelmezett fogalmat nem sikerült ellenőrizni ({{status}}).",
@@ -564,10 +528,16 @@
     "unverified": "A fogalmat nem sikerült igazolni a kapott találatok között.",
     "searchNotConfigured": "A kontrollált fogalmak keresése nincs beállítva.",
     "answered": "A terminológiai kiszolgáló válasza: {{status}} {{statusText}}.",
-    "noResultsCollection": "A terminológiai kiszolgáló nem adott vissza találati gyűjteményt."
+    "noResultsCollection": "A terminológiai kiszolgáló nem adott vissza találati gyűjteményt.",
+    "unreachable": "A terminológiai kiszolgáló nem érhető el. Ellenőrizze a kapcsolatot, és próbálja újra.",
+    "unreadable": "A terminológiai kiszolgáló olyan választ küldött, amelyet a tervező nem tud értelmezni. Próbálja újra.",
+    "timedOut": "A terminológiai lekérdezés túl sokáig tartott. Próbálja újra."
   },
   "outline": {
-    "errors": "{{count}} hiba",
+    "errors": {
+      "one": "{{count}} hiba",
+      "other": "{{count}} hiba"
+    },
     "expand": "Elem kinyitása",
     "collapse": "Elem összecsukása",
     "reorder": "{{name}} áthelyezése",

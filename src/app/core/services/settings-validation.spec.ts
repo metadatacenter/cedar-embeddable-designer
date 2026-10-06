@@ -53,7 +53,6 @@ describe('settings validation report', () => {
     service.updateContainerDefinition(element.id, { name: 'Element' });
     service.updateFieldName(id, 'Field');
     service.setSettingsError(id, 'defaultValue', 'Invalid default.');
-    expect(service.issuesFor(element.id)).toHaveLength(1);
     expect(service.validationReport().issues[0].path).toEqual([root, element.id, id]);
     service.toggleElement(element.id);
     service.revealIssue(service.validationReport().issues[0]);
@@ -76,6 +75,16 @@ describe('settings validation report', () => {
     expect(service.validationReport().valid).toBe(false);
     expect(service.validationReport().issues[0].nodeId).toBe(service.fields()[0].id);
     expect(service.validationReport().issues[0].source).toBe('model');
+  });
+  it('drops a refused occurrence bound, and only that, when Allow multiple is turned off', () => {
+    const id = service.fields()[0].id;
+    service.toggleAllowMultiple(id);
+    service.setSettingsError(id, 'occurrences', 'Minimum exceeds maximum.', 'Occurrences');
+    service.setSettingsError(id, 'defaultValue', 'Default exceeds maximum.');
+    service.toggleAllowMultiple(id);
+    expect(service.validationReport().issues.map((issue) => issue.setting)).toEqual(['defaultValue']);
+    service.setSettingsError(id, 'defaultValue', null);
+    expect(service.validationReport().canSave).toBe(true);
   });
   it('attributes invalid occurrence settings to the field even with no panel mounted', () => {
     service.fields.update((fields) =>
@@ -200,7 +209,7 @@ it('keys are unique across sibling fields and elements, independently of names a
   const [first, second] = service.fields();
   service.updateFieldName(second.id, first.name);
   expect(service.childKey(first.id)).toBe('Title');
-  expect(service.childKey(second.id)).toBe('Title 2');
+  expect(service.childKey(second.id)).toBe('Title_2');
   expect(service.updateFieldSettings(first.id, { deploymentName: 'subject', displayLabel: 'Label' })).toBeNull();
   expect(service.updateFieldSettings(second.id, { deploymentName: 'subject' })).toContain('already uses');
   expect(service.updateFieldSettings(second.id, { deploymentName: '   ' })).toBe('Key is required.');

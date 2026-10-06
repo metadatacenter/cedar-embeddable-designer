@@ -275,6 +275,7 @@ test('the real picker selects a default within the field vocabulary', async ({ p
     expect(request.sources).toEqual([{ sourceAcronym: 'DOID', version: { id: 'pinned-release' } }]);
     await route.fulfill({
       json: {
+        query: request.query,
         sources: [
           {
             sourceSystem: 'bioportal',
@@ -771,3 +772,39 @@ test('editing a display name updates Overview without renaming the field key', a
   expect(child(template, 'Value')['schema:name']).toBe('Value');
   expect(child(template, 'Value')['skos:prefLabel']).toBe('Laboratory identifier');
 });
+
+for (const type of ['email', 'phone', 'link']) {
+  for (const transition of ['metadata', 'language']) {
+    test(`${type} rejected input survives ${transition} and remains repairable`, async ({ page }) => {
+      const control = await openField(page, type);
+      const card = page.locator('app-field-card').first();
+      const input = control.locator('input').first();
+      await input.fill('invalid');
+      const canSave = () =>
+        page.evaluate(
+          () => (document.querySelector('cedar-embeddable-designer') as unknown as { canSave: boolean }).canSave,
+        );
+      await expect.poll(canSave).toBe(false);
+      if (transition === 'metadata') {
+        await openSettings(card, 'Field metadata');
+        await card.locator('input[name=schemaIdentifier]').fill('Edited');
+      } else {
+        await page.evaluate(
+          () =>
+            ((document.querySelector('cedar-embeddable-designer') as unknown as { language: string }).language = 'hu'),
+        );
+        await page.evaluate(
+          () =>
+            ((document.querySelector('cedar-embeddable-designer') as unknown as { language: string }).language = 'en'),
+        );
+      }
+      await openSettings(card);
+      await expect(input).toHaveValue('invalid');
+      expect(await canSave()).toBe(false);
+      await input.fill(
+        type === 'email' ? 'author@example.org' : type === 'phone' ? '+1 650 555 0100' : 'https://example.org/item',
+      );
+      await expect.poll(canSave).toBe(true);
+    });
+  }
+}

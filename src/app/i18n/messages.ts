@@ -118,6 +118,13 @@ export class LocalizedError extends Error {
   }
 }
 
+/**
+ * The key of a counted message's form for `count`: `<key>.one` for one and `<key>.other`
+ * otherwise. Every counted message is chosen here. Hungarian keeps a noun singular after any
+ * number, so its two forms read alike; English needs both.
+ */
+export const countKey = (key: string, count: number): string => `${key}.${count === 1 ? 'one' : 'other'}`;
+
 /** A key and its parameters, as the value `LocalizedError` carries. */
 export const message = (key: string, params?: MessageParams): Message => ({ key, params });
 

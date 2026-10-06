@@ -58,6 +58,21 @@ describe('container mutations', () => {
     expect(() => moveChild(root, leaf.id, b.id, 0)).toThrow(/property name/);
     expect(a.children[0]).toBe(leaf);
   });
+  it('refuses a move that would leave an attribute-value key reserved in its new container', () => {
+    const { root, a, leaf } = setup();
+    const value = fieldNode({
+      ...fieldView(leaf),
+      id: newNodeId(),
+      type: 'attributeValue',
+      name: 'Notes',
+      defaultValue: { kind: 'none' },
+    });
+    value.placement = { ...value.placement, deploymentName: 'annotations' };
+    a.children.push(value);
+    // An element may hold an attribute-value field keyed annotations; a template reserves the name.
+    expect(() => moveChild(root, value.id, root.id, 0)).toThrow(/reserves that property name/);
+    expect(findContainer(moveChild(root, value.id, a.id, 0), a.id)?.children[0].id).toBe(value.id);
+  });
   it('rejects page breaks inside elements', () => {
     const { root, b, leaf } = setup();
     const page = { ...leaf, id: newNodeId(), definition: { ...leaf.definition, type: 'pageBreak' } };

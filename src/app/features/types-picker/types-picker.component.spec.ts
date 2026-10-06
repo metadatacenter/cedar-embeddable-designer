@@ -45,8 +45,4 @@ it('adds unique IRIs to imported types without fabricating ontology constraints'
   editor.remove('urn:one');
   await refresh();
   expect(editor.types()).toEqual(['urn:two']);
-  fixture.componentRef.setInput('disabled', true);
-  fixture.detectChanges();
-  editor.remove('urn:two');
-  expect(service.document().metadata?.instanceTypes).toEqual(['urn:two']);
 });

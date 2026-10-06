@@ -130,10 +130,18 @@ for (const width of [1280, 375]) {
 
 for (const kind of ['Template', 'Element']) {
   test(`${kind} Identifier edits schema:identifier without changing @id`, async ({ page }) => {
-    await openDesigner(page);
+    const designer = await openDesigner(page);
     await loadStandalone(page, kind);
     const original = await currentTemplate(page);
-    const identifier = page.getByPlaceholder('Identifier', { exact: true });
+    const root = designer.locator('app-container-editor').first();
+    // The header carries the name and version; the identifier sits with the metadata, as a field's does.
+    await expect(directHeader(root).locator('.template-header-card__body input')).toHaveCount(2);
+    const settings = root.locator(':scope > .template-header-card > app-container-settings');
+    await settings.getByRole('button', { name: `Expand ${kind.toLowerCase()} settings`, exact: true }).click();
+    await settings
+      .getByRole('tab', { name: kind === 'Template' ? 'Template metadata' : 'Element metadata', exact: true })
+      .click();
+    const identifier = settings.getByLabel('Identifier', { exact: true });
     await expect(identifier).toHaveValue('');
     await identifier.fill('Study protocol ABC-123');
     const edited = await currentTemplate(page);
@@ -149,6 +157,21 @@ for (const kind of ['Template', 'Element']) {
     expect(cleared['schema:identifier'] ?? null).toBeNull();
   });
 }
+
+test('nested element Identifier edits the element in its Element metadata tab', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await applyPreset(page, 'modular');
+  await addElementFixture(page, designer);
+  const element = designer.locator('app-container-editor').nth(1);
+  await expect(directHeader(element).locator('.template-header-card__body input')).toHaveCount(2);
+  const card = directHeader(element).locator('app-element-card');
+  await card.getByRole('button', { name: 'Expand element settings', exact: true }).click();
+  await card.getByRole('tab', { name: 'Element metadata', exact: true }).click();
+  await card.getByLabel('Identifier', { exact: true }).fill('Element protocol 42');
+  const artifact = await currentTemplate(page);
+  expect((artifact.properties as Record<string, any>).element['schema:identifier']).toBe('Element protocol 42');
+  expect(artifact['schema:identifier'] ?? null).toBeNull();
+});
 
 test('element metadata shows provenance without changing the artifact and hides empty optional values', async ({
   page,
@@ -252,6 +275,7 @@ for (const width of [1280, 375]) {
         headerInset: header.left - edge,
         childInset: child.left - edge,
         binAlignment: Math.abs(bin.top - version.top),
+        binOverToggle: Math.abs(bin.left + bin.width / 2 - (toggle.left + toggle.width / 2)),
         toggleBottom: header.bottom - toggle.bottom,
         toggleRight: header.right - toggle.right,
       };
@@ -259,6 +283,7 @@ for (const width of [1280, 375]) {
     expect(geometry.headerInset).toBeGreaterThan(0);
     expect(geometry.headerInset * 2).toBeCloseTo(geometry.childInset, 1);
     expect(geometry.binAlignment).toBeLessThan(1);
+    expect(geometry.binOverToggle).toBeLessThan(0.5);
     expect(geometry.toggleBottom).toBeLessThanOrEqual(6);
     expect(geometry.toggleRight).toBeLessThanOrEqual(6);
     await header.getByRole('button', { name: 'Collapse Element', exact: true }).click();

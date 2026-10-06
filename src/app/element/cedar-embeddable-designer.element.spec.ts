@@ -167,6 +167,33 @@ describe('CedarEmbeddableDesignerElementComponent', () => {
   });
 
   describe('what it publishes', () => {
+    it('isolates public snapshots and event channels from host mutations', async () => {
+      const fixture = create();
+      const element = fixture.componentInstance;
+      service.templateName.set('Original');
+      service.markSaved();
+      const expected = structuredClone(element.currentArtifact);
+      for (const snapshot of [element.currentArtifact, element.currentTemplate]) {
+        const artifact = snapshot as Record<string, unknown>;
+        artifact['schema:name'] = 'Host edit';
+        (artifact['properties'] as Record<string, unknown>)['Title'] = null;
+      }
+      expect(element.currentArtifact).toEqual(expected);
+      expect(element.isDirty).toBe(false);
+      expect(element.canSave).toBe(true);
+
+      const received: object[] = [];
+      element.templateChange.subscribe((artifact) => {
+        (artifact as Record<string, unknown>)['schema:name'] = 'Listener edit';
+      });
+      element.artifactChange.subscribe((artifact) => received.push(artifact));
+      service.templateName.set('Next');
+      await fixture.whenStable();
+      expect(received.at(-1)).toMatchObject({ 'schema:name': 'Next' });
+      (received.at(-1) as Record<string, unknown>)['schema:name'] = 'Later edit';
+      expect(element.currentArtifact).toMatchObject({ 'schema:name': 'Next' });
+    });
+
     it('offers the current template as a property', () => {
       const fixture = create();
 

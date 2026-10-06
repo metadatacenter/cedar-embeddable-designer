@@ -97,7 +97,6 @@ export class CedarEmbeddableFieldDesignerElementComponent {
   private readonly configuration = inject(DesignerConfigService);
   private readonly i18n = inject(CedLanguageService);
   private readonly baseline = signal('');
-  private readonly hostReadOnly = signal(false);
   readonly field = computed(() => this.service.fields()[0] as Field | undefined);
   readonly choosingType = signal(true);
   private readonly typeDialog = viewChild<ElementRef<HTMLDialogElement>>('typeDialog');
@@ -121,10 +120,10 @@ export class CedarEmbeddableFieldDesignerElementComponent {
     return this.i18n.language();
   }
   @Input() set readOnly(value: boolean) {
-    this.hostReadOnly.set(value);
+    this.service.validation.setReadOnly(value);
   }
   get readOnly(): boolean {
-    return this.hostReadOnly() || !!this.field()?.publishedDefinition;
+    return this.service.validation.readOnly() || !!this.field()?.publishedDefinition;
   }
   @Input() set artifact(source: object | string | null) {
     if (source !== null) this.loadArtifact(source);

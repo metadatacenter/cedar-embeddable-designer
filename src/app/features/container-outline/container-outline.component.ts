@@ -1,14 +1,15 @@
-import { fieldDisplayName } from '../../core/model/field-display-name';
+import { elementDisplayName, fieldDisplayName } from '../../core/model/field-display-name';
 import { Component, input, inject } from '@angular/core';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
-import { ContainerDraft, ChildNode, childName, fieldView } from '../../core/model/container-draft';
+import { ContainerDraft, ChildNode, fieldView } from '../../core/model/container-draft';
 import { TemplateService } from '../../core/services/template.service';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { TranslatePipe } from '@ngx-translate/core';
+import { CountKeyPipe } from '../../i18n/count-key.pipe';
 
 @Component({
   selector: 'app-container-outline',
-  imports: [DragDropModule, IconComponent, TranslatePipe],
+  imports: [DragDropModule, IconComponent, CountKeyPipe, TranslatePipe],
   template: `<ul cdkDropList [cdkDropListData]="container().children" (cdkDropListDropped)="drop($event)">
     @for (node of container().children; track node.id) {
       <li cdkDrag [cdkDragData]="node.id" [cdkDragDisabled]="locked(node)">
@@ -18,7 +19,7 @@ import { TranslatePipe } from '@ngx-translate/core';
           [class.invalid]="service.visibleIssuesFor(node.id).length > 0"
         >
           <button type="button" class="select-node" (click)="select(node)">
-            <app-icon [key]="node.kind === 'field' ? node.definition.type : 'folder'" className="w-4 h-4" />
+            <app-icon [key]="node.kind === 'field' ? node.definition.type : 'folder'" size="small" />
             <span class="node-name">{{
               displayName(node) ||
                 ((node.kind === 'field' ? 'validation.unnamed.field' : 'validation.unnamed.element') | translate)
@@ -26,8 +27,8 @@ import { TranslatePipe } from '@ngx-translate/core';
             @if (service.visibleIssuesFor(node.id).length; as count) {
               <span
                 class="validation-badge"
-                [attr.aria-label]="'outline.errors' | translate: { count: count }"
-                [title]="'outline.errors' | translate: { count: count }"
+                [attr.aria-label]="'outline.errors' | countKey: count | translate: { count: count }"
+                [title]="'outline.errors' | countKey: count | translate: { count: count }"
                 ><app-icon key="warning" size="small" /> {{ count }}</span
               >
             }
@@ -49,7 +50,8 @@ import { TranslatePipe } from '@ngx-translate/core';
             >
               <app-icon
                 key="chevronDown"
-                className="w-3 h-3"
+                size="fill"
+                class="outline-chevron"
                 [style.transform]="service.collapsedElements().has(node.id) ? 'rotate(-90deg)' : ''"
               />
             </button>
@@ -63,7 +65,7 @@ import { TranslatePipe } from '@ngx-translate/core';
             [title]="'outline.reorderHint' | translate"
             (keydown)="moveWithKeyboard($event, node)"
           >
-            <app-icon key="list" className="w-4 h-4" />
+            <app-icon key="list" size="small" />
           </button>
         </div>
         @if (node.kind === 'element') {
@@ -78,7 +80,7 @@ export class ContainerOutlineComponent {
   readonly container = input.required<ContainerDraft>();
   readonly service = inject(TemplateService);
   displayName(node: ChildNode): string {
-    return node.kind === 'field' ? fieldDisplayName(fieldView(node)) : (node.placement.displayLabel ?? childName(node));
+    return node.kind === 'field' ? fieldDisplayName(fieldView(node)) : elementDisplayName(node);
   }
   locked(node: ChildNode): boolean {
     return node.kind === 'field' && !!node.definition.publishedDefinition;
@@ -99,9 +101,7 @@ export class ContainerOutlineComponent {
   }
   select(node: ChildNode): void {
     this.service.openContainer(node.kind === 'element' ? node.id : this.container().id);
-    if (node.kind === 'field') {
-      this.service.selectedField.set(node.id);
-      this.service.scrollRequest.set(node.id);
-    }
+    this.service.selectedField.set(node.id);
+    this.service.scrollRequest.set(node.id);
   }
 }

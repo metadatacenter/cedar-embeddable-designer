@@ -1,4 +1,5 @@
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { invalidSettingsInputs } from '../../shared/settings-input';
 import { ElementLabelsComponent } from '../element-labels/element-labels.component';
 import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 import { AnnotationsEditorComponent } from '../annotations-editor/annotations-editor.component';
@@ -41,17 +42,24 @@ export class ElementCardComponent {
   private readonly language = inject(CedLanguageService);
   readonly tabKey = settingsTabKey;
   readonly draft = signal<ElementPlacement>({ allowMultiple: false });
-  readonly error = signal<string | null>(null);
-  readonly keyDraft = signal<string | null>(null);
-  private readonly keyDraftError = signal<string | null>(null);
-  readonly keyError = computed(
-    () =>
-      this.keyDraftError() ??
+  error(): string | null {
+    return (
       this.service
         .validationReport()
-        .issues.find((issue) => issue.nodeId === this.node().id && issue.setting === 'key' && issue.source === 'model')
-        ?.message ??
-      null,
+        .issues.find(
+          (issue) =>
+            issue.nodeId === this.node().id &&
+            issue.tab === this.activeTab &&
+            issue.setting !== 'name' &&
+            issue.setting !== 'key',
+        )?.message ?? null
+    );
+  }
+  readonly keyDraft = signal<string | null>(null);
+  readonly keyError = computed(
+    () =>
+      this.service.validationReport().issues.find((issue) => issue.nodeId === this.node().id && issue.setting === 'key')
+        ?.message ?? null,
   );
   expanded = false;
   activeTab = 'Display';
@@ -93,48 +101,65 @@ export class ElementCardComponent {
     });
     effect(() => {
       // Editing an inline descendant must not reset incomplete placement input.
-      const signature = JSON.stringify([this.node().id, this.node().placement]);
+      const placement = { ...this.node().placement, ...this.service.validation.changes(this.node().id) };
+      const signature = JSON.stringify([this.node().id, placement]);
       if (signature === this.loadedPlacement) return;
       this.loadedPlacement = signature;
-      this.draft.set({ ...this.node().placement });
-      this.error.set(null);
+      this.draft.set(structuredClone(placement));
+      this.keyDraft.set(placement.deploymentName ?? null);
     });
   }
   private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
   saveProperty(iri: string): void {
-    const error = this.service.updateElementPlacement(this.node().id, { ...this.node().placement, propertyIri: iri });
-    this.error.set(error);
-    this.service.setSettingsError(this.node().id, 'propertyIri', error, SETTINGS_TABS.elementMetadata);
+    this.service.updateElementPlacement(
+      this.node().id,
+      { propertyIri: iri },
+      'propertyIri',
+      SETTINGS_TABS.elementMetadata,
+    );
   }
   saveKey(value: string): void {
     this.keyDraft.set(value);
-    this.keyDraftError.set(
-      this.service.updateElementPlacement(this.node().id, {
-        ...this.node().placement,
-        deploymentName: value,
-      }),
+    this.service.updateElementPlacement(
+      this.node().id,
+      { deploymentName: value },
+      'key',
+      SETTINGS_TABS.elementMetadata,
     );
-    this.service.setSettingsError(this.node().id, 'key', this.keyDraftError(), SETTINGS_TABS.elementMetadata);
   }
-  /** The same name the element's header shows, edited through the same update. */
   readonly displayName = computed(() => elementDisplayName(this.node()));
   rename(value: string): void {
-    this.error.set(this.service.updateElementDisplayName(this.node(), value));
-    this.service.setSettingsError(this.node().id, 'placement', this.error(), this.activeTab);
+    this.service.updateElementDisplayName(this.node(), value);
   }
-  apply(): void {
-    const invalid = Array.from(this.host.nativeElement.querySelectorAll('input')).find(
-      (input) => input.validity.badInput,
+  apply(changed?: string): void {
+    const occurrences = this.activeTab === 'Occurrences';
+    const setting = occurrences ? 'placement' : 'display';
+    const invalid = invalidSettingsInputs(
+      this.host.nativeElement,
+      this.service.validation.settingsInput(this.node().id, setting)?.invalid,
+      changed,
     );
-    if (invalid) {
-      const message = this.language.t('settings.invalidNumber', {
-        label: invalid.closest('label')?.textContent?.trim() || this.language.t('settings.value'),
-      });
-      this.error.set(message);
-      this.service.setSettingsError(this.node().id, 'placement', message, this.activeTab);
+    if (Object.keys(invalid).length && occurrences && this.draft().allowMultiple) {
+      this.service.validation.setInputError(
+        this.node().id,
+        setting,
+        this.language.t('settings.invalidNumber', {
+          label: Object.values(invalid)[0] || this.language.t('settings.value'),
+        }),
+        this.activeTab,
+        undefined,
+        { changes: { ...this.draft() }, invalid },
+      );
       return;
     }
-    this.error.set(this.service.updateElementPlacement(this.node().id, this.draft()));
-    this.service.setSettingsError(this.node().id, 'placement', this.error(), this.activeTab);
+    const draft = this.draft();
+    this.service.updateElementPlacement(
+      this.node().id,
+      occurrences
+        ? { allowMultiple: draft.allowMultiple, minItems: draft.minItems, maxItems: draft.maxItems }
+        : { displayDescription: draft.displayDescription },
+      setting,
+      this.activeTab,
+    );
   }
 }

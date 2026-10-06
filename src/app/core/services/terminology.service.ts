@@ -5,6 +5,13 @@ import { LocalizedError, message } from '../../i18n/messages';
 
 /** How deep a default check reads before it gives up and reports the term as unverified. */
 const MEMBERSHIP_CHECK_DEPTH = 5_000;
+const LOOKUP_TIMEOUT_MS = 30_000;
+
+function checkAborted(signal: AbortSignal | null | undefined): void {
+  if (!signal?.aborted) return;
+  if (signal.reason?.name === 'TimeoutError') throw new LocalizedError(message('terminology.timedOut'));
+  signal.throwIfAborted();
+}
 
 /**
  * The terminology server's search route, under whatever base a host names.
@@ -40,6 +47,37 @@ export interface TerminologyHit {
 
 export type SearchScope = 'classes,values' | 'value_sets';
 
+/**
+ * The terminology server's answer as JSON, or the reason there is none, in words an author can read.
+ *
+ * A request that never reached the server rejects with the browser's own text, "Failed to fetch",
+ * and an answer that is not JSON with the parser's complaint about an unexpected token. Both are
+ * English whatever the designer speaks, and neither says what happened.
+ */
+async function answer(
+  input: string | URL,
+  init: RequestInit,
+  refused: (response: Response) => ReturnType<typeof message>,
+): Promise<unknown> {
+  let response: Response;
+  try {
+    checkAborted(init.signal);
+    response = await fetch(input, init);
+  } catch (error) {
+    checkAborted(init.signal);
+    throw new LocalizedError(message('terminology.unreachable'), { cause: error });
+  }
+  if (!response.ok) throw new LocalizedError(refused(response));
+  try {
+    const body: unknown = await response.json();
+    checkAborted(init.signal);
+    return body;
+  } catch (error) {
+    checkAborted(init.signal);
+    throw new LocalizedError(message('terminology.unreadable'), { cause: error });
+  }
+}
+
 @Injectable({ providedIn: 'root' })
 export class TerminologyService {
   private searchUrl: string | null = null;
@@ -69,23 +107,27 @@ export class TerminologyService {
    * Check membership with the same constrained endpoint that supplies CEE's values, walking its pages
    * by offset until the term turns up, a page comes back short, or the server's count is reached.
    */
-  async allowsDefault(field: CeeTemplateObject, iri: string, label: string): Promise<boolean> {
+  async allowsDefault(field: CeeTemplateObject, iri: string, label: string, signal?: AbortSignal): Promise<boolean> {
     const base = this.baseUrl();
     if (!base) throw new LocalizedError(message('terminology.notConfigured'));
     const limit = 50;
+    const deadline = AbortSignal.timeout(LOOKUP_TIMEOUT_MS);
+    const lifetime = signal ? AbortSignal.any([signal, deadline]) : deadline;
     for (let offset = 0; offset < MEMBERSHIP_CHECK_DEPTH; offset += limit) {
-      const response = await fetch(`${base}bioportal/integrated-search`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          parameterObject: { inputText: label, valueConstraints: field['_valueConstraints'] },
-          limit,
-          offset,
-        }),
-      });
-      if (!response.ok)
-        throw new LocalizedError(message('terminology.checkFailed', { status: String(response.status) }));
-      const result = (await response.json()) as { collection?: Array<{ '@id': string }>; totalCount?: number };
+      const result = (await answer(
+        `${base}bioportal/integrated-search`,
+        {
+          method: 'POST',
+          signal: lifetime,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            parameterObject: { inputText: label, valueConstraints: field['_valueConstraints'] },
+            limit,
+            offset,
+          }),
+        },
+        (response) => message('terminology.checkFailed', { status: String(response.status) }),
+      )) as { collection?: Array<{ '@id': string }>; totalCount?: number };
       if (!Array.isArray(result.collection)) throw new LocalizedError(message('terminology.noResultCollection'));
       if (result.collection.some((term) => term['@id'] === iri)) return true;
       if (result.collection.length < limit) return false;
@@ -131,15 +173,12 @@ export class TerminologyService {
      * gate turned a working search off, and the 401 and 403 branches beneath it
      * were unreachable. CEE reaches the same server the same way.
      */
-    const response = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
-
-    if (!response.ok) {
-      throw new LocalizedError(
+    const body = await answer(
+      url,
+      { method: 'GET', signal: AbortSignal.timeout(LOOKUP_TIMEOUT_MS), headers: { Accept: 'application/json' } },
+      (response) =>
         message('terminology.answered', { status: String(response.status), statusText: response.statusText }),
-      );
-    }
-
-    const body: unknown = await response.json();
+    );
     const collection = (body as { collection?: unknown })?.collection;
     if (!Array.isArray(collection)) {
       throw new LocalizedError(message('terminology.noResultsCollection'));

@@ -350,7 +350,7 @@
 }
 
 .plus-indicator {
-  font-size: var(--cedar-font-size-element-heading);
+  font-size: var(--cedar-font-size-large);
   font-weight: var(--cedar-font-weight-medium, 500);
   color: var(--cedar-text-muted);
 }
@@ -369,4 +369,12 @@
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: var(--cedar-text-muted);
+}
+
+.draggable-field-item.invalid,
+.validation-badge {
+  color: var(--cedar-status-error-text);
+}
+.validation-badge {
+  font-size: var(--cedar-font-size);
 }

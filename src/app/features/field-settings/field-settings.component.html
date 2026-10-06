@@ -46,33 +46,36 @@
                 >{{ 'fieldSettings.text.minLength' | translate
                 }}<input
                   spellcheck="false"
+                  autocomplete="off"
                   name="minLength"
                   type="number"
                   min="0"
                   step="1"
                   [(ngModel)]="text.minLength"
-                  (ngModelChange)="saveText(textForm)"
+                  (ngModelChange)="saveText(textForm, 'minLength')"
               /></label>
               <label
                 >{{ 'fieldSettings.text.maxLength' | translate
                 }}<input
                   spellcheck="false"
+                  autocomplete="off"
                   name="maxLength"
                   type="number"
                   min="0"
                   step="1"
                   [(ngModel)]="text.maxLength"
-                  (ngModelChange)="saveText(textForm)"
+                  (ngModelChange)="saveText(textForm, 'maxLength')"
               /></label>
               @if (accepts('textPattern')) {
                 <label
                   >{{ 'fieldSettings.text.regex' | translate
                   }}<input
                     spellcheck="false"
+                    autocomplete="off"
                     class="wide"
                     name="regex"
                     [(ngModel)]="text.regex"
-                    (ngModelChange)="saveText(textForm)"
+                    (ngModelChange)="saveText(textForm, 'regex')"
                     [placeholder]="'fieldSettings.text.regexPlaceholder' | translate"
                 /></label>
               }
@@ -97,7 +100,7 @@
                   name="numericType"
                   [attr.aria-label]="'fieldSettings.numeric.datatype' | translate"
                   [(ngModel)]="numeric.type"
-                  (ngModelChange)="saveNumeric(numericForm)"
+                  (ngModelChange)="saveNumeric(numericForm, 'numericType')"
                 >
                   @for (type of numericTypes; track type) {
                     <option [value]="type">{{ type }}</option>
@@ -108,21 +111,23 @@
                 >{{ 'fieldSettings.numeric.min' | translate
                 }}<input
                   spellcheck="false"
+                  autocomplete="off"
                   name="numericMin"
                   type="number"
                   step="any"
                   [(ngModel)]="numeric.min"
-                  (ngModelChange)="saveNumeric(numericForm)"
+                  (ngModelChange)="saveNumeric(numericForm, 'numericMin')"
               /></label>
               <label
                 >{{ 'fieldSettings.numeric.max' | translate
                 }}<input
                   spellcheck="false"
+                  autocomplete="off"
                   name="numericMax"
                   type="number"
                   step="any"
                   [(ngModel)]="numeric.max"
-                  (ngModelChange)="saveNumeric(numericForm)"
+                  (ngModelChange)="saveNumeric(numericForm, 'numericMax')"
               /></label>
               <div class="numeric-default" role="group" [attr.aria-labelledby]="'numeric-default-label-' + field.id">
                 <span class="default-label" [id]="'numeric-default-label-' + field.id">{{
@@ -134,20 +139,22 @@
                 >{{ 'fieldSettings.numeric.decimalPlaces' | translate
                 }}<input
                   spellcheck="false"
+                  autocomplete="off"
                   name="decimalPlaces"
                   type="number"
                   min="0"
                   step="1"
                   [(ngModel)]="numeric.decimalPlaces"
-                  (ngModelChange)="saveNumeric(numericForm)"
+                  (ngModelChange)="saveNumeric(numericForm, 'decimalPlaces')"
               /></label>
               <label
                 >{{ 'fieldSettings.numeric.unit' | translate
                 }}<input
                   spellcheck="false"
+                  autocomplete="off"
                   name="unit"
                   [(ngModel)]="numeric.unit"
-                  (ngModelChange)="saveNumeric(numericForm)"
+                  (ngModelChange)="saveNumeric(numericForm, 'unit')"
                   [placeholder]="'fieldSettings.numeric.unitPlaceholder' | translate"
               /></label>
             </fieldset>
@@ -235,24 +242,26 @@
                 >{{ 'fieldSettings.media.width' | translate
                 }}<input
                   spellcheck="false"
+                  autocomplete="off"
                   type="number"
                   name="width"
                   min="1"
                   step="1"
                   [(ngModel)]="width"
-                  (ngModelChange)="saveMedia(mediaForm)"
+                  (ngModelChange)="saveMedia(mediaForm, 'width')"
                   [placeholder]="'fieldSettings.media.automatic' | translate"
               /></label>
               <label
                 >{{ 'fieldSettings.media.height' | translate
                 }}<input
                   spellcheck="false"
+                  autocomplete="off"
                   type="number"
                   name="height"
                   min="1"
                   step="1"
                   [(ngModel)]="height"
-                  (ngModelChange)="saveMedia(mediaForm)"
+                  (ngModelChange)="saveMedia(mediaForm, 'height')"
                   [placeholder]="'fieldSettings.media.automatic' | translate"
               /></label>
             </fieldset>
@@ -278,24 +287,26 @@
             >{{ 'fieldSettings.occurrences.min' | translate
             }}<input
               spellcheck="false"
+              autocomplete="off"
               type="number"
               name="min"
               min="0"
               step="1"
               [(ngModel)]="min"
-              (ngModelChange)="saveBounds(boundsForm)"
+              (ngModelChange)="saveBounds(boundsForm, 'min')"
               [placeholder]="'settings.minOccurrencesPlaceholder' | translate"
           /></label>
           <label
             >{{ 'fieldSettings.occurrences.max' | translate
             }}<input
               spellcheck="false"
+              autocomplete="off"
               type="number"
               name="max"
               min="0"
               step="1"
               [(ngModel)]="max"
-              (ngModelChange)="saveBounds(boundsForm)"
+              (ngModelChange)="saveBounds(boundsForm, 'max')"
               [placeholder]="'settings.unlimited' | translate"
           /></label>
         </fieldset>
@@ -323,6 +334,7 @@
           >{{ 'settings.displayLabel' | translate
           }}<input
             spellcheck="false"
+            autocomplete="off"
             name="displayLabel"
             [ngModel]="displayName()"
             (ngModelChange)="rename($event)"
@@ -332,6 +344,7 @@
           >{{ 'settings.displayDescription' | translate
           }}<input
             spellcheck="false"
+            autocomplete="off"
             name="displayDescription"
             [(ngModel)]="displayDescription"
             (ngModelChange)="saveLayout()"
@@ -369,6 +382,7 @@
         >{{ 'fieldSettings.display.helpText' | translate }}
         <input
           spellcheck="false"
+          autocomplete="off"
           type="text"
           [ngModel]="field.helpText || ''"
           (ngModelChange)="service.updateHelpText(field.id, $event)"
@@ -398,6 +412,7 @@
         <dd>
           <input
             spellcheck="false"
+            autocomplete="off"
             [id]="'field-key-' + field.id"
             [attr.aria-invalid]="!!keyError"
             [attr.aria-describedby]="keyError ? 'field-key-error-' + field.id : null"
@@ -441,6 +456,7 @@
       <dd>
         <input
           spellcheck="false"
+          autocomplete="off"
           [id]="'field-identifier-' + field.id"
           name="schemaIdentifier"
           [(ngModel)]="schemaIdentifier"

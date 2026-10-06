@@ -31,13 +31,15 @@ import {
   allowsOptions,
   buildTemplate,
   contentKindOf,
+  descriptorOf,
   newFieldIdentity,
-  parametersOf,
   readTemplate,
   templateToJson,
   templateToYaml,
   toDesignerTemplate,
 } from './cedar-template';
+import { allowedInContainer } from './container-draft';
+import { PLACEMENTS } from './field-placements.testing';
 
 const paletteTypes = Object.keys(FIELD_TYPES);
 
@@ -231,7 +233,7 @@ const CASES: Record<Parameter, ParameterCase> = {
 /** Every parameter a type accepts, however the descriptor records it. */
 function parametersFor(paletteType: string): Parameter[] {
   return [
-    ...parametersOf(paletteType),
+    ...(descriptorOf(paletteType).parameters ?? []),
     ...(allowsOptions(paletteType) ? (['options'] as const) : []),
     ...(contentKindOf(paletteType) ? (['content'] as const) : []),
   ];
@@ -274,7 +276,7 @@ describe('the per-type matrix', () => {
   });
 
   it('covers every parameter the descriptor can name', () => {
-    const covered = new Set(paletteTypes.flatMap((type) => parametersOf(type)));
+    const covered = new Set(paletteTypes.flatMap((type) => descriptorOf(type).parameters ?? []));
     const named = Object.keys(PARAMETER_SETTERS) as FieldParameter[];
     expect(named.filter((parameter) => !covered.has(parameter))).toEqual([]);
   });
@@ -299,6 +301,40 @@ describe.each(['json', 'yaml'] as const)('through %s', (form) => {
       const second = afterRoundTrip(templateOf(first), form);
 
       expect(second).toEqual(first);
+    },
+  );
+});
+
+/**
+ * The same parameters, wherever the field sits. A per-type parameter is written into the field's
+ * own definition, so where the field sits should change nothing, and each placement in
+ * `field-placements.testing.ts` holds the parameter to that.
+ */
+const placedCells = PLACEMENTS.flatMap((placement) =>
+  cells
+    .filter(({ paletteType }) => !placement.parent || allowedInContainer(paletteType, placement.parent))
+    .flatMap((cell) => placement.forms.map((form) => ({ ...cell, placement, form }))),
+);
+const placed = placedCells.map(
+  (cell) => [cell.placement.name, cell.form, cell.paletteType, cell.parameter, cell] as const,
+);
+
+describe('at each placement', () => {
+  it.each(placed)('at %s through %s, %s keeps its %s', (_placement, _form, _paletteType, _parameter, cell) => {
+    const original = fieldFor(cell.paletteType, cell.parameter);
+    const readBack = cell.placement.roundTrip(original, cell.form);
+
+    expect(CASES[cell.parameter].read(readBack)).toEqual(CASES[cell.parameter].read(original));
+  });
+
+  it.each(placed)(
+    'at %s through %s, %s settles its %s after one write',
+    (_placement, _form, _paletteType, _parameter, cell) => {
+      const first = cell.placement.roundTrip(fieldFor(cell.paletteType, cell.parameter), cell.form);
+      const second = cell.placement.roundTrip(first, cell.form);
+
+      // Reading a container mints each node a new session id, which is not part of the artifact.
+      expect({ ...second, id: 0 }).toEqual({ ...first, id: 0 });
     },
   );
 });

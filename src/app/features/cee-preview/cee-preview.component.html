@@ -31,7 +31,10 @@
         {{ 'ceePreview.editableNotice' | translate }}
       </p>
     }
-    <div class="cee-preview__mount" #mount></div>
+    @if (service.previewState().error) {
+      <p role="status" class="cee-preview__missing">{{ 'ceePreview.invalidDocument' | translate }}</p>
+    }
+    <div class="cee-preview__mount" #mount [hidden]="!!service.previewState().error"></div>
   } @else {
     <p class="cee-preview__missing">
       {{ 'ceePreview.missing.before' | translate }} <code>&lt;cedar-embeddable-editor&gt;</code

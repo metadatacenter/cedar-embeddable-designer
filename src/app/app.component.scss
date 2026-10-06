@@ -45,42 +45,10 @@
   gap: var(--cedar-space-3);
 }
 
-.app-header__title {
-  font-size: var(--cedar-font-size);
-  font-weight: var(--cedar-font-weight-medium);
-  color: var(--cedar-text-primary);
-}
-
 .app-header__actions {
   /* `min-w-0` so the group may shrink rather than insisting on its content's width. */
   @apply flex min-w-0 flex-wrap items-center;
   gap: var(--cedar-space-2);
-}
-
-/* ─── Header Buttons ──────────────────────────────────────────────────────── */
-.btn-header {
-  @apply flex items-center cursor-pointer;
-  gap: var(--cedar-space-2);
-  padding: var(--cedar-space-1) var(--cedar-space-2);
-  min-height: var(--cedar-control-height-default);
-  font-size: var(--cedar-font-size);
-  font-weight: var(--cedar-font-weight-medium);
-  border-radius: var(--cedar-radius);
-  border: 0;
-}
-
-.btn-header--primary {
-  @apply border-transparent;
-  color: var(--cedar-color-on-primary);
-  /* background-color set via [style.backgroundColor] binding */
-}
-
-.btn-header--secondary {
-  background: transparent;
-  color: var(--cedar-text-primary);
-  &:hover {
-    background: var(--cedar-surface-selected);
-  }
 }
 
 /* ─── User Menu ───────────────────────────────────────────────────────────── */
@@ -106,7 +74,7 @@
   border-radius: var(--cedar-radius);
   box-shadow: var(--cedar-shadow-overlay);
   padding: var(--cedar-space-1);
-  animation: fade-in var(--cedar-motion-duration-normal) var(--cedar-motion-ease-enter);
+  animation: fade-in var(--cedar-motion-duration-normal) var(--cedar-motion-ease-standard);
 }
 
 .user-menu-item app-icon {
@@ -149,12 +117,7 @@
   margin-left: auto;
 }
 .overview-panel__actions button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
+  @include patterns.icon-button;
   border: 0;
   background: transparent;
   color: var(--cedar-text-muted);
@@ -217,14 +180,14 @@
 
 .overview-panel__close {
   @apply cursor-pointer;
-  color: var(--cedar-control-border-default);
+  color: var(--cedar-text-muted);
   &:hover {
     color: var(--cedar-text-muted);
   }
 }
 
 .overview-panel__list {
-  @apply divide-y divide-gray-100;
+  @apply divide-y divide-[var(--cedar-border-rule)];
 }
 
 /* Header panel controls mirror the side they open. */
@@ -248,8 +211,8 @@
   background: var(--cedar-surface-subtle);
 }
 .panel-toggle:focus-visible {
-  outline: 2px solid var(--cedar-color-primary);
-  outline-offset: 2px;
+  outline: var(--cedar-focus-ring-width) solid var(--cedar-color-primary);
+  outline-offset: var(--cedar-focus-ring-offset);
 }
 @media (max-width: 767px) {
   .overview-toggle {
@@ -266,17 +229,17 @@
 // Divide the space left after navigation equally between editing and preview.
 .main-content {
   --overview-width: 0px;
-  --preferred-overview-width: calc(56 * var(--cedar-space-1));
+  --preferred-overview-width: #{spacing.$designer-overview-width};
   --library-width: 0px;
 }
 .main-content.has-overview {
   --overview-width: var(--preferred-overview-width, 224px);
 }
 .main-content.has-library {
-  --library-width: calc(72 * var(--cedar-space-1));
+  --library-width: #{spacing.$designer-library-width};
 }
 .main-content.has-library.library-collapsed {
-  --library-width: calc(12 * var(--cedar-space-1));
+  --library-width: #{spacing.$designer-library-rail-width};
 }
 .designer-scroll--split {
   flex: 1 1 0;
@@ -294,15 +257,7 @@
 }
 
 .designer-mark {
-  @apply w-7;
-  height: var(--cedar-row-height-compact);
   border-radius: var(--cedar-radius-pill);
-}
-
-.field-designer-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: var(--cedar-layer-modal);
 }
 
 /* ─── Template Header Card ────────────────────────────────────────────────── */
@@ -382,17 +337,6 @@
   opacity: 1;
 }
 
-.btn-insert-here {
-  @apply border-none cursor-pointer;
-  color: var(--cedar-color-on-primary);
-  border-radius: var(--cedar-radius-pill);
-  padding-inline: var(--cedar-space-3);
-  padding-block: var(--cedar-space-1);
-  box-shadow: var(--cedar-shadow-overlay);
-  font-weight: var(--cedar-font-weight-medium);
-  font-size: var(--cedar-font-size);
-}
-
 /* ─── Field Drag Container ────────────────────────────────────────────────── */
 .field-drag-container {
   @apply relative;
@@ -428,57 +372,41 @@
   margin-top: var(--cedar-space-6);
 }
 
-.btn-add-field {
-  @apply flex items-center cursor-pointer;
-  gap: var(--cedar-space-2);
-  min-height: var(--cedar-control-height-default);
-  padding: var(--cedar-space-2) var(--cedar-space-3);
-  border-radius: var(--cedar-radius);
-  border: 0;
-  --cedar-icon-color: var(--cedar-color-on-primary);
-  color: var(--cedar-color-on-primary);
-
-  &:hover {
-    filter: brightness(0.95);
-  }
-}
-
 .add-field-section__picker {
   @apply w-full;
   margin-top: var(--cedar-space-4);
 }
 
+/* The CEDAR mark, with the name and the build beside it. The text column has a fixed width, so a
+   longer version ellipses within it rather than moving the header. */
 .designer-identity {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: calc(18 * var(--cedar-space-1));
+  display: grid;
+  grid-template-columns: spacing.$designer-identity-mark-size spacing.$designer-identity-width;
+  grid-template-rows: 1fr 1fr;
+  @include spacing.apply(gap, compact);
+  column-gap: var(--cedar-space-2);
   min-width: 0;
-  gap: 0;
 }
 .designer-identity > svg {
-  width: calc(10 * var(--cedar-space-1));
-  height: calc(10 * var(--cedar-space-1));
-  flex: none;
+  grid-row: 1 / span 2;
+  width: spacing.$designer-identity-mark-size;
+  height: spacing.$designer-identity-mark-size;
   box-shadow: none;
 }
 .designer-identity__name,
 .designer-identity__version {
-  min-width: calc(10 * var(--cedar-space-1));
-  max-width: 100%;
-  text-align: center;
-  line-height: var(--cedar-font-size);
+  min-width: 0;
+  line-height: var(--cedar-line-height-tight);
 }
 .designer-identity__name {
-  margin-top: var(--cedar-space-1);
+  align-self: end;
   font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-medium);
   color: var(--cedar-text-title);
 }
 
 .designer-identity__version {
-  @include spacing.apply(margin-top, compact);
-  max-width: 100%;
+  align-self: start;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -521,7 +449,7 @@
   top: var(--cedar-space-3);
   bottom: var(--cedar-space-3);
   right: 0;
-  width: var(--cedar-space-2);
+  width: spacing.$resize-handle-width;
   min-height: var(--cedar-control-height-default);
   cursor: col-resize;
   touch-action: none;
@@ -533,7 +461,7 @@
   position: absolute;
   inset: 0;
   margin: auto;
-  width: calc(var(--cedar-space-1) / 4);
+  width: 1px;
   background: var(--cedar-border-rule);
 }
 .overview-panel__resize:hover::after,
@@ -541,5 +469,5 @@
   background: var(--cedar-color-primary);
 }
 .overview-panel__resize:focus-visible {
-  outline: 2px solid var(--cedar-color-primary);
+  outline: var(--cedar-focus-ring-width) solid var(--cedar-color-primary);
 }

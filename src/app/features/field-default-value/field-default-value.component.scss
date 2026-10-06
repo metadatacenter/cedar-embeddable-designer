@@ -33,7 +33,6 @@
     background: none;
     border: 0;
     cursor: pointer;
-    font-size: var(--cedar-font-size-heading);
   }
   p {
     @include spacing.apply(margin, control-row);
@@ -106,4 +105,7 @@
 .default-help {
   font-size: var(--cedar-font-size);
   color: var(--cedar-text-muted);
+}
+.invalid-default-recovery {
+  overflow-wrap: anywhere;
 }

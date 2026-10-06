@@ -1,6 +1,7 @@
 @use '../../shared/dialog-style';
 @use '@org.metadatacenter/cedar-design-tokens/controls';
 @use '@org.metadatacenter/cedar-design-tokens/patterns';
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
 :host {
   display: contents;
 }
@@ -30,7 +31,6 @@ h2 {
   align-items: center;
   gap: var(--cedar-space-2);
   @include dialog-style.heading;
-  color: var(--cedar-text-title);
   margin: 0;
 }
 h3 {
@@ -86,10 +86,10 @@ th {
   font-weight: var(--cedar-font-weight-medium);
   border-bottom: 2px solid var(--cedar-border-rule);
   white-space: nowrap;
-  z-index: 1;
+  z-index: var(--cedar-layer-sticky);
 }
 td {
-  height: var(--cedar-table-row-height);
+  height: spacing.$table-row-height;
 }
 .icon-cell {
   width: 1%;
@@ -147,11 +147,7 @@ input[type='search'] {
   color: var(--cedar-status-error-text);
 }
 .sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
+  @include patterns.visually-hidden;
 }
 .result-row {
   cursor: pointer;
@@ -162,16 +158,16 @@ input[type='search'] {
   background: var(--cedar-surface-selected);
 }
 .result-row:focus-visible {
-  outline: 2px solid var(--cedar-color-primary);
-  outline-offset: -2px;
+  outline: var(--cedar-focus-ring-width) solid var(--cedar-color-primary);
+  outline-offset: calc(-1 * var(--cedar-focus-ring-width));
 }
 .result-row[aria-disabled='true'] {
   cursor: default;
 }
 .cdk-drag-preview {
   background: var(--cedar-surface-raised);
-  box-shadow: var(--cedar-shadow-dialog);
+  box-shadow: var(--cedar-shadow-overlay);
 }
 .cdk-drag-placeholder {
-  opacity: 0.3;
+  @include patterns.drag-placeholder;
 }

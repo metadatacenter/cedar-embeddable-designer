@@ -22,7 +22,8 @@
     },
     "anUnnamedField": "an unnamed field",
     "quoted": "“{{value}}”",
-    "close": "Close"
+    "close": "Close",
+    "actions": "Actions"
   },
   "app": {
     "overview": {
@@ -34,23 +35,6 @@
       "heading": "Overview ({{count}})",
       "expandAll": "Expand all elements",
       "collapseAll": "Collapse all elements"
-    },
-    "profile": {
-      "menuTitle": "The field types and controls this profile offers",
-      "basic": {
-        "label": "Basic",
-        "summary": "Plain fields, no vocabularies"
-      },
-      "semantic": {
-        "label": "Semantic",
-        "summary": "Adds controlled terms and help text"
-      },
-      "modular": {
-        "label": "Modular",
-        "summary": "Adds template elements"
-      },
-      "custom": "Custom",
-      "customize": "Customize…"
     },
     "userMenu": {
       "title": "User Menu",
@@ -116,6 +100,7 @@
     "valueIri": "Annotation value must be a valid IRI."
   },
   "ceePreview": {
+    "invalidDocument": "Preview is unavailable until the document’s invalid settings are corrected.",
     "title": "Preview",
     "mode": "Preview mode",
     "readOnly": "Read-only",
@@ -155,16 +140,11 @@
     "columns": {
       "name": "Name",
       "type": "Type",
-      "created": "Created",
       "modified": "Last modified",
       "version": "Version",
       "status": "Status",
       "remove": "Remove",
       "reorder": "Reorder"
-    },
-    "kind": {
-      "field": "Field",
-      "element": "Element"
     },
     "removeRow": "Remove {{name}}",
     "selectRow": "Select {{name}}",
@@ -254,7 +234,12 @@
       "time": "Enter a valid time for the default.",
       "timezoneDisabled": "Enable Show timezone or remove the timezone from the default.",
       "offset": "Enter a timezone offset between −14:00 and +14:00."
-    }
+    },
+    "invalidIri": "The default must be a well-formed absolute IRI.",
+    "invalidEmail": "The default must be a valid email address.",
+    "invalidPhone": "The default must be a valid phone number.",
+    "suppliedValue": "Default value: {{value}}",
+    "clearInvalid": "Clear invalid default"
   },
   "elementCard": {
     "settings": "Element settings",
@@ -287,8 +272,14 @@
     },
     "text": {
       "lengths": "Text lengths must be nonnegative numbers, with minimum no greater than maximum.",
-      "defaultTooShort": "Default value must contain at least {{count}} characters.",
-      "defaultTooLong": "Default value must contain no more than {{count}} characters.",
+      "defaultTooShort": {
+        "one": "Default value must contain at least {{count}} character.",
+        "other": "Default value must contain at least {{count}} characters."
+      },
+      "defaultTooLong": {
+        "one": "Default value must contain no more than {{count}} character.",
+        "other": "Default value must contain no more than {{count}} characters."
+      },
       "defaultPattern": "Default value must match the regular expression."
     },
     "media": {
@@ -322,21 +313,20 @@
     "move": {
       "missing": "The child or destination no longer exists.",
       "intoItself": "An element cannot be moved into itself or one of its descendants.",
-      "nameTaken": "The destination already has a child with that property name. Rename the placement first."
+      "nameTaken": "The destination already has a child with that property name. Rename the placement first.",
+      "nameReserved": "The destination reserves that property name. Rename the placement first."
     },
     "pageBreakPlacement": "Page breaks can only be placed in templates.",
     "publishedReadOnly": "Published fields are read-only. Editing a draft version is not available yet.",
     "importDestinationMissing": "The import destination no longer exists.",
     "destinationMissing": "The destination no longer exists.",
     "chooseFieldOrElement": "Choose a field or element artifact.",
-    "chooseElementDocument": "Choose an element document to insert into this container.",
     "elementMissing": "The element no longer exists."
   },
   "fieldCard": {
     "displayName": "Field display name",
     "published": "Published field — read-only. Editing a draft version is not available yet.",
     "namePlaceholder": "Enter field name",
-    "name": "Field name",
     "occurrenceRange": "Occurrence range",
     "dragToReorder": "Drag to reorder",
     "requirement": "Requirement",
@@ -353,28 +343,6 @@
       "url": "Image URL",
       "videoId": "YouTube video ID"
     }
-  },
-  "fieldDesigner": {
-    "title": "Field library",
-    "back": "Back to Template Builder",
-    "hint": "Reusable field specifications saved in this browser, including template display and occurrence settings.",
-    "createLibrary": "Create library",
-    "libraryName": "Library name",
-    "description": "Description",
-    "library": "Library",
-    "chooseLibrary": "Choose a library",
-    "saveField": "Save field",
-    "createField": "Create field",
-    "columns": {
-      "field": "Field",
-      "actions": "Actions"
-    },
-    "view": "View",
-    "edit": "Edit",
-    "addToTemplate": "Add to template",
-    "remove": "Remove",
-    "nameRequired": "Give the field a name.",
-    "libraryRequired": "Choose a library, or create one first."
   },
   "fieldElement": {
     "label": "Field designer",
@@ -553,10 +521,6 @@
     "label": "Language",
     "current": "{{code}} (current)"
   },
-  "fieldLibrary": {
-    "loadFailed": "The saved field library could not be loaded. Its stored data has been left unchanged.",
-    "saveFailed": "The browser could not save the field library. Keep this page open and try again."
-  },
   "terminology": {
     "notConfigured": "Terminology server is not configured.",
     "checkFailed": "Could not check the default term ({{status}}).",
@@ -564,10 +528,16 @@
     "unverified": "The term could not be verified in the returned results.",
     "searchNotConfigured": "Controlled-term search is not configured.",
     "answered": "The terminology server answered {{status}} {{statusText}}.",
-    "noResultsCollection": "The terminology server returned no results collection."
+    "noResultsCollection": "The terminology server returned no results collection.",
+    "unreachable": "The terminology server could not be reached. Check your connection and try again.",
+    "unreadable": "The terminology server sent an answer the designer cannot read. Try again.",
+    "timedOut": "The terminology lookup took too long. Try again."
   },
   "outline": {
-    "errors": "{{count}} errors",
+    "errors": {
+      "one": "{{count}} error",
+      "other": "{{count}} errors"
+    },
     "expand": "Expand element",
     "collapse": "Collapse element",
     "reorder": "Reorder {{name}}",
@@ -711,7 +681,7 @@
     "annotations": "Annotations",
     "fieldMetadata": "Field metadata",
     "elementMetadata": "Element metadata",
-    "templateMetadata": "Template Metadata"
+    "templateMetadata": "Template metadata"
   },
   "validation": {
     "summary": {

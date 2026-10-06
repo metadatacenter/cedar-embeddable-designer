@@ -6,6 +6,7 @@ import { publicationStatusLabel } from '../../shared/publication-status';
 import { Component, inject, input, computed, viewChild, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
+import { CountKeyPipe } from '../../i18n/count-key.pipe';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService } from '../../core/services/template.service';
 import { fieldView, findContainer } from '../../core/model/container-draft';
@@ -30,6 +31,7 @@ import { ElementCardComponent } from '../element-card/element-card.component';
     FieldTypePickerComponent,
     ElementCardComponent,
     ContainerSettingsComponent,
+    CountKeyPipe,
     TranslatePipe,
   ],
   templateUrl: './container-editor.component.html',
@@ -79,10 +81,7 @@ export class ContainerEditorComponent {
   readonly fieldView = fieldView;
   update(
     changes: Partial<
-      Pick<
-        import('../../core/model/container-draft').ContainerDraft,
-        'name' | 'description' | 'schemaIdentifier' | 'version'
-      >
+      Pick<import('../../core/model/container-draft').ContainerDraft, 'name' | 'description' | 'version'>
     >,
   ): void {
     this.service.updateContainerDefinition(this.container().id, changes);
@@ -99,10 +98,8 @@ export class ContainerEditorComponent {
   }
   activate(): void {
     this.service.session.activeId.set(this.container().id);
-  }
-  chooseField(index: number): void {
-    this.activate();
-    this.service.showPicker.set(index);
+    const node = this.placementNode();
+    if (node) this.service.selectedField.set(node.id);
   }
   pickerAt(index: number): boolean {
     return this.service.session.active().id === this.container().id && this.service.showPicker() === index;

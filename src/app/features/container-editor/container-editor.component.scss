@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
 @use '@org.metadatacenter/cedar-design-tokens/spacing';
 @use '../../shared/dialog-style';
 :host {
@@ -15,51 +16,29 @@
 .template-header-card::before {
   content: '';
   display: block;
-  height: var(--cedar-space-1);
+  height: spacing.$template-card-accent-height;
   background: linear-gradient(90deg, var(--cedar-color-primary), var(--cedar-surface-selected));
 }
 .template-header-card__body {
   padding-bottom: var(--cedar-space-1);
 }
-.container-path,
-.container-path button {
-  padding: var(--cedar-space-1) var(--cedar-space-2);
-  color: var(--cedar-color-primary);
-  border: 1px solid var(--cedar-border-rule);
-  border-radius: var(--cedar-radius);
-  background: var(--cedar-surface-raised);
-}
-.container-path button[aria-current] {
-  font-weight: var(--cedar-font-weight-medium, 500);
-}
-
-.container-path button {
-  max-width: 100%;
-  overflow-wrap: anywhere;
-}
-
-.element-child-move {
-  @include spacing.apply(padding, element-header);
-}
-
 .template-header-row {
   align-items: flex-start;
 }
 .publication-status {
   color: var(--cedar-text-muted);
   font-size: var(--cedar-font-size);
-  line-height: 18px;
   text-align: right;
 }
 
-/* Compact authoring header: preserve the name/identifier/version row where it fits. */
+/* Compact authoring header: the name and description sit beside the version. */
 :host {
   container-type: inline-size;
 }
 .template-header-card__icon {
   display: flex;
-  width: var(--cedar-control-height-default);
-  height: var(--cedar-control-height-default);
+  width: spacing.$template-icon-tile-size;
+  height: spacing.$template-icon-tile-size;
   border-radius: var(--cedar-radius);
   background: var(--cedar-surface-selected);
   color: var(--cedar-color-primary);
@@ -76,13 +55,9 @@
   min-width: 0;
   width: auto;
 }
-.template-header-row > .template-field-group.w-44 {
-  grid-column: 1;
-  grid-row: 2;
-}
 .template-header-row > .template-field-group.w-24 {
   grid-column: 2;
-  grid-row: 1 / span 3;
+  grid-row: 1 / span 2;
   max-width: 6rem;
 }
 .template-field-label {
@@ -114,22 +89,6 @@
   line-height: var(--cedar-control-line-height-authoring);
 }
 
-@container (min-width: 680px) {
-  .template-header-card__inputs {
-    grid-template-columns: minmax(0, 1fr) minmax(0, calc(11 * var(--cedar-space-4))) auto;
-  }
-  .template-header-row > .template-field-group.w-44 {
-    grid-column: 2;
-    grid-row: 1;
-  }
-  .template-header-row > .template-field-group.w-24 {
-    grid-column: 3;
-    grid-row: 1 / span 2;
-  }
-  .template-description {
-    grid-column: 1 / span 2;
-  }
-}
 @container (max-width: 400px) {
   .template-header-card__icon {
     display: none;
@@ -152,13 +111,7 @@
   position: absolute;
   bottom: var(--cedar-space-1);
   right: var(--cedar-space-1);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  flex: none;
-  padding: 0;
+  @include patterns.icon-button;
   border: 0;
   background: transparent;
   color: var(--cedar-text-muted);
@@ -183,12 +136,7 @@
   top: calc(var(--cedar-space-3) + var(--cedar-space-1));
   left: 50%;
   transform: translateX(-50%);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--cedar-space-6);
-  height: var(--cedar-space-6);
-  padding: 0;
+  @include patterns.icon-button;
   color: var(--cedar-text-muted);
   cursor: grab;
   z-index: var(--cedar-layer-sticky);
@@ -209,9 +157,15 @@
   line-height: var(--cedar-control-line-height-default);
 }
 
+/* The card's outline, border and selection bar keep the error colour over the selected and focused
+   states. Like the badge, they follow a host's --cedar-control-error before the shared error role. */
 .field-drag-container.invalid {
   outline: 2px solid var(--cedar-control-error, var(--cedar-status-error-text));
   outline-offset: 1px;
+  border-color: var(--cedar-control-error, var(--cedar-status-error-text));
+}
+.field-drag-container.invalid > .field-selection-bar {
+  background-color: var(--cedar-control-error, var(--cedar-status-error-text));
 }
 .validation-badge {
   --cedar-icon-color: var(--cedar-control-error, var(--cedar-status-error-text));
@@ -236,24 +190,18 @@ textarea.template-input {
   overflow: hidden;
 }
 
-.version-group {
-  position: relative;
-}
 .version-value-row {
   display: flex;
   justify-content: flex-end;
   align-items: center;
 }
+// Anchored to the card, as the drag handle and the children toggle are, so the bin
+// shares the handle's top and the toggle's right edge rather than the version's.
 .element-delete {
   position: absolute;
-  top: 0;
-  left: calc(100% + var(--cedar-space-3));
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--cedar-space-6);
-  height: var(--cedar-space-6);
-  padding: 0;
+  top: calc(var(--cedar-space-3) + var(--cedar-space-1));
+  right: var(--cedar-space-1);
+  @include patterns.icon-button;
   border: 0;
   background: transparent;
   color: var(--cedar-text-primary);
@@ -307,6 +255,11 @@ textarea.template-input {
 .template-input--name {
   font-weight: var(--cedar-font-weight-medium);
   color: var(--cedar-text-title);
+  // An unnamed template or element shows the header input's underline at rest, as a line to write
+  // the name on. Focus turns it primary, as it does on every header input.
+  &:placeholder-shown:not(:focus) {
+    border-bottom-color: var(--cedar-border-rule);
+  }
 }
 .template-input--fact {
   font-weight: var(--cedar-font-weight-medium);

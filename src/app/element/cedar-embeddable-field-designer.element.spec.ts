@@ -5,6 +5,8 @@ import { CedarEmbeddableFieldDesignerElementComponent } from './cedar-embeddable
 import { FIELD_TYPES } from '../core/models/types';
 import { CedFieldType } from '../ced-public-api';
 import { TerminologyService } from '../core/services/terminology.service';
+import { By } from '@angular/platform-browser';
+import { FieldDefaultValueComponent } from '../features/field-default-value/field-default-value.component';
 
 function create(type?: CedFieldType) {
   const fixture = TestBed.createComponent(CedarEmbeddableFieldDesignerElementComponent);
@@ -107,6 +109,42 @@ it('supports host read-only toggles and keeps published definitions read only', 
   editor.readOnly = false;
   expect(editor.readOnly).toBe(true);
   expect(editor.canSave).toBe(false);
+});
+
+it.each([false, true])('invalidates a pending default after read-only, restored editable=%s', async (restore) => {
+  const { fixture, editor, service } = create('controlledTerms');
+  name(editor);
+  const id = editor.field()!.id;
+  service.updateControlledTermConstraints(id, {
+    constraints: [{ sourceType: 'ontology', ontologyId: 'DOID', ontologyName: 'Disease' }],
+    actions: [],
+  });
+  fixture.detectChanges();
+  const control = fixture.debugElement.query(By.directive(FieldDefaultValueComponent))
+    .componentInstance as FieldDefaultValueComponent;
+  let resolve!: (allowed: boolean) => void;
+  vi.spyOn(fixture.debugElement.injector.get(TerminologyService), 'allowsDefault').mockReturnValue(
+    new Promise<boolean>((done) => {
+      resolve = done;
+    }),
+  );
+  control.openPicker();
+  const pending = control.selectTerm(
+    new CustomEvent('selected', { detail: { type: 'class', termIri: 'urn:term', termLabel: 'Term' } }),
+  );
+  expect(service.validation.isChecking(id, 'defaultValue')).toBe(true);
+  editor.readOnly = true;
+  expect(service.validation.isChecking(id, 'defaultValue')).toBe(false);
+  const before = editor.currentArtifact;
+  service.updateDefaultValue(id, { kind: 'iri', iri: 'urn:other', label: 'Other' });
+  service.updateFieldName(id, 'Changed while locked');
+  service.updateControlledTermConstraints(id, { constraints: [], actions: [] });
+  expect(editor.currentArtifact).toEqual(before);
+  if (restore) editor.readOnly = false;
+  resolve(true);
+  await pending;
+  expect(editor.currentArtifact).toEqual(before);
+  expect(editor.canSave).toBe(restore);
 });
 it('isolates simultaneous documents and terminology configuration', () => {
   const a = create('text'),

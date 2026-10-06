@@ -45,6 +45,7 @@
           >{{ 'containerSettings.header' | translate }}
           <textarea
             spellcheck="false"
+            autocomplete="off"
             rows="1"
             [ngModel]="container().metadata?.header ?? ''"
             (ngModelChange)="update('header', $event)"
@@ -54,6 +55,7 @@
           >{{ 'containerSettings.footer' | translate }}
           <textarea
             spellcheck="false"
+            autocomplete="off"
             rows="1"
             [ngModel]="container().metadata?.footer ?? ''"
             (ngModelChange)="update('footer', $event)"
@@ -100,6 +102,19 @@
         <dt>{{ 'settings.previousVersion' | translate }}</dt>
         <dd>{{ artifact().previousVersion }}</dd>
       }
+      <dt class="editable">
+        <label [for]="'container-identifier-' + container().id">{{ 'containerEditor.identifier' | translate }}</label>
+      </dt>
+      <dd>
+        <input
+          spellcheck="false"
+          autocomplete="off"
+          [id]="'container-identifier-' + container().id"
+          name="schemaIdentifier"
+          [ngModel]="container().schemaIdentifier"
+          (ngModelChange)="service.updateContainerDefinition(container().id, { schemaIdentifier: $event })"
+        />
+      </dd>
       <dt class="editable">{{ 'settings.types' | translate }}</dt>
       <dd><app-types-picker [container]="container()" /></dd>
     </dl>
