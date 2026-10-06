@@ -1,6 +1,6 @@
 import { Field } from '../models/types';
 import { Message, message } from '../../i18n/messages';
-import { validAbsoluteIri } from './field-default';
+import { validAbsoluteIri } from './cedar-model/iri-syntax';
 
 /** One rule for supplied annotations, model construction and the row editor. */
 export function annotationError(rows: NonNullable<Field['annotations']>): Message | null {

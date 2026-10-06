@@ -22,6 +22,7 @@ const invalidIris = [
   'urn:',
   'https://example.org/\\x',
   '\nhttps://example.org/x',
+  'https://example.org/a#b#c',
 ];
 const validIris = [
   'https://example.org/item',

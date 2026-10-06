@@ -44,7 +44,7 @@ import { controlledTermConstraintsOf } from './terminology';
 import { childKeys } from '../child-key-policy';
 import { templateToJson } from './container-writer';
 import { ContainerDraft, containerFromFlat, fieldNode, newNodeId } from '../container-draft';
-import { validAbsoluteIri } from '../field-default';
+import { validAbsoluteIri } from './iri-syntax';
 
 /**
  * Whether a YAML document is the compact form, which is the form to refuse.

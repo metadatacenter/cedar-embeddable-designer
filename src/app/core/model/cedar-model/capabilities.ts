@@ -317,12 +317,12 @@ export const NUMERIC_TYPES = NumberType.values().map((type) => type.getValue()!)
  * `allowsRequired: false` for `attribute-value` while calling it non-static.
  *
  * The requirement offered on an attribute-value field was not simply ignored,
- * which is what made it worth removing rather than leaving. The JSON writer omits
+ * which is what made it worth removing rather than leaving. The JSON writer omitted
  * the whole constraints node for that type, so a requirement set in the card
- * vanished; the YAML writer records `required: true` under the child, so it
- * survived. The same template therefore said different things depending on which
- * format it was saved in, and the one the artifact server stores is the one that
- * dropped it. Both model libraries behave this way.
+ * vanished. The YAML writer recorded `required: true` under the child, so it
+ * survived, and the same template said different things depending on which format
+ * it was saved in. Both model libraries now decline the requirement in either
+ * format, so the control would set nothing at all.
  *
  * This decides what an author may set, not what the designer preserves: a status
  * read from a template is still written back.

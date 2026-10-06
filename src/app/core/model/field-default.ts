@@ -1,21 +1,6 @@
 import { Field, FieldDefaultValue } from '../models/types';
 import { Translate, english } from '../../i18n/messages';
-
-/** Syntax only: identifier resolution and vocabulary membership belong to the host. */
-export function validAbsoluteIri(value: string): boolean {
-  if (
-    !/^[a-z][a-z0-9+.-]*:.+$/i.test(value) ||
-    /[\s<>"{}|\\^`\p{Cc}\p{Cs}]/u.test(value) ||
-    /%(?![\da-f]{2})/i.test(value)
-  )
-    return false;
-  try {
-    const parsed = new URL(value);
-    return !/^https?:/i.test(value) || (/^https?:\/\//i.test(value) && !!parsed.hostname);
-  } catch {
-    return false;
-  }
-}
+import { validAbsoluteIri } from './cedar-model/iri-syntax';
 
 export function defaultFormatError(field: Field, value: FieldDefaultValue, t: Translate = english): string | null {
   if (value.kind === 'iri' && !validAbsoluteIri(value.iri)) return t('defaultValue.invalidIri');
