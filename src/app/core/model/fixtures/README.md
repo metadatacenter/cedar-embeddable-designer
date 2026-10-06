@@ -12,6 +12,9 @@ wrote, which cannot show whether CED can open what production already holds.
 
 Source: `metadatacenter/cedar-test-artifacts`, branch `develop`, commit
 `912ba203578cbdf1273a45470437333efe81a62c`, directory `artifacts/templates/`.
+Template 033 is taken from the later commit
+`ae8b13b8812e0bd9b59b8df4a07c13764e9ae35a`, which corrects its
+`pav:previousVersion`.
 
 To refresh, copy `template-NNN.json` from each numbered directory. Do not copy
 the `-generated-` or `-original` files: those are library outputs, and comparing
