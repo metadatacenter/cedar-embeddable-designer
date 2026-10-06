@@ -161,6 +161,7 @@
     "reorderRow": "{{name}} átrendezése"
   },
   "containerEditor": {
+    "elementDisplayName": "Elem megjelenített neve",
     "published": "Ez az elem közzétett, ezért csak a konfigurációja módosítható.",
     "dragElement": "Húzza az elemet az átrendezéshez",
     "elementLabel": "Elem",
@@ -629,6 +630,10 @@
     "fieldTypes": "Elérhető mezőtípusok"
   },
   "settings": {
+    "fieldName": "Mező neve",
+    "fieldDescription": "Mező leírása",
+    "elementName": "Elem neve",
+    "elementDescription": "Elem leírása",
     "shownName": "Megjelenített név",
     "shownDescription": "Megjelenített leírás",
     "containsErrors": "Hibákat tartalmaz",
@@ -646,9 +651,7 @@
     "displayLabel": "Név",
     "displayDescription": "Leírás",
     "allowMultiple": "Több érték engedélyezése",
-    "minOccurrences": "Előfordulások minimális száma",
     "minOccurrencesPlaceholder": "Alapértelmezett (0)",
-    "maxOccurrences": "Előfordulások maximális száma",
     "unlimited": "Korlátlan",
     "invalidNumber": "{{label}}: érvényes számot kell megadni.",
     "value": "Érték"

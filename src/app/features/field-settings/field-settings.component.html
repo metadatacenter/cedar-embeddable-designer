@@ -37,9 +37,8 @@
                 [ngModel]="shownName"
                 (ngModelChange)="rename($event)"
                 (blur)="service.touchName(field.id)"
-                [placeholder]="'fieldSettings.display.labelPlaceholder' | translate"
             /></label>
-            <label
+            <label class="configuration-wide"
               >{{ 'settings.shownDescription' | translate
               }}<input
                 spellcheck="false"
@@ -47,80 +46,8 @@
                 name="shownDescription"
                 [ngModel]="shownDescription"
                 (ngModelChange)="service.updateFieldDisplayDescription(field.id, $event)"
-                [placeholder]="'fieldSettings.display.descriptionPlaceholder' | translate"
-            /></label>
-            <label data-setting="key"
-              >{{ 'settings.key' | translate
-              }}<input
-                spellcheck="false"
-                autocomplete="off"
-                [attr.aria-invalid]="!!keyError"
-                [attr.aria-describedby]="keyError ? 'field-key-error-' + field.id : null"
-                name="deploymentName"
-                [(ngModel)]="deploymentName"
-                (ngModelChange)="saveKey()"
             /></label>
           </div>
-          @if (keyError) {
-            <p role="alert" class="ced-field-error" [id]="'field-key-error-' + field.id">{{ keyError }}</p>
-          }
-          @if (dynamic) {
-            <div class="configuration-property" data-setting="propertyIri">
-              <span class="default-label">{{ 'settings.propertyIri' | translate }}</span>
-              <app-property-picker
-                [iri]="field.propertyIri"
-                [disabled]="placementLocked"
-                (propertySelected)="saveProperty($event)"
-              />
-            </div>
-          }
-          @if (offersAllowMultiple || offersBounds) {
-            <fieldset [attr.aria-invalid]="!!error" class="configuration-bounds">
-              @if (offersAllowMultiple) {
-                <label class="check"
-                  ><input
-                    spellcheck="false"
-                    type="checkbox"
-                    name="allowMultiple"
-                    [checked]="field.allowMultiple"
-                    (change)="service.toggleAllowMultiple(field.id)"
-                  />{{ 'settings.allowMultiple' | translate }}</label
-                >
-              }
-              @if (offersBounds) {
-                <div class="settings-fields configuration-fields" data-setting="occurrences">
-                  <label
-                    >{{ 'fieldSettings.occurrences.min' | translate
-                    }}<input
-                      spellcheck="false"
-                      autocomplete="off"
-                      type="number"
-                      name="min"
-                      min="0"
-                      step="1"
-                      [disabled]="!multiple"
-                      [(ngModel)]="min"
-                      (ngModelChange)="saveBounds(configurationForm, 'min')"
-                      [placeholder]="'settings.minOccurrencesPlaceholder' | translate"
-                  /></label>
-                  <label
-                    >{{ 'fieldSettings.occurrences.max' | translate
-                    }}<input
-                      spellcheck="false"
-                      autocomplete="off"
-                      type="number"
-                      name="max"
-                      min="0"
-                      step="1"
-                      [disabled]="!multiple"
-                      [(ngModel)]="max"
-                      (ngModelChange)="saveBounds(configurationForm, 'max')"
-                      [placeholder]="'settings.unlimited' | translate"
-                  /></label>
-                </div>
-              }
-            </fieldset>
-          }
           <div class="configuration-flags" data-setting="layout">
             @if (offersRequirement) {
               <select
@@ -156,6 +83,77 @@
               >
             }
           </div>
+          @if (offersAllowMultiple) {
+            <div class="settings-fields configuration-fields">
+              <label class="check configuration-multiple"
+                ><input
+                  spellcheck="false"
+                  type="checkbox"
+                  name="allowMultiple"
+                  [checked]="field.allowMultiple"
+                  (change)="service.toggleAllowMultiple(field.id)"
+                />{{ 'settings.allowMultiple' | translate }}</label
+              >
+            </div>
+          }
+          <fieldset [attr.aria-invalid]="boundsInvalid" class="settings-fields configuration-fields">
+            <label data-setting="key"
+              >{{ 'settings.key' | translate
+              }}<input
+                spellcheck="false"
+                autocomplete="off"
+                [attr.aria-invalid]="!!keyError"
+                [attr.aria-describedby]="keyError ? 'field-key-error-' + field.id : null"
+                name="deploymentName"
+                [(ngModel)]="deploymentName"
+                (ngModelChange)="saveKey()"
+            /></label>
+            @if (offersBounds) {
+              <div class="configuration-bounds" data-setting="occurrences">
+                <label
+                  >{{ 'fieldSettings.occurrences.min' | translate
+                  }}<input
+                    spellcheck="false"
+                    autocomplete="off"
+                    type="number"
+                    name="min"
+                    min="0"
+                    step="1"
+                    [disabled]="!multiple"
+                    [(ngModel)]="min"
+                    (ngModelChange)="saveBounds(configurationForm, 'min')"
+                    [placeholder]="'settings.minOccurrencesPlaceholder' | translate"
+                /></label>
+                <label
+                  >{{ 'fieldSettings.occurrences.max' | translate
+                  }}<input
+                    spellcheck="false"
+                    autocomplete="off"
+                    type="number"
+                    name="max"
+                    min="0"
+                    step="1"
+                    [disabled]="!multiple"
+                    [(ngModel)]="max"
+                    (ngModelChange)="saveBounds(configurationForm, 'max')"
+                    [placeholder]="'settings.unlimited' | translate"
+                /></label>
+              </div>
+            }
+          </fieldset>
+          @if (keyError) {
+            <p role="alert" class="ced-field-error" [id]="'field-key-error-' + field.id">{{ keyError }}</p>
+          }
+          @if (dynamic) {
+            <div class="configuration-property" data-setting="propertyIri">
+              <span class="default-label">{{ 'settings.propertyIri' | translate }}</span>
+              <app-property-picker
+                [iri]="field.propertyIri"
+                [disabled]="placementLocked"
+                (propertySelected)="saveProperty($event)"
+              />
+            </div>
+          }
         </fieldset>
       </form>
       @if (error) {
@@ -429,7 +427,7 @@
     <form class="row">
       <fieldset [disabled]="definitionLocked" class="settings-fields display-fields">
         <label
-          >{{ 'settings.displayLabel' | translate
+          >{{ 'settings.fieldName' | translate
           }}<input
             spellcheck="false"
             autocomplete="off"
@@ -440,7 +438,7 @@
             [placeholder]="'fieldSettings.display.labelPlaceholder' | translate"
         /></label>
         <label
-          >{{ 'settings.displayDescription' | translate
+          >{{ 'settings.fieldDescription' | translate
           }}<input
             spellcheck="false"
             autocomplete="off"

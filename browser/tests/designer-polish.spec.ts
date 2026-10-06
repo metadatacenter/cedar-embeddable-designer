@@ -11,7 +11,7 @@ test('an inserted element retains headroom when the library sidebar collapses', 
   await designer.getByRole('radio', { name: /Library Sidebar/ }).check();
   await designer.getByRole('button', { name: 'Done', exact: true }).click();
   await designer.getByRole('button', { name: 'Add element', exact: true }).click();
-  const name = designer.getByRole('textbox', { name: 'Element name', exact: true });
+  const name = designer.getByRole('textbox', { name: 'Element display name', exact: true });
   await expect(name).toBeFocused();
   const header = designer.locator('.nested-header');
   const headroom = () =>
@@ -29,7 +29,7 @@ test('element overview chevron follows its name and insertion actions have balan
   const designer = await openDesigner(page);
   await applyPreset(page, 'modular');
   await designer.getByRole('button', { name: 'Add element', exact: true }).click();
-  await designer.getByRole('textbox', { name: 'Element name', exact: true }).fill('New element');
+  await designer.getByRole('textbox', { name: 'Element display name', exact: true }).fill('New element');
   const row = designer.locator('.outline-row').filter({ hasText: 'New element' });
   const name = await row.locator('.node-name').boundingBox();
   const toggle = await row.locator('.outline-toggle').boundingBox();

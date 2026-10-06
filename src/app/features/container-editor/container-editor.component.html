@@ -36,8 +36,12 @@
             type="text"
             [appArtifactName]="container().id"
             [attr.aria-label]="
-              (container().kind === 'element' ? 'containerEditor.elementName' : 'containerEditor.templateName')
-                | translate
+              (placementNode()
+                ? 'containerEditor.elementDisplayName'
+                : container().kind === 'element'
+                  ? 'containerEditor.elementName'
+                  : 'containerEditor.templateName'
+              ) | translate
             "
             aria-required="true"
             [attr.aria-invalid]="!!service.nameError(container().id, container().name, container().kind)"

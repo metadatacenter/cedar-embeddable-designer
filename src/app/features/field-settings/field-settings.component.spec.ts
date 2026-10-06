@@ -105,13 +105,13 @@ describe('the Configuration tab', () => {
     const names = [
       'shownName',
       'shownDescription',
-      'deploymentName',
-      'allowMultiple',
-      'min',
-      'max',
       'requirement',
       'hidden',
       'continue',
+      'allowMultiple',
+      'deploymentName',
+      'min',
+      'max',
     ];
     // In the order the panel sets them out.
     expect(

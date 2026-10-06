@@ -132,6 +132,12 @@ export class FieldSettingsComponent implements OnChanges {
   get shownDescription(): string {
     return fieldDisplayDescription(this.field);
   }
+  /** Whether the bounds are refused, which marks the row that holds them. */
+  get boundsInvalid(): boolean {
+    return this.service
+      .visibleIssues()
+      .some((issue) => issue.nodeId === this.field.id && issue.setting === 'occurrences');
+  }
   get dynamic(): boolean {
     return descriptorOf(this.field.type).deployment !== 'static';
   }

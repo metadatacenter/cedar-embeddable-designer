@@ -17,7 +17,7 @@ test('authors occurrence limits and rejects an inverted range', async ({ page })
   await expect(settings.getByRole('alert')).toHaveCSS('font-size', '12px');
   expect(((await currentTemplate(page)).properties as any).Title.minItems).toBe(2);
   const display = await openSettings(card, 'Display');
-  await display.getByLabel('Name', { exact: true }).fill('Immediate label');
+  await display.getByLabel('Field name', { exact: true }).fill('Immediate label');
   await expect(display.getByRole('alert')).toHaveCount(0);
   await openSettings(card, 'Configuration');
   await expect(settings.getByLabel('Minimum', { exact: true })).toHaveValue('8');
@@ -29,7 +29,7 @@ test('authors occurrence limits and rejects an inverted range', async ({ page })
   await page.screenshot({ path: '/tmp/ced-occurrences.png' });
 });
 
-test('Configuration sets the display name, description and key on one row, the bounds below Allow multiple and the requirement with the line settings', async ({
+test('Configuration sets the display name and a wider description, the requirement with the line settings, the key beside the bounds below Allow multiple, and the property IRI last', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 1000 });
@@ -41,34 +41,38 @@ test('Configuration sets the display name, description and key on one row, the b
     ).boundingBox())!;
   const name = await box('Display name');
   const description = await box('Display description');
-  const key = await box('Key');
-  const property = (await panel.getByText('Property IRI', { exact: true }).boundingBox())!;
-  const multiple = await box('Allow multiple', true);
-  const minimum = await box('Minimum');
-  const maximum = await box('Maximum');
   const requirement = await box('Requirement');
   const hidden = await box('Hidden', true);
   const continued = await box('Continue previous line', true);
+  const multiple = await box('Allow multiple', true);
+  const key = await box('Key');
+  const minimum = await box('Minimum');
+  const maximum = await box('Maximum');
+  const property = (await panel.getByText('Property IRI', { exact: true }).boundingBox())!;
+  // The display name and the wider display description share the first row.
   expect(description.y).toBeCloseTo(name.y, 0);
-  expect(key.y).toBeCloseTo(name.y, 0);
   expect(name.x).toBeLessThan(description.x);
-  expect(description.x).toBeLessThan(key.x);
-  expect(property.y).toBeGreaterThan(name.y + name.height);
-  // Allow multiple takes a row of its own, and its bounds the row below it.
-  expect(multiple.y).toBeGreaterThan(property.y + property.height);
-  expect(minimum.y).toBeGreaterThan(multiple.y + multiple.height);
-  expect(maximum.y).toBeCloseTo(minimum.y, 0);
-  expect(minimum.x).toBeLessThan(maximum.x);
+  expect(description.width).toBeGreaterThan(name.width * 1.5);
   // The requirement, without a heading of its own, leads the row the line settings share.
-  expect(requirement.y).toBeGreaterThan(minimum.y + minimum.height);
+  expect(requirement.y).toBeGreaterThan(name.y + name.height);
   expect(Math.abs(requirement.y + requirement.height / 2 - (hidden.y + hidden.height / 2))).toBeLessThanOrEqual(2);
   expect(Math.abs(hidden.y - continued.y)).toBeLessThanOrEqual(1);
   expect(requirement.x).toBeLessThan(hidden.x);
   expect(hidden.x).toBeLessThan(continued.x);
   await expect(panel.getByText('Requirement', { exact: true })).toHaveCount(0);
+  // Allow multiple stands over the bounds it enables, so the key shares their row.
+  expect(multiple.y).toBeGreaterThan(requirement.y + requirement.height);
+  expect(Math.abs(multiple.x - minimum.x)).toBeLessThanOrEqual(1);
+  expect(key.y).toBeGreaterThan(multiple.y + multiple.height);
+  expect(minimum.y).toBeCloseTo(key.y, 0);
+  expect(maximum.y).toBeCloseTo(key.y, 0);
+  expect(key.x).toBeLessThan(minimum.x);
+  expect(minimum.x).toBeLessThan(maximum.x);
+  // The property IRI comes last.
+  expect(property.y).toBeGreaterThan(key.y + key.height);
 });
 
-test('an element Configuration sets its display name, description and key on one row and its bounds below Allow multiple', async ({
+test('an element Configuration sets its display name and description, its key beside the bounds below Allow multiple, and its property IRI last', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 1000 });
@@ -81,22 +85,24 @@ test('an element Configuration sets its display name, description and key on one
   const box = async (label: string) => (await panel.getByLabel(label, { exact: true }).boundingBox())!;
   const name = await box('Display name');
   const description = await box('Display description');
-  const key = await box('Key');
   const multiple = await box('Allow multiple');
-  const minimum = await box('Minimum occurrences');
-  const maximum = await box('Maximum occurrences');
+  const key = await box('Key');
+  const minimum = await box('Minimum');
+  const maximum = await box('Maximum');
+  const property = (await panel.getByText('Property IRI', { exact: true }).boundingBox())!;
   expect(description.y).toBeCloseTo(name.y, 0);
-  expect(key.y).toBeCloseTo(name.y, 0);
-  expect(name.x).toBeLessThan(description.x);
-  expect(description.x).toBeLessThan(key.x);
-  expect(multiple.y).toBeGreaterThan(key.y + key.height);
-  expect(minimum.y).toBeGreaterThan(multiple.y + multiple.height);
-  expect(maximum.y).toBeCloseTo(minimum.y, 0);
+  expect(description.width).toBeGreaterThan(name.width * 1.5);
+  expect(multiple.y).toBeGreaterThan(name.y + name.height);
+  expect(Math.abs(multiple.x - minimum.x)).toBeLessThanOrEqual(1);
+  expect(key.y).toBeGreaterThan(multiple.y + multiple.height);
+  expect(minimum.y).toBeCloseTo(key.y, 0);
+  expect(maximum.y).toBeCloseTo(key.y, 0);
+  expect(property.y).toBeGreaterThan(key.y + key.height);
   // A draft element's display description is its own description as well.
   await panel.getByLabel('Display description', { exact: true }).fill('Shown help');
   await card.getByRole('tab', { name: 'Display', exact: true }).click();
   await expect(
-    card.getByRole('tabpanel', { name: 'Display', exact: true }).getByLabel('Description', { exact: true }),
+    card.getByRole('tabpanel', { name: 'Display', exact: true }).getByLabel('Element description', { exact: true }),
   ).toHaveValue('Shown help');
 });
 
@@ -280,10 +286,10 @@ test('metadata keys are editable and unique within their parent while names and 
   const display = await openSettings(first, 'Display');
   await expect(display.getByLabel('Preferred name', { exact: true })).toHaveCount(0);
   // A draft's own name is the name its header shows, so the Display tab shows what the header typed.
-  await expect(display.getByLabel('Name', { exact: true })).toHaveValue('Repeated');
-  await display.getByLabel('Name', { exact: true }).fill('Same label');
+  await expect(display.getByLabel('Field name', { exact: true })).toHaveValue('Repeated');
+  await display.getByLabel('Field name', { exact: true }).fill('Same label');
   const otherDisplay = await openSettings(second, 'Display');
-  await otherDisplay.getByLabel('Name', { exact: true }).fill('Same label');
+  await otherDisplay.getByLabel('Field name', { exact: true }).fill('Same label');
   const configuration = await openSettings(first, 'Configuration');
   await expect(configuration.getByLabel('Key', { exact: true })).toHaveValue('Title');
   await configuration.getByLabel('Key', { exact: true }).fill('subject');
@@ -312,11 +318,11 @@ test('the header and Configuration edit the display name and Display the own nam
   const card = () => designer.locator('app-field-card').first();
   const header = () => card().getByRole('textbox', { name: 'Field display name', exact: true });
   let display = await openSettings(card(), 'Display');
-  await expect(display.getByLabel('Name', { exact: true })).toHaveValue('Title');
-  await expect(display.getByLabel('Name', { exact: true })).toHaveAttribute('placeholder', 'Field name');
+  await expect(display.getByLabel('Field name', { exact: true })).toHaveValue('Title');
+  await expect(display.getByLabel('Field name', { exact: true })).toHaveAttribute('placeholder', 'Field name');
   // A draft its parent shows as itself has one name, so typing in the header shows in the Display tab.
   await header().fill('Heading');
-  await expect(display.getByLabel('Name', { exact: true })).toHaveValue('Heading');
+  await expect(display.getByLabel('Field name', { exact: true })).toHaveValue('Heading');
 
   // A parent label repeating the name is the writer's filler, not a second name.
   const artifact = await currentTemplate(page);
@@ -333,8 +339,8 @@ test('the header and Configuration edit the display name and Display the own nam
   await configuration.getByLabel('Display name', { exact: true }).fill('Study heading');
   await expect(header()).toHaveValue('Study heading');
   display = await openSettings(card(), 'Display');
-  await expect(display.getByLabel('Name', { exact: true })).toHaveValue('Heading');
-  await display.getByLabel('Name', { exact: true }).fill('Own heading');
+  await expect(display.getByLabel('Field name', { exact: true })).toHaveValue('Heading');
+  await display.getByLabel('Field name', { exact: true }).fill('Own heading');
   await expect(header()).toHaveValue('Study heading');
   await expect
     .poll(async () => (await currentTemplate(page))._ui)

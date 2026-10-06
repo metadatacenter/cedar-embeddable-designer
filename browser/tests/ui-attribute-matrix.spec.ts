@@ -485,8 +485,8 @@ const LIFECYCLES: readonly Lifecycle[] = [
     control: 'own description',
     paletteType: 'text',
     prepare: (page) => open(page, 'Display'),
-    set: async (page) => setIn(page, 'Display', 'Description', 'Some help'),
-    restore: async (page) => setIn(page, 'Display', 'Description', ''),
+    set: async (page) => setIn(page, 'Display', 'Field description', 'Some help'),
+    restore: async (page) => setIn(page, 'Display', 'Field description', ''),
     read: (template) => property(template, 'Text')['schema:description'],
     whenSet: 'Some help',
   },
@@ -545,8 +545,8 @@ const LIFECYCLES: readonly Lifecycle[] = [
     control: 'own name',
     paletteType: 'text',
     prepare: (page) => open(page, 'Display'),
-    set: async (page) => setIn(page, 'Display', 'Name', 'Own name'),
-    restore: async (page) => setIn(page, 'Display', 'Name', 'Text'),
+    set: async (page) => setIn(page, 'Display', 'Field name', 'Own name'),
+    restore: async (page) => setIn(page, 'Display', 'Field name', 'Text'),
   },
 
   // ── Text constraints ────────────────────────────────────────────────────────

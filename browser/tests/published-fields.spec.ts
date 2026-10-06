@@ -17,7 +17,7 @@ test('a published field keeps its definition while its parent configures, rename
   );
   // Its own definition is locked: its Display tab and its values.
   const display = await openSettings(card, 'Display');
-  await expect(display.getByLabel('Name', { exact: true })).toBeDisabled();
+  await expect(display.getByLabel('Field name', { exact: true })).toBeDisabled();
   await expect(display.getByRole('button', { name: 'Apply' })).toHaveCount(0);
   const constraints = await openSettings(card, 'Constraints');
   await expect(constraints.getByLabel('Minimum length', { exact: true })).toBeDisabled();

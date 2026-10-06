@@ -42,7 +42,7 @@
                     (ngModelChange)="rename($event)"
                     (blur)="service.touchName(node().id)"
                 /></label>
-                <label
+                <label class="configuration-wide"
                   >{{ 'settings.shownDescription' | translate }}
                   <input
                     spellcheck="false"
@@ -51,6 +51,20 @@
                     [ngModel]="shownDescription()"
                     (ngModelChange)="service.updateElementDisplayDescription(node(), $event)"
                 /></label>
+              </div>
+              <div class="settings-fields configuration-fields">
+                <label class="check configuration-multiple"
+                  ><input
+                    spellcheck="false"
+                    type="checkbox"
+                    name="allowMultiple"
+                    [(ngModel)]="draft().allowMultiple"
+                    (ngModelChange)="applyPlacement()"
+                  />
+                  {{ 'settings.allowMultiple' | translate }}</label
+                >
+              </div>
+              <div class="settings-fields configuration-fields">
                 <label data-setting="key"
                   >{{ 'settings.key' | translate }}
                   <input
@@ -62,32 +76,9 @@
                     [attr.aria-invalid]="!!keyError()"
                     [attr.aria-describedby]="keyError() ? 'element-key-error-' + node().id : null"
                 /></label>
-              </div>
-              @if (keyError()) {
-                <p role="alert" class="ced-field-error" [id]="'element-key-error-' + node().id">{{ keyError() }}</p>
-              }
-              <div class="configuration-property" data-setting="propertyIri">
-                <span class="default-label">{{ 'settings.propertyIri' | translate }}</span>
-                <app-property-picker
-                  [iri]="node().placement.propertyIri"
-                  [disabled]="placementLocked()"
-                  (propertySelected)="saveProperty($event)"
-                />
-              </div>
-              <div class="configuration-bounds">
-                <label class="check"
-                  ><input
-                    spellcheck="false"
-                    type="checkbox"
-                    name="allowMultiple"
-                    [(ngModel)]="draft().allowMultiple"
-                    (ngModelChange)="applyPlacement()"
-                  />
-                  {{ 'settings.allowMultiple' | translate }}</label
-                >
-                <div class="settings-fields configuration-fields">
+                <div class="configuration-bounds">
                   <label
-                    >{{ 'settings.minOccurrences' | translate }}
+                    >{{ 'fieldSettings.occurrences.min' | translate }}
                     <input
                       spellcheck="false"
                       autocomplete="off"
@@ -101,7 +92,7 @@
                       (ngModelChange)="applyPlacement('minItems')"
                   /></label>
                   <label
-                    >{{ 'settings.maxOccurrences' | translate }}
+                    >{{ 'fieldSettings.occurrences.max' | translate }}
                     <input
                       spellcheck="false"
                       autocomplete="off"
@@ -115,6 +106,17 @@
                       (ngModelChange)="applyPlacement('maxItems')"
                   /></label>
                 </div>
+              </div>
+              @if (keyError()) {
+                <p role="alert" class="ced-field-error" [id]="'element-key-error-' + node().id">{{ keyError() }}</p>
+              }
+              <div class="configuration-property" data-setting="propertyIri">
+                <span class="default-label">{{ 'settings.propertyIri' | translate }}</span>
+                <app-property-picker
+                  [iri]="node().placement.propertyIri"
+                  [disabled]="placementLocked()"
+                  (propertySelected)="saveProperty($event)"
+                />
               </div>
             </fieldset>
           }
@@ -176,7 +178,7 @@
             <fieldset class="panel-scope" [disabled]="definitionLocked()">
               <div class="settings-fields display-fields">
                 <label
-                  >{{ 'settings.displayLabel' | translate }}
+                  >{{ 'settings.elementName' | translate }}
                   <input
                     spellcheck="false"
                     autocomplete="off"
@@ -186,7 +188,7 @@
                     (blur)="service.touchName(node().id)"
                 /></label>
                 <label
-                  >{{ 'settings.displayDescription' | translate }}
+                  >{{ 'settings.elementDescription' | translate }}
                   <input
                     spellcheck="false"
                     autocomplete="off"

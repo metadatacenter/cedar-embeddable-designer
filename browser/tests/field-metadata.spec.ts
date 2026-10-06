@@ -26,9 +26,9 @@ test('removed details controls remain absent and imported metadata survives a re
   await expect(card.getByRole('button', { name: 'Add annotation' })).toHaveCount(0);
   // The Display tab edits the field's own name. The header shows the name its parent shows it by,
   // which is the preferred label here, so the two are apart and a rename leaves the header alone.
-  await expect(section.getByLabel('Name', { exact: true })).toHaveValue('Title');
+  await expect(section.getByLabel('Field name', { exact: true })).toHaveValue('Title');
   await expect(card.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue('Heading');
-  await section.getByLabel('Name', { exact: true }).fill('Visible title');
+  await section.getByLabel('Field name', { exact: true }).fill('Visible title');
   await expect(card.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue('Heading');
   expect(((await currentTemplate(page)).properties as any).Title).toMatchObject({
     'schema:name': 'Visible title',

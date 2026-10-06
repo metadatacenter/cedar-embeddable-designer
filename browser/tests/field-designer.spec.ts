@@ -139,7 +139,7 @@ test('hides placement controls, uses shadow styles and emits current artifacts',
   // its definition's, and the Display tab offers it.
   await expect(page.getByRole('tab', { name: 'Configuration' })).toHaveCount(0);
   await expect(page.getByLabel('Display name', { exact: true })).toHaveCount(0);
-  await expect(page.getByLabel('Name', { exact: true })).toHaveValue('Reusable text');
+  await expect(page.getByLabel('Field name', { exact: true })).toHaveValue('Reusable text');
   await page.getByRole('tab', { name: 'Field metadata' }).click();
   await expect(page.getByText('Property IRI', { exact: true })).toHaveCount(0);
   const background = await page

@@ -64,7 +64,7 @@ for (const width of [1280, 375]) {
     await placement.getByRole('tab', { name: 'Configuration', exact: true }).click();
     const checkbox = placement.getByLabel('Allow multiple', { exact: true });
     await expect(checkbox).toBeVisible();
-    await expect(placement.getByLabel('Minimum occurrences', { exact: true })).toBeDisabled();
+    await expect(placement.getByLabel('Minimum', { exact: true })).toBeDisabled();
     const singlePosition = await checkbox.boundingBox();
     await checkbox.check();
     const multiplePosition = await checkbox.boundingBox();
@@ -80,23 +80,23 @@ for (const width of [1280, 375]) {
       return { accent: getComputedStyle(node).accentColor, primary };
     });
     expect(colors.accent).toBe(colors.primary);
-    await placement.getByLabel('Minimum occurrences', { exact: true }).fill('2');
-    await placement.getByLabel('Maximum occurrences', { exact: true }).fill('4');
+    await placement.getByLabel('Minimum', { exact: true }).fill('2');
+    await placement.getByLabel('Maximum', { exact: true }).fill('4');
     await nestFixtureFields(page, ['Element', 'Element']);
     await placement.getByRole('button', { name: 'Expand element settings', exact: true }).click();
     await placement.getByRole('tab', { name: 'Configuration', exact: true }).click();
     const moved = nested.locator('app-field-card').first();
     await expect(moved.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue('Title');
-    await placement.getByLabel('Minimum occurrences', { exact: true }).fill('8');
+    await placement.getByLabel('Minimum', { exact: true }).fill('8');
     await expect(placement.getByRole('alert')).toBeVisible();
     // Select the root, then edit the nested field without navigating into it.
     await directHeader(root).getByPlaceholder('Template name').click();
     await moved.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Nested title');
-    await expect(placement.getByLabel('Minimum occurrences', { exact: true })).toHaveValue('8');
-    await placement.getByLabel('Minimum occurrences', { exact: true }).fill('2');
+    await expect(placement.getByLabel('Minimum', { exact: true })).toHaveValue('8');
+    await placement.getByLabel('Minimum', { exact: true }).fill('2');
     await expect(placement.getByRole('alert')).toHaveCount(0);
     const display = await openSettings(moved, 'Display');
-    await display.getByLabel('Name', { exact: true }).fill('Nested display');
+    await display.getByLabel('Field name', { exact: true }).fill('Nested display');
     await directHeader(parent).getByRole('button', { name: 'Collapse Samples', exact: true }).click();
     await expect(directContent(parent)).toBeHidden();
     const collapsed = await currentTemplate(page);
@@ -409,7 +409,7 @@ test('an element shows one name in its header and its Display tab until its pare
   const designer = await openDesigner(page);
   await applyPreset(page, 'modular');
   await addElementFixture(page, designer);
-  const header = designer.getByRole('textbox', { name: 'Element name', exact: true }).first();
+  const header = designer.getByRole('textbox', { name: 'Element display name', exact: true }).first();
   const displayName = async () => {
     const settings = designer.locator('app-element-card').first();
     // A reloaded template re-renders the card, so wait for its toggle before reading its state.
@@ -417,7 +417,7 @@ test('an element shows one name in its header and its Display tab until its pare
     const expand = settings.getByRole('button', { name: 'Expand element settings', exact: true });
     if (await expand.count()) await expand.click();
     await settings.getByRole('tab', { name: 'Display', exact: true }).click();
-    return settings.getByRole('tabpanel', { name: 'Display', exact: true }).getByLabel('Name', { exact: true });
+    return settings.getByRole('tabpanel', { name: 'Display', exact: true }).getByLabel('Element name', { exact: true });
   };
   const element = async () => {
     const template = await currentTemplate(page);
@@ -472,7 +472,7 @@ test('a published element keeps its content while its parent names, configures a
     'This element is published, so only its configuration can change.',
   );
   // The header names and describes it as its parent shows it, which the parent still decides.
-  const name = header.getByRole('textbox', { name: 'Element name', exact: true });
+  const name = header.getByRole('textbox', { name: 'Element display name', exact: true });
   await expect(name).toBeEnabled();
   await expect(header.getByRole('textbox', { name: 'Version', exact: true })).toBeDisabled();
   await name.fill('Shown element');
@@ -488,7 +488,7 @@ test('a published element keeps its content while its parent names, configures a
   await configuration.getByLabel('Allow multiple', { exact: true }).check();
   await card.getByRole('tab', { name: 'Display', exact: true }).click();
   await expect(
-    card.getByRole('tabpanel', { name: 'Display', exact: true }).getByLabel('Name', { exact: true }),
+    card.getByRole('tabpanel', { name: 'Display', exact: true }).getByLabel('Element name', { exact: true }),
   ).toBeDisabled();
   const saved = await currentTemplate(page);
   expect((saved._ui as any).propertyLabels.Element).toBe('Shown element');

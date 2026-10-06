@@ -161,6 +161,7 @@
     "reorderRow": "Reorder {{name}}"
   },
   "containerEditor": {
+    "elementDisplayName": "Element display name",
     "published": "This element is published, so only its configuration can change.",
     "dragElement": "Drag element to reorder",
     "elementLabel": "Element",
@@ -629,6 +630,10 @@
     "fieldTypes": "Available field types"
   },
   "settings": {
+    "fieldName": "Field name",
+    "fieldDescription": "Field description",
+    "elementName": "Element name",
+    "elementDescription": "Element description",
     "shownName": "Display name",
     "shownDescription": "Display description",
     "containsErrors": "Contains errors",
@@ -646,9 +651,7 @@
     "displayLabel": "Name",
     "displayDescription": "Description",
     "allowMultiple": "Allow multiple",
-    "minOccurrences": "Minimum occurrences",
     "minOccurrencesPlaceholder": "Default (0)",
-    "maxOccurrences": "Maximum occurrences",
     "unlimited": "Unlimited",
     "invalidNumber": "{{label}} must be a valid number.",
     "value": "Value"

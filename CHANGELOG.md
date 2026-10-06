@@ -26,17 +26,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - A child's settings open on a new Configuration tab, which holds how its parent places
-  it: the display name, display description and key on one row, the property IRI,
-  Allow multiple with the minimum and maximum below it, and a row holding the
-  requirement with Hidden and Continue previous line, each where the child can carry it.
-  The display name and description are the parent's `_ui.propertyLabels` and
-  `_ui.propertyDescriptions` entries, and the card header shows and edits the display
-  name. The requirement select and the Allow multiple checkbox leave the card header,
-  the key and the property IRI leave the metadata tabs, and the Occurrences tab is
-  retired. The bounds stay visible and disabled until Allow multiple is on.
+  it. The display name and a wider display description share its first row. The
+  requirement select follows with Hidden and Continue previous line, each where the child
+  can carry it. Allow multiple sits above the minimum and maximum, which share a row with
+  the key, and the property IRI comes last. The display name and description are the
+  parent's `_ui.propertyLabels` and `_ui.propertyDescriptions` entries, and the card
+  header shows and edits the display name. A nested element's header gives its name input
+  the accessible name Element display name. The requirement select and the Allow multiple
+  checkbox leave the card header, the key and the property IRI leave the metadata tabs,
+  and the Occurrences tab is retired. The bounds stay visible and disabled until Allow multiple is on.
 - The Display tab edits the child's own name and description, its `schema:name` and
-  `schema:description`. While a child is a draft its parent shows as itself, its display
-  name and description are its own as well, and an edit on either side writes both. A
+  `schema:description`, under the labels Field name and Field description or Element name
+  and Element description. While a child is a draft its parent shows as itself, its
+  display name and description are its own as well, and an edit on either side writes both. A
   parent that shows the child differently keeps doing so. The designer no longer writes
   `skos:prefLabel`, except to keep one that only repeated the name moving with it.
   Every profile shows the Description, so the Show Help text preference, which hid the

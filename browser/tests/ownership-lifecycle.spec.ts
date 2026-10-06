@@ -41,8 +41,8 @@ for (const correction of ['clear', 'correct'] as const)
     await settings.getByRole('button', { name: 'Expand element settings', exact: true }).click();
     await expect(settings.getByRole('tabpanel', { name: 'Configuration', exact: true })).toBeVisible();
     await settings.getByLabel('Allow multiple', { exact: true }).check();
-    const min = settings.getByLabel('Minimum occurrences', { exact: true });
-    const max = settings.getByLabel('Maximum occurrences', { exact: true });
+    const min = settings.getByLabel('Minimum', { exact: true });
+    const max = settings.getByLabel('Maximum', { exact: true });
     await max.fill('100');
     await max.fill('');
     await max.pressSequentially('1e');

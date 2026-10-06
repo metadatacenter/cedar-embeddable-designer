@@ -233,21 +233,23 @@ button:focus-visible {
 .configuration-property {
   min-width: 0;
 }
-.configuration-flags .configuration-requirement {
+// The requirement has no heading of its own, so it takes the panel's control box at its own width.
+.configuration-requirement {
   width: auto;
+  @include authoring.compact-control;
+}
+// The description is the longer text, so it takes two of the three columns.
+.configuration-wide {
+  grid-column: span 2;
+}
+// Allow multiple stands over the bounds it enables, leaving the key their row's first column.
+.settings-fields .configuration-multiple {
+  grid-column: 2 / -1;
+  align-self: start;
+  min-height: 0;
 }
 .configuration-bounds {
-  display: flex;
-  flex-direction: column;
-  align-items: start;
-  gap: var(--cedar-space-2);
-  border: 0;
-  margin: 0;
-  padding: 0;
-  min-width: 0;
-}
-.configuration-bounds > .configuration-fields {
-  align-self: stretch;
+  display: contents;
 }
 .configuration-flags {
   display: flex;
@@ -258,6 +260,10 @@ button:focus-visible {
 @container (max-width: 400px) {
   .configuration-fields {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .configuration-wide,
+  .settings-fields .configuration-multiple {
+    grid-column: 1 / -1;
   }
 }
 

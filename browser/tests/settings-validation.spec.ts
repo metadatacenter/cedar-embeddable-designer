@@ -167,7 +167,7 @@ test('blank and whitespace names block saving and summary navigation focuses the
   const newField = await addNamedField(designer);
   for (const name of [
     designer.getByRole('textbox', { name: 'Template name', exact: true }),
-    designer.getByRole('textbox', { name: 'Element name', exact: true }).first(),
+    designer.getByRole('textbox', { name: 'Element display name', exact: true }).first(),
     newField.getByRole('textbox', { name: 'Field display name', exact: true }),
   ]) {
     const original = await name.inputValue();
@@ -206,7 +206,7 @@ test('new fields and elements focus an unnamed draft and defer errors until blur
   await field.fill('Study title');
   await expect.poll(async () => (await report(page)).canSave).toBe(true);
   await designer.getByRole('button', { name: 'Add element', exact: true }).first().click();
-  const element = designer.getByRole('textbox', { name: 'Element name', exact: true }).last();
+  const element = designer.getByRole('textbox', { name: 'Element display name', exact: true }).last();
   await expect(element).toBeFocused();
   await expect(element).toHaveValue('');
   await expect(element).toHaveAttribute('aria-invalid', 'false');
