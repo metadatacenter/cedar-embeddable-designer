@@ -187,10 +187,10 @@ test('an unnamed template, element or field shows a line to write its name on, w
   expect(await line(field)).toBe('none');
   const named = await height(field);
   await field.fill('');
-  expect(await line(field)).toBe(`linear-gradient(${primary}, ${primary})`);
+  await expect.poll(() => line(field)).toBe(`linear-gradient(${primary}, ${primary})`);
   expect(await height(field)).toBe(named);
   await fieldName(page, 1).focus();
-  expect(await line(field)).toBe(`linear-gradient(${rule}, ${rule})`);
+  await expect.poll(() => line(field)).toBe(`linear-gradient(${rule}, ${rule})`);
 });
 
 for (const width of [1440, 768, 375]) {
