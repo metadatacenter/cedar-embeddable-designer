@@ -141,9 +141,7 @@ test('field headers omit version and publication status', async ({ page }) => {
   }
 });
 
-test('an unnamed template, element or field shows a line to write its name on, without moving it', async ({
-  page,
-}) => {
+test('an unnamed template, element or field shows a line to write its name on, without moving it', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   const designer = await openDesigner(page);
   const resolve = (token: string) =>
