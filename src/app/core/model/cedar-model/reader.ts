@@ -10,11 +10,20 @@ import {
   CedarReaders,
   CedarWriters,
   ChildDeploymentInfo,
+  ControlledTermDefaultValue,
   ControlledTermField,
+  ExtDoiField,
+  ExtNihGrantIdField,
+  ExtOrcidField,
+  ExtPfasField,
+  ExtPubmedField,
+  ExtRorField,
+  ExtRridField,
   Iri,
   JsonNode,
   JsonPath,
   Language,
+  LinkField,
   NumericField,
   StaticImageField,
   StaticYoutubeField,
@@ -35,6 +44,7 @@ import { controlledTermConstraintsOf } from './terminology';
 import { childKeys } from '../child-key-policy';
 import { templateToJson } from './container-writer';
 import { ContainerDraft, containerFromFlat, fieldNode, newNodeId } from '../container-draft';
+import { validAbsoluteIri } from '../field-default';
 
 /**
  * Whether a YAML document is the compact form, which is the form to refuse.
@@ -401,11 +411,28 @@ export function readContainer(source: string | object): ContainerDraft {
 
 /**
  * Numeric/temporal readers validate defaults against their constraints while
- * reading. Authoring must retain a well-shaped but invalid supplied value so it
- * can be repaired. Read the schema without those values, then restore them on
- * the model before projection; never change the caller's object or its rules.
+ * reading, and every reader refuses a default IRI it cannot hold. Authoring must
+ * retain a well-shaped but invalid supplied value so it can be repaired. Read the
+ * schema without those values, then restore them on the model before projection;
+ * never change the caller's object or its rules.
+ *
+ * Only an IRI this designer reports as invalid is held back. A valid one is left
+ * to the reader, so it is read exactly as the library reads it.
  */
-function deferredDefault(source: JsonNode): number | string | undefined {
+type DeferredDefault = number | string | { iri: string } | { term: string; label: string };
+
+const IRI_INPUT_TYPES = new Set([
+  'link',
+  'ext-ror',
+  'ext-orcid',
+  'ext-pfas',
+  'ext-pubmed',
+  'ext-rrid',
+  'ext-nih-grant-id',
+  'ext-doi',
+]);
+
+function deferredDefault(source: JsonNode): DeferredDefault | undefined {
   const type = (source['_ui'] as JsonNode | undefined)?.['inputType'];
   const value = (source['_valueConstraints'] as JsonNode | undefined)?.['defaultValue'];
   if (type === 'temporal' && typeof value === 'string') return value;
@@ -416,7 +443,45 @@ function deferredDefault(source: JsonNode): number | string | undefined {
     Number.isFinite(Number(value))
   )
     return Number(value);
+  if (typeof type === 'string' && IRI_INPUT_TYPES.has(type) && typeof value === 'string' && value !== '')
+    return validAbsoluteIri(value) ? undefined : { iri: value };
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const term = (value as JsonNode)['termUri'];
+    const label = (value as JsonNode)['rdfs:label'];
+    if (typeof term === 'string' && term !== '' && !validAbsoluteIri(term))
+      return { term, label: typeof label === 'string' ? label : '' };
+  }
   return undefined;
+}
+
+/** The fields whose default is a bare IRI. */
+type IriDefaultField =
+  | LinkField
+  | ExtRorField
+  | ExtOrcidField
+  | ExtPfasField
+  | ExtPubmedField
+  | ExtRridField
+  | ExtNihGrantIdField
+  | ExtDoiField;
+
+const IRI_DEFAULT_FIELD_TYPES = new Set([
+  CedarFieldType.LINK,
+  CedarFieldType.EXT_ROR,
+  CedarFieldType.EXT_ORCID,
+  CedarFieldType.EXT_PFAS,
+  CedarFieldType.EXT_PUBMED,
+  CedarFieldType.EXT_RRID,
+  CedarFieldType.EXT_NIH_GRANT_ID,
+  CedarFieldType.EXT_DOI,
+]);
+
+function isIriDefaultField(field: TemplateField): field is IriDefaultField {
+  return IRI_DEFAULT_FIELD_TYPES.has(field.cedarFieldType);
+}
+
+function isControlledTermField(field: TemplateField): field is ControlledTermField {
+  return field.cedarFieldType === CedarFieldType.CONTROLLED_TERM;
 }
 
 function withoutCheckedDefaults(source: JsonNode): JsonNode {
@@ -448,6 +513,10 @@ function restoreDeclaredDefaults(model: Template | TemplateElement | TemplateFie
       (model as NumericField).valueConstraints.defaultValue = value;
     if (model.cedarFieldType === CedarFieldType.TEMPORAL && typeof value === 'string')
       (model as TemporalField).valueConstraints.defaultValue = value;
+    if (value && typeof value === 'object' && 'iri' in value && isIriDefaultField(model))
+      model.valueConstraints.defaultValue = new Iri(value.iri);
+    if (value && typeof value === 'object' && 'term' in value && isControlledTermField(model))
+      model.valueConstraints.defaultValue = new ControlledTermDefaultValue(new Iri(value.term), value.label);
   }
 }
 

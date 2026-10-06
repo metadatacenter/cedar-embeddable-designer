@@ -131,6 +131,16 @@ describe('imported IRI default recovery matrix', () => {
     }
 });
 
+describe('an imported controlled-term default with no label', () => {
+  it('is kept and reported when its term IRI is invalid, as a labelled one is', () => {
+    const service = TestBed.inject(TemplateService);
+    service.loadTemplate(sourceFor(field('controlledTerms'), { termUri: 'not an iri' }));
+    const root = service.document();
+    expect(service.session.fieldBinding(root.id)()[0].defaultValue).toMatchObject({ kind: 'iri', iri: 'not an iri' });
+    expect(service.validationReport().canSave).toBe(false);
+  });
+});
+
 describe('interacting imported defects', () => {
   it.each(['constraints-first', 'annotations-first'])('reveals both defects and permits repairs %s', (order) => {
     const service = TestBed.inject(TemplateService);
