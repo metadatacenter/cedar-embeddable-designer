@@ -6,10 +6,10 @@
  * What an author reads is the tab's label, rendered from the translation key below.
  */
 export const SETTINGS_TABS = {
+  configuration: 'Configuration',
   display: 'Display',
   constraints: 'Constraints',
   content: 'Content',
-  occurrences: 'Occurrences',
   annotations: 'Annotations',
   fieldMetadata: 'Field metadata',
   elementMetadata: 'Element metadata',
@@ -17,10 +17,10 @@ export const SETTINGS_TABS = {
 } as const;
 
 const TAB_KEYS: Readonly<Record<string, string>> = {
+  [SETTINGS_TABS.configuration]: 'tabs.configuration',
   [SETTINGS_TABS.display]: 'tabs.display',
   [SETTINGS_TABS.constraints]: 'tabs.constraints',
   [SETTINGS_TABS.content]: 'tabs.content',
-  [SETTINGS_TABS.occurrences]: 'tabs.occurrences',
   [SETTINGS_TABS.annotations]: 'tabs.annotations',
   [SETTINGS_TABS.fieldMetadata]: 'tabs.fieldMetadata',
   [SETTINGS_TABS.elementMetadata]: 'tabs.elementMetadata',

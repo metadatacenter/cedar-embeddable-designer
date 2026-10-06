@@ -62,10 +62,10 @@ export class ElementCardComponent {
         ?.message ?? null,
   );
   expanded = false;
-  activeTab = 'Display';
+  activeTab: string = SETTINGS_TABS.configuration;
   readonly tabs: string[] = [
+    SETTINGS_TABS.configuration,
     SETTINGS_TABS.display,
-    SETTINGS_TABS.occurrences,
     SETTINGS_TABS.annotations,
     SETTINGS_TABS.elementMetadata,
   ];
@@ -120,46 +120,46 @@ export class ElementCardComponent {
   }
   saveKey(value: string): void {
     this.keyDraft.set(value);
-    this.service.updateElementPlacement(
-      this.node().id,
-      { deploymentName: value },
-      'key',
-      SETTINGS_TABS.elementMetadata,
-    );
+    this.service.updateElementPlacement(this.node().id, { deploymentName: value }, 'key', SETTINGS_TABS.configuration);
   }
   readonly displayName = computed(() => elementDisplayName(this.node()));
   rename(value: string): void {
     this.service.updateElementDisplayName(this.node(), value);
   }
-  apply(changed?: string): void {
-    const occurrences = this.activeTab === 'Occurrences';
-    const setting = occurrences ? 'placement' : 'display';
+  applyPlacement(changed?: string): void {
+    const tab = SETTINGS_TABS.configuration;
     const invalid = invalidSettingsInputs(
       this.host.nativeElement,
-      this.service.validation.settingsInput(this.node().id, setting)?.invalid,
+      this.service.validation.settingsInput(this.node().id, 'placement')?.invalid,
       changed,
     );
-    if (Object.keys(invalid).length && occurrences && this.draft().allowMultiple) {
+    const draft = this.draft();
+    if (Object.keys(invalid).length && draft.allowMultiple) {
       this.service.validation.setInputError(
         this.node().id,
-        setting,
+        'placement',
         this.language.t('settings.invalidNumber', {
           label: Object.values(invalid)[0] || this.language.t('settings.value'),
         }),
-        this.activeTab,
+        tab,
         undefined,
-        { changes: { ...this.draft() }, invalid },
+        { changes: { ...draft }, invalid },
       );
       return;
     }
-    const draft = this.draft();
     this.service.updateElementPlacement(
       this.node().id,
-      occurrences
-        ? { allowMultiple: draft.allowMultiple, minItems: draft.minItems, maxItems: draft.maxItems }
-        : { displayDescription: draft.displayDescription },
-      setting,
-      this.activeTab,
+      { allowMultiple: draft.allowMultiple, minItems: draft.minItems, maxItems: draft.maxItems },
+      'placement',
+      tab,
+    );
+  }
+  applyDisplay(): void {
+    this.service.updateElementPlacement(
+      this.node().id,
+      { displayDescription: this.draft().displayDescription },
+      'display',
+      SETTINGS_TABS.display,
     );
   }
 }

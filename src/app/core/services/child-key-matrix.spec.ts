@@ -124,7 +124,7 @@ describe('child keys', () => {
   }
   function setKey(kind: Kind, id: number, key: string): string | null {
     return kind === 'an element'
-      ? service.updateElementPlacement(id, { deploymentName: key }, 'key', 'Element metadata')
+      ? service.updateElementPlacement(id, { deploymentName: key }, 'key', 'Configuration')
       : service.updateFieldSettings(id, { deploymentName: key });
   }
   function artifact(kind: Kind, name: string): { type: 'field' | 'element'; artifact: never } {

@@ -26,6 +26,8 @@ import { Field } from '../../core/models/types';
 import {
   accepts,
   allowsDefault,
+  allowsMultiple,
+  allowsStatus,
   descriptorOf,
   FieldParameter,
   fieldArtifactMetadata,
@@ -62,7 +64,7 @@ export class FieldSettingsComponent implements OnChanges {
   readonly tabKey = settingsTabKey;
   readonly publicationStatusLabel = publicationStatusLabel;
   expanded = false;
-  activeTab = 'Display';
+  activeTab: string = SETTINGS_TABS.configuration;
   get valuesTab(): string {
     return ['richText', 'image', 'youtube'].includes(this.field.type) ? 'Content' : 'Constraints';
   }
@@ -75,14 +77,16 @@ export class FieldSettingsComponent implements OnChanges {
       this.accepts('numericBounds')
     );
   }
+  /**
+   * Configuration holds the settings of the field's place in its parent, so a field edited as a
+   * document of its own, which has no parent, has no such tab.
+   */
   get tabs(): string[] {
     return [
-      'Display',
+      ...(this.service.fieldDocumentMode() ? [] : [SETTINGS_TABS.configuration]),
+      SETTINGS_TABS.display,
       ...(this.hasValues || this.hasConstraints ? [this.valuesTab] : []),
-      ...(!this.service.fieldDocumentMode() && this.multiple && this.field.type !== 'checkboxes'
-        ? ['Occurrences']
-        : []),
-      'Annotations',
+      SETTINGS_TABS.annotations,
       SETTINGS_TABS.fieldMetadata,
     ];
   }
@@ -157,6 +161,8 @@ export class FieldSettingsComponent implements OnChanges {
       if (!issue || issue.setting === 'name' || issue === focused || issue.nodeId !== this.field?.id) return;
       focused = issue;
       const panel = this.host.nativeElement.querySelector<HTMLElement>('[role="tabpanel"]:not([hidden])');
+      // A panel holding several settings marks each one's controls, so an issue reaches its own.
+      const group = panel?.querySelector<HTMLElement>(`[data-setting="${CSS.escape(issue.setting)}"]`) ?? panel;
       const control =
         issue.setting === 'defaultValue'
           ? panel?.querySelector<HTMLElement>(
@@ -166,7 +172,7 @@ export class FieldSettingsComponent implements OnChanges {
             ? panel?.querySelector<HTMLElement>(
                 `input[aria-label="${CSS.escape(this.i18n.t('fieldCard.option', { number: Number(issue.setting.slice(7)) + 1 }))}"]`,
               )
-            : panel?.querySelector<HTMLElement>('input, select, textarea, button');
+            : group?.querySelector<HTMLElement>('input, select, textarea, button');
       control?.focus({ preventScroll: true });
     });
     effect(() => {
@@ -200,6 +206,22 @@ export class FieldSettingsComponent implements OnChanges {
   }
   get multiple(): boolean {
     return descriptorOf(this.field.type).deployment === 'alwaysMultiple' || this.field.allowMultiple;
+  }
+  /** Whether the type takes a requirement and the profile shows the control. */
+  get offersRequirement(): boolean {
+    return this.service.preferences().showRequired && allowsStatus(this.field.type);
+  }
+  /** Whether the author chooses the count and the profile shows the control. */
+  get offersAllowMultiple(): boolean {
+    return this.service.preferences().showAllowMultiple && allowsMultiple(this.field.type);
+  }
+  /**
+   * Whether the panel offers the bounds. They stay in view, disabled, while Allow multiple is off,
+   * except where the profile hides Allow multiple: the bounds then appear only on a field that is
+   * already multiple. A checkbox takes none.
+   */
+  get offersBounds(): boolean {
+    return this.field.type !== 'checkboxes' && (this.multiple || this.offersAllowMultiple);
   }
   private loadedFieldId: number | null = null;
 
@@ -255,14 +277,14 @@ export class FieldSettingsComponent implements OnChanges {
     });
     this.width = take('width', this.width, editing.width ?? null);
     this.height = take('height', this.height, editing.height ?? null);
-    // Turning Allow multiple off removes the Occurrences tab, and a refused bound goes with it.
-    // Turned back on, the tab shows the bounds the field kept.
+    // Turning Allow multiple off disables the bounds, and a refused bound goes with it.
+    // Turned back on, they show the bounds the field kept.
     this.min = take('min', this.min, editing.minItems ?? null, first || !this.multiple);
     this.max = take('max', this.max, editing.maxItems ?? null, first || !this.multiple);
   }
 
   private badInput(
-    form: HTMLFormElement | undefined,
+    form: HTMLElement | undefined,
     setting: string,
     tab: string,
     changes: Partial<Field>,
@@ -324,15 +346,18 @@ export class FieldSettingsComponent implements OnChanges {
   rename(value: string): void {
     this.service.updateFieldDisplayName(this.field.id, value);
   }
+  saveDisplay(): void {
+    this.service.updateFieldSettings(this.field.id, { displayDescription: this.displayDescription || undefined });
+  }
   saveLayout(): void {
     this.service.updateFieldSettings(this.field.id, {
-      displayDescription: this.displayDescription || undefined,
       hidden: this.hidden,
       continuePreviousLine: this.continuePreviousLine,
     });
   }
   saveBounds(form?: HTMLFormElement, changed?: string): void {
-    if (this.badInput(form, 'occurrences', 'Occurrences', { minItems: this.min, maxItems: this.max }, changed)) return;
-    this.service.updateFieldSettings(this.field.id, { minItems: this.min, maxItems: this.max });
+    const bounds = { minItems: this.min, maxItems: this.max };
+    if (this.badInput(form, 'occurrences', SETTINGS_TABS.configuration, bounds, changed)) return;
+    this.service.updateFieldSettings(this.field.id, bounds);
   }
 }

@@ -2,6 +2,7 @@ import { FIELD_TYPES } from '../models/types';
 import { TestBed } from '@angular/core/testing';
 import { TemplateService } from './template.service';
 import { findContainer } from '../model/container-draft';
+import { fieldSetting } from './validation-coordinator';
 
 describe('settings validation report', () => {
   let service: TemplateService;
@@ -15,7 +16,7 @@ describe('settings validation report', () => {
     const saved = service.templateJson();
     expect(service.validationReport().canSave).toBe(true);
     service.setSettingsError(id, 'defaultValue', 'Default exceeds maximum.');
-    service.setSettingsError(id, 'occurrences', 'Minimum exceeds maximum.', 'Occurrences');
+    service.setSettingsError(id, 'occurrences', 'Minimum exceeds maximum.', 'Configuration');
     expect(service.validationReport().issues).toHaveLength(2);
     expect(service.validationReport().canSave).toBe(false);
     expect(service.templateJson()).toEqual(saved);
@@ -79,7 +80,7 @@ describe('settings validation report', () => {
   it('drops a refused occurrence bound, and only that, when Allow multiple is turned off', () => {
     const id = service.fields()[0].id;
     service.toggleAllowMultiple(id);
-    service.setSettingsError(id, 'occurrences', 'Minimum exceeds maximum.', 'Occurrences');
+    service.setSettingsError(id, 'occurrences', 'Minimum exceeds maximum.', 'Configuration');
     service.setSettingsError(id, 'defaultValue', 'Default exceeds maximum.');
     service.toggleAllowMultiple(id);
     expect(service.validationReport().issues.map((issue) => issue.setting)).toEqual(['defaultValue']);
@@ -101,6 +102,29 @@ describe('settings validation report', () => {
     );
     expect(service.validationReport().issues[0].nodeId).toBe(service.fields()[0].id);
     expect(service.validationReport().canSave).toBe(false);
+  });
+  it('reports a child key, its bounds and its line placement on the Configuration tab', () => {
+    const [first, second] = [0, 1].map((index) => {
+      service.addField('text', index);
+      return service.fields()[index].id;
+    });
+    const tabOf = (id: number, setting: string) =>
+      service.validationReport().issues.find((issue) => issue.nodeId === id && issue.setting === setting)?.tab;
+    service.updateFieldSettings(first, { deploymentName: 'subject' });
+    service.updateFieldSettings(second, { deploymentName: 'subject' });
+    expect(tabOf(second, 'key')).toBe('Configuration');
+    service.updateFieldSettings(second, { deploymentName: '@id' });
+    expect(tabOf(second, 'key')).toBe('Configuration');
+    service.toggleAllowMultiple(first);
+    service.updateFieldSettings(first, { minItems: 5, maxItems: 2 });
+    expect(tabOf(first, 'occurrences')).toBe('Configuration');
+    expect(fieldSetting({ hidden: true, continuePreviousLine: false })).toEqual({
+      setting: 'layout',
+      tab: 'Configuration',
+    });
+    const element = service.addElement(service.document().id);
+    service.updateElementPlacement(element, { allowMultiple: true, minItems: 3, maxItems: 1 });
+    expect(tabOf(element, 'placement')).toBe('Configuration');
   });
   it('isolates designers and clears pending errors on document replacement', () => {
     const id = service.fields()[0].id;

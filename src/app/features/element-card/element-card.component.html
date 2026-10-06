@@ -29,29 +29,82 @@
         [hidden]="activeTab !== tab"
       >
         @switch (tab) {
+          @case ('Configuration') {
+            <div class="configuration-scope">
+              <div class="settings-fields configuration-fields">
+                <label data-setting="key"
+                  >{{ 'settings.key' | translate }}
+                  <input
+                    spellcheck="false"
+                    autocomplete="off"
+                    name="deploymentName"
+                    [ngModel]="keyDraft() ?? service.childKey(node().id)"
+                    (ngModelChange)="saveKey($event)"
+                    [attr.aria-invalid]="!!keyError()"
+                    [attr.aria-describedby]="keyError() ? 'element-key-error-' + node().id : null"
+                /></label>
+                <label
+                  >{{ 'settings.displayDescription' | translate }}
+                  <input
+                    spellcheck="false"
+                    autocomplete="off"
+                    name="displayDescription"
+                    [(ngModel)]="draft().displayDescription"
+                    (ngModelChange)="applyDisplay()"
+                /></label>
+              </div>
+              @if (keyError()) {
+                <p role="alert" class="ced-field-error" [id]="'element-key-error-' + node().id">{{ keyError() }}</p>
+              }
+              <div class="configuration-bounds">
+                <label class="check"
+                  ><input
+                    spellcheck="false"
+                    type="checkbox"
+                    name="allowMultiple"
+                    [(ngModel)]="draft().allowMultiple"
+                    (ngModelChange)="applyPlacement()"
+                  />
+                  {{ 'settings.allowMultiple' | translate }}</label
+                >
+                <div class="settings-fields configuration-fields">
+                  <label
+                    >{{ 'settings.minOccurrences' | translate }}
+                    <input
+                      spellcheck="false"
+                      autocomplete="off"
+                      type="number"
+                      min="0"
+                      step="1"
+                      [placeholder]="'settings.minOccurrencesPlaceholder' | translate"
+                      [disabled]="!draft().allowMultiple"
+                      [(ngModel)]="draft().minItems"
+                      name="minItems"
+                      (ngModelChange)="applyPlacement('minItems')"
+                  /></label>
+                  <label
+                    >{{ 'settings.maxOccurrences' | translate }}
+                    <input
+                      spellcheck="false"
+                      autocomplete="off"
+                      type="number"
+                      min="0"
+                      step="1"
+                      [placeholder]="'settings.unlimited' | translate"
+                      [disabled]="!draft().allowMultiple"
+                      [(ngModel)]="draft().maxItems"
+                      name="maxItems"
+                      (ngModelChange)="applyPlacement('maxItems')"
+                  /></label>
+                </div>
+              </div>
+            </div>
+          }
           @case ('Annotations') {
             <app-annotations-editor [container]="node().definition" />
           }
           @case ('Element metadata') {
             <dl class="identity">
-              <dt class="editable">
-                <label [for]="'element-key-' + node().id">{{ 'settings.key' | translate }}</label>
-              </dt>
-              <dd>
-                <input
-                  spellcheck="false"
-                  autocomplete="off"
-                  [id]="'element-key-' + node().id"
-                  name="deploymentName"
-                  [ngModel]="keyDraft() ?? service.childKey(node().id)"
-                  (ngModelChange)="saveKey($event)"
-                  [attr.aria-invalid]="!!keyError()"
-                  [attr.aria-describedby]="keyError() ? 'element-key-error-' + node().id : null"
-                />
-                @if (keyError()) {
-                  <p role="alert" class="ced-field-error" [id]="'element-key-error-' + node().id">{{ keyError() }}</p>
-                }
-              </dd>
               <dt>{{ 'elementCard.elementIri' | translate }}</dt>
               <dd>{{ node().definition.identifier || ('settings.notYetAssigned' | translate) }}</dd>
               @if (node().definition.version) {
@@ -114,52 +167,11 @@
                   spellcheck="false"
                   autocomplete="off"
                   [(ngModel)]="draft().displayDescription"
-                  (ngModelChange)="apply()"
+                  (ngModelChange)="applyDisplay()"
               /></label>
             </div>
             <app-language-selector [container]="node().definition" />
             <app-element-labels [container]="node().definition" />
-          }
-          @case ('Occurrences') {
-            <div class="settings-fields occurrence-fields">
-              <label class="check"
-                ><input
-                  spellcheck="false"
-                  type="checkbox"
-                  [(ngModel)]="draft().allowMultiple"
-                  (ngModelChange)="apply()"
-                />
-                {{ 'settings.allowMultiple' | translate }}</label
-              >
-              @if (draft().allowMultiple) {
-                <label
-                  >{{ 'settings.minOccurrences' | translate }}
-                  <input
-                    spellcheck="false"
-                    autocomplete="off"
-                    type="number"
-                    min="0"
-                    step="1"
-                    [placeholder]="'settings.minOccurrencesPlaceholder' | translate"
-                    [(ngModel)]="draft().minItems"
-                    name="minItems"
-                    (ngModelChange)="apply('minItems')"
-                /></label>
-                <label
-                  >{{ 'settings.maxOccurrences' | translate }}
-                  <input
-                    spellcheck="false"
-                    autocomplete="off"
-                    type="number"
-                    min="0"
-                    step="1"
-                    [placeholder]="'settings.unlimited' | translate"
-                    [(ngModel)]="draft().maxItems"
-                    name="maxItems"
-                    (ngModelChange)="apply('maxItems')"
-                /></label>
-              }
-            </div>
           }
         }
       </div>

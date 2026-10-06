@@ -175,6 +175,25 @@ test.describe('the designer', () => {
     });
   });
 
+  /**
+   * The Configuration tab a settings panel opens on, single and then multiple, so the
+   * disabled bounds and their enabled state are both recorded.
+   */
+  for (const width of [1280, 375]) {
+    test(`shows a text field's Configuration tab at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 1000 });
+      const designer = await designerShowing(page, ['Text']);
+      const card = designer.locator('[id^=field-card-]').first();
+      const panel = await openSettings(card, 'Configuration');
+      await page.mouse.move(0, 0);
+      await expect(card).toHaveScreenshot(`configuration-single-${width}.png`, SHOT);
+      await panel.getByLabel('Allow multiple', { exact: true }).check();
+      await expect(panel.getByLabel('Minimum', { exact: true })).toBeEnabled();
+      await page.mouse.move(0, 0);
+      await expect(card).toHaveScreenshot(`configuration-multiple-${width}.png`, SHOT);
+    });
+  }
+
   test('shows simple inputs at a narrow width', async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 900 });
     const designer = await designerShowing(page, GROUPS['simple-inputs']);
@@ -230,8 +249,8 @@ test('an inactive settings tab still shows its error', async ({ page }) => {
   const designer = await openDesigner(page);
   await designer.getByLabel('Template name', { exact: true }).fill('Study');
   const card = designer.locator('app-field-card').first();
-  await card.getByLabel('Allow multiple', { exact: true }).check();
-  const panel = await openSettings(card, 'Occurrences');
+  const panel = await openSettings(card, 'Configuration');
+  await panel.getByLabel('Allow multiple', { exact: true }).check();
   await panel.getByLabel('Minimum', { exact: true }).fill('2');
   await panel.getByLabel('Maximum', { exact: true }).fill('1');
   await card.getByRole('tab', { name: 'Display', exact: true }).click();

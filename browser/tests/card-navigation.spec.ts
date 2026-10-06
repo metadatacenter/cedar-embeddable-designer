@@ -56,7 +56,8 @@ test('editing controls and modified shortcuts keep their normal arrow handling',
   await tab.focus();
   await page.keyboard.press('ArrowDown');
   await expect(tab).toBeFocused();
-  const select = card.locator('select').first();
+  const configuration = await openSettings(card.locator('app-field-card'), 'Configuration');
+  const select = configuration.getByRole('combobox', { name: 'Requirement', exact: true });
   await select.focus();
   await page.keyboard.press('ArrowDown');
   await expect(select).toBeFocused();

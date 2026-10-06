@@ -674,10 +674,10 @@
     "libraryEmpty": "Ebben a könyvtárban még nincsenek egyéni mezők."
   },
   "tabs": {
+    "configuration": "Konfiguráció",
     "display": "Megjelenítés",
     "constraints": "Megkötések",
     "content": "Tartalom",
-    "occurrences": "Előfordulások",
     "annotations": "Annotációk",
     "fieldMetadata": "Mező metaadatai",
     "elementMetadata": "Elem metaadatai",

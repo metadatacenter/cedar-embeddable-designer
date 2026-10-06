@@ -92,7 +92,8 @@ test('the requirement selector reaches the template', async ({ page }) => {
     (child(template, 'Title')['_valueConstraints'] as { requiredValue: boolean }).requiredValue;
 
   expect(requiredOf(await currentTemplate(page))).toBe(true);
-  await designer.locator('#field-card-1').getByLabel('Requirement', { exact: true }).selectOption('optional');
+  const configuration = await openSettings(designer.locator('#field-card-1'), 'Configuration');
+  await configuration.getByLabel('Requirement', { exact: true }).selectOption('optional');
 
   /*
    * `_valueConstraints.requiredValue`, not the template's top-level `required`.

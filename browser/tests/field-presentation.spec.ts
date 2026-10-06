@@ -62,7 +62,7 @@ test('header controls share a vertical center and version is right aligned', asy
   await applyPreset(page, 'modular');
   const card = designer.locator('app-field-card').first();
   const centers = await card.evaluate((el) =>
-    ['.field-drag-handle', '[aria-label="Requirement"]', '[aria-label="Delete field"]'].map((s) => {
+    ['.field-drag-handle', '.field-type-label', '[aria-label="Delete field"]'].map((s) => {
       const r = el.querySelector(s)!.getBoundingClientRect();
       return r.y + r.height / 2;
     }),

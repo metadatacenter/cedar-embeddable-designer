@@ -23,6 +23,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tests that hold the two language maps to the same keys and that fail when a
   template or message states user-visible text outside them.
 
+### Changed
+
+- A child's settings open on a new Configuration tab. It holds the requirement, the
+  key and the description on one row, Allow multiple with the minimum and maximum
+  below it, and Hidden and Continue previous line on one row, each where the child can
+  carry it. The description is the one Display also edits. The requirement select and
+  the Allow multiple checkbox leave the card header, the key leaves the metadata tab,
+  and the Occurrences tab is retired. An element's Configuration holds its key,
+  description, Allow multiple and the bounds. The bounds stay visible and disabled
+  until Allow multiple is on.
+- `CedValidationIssue.tab` reports `Configuration` for the key, a field's
+  `occurrences` and an element's `placement`. Hidden and Continue previous line are
+  reported as the `layout` setting rather than `display`. Neither `Occurrences` nor a
+  metadata tab is reported for these settings any longer.
+
 ## [0.1.0-dev.20260916.2593d382] - 2026-09-16 (Nexus)
 
 First Nexus development snapshot, including explicit host document loading,

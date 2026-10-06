@@ -632,7 +632,8 @@ for (const type of ['checkboxes', 'multipleChoice', 'singleChoiceList', 'multipl
     await openField(page, type);
     const card = page.locator('app-field-card').first();
     await openSettings(card, 'Constraints');
-    if (type === 'checkboxes') await expect(card.getByRole('tab', { name: 'Occurrences' })).toHaveCount(0);
+    if (type === 'checkboxes')
+      await expect(card.locator('[role="tabpanel"][id$="-Configuration"] input[name="min"]')).toHaveCount(0);
     const option = card.getByRole('textbox', { name: 'Option 1', exact: true });
     const isList = type.endsWith('List');
     if (isList) await card.locator('app-field-default-value').getByRole('combobox').click();

@@ -193,33 +193,6 @@ app-icon {
  * The shared chevron draws this select without the browser's appearance, and the select then
  * honours line height. It takes the authoring control line, as the settings controls do.
  */
-.field-requirement {
-  font-size: var(--cedar-font-size);
-  line-height: var(--cedar-control-line-height-authoring);
-  color: var(--cedar-text-muted);
-  background: var(--cedar-surface-subtle);
-  border: 1px solid var(--cedar-border-rule);
-  border-radius: var(--cedar-radius);
-  @include spacing.apply(padding, compact-cell);
-  &:focus-visible {
-    @include controls.focus-ring(var(--cedar-control-focus, var(--cedar-color-primary)));
-  }
-}
-.field-repetition {
-  display: flex;
-  align-items: center;
-  gap: var(--cedar-space-1);
-  cursor: pointer;
-  flex-shrink: 0;
-}
-.field-repetition-label {
-  font-size: var(--cedar-font-size);
-  color: var(--cedar-text-muted);
-  white-space: nowrap;
-}
-.field-repetition:hover .field-repetition-label {
-  color: var(--cedar-text-primary);
-}
 .field-icon-action {
   display: inline-flex;
   align-items: center;
@@ -293,12 +266,4 @@ app-field-summary {
 .field-content-control:focus {
   outline: none;
   border-color: var(--cedar-color-primary);
-}
-
-.field-repetition-check {
-  width: var(--cedar-icon-size-small);
-  height: var(--cedar-icon-size-small);
-  &:focus-visible {
-    @include controls.focus-ring(var(--cedar-control-focus, var(--cedar-color-primary)));
-  }
 }

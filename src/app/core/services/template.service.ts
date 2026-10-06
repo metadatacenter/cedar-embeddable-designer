@@ -22,6 +22,7 @@ import {
 import { FieldLibraryService } from './field-library.service';
 import { childKeys, deploymentKeys, freshChildKey, keyedChild } from '../model/child-key-policy';
 import { CedLanguageService } from '../../i18n/ced-language.service';
+import { SETTINGS_TABS } from '../../shared/settings-tabs';
 import { LocalizedError, message } from '../../i18n/messages';
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { Field, FieldDefaultValue, CustomField, ControlledTermSet, UserPreferences } from '../models/types';
@@ -845,7 +846,7 @@ export class TemplateService {
     id: number,
     placement: Partial<ElementNode['placement']>,
     setting = 'placement',
-    tab = 'Occurrences',
+    tab: string = SETTINGS_TABS.configuration,
   ): string | null {
     return this.validation.submit(id, placement, setting, tab);
   }

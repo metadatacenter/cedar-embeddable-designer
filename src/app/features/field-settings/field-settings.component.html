@@ -17,6 +17,133 @@
       </button>
     }
   </div>
+  @if (!service.fieldDocumentMode()) {
+    <section
+      class="settings"
+      role="tabpanel"
+      [hidden]="selectedTab !== 'Configuration'"
+      [id]="'field-panel-' + field.id + '-Configuration'"
+      [attr.aria-labelledby]="'field-tab-' + field.id + '-Configuration'"
+    >
+      <form #configurationForm (ngSubmit)="saveBounds(configurationForm)" class="configuration">
+        <fieldset [disabled]="!!field.publishedDefinition" class="configuration-scope">
+          <div class="settings-fields configuration-fields">
+            @if (offersRequirement) {
+              <label
+                >{{ 'fieldCard.requirement' | translate
+                }}<select
+                  name="requirement"
+                  [attr.aria-label]="'fieldCard.requirement' | translate"
+                  [ngModel]="field.status"
+                  (ngModelChange)="service.updateFieldStatus(field.id, $event)"
+                >
+                  <option value="optional">{{ 'fieldCard.optional' | translate }}</option>
+                  <option value="recommended">{{ 'fieldCard.recommended' | translate }}</option>
+                  <option value="required">{{ 'fieldCard.required' | translate }}</option>
+                </select></label
+              >
+            }
+            <label data-setting="key"
+              >{{ 'settings.key' | translate
+              }}<input
+                spellcheck="false"
+                autocomplete="off"
+                [attr.aria-invalid]="!!keyError"
+                [attr.aria-describedby]="keyError ? 'field-key-error-' + field.id : null"
+                name="deploymentName"
+                [(ngModel)]="deploymentName"
+                (ngModelChange)="saveKey()"
+            /></label>
+            <label
+              >{{ 'settings.displayDescription' | translate
+              }}<input
+                spellcheck="false"
+                autocomplete="off"
+                name="displayDescription"
+                [(ngModel)]="displayDescription"
+                (ngModelChange)="saveDisplay()"
+                [placeholder]="'fieldSettings.display.descriptionPlaceholder' | translate"
+            /></label>
+          </div>
+          @if (keyError) {
+            <p role="alert" class="ced-field-error" [id]="'field-key-error-' + field.id">{{ keyError }}</p>
+          }
+          @if (offersAllowMultiple || offersBounds) {
+            <fieldset [attr.aria-invalid]="!!error" class="configuration-bounds">
+              @if (offersAllowMultiple) {
+                <label class="check"
+                  ><input
+                    spellcheck="false"
+                    type="checkbox"
+                    name="allowMultiple"
+                    [checked]="field.allowMultiple"
+                    (change)="service.toggleAllowMultiple(field.id)"
+                  />{{ 'settings.allowMultiple' | translate }}</label
+                >
+              }
+              @if (offersBounds) {
+                <div class="settings-fields configuration-fields" data-setting="occurrences">
+                  <label
+                    >{{ 'fieldSettings.occurrences.min' | translate
+                    }}<input
+                      spellcheck="false"
+                      autocomplete="off"
+                      type="number"
+                      name="min"
+                      min="0"
+                      step="1"
+                      [disabled]="!multiple"
+                      [(ngModel)]="min"
+                      (ngModelChange)="saveBounds(configurationForm, 'min')"
+                      [placeholder]="'settings.minOccurrencesPlaceholder' | translate"
+                  /></label>
+                  <label
+                    >{{ 'fieldSettings.occurrences.max' | translate
+                    }}<input
+                      spellcheck="false"
+                      autocomplete="off"
+                      type="number"
+                      name="max"
+                      min="0"
+                      step="1"
+                      [disabled]="!multiple"
+                      [(ngModel)]="max"
+                      (ngModelChange)="saveBounds(configurationForm, 'max')"
+                      [placeholder]="'settings.unlimited' | translate"
+                  /></label>
+                </div>
+              }
+            </fieldset>
+          }
+          <div class="configuration-flags" data-setting="layout">
+            <label class="check"
+              ><input
+                spellcheck="false"
+                type="checkbox"
+                name="hidden"
+                [(ngModel)]="hidden"
+                (ngModelChange)="saveLayout()"
+              />{{ 'fieldSettings.display.hidden' | translate }}</label
+            >
+            @if (dynamic) {
+              <label class="check"
+                ><input
+                  spellcheck="false"
+                  type="checkbox"
+                  name="continue"
+                  [(ngModel)]="continuePreviousLine"
+                  (ngModelChange)="saveLayout()"
+                />{{ 'fieldSettings.display.continueLine' | translate }}</label
+              >
+            }
+          </div>
+        </fieldset>
+      </form>
+      @if (error) {
+        <p role="alert">{{ error }}</p>
+      }
+    </section>
+  }
   <section
     role="tabpanel"
     [hidden]="selectedTab !== 'Annotations'"
@@ -273,50 +400,6 @@
       }
     </section>
   }
-  @if (multiple) {
-    <section
-      class="settings"
-      role="tabpanel"
-      [hidden]="selectedTab !== 'Occurrences'"
-      [id]="'field-panel-' + field.id + '-Occurrences'"
-      [attr.aria-labelledby]="'field-tab-' + field.id + '-Occurrences'"
-    >
-      <form #boundsForm (ngSubmit)="saveBounds(boundsForm)" class="row">
-        <fieldset [attr.aria-invalid]="!!error" [disabled]="!!field.publishedDefinition" class="settings-fields">
-          <label
-            >{{ 'fieldSettings.occurrences.min' | translate
-            }}<input
-              spellcheck="false"
-              autocomplete="off"
-              type="number"
-              name="min"
-              min="0"
-              step="1"
-              [(ngModel)]="min"
-              (ngModelChange)="saveBounds(boundsForm, 'min')"
-              [placeholder]="'settings.minOccurrencesPlaceholder' | translate"
-          /></label>
-          <label
-            >{{ 'fieldSettings.occurrences.max' | translate
-            }}<input
-              spellcheck="false"
-              autocomplete="off"
-              type="number"
-              name="max"
-              min="0"
-              step="1"
-              [(ngModel)]="max"
-              (ngModelChange)="saveBounds(boundsForm, 'max')"
-              [placeholder]="'settings.unlimited' | translate"
-          /></label>
-        </fieldset>
-      </form>
-      @if (error) {
-        <p role="alert">{{ error }}</p>
-      }
-    </section>
-  }
-
   <section
     class="settings"
     role="tabpanel"
@@ -324,7 +407,7 @@
     [id]="'field-panel-' + field.id + '-Display'"
     [attr.aria-labelledby]="'field-tab-' + field.id + '-Display'"
   >
-    <form (ngSubmit)="saveLayout()" class="row" [hidden]="service.fieldDocumentMode()">
+    <form (ngSubmit)="saveDisplay()" class="row" [hidden]="service.fieldDocumentMode()">
       <fieldset
         [attr.aria-invalid]="!!error"
         [disabled]="!!field.publishedDefinition"
@@ -347,31 +430,9 @@
             autocomplete="off"
             name="displayDescription"
             [(ngModel)]="displayDescription"
-            (ngModelChange)="saveLayout()"
+            (ngModelChange)="saveDisplay()"
             [placeholder]="'fieldSettings.display.descriptionPlaceholder' | translate"
         /></label>
-        <div class="display-flags">
-          <label class="check"
-            ><input
-              spellcheck="false"
-              type="checkbox"
-              name="hidden"
-              [(ngModel)]="hidden"
-              (ngModelChange)="saveLayout()"
-            />{{ 'fieldSettings.display.hidden' | translate }}</label
-          >
-          @if (dynamic) {
-            <label class="check"
-              ><input
-                spellcheck="false"
-                type="checkbox"
-                name="continue"
-                [(ngModel)]="continuePreviousLine"
-                (ngModelChange)="saveLayout()"
-              />{{ 'fieldSettings.display.continueLine' | translate }}</label
-            >
-          }
-        </div>
       </fieldset>
     </form>
     @if (error) {
@@ -405,27 +466,6 @@
     [attr.aria-labelledby]="'field-tab-' + field.id + '-Field-metadata'"
   >
     <dl class="identity">
-      @if (!service.fieldDocumentMode()) {
-        <dt class="editable">
-          <label [for]="'field-key-' + field.id">{{ 'settings.key' | translate }}</label>
-        </dt>
-        <dd>
-          <input
-            spellcheck="false"
-            autocomplete="off"
-            [id]="'field-key-' + field.id"
-            [attr.aria-invalid]="!!keyError"
-            [attr.aria-describedby]="keyError ? 'field-key-error-' + field.id : null"
-            name="deploymentName"
-            [(ngModel)]="deploymentName"
-            (ngModelChange)="saveKey()"
-            [disabled]="!!field.publishedDefinition"
-          />
-          @if (keyError) {
-            <p role="alert" class="ced-field-error" [id]="'field-key-error-' + field.id">{{ keyError }}</p>
-          }
-        </dd>
-      }
       <dt>{{ 'fieldSettings.metadata.fieldIri' | translate }}</dt>
       <dd>{{ field.atId || ('settings.notYetAssigned' | translate) }}</dd>
       @if (artifact.version) {

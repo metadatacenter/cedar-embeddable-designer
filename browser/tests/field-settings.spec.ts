@@ -1,12 +1,13 @@
 import { test, expect } from '@playwright/test';
-import { openSettings, openDesigner, currentTemplate, applyPreset } from './support';
+import { openSettings, openDesigner, currentTemplate, applyPreset, addElementFixture } from './support';
 
 test('authors occurrence limits and rejects an inverted range', async ({ page }) => {
   await openDesigner(page);
   const card = page.locator('app-field-card').first();
-  await card.getByRole('checkbox', { name: 'Allow multiple', exact: true }).check();
   const settings = card.locator('app-field-settings');
-  await openSettings(card, 'Occurrences');
+  const configuration = await openSettings(card, 'Configuration');
+  await expect(configuration.getByLabel('Minimum', { exact: true })).toBeDisabled();
+  await configuration.getByRole('checkbox', { name: 'Allow multiple', exact: true }).check();
   await settings.getByLabel('Minimum', { exact: true }).fill('2');
   await settings.getByLabel('Maximum', { exact: true }).fill('5');
   await expect.poll(async () => ((await currentTemplate(page)).properties as any).Title.minItems).toBe(2);
@@ -18,7 +19,7 @@ test('authors occurrence limits and rejects an inverted range', async ({ page })
   const display = await openSettings(card, 'Display');
   await display.getByLabel('Name', { exact: true }).fill('Immediate label');
   await expect(display.getByRole('alert')).toHaveCount(0);
-  await openSettings(card, 'Occurrences');
+  await openSettings(card, 'Configuration');
   await expect(settings.getByLabel('Minimum', { exact: true })).toHaveValue('8');
   await expect(settings.getByRole('alert')).toContainText('minimum no greater');
   await settings.getByLabel('Maximum', { exact: true }).fill('10');
@@ -28,14 +29,75 @@ test('authors occurrence limits and rejects an inverted range', async ({ page })
   await page.screenshot({ path: '/tmp/ced-occurrences.png' });
 });
 
+test('Configuration sets the requirement, key and description on one row, the bounds below Allow multiple and the line settings on one row', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  await openDesigner(page);
+  const panel = await openSettings(page.locator('#field-card-1'), 'Configuration');
+  const box = async (label: string, checkbox = false) =>
+    (await (
+      checkbox ? panel.getByRole('checkbox', { name: label, exact: true }) : panel.getByLabel(label, { exact: true })
+    ).boundingBox())!;
+  const requirement = await box('Requirement');
+  const key = await box('Key');
+  const description = await box('Description');
+  const multiple = await box('Allow multiple', true);
+  const minimum = await box('Minimum');
+  const maximum = await box('Maximum');
+  const hidden = await box('Hidden', true);
+  const continued = await box('Continue previous line', true);
+  expect(key.y).toBeCloseTo(requirement.y, 0);
+  expect(description.y).toBeCloseTo(requirement.y, 0);
+  expect(requirement.x).toBeLessThan(key.x);
+  expect(key.x).toBeLessThan(description.x);
+  // Allow multiple takes a row of its own, and its bounds the row below it.
+  expect(multiple.y).toBeGreaterThan(requirement.y + requirement.height);
+  expect(minimum.y).toBeGreaterThan(multiple.y + multiple.height);
+  expect(maximum.y).toBeCloseTo(minimum.y, 0);
+  expect(minimum.x).toBeLessThan(maximum.x);
+  expect(hidden.y).toBeGreaterThan(minimum.y + minimum.height);
+  expect(continued.y).toBeCloseTo(hidden.y, 0);
+  expect(hidden.x).toBeLessThan(continued.x);
+});
+
+test('an element Configuration sets its key and description on one row and its bounds below Allow multiple', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  const designer = await openDesigner(page);
+  await applyPreset(page, 'modular');
+  await addElementFixture(page, designer);
+  const card = designer.locator('app-element-card').first();
+  await card.getByRole('button', { name: 'Expand element settings', exact: true }).click();
+  const panel = card.getByRole('tabpanel', { name: 'Configuration', exact: true });
+  const box = async (label: string) => (await panel.getByLabel(label, { exact: true }).boundingBox())!;
+  const key = await box('Key');
+  const description = await box('Description');
+  const multiple = await box('Allow multiple');
+  const minimum = await box('Minimum occurrences');
+  const maximum = await box('Maximum occurrences');
+  expect(description.y).toBeCloseTo(key.y, 0);
+  expect(key.x).toBeLessThan(description.x);
+  expect(multiple.y).toBeGreaterThan(key.y + key.height);
+  expect(minimum.y).toBeGreaterThan(multiple.y + multiple.height);
+  expect(maximum.y).toBeCloseTo(minimum.y, 0);
+  await panel.getByLabel('Description', { exact: true }).fill('Shown help');
+  await card.getByRole('tab', { name: 'Display', exact: true }).click();
+  await expect(
+    card.getByRole('tabpanel', { name: 'Display', exact: true }).getByLabel('Description', { exact: true }),
+  ).toHaveValue('Shown help');
+});
+
 test('writes the display name, description and layout settings', async ({ page }) => {
   await openDesigner(page);
-  const settings = page.locator('#field-card-1 app-field-settings');
   const section = await openSettings(page.locator('#field-card-1'), 'Display');
   await section.getByLabel('Name', { exact: true }).fill('Shown title');
   await section.getByLabel('Description', { exact: true }).fill('Shown help');
-  await section.getByLabel('Hidden', { exact: true }).check();
-  await section.getByLabel('Continue previous line', { exact: true }).check();
+  await expect(section.getByLabel('Hidden', { exact: true })).toHaveCount(0);
+  const configuration = await openSettings(page.locator('#field-card-1'), 'Configuration');
+  await configuration.getByLabel('Hidden', { exact: true }).check();
+  await configuration.getByLabel('Continue previous line', { exact: true }).check();
   // The name is the one the card's header shows, so it lands where the header writes it.
   await expect
     .poll(async () => ((await currentTemplate(page)).properties as any).Title['skos:prefLabel'])
@@ -50,7 +112,8 @@ test('writes the display name, description and layout settings', async ({ page }
 
 test('authors recommended fields without marking them required', async ({ page }) => {
   await openDesigner(page);
-  const requirement = page.locator('#field-card-1').getByLabel('Requirement', { exact: true });
+  const configuration = await openSettings(page.locator('#field-card-1'), 'Configuration');
+  const requirement = configuration.getByLabel('Requirement', { exact: true });
   await requirement.selectOption('recommended');
   await expect
     .poll(async () => ((await currentTemplate(page)).properties as any).Title._valueConstraints)
@@ -143,7 +206,8 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
   await expect(designer.locator('app-field-card')).toHaveCount(5);
   await card.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Rich content');
   await openSettings(card, 'Content');
-  await expect(card.getByRole('tab').first()).toHaveText('Display');
+  await expect(card.getByRole('tab').first()).toHaveText('Configuration');
+  await expect(card.getByRole('tab').nth(1)).toHaveText('Display');
   await card.getByRole('textbox', { name: 'Content', exact: true }).fill('<p>First</p>\n<p>Second</p>');
   await expect
     .poll(async () => ((await currentTemplate(page)).properties as any)['rich_content']._ui._content)
@@ -209,17 +273,19 @@ test('metadata keys are editable and unique within their parent while names and 
   await display.getByLabel('Name', { exact: true }).fill('Same label');
   const otherDisplay = await openSettings(second, 'Display');
   await otherDisplay.getByLabel('Name', { exact: true }).fill('Same label');
-  const metadata = await openSettings(first, 'Field metadata');
-  await expect(metadata.getByLabel('Key', { exact: true })).toHaveValue('Title');
-  await metadata.getByLabel('Key', { exact: true }).fill('subject');
-  const otherMetadata = await openSettings(second, 'Field metadata');
-  const key = otherMetadata.getByLabel('Key', { exact: true });
+  const configuration = await openSettings(first, 'Configuration');
+  await expect(configuration.getByLabel('Key', { exact: true })).toHaveValue('Title');
+  await configuration.getByLabel('Key', { exact: true }).fill('subject');
+  const otherConfiguration = await openSettings(second, 'Configuration');
+  const key = otherConfiguration.getByLabel('Key', { exact: true });
   await key.fill('subject');
-  await expect(otherMetadata.getByRole('alert')).toContainText('already uses that key');
+  await expect(otherConfiguration.getByRole('alert')).toContainText('already uses that key');
   await key.fill('');
-  await expect(otherMetadata.getByRole('alert')).toContainText('Key is required');
+  await expect(otherConfiguration.getByRole('alert')).toContainText('Key is required');
   await key.fill('category');
-  await expect(otherMetadata.getByRole('alert')).toHaveCount(0);
+  await expect(otherConfiguration.getByRole('alert')).toHaveCount(0);
+  const metadata = await openSettings(second, 'Field metadata');
+  await expect(metadata.getByLabel('Key', { exact: true })).toHaveCount(0);
   const saved = await currentTemplate(page);
   expect((saved.properties as any).subject['schema:name']).toBe('Title');
   expect((saved.properties as any).subject['skos:prefLabel']).toBe('Same label');

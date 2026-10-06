@@ -39,7 +39,7 @@ for (const correction of ['clear', 'correct'] as const)
     await addElementFixture(page, designer);
     const settings = designer.locator('app-element-card').first();
     await settings.getByRole('button', { name: 'Expand element settings', exact: true }).click();
-    await settings.getByRole('tab', { name: 'Occurrences', exact: true }).click();
+    await expect(settings.getByRole('tabpanel', { name: 'Configuration', exact: true })).toBeVisible();
     await settings.getByLabel('Allow multiple', { exact: true }).check();
     const min = settings.getByLabel('Minimum occurrences', { exact: true });
     const max = settings.getByLabel('Maximum occurrences', { exact: true });
@@ -50,7 +50,7 @@ for (const correction of ['clear', 'correct'] as const)
     await expect(settings.getByRole('alert')).toBeVisible();
     await settings.getByRole('tab', { name: 'Display', exact: true }).click();
     await expect(max).toBeHidden();
-    await settings.getByRole('tab', { name: 'Occurrences', exact: true }).click();
+    await settings.getByRole('tab', { name: 'Configuration', exact: true }).click();
     await expect(max).toHaveValue('');
     await min.fill('1');
     await expect(settings.getByRole('alert')).toBeVisible();

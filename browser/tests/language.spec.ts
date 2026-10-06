@@ -24,6 +24,7 @@ for (const width of [1280, 375]) {
     await addElementFixture(page, root);
     const element = designer.locator('app-element-card').first();
     await element.getByRole('button', { name: 'Expand element settings' }).click();
+    await element.getByRole('tab', { name: 'Display', exact: true }).click();
     await element.getByRole('combobox', { name: 'Language', exact: true }).selectOption('de');
     await expect(element.getByRole('combobox', { name: 'Language', exact: true })).toHaveValue('de');
   });

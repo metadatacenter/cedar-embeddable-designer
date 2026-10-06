@@ -113,13 +113,6 @@
       "value": "6px",
       "count": 1
     },
-    "ca5cb8d848b5490f87d1": {
-      "file": "src/app/features/field-settings/field-settings.component.scss",
-      "rule": "geometry",
-      "property": "min-height",
-      "value": "20px",
-      "count": 1
-    },
     "fb0df96f25c062f6a2ed": {
       "file": "src/app/element/cedar-embeddable-designer.element.scss",
       "rule": "geometry",

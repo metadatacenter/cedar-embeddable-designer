@@ -70,37 +70,6 @@
             </div>
           </div>
           <div class="field-actions">
-            <!--
-      Required, Allow multiple and delete sit on the title row rather than in a
-      footer bar of their own. They are one line of controls either way, and a
-      bar cost every card its own rule, its padding and 36px of height.
-    -->
-            @if (!service.fieldDocumentMode() && service.preferences().showRequired && allowsStatus(field.type)) {
-              <select
-                [attr.aria-label]="'fieldCard.requirement' | translate"
-                [ngModel]="field.status"
-                (ngModelChange)="service.updateFieldStatus(field.id, $event)"
-                class="field-requirement"
-              >
-                <option value="optional">{{ 'fieldCard.optional' | translate }}</option>
-                <option value="recommended">{{ 'fieldCard.recommended' | translate }}</option>
-                <option value="required">{{ 'fieldCard.required' | translate }}</option>
-              </select>
-            }
-            @if (
-              !service.fieldDocumentMode() && service.preferences().showAllowMultiple && allowsMultiple(field.type)
-            ) {
-              <label class="field-repetition">
-                <input
-                  spellcheck="false"
-                  type="checkbox"
-                  [checked]="field.allowMultiple"
-                  (change)="service.toggleAllowMultiple(field.id)"
-                  class="checkbox-white field-repetition-check"
-                />
-                <span class="field-repetition-label">{{ 'settings.allowMultiple' | translate }}</span>
-              </label>
-            }
             @if (!standalone) {
               <button
                 (click)="service.deleteField(field.id)"

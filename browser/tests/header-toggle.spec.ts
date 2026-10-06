@@ -67,7 +67,6 @@ for (const width of [1280, 375]) {
     await header.locator('.field-type-icon').click();
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
     await header.getByRole('textbox', { name: 'Field display name' }).click();
-    await header.getByLabel('Allow multiple', { exact: true }).check();
     await header.locator('.field-drag-handle').click();
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
     await header.locator('.field-type-icon').click();

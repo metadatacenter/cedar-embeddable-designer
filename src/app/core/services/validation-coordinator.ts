@@ -36,7 +36,7 @@ const nodeOf = (document: ContainerDraft, id: number) =>
 
 /** The stable setting identity used by controls, pending edits and the public report. */
 export function fieldSetting(changes: Partial<Field>): { setting: string; tab: string } {
-  if ('deploymentName' in changes) return { setting: 'key', tab: SETTINGS_TABS.fieldMetadata };
+  if ('deploymentName' in changes) return { setting: 'key', tab: SETTINGS_TABS.configuration };
   if ('schemaIdentifier' in changes) return { setting: 'identifier', tab: SETTINGS_TABS.fieldMetadata };
   if ('propertyIri' in changes) return { setting: 'propertyIri', tab: SETTINGS_TABS.fieldMetadata };
   if ('controlledTermConstraints' in changes) return { setting: 'controlledTerms', tab: SETTINGS_TABS.constraints };
@@ -44,7 +44,10 @@ export function fieldSetting(changes: Partial<Field>): { setting: string; tab: s
   if ('numeric' in changes) return { setting: 'numeric', tab: 'Constraints' };
   if ('textConstraints' in changes) return { setting: 'textConstraints', tab: 'Constraints' };
   if ('temporal' in changes) return { setting: 'temporal', tab: 'Constraints' };
-  if ('minItems' in changes || 'maxItems' in changes) return { setting: 'occurrences', tab: 'Occurrences' };
+  if ('minItems' in changes || 'maxItems' in changes)
+    return { setting: 'occurrences', tab: SETTINGS_TABS.configuration };
+  if ('hidden' in changes || 'continuePreviousLine' in changes)
+    return { setting: 'layout', tab: SETTINGS_TABS.configuration };
   if ('width' in changes || 'height' in changes) return { setting: 'media', tab: 'Content' };
   if ('defaultValue' in changes) return { setting: 'defaultValue', tab: 'Constraints' };
   if ('language' in changes) return { setting: 'language', tab: 'Display' };

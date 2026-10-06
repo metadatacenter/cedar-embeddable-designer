@@ -214,12 +214,14 @@ test('occurrence ranges follow limits and repetition beside the field name', asy
   const range = card.getByLabel('Occurrence range');
   const required = card.getByLabel('Required', { exact: true });
   await expect(required).toHaveCount(0);
-  await card.getByLabel('Requirement', { exact: true }).selectOption('required');
+  const configuration = await openSettings(card, 'Configuration');
+  const requirement = configuration.getByLabel('Requirement', { exact: true });
+  await requirement.selectOption('required');
   await expect(required).toHaveText('*');
   await expect(card.locator('.field-heading > input + .required-mark + .occurrence-range')).toHaveText('(3 .. 4)');
-  await card.getByLabel('Requirement', { exact: true }).selectOption('recommended');
+  await requirement.selectOption('recommended');
   await expect(required).toHaveCount(0);
-  await card.getByLabel('Requirement', { exact: true }).selectOption('optional');
+  await requirement.selectOption('optional');
   await expect(required).toHaveCount(0);
   await expect(range).toHaveText('(3 .. 4)');
   await expect(range).toHaveCSS('align-self', 'baseline');
@@ -227,11 +229,10 @@ test('occurrence ranges follow limits and repetition beside the field name', asy
     'align-self',
     'baseline',
   );
-  await openSettings(card, 'Occurrences');
-  await card.getByLabel('Maximum', { exact: true }).fill('');
-  await card.getByLabel('Maximum', { exact: true }).press('Tab');
+  await configuration.getByLabel('Maximum', { exact: true }).fill('');
+  await configuration.getByLabel('Maximum', { exact: true }).press('Tab');
   await expect(range).toHaveText('(3 .. ∞)');
-  await card.getByLabel('Allow multiple', { exact: true }).uncheck();
+  await configuration.getByLabel('Allow multiple', { exact: true }).uncheck();
   await expect(range).toHaveCount(0);
 });
 
@@ -254,7 +255,7 @@ test('toggling repetition keeps the field header and preview stationary', async 
     ),
   );
   const card = designer.locator('app-field-card').first();
-  await openSettings(card, 'Constraints');
+  const configuration = await openSettings(card, 'Configuration');
   await page.evaluate(() => {
     document.body.style.setProperty('--cedar-font-size', '16px');
     document.body.style.setProperty('--cedar-font-size-small', '14px');
@@ -270,7 +271,7 @@ test('toggling repetition keeps the field header and preview stationary', async 
   await expect(previewInput).toBeVisible();
   const mounted = await previewInput.elementHandle();
   const before = await Promise.all(targets.map((target) => target.boundingBox()));
-  await card.getByLabel('Allow multiple', { exact: true }).check();
+  await configuration.getByLabel('Allow multiple', { exact: true }).check();
   await expect(card.getByLabel('Occurrence range')).toBeVisible();
   expect(await mounted!.evaluate((el) => el.isConnected)).toBe(true);
   for (let i = 0; i < targets.length; i++) {

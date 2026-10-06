@@ -78,7 +78,7 @@ describe('central editing validation', () => {
     service.updateContainerDefinition(id, { name: 'Details' });
     service.updateElementPlacement(id, { allowMultiple: true, minItems: 2 });
     service.updateElementPlacement(id, { allowMultiple: true, minItems: 2, maxItems: 1 });
-    service.updateElementPlacement(id, { deploymentName: 'details' }, 'key', 'Element metadata');
+    service.updateElementPlacement(id, { deploymentName: 'details' }, 'key', 'Configuration');
     expect(service.validation.changes(id)).toMatchObject({ minItems: 2, maxItems: 1 });
     expect(service.validationReport().issues.map((issue) => issue.setting)).toEqual(['placement']);
     service.updateElementPlacement(id, { allowMultiple: true, minItems: 2, maxItems: 3 });

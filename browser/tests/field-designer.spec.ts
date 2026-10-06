@@ -136,7 +136,7 @@ test('hides placement controls, uses shadow styles and emits current artifacts',
   await expect(page.getByText('Allow multiple', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Collapse field settings' })).toBeVisible();
   await expect(page.getByLabel('Name', { exact: true })).toBeHidden();
-  await expect(page.getByRole('tab', { name: 'Occurrences' })).toHaveCount(0);
+  await expect(page.getByRole('tab', { name: 'Configuration' })).toHaveCount(0);
   await page.getByRole('tab', { name: 'Field metadata' }).click();
   await expect(page.getByText('Property IRI', { exact: true })).toHaveCount(0);
   const background = await page

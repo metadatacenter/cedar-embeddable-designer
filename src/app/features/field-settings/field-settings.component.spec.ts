@@ -73,3 +73,119 @@ it('edits identifier and key while preserving a hidden preferred label', async (
   expect(service.fields()[0].schemaIdentifier).toBeUndefined();
   expect(service.fields()[0].preferredLabel).toBe('Study subject');
 });
+
+describe('the Configuration tab', () => {
+  const panel = (fixture: { nativeElement: HTMLElement }) =>
+    fixture.nativeElement.querySelector<HTMLElement>('[role="tabpanel"][id$="-Configuration"]');
+  const control = (fixture: { nativeElement: HTMLElement }, name: string) =>
+    panel(fixture)?.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"]`) ?? null;
+  const create = (type: string) => {
+    localStorage.clear();
+    const service = TestBed.inject(TemplateService);
+    service.templateName.set('Study');
+    service.addField(type, 0);
+    const fixture = TestBed.createComponent(FieldSettingsComponent);
+    fixture.componentRef.setInput('field', service.fields()[0]);
+    fixture.detectChanges();
+    return { service, fixture };
+  };
+  const refresh = async (service: TemplateService, fixture: ReturnType<typeof create>['fixture']): Promise<void> => {
+    fixture.componentRef.setInput('field', service.fields()[0]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  };
+
+  it('comes first and holds the requirement, key, description, multiplicity, bounds and line placement', async () => {
+    const { service, fixture } = create('text');
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.tabs[0]).toBe('Configuration');
+    expect(fixture.componentInstance.selectedTab).toBe('Configuration');
+    const names = [
+      'requirement',
+      'deploymentName',
+      'displayDescription',
+      'allowMultiple',
+      'min',
+      'max',
+      'hidden',
+      'continue',
+    ];
+    // In the order the panel sets them out.
+    expect(
+      [...panel(fixture)!.querySelectorAll<HTMLInputElement>('[name]')]
+        .map((node) => node.name)
+        .filter((name) => names.includes(name)),
+    ).toEqual(names);
+    expect(fixture.componentInstance.tabs).not.toContain('Occurrences');
+    expect(control(fixture, 'min')!.disabled).toBe(true);
+    expect(control(fixture, 'max')!.disabled).toBe(true);
+    service.toggleAllowMultiple(service.fields()[0].id);
+    await refresh(service, fixture);
+    expect(control(fixture, 'min')!.disabled).toBe(false);
+    expect(control(fixture, 'max')!.disabled).toBe(false);
+    const display = fixture.nativeElement.querySelector('[role="tabpanel"][id$="-Display"]') as HTMLElement;
+    expect(display.querySelector('[name="hidden"], [name="continue"]')).toBeNull();
+    const metadata = fixture.nativeElement.querySelector('[role="tabpanel"][id$="-Field-metadata"]') as HTMLElement;
+    expect(metadata.querySelector('[name="deploymentName"]')).toBeNull();
+  });
+
+  it('offers a static field only its key, description and Hidden', () => {
+    const { fixture } = create('richText');
+    expect(control(fixture, 'deploymentName')).not.toBeNull();
+    expect(control(fixture, 'displayDescription')).not.toBeNull();
+    expect(control(fixture, 'hidden')).not.toBeNull();
+    for (const name of ['requirement', 'allowMultiple', 'min', 'max', 'continue'])
+      expect(control(fixture, name), name).toBeNull();
+  });
+
+  it('enables the bounds of a type that is always multiple, without an Allow multiple control', () => {
+    const { fixture } = create('multipleChoiceList');
+    expect(control(fixture, 'allowMultiple')).toBeNull();
+    expect(control(fixture, 'min')!.disabled).toBe(false);
+  });
+
+  it('hides the requirement and Allow multiple where the profile does, and the bounds of a single field', async () => {
+    const { service, fixture } = create('text');
+    service.updatePreference('showRequired', false);
+    service.updatePreference('showAllowMultiple', false);
+    await refresh(service, fixture);
+    for (const name of ['requirement', 'allowMultiple', 'min', 'max']) expect(control(fixture, name), name).toBeNull();
+    service.toggleAllowMultiple(service.fields()[0].id);
+    await refresh(service, fixture);
+    expect(control(fixture, 'min')!.disabled).toBe(false);
+  });
+
+  it('is absent from a field edited as a document of its own', () => {
+    const service = TestBed.inject(TemplateService);
+    service.fieldDocumentMode.set(true);
+    const fixture = TestBed.createComponent(FieldSettingsComponent);
+    fixture.componentRef.setInput('field', service.fields()[0]);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.tabs).not.toContain('Configuration');
+    expect(fixture.componentInstance.selectedTab).toBe('Display');
+    expect(panel(fixture)).toBeNull();
+  });
+});
+
+it('edits one description from Configuration and from Display', async () => {
+  localStorage.clear();
+  const service = TestBed.inject(TemplateService);
+  service.templateName.set('Study');
+  const fixture = TestBed.createComponent(FieldSettingsComponent);
+  fixture.componentRef.setInput('field', service.fields()[0]);
+  fixture.detectChanges();
+  await fixture.whenStable();
+  const input = (tab: string) =>
+    fixture.nativeElement.querySelector(
+      `[role="tabpanel"][id$="-${tab}"] input[name="displayDescription"]`,
+    ) as HTMLInputElement;
+  input('Configuration').value = 'Shown help';
+  input('Configuration').dispatchEvent(new Event('input'));
+  fixture.componentRef.setInput('field', service.fields()[0]);
+  fixture.detectChanges();
+  await fixture.whenStable();
+  expect(service.fields()[0].displayDescription).toBe('Shown help');
+  expect(input('Display').value).toBe('Shown help');
+});

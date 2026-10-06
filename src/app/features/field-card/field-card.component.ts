@@ -14,7 +14,6 @@ import {
   choiceDefaultConflict,
   accepts,
   allowsDefault,
-  allowsMultiple,
   allowsOptions,
   allowsStatus,
   contentKindOf,
@@ -76,10 +75,6 @@ export class FieldCardComponent {
 
   allowsStatus(type: string): boolean {
     return allowsStatus(type);
-  }
-
-  allowsMultiple(type: string): boolean {
-    return allowsMultiple(type);
   }
 
   allowsOptions(type: string): boolean {

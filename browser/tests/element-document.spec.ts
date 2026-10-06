@@ -49,9 +49,10 @@ for (const width of [1280, 375]) {
     const placement = directHeader(nested).locator(':scope > app-element-card');
     await placement.getByRole('button', { name: 'Expand element settings', exact: true }).click();
     await expect(placement.getByRole('tablist')).toBeVisible();
-    await placement.getByRole('tab', { name: 'Display', exact: true }).focus();
+    await expect(placement.getByRole('tabpanel', { name: 'Configuration', exact: true })).toBeVisible();
+    await placement.getByRole('tab', { name: 'Configuration', exact: true }).focus();
     await page.keyboard.press('ArrowRight');
-    await expect(placement.getByRole('tab', { name: 'Occurrences', exact: true })).toBeFocused();
+    await expect(placement.getByRole('tab', { name: 'Display', exact: true })).toBeFocused();
     await page.keyboard.press('ArrowRight');
     await expect(placement.getByRole('tab', { name: 'Annotations', exact: true })).toBeFocused();
     await placement.getByRole('button', { name: 'Collapse element settings', exact: true }).click();
@@ -60,9 +61,10 @@ for (const width of [1280, 375]) {
     await placement.getByRole('button', { name: 'Expand element settings', exact: true }).click();
     await expect(placement.getByRole('tab', { name: 'Element details', exact: true })).toHaveCount(0);
     await expect(placement.getByRole('tabpanel', { name: 'Annotations', exact: true })).toBeVisible();
-    await placement.getByRole('tab', { name: 'Occurrences', exact: true }).click();
+    await placement.getByRole('tab', { name: 'Configuration', exact: true }).click();
     const checkbox = placement.getByLabel('Allow multiple', { exact: true });
     await expect(checkbox).toBeVisible();
+    await expect(placement.getByLabel('Minimum occurrences', { exact: true })).toBeDisabled();
     const singlePosition = await checkbox.boundingBox();
     await checkbox.check();
     const multiplePosition = await checkbox.boundingBox();
@@ -82,7 +84,7 @@ for (const width of [1280, 375]) {
     await placement.getByLabel('Maximum occurrences', { exact: true }).fill('4');
     await nestFixtureFields(page, ['element', 'element']);
     await placement.getByRole('button', { name: 'Expand element settings', exact: true }).click();
-    await placement.getByRole('tab', { name: 'Occurrences', exact: true }).click();
+    await placement.getByRole('tab', { name: 'Configuration', exact: true }).click();
     const moved = nested.locator('app-field-card').first();
     await expect(moved.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue('Title');
     await placement.getByLabel('Minimum occurrences', { exact: true }).fill('8');
@@ -357,7 +359,7 @@ test('edits a nested element key and rejects keys used by sibling fields', async
   const settings = designer.locator('app-element-card').first();
   const expand = settings.getByRole('button', { name: 'Expand element settings', exact: true });
   await expand.click();
-  await settings.getByRole('tab', { name: 'Element metadata', exact: true }).click();
+  await expect(settings.getByRole('tabpanel', { name: 'Configuration', exact: true })).toBeVisible();
   const key = settings.getByLabel('Key', { exact: true });
   await key.fill('Title');
   await expect(settings.getByRole('alert')).toContainText('already uses that key');

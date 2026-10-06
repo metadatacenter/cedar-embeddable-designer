@@ -674,10 +674,10 @@
     "libraryEmpty": "No custom fields in this library yet."
   },
   "tabs": {
+    "configuration": "Configuration",
     "display": "Display",
     "constraints": "Constraints",
     "content": "Content",
-    "occurrences": "Occurrences",
     "annotations": "Annotations",
     "fieldMetadata": "Field metadata",
     "elementMetadata": "Element metadata",

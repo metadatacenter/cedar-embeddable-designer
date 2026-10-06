@@ -170,6 +170,10 @@ scenarios['field-metadata'] = async (page) => {
   const d = await openDesigner(page);
   await openSettings(d.locator('app-field-card').first(), 'Field metadata');
 };
+scenarios['field-configuration'] = async (page) => {
+  const d = await openDesigner(page);
+  await openSettings(d.locator('app-field-card').first(), 'Configuration');
+};
 scenarios['temporal-constraints'] = async (page) => {
   const d = await openDesigner(page);
   await d.getByRole('button', { name: /^Add field$/ }).click();
@@ -185,6 +189,14 @@ scenarios['element-metadata'] = async (page) => {
   const card = d.locator('app-element-card').first();
   await card.getByRole('button', { name: 'Expand element settings', exact: true }).click();
   await card.getByRole('tab', { name: 'Element metadata', exact: true }).click();
+};
+scenarios['element-configuration'] = async (page) => {
+  const d = await openDesigner(page);
+  await applyPreset(page, 'modular');
+  await addElementFixture(page, d);
+  const card = d.locator('app-element-card').first();
+  await card.getByRole('button', { name: 'Expand element settings', exact: true }).click();
+  await expect(card.getByRole('tabpanel', { name: 'Configuration', exact: true })).toBeVisible();
 };
 scenarios['nested-field'] = async (page) => {
   const d = await openDesigner(page);
@@ -232,7 +244,7 @@ scenarios['host-override'] = async (page) => {
   const d = await openDesigner(page);
   await d.evaluate((host) => (host as HTMLElement).style.setProperty('--cedar-font-size', '16px'));
   const panel = await openSettings(d.locator('app-field-card').first(), 'Field metadata');
-  await expect(panel.locator('label[for^="field-key-"]')).toHaveCSS('font-size', '16px');
+  await expect(panel.locator('label[for^="field-identifier-"]')).toHaveCSS('font-size', '16px');
 };
 for (const { surface, state, width, title } of surfaceCases(registry, scenarios))
   test(title, async ({ page }, testInfo) => {
