@@ -85,6 +85,7 @@ export class TerminologyEditCommands {
     const check = validation.beginCheck(id, setting, this.language.t('controlledTerms.checkingConstraints'));
     let cancelled = false;
     let recovery: Partial<Field> | undefined;
+    let recoveryCurrent = () => false;
     const result = (async (): Promise<Outcome> => {
       try {
         const verdict = await decide(fieldView(node), check.signal);
@@ -92,6 +93,7 @@ export class TerminologyEditCommands {
         if (verdict.error) {
           recovery = verdict.recovery;
           validation.setInputError(id, setting, verdict.error, 'Constraints');
+          recoveryCurrent = validation.captureIntent(id);
           return recovery ? 'needs-clear' : 'rejected';
         }
         return this.service.updateFieldSettings(id, verdict.changes!) === null ? 'applied' : 'rejected';
@@ -110,7 +112,7 @@ export class TerminologyEditCommands {
         check.cancel();
       },
       clearDefaultAndApply: () => {
-        if (cancelled || !recovery || !check.unchanged()) return false;
+        if (cancelled || !recovery || !recoveryCurrent()) return false;
         // Clearing the default and changing its vocabulary is one document edit.
         validation.setInputError(id, setting, null, 'Constraints');
         const changes = recovery;

@@ -64,6 +64,7 @@ export class ValidationCoordinator {
   private readonly locked = signal(false);
   readonly readOnly = this.locked.asReadonly();
   private editabilityRevision = 0;
+  private readonly intents = new Map<number, symbol>();
   private readonly edits = signal<Record<string, Edit>>({});
   private readonly inputErrors = signal<
     Record<string, { message: string; tab: string; value?: string | FieldDefaultValue; settings?: SettingsInputDraft }>
@@ -134,6 +135,8 @@ export class ValidationCoordinator {
   }
 
   reset(touched: number[] = []): void {
+    this.editabilityRevision++;
+    this.intents.clear();
     this.edits.set({});
     this.inputErrors.set({});
     this.replaceChecks({});
@@ -182,6 +185,7 @@ export class ValidationCoordinator {
       return same(previous, next) ? previous : next;
     });
     if (message) {
+      this.intents.set(id, Symbol());
       this.discardEdit(key);
       this.replaceChecks(Object.fromEntries(Object.entries(this.checks()).filter(([, check]) => check.id !== id)));
     }
@@ -205,12 +209,14 @@ export class ValidationCoordinator {
     const node = nodeOf(this.session.document(), id);
     if (!node || !this.canEdit(id))
       return { signal: AbortSignal.abort(), active: () => false, unchanged: () => false, cancel: () => {} };
-    const revision = this.editabilityRevision;
+    this.intents.set(id, Symbol());
     const key = keyOf(id, setting);
     const check = { id, node, message, tab, controller: new AbortController() };
-    this.replaceChecks({ ...this.checks(), [key]: check });
-    const unchanged = () =>
-      revision === this.editabilityRevision && this.canEdit(id) && nodeOf(this.session.document(), id) === node;
+    this.replaceChecks({
+      ...Object.fromEntries(Object.entries(this.checks()).filter(([, pending]) => pending.id !== id)),
+      [key]: check,
+    });
+    const unchanged = this.captureIntent(id);
     return {
       signal: check.controller.signal,
       active: () => this.checks()[key] === check && unchanged(),
@@ -222,6 +228,17 @@ export class ValidationCoordinator {
         this.replaceChecks(next);
       },
     };
+  }
+  /** A recovery belongs to the latest attempt, including attempts rejected before commit. */
+  captureIntent(id: number): () => boolean {
+    const node = nodeOf(this.session.document(), id);
+    const intent = this.intents.get(id);
+    const revision = this.editabilityRevision;
+    return () =>
+      revision === this.editabilityRevision &&
+      intent === this.intents.get(id) &&
+      this.canEdit(id) &&
+      nodeOf(this.session.document(), id) === node;
   }
   private replaceChecks(next: Record<string, PendingCheck>): void {
     const previous = this.checks();
@@ -250,6 +267,7 @@ export class ValidationCoordinator {
   submit(id: number, changes: Partial<Field>, setting: string, tab: string): string | null {
     if (this.readOnly()) return this.t('fieldElement.readOnly');
     if (!parentOf(this.session.document(), id)) return this.t('errors.elementMissing');
+    this.intents.set(id, Symbol());
     // A new editing intent supersedes checks of the previous field, even if
     // this edit is held as a draft instead of changing the accepted document.
     this.replaceChecks(Object.fromEntries(Object.entries(this.checks()).filter(([, check]) => check.id !== id)));
