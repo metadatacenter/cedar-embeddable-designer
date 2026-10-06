@@ -58,7 +58,18 @@ export class FieldCardComponent {
   readonly service = inject(TemplateService);
 
   readonly FIELD_TYPES_LIST = FIELD_TYPES;
-  readonly displayName = fieldDisplayName;
+
+  /** The name the header shows: the parent's display name, or the field's own where it has no parent. */
+  get shownName(): string {
+    return this.service.fieldDocumentMode() ? this.field.name : fieldDisplayName(this.field);
+  }
+
+  /** A field designed on its own has no placement, so its header edits its definition. */
+  get headerLocked(): boolean {
+    return this.service.fieldDocumentMode()
+      ? this.service.definitionLocked(this.field.id) || !!this.field.publishedDefinition
+      : this.service.placementLocked(this.field.id);
+  }
 
   updateDisplayName(value: string): void {
     this.service.updateFieldDisplayName(this.field.id, value);

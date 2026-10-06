@@ -38,6 +38,19 @@ import { openSettings, applyPreset, openDesigner } from './support';
 const DESIGNER = 'cedar-embeddable-designer';
 
 /**
+ * Mint identifiers in sequence, so a shot that shows one, such as a property IRI in Configuration,
+ * shows the same one on every run. Random glyphs would otherwise change the pixels, and their
+ * widths can wrap the IRI onto another line and change the height of the whole card.
+ */
+const sequentialIdentifiers = (page: Page) =>
+  page.addInitScript(() => {
+    let sequence = 0;
+    Object.defineProperty(crypto, 'randomUUID', {
+      value: () => `00000000-0000-4000-8000-${String(++sequence).padStart(12, '0')}`,
+    });
+  });
+
+/**
  * Field types that share a question, so one photograph answers it for all of them.
  *
  * The groups are the capability axis the descriptor already draws: what the type
@@ -126,8 +139,8 @@ test.describe('the designer', () => {
 
   /**
    * The three profiles on one template, which is the only way to see what a preset
-   * actually changes. Basic hides help text and default value; the other two show
-   * them, and Modular adds elements.
+   * actually changes. Basic hides the default value and controlled terms; the other
+   * two show them, and Modular adds elements.
    */
   for (const preset of ['basic', 'semantic', 'modular'] as const) {
     test(`shows a text field under the ${preset} profile`, async ({ page }) => {
@@ -156,14 +169,7 @@ test.describe('the designer', () => {
    * and the only shot where the settings panels are visible at all.
    */
   test('shows a text field with metadata settings expanded', async ({ page }) => {
-    // Masking metadata hides pixels, but random UUID glyph widths can still wrap
-    // its IRI onto another line and change the height of the whole card.
-    await page.addInitScript(() => {
-      let sequence = 0;
-      Object.defineProperty(crypto, 'randomUUID', {
-        value: () => `00000000-0000-4000-8000-${String(++sequence).padStart(12, '0')}`,
-      });
-    });
+    await sequentialIdentifiers(page);
     const designer = await designerShowing(page, ['Text']);
     const card = designer.locator('[id^=field-card-]').first();
     await openSettings(card, 'Field metadata');
@@ -181,6 +187,7 @@ test.describe('the designer', () => {
    */
   for (const width of [1280, 375]) {
     test(`shows a text field's Configuration tab at ${width}`, async ({ page }) => {
+      await sequentialIdentifiers(page);
       await page.setViewportSize({ width, height: 1000 });
       const designer = await designerShowing(page, ['Text']);
       const card = designer.locator('[id^=field-card-]').first();
@@ -205,13 +212,14 @@ test.describe('the designer', () => {
   });
   for (const width of [1280, 375]) {
     test(`shows inline elements expanded and collapsed at ${width}`, async ({ page }) => {
+      await sequentialIdentifiers(page);
       await page.setViewportSize({ width, height: 1000 });
       const designer = await openDesigner(page);
       await applyPreset(page, 'modular');
       await addElementFixture(page, designer);
       const element = designer.locator('app-container-editor').nth(1);
       await element.getByPlaceholder('Enter element name').fill('Study details');
-      await nestFixtureFields(page, ['element']);
+      await nestFixtureFields(page, ['Element']);
       await expect(element.locator('app-field-card')).toHaveCount(1);
       await page.mouse.move(0, 0);
       await expect(element).toHaveScreenshot(`element-expanded-${width}.png`, SHOT);
@@ -262,7 +270,7 @@ test('element deletion confirmation uses the shared dialog actions', async ({ pa
   const designer = await openDesigner(page);
   await applyPreset(page, 'modular');
   await addElementFixture(page);
-  await nestFixtureFields(page, ['element']);
+  await nestFixtureFields(page, ['Element']);
   await designer.getByRole('button', { name: 'Delete element Element', exact: true }).click();
   const dialog = designer.getByRole('dialog', { name: 'Delete element?' });
   await expect(dialog.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();

@@ -12,7 +12,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { CedLanguageService } from '../../i18n/ced-language.service';
 import { SETTINGS_TABS, settingsTabKey } from '../../shared/settings-tabs';
 import { ElementNode, ElementPlacement } from '../../core/model/container-draft';
-import { elementDisplayName } from '../../core/model/field-display-name';
+import { elementDisplayDescription, elementDisplayName } from '../../core/model/field-display-name';
 import { containerArtifactMetadata } from '../../core/model/cedar-template';
 import { TemplateService } from '../../core/services/template.service';
 
@@ -70,6 +70,11 @@ export class ElementCardComponent {
     SETTINGS_TABS.elementMetadata,
   ];
   readonly artifact = computed(() => containerArtifactMetadata(this.node().definition));
+  /** Whether the element's own definition is locked: it is published, or inside a published element. */
+  readonly definitionLocked = computed(() => this.service.definitionLocked(this.node().id));
+  /** Whether its placement in the parent is locked: it is inside a published element. */
+  readonly placementLocked = computed(() => this.service.placementLocked(this.node().id));
+  readonly shownDescription = computed(() => elementDisplayDescription(this.node()));
   readonly publicationStatus = computed(() => publicationStatusLabel(this.artifact().publicationStatus));
   tabId(tab: string): string {
     return 'element-settings-' + this.node().id + '-' + tab.replaceAll(' ', '-');
@@ -115,7 +120,7 @@ export class ElementCardComponent {
       this.node().id,
       { propertyIri: iri },
       'propertyIri',
-      SETTINGS_TABS.elementMetadata,
+      SETTINGS_TABS.configuration,
     );
   }
   saveKey(value: string): void {
@@ -152,14 +157,6 @@ export class ElementCardComponent {
       { allowMultiple: draft.allowMultiple, minItems: draft.minItems, maxItems: draft.maxItems },
       'placement',
       tab,
-    );
-  }
-  applyDisplay(): void {
-    this.service.updateElementPlacement(
-      this.node().id,
-      { displayDescription: this.draft().displayDescription },
-      'display',
-      SETTINGS_TABS.display,
     );
   }
 }

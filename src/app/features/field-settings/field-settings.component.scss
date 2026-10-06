@@ -223,6 +223,19 @@ button:focus-visible {
 .configuration-fields {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
+// A panel whose controls a lock disables together, with none of a fieldset's own box.
+.panel-scope {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.configuration-property {
+  min-width: 0;
+}
+.configuration-flags .configuration-requirement {
+  width: auto;
+}
 .configuration-bounds {
   display: flex;
   flex-direction: column;
@@ -239,6 +252,7 @@ button:focus-visible {
 .configuration-flags {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--cedar-space-1) var(--cedar-space-4);
 }
 @container (max-width: 400px) {

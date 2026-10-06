@@ -1,6 +1,6 @@
 import { invalidSettingsInputs } from '../../shared/settings-input';
 import { publicationStatusLabel } from '../../shared/publication-status';
-import { fieldDisplayName } from '../../core/model/field-display-name';
+import { fieldDisplayDescription, fieldDisplayName } from '../../core/model/field-display-name';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 import { AlternateQuestionsComponent } from '../alternate-questions/alternate-questions.component';
@@ -115,9 +115,23 @@ export class FieldSettingsComponent implements OnChanges {
   }
   deploymentName = '';
   schemaIdentifier = '';
-  displayDescription = '';
   hidden = false;
   continuePreviousLine = false;
+  /** Whether the field's own definition is locked: it is published, or inside a published element. */
+  get definitionLocked(): boolean {
+    return this.service.definitionLocked(this.field.id);
+  }
+  /** Whether its placement in the parent is locked: it is inside a published element. */
+  get placementLocked(): boolean {
+    return this.service.placementLocked(this.field.id);
+  }
+  /** The name and description the parent shows the field by, which its header shares. */
+  get shownName(): string {
+    return fieldDisplayName(this.field);
+  }
+  get shownDescription(): string {
+    return fieldDisplayDescription(this.field);
+  }
   get dynamic(): boolean {
     return descriptorOf(this.field.type).deployment !== 'static';
   }
@@ -254,7 +268,6 @@ export class FieldSettingsComponent implements OnChanges {
       editing.deploymentName ?? this.service.childKey(editing.id),
     );
     this.schemaIdentifier = take('schemaIdentifier', this.schemaIdentifier, editing.schemaIdentifier ?? '');
-    this.displayDescription = take('displayDescription', this.displayDescription, editing.displayDescription ?? '');
     this.hidden = take('hidden', this.hidden, editing.hidden ?? false);
     this.continuePreviousLine = take(
       'continuePreviousLine',
@@ -340,14 +353,8 @@ export class FieldSettingsComponent implements OnChanges {
       textConstraints: { ...this.text, regex: this.accepts('textPattern') ? this.text.regex || null : null },
     });
   }
-  displayName(): string {
-    return fieldDisplayName(this.field);
-  }
   rename(value: string): void {
     this.service.updateFieldDisplayName(this.field.id, value);
-  }
-  saveDisplay(): void {
-    this.service.updateFieldSettings(this.field.id, { displayDescription: this.displayDescription || undefined });
   }
   saveLayout(): void {
     this.service.updateFieldSettings(this.field.id, {

@@ -139,13 +139,16 @@ for (const width of [1280, 375])
     await page.screenshot({ path: `/tmp/ced-child-dialog-${width}.png` });
     await designer.getByRole('button', { name: 'Done', exact: true }).click();
     await expect(designer.getByRole('dialog')).toHaveCount(0);
+    // Each takes its name as its key. A Title is there already, so that key is reported at once and the
+    // imported field waits under a usable one until the author chooses.
     expect(fieldOrder(await currentTemplate(page))).toEqual([
       'Title',
       'Category',
       'Publication Date',
-      'section',
-      'title',
+      'Section',
+      'Title_2',
     ]);
+    await expect(designer.locator('.validation-summary')).toContainText('already uses that key');
   });
 
 test('creates an editable element at the insertion position and adds a nested field', async ({ page }) => {
@@ -159,7 +162,7 @@ test('creates an editable element at the insertion position and adds a nested fi
   await expect(name).toBeFocused();
   await expect(name).toHaveValue('');
   await name.fill('Element');
-  expect(fieldOrder(await currentTemplate(page))[0]).toBe('element');
+  expect(fieldOrder(await currentTemplate(page))[0]).toBe('Element');
   await page.mouse.move(0, 0);
   await expect
     .poll(() =>
@@ -174,7 +177,7 @@ test('creates an editable element at the insertion position and adds a nested fi
   await nested.getByRole('button', { name: 'Add field', exact: true }).click();
   await nested.getByRole('button', { name: 'Text', exact: true }).click();
   const document = await currentTemplate(page);
-  expect(fieldOrder((document['properties'] as CedJsonObject)['element'] as CedJsonObject)).toHaveLength(1);
+  expect(fieldOrder((document['properties'] as CedJsonObject)['Element'] as CedJsonObject)).toHaveLength(1);
   await nested.getByRole('button', { name: 'Delete field', exact: true }).click();
   await expect(nested.locator('.element-toggle')).toHaveCount(0);
   await nested.getByRole('button', { name: 'Add field', exact: true }).click();

@@ -1,5 +1,8 @@
 <!-- Template Header Card -->
 <div class="template-header-card" [class.nested-header]="!!placementNode()" (focusin)="activate()">
+  @if (placementNode() && published()) {
+    <p role="status" class="published-warning">{{ 'containerEditor.published' | translate }}</p>
+  }
   @if (placementNode() && service.visibleIssuesFor(container().id).length; as count) {
     <span class="validation-badge">{{ 'common.errorBadge' | countKey: count | translate: { count: count } }}</span>
   }
@@ -45,6 +48,7 @@
             "
             [ngModel]="shownName()"
             (ngModelChange)="rename($event)"
+            [disabled]="placementLocked()"
             class="template-input template-input--name"
             [placeholder]="
               (container().kind === 'element'
@@ -67,6 +71,7 @@
               type="text"
               [ngModel]="container().version"
               (ngModelChange)="update({ version: $event })"
+              [disabled]="definitionLocked()"
               class="template-input template-input--fact"
               [attr.aria-label]="'containerEditor.version' | translate"
               [placeholder]="'common.notSpecified' | translate"
@@ -103,6 +108,7 @@
               <button
                 type="button"
                 class="element-delete"
+                [disabled]="placementLocked()"
                 [attr.aria-label]="'containerEditor.deleteNamed' | translate: { name: container().name }"
                 [title]="'containerEditor.delete' | translate"
                 (click)="container().children.length ? deleteDialog.showModal() : service.deleteChild(container().id)"
@@ -131,8 +137,9 @@
           spellcheck="false"
           autocomplete="off"
           rows="1"
-          [ngModel]="container().description"
-          (ngModelChange)="update({ description: $event })"
+          [ngModel]="shownDescription()"
+          (ngModelChange)="describe($event)"
+          [disabled]="placementLocked()"
           class="template-input template-input--description"
           [placeholder]="'containerEditor.descriptionPlaceholder' | translate"
         ></textarea>
@@ -168,11 +175,16 @@
   [id]="'element-content-' + container().id"
 >
   <!-- Fields Drop List -->
-  <div cdkDropList (cdkDropListDropped)="onDrop($event)" class="fields-drop-list">
+  <div
+    cdkDropList
+    [cdkDropListDisabled]="definitionLocked()"
+    (cdkDropListDropped)="onDrop($event)"
+    class="fields-drop-list"
+  >
     @for (node of container().children; track node.id; let idx = $index) {
       <div class="field-drop-item" [id]="'field-card-' + node.id">
         <!-- Insert Zone (modal style) -->
-        @if (service.preferences().fieldSelectionStyle === 'modal') {
+        @if (service.preferences().fieldSelectionStyle === 'modal' && !definitionLocked()) {
           <div
             class="insert-zone"
             [class.dismissed]="dismissedInsertion() === node.id"
@@ -196,7 +208,7 @@
         <div
           cdkDrag
           [cdkDragData]="node.id"
-          [cdkDragDisabled]="node.kind === 'field' && !!node.definition.publishedDefinition"
+          [cdkDragDisabled]="service.placementLocked(node.id)"
           (click)="selectCard($event, node.id)"
           (focus)="activate(); service.selectedField.set(node.id)"
           tabindex="0"
@@ -221,7 +233,7 @@
   </div>
 
   <!-- Bottom insertion zone (modal style) -->
-  @if (service.preferences().fieldSelectionStyle === 'modal') {
+  @if (service.preferences().fieldSelectionStyle === 'modal' && !definitionLocked()) {
     <div class="add-field-section">
       <div
         class="bottom-insert-zone"

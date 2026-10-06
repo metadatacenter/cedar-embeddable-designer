@@ -26,23 +26,29 @@
       [attr.aria-labelledby]="'field-tab-' + field.id + '-Configuration'"
     >
       <form #configurationForm (ngSubmit)="saveBounds(configurationForm)" class="configuration">
-        <fieldset [disabled]="!!field.publishedDefinition" class="configuration-scope">
+        <fieldset [disabled]="placementLocked" class="configuration-scope">
           <div class="settings-fields configuration-fields">
-            @if (offersRequirement) {
-              <label
-                >{{ 'fieldCard.requirement' | translate
-                }}<select
-                  name="requirement"
-                  [attr.aria-label]="'fieldCard.requirement' | translate"
-                  [ngModel]="field.status"
-                  (ngModelChange)="service.updateFieldStatus(field.id, $event)"
-                >
-                  <option value="optional">{{ 'fieldCard.optional' | translate }}</option>
-                  <option value="recommended">{{ 'fieldCard.recommended' | translate }}</option>
-                  <option value="required">{{ 'fieldCard.required' | translate }}</option>
-                </select></label
-              >
-            }
+            <label data-setting="display"
+              >{{ 'settings.shownName' | translate
+              }}<input
+                spellcheck="false"
+                autocomplete="off"
+                name="shownName"
+                [ngModel]="shownName"
+                (ngModelChange)="rename($event)"
+                (blur)="service.touchName(field.id)"
+                [placeholder]="'fieldSettings.display.labelPlaceholder' | translate"
+            /></label>
+            <label
+              >{{ 'settings.shownDescription' | translate
+              }}<input
+                spellcheck="false"
+                autocomplete="off"
+                name="shownDescription"
+                [ngModel]="shownDescription"
+                (ngModelChange)="service.updateFieldDisplayDescription(field.id, $event)"
+                [placeholder]="'fieldSettings.display.descriptionPlaceholder' | translate"
+            /></label>
             <label data-setting="key"
               >{{ 'settings.key' | translate
               }}<input
@@ -54,19 +60,19 @@
                 [(ngModel)]="deploymentName"
                 (ngModelChange)="saveKey()"
             /></label>
-            <label
-              >{{ 'settings.displayDescription' | translate
-              }}<input
-                spellcheck="false"
-                autocomplete="off"
-                name="displayDescription"
-                [(ngModel)]="displayDescription"
-                (ngModelChange)="saveDisplay()"
-                [placeholder]="'fieldSettings.display.descriptionPlaceholder' | translate"
-            /></label>
           </div>
           @if (keyError) {
             <p role="alert" class="ced-field-error" [id]="'field-key-error-' + field.id">{{ keyError }}</p>
+          }
+          @if (dynamic) {
+            <div class="configuration-property" data-setting="propertyIri">
+              <span class="default-label">{{ 'settings.propertyIri' | translate }}</span>
+              <app-property-picker
+                [iri]="field.propertyIri"
+                [disabled]="placementLocked"
+                (propertySelected)="saveProperty($event)"
+              />
+            </div>
           }
           @if (offersAllowMultiple || offersBounds) {
             <fieldset [attr.aria-invalid]="!!error" class="configuration-bounds">
@@ -116,6 +122,19 @@
             </fieldset>
           }
           <div class="configuration-flags" data-setting="layout">
+            @if (offersRequirement) {
+              <select
+                name="requirement"
+                class="configuration-requirement"
+                [attr.aria-label]="'fieldCard.requirement' | translate"
+                [ngModel]="field.status"
+                (ngModelChange)="service.updateFieldStatus(field.id, $event)"
+              >
+                <option value="optional">{{ 'fieldCard.optional' | translate }}</option>
+                <option value="recommended">{{ 'fieldCard.recommended' | translate }}</option>
+                <option value="required">{{ 'fieldCard.required' | translate }}</option>
+              </select>
+            }
             <label class="check"
               ><input
                 spellcheck="false"
@@ -166,7 +185,7 @@
           <form #textForm (ngSubmit)="saveText(textForm)" class="row">
             <fieldset
               [attr.aria-invalid]="!!error"
-              [disabled]="!!field.publishedDefinition"
+              [disabled]="definitionLocked"
               class="settings-fields constraint-fields"
             >
               <label
@@ -218,7 +237,7 @@
           <form #numericForm (ngSubmit)="saveNumeric(numericForm)" class="row">
             <fieldset
               [attr.aria-invalid]="!!error"
-              [disabled]="!!field.publishedDefinition"
+              [disabled]="definitionLocked"
               class="settings-fields numeric-constraint-fields"
             >
               <label
@@ -294,7 +313,7 @@
       @if (accepts('temporalPrecision')) {
         <div class="settings">
           <form (ngSubmit)="saveTemporal()" class="row">
-            <fieldset [attr.aria-invalid]="!!error" [disabled]="!!field.publishedDefinition" class="settings-fields">
+            <fieldset [attr.aria-invalid]="!!error" [disabled]="definitionLocked" class="settings-fields">
               <label
                 >{{ 'fieldSettings.temporal.type' | translate
                 }}<select
@@ -364,7 +383,7 @@
       @if (accepts('mediaDimensions')) {
         <div class="settings">
           <form #mediaForm (ngSubmit)="saveMedia(mediaForm)" class="row">
-            <fieldset [attr.aria-invalid]="!!error" [disabled]="!!field.publishedDefinition" class="settings-fields">
+            <fieldset [attr.aria-invalid]="!!error" [disabled]="definitionLocked" class="settings-fields">
               <label
                 >{{ 'fieldSettings.media.width' | translate
                 }}<input
@@ -407,20 +426,17 @@
     [id]="'field-panel-' + field.id + '-Display'"
     [attr.aria-labelledby]="'field-tab-' + field.id + '-Display'"
   >
-    <form (ngSubmit)="saveDisplay()" class="row" [hidden]="service.fieldDocumentMode()">
-      <fieldset
-        [attr.aria-invalid]="!!error"
-        [disabled]="!!field.publishedDefinition"
-        class="settings-fields display-fields"
-      >
+    <form class="row">
+      <fieldset [disabled]="definitionLocked" class="settings-fields display-fields">
         <label
           >{{ 'settings.displayLabel' | translate
           }}<input
             spellcheck="false"
             autocomplete="off"
-            name="displayLabel"
-            [ngModel]="displayName()"
-            (ngModelChange)="rename($event)"
+            name="name"
+            [ngModel]="field.name"
+            (ngModelChange)="service.updateOwnFieldName(field.id, $event)"
+            (blur)="service.touchName(field.id)"
             [placeholder]="'fieldSettings.display.labelPlaceholder' | translate"
         /></label>
         <label
@@ -428,29 +444,15 @@
           }}<input
             spellcheck="false"
             autocomplete="off"
-            name="displayDescription"
-            [(ngModel)]="displayDescription"
-            (ngModelChange)="saveDisplay()"
+            name="helpText"
+            [ngModel]="field.helpText || ''"
+            (ngModelChange)="service.updateHelpText(field.id, $event)"
             [placeholder]="'fieldSettings.display.descriptionPlaceholder' | translate"
         /></label>
       </fieldset>
     </form>
     @if (error) {
       <p role="alert">{{ error }}</p>
-    }
-    @if (service.preferences().showHelpText) {
-      <label class="preferred-label"
-        >{{ 'fieldSettings.display.helpText' | translate }}
-        <input
-          spellcheck="false"
-          autocomplete="off"
-          type="text"
-          [ngModel]="field.helpText || ''"
-          (ngModelChange)="service.updateHelpText(field.id, $event)"
-          [disabled]="!!field.publishedDefinition"
-          [placeholder]="'fieldSettings.display.helpTextPlaceholder' | translate"
-        />
-      </label>
     }
     <app-language-selector [field]="field" />
     @if (dynamic) {
@@ -501,22 +503,9 @@
           name="schemaIdentifier"
           [(ngModel)]="schemaIdentifier"
           (ngModelChange)="saveIdentifier()"
-          [disabled]="!!field.publishedDefinition"
+          [disabled]="definitionLocked"
         />
       </dd>
-      @if (dynamic && !service.fieldDocumentMode()) {
-        <dt class="editable first-line">{{ 'settings.propertyIri' | translate }}</dt>
-        <dd>
-          <app-property-picker
-            [iri]="field.propertyIri"
-            [disabled]="!!field.publishedDefinition"
-            (propertySelected)="saveProperty($event)"
-          />
-          @if (error) {
-            <p role="alert" class="ced-field-error">{{ error }}</p>
-          }
-        </dd>
-      }
     </dl>
   </section>
 </div>

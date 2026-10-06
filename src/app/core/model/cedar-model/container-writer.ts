@@ -126,6 +126,9 @@ function buildContainerArtifact(
   if (state.metadata) {
     const metadata = state.metadata;
     applyArtifactMetadata(template, metadata.artifact);
+    // The model library reads a title as the name gives it, so a renamed artifact's stored title
+    // would come back changed. Write the one its name gives now.
+    template.title = derivedTitle(state.name, kind);
     // Preserve an absent imported version until the author actually changes it.
     if (state.version !== (metadata.artifact.version ?? '')) {
       template.pav_version = PavVersion.forValue(state.version);

@@ -83,7 +83,7 @@ for (const width of [1280, 375]) {
 
     await applyPreset(page, 'modular');
     await addElementFixture(page, root);
-    await nestFixtureFields(page, ['element']);
+    await nestFixtureFields(page, ['Element']);
     const element = root.locator('.template-header-card').nth(1);
     const elementBody = element.locator('.template-header-card__body');
     const elementToggle = element.getByRole('button', { name: /element settings/ });

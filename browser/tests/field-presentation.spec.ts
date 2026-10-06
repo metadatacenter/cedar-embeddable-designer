@@ -26,9 +26,13 @@ for (const width of [1440, 768, 375]) {
     await expect(card.getByRole('tab')).toHaveCount(0);
     await openSettings(card, 'Display');
     await expect(metadata.getByLabel('Name', { exact: true })).toHaveValue('Live label');
-    // One name in two places: the header follows the Display tab as it is typed.
+    // A draft's own name is the name its parent shows it by, so the header follows the Display tab as it
+    // is typed, and the key stays where it was.
     await expect(card.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue('Live label');
-    expect(((await currentTemplate(page)).properties as any).Title['skos:prefLabel']).toBe('Live label');
+    const saved = await currentTemplate(page);
+    expect((saved.properties as any).Title['schema:name']).toBe('Live label');
+    expect((saved._ui as any).propertyLabels.Title).toBe('Live label');
+    expect((saved.properties as any).Title['skos:prefLabel']).toBeUndefined();
     expect((await currentTemplate(page))['@id']).toEqual(before['@id']);
     const tab = card.getByRole('tab', { name: 'Display', exact: true });
     await tab.focus();

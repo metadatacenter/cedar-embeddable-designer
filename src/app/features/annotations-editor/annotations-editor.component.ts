@@ -29,8 +29,12 @@ export class AnnotationsEditorComponent {
     const id = (this.field() ?? this.container())?.id;
     return id === undefined ? null : this.service.settingError(id, 'annotations');
   });
-  readonly disabled = computed(() => !!this.field()?.publishedDefinition);
   private readonly service = inject(TemplateService);
+  /** Whether the artifact's own definition is locked: it is published, or inside a published element. */
+  readonly disabled = computed(() => {
+    const id = this.field()?.id ?? this.container()?.id;
+    return !!this.field()?.publishedDefinition || (id !== undefined && this.service.definitionLocked(id));
+  });
   private loaded = '';
   private loadedOwner: number | undefined;
 

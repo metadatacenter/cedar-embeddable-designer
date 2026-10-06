@@ -103,12 +103,13 @@ describe('the Configuration tab', () => {
     expect(fixture.componentInstance.tabs[0]).toBe('Configuration');
     expect(fixture.componentInstance.selectedTab).toBe('Configuration');
     const names = [
-      'requirement',
+      'shownName',
+      'shownDescription',
       'deploymentName',
-      'displayDescription',
       'allowMultiple',
       'min',
       'max',
+      'requirement',
       'hidden',
       'continue',
     ];
@@ -126,15 +127,17 @@ describe('the Configuration tab', () => {
     expect(control(fixture, 'min')!.disabled).toBe(false);
     expect(control(fixture, 'max')!.disabled).toBe(false);
     const display = fixture.nativeElement.querySelector('[role="tabpanel"][id$="-Display"]') as HTMLElement;
-    expect(display.querySelector('[name="hidden"], [name="continue"]')).toBeNull();
+    expect(display.querySelector('[name="hidden"], [name="continue"], [name="shownName"]')).toBeNull();
+    expect(display.querySelector('[name="name"]')).not.toBeNull();
     const metadata = fixture.nativeElement.querySelector('[role="tabpanel"][id$="-Field-metadata"]') as HTMLElement;
-    expect(metadata.querySelector('[name="deploymentName"]')).toBeNull();
+    expect(metadata.querySelector('[name="deploymentName"], app-property-picker')).toBeNull();
   });
 
-  it('offers a static field only its key, description and Hidden', () => {
+  it('offers a static field only its display name and description, key and Hidden', () => {
     const { fixture } = create('richText');
+    expect(control(fixture, 'shownName')).not.toBeNull();
     expect(control(fixture, 'deploymentName')).not.toBeNull();
-    expect(control(fixture, 'displayDescription')).not.toBeNull();
+    expect(control(fixture, 'shownDescription')).not.toBeNull();
     expect(control(fixture, 'hidden')).not.toBeNull();
     for (const name of ['requirement', 'allowMultiple', 'min', 'max', 'continue'])
       expect(control(fixture, name), name).toBeNull();
@@ -169,23 +172,29 @@ describe('the Configuration tab', () => {
   });
 });
 
-it('edits one description from Configuration and from Display', async () => {
+it('edits one description from Configuration and from Display while the field is a draft', async () => {
   localStorage.clear();
   const service = TestBed.inject(TemplateService);
   service.templateName.set('Study');
   const fixture = TestBed.createComponent(FieldSettingsComponent);
-  fixture.componentRef.setInput('field', service.fields()[0]);
-  fixture.detectChanges();
-  await fixture.whenStable();
-  const input = (tab: string) =>
-    fixture.nativeElement.querySelector(
-      `[role="tabpanel"][id$="-${tab}"] input[name="displayDescription"]`,
-    ) as HTMLInputElement;
-  input('Configuration').value = 'Shown help';
-  input('Configuration').dispatchEvent(new Event('input'));
-  fixture.componentRef.setInput('field', service.fields()[0]);
-  fixture.detectChanges();
-  await fixture.whenStable();
-  expect(service.fields()[0].displayDescription).toBe('Shown help');
-  expect(input('Display').value).toBe('Shown help');
+  const render = async () => {
+    fixture.componentRef.setInput('field', service.fields()[0]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+  };
+  await render();
+  const input = (tab: string, name: string) =>
+    fixture.nativeElement.querySelector(`[role="tabpanel"][id$="-${tab}"] input[name="${name}"]`) as HTMLInputElement;
+  const type = async (control: HTMLInputElement, value: string) => {
+    control.value = value;
+    control.dispatchEvent(new Event('input'));
+    await render();
+  };
+  await type(input('Configuration', 'shownDescription'), 'Shown help');
+  expect(service.fields()[0].helpText).toBe('Shown help');
+  expect(input('Display', 'helpText').value).toBe('Shown help');
+  await type(input('Display', 'helpText'), 'Own help');
+  expect(input('Configuration', 'shownDescription').value).toBe('Own help');
+  await type(input('Display', 'name'), 'Study title');
+  expect(input('Configuration', 'shownName').value).toBe('Study title');
 });

@@ -30,8 +30,27 @@
       >
         @switch (tab) {
           @case ('Configuration') {
-            <div class="configuration-scope">
+            <fieldset class="configuration-scope" [disabled]="placementLocked()">
               <div class="settings-fields configuration-fields">
+                <label data-setting="display"
+                  >{{ 'settings.shownName' | translate }}
+                  <input
+                    spellcheck="false"
+                    autocomplete="off"
+                    name="shownName"
+                    [ngModel]="displayName()"
+                    (ngModelChange)="rename($event)"
+                    (blur)="service.touchName(node().id)"
+                /></label>
+                <label
+                  >{{ 'settings.shownDescription' | translate }}
+                  <input
+                    spellcheck="false"
+                    autocomplete="off"
+                    name="shownDescription"
+                    [ngModel]="shownDescription()"
+                    (ngModelChange)="service.updateElementDisplayDescription(node(), $event)"
+                /></label>
                 <label data-setting="key"
                   >{{ 'settings.key' | translate }}
                   <input
@@ -43,19 +62,18 @@
                     [attr.aria-invalid]="!!keyError()"
                     [attr.aria-describedby]="keyError() ? 'element-key-error-' + node().id : null"
                 /></label>
-                <label
-                  >{{ 'settings.displayDescription' | translate }}
-                  <input
-                    spellcheck="false"
-                    autocomplete="off"
-                    name="displayDescription"
-                    [(ngModel)]="draft().displayDescription"
-                    (ngModelChange)="applyDisplay()"
-                /></label>
               </div>
               @if (keyError()) {
                 <p role="alert" class="ced-field-error" [id]="'element-key-error-' + node().id">{{ keyError() }}</p>
               }
+              <div class="configuration-property" data-setting="propertyIri">
+                <span class="default-label">{{ 'settings.propertyIri' | translate }}</span>
+                <app-property-picker
+                  [iri]="node().placement.propertyIri"
+                  [disabled]="placementLocked()"
+                  (propertySelected)="saveProperty($event)"
+                />
+              </div>
               <div class="configuration-bounds">
                 <label class="check"
                   ><input
@@ -98,80 +116,88 @@
                   /></label>
                 </div>
               </div>
-            </div>
+            </fieldset>
           }
           @case ('Annotations') {
-            <app-annotations-editor [container]="node().definition" />
+            <fieldset class="panel-scope" [disabled]="definitionLocked()">
+              <app-annotations-editor [container]="node().definition" />
+            </fieldset>
           }
           @case ('Element metadata') {
-            <dl class="identity">
-              <dt>{{ 'elementCard.elementIri' | translate }}</dt>
-              <dd>{{ node().definition.identifier || ('settings.notYetAssigned' | translate) }}</dd>
-              @if (node().definition.version) {
-                <dt>{{ 'settings.version' | translate }}</dt>
-                <dd>{{ node().definition.version }}</dd>
-              }
-              @if (publicationStatus()) {
-                <dt>{{ 'common.publicationStatus' | translate }}</dt>
-                <dd>{{ publicationStatus() | translate }}</dd>
-              }
-              <dt>{{ 'settings.modelVersion' | translate }}</dt>
-              <dd>{{ artifact().schemaVersion || ('common.notSpecified' | translate) }}</dd>
-              <dt>{{ 'settings.created' | translate }}</dt>
-              <dd>{{ artifact().createdOn || ('settings.notYetRecorded' | translate) }}</dd>
-              <dt>{{ 'settings.modified' | translate }}</dt>
-              <dd>{{ artifact().modifiedOn || ('settings.notYetRecorded' | translate) }}</dd>
-              @if (artifact().derivedFrom) {
-                <dt>{{ 'settings.derivedFrom' | translate }}</dt>
-                <dd>{{ artifact().derivedFrom }}</dd>
-              }
-              @if (artifact().previousVersion) {
-                <dt>{{ 'settings.previousVersion' | translate }}</dt>
-                <dd>{{ artifact().previousVersion }}</dd>
-              }
-              <dt class="editable">
-                <label [for]="'element-identifier-' + node().id">{{ 'containerEditor.identifier' | translate }}</label>
-              </dt>
-              <dd>
-                <input
-                  spellcheck="false"
-                  autocomplete="off"
-                  [id]="'element-identifier-' + node().id"
-                  name="schemaIdentifier"
-                  [ngModel]="node().definition.schemaIdentifier"
-                  (ngModelChange)="
-                    service.updateContainerDefinition(node().definition.id, { schemaIdentifier: $event })
-                  "
-                />
-              </dd>
-              <dt class="editable first-line">{{ 'settings.propertyIri' | translate }}</dt>
-              <dd>
-                <app-property-picker [iri]="node().placement.propertyIri" (propertySelected)="saveProperty($event)" />
-                @if (error()) {
-                  <p role="alert" class="ced-field-error">{{ error() }}</p>
+            <fieldset class="panel-scope" [disabled]="definitionLocked()">
+              <dl class="identity">
+                <dt>{{ 'elementCard.elementIri' | translate }}</dt>
+                <dd>{{ node().definition.identifier || ('settings.notYetAssigned' | translate) }}</dd>
+                @if (node().definition.version) {
+                  <dt>{{ 'settings.version' | translate }}</dt>
+                  <dd>{{ node().definition.version }}</dd>
                 }
-              </dd>
-              <dt class="editable first-line">{{ 'settings.types' | translate }}</dt>
-              <dd><app-types-picker [container]="node().definition" /></dd>
-            </dl>
+                @if (publicationStatus()) {
+                  <dt>{{ 'common.publicationStatus' | translate }}</dt>
+                  <dd>{{ publicationStatus() | translate }}</dd>
+                }
+                <dt>{{ 'settings.modelVersion' | translate }}</dt>
+                <dd>{{ artifact().schemaVersion || ('common.notSpecified' | translate) }}</dd>
+                <dt>{{ 'settings.created' | translate }}</dt>
+                <dd>{{ artifact().createdOn || ('settings.notYetRecorded' | translate) }}</dd>
+                <dt>{{ 'settings.modified' | translate }}</dt>
+                <dd>{{ artifact().modifiedOn || ('settings.notYetRecorded' | translate) }}</dd>
+                @if (artifact().derivedFrom) {
+                  <dt>{{ 'settings.derivedFrom' | translate }}</dt>
+                  <dd>{{ artifact().derivedFrom }}</dd>
+                }
+                @if (artifact().previousVersion) {
+                  <dt>{{ 'settings.previousVersion' | translate }}</dt>
+                  <dd>{{ artifact().previousVersion }}</dd>
+                }
+                <dt class="editable">
+                  <label [for]="'element-identifier-' + node().id">{{
+                    'containerEditor.identifier' | translate
+                  }}</label>
+                </dt>
+                <dd>
+                  <input
+                    spellcheck="false"
+                    autocomplete="off"
+                    [id]="'element-identifier-' + node().id"
+                    name="schemaIdentifier"
+                    [ngModel]="node().definition.schemaIdentifier"
+                    (ngModelChange)="
+                      service.updateContainerDefinition(node().definition.id, { schemaIdentifier: $event })
+                    "
+                  />
+                </dd>
+                <dt class="editable first-line">{{ 'settings.types' | translate }}</dt>
+                <dd><app-types-picker [container]="node().definition" /></dd>
+              </dl>
+            </fieldset>
           }
           @case ('Display') {
-            <div class="settings-fields display-fields">
-              <label
-                >{{ 'settings.displayLabel' | translate }}
-                <input spellcheck="false" autocomplete="off" [ngModel]="displayName()" (ngModelChange)="rename($event)"
-              /></label>
-              <label
-                >{{ 'settings.displayDescription' | translate }}
-                <input
-                  spellcheck="false"
-                  autocomplete="off"
-                  [(ngModel)]="draft().displayDescription"
-                  (ngModelChange)="applyDisplay()"
-              /></label>
-            </div>
-            <app-language-selector [container]="node().definition" />
-            <app-element-labels [container]="node().definition" />
+            <fieldset class="panel-scope" [disabled]="definitionLocked()">
+              <div class="settings-fields display-fields">
+                <label
+                  >{{ 'settings.displayLabel' | translate }}
+                  <input
+                    spellcheck="false"
+                    autocomplete="off"
+                    name="name"
+                    [ngModel]="node().definition.name"
+                    (ngModelChange)="service.updateOwnElementName(node(), $event)"
+                    (blur)="service.touchName(node().id)"
+                /></label>
+                <label
+                  >{{ 'settings.displayDescription' | translate }}
+                  <input
+                    spellcheck="false"
+                    autocomplete="off"
+                    name="description"
+                    [ngModel]="node().definition.description"
+                    (ngModelChange)="service.updateOwnElementDescription(node(), $event)"
+                /></label>
+              </div>
+              <app-language-selector [container]="node().definition" />
+              <app-element-labels [container]="node().definition" />
+            </fieldset>
           }
         }
       </div>

@@ -40,7 +40,7 @@ const scenarios: Record<string, (page: Page) => Promise<void>> = {
   },
   property: async (page) => {
     const d = await openDesigner(page, '?picker=stub');
-    const panel = await openSettings(d.locator('app-field-card').first(), 'Field metadata');
+    const panel = await openSettings(d.locator('app-field-card').first(), 'Configuration');
     await panel.getByRole('button', { name: 'Replace property IRI', exact: true }).click();
   },
   types: async (page) => {

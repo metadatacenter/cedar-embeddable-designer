@@ -23,6 +23,10 @@ const placementKeys = [
   'valueRecommendationEnabled',
 ] as const;
 type PlacementKey = (typeof placementKeys)[number];
+/** Whether a field property belongs to its placement in a parent rather than to its definition. */
+export function isPlacementKey(key: string): key is PlacementKey {
+  return (placementKeys as readonly string[]).includes(key);
+}
 export type Placement = Pick<Field, PlacementKey>;
 /**
  * An element's placement is what a parent can actually record about an element it holds: its

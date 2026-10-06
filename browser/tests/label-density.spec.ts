@@ -30,8 +30,9 @@ for (const width of [1280, 375]) {
     }, template);
     await applyPreset(page, 'semantic');
     const card = designer.locator('app-field-card').first();
-    await openSettings(card, 'Display');
-    const help = card.getByText('Help text', { exact: true });
+    const display = await openSettings(card, 'Display');
+    // The field's own description, which CEE shows as the field's help.
+    const help = display.getByText('Description', { exact: true });
     await expect(help).toBeVisible();
     await expect(help).toHaveCSS('text-transform', 'none');
     for (const label of [help, card.locator('app-language-selector label')]) {
@@ -94,9 +95,9 @@ for (const type of ['checkboxes', 'multipleChoice', 'singleChoiceList', 'multipl
     const addIcon = await card.getByRole('button', { name: 'Add option', exact: true }).locator('svg').boundingBox();
     expect(addIcon!.x).toBe(optionIcon!.x);
     expect(addIcon!.width).toBe(optionIcon!.width);
-    await expect(card.getByLabel('Help text', { exact: true })).toBeHidden();
+    const help = card.locator('[role="tabpanel"][id$="-Display"]').getByLabel('Description', { exact: true });
+    await expect(help).toBeHidden();
     await openSettings(card, 'Display');
-    const help = card.getByLabel('Help text', { exact: true });
     await expect(help).toHaveCount(1);
     await help.fill('Choose an option.');
     expect(child(await currentTemplate(page), 'Choices')['schema:description']).toBe('Choose an option.');

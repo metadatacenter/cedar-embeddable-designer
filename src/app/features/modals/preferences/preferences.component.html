@@ -70,19 +70,6 @@
               <input
                 spellcheck="false"
                 type="checkbox"
-                [ngModel]="service.preferences().showHelpText"
-                (ngModelChange)="updatePref('showHelpText', $event)"
-                class="settings-dialog-check checkbox-white"
-              />
-              <div class="flex-1">
-                <span class="preferences-label">{{ 'preferences.fieldOptions.helpText.label' | translate }}</span>
-                <p class="preferences-help">{{ 'preferences.fieldOptions.helpText.help' | translate }}</p>
-              </div>
-            </label>
-            <label class="preferences-option">
-              <input
-                spellcheck="false"
-                type="checkbox"
                 [ngModel]="service.preferences().showDefaultValue"
                 (ngModelChange)="updatePref('showDefaultValue', $event)"
                 class="settings-dialog-check checkbox-white"

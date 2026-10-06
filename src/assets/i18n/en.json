@@ -161,6 +161,7 @@
     "reorderRow": "Reorder {{name}}"
   },
   "containerEditor": {
+    "published": "This element is published, so only its configuration can change.",
     "dragElement": "Drag element to reorder",
     "elementLabel": "Element",
     "name": "Name",
@@ -317,7 +318,7 @@
       "nameReserved": "The destination reserves that property name. Rename the placement first."
     },
     "pageBreakPlacement": "Page breaks can only be placed in templates.",
-    "publishedReadOnly": "Published fields are read-only. Editing a draft version is not available yet.",
+    "publishedReadOnly": "This is part of a published artifact, so it cannot change.",
     "importDestinationMissing": "The import destination no longer exists.",
     "destinationMissing": "The destination no longer exists.",
     "chooseFieldOrElement": "Choose a field or element artifact.",
@@ -325,7 +326,7 @@
   },
   "fieldCard": {
     "displayName": "Field display name",
-    "published": "Published field — read-only. Editing a draft version is not available yet.",
+    "published": "This field is published, so only its configuration can change.",
     "namePlaceholder": "Enter field name",
     "occurrenceRange": "Occurrence range",
     "dragToReorder": "Drag to reorder",
@@ -398,9 +399,7 @@
       "labelPlaceholder": "Field name",
       "descriptionPlaceholder": "Field description",
       "hidden": "Hidden",
-      "continueLine": "Continue previous line",
-      "helpText": "Help text",
-      "helpTextPlaceholder": "Add helper instructions for users..."
+      "continueLine": "Continue previous line"
     },
     "metadata": {
       "fieldIri": "Field IRI"
@@ -594,10 +593,6 @@
         "label": "Show \"Allow multiple\" checkbox",
         "help": "Display multiple values toggle for fields"
       },
-      "helpText": {
-        "label": "Show \"Help text\" field",
-        "help": "Display help text input for fields"
-      },
       "defaultValue": {
         "label": "Show \"Default Value\" field",
         "help": "Display default value input for fields"
@@ -634,6 +629,8 @@
     "fieldTypes": "Available field types"
   },
   "settings": {
+    "shownName": "Display name",
+    "shownDescription": "Display description",
     "containsErrors": "Contains errors",
     "key": "Key",
     "version": "Version",

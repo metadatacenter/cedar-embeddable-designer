@@ -233,7 +233,7 @@ it('keys are unique across sibling fields and elements, independently of names a
   const [first, second] = service.fields();
   service.updateFieldName(second.id, first.name);
   expect(service.childKey(first.id)).toBe('Title');
-  expect(service.childKey(second.id)).toBe('Title_2');
+  expect(service.childKey(second.id)).toBe('Category');
   expect(service.updateFieldSettings(first.id, { deploymentName: 'subject', displayLabel: 'Label' })).toBeNull();
   expect(service.updateFieldSettings(second.id, { deploymentName: 'subject' })).toContain('already uses');
   expect(service.updateFieldSettings(second.id, { deploymentName: '   ' })).toBe('Key is required.');
@@ -256,17 +256,20 @@ it('keys are unique across sibling fields and elements, independently of names a
   expect(service.document().children.map((node) => node.placement.deploymentName)).toContain('subject');
 });
 
-it('generates lowercase sibling-unique keys for newly named fields and preserves explicit keys', () => {
+it('keys newly named fields by their names as written, reports a repeat at once and preserves explicit keys', () => {
   const service = TestBed.inject(TemplateService);
   const root = service.document().id;
   service.addField('text', 0, root);
   const first = service.document().children[0].id;
   service.updateFieldName(first, 'Sample Name');
-  expect(service.childKey(first)).toBe('sample_name');
+  expect(service.childKey(first)).toBe('Sample Name');
   service.addField('text', 1, root);
   const second = service.document().children[1].id;
   service.updateFieldName(second, 'Sample Name');
-  expect(service.childKey(second)).toBe('sample_name_2');
+  expect(service.validation.changes(second).deploymentName).toBe('Sample Name');
+  expect(service.validationReport().issues).toContainEqual(
+    expect.objectContaining({ nodeId: second, setting: 'key', shown: true }),
+  );
   expect(service.updateFieldSettings(first, { deploymentName: 'custom_key' })).toBeNull();
   service.updateFieldName(first, 'Renamed');
   expect(service.childKey(first)).toBe('custom_key');

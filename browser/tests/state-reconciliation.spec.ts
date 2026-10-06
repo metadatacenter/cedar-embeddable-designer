@@ -165,7 +165,7 @@ test('element selection agrees between outline, card and preview', async ({ page
             .path,
       ),
     )
-    .toEqual(['element']);
+    .toEqual(['Element']);
 });
 
 test('library rows use the same display names, unnamed labels and errors as the outline', async ({ page }) => {

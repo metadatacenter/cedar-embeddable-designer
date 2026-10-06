@@ -163,8 +163,18 @@ const CONTROLS: readonly Control[] = [
     expected: () => true,
   },
   {
-    name: 'configuration description',
-    find: (page) => disclosure(page, 'Configuration').locator('input[name="displayDescription"]'),
+    name: 'display name',
+    find: (page) => disclosure(page, 'Configuration').locator('input[name="shownName"]'),
+    expected: () => true,
+  },
+  {
+    name: 'display description',
+    find: (page) => disclosure(page, 'Configuration').locator('input[name="shownDescription"]'),
+    expected: () => true,
+  },
+  {
+    name: 'own name',
+    find: (page) => disclosure(page, 'Display').locator('input[name="name"]'),
     expected: () => true,
   },
   {
@@ -402,16 +412,24 @@ const LIFECYCLES: readonly Lifecycle[] = [
     paletteType: 'text',
     prepare: (page) => open(page, 'Configuration'),
     set: async (page) => setIn(page, 'Configuration', 'Key', 'subject'),
-    restore: async (page) => setIn(page, 'Configuration', 'Key', 'text'),
+    restore: async (page) => setIn(page, 'Configuration', 'Key', 'Text'),
     read: (template) => Object.keys(template['properties'] as object).includes('subject'),
     whenSet: true,
   },
+  // A draft's display name and description are its own as well, so either side writes both.
   {
-    control: 'configuration description',
+    control: 'display name',
     paletteType: 'text',
     prepare: (page) => open(page, 'Configuration'),
-    set: async (page) => setIn(page, 'Configuration', 'Description', 'Shown help'),
-    restore: async (page) => setIn(page, 'Configuration', 'Description', ''),
+    set: async (page) => setIn(page, 'Configuration', 'Display name', 'Shown'),
+    restore: async (page) => setIn(page, 'Configuration', 'Display name', 'Text'),
+  },
+  {
+    control: 'display description',
+    paletteType: 'text',
+    prepare: (page) => open(page, 'Configuration'),
+    set: async (page) => setIn(page, 'Configuration', 'Display description', 'Shown help'),
+    restore: async (page) => setIn(page, 'Configuration', 'Display description', ''),
   },
   {
     control: 'requirement',
@@ -419,7 +437,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
     prepare: (page) => open(page, 'Configuration'),
     set: async (page) => chooseIn(page, 'Configuration', 'Requirement', 'required'),
     restore: async (page) => chooseIn(page, 'Configuration', 'Requirement', 'optional'),
-    read: (template) => constraints(template, 'text')['requiredValue'],
+    read: (template) => constraints(template, 'Text')['requiredValue'],
     whenSet: true,
   },
   {
@@ -464,12 +482,12 @@ const LIFECYCLES: readonly Lifecycle[] = [
     restore: async (page) => tickIn(page, 'Configuration', 'Continue previous line', false),
   },
   {
-    control: 'help text',
+    control: 'own description',
     paletteType: 'text',
     prepare: (page) => open(page, 'Display'),
-    set: async (page) => putValue(card(page).getByLabel('Help text', { exact: true }), 'Some help'),
-    restore: async (page) => putValue(card(page).getByLabel('Help text', { exact: true }), ''),
-    read: (template) => property(template, 'text')['schema:description'],
+    set: async (page) => setIn(page, 'Display', 'Description', 'Some help'),
+    restore: async (page) => setIn(page, 'Display', 'Description', ''),
+    read: (template) => property(template, 'Text')['schema:description'],
     whenSet: 'Some help',
   },
 
@@ -523,19 +541,12 @@ const LIFECYCLES: readonly Lifecycle[] = [
 
   // ── Display ─────────────────────────────────────────────────────────────────
   {
-    // The Display tab edits the name the card's header shows, so this mirrors the header's row.
-    control: 'display name',
+    // The Display tab edits the field's own name; a draft's display name follows it.
+    control: 'own name',
     paletteType: 'text',
     prepare: (page) => open(page, 'Display'),
-    set: async (page) => setIn(page, 'Display', 'Name', 'Shown'),
+    set: async (page) => setIn(page, 'Display', 'Name', 'Own name'),
     restore: async (page) => setIn(page, 'Display', 'Name', 'Text'),
-  },
-  {
-    control: 'display description',
-    paletteType: 'text',
-    prepare: (page) => open(page, 'Display'),
-    set: async (page) => setIn(page, 'Display', 'Description', 'Shown help'),
-    restore: async (page) => setIn(page, 'Display', 'Description', ''),
   },
 
   // ── Text constraints ────────────────────────────────────────────────────────
@@ -545,7 +556,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
     prepare: (page) => open(page, 'Constraints'),
     set: async (page) => setIn(page, 'Constraints', 'Minimum length', '4'),
     restore: async (page) => setIn(page, 'Constraints', 'Minimum length', ''),
-    read: (template) => constraints(template, 'text')['minLength'],
+    read: (template) => constraints(template, 'Text')['minLength'],
     whenSet: 4,
   },
   {
@@ -584,7 +595,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
     prepare: (page) => open(page, 'Constraints'),
     set: async (page) => setIn(page, 'Constraints', 'Maximum value', '99'),
     restore: async (page) => setIn(page, 'Constraints', 'Maximum value', ''),
-    read: (template) => constraints(template, 'number')['maxValue'],
+    read: (template) => constraints(template, 'Number')['maxValue'],
     whenSet: 99,
   },
   {
@@ -674,7 +685,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
     paletteType: 'text',
     set: async (page) => card(page).locator('app-field-default-value input').first().fill('Example'),
     restore: async (page) => card(page).locator('app-field-default-value input').first().fill(''),
-    read: (template) => constraints(template, 'text')['defaultValue'],
+    read: (template) => constraints(template, 'Text')['defaultValue'],
     whenSet: 'Example',
   },
 ];

@@ -1,4 +1,10 @@
-import { elementDisplayOverride, fieldDisplayOverride } from '../model/field-display-name';
+import {
+  elementDisplayDescription,
+  elementDisplayName,
+  fieldDisplayDescription,
+  fieldDisplayName,
+} from '../model/field-display-name';
+import { childLocks } from '../model/child-locks';
 import { fieldSetting, ValidationCoordinator } from './validation-coordinator';
 import { CedChildSource, CedJsonObject, CedValidationIssue } from '../../ced-public-api';
 import { EditorSession } from './editor-session';
@@ -12,7 +18,7 @@ import {
   ElementNode,
   fieldNode,
   containers,
-  childName,
+  isPlacementKey,
   moveChild,
   parentOf,
   updateContainer,
@@ -20,7 +26,7 @@ import {
   findContainer,
 } from '../model/container-draft';
 import { FieldLibraryService } from './field-library.service';
-import { childKeys, deploymentKeys, freshChildKey, keyedChild } from '../model/child-key-policy';
+import { deploymentKeys, keyedChild } from '../model/child-key-policy';
 import { CedLanguageService } from '../../i18n/ced-language.service';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
 import { LocalizedError, message } from '../../i18n/messages';
@@ -41,6 +47,15 @@ import {
 export { FIELD_TYPES } from '../models/types';
 
 /** Every container and child whose name the author can see, throughout the document. */
+/**
+ * What a child brought into a parent from elsewhere takes from itself: its display name and
+ * display description are its own name and description. Its key is its name too, which
+ * `takeKeyFromName` gives it once the child is in place.
+ */
+function copiedPlacement(name: string, description: string) {
+  return { displayLabel: name, displayDescription: description };
+}
+
 function namedIds(container: ContainerDraft): number[] {
   return [
     container.id,
@@ -57,6 +72,9 @@ function namedIds(container: ContainerDraft): number[] {
  * signal initializer and once in `resetTemplate`, and the two drifted — the reset
  * copy minted field identifiers and the initializer's did not, so the fields an
  * author saw on first load had no identity at all.
+ *
+ * Each is keyed by its name, as a new child is once it has been named, so renaming one leaves its key
+ * where it is.
  */
 function starterFields(): Field[] {
   return [
@@ -65,6 +83,7 @@ function starterFields(): Field[] {
       ...newFieldIdentity(),
       type: 'text',
       name: 'Title',
+      deploymentName: 'Title',
       status: 'required',
       options: [],
       defaultValue: { kind: 'none' },
@@ -75,6 +94,7 @@ function starterFields(): Field[] {
       ...newFieldIdentity(),
       type: 'multipleChoice',
       name: 'Category',
+      deploymentName: 'Category',
       status: 'optional',
       options: ['Option A', 'Option B'],
       defaultValue: { kind: 'none' },
@@ -85,6 +105,7 @@ function starterFields(): Field[] {
       ...newFieldIdentity(),
       type: 'date',
       name: 'Publication Date',
+      deploymentName: 'Publication Date',
       status: 'optional',
       options: [],
       defaultValue: { kind: 'none' },
@@ -110,14 +131,40 @@ function choiceDefault(field: Field, options: string[], renamed?: { from: string
   providedIn: 'root',
 })
 export class TemplateService {
+  /**
+   * The children whose key still follows their name: a new child, until its name first loses focus.
+   * After that the key is the author's, and a rename leaves it where it is.
+   */
   private readonly automaticKeys = new Set<number>();
-  private readonly automaticFieldNames = new Set<number>();
 
-  private generatedKey(id: number, name: string): string {
-    const parent = parentOf(this.session.document(), id);
-    const node = parent?.children.find((child) => child.id === id);
-    const child = node ? keyedChild(node) : { kind: 'field' as const, attributeValue: false };
-    return freshChildKey(name, child, parent?.kind ?? 'template', (key) => !!this.keyError(id, key));
+  /**
+   * The key a child takes from its name: the name as written, which is CEDAR's convention, or none
+   * while the child has no name, so an unnamed child is not reported for a blank key. A name that
+   * clashes with a sibling's key, or is reserved, is kept and reported, so the author sees it.
+   */
+  private generatedKey(name: string): string | undefined {
+    return name.trim() || undefined;
+  }
+  /** Set while a key is taken from a name, which is not the author choosing one. */
+  private takingKey = false;
+
+  /**
+   * Gives a child the key its name gives. A key the parent accepts lands; one that clashes or is
+   * reserved stays as a pending edit, reported at once, while the child keeps a usable key.
+   */
+  private takeKeyFromName(id: number, name: string): void {
+    // A field designed on its own has no parent to key it in.
+    if (this.fieldDocumentMode()) return;
+    const node = parentOf(this.session.document(), id)?.children.find((child) => child.id === id);
+    if (!node) return;
+    const deploymentName = this.generatedKey(name);
+    this.takingKey = true;
+    try {
+      if (node.kind === 'element') this.updateElementPlacement(id, { deploymentName }, 'key');
+      else this.updateFieldSettings(id, { deploymentName });
+    } finally {
+      this.takingKey = false;
+    }
   }
 
   // Inject PreferencesService
@@ -142,13 +189,23 @@ export class TemplateService {
   readonly templateName = this.session.property('name');
   readonly loadError = signal<string | null>(null);
   readonly validation = new ValidationCoordinator(this.session, this.i18n.t, (id, changes) => {
-    if (changes.deploymentName !== undefined) this.automaticKeys.delete(id);
+    if ('deploymentName' in changes && !this.takingKey) this.automaticKeys.delete(id);
   });
   readonly terminologyEdits = new TerminologyEditCommands(this, inject(TerminologyService), this.i18n);
   readonly nameFocusRequest = signal<number | null>(null);
   readonly initialInsertionId = signal<number | null>(null);
   touchName(id: number): void {
     this.validation.touchName(id);
+    const node = parentOf(this.session.document(), id)?.children.find((child) => child.id === id);
+    if (node?.definition.name.trim()) this.automaticKeys.delete(id);
+  }
+  /** Whether a child's own definition can no longer change: it is published, or inside a published element. */
+  definitionLocked(id: number): boolean {
+    return childLocks(this.session.document(), id).definition;
+  }
+  /** Whether a child's placement in its parent can no longer change: it is inside a published element. */
+  placementLocked(id: number): boolean {
+    return childLocks(this.session.document(), id).placement;
   }
   nameError(id: number, name: string, kind: 'field' | 'element' | 'template'): string | null {
     return this.validation.nameError(id, name, kind);
@@ -313,23 +370,9 @@ export class TemplateService {
       >
     >,
   ): void {
-    if (changes.name !== undefined && this.automaticKeys.has(id)) {
-      const parent = parentOf(this.session.document(), id);
-      if (parent) {
-        const deploymentName = this.generatedKey(id, changes.name);
-        this.session.document.update((root) =>
-          updateContainer(root, parent.id, (container) => ({
-            ...container,
-            children: container.children.map((child) =>
-              child.id === id && child.kind === 'element'
-                ? { ...child, placement: { ...child.placement, deploymentName } }
-                : child,
-            ),
-          })),
-        );
-      }
-    }
+    if (this.definitionLocked(id)) return;
     this.session.document.update((root) => updateContainer(root, id, (container) => ({ ...container, ...changes })));
+    if (changes.name !== undefined && this.automaticKeys.has(id)) this.takeKeyFromName(id, changes.name);
   }
   readonly collapsedElements = signal<ReadonlySet<number>>(new Set());
   expandAllElements(): void {
@@ -364,6 +407,7 @@ export class TemplateService {
 
   // Field manipulation methods
   addField(type: string, position: number, targetId = this.session.active().id) {
+    if (this.definitionLocked(targetId)) return;
     if (!this.canAddField(type, targetId)) {
       this.loadError.set(this.i18n.t('errors.pageBreakPlacement'));
       return;
@@ -380,8 +424,7 @@ export class TemplateService {
     };
 
     this.automaticKeys.add(newField.id);
-    this.automaticFieldNames.add(newField.id);
-    this.insertNode(fieldNode(newField), position, targetId, false);
+    this.insertNode(fieldNode(newField), position, targetId);
     if (newField.options[0] === '') this.validation.startOption(newField.id);
     this.nameFocusRequest.set(newField.id);
 
@@ -392,18 +435,23 @@ export class TemplateService {
   }
 
   addCustomFieldToTemplate(customField: CustomField, position: number, targetId = this.session.active().id) {
+    if (this.definitionLocked(targetId)) return;
     if (!this.canAddField(customField.definition.type, targetId)) {
       this.loadError.set(this.i18n.t('errors.pageBreakPlacement'));
       return;
     }
+    const definition = structuredClone(customField.definition);
     const newField: Field = {
-      ...structuredClone(customField.definition),
+      ...definition,
+      ...copiedPlacement(definition.name, definition.helpText ?? ''),
+      deploymentName: undefined,
       id: newNodeId(),
       customFieldId: customField.id,
       libraryId: customField.libraryId,
     };
 
     this.insertNode(fieldNode(newField), position, targetId);
+    this.takeKeyFromName(newField.id, newField.name);
 
     this.showPicker.set(null);
     this.selectedField.set(newField.id);
@@ -412,7 +460,7 @@ export class TemplateService {
   }
 
   deleteField(id: number) {
-    if (!this.validation.canEdit(id)) return;
+    if (!this.validation.canPlace(id)) return;
     this.fieldsFor(id).update((prev) => prev.filter((f) => f.id !== id));
     this.pruneCollapsed();
     if (this.selectedField() === id) {
@@ -420,43 +468,125 @@ export class TemplateService {
     }
   }
 
-  updateFieldDisplayName(id: number, value: string): string | null {
-    const field = this.fieldsFor(id)().find((item) => item.id === id);
-    if (!field) return null;
-    if (this.automaticFieldNames.has(id)) this.updateFieldName(id, value);
-    return this.updateFieldSettings(
-      id,
-      fieldDisplayOverride(field) ? { displayLabel: value } : { preferredLabel: value },
-    );
+  private fieldOf(id: number): Field | undefined {
+    return this.fieldsFor(id)().find((item) => item.id === id);
+  }
+
+  /*
+   * A child's display name and description, which its parent shows, and its own name and
+   * description, which it holds itself, are one value each while the child is a draft its parent
+   * shows as itself. An edit from either side then writes both. A published child keeps its own,
+   * and a parent that already shows a child differently keeps doing so: each side then edits its own.
+   */
+  private fieldNamesSynced(field: Field): boolean {
+    return !this.definitionLocked(field.id) && fieldDisplayName(field) === field.name;
+  }
+  private fieldDescriptionsSynced(field: Field): boolean {
+    return !this.definitionLocked(field.id) && fieldDisplayDescription(field) === (field.helpText ?? '');
   }
 
   /**
-   * Edits the name an element placement shows, from its header or its Display tab alike: the
-   * parent's override where there is one, otherwise the element's own name.
+   * Renames a field and the name its parent shows it by together. A label repeating the old name,
+   * and a preferred label that only repeated it, move with it: CEE would otherwise go on showing
+   * the old name.
    */
-  updateElementDisplayName(node: ElementNode, value: string): string | null {
-    if (elementDisplayOverride(node)) {
-      return this.updateElementPlacement(node.id, { displayLabel: value }, 'display', 'Display');
+  private renameField(field: Field, name: string): void {
+    this.updateFieldName(field.id, name, {
+      ...(field.displayLabel === undefined ? {} : { displayLabel: name }),
+      ...(field.preferredLabel !== undefined && field.preferredLabel === field.name ? { preferredLabel: name } : {}),
+    });
+  }
+
+  /** Edits the name a field shows in its parent, from its header or its Configuration tab. */
+  updateFieldDisplayName(id: number, value: string): string | null {
+    const field = this.fieldOf(id);
+    if (!field) return null;
+    // A field designed on its own has no parent, so its header names the field itself.
+    if (this.fieldDocumentMode()) {
+      this.updateFieldName(id, value);
+      return null;
     }
-    // A filler label repeating the old name would otherwise outlive the rename as an override.
+    if (!this.fieldNamesSynced(field)) return this.updateFieldSettings(id, { displayLabel: value });
+    this.renameField(field, value);
+    return null;
+  }
+
+  /** Edits a field's own name, from its Display tab. */
+  updateOwnFieldName(id: number, value: string): void {
+    const field = this.fieldOf(id);
+    if (!field) return;
+    if (this.fieldNamesSynced(field)) this.renameField(field, value);
+    else this.updateFieldName(id, value);
+  }
+
+  /** Edits the description a field shows in its parent, from its Configuration tab. */
+  updateFieldDisplayDescription(id: number, value: string): string | null {
+    const field = this.fieldOf(id);
+    if (!field) return null;
+    if (!this.fieldDescriptionsSynced(field)) return this.updateFieldSettings(id, { displayDescription: value });
+    this.describeField(field, value);
+    return null;
+  }
+
+  private describeField(field: Field, helpText: string): void {
+    if (!this.validation.canEdit(field.id)) return;
+    const displayDescription = field.displayDescription === undefined ? undefined : helpText;
+    this.fieldsFor(field.id).update((prev) =>
+      prev.map((f) => (f.id === field.id ? { ...f, helpText, displayDescription } : f)),
+    );
+  }
+
+  private elementNamesSynced(node: ElementNode): boolean {
+    return !this.definitionLocked(node.id) && elementDisplayName(node) === node.definition.name;
+  }
+  private elementDescriptionsSynced(node: ElementNode): boolean {
+    return !this.definitionLocked(node.id) && elementDisplayDescription(node) === node.definition.description;
+  }
+
+  /** Edits the name an element shows in its parent, from its header or its Configuration tab. */
+  updateElementDisplayName(node: ElementNode, value: string): string | null {
+    if (!this.elementNamesSynced(node)) return this.updateElementPlacement(node.id, { displayLabel: value }, 'display');
+    // A label repeating the old name moves with it, or it would outlive the rename as an override.
     if (node.placement.displayLabel !== undefined) {
-      const failure = this.updateElementPlacement(node.id, { displayLabel: undefined }, 'display', 'Display');
+      const failure = this.updateElementPlacement(node.id, { displayLabel: value }, 'display');
       if (failure) return failure;
     }
     this.updateContainerDefinition(node.definition.id, { name: value });
     return null;
   }
 
-  updateFieldName(id: number, name: string) {
+  /** Edits an element's own name, from its Display tab. */
+  updateOwnElementName(node: ElementNode, value: string): void {
+    if (this.elementNamesSynced(node)) this.updateElementDisplayName(node, value);
+    else this.updateContainerDefinition(node.definition.id, { name: value });
+  }
+
+  /** Edits the description an element shows in its parent, from its header or its Configuration tab. */
+  updateElementDisplayDescription(node: ElementNode, value: string): string | null {
+    if (!this.elementDescriptionsSynced(node))
+      return this.updateElementPlacement(node.id, { displayDescription: value }, 'display');
+    if (node.placement.displayDescription !== undefined) {
+      const failure = this.updateElementPlacement(node.id, { displayDescription: value }, 'display');
+      if (failure) return failure;
+    }
+    this.updateContainerDefinition(node.definition.id, { description: value });
+    return null;
+  }
+
+  /** Edits an element's own description, from its Display tab. */
+  updateOwnElementDescription(node: ElementNode, value: string): void {
+    if (this.elementDescriptionsSynced(node)) this.updateElementDisplayDescription(node, value);
+    else this.updateContainerDefinition(node.definition.id, { description: value });
+  }
+
+  updateFieldName(id: number, name: string, follow: Pick<Partial<Field>, 'displayLabel' | 'preferredLabel'> = {}) {
     if (!this.validation.canEdit(id)) return;
-    const deploymentName = this.automaticKeys.has(id) ? this.generatedKey(id, name) : undefined;
-    this.fieldsFor(id).update((prev) =>
-      prev.map((f) => (f.id === id ? { ...f, name, ...(deploymentName ? { deploymentName } : {}) } : f)),
-    );
+    this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, name, ...follow } : f)));
+    if (this.automaticKeys.has(id)) this.takeKeyFromName(id, name);
   }
 
   updateFieldStatus(id: number, status: string) {
-    if (!this.validation.canEdit(id)) return;
+    if (!this.validation.canPlace(id)) return;
     this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, status } : f)));
   }
 
@@ -519,10 +649,6 @@ export class TemplateService {
     );
   }
 
-  isPublished(id: number): boolean {
-    return !!this.fieldsFor(id)().find((field) => field.id === id)?.publishedDefinition;
-  }
-
   /**
    * The property keys from the template to this field or element, which is how the CEE
    * preview addresses it. Null for the template itself, or while two siblings share a key.
@@ -559,12 +685,14 @@ export class TemplateService {
     return keys[siblings.findIndex((node) => node.id === id)] ?? '';
   }
 
-  private keyError(id: number, value: string): string | null {
-    return this.validation.keyError(this.session.document(), id, value);
-  }
-
   updateFieldSettings(id: number, changes: Partial<Field>): string | null {
-    if (this.isPublished(id)) return this.i18n.t('errors.publishedReadOnly');
+    const locks = childLocks(this.session.document(), id);
+    const keys = Object.keys(changes);
+    if (
+      (locks.definition && keys.some((key) => !isPlacementKey(key))) ||
+      (locks.placement && keys.some(isPlacementKey))
+    )
+      return this.i18n.t('errors.publishedReadOnly');
     const current = this.fieldsFor(id)().find((field) => field.id === id);
     if (current && !this.canAddField(changes.type ?? current.type, this.parentContainerId(id)))
       return this.i18n.t('errors.pageBreakPlacement');
@@ -577,7 +705,7 @@ export class TemplateService {
   }
 
   toggleAllowMultiple(id: number) {
-    if (!this.validation.canEdit(id)) return;
+    if (!this.validation.canPlace(id)) return;
     const multiple = !this.fieldsFor(id)().find((field) => field.id === id)?.allowMultiple;
     this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, allowMultiple: multiple } : f)));
   }
@@ -588,9 +716,12 @@ export class TemplateService {
     this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, content } : f)));
   }
 
+  /** Edits a field's own description, from its Display tab. */
   updateHelpText(id: number, helpText: string) {
-    if (!this.validation.canEdit(id)) return;
-    this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, helpText } : f)));
+    const field = this.fieldOf(id);
+    if (!field || !this.validation.canEdit(id)) return;
+    if (this.fieldDescriptionsSynced(field)) this.describeField(field, helpText);
+    else this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, helpText } : f)));
   }
 
   updateControlledTermConstraints(id: number, constraints: ControlledTermSet) {
@@ -714,12 +845,7 @@ export class TemplateService {
     this.showPicker.set(null);
     this.selectedField.set(null);
   }
-  private insertNode(
-    node: ChildNode,
-    position: number,
-    targetId = this.session.active().id,
-    namePlacement = true,
-  ): void {
+  private insertNode(node: ChildNode, position: number, targetId = this.session.active().id): void {
     const target = findContainer(this.session.document(), targetId);
     if (!target) throw new LocalizedError(message('errors.importDestinationMissing'));
     // Beginning child authoring must explain why Save is blocked even when the
@@ -732,18 +858,6 @@ export class TemplateService {
       if (!ancestor.name.trim()) this.touchName(ancestor.id);
     }
     this.loadError.set(null);
-    if (namePlacement) {
-      // The key a rename would give it, in the container the child joins.
-      const used = new Set(childKeys(target.children.map(keyedChild), target.kind));
-      const name = freshChildKey(childName(node), keyedChild(node), target.kind, (key) => used.has(key));
-      if (node.kind === 'field') {
-        node = { ...node, placement: { ...node.placement, deploymentName: name } };
-      } else {
-        // Branching on the kind keeps each placement its own type; one spread over the union loses
-        // which of the two it is, and an element's placement is the narrower of them.
-        node = { ...node, placement: { ...node.placement, deploymentName: name } };
-      }
-    }
     this.session.document.update((root) =>
       updateContainer(root, targetId, (container) => {
         const children = [...container.children];
@@ -773,6 +887,7 @@ export class TemplateService {
     const root = this.session.document();
     const target = findContainer(root, targetId);
     if (!target) throw new LocalizedError(message('errors.destinationMissing'));
+    if (this.definitionLocked(targetId)) throw new LocalizedError(message('errors.publishedReadOnly'));
     const nodes = sources.map(({ type, artifact }): ChildNode => {
       if (type === 'field') {
         const field = readField(JSON.stringify(artifact));
@@ -780,8 +895,9 @@ export class TemplateService {
           throw new LocalizedError(message('errors.pageBreakPlacement'));
         return fieldNode({
           ...field,
+          ...copiedPlacement(field.name, field.helpText ?? ''),
+          deploymentName: undefined,
           id: newNodeId(),
-          deploymentName: field.name,
           propertyIri: newFieldIdentity().propertyIri,
         });
       }
@@ -791,18 +907,25 @@ export class TemplateService {
         kind: 'element',
         id: definition.id,
         definition,
-        placement: { allowMultiple: false, propertyIri: newFieldIdentity().propertyIri },
+        placement: {
+          ...copiedPlacement(definition.name, definition.description),
+          allowMultiple: false,
+          propertyIri: newFieldIdentity().propertyIri,
+        },
       };
     });
     try {
       nodes.forEach((node, index) => this.insertNode(node, position + index, targetId));
+      for (const node of nodes) this.takeKeyFromName(node.id, node.definition.name);
     } catch (error) {
       this.session.document.set(root);
       throw error;
     }
   }
 
+  /** Adds an inline element and returns its id, or -1 where the target cannot take one. */
   addElement(targetId = this.session.active().id, position = Number.MAX_SAFE_INTEGER): number {
+    if (this.definitionLocked(targetId)) return -1;
     const definition = newContainer('element');
     this.automaticKeys.add(definition.id);
     this.insertNode(
@@ -814,7 +937,6 @@ export class TemplateService {
       },
       position,
       targetId,
-      false,
     );
     this.openContainer(targetId);
     this.scrollRequest.set(definition.id);
@@ -823,7 +945,7 @@ export class TemplateService {
   }
   deleteChild(id: number): void {
     const parent = parentOf(this.session.document(), id);
-    if (!parent) return;
+    if (!parent || !this.validation.canPlace(id)) return;
     this.session.document.update((root) =>
       updateContainer(root, parent.id, (container) => ({
         ...container,
@@ -834,6 +956,8 @@ export class TemplateService {
     if (!this.containerChoices().some((choice) => choice.id === this.session.activeId())) this.openContainer(parent.id);
   }
   moveChild(id: number, targetId: number, index = Number.MAX_SAFE_INTEGER): void {
+    // A child inside a published element stays where it is, and nothing moves into one.
+    if (!this.validation.canPlace(id) || this.definitionLocked(targetId)) return;
     try {
       this.session.document.update((root) => moveChild(root, id, targetId, index));
       this.pruneCollapsed();

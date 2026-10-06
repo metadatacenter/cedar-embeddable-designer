@@ -81,9 +81,9 @@ for (const [type, text, stored] of [
 
 test('real CEE preview honors deployment display overrides over field metadata', async ({ page }) => {
   await openField(page, 'shortText', { preferredLabel: 'Semantic label', helpText: 'Artifact description' });
-  const section = await openSettings(page.locator('app-field-card').first(), 'Display');
-  await section.getByLabel('Name', { exact: true }).fill('Deployment heading');
-  await section.getByLabel('Description', { exact: true }).fill('Deployment help');
+  const section = await openSettings(page.locator('app-field-card').first(), 'Configuration');
+  await section.getByLabel('Display name', { exact: true }).fill('Deployment heading');
+  await section.getByLabel('Display description', { exact: true }).fill('Deployment help');
   const preview = await openPreview(page);
   await expect(preview.locator('.title-label')).toContainText('Deployment heading');
   await expect(preview.locator('.cee-field-spec-description')).toHaveText('Deployment help');
@@ -768,10 +768,15 @@ test('editing a display name updates Overview without renaming the field key', a
   await heading.fill('Laboratory identifier');
   await heading.blur();
   await expect(page.locator('app-container-outline .node-name')).toHaveText('Laboratory identifier');
+  // The parent already shows the field by another name, so the header edits the parent's display name
+  // and leaves the field's own name and preferred label as they were.
   const template = await currentTemplate(page);
   expect(template.properties).toHaveProperty('Value');
   expect(child(template, 'Value')['schema:name']).toBe('Value');
-  expect(child(template, 'Value')['skos:prefLabel']).toBe('Laboratory identifier');
+  expect(child(template, 'Value')['skos:prefLabel']).toBe('Lab ID');
+  expect((template._ui as { propertyLabels: Record<string, string> }).propertyLabels['Value']).toBe(
+    'Laboratory identifier',
+  );
 });
 
 for (const type of ['email', 'phone', 'link']) {

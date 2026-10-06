@@ -65,7 +65,7 @@ for (const correction of ['clear', 'correct'] as const)
     await expect(settings.getByRole('alert')).toHaveCount(0);
     await expect.poll(canSave).toBe(true);
     const artifact = await currentTemplate(page);
-    const placement = (artifact.properties as Record<string, Record<string, unknown>>).element;
+    const placement = (artifact.properties as Record<string, Record<string, unknown>>).Element;
     expect(placement.minItems).toBe(1);
     expect(placement.maxItems).toBe(correction === 'correct' ? 200 : undefined);
   });
