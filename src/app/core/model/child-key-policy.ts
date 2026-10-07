@@ -57,11 +57,12 @@ const controlCharacter = (value: string) =>
   [...value].some((character) => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127);
 
 /**
- * The key the designer chooses for a child from its name, as it does for a new, renamed or imported
- * child: lower case, spaces as underscores, and a numeric suffix past any key a sibling holds or the
- * policy refuses. Suffixing cannot repair a name that starts with @ or holds a control character, so
- * such a name falls back to the child's kind, "field" or "element". `taken` names the keys the
- * child's siblings hold; the policy is applied here, for the parent the child sits in.
+ * The key a child without one of its own falls back to when its name cannot be its key: lower case,
+ * spaces as underscores, and a numeric suffix past any key a sibling holds or the policy refuses.
+ * Suffixing cannot repair a name that starts with @ or holds a control character, so such a name
+ * falls back to the child's kind, "field" or "element". `taken` names the keys the child's siblings
+ * hold; the policy is applied here, for the parent the child sits in. A child takes its name as
+ * written as its key; this only keeps a document whose key the author has yet to choose buildable.
  */
 export function freshChildKey(
   name: string,

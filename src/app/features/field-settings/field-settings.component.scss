@@ -194,15 +194,6 @@ button:focus-visible {
     grid-column: 1 / -1;
   }
 }
-.display-flags {
-  display: flex;
-  flex-direction: column;
-  @include spacing.apply(gap, compact);
-}
-.display-flags .check {
-  align-self: start;
-  min-height: 20px;
-}
 .preferred-label {
   margin-top: var(--cedar-space-2);
 }
@@ -212,8 +203,66 @@ button:focus-visible {
   @include authoring.compact-control;
 }
 @container (max-width: 480px) {
-  .display-fields > label,
-  .display-flags {
+  .display-fields > label {
+    grid-column: 1 / -1;
+  }
+}
+
+// Configuration sets each row of controls on the same three columns, so the bounds sit below the
+// requirement and the key. Allow multiple and the line settings take rows of their own.
+.configuration-scope {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cedar-space-2);
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  container-type: inline-size;
+}
+.configuration-fields {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+// A panel whose controls a lock disables together, with none of a fieldset's own box.
+.panel-scope {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.configuration-property {
+  min-width: 0;
+}
+// The requirement has no heading of its own, so it takes the panel's control box at its own width.
+.configuration-requirement {
+  width: auto;
+  @include authoring.compact-control;
+}
+// The description is the longer text, so it takes two of the three columns.
+.configuration-wide {
+  grid-column: span 2;
+}
+// Allow multiple stands over the bounds it enables, leaving the key their row's first column.
+.settings-fields .configuration-multiple {
+  grid-column: 2 / -1;
+  align-self: start;
+  min-height: 0;
+}
+.configuration-bounds {
+  display: contents;
+}
+.configuration-flags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cedar-space-1) var(--cedar-space-4);
+}
+@container (max-width: 400px) {
+  .configuration-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .configuration-wide,
+  .settings-fields .configuration-multiple {
     grid-column: 1 / -1;
   }
 }

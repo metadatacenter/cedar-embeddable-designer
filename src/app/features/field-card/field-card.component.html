@@ -5,7 +5,11 @@
 }
 <div>
   <div class="field-card-body">
-    <fieldset [disabled]="!!field.publishedDefinition" class="field-edit-scope">
+    <!--
+      The header names the field as its parent shows it and removes it from the parent, so a
+      published field keeps both; only a field inside a published element loses them.
+    -->
+    <fieldset [disabled]="headerLocked" class="field-edit-scope">
       <!-- Header Row: Icon and Name editing -->
       <div appHeaderToggle (headerToggle)="toggleSettings()" class="field-header" [class.standalone]="standalone">
         <div class="field-heading">
@@ -24,7 +28,7 @@
             [appArtifactName]="field.id"
             [attr.aria-invalid]="!!service.nameError(field.id, field.name, 'field')"
             [attr.aria-describedby]="service.nameError(field.id, field.name, 'field') ? 'name-error-' + field.id : null"
-            [ngModel]="displayName(field)"
+            [ngModel]="shownName"
             (ngModelChange)="updateDisplayName($event)"
             class="field-name"
             [class.selected]="service.selectedField() === field.id"
@@ -70,37 +74,6 @@
             </div>
           </div>
           <div class="field-actions">
-            <!--
-      Required, Allow multiple and delete sit on the title row rather than in a
-      footer bar of their own. They are one line of controls either way, and a
-      bar cost every card its own rule, its padding and 36px of height.
-    -->
-            @if (!service.fieldDocumentMode() && service.preferences().showRequired && allowsStatus(field.type)) {
-              <select
-                [attr.aria-label]="'fieldCard.requirement' | translate"
-                [ngModel]="field.status"
-                (ngModelChange)="service.updateFieldStatus(field.id, $event)"
-                class="field-requirement"
-              >
-                <option value="optional">{{ 'fieldCard.optional' | translate }}</option>
-                <option value="recommended">{{ 'fieldCard.recommended' | translate }}</option>
-                <option value="required">{{ 'fieldCard.required' | translate }}</option>
-              </select>
-            }
-            @if (
-              !service.fieldDocumentMode() && service.preferences().showAllowMultiple && allowsMultiple(field.type)
-            ) {
-              <label class="field-repetition">
-                <input
-                  spellcheck="false"
-                  type="checkbox"
-                  [checked]="field.allowMultiple"
-                  (change)="service.toggleAllowMultiple(field.id)"
-                  class="checkbox-white field-repetition-check"
-                />
-                <span class="field-repetition-label">{{ 'settings.allowMultiple' | translate }}</span>
-              </label>
-            }
             @if (!standalone) {
               <button
                 (click)="service.deleteField(field.id)"
@@ -127,7 +100,7 @@
       [field]="field"
       [hasValues]="allowsOptions(field.type) || allowsControlledTerms(field.type) || !!contentLabel(field.type)"
     >
-      <fieldset field-values [disabled]="!!field.publishedDefinition" class="field-edit-scope">
+      <fieldset field-values [disabled]="service.definitionLocked(field.id)" class="field-edit-scope">
         <!-- Field Preview / Options Editing Inside Card -->
         <!-- Option Editing for Multiple Choice / Checkboxes -->
         @if (allowsOptions(field.type)) {

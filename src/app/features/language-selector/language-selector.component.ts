@@ -32,7 +32,7 @@ function languageOptions(locale: string, english: boolean): readonly { code: str
       >{{ 'languageSelector.label' | translate }}
       <select
         [attr.aria-label]="'languageSelector.label' | translate"
-        [disabled]="!!field()?.publishedDefinition"
+        [disabled]="locked()"
         [ngModel]="value()"
         (ngModelChange)="change($event)"
       >
@@ -86,8 +86,13 @@ export class LanguageSelectorComponent {
     return field ? this.service.settingError(field.id, 'language') : null;
   });
   private readonly service = inject(TemplateService);
+  /** Whether the artifact's own definition is locked: it is published, or inside a published element. */
+  readonly locked = computed(() => {
+    const id = this.field()?.id ?? this.container()?.id;
+    return !!this.field()?.publishedDefinition || (id !== undefined && this.service.definitionLocked(id));
+  });
   change(value: string): void {
-    if (this.field()?.publishedDefinition) return;
+    if (this.locked()) return;
     if (value && !LANGUAGES.some((l) => l.code === value) && value !== this.value()) return;
     const field = this.field();
     if (field) {

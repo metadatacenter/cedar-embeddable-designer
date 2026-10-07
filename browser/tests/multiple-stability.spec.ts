@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openDesigner, openPreview } from './support';
+import { openDesigner, openPreview, openSettings } from './support';
 for (const width of [1280, 375]) {
   test(`allow multiple preserves header geometry at ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1400 });
@@ -15,8 +15,9 @@ for (const width of [1280, 375]) {
       const card = cards.nth(i);
       const checkbox = card.getByLabel('Allow multiple', { exact: true });
       if (!(await checkbox.count())) continue;
+      const configuration = await openSettings(card, 'Configuration');
       await checkbox.scrollIntoViewIfNeeded();
-      await card.getByRole('combobox', { name: 'Requirement', exact: true }).selectOption('optional');
+      await configuration.getByRole('combobox', { name: 'Requirement', exact: true }).selectOption('optional');
       await expect(card.getByLabel('Required', { exact: true })).toHaveCount(0);
       await checkbox.focus();
       const measure = () =>

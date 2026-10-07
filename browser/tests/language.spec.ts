@@ -17,13 +17,14 @@ for (const width of [1280, 375]) {
     await language.selectOption('');
     await rootSettings.getByRole('button', { name: 'Collapse template settings' }).click();
     const field = designer.locator('app-field-card').first();
-    await openSettings(field, 'Display');
+    await openSettings(field, 'Presentation');
     await field.getByRole('combobox', { name: 'Language', exact: true }).selectOption('en');
     await field.locator('app-field-settings').screenshot({ path: testInfo.outputPath('language.png') });
     await applyPreset(page, 'modular');
     await addElementFixture(page, root);
     const element = designer.locator('app-element-card').first();
     await element.getByRole('button', { name: 'Expand element settings' }).click();
+    await element.getByRole('tab', { name: 'Presentation', exact: true }).click();
     await element.getByRole('combobox', { name: 'Language', exact: true }).selectOption('de');
     await expect(element.getByRole('combobox', { name: 'Language', exact: true })).toHaveValue('de');
   });

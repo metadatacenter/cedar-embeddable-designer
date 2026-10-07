@@ -3,7 +3,16 @@ import { computed, signal } from '@angular/core';
 import { CedValidationReport } from '../../ced-public-api';
 import { Translate } from '../../i18n/messages';
 import { Field, FieldDefaultValue } from '../models/types';
-import { ChildNode, ContainerDraft, fieldNode, fieldView, parentOf, updateContainer } from '../model/container-draft';
+import {
+  ChildNode,
+  ContainerDraft,
+  fieldNode,
+  fieldView,
+  isPlacementKey,
+  parentOf,
+  updateContainer,
+} from '../model/container-draft';
+import { childLocks } from '../model/child-locks';
 import { artifactNameError, DraftIssues, inspectDocument, validateDocument } from '../model/document-validation';
 import { childKeyError, childKeys, keyedChild } from '../model/child-key-policy';
 import { descriptorOf } from '../model/cedar-template';
@@ -36,15 +45,20 @@ const nodeOf = (document: ContainerDraft, id: number) =>
 
 /** The stable setting identity used by controls, pending edits and the public report. */
 export function fieldSetting(changes: Partial<Field>): { setting: string; tab: string } {
-  if ('deploymentName' in changes) return { setting: 'key', tab: SETTINGS_TABS.fieldMetadata };
+  if ('deploymentName' in changes) return { setting: 'key', tab: SETTINGS_TABS.configuration };
   if ('schemaIdentifier' in changes) return { setting: 'identifier', tab: SETTINGS_TABS.fieldMetadata };
-  if ('propertyIri' in changes) return { setting: 'propertyIri', tab: SETTINGS_TABS.fieldMetadata };
+  if ('propertyIri' in changes) return { setting: 'propertyIri', tab: SETTINGS_TABS.configuration };
+  if ('displayLabel' in changes || 'displayDescription' in changes)
+    return { setting: 'display', tab: SETTINGS_TABS.configuration };
   if ('controlledTermConstraints' in changes) return { setting: 'controlledTerms', tab: SETTINGS_TABS.constraints };
   if ('annotations' in changes) return { setting: 'annotations', tab: 'Annotations' };
   if ('numeric' in changes) return { setting: 'numeric', tab: 'Constraints' };
   if ('textConstraints' in changes) return { setting: 'textConstraints', tab: 'Constraints' };
   if ('temporal' in changes) return { setting: 'temporal', tab: 'Constraints' };
-  if ('minItems' in changes || 'maxItems' in changes) return { setting: 'occurrences', tab: 'Occurrences' };
+  if ('minItems' in changes || 'maxItems' in changes)
+    return { setting: 'occurrences', tab: SETTINGS_TABS.configuration };
+  if ('hidden' in changes || 'continuePreviousLine' in changes)
+    return { setting: 'layout', tab: SETTINGS_TABS.configuration };
   if ('width' in changes || 'height' in changes) return { setting: 'media', tab: 'Content' };
   if ('defaultValue' in changes) return { setting: 'defaultValue', tab: 'Constraints' };
   if ('language' in changes) return { setting: 'language', tab: 'Display' };
@@ -53,6 +67,16 @@ export function fieldSetting(changes: Partial<Field>): { setting: string; tab: s
 }
 
 const keyOf = (id: number, setting: string) => `${id}:${setting}`;
+/** The settings that place a child in its parent, which a published child still lets its parent change. */
+const PLACEMENT_SETTINGS = new Set(['key', 'display', 'occurrences', 'layout', 'placement', 'propertyIri']);
+/** Whether a locked part of the child would refuse these changes. */
+const refused = (document: ContainerDraft, id: number, keys: readonly string[]) => {
+  const locks = childLocks(document, id);
+  return (
+    (locks.definition && keys.some((key) => !isPlacementKey(key))) ||
+    (locks.placement && keys.some((key) => isPlacementKey(key)))
+  );
+};
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
 /**
@@ -127,11 +151,15 @@ export class ValidationCoordinator {
     this.locked.set(value);
     this.replaceChecks({});
   }
+  /** Whether the child's own definition, or the root's, can change. */
   canEdit(id: number): boolean {
-    const node = nodeOf(this.session.document(), id);
-    return (
-      !this.readOnly() && !!node && !('kind' in node && node.kind === 'field' && node.definition.publishedDefinition)
-    );
+    const document = this.session.document();
+    return !this.readOnly() && !!nodeOf(document, id) && !childLocks(document, id).definition;
+  }
+  /** Whether the child's placement in its parent can change. */
+  canPlace(id: number): boolean {
+    const document = this.session.document();
+    return !this.readOnly() && !!parentOf(document, id) && !childLocks(document, id).placement;
   }
 
   reset(touched: number[] = []): void {
@@ -305,8 +333,7 @@ export class ValidationCoordinator {
     const parent = parentOf(document, id);
     const node = parent?.children.find((child) => child.id === id);
     if (!node || !parent) return { error: this.t('errors.elementMissing') };
-    if (node.kind === 'field' && node.definition.publishedDefinition)
-      return { error: this.t('errors.publishedReadOnly') };
+    if (refused(document, id, Object.keys(changes))) return { error: this.t('errors.publishedReadOnly') };
     if (changes.deploymentName !== undefined) {
       const error = this.keyError(document, id, changes.deploymentName);
       if (error) return { error };
@@ -352,20 +379,28 @@ export class ValidationCoordinator {
     const edits = { ...this.edits() };
     const inputs = { ...this.inputErrors() };
     const checks = { ...this.checks() };
-    const available = (id: number, setting: string, enablingMultiple = false) => {
+    const available = (id: number, setting: string, changes?: Partial<Field>) => {
       const node = parentOf(document, id)?.children.find((child) => child.id === id);
       if (!node) return id === document.id;
+      const locks = childLocks(document, id);
+      if (
+        changes
+          ? refused(document, id, Object.keys(changes))
+          : PLACEMENT_SETTINGS.has(setting)
+            ? locks.placement
+            : locks.definition
+      )
+        return false;
       return !(
         node.kind === 'field' &&
-        (node.definition.publishedDefinition ||
-          (setting === 'occurrences' &&
-            !enablingMultiple &&
-            !node.placement.allowMultiple &&
-            descriptorOf(node.definition.type).deployment !== 'alwaysMultiple'))
+        setting === 'occurrences' &&
+        !changes?.allowMultiple &&
+        !node.placement.allowMultiple &&
+        descriptorOf(node.definition.type).deployment !== 'alwaysMultiple'
       );
     };
     for (const [key, edit] of Object.entries(edits))
-      if (!available(edit.id, edit.setting, edit.changes.allowMultiple)) delete edits[key];
+      if (!available(edit.id, edit.setting, edit.changes)) delete edits[key];
     for (const key of Object.keys(inputs)) {
       const [id, setting] = key.split(':');
       if (!available(Number(id), setting)) delete inputs[key];

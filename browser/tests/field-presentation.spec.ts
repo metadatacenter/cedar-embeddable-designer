@@ -18,23 +18,27 @@ for (const width of [1440, 768, 375]) {
     await expect(designer.getByRole('tab')).toHaveCount(0);
     const card = designer.locator('app-field-card').first();
     const before = await currentTemplate(page);
-    const metadata = await openSettings(card, 'Display');
+    const metadata = await openSettings(card, 'Presentation');
     await expect(card.getByRole('button', { name: 'Apply', exact: true })).toHaveCount(0);
-    await metadata.getByLabel('Name', { exact: true }).fill('Live label');
-    await openSettings(card, 'Field metadata');
+    await metadata.getByLabel('Field name', { exact: true }).fill('Live label');
+    await openSettings(card, 'Metadata');
     await card.getByRole('button', { name: 'Collapse field settings' }).click();
     await expect(card.getByRole('tab')).toHaveCount(0);
-    await openSettings(card, 'Display');
-    await expect(metadata.getByLabel('Name', { exact: true })).toHaveValue('Live label');
-    // One name in two places: the header follows the Display tab as it is typed.
+    await openSettings(card, 'Presentation');
+    await expect(metadata.getByLabel('Field name', { exact: true })).toHaveValue('Live label');
+    // A draft's own name is the name its parent shows it by, so the header follows the Presentation tab as it
+    // is typed, and the key stays where it was.
     await expect(card.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue('Live label');
-    expect(((await currentTemplate(page)).properties as any).Title['skos:prefLabel']).toBe('Live label');
+    const saved = await currentTemplate(page);
+    expect((saved.properties as any).Title['schema:name']).toBe('Live label');
+    expect((saved._ui as any).propertyLabels.Title).toBe('Live label');
+    expect((saved.properties as any).Title['skos:prefLabel']).toBeUndefined();
     expect((await currentTemplate(page))['@id']).toEqual(before['@id']);
-    const tab = card.getByRole('tab', { name: 'Display', exact: true });
+    const tab = card.getByRole('tab', { name: 'Presentation', exact: true });
     await tab.focus();
     await page.keyboard.press('End');
-    await expect(card.getByRole('tab', { name: 'Field metadata', exact: true })).toBeFocused();
-    await expect(card.getByRole('tabpanel', { name: 'Field metadata', exact: true })).toBeVisible();
+    await expect(card.getByRole('tab', { name: 'Metadata', exact: true })).toBeFocused();
+    await expect(card.getByRole('tabpanel', { name: 'Metadata', exact: true })).toBeVisible();
     const measurements = await card.evaluate((el) => {
       const rect = el.getBoundingClientRect();
       const arrow = el.querySelector('.settings-toggle')!.getBoundingClientRect();
@@ -62,7 +66,7 @@ test('header controls share a vertical center and version is right aligned', asy
   await applyPreset(page, 'modular');
   const card = designer.locator('app-field-card').first();
   const centers = await card.evaluate((el) =>
-    ['.field-drag-handle', '[aria-label="Requirement"]', '[aria-label="Delete field"]'].map((s) => {
+    ['.field-drag-handle', '.field-type-label', '[aria-label="Delete field"]'].map((s) => {
       const r = el.querySelector(s)!.getBoundingClientRect();
       return r.y + r.height / 2;
     }),
@@ -141,9 +145,7 @@ test('field headers omit version and publication status', async ({ page }) => {
   }
 });
 
-test('an unnamed template, element or field shows a line to write its name on, without moving it', async ({
-  page,
-}) => {
+test('an unnamed template, element or field shows a line to write its name on, without moving it', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   const designer = await openDesigner(page);
   const resolve = (token: string) =>
@@ -187,10 +189,10 @@ test('an unnamed template, element or field shows a line to write its name on, w
   expect(await line(field)).toBe('none');
   const named = await height(field);
   await field.fill('');
-  expect(await line(field)).toBe(`linear-gradient(${primary}, ${primary})`);
+  await expect.poll(() => line(field)).toBe(`linear-gradient(${primary}, ${primary})`);
   expect(await height(field)).toBe(named);
   await fieldName(page, 1).focus();
-  expect(await line(field)).toBe(`linear-gradient(${rule}, ${rule})`);
+  await expect.poll(() => line(field)).toBe(`linear-gradient(${rule}, ${rule})`);
 });
 
 for (const width of [1440, 768, 375]) {

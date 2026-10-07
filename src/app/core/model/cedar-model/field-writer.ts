@@ -293,6 +293,9 @@ function buildField(field: Field): TemplateField {
 
   const built = builder.build();
   if (field.artifact) applyArtifactMetadata(built, field.artifact);
+  // The model library reads a title as its name gives it, so a renamed field's stored title would
+  // come back changed. Write the one its name gives now.
+  built.title = derivedTitle(field.name, 'field');
   built.language = Language.forValue(field.language || null);
   if (field.annotations?.length) {
     const error = annotationError(field.annotations);

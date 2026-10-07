@@ -1,3 +1,5 @@
+import type { ElementNode } from '../model/container-draft';
+import { elementDisplayDescription, fieldDisplayName } from '../model/field-display-name';
 import { CedJsonObject } from '../../ced-public-api';
 import { fieldToJson, newContainer } from '../model/cedar-template';
 import { findContainer } from '../model/container-draft';
@@ -34,46 +36,63 @@ describe('TemplateService', () => {
     const id = service.selectedField()!;
     expect(service.updateFieldDisplayName(id, 'Disease')).toBeNull();
     expect(service.fields().find((field) => field.id === id)?.name).toBe('Disease');
-    expect(service.childKey(id)).toBe('disease');
+    expect(service.childKey(id)).toBe('Disease');
     expect(service.validationReport().issues.filter((issue) => issue.nodeId === id)).toEqual([]);
     service.updateFieldDisplayName(id, '');
     expect(service.validationReport().issues.some((issue) => issue.nodeId === id && issue.setting === 'name')).toBe(
       true,
     );
     service.updateFieldDisplayName(id, 'Condition');
-    expect(service.childKey(id)).toBe('condition');
-    expect(service.fields().find((field) => field.id === id)?.preferredLabel).toBe('Condition');
+    expect(service.childKey(id)).toBe('Condition');
+    expect(service.fields().find((field) => field.id === id)?.preferredLabel).toBeUndefined();
+    // Once the name has been left, the key is the author's and stays put.
+    service.touchName(id);
+    service.updateFieldDisplayName(id, 'Diagnosis');
+    expect(service.fields().find((field) => field.id === id)?.name).toBe('Diagnosis');
+    expect(service.childKey(id)).toBe('Condition');
   });
 
-  it('keeps established field names and keys when editing their display name', () => {
+  it('renames a draft field with its display name, and keeps an established key', () => {
     const field = service.fields()[0];
     const key = service.childKey(field.id);
-    expect(service.updateFieldDisplayName(field.id, 'Changed display label')).toBeNull();
-    expect(service.fields().find((item) => item.id === field.id)?.name).toBe(field.name);
+    expect(service.updateFieldDisplayName(field.id, 'Changed name')).toBeNull();
+    expect(service.fields()[0]).toMatchObject({ name: 'Changed name' });
+    expect(fieldDisplayName(service.fields()[0])).toBe('Changed name');
     expect(service.childKey(field.id)).toBe(key);
-    expect(service.fields().find((item) => item.id === field.id)?.preferredLabel).toBe('Changed display label');
+    service.updateOwnFieldName(field.id, 'Own name');
+    expect(fieldDisplayName(service.fields()[0])).toBe('Own name');
   });
 
-  it('generates usable unique keys for reserved-prefix display names without looping', () => {
-    // Bound a recurrence of the synchronous loop so it fails instead of hanging the test worker.
-    const internals = service as unknown as { keyError(id: number, key: string): string | null };
-    const original = internals.keyError.bind(service);
-    let attempts = 0;
-    internals.keyError = (id, key) => {
-      if (++attempts > 100) throw new Error('Unbounded automatic naming');
-      return original(id, key);
-    };
+  it('keeps a display name and an own name apart once the parent shows the field differently', () => {
+    const id = service.fields()[0].id;
+    expect(service.updateFieldSettings(id, { displayLabel: 'Shown title' })).toBeNull();
+    service.updateFieldDisplayName(id, 'Shown again');
+    expect(service.fields()[0]).toMatchObject({ name: 'Title', displayLabel: 'Shown again' });
+    service.updateOwnFieldName(id, 'Own title');
+    expect(service.fields()[0]).toMatchObject({ name: 'Own title', displayLabel: 'Shown again' });
+    expect(service.updateFieldSettings(id, { displayDescription: 'Shown help' })).toBeNull();
+    service.updateHelpText(id, 'Own help');
+    service.updateFieldDisplayDescription(id, 'Shown help again');
+    expect(service.fields()[0]).toMatchObject({ helpText: 'Own help', displayDescription: 'Shown help again' });
+  });
+
+  it('keeps a usable key for a reserved or unusable name and reports the one the name gives', () => {
     for (const name of ['@id', '@context', '@anything', 'bad\u0000key']) {
       service.addField('text', 0);
       const id = service.selectedField()!;
       service.updateFieldName(id, name);
       expect(service.childKey(id)).toMatch(/^field(?:_\d+)?$/);
+      expect(service.validation.changes(id).deploymentName).toBe(name);
+      expect(service.validationReport().issues).toContainEqual(
+        expect.objectContaining({ nodeId: id, setting: 'key', shown: true }),
+      );
     }
     expect(() => buildContainer(service.session.document())).not.toThrow();
     service.addElement(service.session.document().id);
     const element = service.session.document().children.find((n) => n.kind === 'element')!;
     service.updateContainerDefinition(element.id, { name: '@id' });
     expect(service.childKey(element.id)).toMatch(/^element(?:_\d+)?$/);
+    expect(service.validation.changes(element.id).deploymentName).toBe('@id');
   });
 
   it('validates element field settings in their real parent', () => {
@@ -104,39 +123,43 @@ describe('TemplateService', () => {
     expect(inserted[0]).toMatchObject({
       kind: 'field',
       definition: { name: 'Title', atId: field['@id'] },
-      placement: { deploymentName: 'title' },
+      placement: { displayLabel: 'Title' },
     });
-    expect(inserted[1]).toMatchObject({ kind: 'element', definition: { identifier: element['@id'], name: 'Section' } });
+    expect(inserted[1]).toMatchObject({
+      kind: 'element',
+      definition: { identifier: element['@id'], name: 'Section' },
+      placement: { deploymentName: 'Section', displayLabel: 'Section' },
+    });
+    // The field's name is a sibling's key already: that key is reported at once, and the field waits
+    // under a usable one until the author chooses.
+    expect(service.validation.changes(inserted[0].id).deploymentName).toBe('Title');
+    expect(service.validationReport().issues).toContainEqual(
+      expect.objectContaining({ nodeId: inserted[0].id, setting: 'key', shown: true }),
+    );
     expect(((service.templateJson() as CedJsonObject)['_ui'] as CedJsonObject)['order']).toEqual([
       'Title',
-      'title',
-      'section',
+      'Title_2',
+      'Section',
       'Category',
       'Publication Date',
     ]);
   });
 
-  // An imported child's key is made from its name, and a name can lower-case into a key no child may
-  // have. Import must choose a key the policy accepts, as a rename does.
-  it.each(['Prototype', 'Constructor', 'Schema:Name', 'Notes\u0007'])(
-    'imports a reusable field named %s under a key the key policy accepts',
-    (name) => {
-      const field = { ...(fieldToJson(service.fields()[0]) as CedJsonObject), 'schema:name': name };
-      const root = service.session.document();
-      service.importChildren([{ type: 'field', artifact: field }], root.id, 0);
-      const key = service.session.document().children[0].placement.deploymentName!;
-      expect(childKeyError(key)).toBeNull();
-    },
-  );
-  // A name is a label, not a key: a field named as a reserved key is imported under a usable key.
-  it.each(['__proto__', '@type', '@Type', 'schema:name'])(
-    'imports a reusable field named %s under a key the policy accepts',
+  // An imported child's key is its name. A name the key policy refuses is reported at once, and the
+  // child waits under a key the policy accepts until the author chooses one.
+  it.each(['Prototype', 'Constructor', 'Schema:Name', 'Notes\u0007', '__proto__', '@type', '@Type', 'schema:name'])(
+    'imports a reusable field named %s under its name, or reports that name as a key',
     (name) => {
       const field = { ...(fieldToJson(service.fields()[0]) as CedJsonObject), 'schema:name': name };
       service.importChildren([{ type: 'field', artifact: field }], service.session.document().id, 0);
       const imported = service.session.document().children[0];
       expect(imported.definition.name).toBe(name);
       expect(childKeyError(service.childKey(imported.id))).toBeNull();
+      const refused = !!childKeyError(name);
+      expect(service.childKey(imported.id) === name).toBe(!refused);
+      expect(
+        service.validationReport().issues.some((issue) => issue.nodeId === imported.id && issue.setting === 'key'),
+      ).toBe(refused);
     },
   );
 
@@ -194,12 +217,17 @@ describe('TemplateService', () => {
     service.customFields.set([custom]);
     service.addCustomFieldToTemplate(custom, 0);
     const copy = service.fields()[0];
+    // A library copy takes its name and description as its display name and description, and its
+    // name as its key; Title is a sibling's already, so that key waits as a reported edit.
     expect({ ...copy, id: definition.id, customFieldId: undefined, libraryId: undefined }).toEqual({
       ...definition,
-      deploymentName: 'title',
+      deploymentName: undefined,
+      displayLabel: definition.name,
+      displayDescription: definition.helpText ?? '',
       customFieldId: undefined,
       libraryId: undefined,
     });
+    expect(service.validation.changes(copy.id).deploymentName).toBe('Title');
     copy.annotations![0].value = 'copy only';
     expect(definition.annotations![0].value).toBe('original');
     service.customFields.set([{ ...custom, definition: { ...definition, name: 'Library revision' } }]);
@@ -217,27 +245,123 @@ describe('TemplateService', () => {
     expect(service.libraries()[0].name).toBe('Study');
   });
 
-  it('blocks published field mutations and preserves the published definition', () => {
+  const published = () => {
     const source = JSON.parse(JSON.stringify(service.templateJson()));
     source.properties.Title['bibo:status'] = 'bibo:published';
     source.properties.Title['pav:version'] = '1.2.0';
     source.properties.Title['pav:createdOn'] = '2026-01-01T00:00:00Z';
     service.loadTemplate(source);
+    return service.fields()[0].id;
+  };
+  const titleProperty = () =>
+    (service.templateJson() as { properties: Record<string, Record<string, unknown>> }).properties;
+
+  it("blocks a published field's definition and preserves it", () => {
+    const id = published();
     const before = service.templateJson();
-    const id = service.fields()[0].id;
-    expect(service.isPublished(id)).toBe(true);
+    expect(service.definitionLocked(id)).toBe(true);
+    expect(service.placementLocked(id)).toBe(false);
     service.updateFieldName(id, 'Changed');
-    service.updateFieldStatus(id, 'optional');
+    service.updateOwnFieldName(id, 'Changed');
     service.updateDefaultValue(id, { kind: 'literal', value: 'Changed' });
     service.updateHelpText(id, 'Changed');
     service.updateContent(id, 'Changed');
     service.updateControlledTermConstraints(id, { constraints: [], actions: [] });
-    service.toggleAllowMultiple(id);
     service.addOption(id);
-    service.deleteField(id);
-    expect(service.updateFieldSettings(id, { preferredLabel: 'Changed' })).toContain('read-only');
+    expect(service.updateFieldSettings(id, { preferredLabel: 'Changed' })).toContain('published');
     expect(service.templateJson()).toEqual(before);
     expect(service.isDirty()).toBe(false);
+  });
+
+  it('lets the parent configure and remove a published field', () => {
+    const id = published();
+    const name = service.fields()[0].name;
+    service.updateFieldDisplayName(id, 'Shown title');
+    service.updateFieldDisplayDescription(id, 'Shown help');
+    service.updateFieldStatus(id, 'recommended');
+    service.toggleAllowMultiple(id);
+    const field = service.fields()[0];
+    expect(field).toMatchObject({ name, displayLabel: 'Shown title', displayDescription: 'Shown help' });
+    expect(field).toMatchObject({ status: 'recommended', allowMultiple: true });
+    const template = service.templateJson() as { _ui: { propertyLabels: Record<string, string> } };
+    expect(template._ui.propertyLabels['Title']).toBe('Shown title');
+    expect(titleProperty()['Title']['items']).toBeDefined();
+    service.deleteField(id);
+    expect(service.fields().some((candidate) => candidate.id === id)).toBe(false);
+  });
+
+  /** A template holding Section, a published element with one field, beside the starter fields. */
+  const publishedSection = () => {
+    const id = service.addElement(service.session.document().id);
+    service.updateContainerDefinition(id, { name: 'Section' });
+    service.addField('text', 0, id);
+    const inner = findContainer(service.session.document(), id)!.children[0].id;
+    service.updateFieldName(inner, 'Inner');
+    const source = JSON.parse(JSON.stringify(service.templateJson()));
+    source.properties.Section['bibo:status'] = 'bibo:published';
+    service.loadTemplate(source);
+    const section = service.session.document().children.find((node) => node.kind === 'element')!;
+    if (section.kind !== 'element') throw new Error('Section is an element');
+    return section;
+  };
+
+  it('locks a published element and everything in it, and leaves its placement to its parent', () => {
+    const section = publishedSection();
+    const inner = section.definition.children[0];
+    expect([service.definitionLocked(section.id), service.placementLocked(section.id)]).toEqual([true, false]);
+    expect([service.definitionLocked(inner.id), service.placementLocked(inner.id)]).toEqual([true, true]);
+    const before = JSON.stringify(section.definition);
+    service.updateContainerDefinition(section.id, { name: 'Renamed', description: 'Changed' });
+    service.addField('text', 0, section.id);
+    expect(service.addElement(section.id)).toBe(-1);
+    service.updateFieldName(inner.id, 'Changed');
+    service.deleteField(inner.id);
+    service.moveChild(inner.id, service.session.document().id);
+    service.moveChild(service.fields()[0].id, section.id);
+    expect(service.updateFieldSettings(inner.id, { displayLabel: 'Changed' })).toContain('published');
+    const current = () => service.session.document().children.find((node) => node.id === section.id)!;
+    expect(JSON.stringify(current().definition)).toBe(before);
+    // Its parent still places it: display name and description, key, multiplicity, and removal.
+    expect(service.updateElementDisplayName(current() as ElementNode, 'Shown section')).toBeNull();
+    expect(service.updateElementDisplayDescription(current() as ElementNode, 'Shown help')).toBeNull();
+    expect(service.updateElementPlacement(section.id, { deploymentName: 'Placed', allowMultiple: true })).toBeNull();
+    expect(current().placement).toMatchObject({
+      displayLabel: 'Shown section',
+      displayDescription: 'Shown help',
+      deploymentName: 'Placed',
+      allowMultiple: true,
+    });
+    expect(current().definition.name).toBe('Section');
+    service.deleteChild(section.id);
+    expect(service.session.document().children.some((node) => node.id === section.id)).toBe(false);
+  });
+
+  it('renames a draft element with its display name, and keeps them apart once they differ', () => {
+    const id = service.addElement(service.session.document().id);
+    service.updateContainerDefinition(id, { name: 'Section' });
+    const node = () => service.session.document().children.find((child) => child.id === id) as ElementNode;
+    service.updateElementDisplayName(node(), 'Samples');
+    expect(node().definition.name).toBe('Samples');
+    service.updateOwnElementDescription(node(), 'About samples');
+    expect(node().definition.description).toBe('About samples');
+    expect(elementDisplayDescription(node())).toBe('About samples');
+    expect(service.updateElementPlacement(id, { displayLabel: 'Shown samples' }, 'display')).toBeNull();
+    service.updateOwnElementName(node(), 'Own samples');
+    expect(node().definition.name).toBe('Own samples');
+    expect(node().placement.displayLabel).toBe('Shown samples');
+  });
+
+  it("copies an imported child's name and description into its display name and description", () => {
+    const element = newContainer('element', 'Specimen');
+    element.description = 'A collected specimen';
+    const artifact = templateToJson(buildContainer(element)) as CedJsonObject;
+    service.importChildren([{ type: 'element', artifact }], service.session.document().id, 0);
+    const imported = service.session.document().children[0] as ElementNode;
+    expect(imported.placement).toMatchObject({
+      deploymentName: 'Specimen',
+      displayLabel: 'Specimen',
+      displayDescription: 'A collected specimen',
+    });
   });
 
   describe('the template it builds', () => {
@@ -515,7 +639,7 @@ describe('default editing', () => {
     service.updateContainerDefinition(service.addElement(), { name: 'Element' });
     const before = service.templateJson();
     const field = service.fields()[0];
-    expect(service.updateFieldSettings(field.id, { deploymentName: 'element' })).toMatch(/key/);
+    expect(service.updateFieldSettings(field.id, { deploymentName: 'Element' })).toMatch(/key/);
     expect(service.templateJson()).toEqual(before);
   });
 });

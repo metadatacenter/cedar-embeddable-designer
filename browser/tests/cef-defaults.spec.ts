@@ -81,9 +81,9 @@ for (const [type, text, stored] of [
 
 test('real CEE preview honors deployment display overrides over field metadata', async ({ page }) => {
   await openField(page, 'shortText', { preferredLabel: 'Semantic label', helpText: 'Artifact description' });
-  const section = await openSettings(page.locator('app-field-card').first(), 'Display');
-  await section.getByLabel('Name', { exact: true }).fill('Deployment heading');
-  await section.getByLabel('Description', { exact: true }).fill('Deployment help');
+  const section = await openSettings(page.locator('app-field-card').first(), 'Configuration');
+  await section.getByLabel('Display name', { exact: true }).fill('Deployment heading');
+  await section.getByLabel('Display description', { exact: true }).fill('Deployment help');
   const preview = await openPreview(page);
   await expect(preview.locator('.title-label')).toContainText('Deployment heading');
   await expect(preview.locator('.cee-field-spec-description')).toHaveText('Deployment help');
@@ -508,9 +508,9 @@ for (const type of ['number', 'date']) {
   });
 }
 
-test('Display controls use the standard CEE scale', async ({ page }) => {
+test('Presentation controls use the standard CEE scale', async ({ page }) => {
   await openField(page, 'number');
-  const panel = await openSettings(page.locator('app-field-card').first(), 'Display');
+  const panel = await openSettings(page.locator('app-field-card').first(), 'Presentation');
   for (const input of await panel.locator('input:not([type="checkbox"])').all()) {
     const authoringRow = await input.evaluate((el) => !!el.closest('app-alternate-questions'));
     await expect(input).toHaveCSS('height', authoringRow ? '32px' : '36px');
@@ -632,7 +632,8 @@ for (const type of ['checkboxes', 'multipleChoice', 'singleChoiceList', 'multipl
     await openField(page, type);
     const card = page.locator('app-field-card').first();
     await openSettings(card, 'Constraints');
-    if (type === 'checkboxes') await expect(card.getByRole('tab', { name: 'Occurrences' })).toHaveCount(0);
+    if (type === 'checkboxes')
+      await expect(card.locator('[role="tabpanel"][id$="-Configuration"] input[name="min"]')).toHaveCount(0);
     const option = card.getByRole('textbox', { name: 'Option 1', exact: true });
     const isList = type.endsWith('List');
     if (isList) await card.locator('app-field-default-value').getByRole('combobox').click();
@@ -767,10 +768,15 @@ test('editing a display name updates Overview without renaming the field key', a
   await heading.fill('Laboratory identifier');
   await heading.blur();
   await expect(page.locator('app-container-outline .node-name')).toHaveText('Laboratory identifier');
+  // The parent already shows the field by another name, so the header edits the parent's display name
+  // and leaves the field's own name and preferred label as they were.
   const template = await currentTemplate(page);
   expect(template.properties).toHaveProperty('Value');
   expect(child(template, 'Value')['schema:name']).toBe('Value');
-  expect(child(template, 'Value')['skos:prefLabel']).toBe('Laboratory identifier');
+  expect(child(template, 'Value')['skos:prefLabel']).toBe('Lab ID');
+  expect((template._ui as { propertyLabels: Record<string, string> }).propertyLabels['Value']).toBe(
+    'Laboratory identifier',
+  );
 });
 
 for (const type of ['email', 'phone', 'link']) {
@@ -786,7 +792,7 @@ for (const type of ['email', 'phone', 'link']) {
         );
       await expect.poll(canSave).toBe(false);
       if (transition === 'metadata') {
-        await openSettings(card, 'Field metadata');
+        await openSettings(card, 'Metadata');
         await card.locator('input[name=schemaIdentifier]').fill('Edited');
       } else {
         await page.evaluate(

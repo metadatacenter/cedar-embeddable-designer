@@ -74,22 +74,6 @@
                 </tr>
                 <tr class="preset-row">
                   <td class="preset-row-label">
-                    {{ 'preferences.fieldOptions.helpText.label' | translate }}
-                  </td>
-                  @for (preset of presets; track preset) {
-                    <td class="preset-column">
-                      <input
-                        spellcheck="false"
-                        type="checkbox"
-                        [ngModel]="service.presetDefinitions()[preset].showHelpText"
-                        (ngModelChange)="updateDef(preset, 'showHelpText', $event)"
-                        class="settings-dialog-check checkbox-white"
-                      />
-                    </td>
-                  }
-                </tr>
-                <tr class="preset-row">
-                  <td class="preset-row-label">
                     {{ 'preferences.fieldOptions.defaultValue.label' | translate }}
                   </td>
                   @for (preset of presets; track preset) {

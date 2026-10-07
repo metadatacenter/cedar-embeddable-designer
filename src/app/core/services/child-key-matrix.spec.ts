@@ -1,18 +1,18 @@
 /**
  * A child's key, whichever way it gets one.
  *
- * A child's key is the property name its parent stores it under. It comes from the child's name
- * while the designer chooses it, stays fixed once the author chooses it, is minted afresh when a
- * child is imported, and travels with the child when it moves. Each of those paths decides the key
- * on its own, so each can produce a key the others would refuse: one a sibling already holds, one
- * the model reserves for CEDAR's own metadata, or one an attribute-value field cannot take because
- * its YAML form writes it beside its parent's metadata.
+ * A child's key is the property name its parent stores it under. A new child's key follows its name
+ * as written until the name first loses focus, and stays put after that; an imported child takes
+ * its name as its key; an author's key stays fixed; and a key travels with the child when it moves.
+ * A name can give a key the parent refuses: one a sibling already holds, one the model reserves for
+ * CEDAR's own metadata, or one an attribute-value field cannot take because its YAML form writes it
+ * beside its parent's metadata. Such a key is kept and reported at once, so the author decides.
  *
  * The matrix crosses the kind of child, the container it sits in, the name or key it is given, and
- * the path. Every case asserts the key the path should produce, or that the path refuses, and then
- * the same four invariants of the whole document: keys are unique within each parent, every key
- * passes the key policy for its parent, the saved artifact stores each child under the key the
- * designer shows, and saving and reopening changes no key.
+ * the path. Every case asserts the key the path should produce, and then either that the parent
+ * reports it at once or the same four invariants of the whole document: keys are unique within
+ * each parent, every key passes the key policy for its parent, the saved artifact stores each child
+ * under the key the designer shows, and saving and reopening changes no key.
  */
 import { TestBed } from '@angular/core/testing';
 import { buildContainer, fieldToJson, newContainer, newFieldIdentity, templateToJson } from '../model/cedar-template';
@@ -66,29 +66,26 @@ function containerNamed(root: ContainerDraft, name: string): ContainerDraft | un
   return undefined;
 }
 
-/**
- * The key the designer should derive from a name, for each kind of child in each kind of parent:
- * lower case with underscores, a suffix past a key that is taken or reserved, and the kind's own
- * word for a name no suffix can repair.
- */
-function derived(name: string, kind: Kind, parent: ContainerDraft['kind']): string {
-  const attributeValue = kind === 'an attribute-value field';
-  const table: Record<string, string> = {
-    Sample: 'sample',
-    'Sample ID': 'sample_id',
-    Taken: 'taken_2',
-    '@id': kind === 'an element' ? 'element' : 'field',
-    'schema:name': 'schema:name_2',
-    // A computed key, since a literal __proto__ key would set the table's prototype instead.
-    ['__proto__']: '__proto___2',
-    Échantillon: 'échantillon',
-    // An attribute-value field's YAML sits beside its parent's metadata, and a template has more of it.
-    annotations: attributeValue && parent === 'template' ? 'annotations_2' : 'annotations',
-    name: attributeValue ? 'name_2' : 'name',
-  };
-  return table[name];
+// Taken is held under the key taken, so only the lower-case name clashes: keys are case-sensitive.
+const NAMES = [
+  'Sample',
+  'Sample ID',
+  'Taken',
+  'taken',
+  '@id',
+  'schema:name',
+  '__proto__',
+  'Échantillon',
+  'annotations',
+  'name',
+];
+
+/** Whether the key a name gives is one the parent accepts, beside a sibling holding `taken` or not. */
+function usable(name: string, kind: Kind, parent: ContainerDraft['kind'], holdsTaken = true): boolean {
+  return (
+    !(holdsTaken && name === 'taken') && !childKeyError(name, kind === 'an attribute-value field', undefined, parent)
+  );
 }
-const NAMES = ['Sample', 'Sample ID', 'Taken', '@id', 'schema:name', '__proto__', 'Échantillon', 'annotations', 'name'];
 
 /** A key the author types, and whether the policy for that child in that parent accepts it. */
 const KEYS: { key: string; accepted: (kind: Kind, parent: ContainerDraft['kind']) => boolean; stored?: string }[] = [
@@ -122,9 +119,28 @@ describe('child keys', () => {
     if (kind === 'an element') service.updateContainerDefinition(id, { name });
     else service.updateFieldName(id, name);
   }
+  /** The key the author sees: a refused key is held as a pending edit, over the key the child keeps. */
+  const keyOf = (id: number) => {
+    const pending = service.validation.changes(id);
+    return 'deploymentName' in pending ? pending.deploymentName : service.childKey(id);
+  };
+  /**
+   * The key a name gave, reported at once where the parent refuses it, and in every case a document
+   * that stays sound: a refused key never reaches it.
+   */
+  function expectNamedKey(id: number, name: string, accepted: boolean): void {
+    expect(keyOf(id)).toBe(name);
+    const issue = expect.objectContaining({ nodeId: id, setting: 'key', shown: true });
+    if (accepted) expect(service.validationReport().issues).not.toContainEqual(issue);
+    else {
+      expect(service.validationReport().issues).toContainEqual(issue);
+      expect(service.validationReport().canSave).toBe(false);
+    }
+    expectSoundKeys();
+  }
   function setKey(kind: Kind, id: number, key: string): string | null {
     return kind === 'an element'
-      ? service.updateElementPlacement(id, { deploymentName: key }, 'key', 'Element metadata')
+      ? service.updateElementPlacement(id, { deploymentName: key }, 'key', 'Configuration')
       : service.updateFieldSettings(id, { deploymentName: key });
   }
   function artifact(kind: Kind, name: string): { type: 'field' | 'element'; artifact: never } {
@@ -183,8 +199,7 @@ describe('child keys', () => {
     const target = container(CONTAINERS[where]);
     const id = add(kind, target);
     rename(kind, id, name);
-    expect(service.childKey(id)).toBe(derived(name, kind, target.kind));
-    expectSoundKeys();
+    expectNamedKey(id, name, usable(name, kind, target.kind));
   });
 
   // A child added and not yet named holds a key all the same, and it must be one the policy accepts.
@@ -204,9 +219,17 @@ describe('child keys', () => {
     const target = container(CONTAINERS[where]);
     const id = add(kind, target);
     rename(kind, id, 'First');
-    expect(service.childKey(id)).toBe('first');
+    expect(service.childKey(id)).toBe('First');
     rename(kind, id, name);
-    expect(service.childKey(id)).toBe(derived(name, kind, target.kind));
+    expectNamedKey(id, name, usable(name, kind, target.kind));
+  });
+
+  it.each(cross(NAMES))('%s in %s named and left keeps its key when renamed to %j', (kind, where, name) => {
+    const id = add(kind, container(CONTAINERS[where]));
+    rename(kind, id, 'First');
+    service.touchName(id);
+    rename(kind, id, name);
+    expect(service.childKey(id)).toBe('First');
     expectSoundKeys();
   });
 
@@ -223,8 +246,7 @@ describe('child keys', () => {
     const target = container(CONTAINERS[where]);
     service.importChildren([artifact(kind, name)], target.id, target.children.length);
     const id = findContainer(service.document(), target.id)!.children.at(-1)!.id;
-    expect(service.childKey(id)).toBe(derived(name, kind, target.kind));
-    expectSoundKeys();
+    expectNamedKey(id, name, usable(name, kind, target.kind));
   });
 
   it.each(cross(KEYS))('%s in %s keyed %j', (kind, where, { key, accepted, stored }) => {
@@ -239,29 +261,32 @@ describe('child keys', () => {
     } else {
       // The edit is held, the key stays what it was, and Save says why it is refused.
       expect(error).toEqual(expect.any(String));
-      expect(service.childKey(id)).toBe('sample');
+      expect(service.childKey(id)).toBe('Sample');
       expect(service.validationReport().canSave).toBe(false);
-      setKey(kind, id, 'sample');
+      setKey(kind, id, 'Sample');
       expect(service.validationReport().canSave).toBe(true);
     }
     expectSoundKeys();
   });
 
-  it.each(cross(NAMES))('%s moved from elsewhere into %s after being named %j', (kind, where, name) => {
-    const source = container('Elsewhere');
-    const target = container(CONTAINERS[where]);
-    const id = add(kind, source);
-    rename(kind, id, name);
-    const key = derived(name, kind, 'element');
-    expect(service.childKey(id)).toBe(name === 'Taken' ? 'taken' : key);
-    service.moveChild(id, target.id);
-    // A key the destination already holds, or reserves, refuses the move; the child stays put.
-    const attributeValue = kind === 'an attribute-value field';
-    const refused = name === 'Taken' || !!childKeyError(service.childKey(id), attributeValue, undefined, target.kind);
-    const parent = refused ? source : target;
-    expect(findContainer(service.document(), parent.id)!.children.some((child) => child.id === id)).toBe(true);
-    expect(service.loadError()).toEqual(refused ? expect.any(String) : null);
-    expect(service.childKey(id)).toBe(name === 'Taken' ? 'taken' : key);
-    expectSoundKeys();
-  });
+  // Elsewhere holds nothing, so each name there gives a key only the policy can refuse.
+  it.each(cross(NAMES.filter((name) => !childKeyError(name, false, undefined, 'element'))))(
+    '%s moved from elsewhere into %s after being named %j',
+    (kind, where, name) => {
+      const source = container('Elsewhere');
+      const target = container(CONTAINERS[where]);
+      const id = add(kind, source);
+      rename(kind, id, name);
+      if (!usable(name, kind, 'element', false)) return;
+      expect(service.childKey(id)).toBe(name);
+      service.moveChild(id, target.id);
+      // A key the destination already holds, or reserves, refuses the move; the child stays put.
+      const refused = !usable(name, kind, target.kind);
+      const parent = refused ? source : target;
+      expect(findContainer(service.document(), parent.id)!.children.some((child) => child.id === id)).toBe(true);
+      expect(service.loadError()).toEqual(refused ? expect.any(String) : null);
+      expect(service.childKey(id)).toBe(name);
+      expectSoundKeys();
+    },
+  );
 });

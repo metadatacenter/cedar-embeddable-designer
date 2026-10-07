@@ -49,9 +49,10 @@ for (const width of [1280, 375]) {
     const placement = directHeader(nested).locator(':scope > app-element-card');
     await placement.getByRole('button', { name: 'Expand element settings', exact: true }).click();
     await expect(placement.getByRole('tablist')).toBeVisible();
-    await placement.getByRole('tab', { name: 'Display', exact: true }).focus();
+    await expect(placement.getByRole('tabpanel', { name: 'Configuration', exact: true })).toBeVisible();
+    await placement.getByRole('tab', { name: 'Configuration', exact: true }).focus();
     await page.keyboard.press('ArrowRight');
-    await expect(placement.getByRole('tab', { name: 'Occurrences', exact: true })).toBeFocused();
+    await expect(placement.getByRole('tab', { name: 'Presentation', exact: true })).toBeFocused();
     await page.keyboard.press('ArrowRight');
     await expect(placement.getByRole('tab', { name: 'Annotations', exact: true })).toBeFocused();
     await placement.getByRole('button', { name: 'Collapse element settings', exact: true }).click();
@@ -60,9 +61,10 @@ for (const width of [1280, 375]) {
     await placement.getByRole('button', { name: 'Expand element settings', exact: true }).click();
     await expect(placement.getByRole('tab', { name: 'Element details', exact: true })).toHaveCount(0);
     await expect(placement.getByRole('tabpanel', { name: 'Annotations', exact: true })).toBeVisible();
-    await placement.getByRole('tab', { name: 'Occurrences', exact: true }).click();
+    await placement.getByRole('tab', { name: 'Configuration', exact: true }).click();
     const checkbox = placement.getByLabel('Allow multiple', { exact: true });
     await expect(checkbox).toBeVisible();
+    await expect(placement.getByLabel('Minimum', { exact: true })).toBeDisabled();
     const singlePosition = await checkbox.boundingBox();
     await checkbox.check();
     const multiplePosition = await checkbox.boundingBox();
@@ -78,23 +80,23 @@ for (const width of [1280, 375]) {
       return { accent: getComputedStyle(node).accentColor, primary };
     });
     expect(colors.accent).toBe(colors.primary);
-    await placement.getByLabel('Minimum occurrences', { exact: true }).fill('2');
-    await placement.getByLabel('Maximum occurrences', { exact: true }).fill('4');
-    await nestFixtureFields(page, ['element', 'element']);
+    await placement.getByLabel('Minimum', { exact: true }).fill('2');
+    await placement.getByLabel('Maximum', { exact: true }).fill('4');
+    await nestFixtureFields(page, ['Element', 'Element']);
     await placement.getByRole('button', { name: 'Expand element settings', exact: true }).click();
-    await placement.getByRole('tab', { name: 'Occurrences', exact: true }).click();
+    await placement.getByRole('tab', { name: 'Configuration', exact: true }).click();
     const moved = nested.locator('app-field-card').first();
     await expect(moved.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue('Title');
-    await placement.getByLabel('Minimum occurrences', { exact: true }).fill('8');
+    await placement.getByLabel('Minimum', { exact: true }).fill('8');
     await expect(placement.getByRole('alert')).toBeVisible();
     // Select the root, then edit the nested field without navigating into it.
     await directHeader(root).getByPlaceholder('Template name').click();
     await moved.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Nested title');
-    await expect(placement.getByLabel('Minimum occurrences', { exact: true })).toHaveValue('8');
-    await placement.getByLabel('Minimum occurrences', { exact: true }).fill('2');
+    await expect(placement.getByLabel('Minimum', { exact: true })).toHaveValue('8');
+    await placement.getByLabel('Minimum', { exact: true }).fill('2');
     await expect(placement.getByRole('alert')).toHaveCount(0);
-    const display = await openSettings(moved, 'Display');
-    await display.getByLabel('Name', { exact: true }).fill('Nested display');
+    const display = await openSettings(moved, 'Presentation');
+    await display.getByLabel('Field name', { exact: true }).fill('Nested display');
     await directHeader(parent).getByRole('button', { name: 'Collapse Samples', exact: true }).click();
     await expect(directContent(parent)).toBeHidden();
     const collapsed = await currentTemplate(page);
@@ -109,13 +111,14 @@ for (const width of [1280, 375]) {
     await rootCategory.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Root category');
     const saved = await currentTemplate(page);
     const properties = saved.properties as Record<string, any>;
-    expect(properties.element.properties.element.minItems).toBe(2);
-    expect(properties.element.properties.element.maxItems).toBe(4);
-    expect(properties.element.properties.element.items['schema:name']).toBe('Sample');
-    const nestedTitle = properties.element.properties.element.items.properties.Title;
-    expect((nestedTitle.items ?? nestedTitle)['skos:prefLabel']).toBe('Nested display');
+    expect(properties.Element.properties.Element.minItems).toBe(2);
+    expect(properties.Element.properties.Element.maxItems).toBe(4);
+    expect(properties.Element.properties.Element.items['schema:name']).toBe('Sample');
+    // Each is a draft its parent shows as itself, so its header and Presentation tab name the field itself.
+    const nestedTitle = properties.Element.properties.Element.items.properties.Title;
+    expect((nestedTitle.items ?? nestedTitle)['schema:name']).toBe('Nested display');
     expect(
-      Object.values(properties).some((field: any) => (field.items ?? field)['skos:prefLabel'] === 'Root category'),
+      Object.values(properties).some((field: any) => (field.items ?? field)['schema:name'] === 'Root category'),
     ).toBe(true);
     expect(await root.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
     await page.screenshot({ path: test.info().outputPath(`ced-inline-elements-${width}.png`), fullPage: true });
@@ -138,9 +141,7 @@ for (const kind of ['Template', 'Element']) {
     await expect(directHeader(root).locator('.template-header-card__body input')).toHaveCount(2);
     const settings = root.locator(':scope > .template-header-card > app-container-settings');
     await settings.getByRole('button', { name: `Expand ${kind.toLowerCase()} settings`, exact: true }).click();
-    await settings
-      .getByRole('tab', { name: kind === 'Template' ? 'Template metadata' : 'Element metadata', exact: true })
-      .click();
+    await settings.getByRole('tab', { name: 'Metadata', exact: true }).click();
     const identifier = settings.getByLabel('Identifier', { exact: true });
     await expect(identifier).toHaveValue('');
     await identifier.fill('Study protocol ABC-123');
@@ -158,7 +159,7 @@ for (const kind of ['Template', 'Element']) {
   });
 }
 
-test('nested element Identifier edits the element in its Element metadata tab', async ({ page }) => {
+test('nested element Identifier edits the element in its Metadata tab', async ({ page }) => {
   const designer = await openDesigner(page);
   await applyPreset(page, 'modular');
   await addElementFixture(page, designer);
@@ -166,10 +167,10 @@ test('nested element Identifier edits the element in its Element metadata tab', 
   await expect(directHeader(element).locator('.template-header-card__body input')).toHaveCount(2);
   const card = directHeader(element).locator('app-element-card');
   await card.getByRole('button', { name: 'Expand element settings', exact: true }).click();
-  await card.getByRole('tab', { name: 'Element metadata', exact: true }).click();
+  await card.getByRole('tab', { name: 'Metadata', exact: true }).click();
   await card.getByLabel('Identifier', { exact: true }).fill('Element protocol 42');
   const artifact = await currentTemplate(page);
-  expect((artifact.properties as Record<string, any>).element['schema:identifier']).toBe('Element protocol 42');
+  expect((artifact.properties as Record<string, any>).Element['schema:identifier']).toBe('Element protocol 42');
   expect(artifact['schema:identifier'] ?? null).toBeNull();
 });
 
@@ -180,7 +181,7 @@ test('element metadata shows provenance without changing the artifact and hides 
   await applyPreset(page, 'modular');
   await addElementFixture(page, designer);
   const artifact = await currentTemplate(page);
-  const element = (artifact.properties as Record<string, any>).element;
+  const element = (artifact.properties as Record<string, any>).Element;
   element['pav:createdOn'] = '2026-08-18T16:07:23-07:00';
   element['pav:lastUpdatedOn'] = '2026-09-11T07:27:46-07:00';
   element['pav:derivedFrom'] = 'https://example.org/elements/source';
@@ -191,8 +192,8 @@ test('element metadata shows provenance without changing the artifact and hides 
     }, artifact);
     const settings = designer.locator('app-element-card').first();
     await settings.getByRole('button', { name: 'Expand element settings', exact: true }).click();
-    await settings.getByRole('tab', { name: 'Element metadata', exact: true }).click();
-    return settings.getByRole('tabpanel', { name: 'Element metadata', exact: true });
+    await settings.getByRole('tab', { name: 'Metadata', exact: true }).click();
+    return settings.getByRole('tabpanel', { name: 'Metadata', exact: true });
   };
   const panel = await load();
   const before = await currentTemplate(page);
@@ -225,7 +226,7 @@ async function loadStandalone(page: import('@playwright/test').Page, kind: strin
   await applyPreset(page, 'modular');
   await addElementFixture(page);
   const template = await currentTemplate(page);
-  const element = (template.properties as Record<string, any>).element;
+  const element = (template.properties as Record<string, any>).Element;
   await page.evaluate((artifact) => {
     (document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object }).artifact = artifact;
   }, element);
@@ -260,7 +261,7 @@ for (const width of [1280, 375]) {
     const designer = await openDesigner(page);
     await applyPreset(page, 'modular');
     await addElementFixture(page);
-    await nestFixtureFields(page, ['element']);
+    await nestFixtureFields(page, ['Element']);
     const element = designer.locator('app-container-editor').nth(1);
     const header = directHeader(element);
     const geometry = await element.evaluate((node) => {
@@ -299,7 +300,7 @@ for (const collapsed of [false, true]) {
     await page.setViewportSize({ width: 1280, height: 1400 });
     await applyPreset(page, 'modular');
     await addElementFixture(page, designer);
-    await nestFixtureFields(page, ['element'], 2);
+    await nestFixtureFields(page, ['Element'], 2);
     const root = designer.locator('app-container-editor').first();
     const element = nestedEditors(root).first();
     if (collapsed) await directHeader(element).locator('.element-toggle').click();
@@ -319,9 +320,9 @@ for (const collapsed of [false, true]) {
     await expect
       .poll(async () => (await currentTemplate(page))._ui)
       .toMatchObject({
-        order: ['element', ...(before._ui as { order: string[] }).order.filter((name) => name !== 'element')],
+        order: ['Element', ...(before._ui as { order: string[] }).order.filter((name) => name !== 'Element')],
       });
-    expect(child(await currentTemplate(page), 'element')).toEqual(child(before, 'element'));
+    expect(child(await currentTemplate(page), 'Element')).toEqual(child(before, 'Element'));
   });
 }
 
@@ -357,7 +358,7 @@ test('edits a nested element key and rejects keys used by sibling fields', async
   const settings = designer.locator('app-element-card').first();
   const expand = settings.getByRole('button', { name: 'Expand element settings', exact: true });
   await expand.click();
-  await settings.getByRole('tab', { name: 'Element metadata', exact: true }).click();
+  await expect(settings.getByRole('tabpanel', { name: 'Configuration', exact: true })).toBeVisible();
   const key = settings.getByLabel('Key', { exact: true });
   await key.fill('Title');
   await expect(settings.getByRole('alert')).toContainText('already uses that key');
@@ -400,19 +401,23 @@ test('confirms deletion of an element subtree, but deletes empty elements immedi
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
-test('an element shows one name in its header and its Display tab, and either edits it', async ({ page }) => {
+test('an element shows one name in its header and its Presentation tab until its parent shows it differently', async ({
+  page,
+}) => {
   const designer = await openDesigner(page);
   await applyPreset(page, 'modular');
   await addElementFixture(page, designer);
-  const header = designer.getByRole('textbox', { name: 'Element name', exact: true }).first();
+  const header = designer.getByRole('textbox', { name: 'Element display name', exact: true }).first();
   const displayName = async () => {
     const settings = designer.locator('app-element-card').first();
     // A reloaded template re-renders the card, so wait for its toggle before reading its state.
     await expect(settings.getByRole('button', { name: /^(Expand|Collapse) element settings$/ })).toBeVisible();
     const expand = settings.getByRole('button', { name: 'Expand element settings', exact: true });
     if (await expand.count()) await expand.click();
-    await settings.getByRole('tab', { name: 'Display', exact: true }).click();
-    return settings.getByRole('tabpanel', { name: 'Display', exact: true }).getByLabel('Name', { exact: true });
+    await settings.getByRole('tab', { name: 'Presentation', exact: true }).click();
+    return settings
+      .getByRole('tabpanel', { name: 'Presentation', exact: true })
+      .getByLabel('Element name', { exact: true });
   };
   const element = async () => {
     const template = await currentTemplate(page);
@@ -431,21 +436,66 @@ test('an element shows one name in its header and its Display tab, and either ed
   // Without an authored override, the name both places edit is the element's own.
   await expect.poll(async () => (await element()).element['schema:name']).toBe('Specimen');
 
-  // An override the template already carries is the name both places show, and both edit it.
+  // An override the template already carries is the parent's display name: the header shows and edits
+  // it, and the Presentation tab keeps the element's own name.
   const { template, key } = await element();
   (template._ui as { propertyLabels: Record<string, string> }).propertyLabels[key] = 'Collected specimen';
   await page.evaluate((value) => {
     (document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object }).artifact = value;
   }, template);
   name = await displayName();
-  await expect(name).toHaveValue('Collected specimen');
+  await expect(name).toHaveValue('Specimen');
   await expect(header).toHaveValue('Collected specimen');
   await header.fill('Stored specimen');
-  await expect(name).toHaveValue('Stored specimen');
+  await expect(name).toHaveValue('Specimen');
   await expect
     .poll(async () => {
       const current = await element();
       return [(current.template._ui as any).propertyLabels[current.key], current.element['schema:name']];
     })
     .toEqual(['Stored specimen', 'Specimen']);
+});
+
+test('a published element keeps its content while its parent names, configures and removes it', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await applyPreset(page, 'modular');
+  await addElementFixture(page, designer);
+  await nestFixtureFields(page, ['Element']);
+  const source = await currentTemplate(page);
+  (source.properties as Record<string, any>).Element['bibo:status'] = 'bibo:published';
+  await page.evaluate((artifact) => {
+    (document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object }).artifact = artifact;
+  }, source);
+  const editor = designer.locator('app-container-editor').nth(1);
+  const header = directHeader(editor);
+  await expect(header.getByRole('status')).toHaveText(
+    'This element is published, so only its configuration can change.',
+  );
+  // The header names and describes it as its parent shows it, which the parent still decides.
+  const name = header.getByRole('textbox', { name: 'Element display name', exact: true });
+  await expect(name).toBeEnabled();
+  await expect(header.getByRole('textbox', { name: 'Version', exact: true })).toBeDisabled();
+  await name.fill('Shown element');
+  // What it holds is its own: its children and the places a child could be added are locked.
+  const inner = directContent(editor).locator('app-field-card').first();
+  await expect(inner.getByRole('textbox', { name: 'Field display name', exact: true })).toBeDisabled();
+  await expect(inner.getByTitle('Delete field', { exact: true })).toBeDisabled();
+  await expect(directContent(editor).locator('app-insertion-actions')).toHaveCount(0);
+  const card = header.locator('app-element-card');
+  await card.getByRole('button', { name: 'Expand element settings', exact: true }).click();
+  const configuration = card.getByRole('tabpanel', { name: 'Configuration', exact: true });
+  await expect(configuration.getByLabel('Display name', { exact: true })).toHaveValue('Shown element');
+  await configuration.getByLabel('Allow multiple', { exact: true }).check();
+  await card.getByRole('tab', { name: 'Presentation', exact: true }).click();
+  await expect(
+    card.getByRole('tabpanel', { name: 'Presentation', exact: true }).getByLabel('Element name', { exact: true }),
+  ).toBeDisabled();
+  const saved = await currentTemplate(page);
+  expect((saved._ui as any).propertyLabels.Element).toBe('Shown element');
+  expect((saved.properties as any).Element).toMatchObject({ type: 'array', items: { 'schema:name': 'Element' } });
+  await header.getByRole('button', { name: 'Delete element Element', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect
+    .poll(async () => Object.keys((await currentTemplate(page)).properties as object))
+    .not.toContain('Element');
 });

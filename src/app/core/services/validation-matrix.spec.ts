@@ -420,9 +420,12 @@ describe('deep container and field defects stay independent', () => {
       const parent = deepest(service.document());
       service.importChildren([{ type: 'field', artifact: source.properties['Value'] as never }], parent.id, 1);
       const id = deepest(service.document()).children[1].id;
+      // Its sibling is also called Value, so the key it takes from its name is reported at once too.
       expect(service.validationReport().issues).toEqual([
+        expect.objectContaining({ nodeId: id, setting: 'key', shown: true }),
         expect.objectContaining({ nodeId: id, setting: 'defaultValue' }),
       ]);
+      expect(service.updateFieldSettings(id, { deploymentName: 'Imported value' })).toBeNull();
       service.updateDefaultValue(id, entry.correction);
       expect(service.validationReport().canSave).toBe(true);
     });

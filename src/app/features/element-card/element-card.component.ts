@@ -12,7 +12,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { CedLanguageService } from '../../i18n/ced-language.service';
 import { SETTINGS_TABS, settingsTabKey } from '../../shared/settings-tabs';
 import { ElementNode, ElementPlacement } from '../../core/model/container-draft';
-import { elementDisplayName } from '../../core/model/field-display-name';
+import { elementDisplayDescription, elementDisplayName } from '../../core/model/field-display-name';
 import { containerArtifactMetadata } from '../../core/model/cedar-template';
 import { TemplateService } from '../../core/services/template.service';
 
@@ -62,14 +62,19 @@ export class ElementCardComponent {
         ?.message ?? null,
   );
   expanded = false;
-  activeTab = 'Display';
+  activeTab: string = SETTINGS_TABS.configuration;
   readonly tabs: string[] = [
+    SETTINGS_TABS.configuration,
     SETTINGS_TABS.display,
-    SETTINGS_TABS.occurrences,
     SETTINGS_TABS.annotations,
     SETTINGS_TABS.elementMetadata,
   ];
   readonly artifact = computed(() => containerArtifactMetadata(this.node().definition));
+  /** Whether the element's own definition is locked: it is published, or inside a published element. */
+  readonly definitionLocked = computed(() => this.service.definitionLocked(this.node().id));
+  /** Whether its placement in the parent is locked: it is inside a published element. */
+  readonly placementLocked = computed(() => this.service.placementLocked(this.node().id));
+  readonly shownDescription = computed(() => elementDisplayDescription(this.node()));
   readonly publicationStatus = computed(() => publicationStatusLabel(this.artifact().publicationStatus));
   tabId(tab: string): string {
     return 'element-settings-' + this.node().id + '-' + tab.replaceAll(' ', '-');
@@ -115,51 +120,43 @@ export class ElementCardComponent {
       this.node().id,
       { propertyIri: iri },
       'propertyIri',
-      SETTINGS_TABS.elementMetadata,
+      SETTINGS_TABS.configuration,
     );
   }
   saveKey(value: string): void {
     this.keyDraft.set(value);
-    this.service.updateElementPlacement(
-      this.node().id,
-      { deploymentName: value },
-      'key',
-      SETTINGS_TABS.elementMetadata,
-    );
+    this.service.updateElementPlacement(this.node().id, { deploymentName: value }, 'key', SETTINGS_TABS.configuration);
   }
   readonly displayName = computed(() => elementDisplayName(this.node()));
   rename(value: string): void {
     this.service.updateElementDisplayName(this.node(), value);
   }
-  apply(changed?: string): void {
-    const occurrences = this.activeTab === 'Occurrences';
-    const setting = occurrences ? 'placement' : 'display';
+  applyPlacement(changed?: string): void {
+    const tab = SETTINGS_TABS.configuration;
     const invalid = invalidSettingsInputs(
       this.host.nativeElement,
-      this.service.validation.settingsInput(this.node().id, setting)?.invalid,
+      this.service.validation.settingsInput(this.node().id, 'placement')?.invalid,
       changed,
     );
-    if (Object.keys(invalid).length && occurrences && this.draft().allowMultiple) {
+    const draft = this.draft();
+    if (Object.keys(invalid).length && draft.allowMultiple) {
       this.service.validation.setInputError(
         this.node().id,
-        setting,
+        'placement',
         this.language.t('settings.invalidNumber', {
           label: Object.values(invalid)[0] || this.language.t('settings.value'),
         }),
-        this.activeTab,
+        tab,
         undefined,
-        { changes: { ...this.draft() }, invalid },
+        { changes: { ...draft }, invalid },
       );
       return;
     }
-    const draft = this.draft();
     this.service.updateElementPlacement(
       this.node().id,
-      occurrences
-        ? { allowMultiple: draft.allowMultiple, minItems: draft.minItems, maxItems: draft.maxItems }
-        : { displayDescription: draft.displayDescription },
-      setting,
-      this.activeTab,
+      { allowMultiple: draft.allowMultiple, minItems: draft.minItems, maxItems: draft.maxItems },
+      'placement',
+      tab,
     );
   }
 }

@@ -406,12 +406,12 @@
       "section": "Template Designer",
       "contract": "authoring-label",
       "scenario": "field-metadata",
-      "selector": "label[for^=\"field-key-\"]:visible",
+      "selector": "label[for^=\"field-identifier-\"]:visible",
       "states": ["open"],
       "source": [
         {
           "file": "src/app/features/field-settings/field-settings.component.html",
-          "anchor": "[for]=\"'field-key-' + field.id\""
+          "anchor": "[for]=\"'field-identifier-' + field.id\""
         }
       ],
       "test": "browser/tests/surfaces.spec.ts"
@@ -422,12 +422,44 @@
       "section": "Template Designer",
       "contract": "authoring-control",
       "scenario": "field-metadata",
-      "selector": "input[id^=\"field-key-\"]:visible",
+      "selector": "input[id^=\"field-identifier-\"]:visible",
       "states": ["open"],
       "source": [
         {
           "file": "src/app/features/field-settings/field-settings.component.html",
-          "anchor": "[id]=\"'field-key-' + field.id\""
+          "anchor": "[id]=\"'field-identifier-' + field.id\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.field-configuration-label",
+      "name": "Field configuration label",
+      "section": "Template Designer",
+      "contract": "authoring-label",
+      "scenario": "field-configuration",
+      "selector": "label[data-setting=\"key\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-settings/field-settings.component.html",
+          "anchor": "<label data-setting=\"key\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.field-configuration-control",
+      "name": "Field configuration control",
+      "section": "Template Designer",
+      "contract": "authoring-control",
+      "scenario": "field-configuration",
+      "selector": "select[name=\"requirement\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/field-settings/field-settings.component.html",
+          "anchor": "name=\"requirement\""
         }
       ],
       "test": "browser/tests/surfaces.spec.ts"
@@ -454,12 +486,12 @@
       "section": "Template Designer",
       "contract": "authoring-label",
       "scenario": "element-metadata",
-      "selector": "label[for^=\"element-key-\"]:visible",
+      "selector": "label[for^=\"element-identifier-\"]:visible",
       "states": ["open"],
       "source": [
         {
           "file": "src/app/features/element-card/element-card.component.html",
-          "anchor": "[for]=\"'element-key-' + node().id\""
+          "anchor": "[for]=\"'element-identifier-' + node().id\""
         }
       ],
       "test": "browser/tests/surfaces.spec.ts"
@@ -470,12 +502,44 @@
       "section": "Template Designer",
       "contract": "authoring-control",
       "scenario": "element-metadata",
-      "selector": "input[id^=\"element-key-\"]:visible",
+      "selector": "input[id^=\"element-identifier-\"]:visible",
       "states": ["open"],
       "source": [
         {
           "file": "src/app/features/element-card/element-card.component.html",
-          "anchor": "[id]=\"'element-key-' + node().id\""
+          "anchor": "[id]=\"'element-identifier-' + node().id\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.element-configuration-label",
+      "name": "Element configuration label",
+      "section": "Template Designer",
+      "contract": "authoring-label",
+      "scenario": "element-configuration",
+      "selector": "app-element-card label[data-setting=\"key\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/element-card/element-card.component.html",
+          "anchor": "<label data-setting=\"key\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.element-configuration-control",
+      "name": "Element configuration control",
+      "section": "Template Designer",
+      "contract": "authoring-control",
+      "scenario": "element-configuration",
+      "selector": "app-element-card input[name=\"deploymentName\"]:visible",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/element-card/element-card.component.html",
+          "anchor": "name=\"deploymentName\""
         }
       ],
       "test": "browser/tests/surfaces.spec.ts"
@@ -534,12 +598,12 @@
       "section": "Template Designer",
       "contract": "authoring-label",
       "scenario": "host-override",
-      "selector": "label[for^=\"field-key-\"]:visible",
+      "selector": "label[for^=\"field-identifier-\"]:visible",
       "states": ["open"],
       "source": [
         {
           "file": "src/app/features/field-settings/field-settings.component.html",
-          "anchor": "[for]=\"'field-key-' + field.id\""
+          "anchor": "[for]=\"'field-identifier-' + field.id\""
         }
       ],
       "test": "browser/tests/surfaces.spec.ts"
@@ -550,12 +614,12 @@
       "section": "Template Designer",
       "contract": "authoring-control",
       "scenario": "host-override",
-      "selector": "input[id^=\"field-key-\"]:visible",
+      "selector": "input[id^=\"field-identifier-\"]:visible",
       "states": ["open"],
       "source": [
         {
           "file": "src/app/features/field-settings/field-settings.component.html",
-          "anchor": "[id]=\"'field-key-' + field.id\""
+          "anchor": "[id]=\"'field-identifier-' + field.id\""
         }
       ],
       "test": "browser/tests/surfaces.spec.ts"

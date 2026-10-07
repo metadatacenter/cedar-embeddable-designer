@@ -51,6 +51,10 @@ interface FieldElement extends HTMLElement {
 export class FieldDefaultValueComponent {
   readonly field = input.required<Field>();
   readonly service = inject(TemplateService);
+  /** Whether the field's own definition is locked: it is published, or inside a published element. */
+  locked(): boolean {
+    return !!this.field().publishedDefinition || this.service.definitionLocked(this.field().id);
+  }
   private readonly terminology = inject(TerminologyService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly i18n = inject(CedLanguageService);
@@ -168,7 +172,7 @@ export class FieldDefaultValueComponent {
       const field = this.field();
       const config = {
         ...this.service.fieldEditorConfig(),
-        readOnlyMode: !!field.publishedDefinition || accepts(field.type, 'controlledTermConstraints'),
+        readOnlyMode: this.locked() || accepts(field.type, 'controlledTermConstraints'),
         // CEF applies configuration once, so a change of language builds a new control.
         defaultLanguage: this.language(),
         fallbackLanguage: 'en',
@@ -211,13 +215,13 @@ export class FieldDefaultValueComponent {
 
   private readonly acceptValue = (event: Event): void => {
     const detail = (event as CustomEvent<{ value: FieldDefaultValue; valid: boolean }>).detail;
-    if (this.allowsControlledTerms() || this.field().publishedDefinition) return;
+    if (this.allowsControlledTerms() || this.locked()) return;
     if (detail?.valid === true) this.save(defaultFromCef(this.field(), detail.value));
     else this.setError(this.i18n.t('defaultValue.invalid'), true, detail?.value);
   };
 
   editNative(text: string): void {
-    if (this.field().publishedDefinition) return;
+    if (this.locked()) return;
     this.draft.set(text);
     if (text === '') {
       this.save({ kind: 'none' });
@@ -240,7 +244,7 @@ export class FieldDefaultValueComponent {
   }
 
   openPicker(): void {
-    if (this.field().publishedDefinition) return;
+    if (this.locked()) return;
     this.cancelPicker();
     this.pickerOpen.set(true);
   }
@@ -253,7 +257,7 @@ export class FieldDefaultValueComponent {
   }
 
   clear(): void {
-    if (this.field().publishedDefinition) return;
+    if (this.locked()) return;
     this.draft.set('');
     this.cancelPicker();
     this.save({ kind: 'none' });
@@ -267,7 +271,7 @@ export class FieldDefaultValueComponent {
     }
     if (this.checking()) return;
     const field = this.field();
-    if (field.publishedDefinition || !this.pickerOpen()) return;
+    if (this.locked() || !this.pickerOpen()) return;
     this.setError(null);
     const attempt = this.service.terminologyEdits.selectDefault(field.id, {
       iri: picked.termIri,

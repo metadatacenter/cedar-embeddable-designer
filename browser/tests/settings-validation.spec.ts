@@ -114,9 +114,10 @@ test('settings and default errors coexist and malformed occurrence input blocks 
   await expect.poll(async () => (await report(page)).issues.length).toBe(1);
   await panel.getByRole('textbox', { name: 'Default value', exact: true }).fill('abcdefgh');
   await expect.poll(async () => (await report(page)).valid).toBe(true);
-  await card.getByLabel('Allow multiple', { exact: true }).check();
-  const occurrences = await openSettings(card, 'Occurrences');
-  const min = occurrences.getByLabel('Minimum', { exact: true });
+  const configuration = await openSettings(card, 'Configuration');
+  await configuration.getByLabel('Allow multiple', { exact: true }).check();
+  const min = configuration.getByLabel('Minimum', { exact: true });
+  await expect(min).toBeEnabled();
   await min.pressSequentially('1e');
   await expect.poll(async () => (await report(page)).canSave).toBe(false);
   await min.fill('1');
@@ -166,7 +167,7 @@ test('blank and whitespace names block saving and summary navigation focuses the
   const newField = await addNamedField(designer);
   for (const name of [
     designer.getByRole('textbox', { name: 'Template name', exact: true }),
-    designer.getByRole('textbox', { name: 'Element name', exact: true }).first(),
+    designer.getByRole('textbox', { name: 'Element display name', exact: true }).first(),
     newField.getByRole('textbox', { name: 'Field display name', exact: true }),
   ]) {
     const original = await name.inputValue();
@@ -205,7 +206,7 @@ test('new fields and elements focus an unnamed draft and defer errors until blur
   await field.fill('Study title');
   await expect.poll(async () => (await report(page)).canSave).toBe(true);
   await designer.getByRole('button', { name: 'Add element', exact: true }).first().click();
-  const element = designer.getByRole('textbox', { name: 'Element name', exact: true }).last();
+  const element = designer.getByRole('textbox', { name: 'Element display name', exact: true }).last();
   await expect(element).toBeFocused();
   await expect(element).toHaveValue('');
   await expect(element).toHaveAttribute('aria-invalid', 'false');
@@ -277,7 +278,7 @@ test('an invalid blank field name remains editable with real keystrokes', async 
   await name.fill('');
   await name.blur();
   await expect(name).toHaveAttribute('aria-invalid', 'true');
-  await openSettings(card, 'Display');
+  await openSettings(card, 'Presentation');
   const bounds = (await name.boundingBox())!;
   // Hit the top edge physically: locator.click() would retry around an overlay.
   await page.mouse.click(bounds.x + 30, bounds.y + 2);
@@ -292,42 +293,43 @@ test('tabs retain their error marker when another tab is selected', async ({ pag
   const designer = await openDesigner(page);
   await designer.getByLabel('Template name', { exact: true }).fill('Study');
   const card = designer.locator('app-field-card').first();
-  await card.getByLabel('Allow multiple', { exact: true }).check();
-  const panel = await openSettings(card, 'Occurrences');
+  const panel = await openSettings(card, 'Configuration');
+  await panel.getByLabel('Allow multiple', { exact: true }).check();
   await panel.getByLabel('Minimum', { exact: true }).fill('2');
   await panel.getByLabel('Maximum', { exact: true }).fill('1');
-  const tab = card.getByRole('tab', { name: 'Occurrences', exact: true });
+  const tab = card.getByRole('tab', { name: 'Configuration', exact: true });
   await expect(tab).toHaveAttribute('aria-description', 'Contains errors');
   await expect(tab).toHaveCSS('border-bottom-color', 'rgb(180, 35, 24)');
-  await card.getByRole('tab', { name: 'Display', exact: true }).click();
+  await card.getByRole('tab', { name: 'Presentation', exact: true }).click();
   await expect(tab).toHaveAttribute('aria-selected', 'false');
   await expect(tab).toHaveCSS('border-bottom-color', 'rgb(180, 35, 24)');
-  await expect(card.getByRole('tab', { name: 'Display', exact: true })).not.toHaveAttribute('aria-description');
+  await expect(card.getByRole('tab', { name: 'Presentation', exact: true })).not.toHaveAttribute('aria-description');
   await tab.click();
   await panel.getByLabel('Maximum', { exact: true }).fill('3');
   await expect(tab).not.toHaveAttribute('aria-description');
   await expect(tab).not.toHaveCSS('border-bottom-color', 'rgb(180, 35, 24)');
 });
 
-test('turning Allow multiple off drops a refused occurrence bound with its tab', async ({ page }) => {
+test('turning Allow multiple off disables the bounds and drops a refused one', async ({ page }) => {
   const designer = await openDesigner(page);
   await designer.getByLabel('Template name', { exact: true }).fill('Study');
   const card = designer.locator('app-field-card').first();
-  const multiple = card.getByLabel('Allow multiple', { exact: true });
+  const panel = await openSettings(card, 'Configuration');
+  const multiple = panel.getByLabel('Allow multiple', { exact: true });
   await multiple.check();
-  const panel = await openSettings(card, 'Occurrences');
   await panel.getByLabel('Minimum', { exact: true }).fill('2');
   await panel.getByLabel('Maximum', { exact: true }).fill('1');
   await expect.poll(async () => (await report(page)).canSave).toBe(false);
   await multiple.uncheck();
-  await expect(card.getByRole('tab', { name: 'Occurrences', exact: true })).toHaveCount(0);
+  await expect(panel.getByLabel('Minimum', { exact: true })).toBeDisabled();
+  await expect(panel.getByLabel('Maximum', { exact: true })).toBeDisabled();
   await expect.poll(async () => (await report(page)).valid).toBe(true);
-  // Turned back on, the tab shows the bounds the field kept, not the draft it refused.
+  // Turned back on, the bounds are the ones the field kept, not the draft it refused.
   await multiple.check();
-  const restored = await openSettings(card, 'Occurrences');
-  await expect(restored.getByLabel('Minimum', { exact: true })).toHaveValue('2');
-  await expect(restored.getByLabel('Maximum', { exact: true })).toHaveValue('');
-  await expect(card.getByRole('tab', { name: 'Occurrences', exact: true })).not.toHaveAttribute('aria-description');
+  await expect(panel.getByLabel('Minimum', { exact: true })).toBeEnabled();
+  await expect(panel.getByLabel('Minimum', { exact: true })).toHaveValue('2');
+  await expect(panel.getByLabel('Maximum', { exact: true })).toHaveValue('');
+  await expect(card.getByRole('tab', { name: 'Configuration', exact: true })).not.toHaveAttribute('aria-description');
   expect((await report(page)).valid).toBe(true);
 });
 
@@ -365,17 +367,14 @@ for (const inputType of ['radio', 'checkbox', 'list']) {
 test('key errors are attached directly below the key and preserve the previous schema', async ({ page }) => {
   const designer = await openDesigner(page);
   const card = designer.locator('app-field-card').first();
-  await openSettings(card);
-  await card.getByRole('tab', { name: 'Field metadata', exact: true }).click();
+  await openSettings(card, 'Configuration');
   const key = card.getByLabel('Key', { exact: true });
   const before = await currentTemplate(page);
   for (const invalid of ['', '@context', '__proto__', 'Category']) {
     await key.fill(invalid);
     await expect(key).toHaveAttribute('aria-invalid', 'true');
-    const error = card
-      .locator('dd')
-      .filter({ has: page.locator('input[name="deploymentName"]') })
-      .getByRole('alert');
+    const error = card.locator(`#${await key.getAttribute('aria-describedby')}`);
+    await expect(error).toHaveRole('alert');
     await expect(error).toBeVisible();
     const inputBox = (await key.boundingBox())!;
     const errorBox = (await error.boundingBox())!;

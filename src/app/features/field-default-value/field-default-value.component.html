@@ -8,7 +8,7 @@
         [attr.aria-label]="'defaultValue.label' | translate"
         rows="1"
         [value]="draft()"
-        [disabled]="!!field().publishedDefinition"
+        [disabled]="locked()"
         [attr.aria-invalid]="!!error()"
         (input)="editNative(control.value)"
       ></textarea>
@@ -21,7 +21,7 @@
         [attr.aria-label]="'defaultValue.label' | translate"
         [value]="draft()"
         [attr.inputmode]="field().type === 'number' ? 'decimal' : null"
-        [disabled]="!!field().publishedDefinition"
+        [disabled]="locked()"
         [attr.aria-invalid]="!!error()"
         (input)="editNative(control.value)"
       />
@@ -125,7 +125,7 @@
       <p role="alert" class="ced-field-error">{{ error() }}</p>
     }
     <p class="default-help">{{ 'defaultValue.suppliedValue' | translate: { value: invalidDefaultText() } }}</p>
-    <button type="button" class="ced-text-action" [disabled]="!!field().publishedDefinition" (click)="clear()">
+    <button type="button" class="ced-text-action" [disabled]="locked()" (click)="clear()">
       {{ 'defaultValue.clearInvalid' | translate }}
     </button>
   </div>

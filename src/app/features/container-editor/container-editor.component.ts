@@ -10,7 +10,8 @@ import { CountKeyPipe } from '../../i18n/count-key.pipe';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService } from '../../core/services/template.service';
 import { fieldView, findContainer } from '../../core/model/container-draft';
-import { elementDisplayName } from '../../core/model/field-display-name';
+import { elementDisplayDescription, elementDisplayName } from '../../core/model/field-display-name';
+import { childLocks, publishedContainer } from '../../core/model/child-locks';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { FieldCardComponent } from '../field-card/field-card.component';
 import { FieldTypePickerComponent } from '../field-type-picker/field-type-picker.component';
@@ -86,15 +87,31 @@ export class ContainerEditorComponent {
   ): void {
     this.service.updateContainerDefinition(this.container().id, changes);
   }
-  /** A nested element shows the same name in this header as in its Display tab. */
+  /** A nested element's header shows the name and description its parent shows it by. */
   readonly shownName = computed(() => {
     const node = this.placementNode();
     return node ? elementDisplayName(node) : this.container().name;
   });
+  readonly shownDescription = computed(() => {
+    const node = this.placementNode();
+    return node ? elementDisplayDescription(node) : this.container().description;
+  });
+  private readonly locks = computed(() => childLocks(this.service.session.document(), this.container().id));
+  /** Whether this element's own content is locked: it is published, or inside a published element. */
+  readonly definitionLocked = computed(() => this.locks().definition);
+  /** Whether its placement in its parent is locked: it is inside a published element. */
+  readonly placementLocked = computed(() => this.locks().placement);
+  /** Whether this element is itself published, which its header says once for everything inside it. */
+  readonly published = computed(() => publishedContainer(this.container()) && !this.placementLocked());
   rename(value: string): void {
     const node = this.placementNode();
     if (node) this.service.updateElementDisplayName(node, value);
     else this.update({ name: value });
+  }
+  describe(value: string): void {
+    const node = this.placementNode();
+    if (node) this.service.updateElementDisplayDescription(node, value);
+    else this.update({ description: value });
   }
   activate(): void {
     this.service.session.activeId.set(this.container().id);

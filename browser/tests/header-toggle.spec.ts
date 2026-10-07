@@ -67,7 +67,6 @@ for (const width of [1280, 375]) {
     await header.locator('.field-type-icon').click();
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
     await header.getByRole('textbox', { name: 'Field display name' }).click();
-    await header.getByLabel('Allow multiple', { exact: true }).check();
     await header.locator('.field-drag-handle').click();
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
     await header.locator('.field-type-icon').click();
@@ -84,7 +83,7 @@ for (const width of [1280, 375]) {
 
     await applyPreset(page, 'modular');
     await addElementFixture(page, root);
-    await nestFixtureFields(page, ['element']);
+    await nestFixtureFields(page, ['Element']);
     const element = root.locator('.template-header-card').nth(1);
     const elementBody = element.locator('.template-header-card__body');
     const elementToggle = element.getByRole('button', { name: /element settings/ });
@@ -145,7 +144,7 @@ for (const kind of ['field', 'element'] as const) {
       }
       const card = designer.locator(kind === 'field' ? 'app-field-card' : '.nested-header').first();
       const name = card.getByRole('textbox', {
-        name: kind === 'field' ? 'Field display name' : 'Element name',
+        name: kind === 'field' ? 'Field display name' : 'Element display name',
         exact: true,
       });
       const toggle = card.getByRole('button', { name: `Expand ${kind} settings`, exact: true });
@@ -164,7 +163,7 @@ for (const kind of ['field', 'element'] as const) {
         'aria-expanded',
         'true',
       );
-      await expect(card.getByRole('tab', { name: 'Display', exact: true })).toBeVisible();
+      await expect(card.getByRole('tab', { name: 'Presentation', exact: true })).toBeVisible();
     });
   }
 }

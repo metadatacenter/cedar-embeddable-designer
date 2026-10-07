@@ -59,7 +59,7 @@ test('rejected text bounds survive another edit and reconcile with a corrected d
   await panel.getByRole('textbox', { name: 'Default value', exact: true }).fill('ABC');
   await panel.getByLabel('Maximum length', { exact: true }).fill('2');
   await expect.poll(async () => (await report(page)).canSave).toBe(false);
-  await openSettings(card, 'Field metadata');
+  await openSettings(card, 'Metadata');
   await card.locator('input[name=schemaIdentifier]').fill('Identifier');
   await openSettings(card);
   await expect(panel.getByLabel('Maximum length', { exact: true })).toHaveValue('2');
@@ -96,15 +96,15 @@ test('an element keeps its rejected occurrence input and error through a valid k
   await addElementFixture(page);
   const card = designer.locator('app-element-card').last();
   await card.getByRole('button', { name: 'Expand element settings' }).click();
-  await card.getByRole('tab', { name: 'Occurrences', exact: true }).click();
-  const panel = card.getByRole('tabpanel', { name: 'Occurrences', exact: true });
+  const panel = card.getByRole('tabpanel', { name: 'Configuration', exact: true });
+  await expect(panel).toBeVisible();
   await panel.getByRole('checkbox').check();
   await panel.locator('input[type=number]').nth(0).fill('2');
   await panel.locator('input[type=number]').nth(1).fill('1');
   await expect.poll(async () => (await report(page)).canSave).toBe(false);
-  await card.getByRole('tab', { name: 'Element metadata', exact: true }).click();
-  await card.locator('input[name=deploymentName]').fill('details');
-  await card.getByRole('tab', { name: 'Occurrences', exact: true }).click();
+  await panel.locator('input[name=deploymentName]').fill('details');
+  await card.getByRole('tab', { name: 'Presentation', exact: true }).click();
+  await card.getByRole('tab', { name: 'Configuration', exact: true }).click();
   await expect(panel.locator('input[type=number]').nth(1)).toHaveValue('1');
   await expect(card.getByRole('alert')).toContainText('minimum no greater than maximum');
   await panel.locator('input[type=number]').nth(1).fill('3');
@@ -165,7 +165,7 @@ test('element selection agrees between outline, card and preview', async ({ page
             .path,
       ),
     )
-    .toEqual(['element']);
+    .toEqual(['Element']);
 });
 
 test('library rows use the same display names, unnamed labels and errors as the outline', async ({ page }) => {

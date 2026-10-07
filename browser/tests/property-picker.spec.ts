@@ -7,7 +7,7 @@ test('field and element property choices update only their parent context and ca
 }) => {
   const designer = await openDesigner(page, '?picker=stub');
   const field = designer.locator('app-field-card').first();
-  const metadata = await openSettings(field, 'Field metadata');
+  const metadata = await openSettings(field, 'Configuration');
   const original = await currentTemplate(page);
   await metadata.getByRole('button', { name: 'Replace property IRI', exact: true }).click();
   const picker = page.locator('cedar-embeddable-term-picker');
@@ -44,7 +44,7 @@ test('field and element property choices update only their parent context and ca
   await addElementFixture(page, designer);
   const element = designer.locator('app-element-card').first();
   await element.getByRole('button', { name: 'Expand element settings' }).click();
-  await element.getByRole('tab', { name: 'Element metadata', exact: true }).click();
+  await element.getByRole('tab', { name: 'Configuration', exact: true }).click();
   await element.getByRole('button', { name: 'Replace property IRI', exact: true }).click();
   const beforeEmpty = await currentTemplate(page);
   await emit([]);
@@ -53,7 +53,7 @@ test('field and element property choices update only their parent context and ca
   await element.getByRole('button', { name: 'Replace property IRI', exact: true }).click();
   await emit([{ sourceType: 'ontology-property', sourceId: 'urn:element-property' }]);
   const saved = await currentTemplate(page);
-  expect((saved.properties as any)['@context'].properties.element.enum).toEqual(['urn:element-property']);
+  expect((saved.properties as any)['@context'].properties.Element.enum).toEqual(['urn:element-property']);
   await page.evaluate((artifact) => {
     (document.querySelector('cedar-embeddable-designer') as any).artifact = artifact;
   }, saved);
@@ -91,7 +91,7 @@ test('real CETP selects a property for field metadata', async ({ page }) => {
       json: { selected: { sourceAcronym: 'RO', versionId: 'ro-v1', property }, ancestors: [], children: [], offset: 0 },
     }),
   );
-  const metadata = await openSettings(designer.locator('app-field-card').first(), 'Field metadata');
+  const metadata = await openSettings(designer.locator('app-field-card').first(), 'Configuration');
   await metadata.getByRole('button', { name: 'Replace property IRI', exact: true }).click();
   const picker = page.locator('cedar-embeddable-term-picker');
   await expect(picker.getByRole('tab')).toHaveCount(1);

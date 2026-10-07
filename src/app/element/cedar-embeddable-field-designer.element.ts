@@ -168,7 +168,7 @@ export class CedarEmbeddableFieldDesignerElementComponent {
 
   constructor() {
     this.service.fieldDocumentMode.set(true);
-    this.service.preferences.update((p) => ({ ...p, showHelpText: true, showDefaultValue: true }));
+    this.service.preferences.update((p) => ({ ...p, showDefaultValue: true }));
     this.newArtifact();
     afterRenderEffect(() => {
       const dialog = this.typeDialog()?.nativeElement;

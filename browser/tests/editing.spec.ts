@@ -92,7 +92,8 @@ test('the requirement selector reaches the template', async ({ page }) => {
     (child(template, 'Title')['_valueConstraints'] as { requiredValue: boolean }).requiredValue;
 
   expect(requiredOf(await currentTemplate(page))).toBe(true);
-  await designer.locator('#field-card-1').getByLabel('Requirement', { exact: true }).selectOption('optional');
+  const configuration = await openSettings(designer.locator('#field-card-1'), 'Configuration');
+  await configuration.getByLabel('Requirement', { exact: true }).selectOption('optional');
 
   /*
    * `_valueConstraints.requiredValue`, not the template's top-level `required`.
@@ -301,7 +302,7 @@ test('template identity keeps the compact authoring header layout', async ({ pag
       return { top: box.top, right: box.right, left: box.left };
     }),
   );
-  // Name and version share the row; the identifier sits in the Template metadata tab.
+  // Name and version share the row; the identifier sits in the Metadata tab.
   expect(boxes).toHaveLength(2);
   expect(Math.max(...boxes.map((box) => box.top)) - Math.min(...boxes.map((box) => box.top))).toBeLessThanOrEqual(1);
   expect(boxes[0].right).toBeLessThanOrEqual(boxes[1].left);
@@ -317,7 +318,7 @@ for (const width of [1280, 375]) {
     await page.setViewportSize({ width, height: 1000 });
     const designer = await openDesigner(page);
     const card = designer.locator('app-field-card').first();
-    await openSettings(card, 'Field metadata');
+    await openSettings(card, 'Metadata');
     const identifier = card.getByLabel('Identifier', { exact: true });
     await expect(identifier).toBeVisible();
     const geometry = await identifier.evaluate((input) => ({

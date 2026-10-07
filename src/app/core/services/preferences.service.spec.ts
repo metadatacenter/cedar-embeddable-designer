@@ -37,13 +37,12 @@ describe('PreferencesService', () => {
 
   it('stops reporting a preset once one of its settings changes', () => {
     service.applyPreset('modular');
-    service.updatePreference('showHelpText', false);
+    service.updatePreference('showDefaultValue', false);
     expect(service.getActivePreset()).toBeNull();
   });
 
   it('names a preset reached by hand from another', () => {
     service.applyPreset('basic');
-    service.updatePreference('showHelpText', true);
     service.updatePreference('showDefaultValue', true);
     service.updateFieldTypeVisibility('controlledTerms', true);
     expect(service.getActivePreset()).toBe('semantic');

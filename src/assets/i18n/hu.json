@@ -161,6 +161,8 @@
     "reorderRow": "{{name}} átrendezése"
   },
   "containerEditor": {
+    "elementDisplayName": "Elem megjelenített neve",
+    "published": "Ez az elem közzétett, ezért csak a konfigurációja módosítható.",
     "dragElement": "Húzza az elemet az átrendezéshez",
     "elementLabel": "Elem",
     "name": "Név",
@@ -317,7 +319,7 @@
       "nameReserved": "A célban ez a tulajdonságnév foglalt. Először nevezze át az elhelyezést."
     },
     "pageBreakPlacement": "Oldaltörés csak sablonban helyezhető el.",
-    "publishedReadOnly": "A közzétett mezők csak olvashatók. Vázlatverzió szerkesztése még nem érhető el.",
+    "publishedReadOnly": "Ez egy közzétett artefaktum része, ezért nem módosítható.",
     "importDestinationMissing": "Az importálás célja már nem létezik.",
     "destinationMissing": "A cél már nem létezik.",
     "chooseFieldOrElement": "Válasszon mező- vagy elemartefaktumot.",
@@ -325,7 +327,7 @@
   },
   "fieldCard": {
     "displayName": "Mező megjelenítési neve",
-    "published": "Közzétett mező – csak olvasható. Vázlatverzió szerkesztése még nem érhető el.",
+    "published": "Ez a mező közzétett, ezért csak a konfigurációja módosítható.",
     "namePlaceholder": "Adja meg a mező nevét",
     "occurrenceRange": "Előfordulási tartomány",
     "dragToReorder": "Húzza az átrendezéshez",
@@ -398,9 +400,7 @@
       "labelPlaceholder": "Mező neve",
       "descriptionPlaceholder": "Mező leírása",
       "hidden": "Rejtett",
-      "continueLine": "Folytatás az előző sorban",
-      "helpText": "Súgószöveg",
-      "helpTextPlaceholder": "Adjon útmutatást a felhasználóknak..."
+      "continueLine": "Folytatás az előző sorban"
     },
     "metadata": {
       "fieldIri": "Mező IRI"
@@ -594,10 +594,6 @@
         "label": "A „Több érték engedélyezése” jelölőnégyzet megjelenítése",
         "help": "A több érték kapcsolójának megjelenítése a mezőknél"
       },
-      "helpText": {
-        "label": "A „Súgószöveg” mező megjelenítése",
-        "help": "A súgószöveg beviteli mezőjének megjelenítése a mezőknél"
-      },
       "defaultValue": {
         "label": "Az „Alapértelmezett érték” mező megjelenítése",
         "help": "Az alapértelmezett érték beviteli mezőjének megjelenítése a mezőknél"
@@ -634,6 +630,12 @@
     "fieldTypes": "Elérhető mezőtípusok"
   },
   "settings": {
+    "fieldName": "Mező neve",
+    "fieldDescription": "Mező leírása",
+    "elementName": "Elem neve",
+    "elementDescription": "Elem leírása",
+    "shownName": "Megjelenített név",
+    "shownDescription": "Megjelenített leírás",
     "containsErrors": "Hibákat tartalmaz",
     "key": "Kulcs",
     "version": "Verzió",
@@ -649,9 +651,7 @@
     "displayLabel": "Név",
     "displayDescription": "Leírás",
     "allowMultiple": "Több érték engedélyezése",
-    "minOccurrences": "Előfordulások minimális száma",
     "minOccurrencesPlaceholder": "Alapértelmezett (0)",
-    "maxOccurrences": "Előfordulások maximális száma",
     "unlimited": "Korlátlan",
     "invalidNumber": "{{label}}: érvényes számot kell megadni.",
     "value": "Érték"
@@ -674,14 +674,14 @@
     "libraryEmpty": "Ebben a könyvtárban még nincsenek egyéni mezők."
   },
   "tabs": {
+    "configuration": "Konfiguráció",
     "display": "Megjelenítés",
     "constraints": "Megkötések",
     "content": "Tartalom",
-    "occurrences": "Előfordulások",
     "annotations": "Annotációk",
-    "fieldMetadata": "Mező metaadatai",
-    "elementMetadata": "Elem metaadatai",
-    "templateMetadata": "Sablon metaadatai"
+    "fieldMetadata": "Metaadatok",
+    "elementMetadata": "Metaadatok",
+    "templateMetadata": "Metaadatok"
   },
   "validation": {
     "summary": {

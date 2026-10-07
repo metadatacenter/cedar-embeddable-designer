@@ -23,6 +23,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tests that hold the two language maps to the same keys and that fail when a
   template or message states user-visible text outside them.
 
+### Changed
+
+- A child's settings open on a new Configuration tab, which holds how its parent places
+  it. The display name and a wider display description share its first row. The
+  requirement select follows with Hidden and Continue previous line, each where the
+  child can carry it. Allow multiple sits above the minimum and maximum, which share a
+  row with the key, and the property IRI comes last. The display name and description
+  are the parent's `_ui.propertyLabels` and `_ui.propertyDescriptions` entries, and the
+  card header shows and edits the display name. A nested element's header gives its name
+  input the accessible name Element display name. The requirement select and the Allow
+  multiple checkbox leave the card header, the key and the property IRI leave the
+  metadata tabs, and the Occurrences tab is retired. The bounds stay visible and
+  disabled until Allow multiple is on.
+- The Presentation tab, formerly Display, edits the child's own name and description,
+  its `schema:name` and `schema:description`, under the labels Field name and Field
+  description or Element name and Element description. While a child is a draft its
+  parent shows as itself, its display name and description are its own as well, and an
+  edit on either side writes both. A parent that shows the child differently keeps doing
+  so. The designer no longer writes `skos:prefLabel`, except to keep one that only
+  repeated the name moving with it. Every profile shows that description, so the Show
+  Help text preference, which hid the separate help text input it replaces, is retired.
+- The metadata tab of a field, an element and a template is labelled Metadata.
+- A new child's key is its name as written, and follows the name until the name first
+  loses focus. An imported or library child takes its name as its key. A key that
+  clashes or is reserved is reported at once instead of being renamed with a suffix, and
+  the child keeps a usable key until the author chooses one. The fields a new template
+  starts with are keyed by their names.
+- A published field or element keeps its own definition while its parent configures,
+  renames, reorders and removes it. Everything inside a published element is locked, its
+  children's placement included, and nothing can be added to it.
+- `CedValidationIssue.tab` reports `Configuration` for the key, the display name and
+  description, the property IRI, a field's `occurrences` and an element's `placement`.
+  Hidden and Continue previous line are reported as the `layout` setting rather than
+  `display`. The Presentation and Metadata tabs keep the identifiers `Display`,
+  `Field metadata`, `Element metadata` and `Template Metadata`.
+
+### Fixed
+
+- A renamed template, element or field is written with the title its name gives. The
+  model library reads a title that way, so the stored title used to change between a
+  save and the next reopening.
+
 ## [0.1.0-dev.20260916.2593d382] - 2026-09-16 (Nexus)
 
 First Nexus development snapshot, including explicit host document loading,

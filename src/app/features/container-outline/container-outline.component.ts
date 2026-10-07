@@ -82,8 +82,9 @@ export class ContainerOutlineComponent {
   displayName(node: ChildNode): string {
     return node.kind === 'field' ? fieldDisplayName(fieldView(node)) : elementDisplayName(node);
   }
+  /** A child inside a published element keeps its place. */
   locked(node: ChildNode): boolean {
-    return node.kind === 'field' && !!node.definition.publishedDefinition;
+    return this.service.placementLocked(node.id);
   }
   drop(event: CdkDragDrop<ChildNode[]>): void {
     // CDK sorts only its local DOM while dragging. Commit the document on drop.

@@ -25,8 +25,12 @@ export class AlternateQuestionsComponent {
   readonly question = signal('');
   readonly error = signal<string | null>(null);
   readonly questions = computed(() => this.field()?.alternateLabels ?? this.container()?.alternateLabels ?? []);
-  readonly disabled = computed(() => !!this.field()?.publishedDefinition);
   private readonly service = inject(TemplateService);
+  /** Whether the artifact's own definition is locked: it is published, or inside a published element. */
+  readonly disabled = computed(() => {
+    const id = this.field()?.id ?? this.container()?.id;
+    return !!this.field()?.publishedDefinition || (id !== undefined && this.service.definitionLocked(id));
+  });
   private owner: number | undefined;
 
   constructor() {

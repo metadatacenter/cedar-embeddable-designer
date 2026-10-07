@@ -218,7 +218,6 @@ export interface Field {
 export interface UserPreferences {
   showRequired: boolean;
   showAllowMultiple: boolean;
-  showHelpText: boolean;
   showDefaultValue: boolean;
   showElements: boolean;
   fieldSelectionStyle: 'modal' | 'sidebar';
@@ -228,7 +227,6 @@ export interface UserPreferences {
 export interface PresetDefinition {
   showRequired: boolean;
   showAllowMultiple: boolean;
-  showHelpText: boolean;
   showDefaultValue: boolean;
   showElements: boolean;
   hiddenFieldTypes: string[];

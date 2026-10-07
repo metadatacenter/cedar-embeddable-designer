@@ -41,7 +41,13 @@ for (const format of ['JSON', 'YAML']) {
       const state = toDesignerTemplate(readTemplate(source));
       expect(templateToJson(buildTemplate(state))).toEqual(original);
       const edited = templateToJson(buildTemplate({ ...state, name: 'Renamed', version: '2.3.5' }));
-      expect(edited).toEqual({ ...original, 'schema:name': 'Renamed', 'pav:version': '2.3.5' });
+      // The title is the one the new name gives, which is what the model library reads it as.
+      expect(edited).toEqual({
+        ...original,
+        'schema:name': 'Renamed',
+        title: 'Renamed template schema',
+        'pav:version': '2.3.5',
+      });
     });
   });
 }

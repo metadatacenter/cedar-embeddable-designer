@@ -88,8 +88,24 @@ const CONTROLS: readonly Control[] = [
   },
   {
     name: 'allow multiple',
-    find: (page) => card(page).getByRole('checkbox', { name: 'Allow multiple', exact: true }),
+    find: (page) => card(page).getByRole('checkbox', { name: 'Allow multiple', exact: true, includeHidden: true }),
     expected: allowsMultiple,
+  },
+  {
+    name: 'occurrence bounds',
+    find: (page) => disclosure(page, 'Configuration').locator('input[name="min"], input[name="max"]'),
+    expected: (type) =>
+      type !== 'checkboxes' && (allowsMultiple(type) || descriptorOf(type).deployment === 'alwaysMultiple'),
+  },
+  {
+    name: 'hidden',
+    find: (page) => disclosure(page, 'Configuration').locator('input[name="hidden"]'),
+    expected: () => true,
+  },
+  {
+    name: 'continue previous line',
+    find: (page) => disclosure(page, 'Configuration').locator('input[name="continue"]'),
+    expected: (type) => descriptorOf(type).deployment !== 'static',
   },
   {
     name: 'options list',
@@ -137,8 +153,38 @@ const CONTROLS: readonly Control[] = [
     expected: (type) => contentKindOf(type) !== undefined,
   },
   {
+    name: 'configuration',
+    find: (page) => disclosure(page, 'Configuration'),
+    expected: () => true,
+  },
+  {
+    name: 'key',
+    find: (page) => disclosure(page, 'Configuration').locator('input[name="deploymentName"]'),
+    expected: () => true,
+  },
+  {
+    name: 'display name',
+    find: (page) => disclosure(page, 'Configuration').locator('input[name="shownName"]'),
+    expected: () => true,
+  },
+  {
+    name: 'display description',
+    find: (page) => disclosure(page, 'Configuration').locator('input[name="shownDescription"]'),
+    expected: () => true,
+  },
+  {
+    name: 'own name',
+    find: (page) => disclosure(page, 'Presentation').locator('input[name="name"]'),
+    expected: () => true,
+  },
+  {
+    name: 'retired occurrences tab',
+    find: (page) => disclosure(page, 'Occurrences'),
+    expected: () => false,
+  },
+  {
     name: 'display settings',
-    find: (page) => disclosure(page, 'Display'),
+    find: (page) => disclosure(page, 'Presentation'),
     expected: () => true,
   },
   {
@@ -148,7 +194,7 @@ const CONTROLS: readonly Control[] = [
   },
   {
     name: 'field identity',
-    find: (page) => disclosure(page, 'Field metadata'),
+    find: (page) => disclosure(page, 'Metadata'),
     expected: () => true,
   },
 ];
@@ -359,27 +405,89 @@ const LIFECYCLES: readonly Lifecycle[] = [
     // A field must have a name, so putting this back means the name it began with.
     restore: async (page) => card(page).getByLabel('Field display name', { exact: true }).fill('Text'),
   },
+
+  // ── Configuration, the field's place in its parent ─────────────────────────────
+  {
+    control: 'key',
+    paletteType: 'text',
+    prepare: (page) => open(page, 'Configuration'),
+    set: async (page) => setIn(page, 'Configuration', 'Key', 'subject'),
+    restore: async (page) => setIn(page, 'Configuration', 'Key', 'Text'),
+    read: (template) => Object.keys(template['properties'] as object).includes('subject'),
+    whenSet: true,
+  },
+  // A draft's display name and description are its own as well, so either side writes both.
+  {
+    control: 'display name',
+    paletteType: 'text',
+    prepare: (page) => open(page, 'Configuration'),
+    set: async (page) => setIn(page, 'Configuration', 'Display name', 'Shown'),
+    restore: async (page) => setIn(page, 'Configuration', 'Display name', 'Text'),
+  },
+  {
+    control: 'display description',
+    paletteType: 'text',
+    prepare: (page) => open(page, 'Configuration'),
+    set: async (page) => setIn(page, 'Configuration', 'Display description', 'Shown help'),
+    restore: async (page) => setIn(page, 'Configuration', 'Display description', ''),
+  },
   {
     control: 'requirement',
     paletteType: 'text',
-    set: async (page) => card(page).getByLabel('Requirement', { exact: true }).selectOption('required'),
-    restore: async (page) => card(page).getByLabel('Requirement', { exact: true }).selectOption('optional'),
-    read: (template) => constraints(template, 'text')['requiredValue'],
+    prepare: (page) => open(page, 'Configuration'),
+    set: async (page) => chooseIn(page, 'Configuration', 'Requirement', 'required'),
+    restore: async (page) => chooseIn(page, 'Configuration', 'Requirement', 'optional'),
+    read: (template) => constraints(template, 'Text')['requiredValue'],
     whenSet: true,
   },
   {
     control: 'allow multiple',
     paletteType: 'text',
-    set: async (page) => card(page).getByRole('checkbox', { name: 'Allow multiple', exact: true }).check(),
-    restore: async (page) => card(page).getByRole('checkbox', { name: 'Allow multiple', exact: true }).uncheck(),
+    prepare: (page) => open(page, 'Configuration'),
+    set: async (page) => tickIn(page, 'Configuration', 'Allow multiple', true),
+    restore: async (page) => tickIn(page, 'Configuration', 'Allow multiple', false),
   },
   {
-    control: 'help text',
+    control: 'minimum occurrences',
     paletteType: 'text',
-    prepare: (page) => open(page, 'Display'),
-    set: async (page) => putValue(card(page).getByLabel('Help text', { exact: true }), 'Some help'),
-    restore: async (page) => putValue(card(page).getByLabel('Help text', { exact: true }), ''),
-    read: (template) => property(template, 'text')['schema:description'],
+    prepare: async (page) => {
+      await open(page, 'Configuration');
+      await tickIn(page, 'Configuration', 'Allow multiple', true);
+    },
+    set: async (page) => setIn(page, 'Configuration', 'Minimum', '2'),
+    restore: async (page) => setIn(page, 'Configuration', 'Minimum', ''),
+  },
+  {
+    control: 'maximum occurrences',
+    paletteType: 'text',
+    prepare: async (page) => {
+      await open(page, 'Configuration');
+      await tickIn(page, 'Configuration', 'Allow multiple', true);
+    },
+    set: async (page) => setIn(page, 'Configuration', 'Maximum', '5'),
+    restore: async (page) => setIn(page, 'Configuration', 'Maximum', ''),
+  },
+  {
+    control: 'hidden',
+    paletteType: 'text',
+    prepare: (page) => open(page, 'Configuration'),
+    set: async (page) => tickIn(page, 'Configuration', 'Hidden', true),
+    restore: async (page) => tickIn(page, 'Configuration', 'Hidden', false),
+  },
+  {
+    control: 'continue previous line',
+    paletteType: 'text',
+    prepare: (page) => open(page, 'Configuration'),
+    set: async (page) => tickIn(page, 'Configuration', 'Continue previous line', true),
+    restore: async (page) => tickIn(page, 'Configuration', 'Continue previous line', false),
+  },
+  {
+    control: 'own description',
+    paletteType: 'text',
+    prepare: (page) => open(page, 'Presentation'),
+    set: async (page) => setIn(page, 'Presentation', 'Field description', 'Some help'),
+    restore: async (page) => setIn(page, 'Presentation', 'Field description', ''),
+    read: (template) => property(template, 'Text')['schema:description'],
     whenSet: 'Some help',
   },
 
@@ -431,35 +539,14 @@ const LIFECYCLES: readonly Lifecycle[] = [
     restore: async (page) => card(page).getByLabel('YouTube video ID', { exact: true }).fill(''),
   },
 
-  // ── Display ─────────────────────────────────────────────────────────────────
+  // ── Presentation ────────────────────────────────────────────────────────────
   {
-    // The Display tab edits the name the card's header shows, so this mirrors the header's row.
-    control: 'display name',
+    // The Presentation tab edits the field's own name; a draft's display name follows it.
+    control: 'own name',
     paletteType: 'text',
-    prepare: (page) => open(page, 'Display'),
-    set: async (page) => setIn(page, 'Display', 'Name', 'Shown'),
-    restore: async (page) => setIn(page, 'Display', 'Name', 'Text'),
-  },
-  {
-    control: 'display description',
-    paletteType: 'text',
-    prepare: (page) => open(page, 'Display'),
-    set: async (page) => setIn(page, 'Display', 'Description', 'Shown help'),
-    restore: async (page) => setIn(page, 'Display', 'Description', ''),
-  },
-  {
-    control: 'hidden',
-    paletteType: 'text',
-    prepare: (page) => open(page, 'Display'),
-    set: async (page) => tickIn(page, 'Display', 'Hidden', true),
-    restore: async (page) => tickIn(page, 'Display', 'Hidden', false),
-  },
-  {
-    control: 'continue previous line',
-    paletteType: 'text',
-    prepare: (page) => open(page, 'Display'),
-    set: async (page) => tickIn(page, 'Display', 'Continue previous line', true),
-    restore: async (page) => tickIn(page, 'Display', 'Continue previous line', false),
+    prepare: (page) => open(page, 'Presentation'),
+    set: async (page) => setIn(page, 'Presentation', 'Field name', 'Own name'),
+    restore: async (page) => setIn(page, 'Presentation', 'Field name', 'Text'),
   },
 
   // ── Text constraints ────────────────────────────────────────────────────────
@@ -469,7 +556,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
     prepare: (page) => open(page, 'Constraints'),
     set: async (page) => setIn(page, 'Constraints', 'Minimum length', '4'),
     restore: async (page) => setIn(page, 'Constraints', 'Minimum length', ''),
-    read: (template) => constraints(template, 'text')['minLength'],
+    read: (template) => constraints(template, 'Text')['minLength'],
     whenSet: 4,
   },
   {
@@ -508,7 +595,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
     prepare: (page) => open(page, 'Constraints'),
     set: async (page) => setIn(page, 'Constraints', 'Maximum value', '99'),
     restore: async (page) => setIn(page, 'Constraints', 'Maximum value', ''),
-    read: (template) => constraints(template, 'number')['maxValue'],
+    read: (template) => constraints(template, 'Number')['maxValue'],
     whenSet: 99,
   },
   {
@@ -578,28 +665,6 @@ const LIFECYCLES: readonly Lifecycle[] = [
     restore: async (page) => setIn(page, 'Content', 'Height', ''),
   },
 
-  // ── Occurrences, which exist only once several values are allowed ───────────
-  {
-    control: 'minimum occurrences',
-    paletteType: 'text',
-    prepare: async (page) => {
-      await card(page).getByRole('checkbox', { name: 'Allow multiple', exact: true }).check();
-      await open(page, 'Occurrences');
-    },
-    set: async (page) => setIn(page, 'Occurrences', 'Minimum', '2'),
-    restore: async (page) => setIn(page, 'Occurrences', 'Minimum', ''),
-  },
-  {
-    control: 'maximum occurrences',
-    paletteType: 'text',
-    prepare: async (page) => {
-      await card(page).getByRole('checkbox', { name: 'Allow multiple', exact: true }).check();
-      await open(page, 'Occurrences');
-    },
-    set: async (page) => setIn(page, 'Occurrences', 'Maximum', '5'),
-    restore: async (page) => setIn(page, 'Occurrences', 'Maximum', ''),
-  },
-
   /*
    * The two controls a sibling component provides, and only CED's half of them.
    *
@@ -620,7 +685,7 @@ const LIFECYCLES: readonly Lifecycle[] = [
     paletteType: 'text',
     set: async (page) => card(page).locator('app-field-default-value input').first().fill('Example'),
     restore: async (page) => card(page).locator('app-field-default-value input').first().fill(''),
-    read: (template) => constraints(template, 'text')['defaultValue'],
+    read: (template) => constraints(template, 'Text')['defaultValue'],
     whenSet: 'Example',
   },
 ];

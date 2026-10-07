@@ -15,7 +15,6 @@ export class PreferencesService {
     basic: {
       showRequired: true,
       showAllowMultiple: true,
-      showHelpText: false,
       showDefaultValue: false,
       showElements: false,
       hiddenFieldTypes: ['controlledTerms'],
@@ -23,7 +22,6 @@ export class PreferencesService {
     semantic: {
       showRequired: true,
       showAllowMultiple: true,
-      showHelpText: true,
       showDefaultValue: true,
       showElements: false,
       hiddenFieldTypes: [],
@@ -31,7 +29,6 @@ export class PreferencesService {
     modular: {
       showRequired: true,
       showAllowMultiple: true,
-      showHelpText: true,
       showDefaultValue: true,
       showElements: true,
       hiddenFieldTypes: [],
@@ -80,7 +77,7 @@ export class PreferencesService {
    * One preference, typed by the key that names it.
    *
    * Generic rather than `(key: keyof UserPreferences, value: any)`, which let
-   * `fieldSelectionStyle` be set to a boolean and `showHelpText` to a string with
+   * `fieldSelectionStyle` be set to a boolean and `showElements` to a string with
    * nothing to say so — the signal's own type could not help, because the value
    * had already been widened by the time it reached the update.
    */
@@ -126,7 +123,6 @@ export class PreferencesService {
       ...prev,
       showRequired: definition.showRequired,
       showAllowMultiple: definition.showAllowMultiple,
-      showHelpText: definition.showHelpText,
       showDefaultValue: definition.showDefaultValue,
       showElements: definition.showElements,
       visibleFieldTypes,
@@ -143,7 +139,6 @@ export class PreferencesService {
       const matchConfig =
         current.showRequired === def.showRequired &&
         current.showAllowMultiple === def.showAllowMultiple &&
-        current.showHelpText === def.showHelpText &&
         current.showDefaultValue === def.showDefaultValue &&
         current.showElements === def.showElements;
 

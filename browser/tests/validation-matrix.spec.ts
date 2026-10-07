@@ -75,7 +75,7 @@ for (const type of ['link', 'controlledTerms', 'orcid', 'ror', 'pfas', 'rrid', '
       await expect(card).toContainText('Default value: relative/path');
       await expect(designer.locator('.outline-row.active .node-name')).toHaveText('Value');
       await card.getByLabel('Field display name', { exact: true }).fill('Renamed value');
-      await openSettings(card, 'Field metadata');
+      await openSettings(card, 'Metadata');
       await card.locator('input[name=schemaIdentifier]').fill('Identifier');
       await openSettings(card);
       await expect(card).toContainText('Default value: relative/path');
@@ -119,7 +119,7 @@ for (const kind of ['template', 'element'] as const)
           await expect(value).toHaveAttribute('aria-invalid', 'true');
           await expect(designer.locator('.outline-row.active .node-name')).toHaveText('Value');
           await card.getByLabel('Field display name', { exact: true }).fill('Renamed number');
-          await openSettings(card, 'Display');
+          await openSettings(card, 'Presentation');
           await openSettings(card);
           await expect(value).toHaveValue('1000');
           if (recovery === 'relax') await card.getByLabel('Maximum value', { exact: true }).fill('1000');

@@ -56,8 +56,8 @@ for (const [label, type] of [
 ]) {
   test(`creates and reopens a ${label} field through the public component`, async ({ page }) => {
     await page.getByRole('button', { name: label, exact: true }).click();
-    await expect(page.getByRole('tab', { name: 'Display', exact: true })).toBeVisible();
-    await expect(page.getByRole('tab', { name: 'Field metadata', exact: true })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Presentation', exact: true })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Metadata', exact: true })).toBeVisible();
     await page.getByRole('textbox', { name: 'Field display name', exact: true }).fill(`My ${label}`);
     await expect
       .poll(() =>
@@ -74,7 +74,7 @@ for (const [label, type] of [
       artifact,
     );
     await expect(page.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue(`My ${label}`);
-    await expect(page.getByRole('tab', { name: 'Display', exact: true })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Presentation', exact: true })).toBeVisible();
     await expect
       .poll(() =>
         page.evaluate(() => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).isDirty),
@@ -121,11 +121,11 @@ test('preserves a manual collapse during edits and opens settings for the next f
   await page.getByRole('button', { name: 'Text', exact: true }).click();
   await page.getByRole('button', { name: 'Collapse field settings' }).click();
   await page.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Collapsed field');
-  await expect(page.getByRole('tab', { name: 'Display', exact: true })).toBeHidden();
+  await expect(page.getByRole('tab', { name: 'Presentation', exact: true })).toBeHidden();
   await page.evaluate(() =>
     (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).newArtifact('number'),
   );
-  await expect(page.getByRole('tab', { name: 'Display', exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Presentation', exact: true })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Constraints', exact: true })).toBeVisible();
 });
 
@@ -135,9 +135,12 @@ test('hides placement controls, uses shadow styles and emits current artifacts',
   await expect(page.getByRole('combobox', { name: 'Requirement' })).toHaveCount(0);
   await expect(page.getByText('Allow multiple', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Collapse field settings' })).toBeVisible();
-  await expect(page.getByLabel('Name', { exact: true })).toBeHidden();
-  await expect(page.getByRole('tab', { name: 'Occurrences' })).toHaveCount(0);
-  await page.getByRole('tab', { name: 'Field metadata' }).click();
+  // The field has no parent, so nothing places it: no Configuration, no display name. Its own name is
+  // its definition's, and the Presentation tab offers it.
+  await expect(page.getByRole('tab', { name: 'Configuration' })).toHaveCount(0);
+  await expect(page.getByLabel('Display name', { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel('Field name', { exact: true })).toHaveValue('Reusable text');
+  await page.getByRole('tab', { name: 'Metadata', exact: true }).click();
   await expect(page.getByText('Property IRI', { exact: true })).toHaveCount(0);
   const background = await page
     .getByRole('textbox', { name: 'Field display name', exact: true })
@@ -192,7 +195,7 @@ test('keeps invalid numeric settings dirty and unsaveable until corrected', asyn
   await expect(page.getByRole('alert').first()).toHaveCSS('color', 'rgb(153, 51, 17)');
   const summary = page.locator('.validation-summary');
   await expect(summary).toBeVisible();
-  await page.getByRole('tab', { name: 'Display', exact: true }).click();
+  await page.getByRole('tab', { name: 'Presentation', exact: true }).click();
   await summary.locator('summary').click();
   await summary.getByRole('button').first().click();
   await expect(page.getByRole('tab', { name: 'Constraints', exact: true })).toHaveAttribute('aria-selected', 'true');
