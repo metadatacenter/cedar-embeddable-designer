@@ -133,7 +133,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: metadatacenter/cedar-embeddable-editor
-          ref: c786a71681d93152c0f208913f2ff0f090e69867
+          ref: 074dc50ab7f24d5774ee9139eec1b00258fe0bd1
           path: cedar-embeddable-editor
 
       - name: Check out the supported term picker revision
