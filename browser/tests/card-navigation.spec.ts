@@ -18,7 +18,7 @@ for (const width of [1280, 375]) {
     await cards.first().locator('.field-type-icon').click();
     await expect(cards.first()).toBeFocused();
     await expect(cards.first().getByRole('tablist')).toBeVisible();
-    await openSettings(cards.first().locator('app-field-card'), 'Display');
+    await openSettings(cards.first().locator('app-field-card'), 'Presentation');
     const before = await currentTemplate(page);
     const events = await publishedTemplates(page);
     await cards.first().focus();
@@ -31,7 +31,7 @@ for (const width of [1280, 375]) {
     await expect(cards.nth(1).locator('.field-header')).toBeInViewport();
     await page.keyboard.press('ArrowUp');
     await expect(cards.first()).toBeFocused();
-    await expect(cards.first().getByRole('tabpanel', { name: 'Display', exact: true })).toBeVisible();
+    await expect(cards.first().getByRole('tabpanel', { name: 'Presentation', exact: true })).toBeVisible();
     await cards.last().focus();
     await page.keyboard.press('ArrowDown');
     await expect(cards.last()).toBeFocused();
@@ -51,8 +51,8 @@ test('editing controls and modified shortcuts keep their normal arrow handling',
   await name.click();
   await page.keyboard.press('ArrowDown');
   await expect(name).toBeFocused();
-  await openSettings(card.locator('app-field-card'), 'Display');
-  const tab = card.getByRole('tab', { name: 'Display', exact: true });
+  await openSettings(card.locator('app-field-card'), 'Presentation');
+  const tab = card.getByRole('tab', { name: 'Presentation', exact: true });
   await tab.focus();
   await page.keyboard.press('ArrowDown');
   await expect(tab).toBeFocused();

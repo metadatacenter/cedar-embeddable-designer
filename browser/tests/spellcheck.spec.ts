@@ -5,7 +5,7 @@ test('designer controls disable browser spelling even in a spellchecked host', a
   const designer = await openDesigner(page);
   await page.locator('body').evaluate((body) => body.setAttribute('spellcheck', 'true'));
   const card = designer.locator('app-field-card').first();
-  for (const tab of ['Configuration', 'Display', 'Constraints', 'Annotations', 'Field metadata']) {
+  for (const tab of ['Configuration', 'Presentation', 'Constraints', 'Annotations', 'Metadata']) {
     await openSettings(card, tab);
     const controls = designer.locator('input, textarea');
     expect(await controls.count()).toBeGreaterThan(0);

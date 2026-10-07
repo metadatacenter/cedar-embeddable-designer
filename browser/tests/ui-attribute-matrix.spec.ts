@@ -174,7 +174,7 @@ const CONTROLS: readonly Control[] = [
   },
   {
     name: 'own name',
-    find: (page) => disclosure(page, 'Display').locator('input[name="name"]'),
+    find: (page) => disclosure(page, 'Presentation').locator('input[name="name"]'),
     expected: () => true,
   },
   {
@@ -184,7 +184,7 @@ const CONTROLS: readonly Control[] = [
   },
   {
     name: 'display settings',
-    find: (page) => disclosure(page, 'Display'),
+    find: (page) => disclosure(page, 'Presentation'),
     expected: () => true,
   },
   {
@@ -194,7 +194,7 @@ const CONTROLS: readonly Control[] = [
   },
   {
     name: 'field identity',
-    find: (page) => disclosure(page, 'Field metadata'),
+    find: (page) => disclosure(page, 'Metadata'),
     expected: () => true,
   },
 ];
@@ -484,9 +484,9 @@ const LIFECYCLES: readonly Lifecycle[] = [
   {
     control: 'own description',
     paletteType: 'text',
-    prepare: (page) => open(page, 'Display'),
-    set: async (page) => setIn(page, 'Display', 'Field description', 'Some help'),
-    restore: async (page) => setIn(page, 'Display', 'Field description', ''),
+    prepare: (page) => open(page, 'Presentation'),
+    set: async (page) => setIn(page, 'Presentation', 'Field description', 'Some help'),
+    restore: async (page) => setIn(page, 'Presentation', 'Field description', ''),
     read: (template) => property(template, 'Text')['schema:description'],
     whenSet: 'Some help',
   },
@@ -539,14 +539,14 @@ const LIFECYCLES: readonly Lifecycle[] = [
     restore: async (page) => card(page).getByLabel('YouTube video ID', { exact: true }).fill(''),
   },
 
-  // ── Display ─────────────────────────────────────────────────────────────────
+  // ── Presentation ────────────────────────────────────────────────────────────
   {
-    // The Display tab edits the field's own name; a draft's display name follows it.
+    // The Presentation tab edits the field's own name; a draft's display name follows it.
     control: 'own name',
     paletteType: 'text',
-    prepare: (page) => open(page, 'Display'),
-    set: async (page) => setIn(page, 'Display', 'Field name', 'Own name'),
-    restore: async (page) => setIn(page, 'Display', 'Field name', 'Text'),
+    prepare: (page) => open(page, 'Presentation'),
+    set: async (page) => setIn(page, 'Presentation', 'Field name', 'Own name'),
+    restore: async (page) => setIn(page, 'Presentation', 'Field name', 'Text'),
   },
 
   // ── Text constraints ────────────────────────────────────────────────────────

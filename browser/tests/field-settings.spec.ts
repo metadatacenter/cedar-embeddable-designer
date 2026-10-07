@@ -16,7 +16,7 @@ test('authors occurrence limits and rejects an inverted range', async ({ page })
   await expect(settings.getByRole('alert')).toContainText('minimum no greater');
   await expect(settings.getByRole('alert')).toHaveCSS('font-size', '12px');
   expect(((await currentTemplate(page)).properties as any).Title.minItems).toBe(2);
-  const display = await openSettings(card, 'Display');
+  const display = await openSettings(card, 'Presentation');
   await display.getByLabel('Field name', { exact: true }).fill('Immediate label');
   await expect(display.getByRole('alert')).toHaveCount(0);
   await openSettings(card, 'Configuration');
@@ -100,15 +100,17 @@ test('an element Configuration sets its display name and description, its key be
   expect(property.y).toBeGreaterThan(key.y + key.height);
   // A draft element's display description is its own description as well.
   await panel.getByLabel('Display description', { exact: true }).fill('Shown help');
-  await card.getByRole('tab', { name: 'Display', exact: true }).click();
+  await card.getByRole('tab', { name: 'Presentation', exact: true }).click();
   await expect(
-    card.getByRole('tabpanel', { name: 'Display', exact: true }).getByLabel('Element description', { exact: true }),
+    card
+      .getByRole('tabpanel', { name: 'Presentation', exact: true })
+      .getByLabel('Element description', { exact: true }),
   ).toHaveValue('Shown help');
 });
 
 test('writes the display name, description and layout settings', async ({ page }) => {
   await openDesigner(page);
-  const section = await openSettings(page.locator('#field-card-1'), 'Display');
+  const section = await openSettings(page.locator('#field-card-1'), 'Presentation');
   await expect(section.getByLabel('Hidden', { exact: true })).toHaveCount(0);
   const configuration = await openSettings(page.locator('#field-card-1'), 'Configuration');
   await configuration.getByLabel('Display name', { exact: true }).fill('Shown title');
@@ -224,7 +226,7 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
   await card.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Rich content');
   await openSettings(card, 'Content');
   await expect(card.getByRole('tab').first()).toHaveText('Configuration');
-  await expect(card.getByRole('tab').nth(1)).toHaveText('Display');
+  await expect(card.getByRole('tab').nth(1)).toHaveText('Presentation');
   await card.getByRole('textbox', { name: 'Content', exact: true }).fill('<p>First</p>\n<p>Second</p>');
   await expect
     .poll(async () => ((await currentTemplate(page)).properties as any)['Rich content']._ui._content)
@@ -283,12 +285,12 @@ test('metadata keys are editable and unique within their parent while names and 
   const second = cards.nth(1);
   await first.getByLabel('Field display name', { exact: true }).fill('Repeated');
   await second.getByLabel('Field display name', { exact: true }).fill('Repeated');
-  const display = await openSettings(first, 'Display');
+  const display = await openSettings(first, 'Presentation');
   await expect(display.getByLabel('Preferred name', { exact: true })).toHaveCount(0);
-  // A draft's own name is the name its header shows, so the Display tab shows what the header typed.
+  // A draft's own name is the name its header shows, so the Presentation tab shows what the header typed.
   await expect(display.getByLabel('Field name', { exact: true })).toHaveValue('Repeated');
   await display.getByLabel('Field name', { exact: true }).fill('Same label');
-  const otherDisplay = await openSettings(second, 'Display');
+  const otherDisplay = await openSettings(second, 'Presentation');
   await otherDisplay.getByLabel('Field name', { exact: true }).fill('Same label');
   const configuration = await openSettings(first, 'Configuration');
   await expect(configuration.getByLabel('Key', { exact: true })).toHaveValue('Title');
@@ -301,7 +303,7 @@ test('metadata keys are editable and unique within their parent while names and 
   await expect(otherConfiguration.getByRole('alert')).toContainText('Key is required');
   await key.fill('category');
   await expect(otherConfiguration.getByRole('alert')).toHaveCount(0);
-  const metadata = await openSettings(second, 'Field metadata');
+  const metadata = await openSettings(second, 'Metadata');
   await expect(metadata.getByLabel('Key', { exact: true })).toHaveCount(0);
   const saved = await currentTemplate(page);
   for (const key of ['subject', 'category']) {
@@ -317,10 +319,10 @@ test('the header and Configuration edit the display name and Display the own nam
   const designer = await openDesigner(page);
   const card = () => designer.locator('app-field-card').first();
   const header = () => card().getByRole('textbox', { name: 'Field display name', exact: true });
-  let display = await openSettings(card(), 'Display');
+  let display = await openSettings(card(), 'Presentation');
   await expect(display.getByLabel('Field name', { exact: true })).toHaveValue('Title');
   await expect(display.getByLabel('Field name', { exact: true })).toHaveAttribute('placeholder', 'Field name');
-  // A draft its parent shows as itself has one name, so typing in the header shows in the Display tab.
+  // A draft its parent shows as itself has one name, so typing in the header shows in the Presentation tab.
   await header().fill('Heading');
   await expect(display.getByLabel('Field name', { exact: true })).toHaveValue('Heading');
 
@@ -332,13 +334,13 @@ test('the header and Configuration edit the display name and Display the own nam
     (document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object }).artifact = value;
   }, artifact);
   // An authored display name is the parent's: the header and Configuration show and edit it, and the
-  // Display tab keeps the field's own name.
+  // Presentation tab keeps the field's own name.
   const configuration = await openSettings(card(), 'Configuration');
   await expect(configuration.getByLabel('Display name', { exact: true })).toHaveValue('Study title');
   await expect(header()).toHaveValue('Study title');
   await configuration.getByLabel('Display name', { exact: true }).fill('Study heading');
   await expect(header()).toHaveValue('Study heading');
-  display = await openSettings(card(), 'Display');
+  display = await openSettings(card(), 'Presentation');
   await expect(display.getByLabel('Field name', { exact: true })).toHaveValue('Heading');
   await display.getByLabel('Field name', { exact: true }).fill('Own heading');
   await expect(header()).toHaveValue('Study heading');

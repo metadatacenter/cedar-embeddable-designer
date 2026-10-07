@@ -278,7 +278,7 @@ test('an invalid blank field name remains editable with real keystrokes', async 
   await name.fill('');
   await name.blur();
   await expect(name).toHaveAttribute('aria-invalid', 'true');
-  await openSettings(card, 'Display');
+  await openSettings(card, 'Presentation');
   const bounds = (await name.boundingBox())!;
   // Hit the top edge physically: locator.click() would retry around an overlay.
   await page.mouse.click(bounds.x + 30, bounds.y + 2);
@@ -300,10 +300,10 @@ test('tabs retain their error marker when another tab is selected', async ({ pag
   const tab = card.getByRole('tab', { name: 'Configuration', exact: true });
   await expect(tab).toHaveAttribute('aria-description', 'Contains errors');
   await expect(tab).toHaveCSS('border-bottom-color', 'rgb(180, 35, 24)');
-  await card.getByRole('tab', { name: 'Display', exact: true }).click();
+  await card.getByRole('tab', { name: 'Presentation', exact: true }).click();
   await expect(tab).toHaveAttribute('aria-selected', 'false');
   await expect(tab).toHaveCSS('border-bottom-color', 'rgb(180, 35, 24)');
-  await expect(card.getByRole('tab', { name: 'Display', exact: true })).not.toHaveAttribute('aria-description');
+  await expect(card.getByRole('tab', { name: 'Presentation', exact: true })).not.toHaveAttribute('aria-description');
   await tab.click();
   await panel.getByLabel('Maximum', { exact: true }).fill('3');
   await expect(tab).not.toHaveAttribute('aria-description');

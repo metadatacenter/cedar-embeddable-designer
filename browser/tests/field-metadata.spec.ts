@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { openSettings, openDesigner, currentTemplate } from './support';
 
-test('removed details controls remain absent and imported metadata survives a rename from the Display tab', async ({
+test('removed details controls remain absent and imported metadata survives a rename from the Presentation tab', async ({
   page,
 }) => {
   const designer = await openDesigner(page);
@@ -20,11 +20,11 @@ test('removed details controls remain absent and imported metadata survives a re
     .poll(async () => ((await currentTemplate(page)).properties as any).Title['schema:identifier'])
     .toBe('title-field');
   const card = designer.locator('app-field-card').first();
-  const section = await openSettings(card, 'Display');
+  const section = await openSettings(card, 'Presentation');
   await expect(card.getByRole('tab', { name: 'Field details', exact: true })).toHaveCount(0);
   await expect(card.getByLabel('Property IRI', { exact: true })).toHaveCount(0);
   await expect(card.getByRole('button', { name: 'Add annotation' })).toHaveCount(0);
-  // The Display tab edits the field's own name. The header shows the name its parent shows it by,
+  // The Presentation tab edits the field's own name. The header shows the name its parent shows it by,
   // which is the preferred label here, so the two are apart and a rename leaves the header alone.
   await expect(section.getByLabel('Field name', { exact: true })).toHaveValue('Title');
   await expect(card.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue('Heading');
@@ -52,7 +52,7 @@ for (const [stored, label] of [
       host.artifact = template;
     }, stored);
     await expect.poll(async () => ((await currentTemplate(page)).properties as any).Title['bibo:status']).toBe(stored);
-    const section = await openSettings(designer.locator('app-field-card').first(), 'Field metadata');
+    const section = await openSettings(designer.locator('app-field-card').first(), 'Metadata');
     await expect(
       section
         .locator('dt')

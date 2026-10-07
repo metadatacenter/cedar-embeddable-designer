@@ -23,8 +23,8 @@ test('published first-class fields show lifecycle information while their defini
   await expect(designer.getByLabel('Field version and publication status')).toHaveCount(0);
   // The header edits the name the template shows the field by, which is the template's to change.
   await expect(designer.getByPlaceholder('Enter field name').first()).toBeEnabled();
-  const display = await openSettings(designer.locator('app-field-card').first(), 'Display');
+  const display = await openSettings(designer.locator('app-field-card').first(), 'Presentation');
   await expect(display.getByLabel('Field name', { exact: true })).toBeDisabled();
-  await openSettings(designer.locator('app-field-card').first(), 'Field metadata');
+  await openSettings(designer.locator('app-field-card').first(), 'Metadata');
   await expect(designer.locator('app-field-settings').first()).toContainText('1.2.0');
 });

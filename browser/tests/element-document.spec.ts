@@ -52,7 +52,7 @@ for (const width of [1280, 375]) {
     await expect(placement.getByRole('tabpanel', { name: 'Configuration', exact: true })).toBeVisible();
     await placement.getByRole('tab', { name: 'Configuration', exact: true }).focus();
     await page.keyboard.press('ArrowRight');
-    await expect(placement.getByRole('tab', { name: 'Display', exact: true })).toBeFocused();
+    await expect(placement.getByRole('tab', { name: 'Presentation', exact: true })).toBeFocused();
     await page.keyboard.press('ArrowRight');
     await expect(placement.getByRole('tab', { name: 'Annotations', exact: true })).toBeFocused();
     await placement.getByRole('button', { name: 'Collapse element settings', exact: true }).click();
@@ -95,7 +95,7 @@ for (const width of [1280, 375]) {
     await expect(placement.getByLabel('Minimum', { exact: true })).toHaveValue('8');
     await placement.getByLabel('Minimum', { exact: true }).fill('2');
     await expect(placement.getByRole('alert')).toHaveCount(0);
-    const display = await openSettings(moved, 'Display');
+    const display = await openSettings(moved, 'Presentation');
     await display.getByLabel('Field name', { exact: true }).fill('Nested display');
     await directHeader(parent).getByRole('button', { name: 'Collapse Samples', exact: true }).click();
     await expect(directContent(parent)).toBeHidden();
@@ -114,7 +114,7 @@ for (const width of [1280, 375]) {
     expect(properties.Element.properties.Element.minItems).toBe(2);
     expect(properties.Element.properties.Element.maxItems).toBe(4);
     expect(properties.Element.properties.Element.items['schema:name']).toBe('Sample');
-    // Each is a draft its parent shows as itself, so its header and Display tab name the field itself.
+    // Each is a draft its parent shows as itself, so its header and Presentation tab name the field itself.
     const nestedTitle = properties.Element.properties.Element.items.properties.Title;
     expect((nestedTitle.items ?? nestedTitle)['schema:name']).toBe('Nested display');
     expect(
@@ -141,9 +141,7 @@ for (const kind of ['Template', 'Element']) {
     await expect(directHeader(root).locator('.template-header-card__body input')).toHaveCount(2);
     const settings = root.locator(':scope > .template-header-card > app-container-settings');
     await settings.getByRole('button', { name: `Expand ${kind.toLowerCase()} settings`, exact: true }).click();
-    await settings
-      .getByRole('tab', { name: kind === 'Template' ? 'Template metadata' : 'Element metadata', exact: true })
-      .click();
+    await settings.getByRole('tab', { name: 'Metadata', exact: true }).click();
     const identifier = settings.getByLabel('Identifier', { exact: true });
     await expect(identifier).toHaveValue('');
     await identifier.fill('Study protocol ABC-123');
@@ -161,7 +159,7 @@ for (const kind of ['Template', 'Element']) {
   });
 }
 
-test('nested element Identifier edits the element in its Element metadata tab', async ({ page }) => {
+test('nested element Identifier edits the element in its Metadata tab', async ({ page }) => {
   const designer = await openDesigner(page);
   await applyPreset(page, 'modular');
   await addElementFixture(page, designer);
@@ -169,7 +167,7 @@ test('nested element Identifier edits the element in its Element metadata tab', 
   await expect(directHeader(element).locator('.template-header-card__body input')).toHaveCount(2);
   const card = directHeader(element).locator('app-element-card');
   await card.getByRole('button', { name: 'Expand element settings', exact: true }).click();
-  await card.getByRole('tab', { name: 'Element metadata', exact: true }).click();
+  await card.getByRole('tab', { name: 'Metadata', exact: true }).click();
   await card.getByLabel('Identifier', { exact: true }).fill('Element protocol 42');
   const artifact = await currentTemplate(page);
   expect((artifact.properties as Record<string, any>).Element['schema:identifier']).toBe('Element protocol 42');
@@ -194,8 +192,8 @@ test('element metadata shows provenance without changing the artifact and hides 
     }, artifact);
     const settings = designer.locator('app-element-card').first();
     await settings.getByRole('button', { name: 'Expand element settings', exact: true }).click();
-    await settings.getByRole('tab', { name: 'Element metadata', exact: true }).click();
-    return settings.getByRole('tabpanel', { name: 'Element metadata', exact: true });
+    await settings.getByRole('tab', { name: 'Metadata', exact: true }).click();
+    return settings.getByRole('tabpanel', { name: 'Metadata', exact: true });
   };
   const panel = await load();
   const before = await currentTemplate(page);
@@ -403,7 +401,7 @@ test('confirms deletion of an element subtree, but deletes empty elements immedi
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
-test('an element shows one name in its header and its Display tab until its parent shows it differently', async ({
+test('an element shows one name in its header and its Presentation tab until its parent shows it differently', async ({
   page,
 }) => {
   const designer = await openDesigner(page);
@@ -416,8 +414,10 @@ test('an element shows one name in its header and its Display tab until its pare
     await expect(settings.getByRole('button', { name: /^(Expand|Collapse) element settings$/ })).toBeVisible();
     const expand = settings.getByRole('button', { name: 'Expand element settings', exact: true });
     if (await expand.count()) await expand.click();
-    await settings.getByRole('tab', { name: 'Display', exact: true }).click();
-    return settings.getByRole('tabpanel', { name: 'Display', exact: true }).getByLabel('Element name', { exact: true });
+    await settings.getByRole('tab', { name: 'Presentation', exact: true }).click();
+    return settings
+      .getByRole('tabpanel', { name: 'Presentation', exact: true })
+      .getByLabel('Element name', { exact: true });
   };
   const element = async () => {
     const template = await currentTemplate(page);
@@ -437,7 +437,7 @@ test('an element shows one name in its header and its Display tab until its pare
   await expect.poll(async () => (await element()).element['schema:name']).toBe('Specimen');
 
   // An override the template already carries is the parent's display name: the header shows and edits
-  // it, and the Display tab keeps the element's own name.
+  // it, and the Presentation tab keeps the element's own name.
   const { template, key } = await element();
   (template._ui as { propertyLabels: Record<string, string> }).propertyLabels[key] = 'Collected specimen';
   await page.evaluate((value) => {
@@ -486,9 +486,9 @@ test('a published element keeps its content while its parent names, configures a
   const configuration = card.getByRole('tabpanel', { name: 'Configuration', exact: true });
   await expect(configuration.getByLabel('Display name', { exact: true })).toHaveValue('Shown element');
   await configuration.getByLabel('Allow multiple', { exact: true }).check();
-  await card.getByRole('tab', { name: 'Display', exact: true }).click();
+  await card.getByRole('tab', { name: 'Presentation', exact: true }).click();
   await expect(
-    card.getByRole('tabpanel', { name: 'Display', exact: true }).getByLabel('Element name', { exact: true }),
+    card.getByRole('tabpanel', { name: 'Presentation', exact: true }).getByLabel('Element name', { exact: true }),
   ).toBeDisabled();
   const saved = await currentTemplate(page);
   expect((saved._ui as any).propertyLabels.Element).toBe('Shown element');

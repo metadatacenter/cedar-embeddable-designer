@@ -675,13 +675,13 @@
   },
   "tabs": {
     "configuration": "Configuration",
-    "display": "Display",
+    "display": "Presentation",
     "constraints": "Constraints",
     "content": "Content",
     "annotations": "Annotations",
-    "fieldMetadata": "Field metadata",
-    "elementMetadata": "Element metadata",
-    "templateMetadata": "Template metadata"
+    "fieldMetadata": "Metadata",
+    "elementMetadata": "Metadata",
+    "templateMetadata": "Metadata"
   },
   "validation": {
     "summary": {

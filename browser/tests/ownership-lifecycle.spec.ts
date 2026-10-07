@@ -48,7 +48,7 @@ for (const correction of ['clear', 'correct'] as const)
     await max.pressSequentially('1e');
     await expect.poll(() => max.evaluate((input: HTMLInputElement) => input.validity.badInput)).toBe(true);
     await expect(settings.getByRole('alert')).toBeVisible();
-    await settings.getByRole('tab', { name: 'Display', exact: true }).click();
+    await settings.getByRole('tab', { name: 'Presentation', exact: true }).click();
     await expect(max).toBeHidden();
     await settings.getByRole('tab', { name: 'Configuration', exact: true }).click();
     await expect(max).toHaveValue('');

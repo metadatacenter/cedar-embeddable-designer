@@ -80,7 +80,7 @@ for (const type of Object.keys(FIELD_TYPES)) {
 test('field card settings, with their display checkboxes, use muted medium labels in every tab', async ({ page }) => {
   const designer = await openDesigner(page);
   const card = designer.locator('app-field-card').first();
-  await openSettings(card, 'Display');
+  await openSettings(card, 'Presentation');
   const settings = card.locator('app-field-settings');
   for (const tab of await settings.getByRole('tab').all()) {
     await tab.click();

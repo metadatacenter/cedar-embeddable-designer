@@ -163,7 +163,7 @@ for (const kind of ['field', 'element'] as const) {
         'aria-expanded',
         'true',
       );
-      await expect(card.getByRole('tab', { name: 'Display', exact: true })).toBeVisible();
+      await expect(card.getByRole('tab', { name: 'Presentation', exact: true })).toBeVisible();
     });
   }
 }

@@ -47,7 +47,7 @@ const scenarios: Record<string, (page: Page) => Promise<void>> = {
     const d = await openDesigner(page, '?picker=stub');
     const settings = d.locator('app-container-settings').first();
     await settings.getByRole('button', { name: 'Expand template settings', exact: true }).click();
-    await settings.getByRole('tab', { name: 'Template metadata', exact: true }).click();
+    await settings.getByRole('tab', { name: 'Metadata', exact: true }).click();
     await settings.getByRole('button', { name: 'Add types', exact: true }).click();
   },
   validation: async (page) => {
@@ -168,7 +168,7 @@ scenarios['invalid-field'] = async (page) => {
 // and label-weight suites cover every type and tab; these hold representatives to the central contracts.
 scenarios['field-metadata'] = async (page) => {
   const d = await openDesigner(page);
-  await openSettings(d.locator('app-field-card').first(), 'Field metadata');
+  await openSettings(d.locator('app-field-card').first(), 'Metadata');
 };
 scenarios['field-configuration'] = async (page) => {
   const d = await openDesigner(page);
@@ -188,7 +188,7 @@ scenarios['element-metadata'] = async (page) => {
   await addElementFixture(page, d);
   const card = d.locator('app-element-card').first();
   await card.getByRole('button', { name: 'Expand element settings', exact: true }).click();
-  await card.getByRole('tab', { name: 'Element metadata', exact: true }).click();
+  await card.getByRole('tab', { name: 'Metadata', exact: true }).click();
 };
 scenarios['element-configuration'] = async (page) => {
   const d = await openDesigner(page);
@@ -243,7 +243,7 @@ scenarios['cef-default'] = async (page) => {
 scenarios['host-override'] = async (page) => {
   const d = await openDesigner(page);
   await d.evaluate((host) => (host as HTMLElement).style.setProperty('--cedar-font-size', '16px'));
-  const panel = await openSettings(d.locator('app-field-card').first(), 'Field metadata');
+  const panel = await openSettings(d.locator('app-field-card').first(), 'Metadata');
   await expect(panel.locator('label[for^="field-identifier-"]')).toHaveCSS('font-size', '16px');
 };
 for (const { surface, state, width, title } of surfaceCases(registry, scenarios))

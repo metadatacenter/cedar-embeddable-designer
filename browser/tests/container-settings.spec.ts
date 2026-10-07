@@ -9,10 +9,10 @@ test('template settings preserve header, footer and multiple types, and element 
   const settings = designer.locator('app-container-settings').first();
   await expect(settings.getByRole('tab')).toHaveCount(0);
   await settings.getByRole('button', { name: 'Expand template settings' }).click();
-  await expect(settings.getByRole('tab')).toHaveText(['Display', 'Annotations', 'Template metadata']);
+  await expect(settings.getByRole('tab')).toHaveText(['Presentation', 'Annotations', 'Metadata']);
   await settings.getByLabel('Header', { exact: true }).fill('Read before entering data');
   await settings.getByLabel('Footer', { exact: true }).fill('Thank you');
-  await settings.getByRole('tab', { name: 'Template metadata' }).click();
+  await settings.getByRole('tab', { name: 'Metadata', exact: true }).click();
   await settings.getByRole('button', { name: 'Add types' }).click();
   const picker = page.locator('cedar-embeddable-term-picker');
   expect(await picker.evaluate((p: any) => ({ types: p.termTypes, max: p.maximumTerms }))).toEqual({
@@ -50,7 +50,7 @@ test('template settings preserve header, footer and multiple types, and element 
   await addElementFixture(page, designer);
   const element = designer.locator('app-element-card').first();
   await element.getByRole('button', { name: 'Expand element settings' }).click();
-  await element.getByRole('tab', { name: 'Element metadata', exact: true }).click();
+  await element.getByRole('tab', { name: 'Metadata', exact: true }).click();
   await element.getByRole('button', { name: 'Add types' }).click();
   await pick(['urn:element-one', 'urn:element-two']);
   artifact = await currentTemplate(page);
@@ -63,7 +63,7 @@ test('template settings preserve header, footer and multiple types, and element 
   if (await settings.getByRole('button', { name: 'Expand template settings' }).count()) {
     await settings.getByRole('button', { name: 'Expand template settings' }).click();
   }
-  await settings.getByRole('tab', { name: 'Template metadata' }).click();
+  await settings.getByRole('tab', { name: 'Metadata', exact: true }).click();
   await settings.getByRole('button', { name: 'Add types' }).click();
   expect(await picker.evaluate((p: any) => p.constraintSet)).toEqual({ constraints: [], actions: [] });
   await pick(['urn:two', 'urn:three']);

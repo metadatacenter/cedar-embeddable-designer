@@ -679,9 +679,9 @@
     "constraints": "Megkötések",
     "content": "Tartalom",
     "annotations": "Annotációk",
-    "fieldMetadata": "Mező metaadatai",
-    "elementMetadata": "Elem metaadatai",
-    "templateMetadata": "Sablon metaadatai"
+    "fieldMetadata": "Metaadatok",
+    "elementMetadata": "Metaadatok",
+    "templateMetadata": "Metaadatok"
   },
   "validation": {
     "summary": {

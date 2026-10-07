@@ -18,15 +18,15 @@ for (const width of [1440, 768, 375]) {
     await expect(designer.getByRole('tab')).toHaveCount(0);
     const card = designer.locator('app-field-card').first();
     const before = await currentTemplate(page);
-    const metadata = await openSettings(card, 'Display');
+    const metadata = await openSettings(card, 'Presentation');
     await expect(card.getByRole('button', { name: 'Apply', exact: true })).toHaveCount(0);
     await metadata.getByLabel('Field name', { exact: true }).fill('Live label');
-    await openSettings(card, 'Field metadata');
+    await openSettings(card, 'Metadata');
     await card.getByRole('button', { name: 'Collapse field settings' }).click();
     await expect(card.getByRole('tab')).toHaveCount(0);
-    await openSettings(card, 'Display');
+    await openSettings(card, 'Presentation');
     await expect(metadata.getByLabel('Field name', { exact: true })).toHaveValue('Live label');
-    // A draft's own name is the name its parent shows it by, so the header follows the Display tab as it
+    // A draft's own name is the name its parent shows it by, so the header follows the Presentation tab as it
     // is typed, and the key stays where it was.
     await expect(card.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue('Live label');
     const saved = await currentTemplate(page);
@@ -34,11 +34,11 @@ for (const width of [1440, 768, 375]) {
     expect((saved._ui as any).propertyLabels.Title).toBe('Live label');
     expect((saved.properties as any).Title['skos:prefLabel']).toBeUndefined();
     expect((await currentTemplate(page))['@id']).toEqual(before['@id']);
-    const tab = card.getByRole('tab', { name: 'Display', exact: true });
+    const tab = card.getByRole('tab', { name: 'Presentation', exact: true });
     await tab.focus();
     await page.keyboard.press('End');
-    await expect(card.getByRole('tab', { name: 'Field metadata', exact: true })).toBeFocused();
-    await expect(card.getByRole('tabpanel', { name: 'Field metadata', exact: true })).toBeVisible();
+    await expect(card.getByRole('tab', { name: 'Metadata', exact: true })).toBeFocused();
+    await expect(card.getByRole('tabpanel', { name: 'Metadata', exact: true })).toBeVisible();
     const measurements = await card.evaluate((el) => {
       const rect = el.getBoundingClientRect();
       const arrow = el.querySelector('.settings-toggle')!.getBoundingClientRect();

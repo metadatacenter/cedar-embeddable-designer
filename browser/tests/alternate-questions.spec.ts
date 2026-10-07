@@ -6,7 +6,7 @@ for (const width of [1280, 375]) {
     await page.setViewportSize({ width, height: 1000 });
     const designer = await openDesigner(page);
     const card = designer.locator('app-field-card').first();
-    await openSettings(card, 'Display');
+    await openSettings(card, 'Presentation');
     const editor = card.locator('app-alternate-questions');
     const input = editor.getByRole('textbox', { name: 'New alternate question' });
     await input.fill('   ');
@@ -32,7 +32,7 @@ for (const width of [1280, 375]) {
     ]);
     await editor.screenshot({ path: testInfo.outputPath('alternate-questions.png') });
     await card.getByRole('tab', { name: 'Annotations', exact: true }).click();
-    await card.getByRole('tab', { name: 'Display', exact: true }).click();
+    await card.getByRole('tab', { name: 'Presentation', exact: true }).click();
     await expect(editor.getByRole('cell', { name: 'What is the title?', exact: true })).toBeVisible();
     await editor.getByRole('button', { name: 'Remove question 1' }).click();
     expect(child(await currentTemplate(page), 'Title')['skos:altLabel']).toEqual(['Which title should be used?']);

@@ -508,9 +508,9 @@ for (const type of ['number', 'date']) {
   });
 }
 
-test('Display controls use the standard CEE scale', async ({ page }) => {
+test('Presentation controls use the standard CEE scale', async ({ page }) => {
   await openField(page, 'number');
-  const panel = await openSettings(page.locator('app-field-card').first(), 'Display');
+  const panel = await openSettings(page.locator('app-field-card').first(), 'Presentation');
   for (const input of await panel.locator('input:not([type="checkbox"])').all()) {
     const authoringRow = await input.evaluate((el) => !!el.closest('app-alternate-questions'));
     await expect(input).toHaveCSS('height', authoringRow ? '32px' : '36px');
@@ -792,7 +792,7 @@ for (const type of ['email', 'phone', 'link']) {
         );
       await expect.poll(canSave).toBe(false);
       if (transition === 'metadata') {
-        await openSettings(card, 'Field metadata');
+        await openSettings(card, 'Metadata');
         await card.locator('input[name=schemaIdentifier]').fill('Edited');
       } else {
         await page.evaluate(

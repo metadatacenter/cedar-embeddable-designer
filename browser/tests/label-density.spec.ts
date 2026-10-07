@@ -30,7 +30,7 @@ for (const width of [1280, 375]) {
     }, template);
     await applyPreset(page, 'semantic');
     const card = designer.locator('app-field-card').first();
-    const display = await openSettings(card, 'Display');
+    const display = await openSettings(card, 'Presentation');
     // The field's own description, which CEE shows as the field's help.
     const help = display.getByText('Field description', { exact: true });
     await expect(help).toBeVisible();
@@ -60,7 +60,7 @@ for (const width of [1280, 375]) {
 }
 
 for (const type of ['checkboxes', 'multipleChoice', 'singleChoiceList', 'multipleChoiceList']) {
-  test(`${type} authoring uses consistent spacing and keeps help in Display`, async ({ page }) => {
+  test(`${type} authoring uses consistent spacing and keeps help in Presentation`, async ({ page }) => {
     const designer = await openDesigner(page);
     const template = templateToJson(
       buildTemplate({
@@ -97,7 +97,7 @@ for (const type of ['checkboxes', 'multipleChoice', 'singleChoiceList', 'multipl
     expect(addIcon!.width).toBe(optionIcon!.width);
     const help = card.locator('[role="tabpanel"][id$="-Display"]').getByLabel('Field description', { exact: true });
     await expect(help).toBeHidden();
-    await openSettings(card, 'Display');
+    await openSettings(card, 'Presentation');
     await expect(help).toHaveCount(1);
     await help.fill('Choose an option.');
     expect(child(await currentTemplate(page), 'Choices')['schema:description']).toBe('Choose an option.');

@@ -172,7 +172,7 @@ test.describe('the designer', () => {
     await sequentialIdentifiers(page);
     const designer = await designerShowing(page, ['Text']);
     const card = designer.locator('[id^=field-card-]').first();
-    await openSettings(card, 'Field metadata');
+    await openSettings(card, 'Metadata');
 
     await expect(card).toHaveScreenshot('card-expanded.png', {
       ...SHOT,
@@ -261,7 +261,7 @@ test('an inactive settings tab still shows its error', async ({ page }) => {
   await panel.getByLabel('Allow multiple', { exact: true }).check();
   await panel.getByLabel('Minimum', { exact: true }).fill('2');
   await panel.getByLabel('Maximum', { exact: true }).fill('1');
-  await card.getByRole('tab', { name: 'Display', exact: true }).click();
+  await card.getByRole('tab', { name: 'Presentation', exact: true }).click();
   await page.mouse.move(0, 0);
   await expect(card).toHaveScreenshot('inactive-tab-error.png', SHOT);
 });

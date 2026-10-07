@@ -90,7 +90,9 @@ formatted in the active language's locale: `en-US` for English, as before, and
 
 Validation messages follow the language too. `validationReport` and
 `validationChange` carry each message in the active language, while an issue's
-`tab` keeps its English identifier. A message already shown for a failed edit keeps
+`tab` keeps its English identifier. An identifier is the tab's original English name,
+so `Display` identifies the tab labelled Presentation, and `Field metadata`,
+`Element metadata` and `Template Metadata` identify the tabs labelled Metadata. A message already shown for a failed edit keeps
 the language it was produced in until the next edit.
 
 Both language maps are bundled into the script, so choosing a language never makes
@@ -334,7 +336,7 @@ the example page does not write back to the stack. Choose Modular to expose all
 authoring features.
 
 Field cards start compact. The grey bottom chevron reveals underline tabs for
-values, display, placement, type-specific constraints, metadata and identity.
+values, presentation, placement, type-specific constraints, metadata and identity.
 Settings update immediately as valid values are entered. Incomplete input stays editable
 when switching tabs or collapsing the panel. Published fields allow
 inspection but keep editing controls disabled. Reusable field work remains in
