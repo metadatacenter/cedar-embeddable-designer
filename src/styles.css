@@ -232,25 +232,6 @@
   animation: modal-fade-in var(--cedar-motion-duration-normal) var(--cedar-motion-ease-standard);
 }
 
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: var(--cedar-surface-subtle);
-  border-radius: var(--cedar-radius);
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--cedar-border-rule);
-  border-radius: var(--cedar-radius);
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--cedar-border-rule);
-}
-
 /* Shared focus geometry also covers toolbar and dialog actions. */
 button:focus-visible,
 a:focus-visible,

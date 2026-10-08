@@ -1,47 +1,12 @@
 {
   "schema": 1,
   "findings": {
-    "04209051ccb0788ba987": {
-      "file": "src/app/app.component.scss",
-      "rule": "utility-style",
-      "property": "utility-style",
-      "value": "hover:opacity-80",
-      "count": 1
-    },
-    "2618584b089ce8f7cb1d": {
-      "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
-      "rule": "geometry",
-      "property": "height",
-      "value": "0.5rem",
-      "count": 2
-    },
-    "304aeb4d62f704889f9c": {
-      "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
-      "rule": "geometry",
-      "property": "height",
-      "value": "0.25rem",
-      "count": 1
-    },
     "a68276631bc8463265ec": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.html",
       "rule": "dynamic-style",
       "property": "height",
       "value": "uninspectable-binding",
       "count": 2
-    },
-    "bdfc32f6dd0cc875fddc": {
-      "file": "src/styles.css",
-      "rule": "geometry",
-      "property": "height",
-      "value": "6px",
-      "count": 1
-    },
-    "fb0df96f25c062f6a2ed": {
-      "file": "src/app/element/cedar-embeddable-designer.element.scss",
-      "rule": "geometry",
-      "property": "min-height",
-      "value": "500px",
-      "count": 1
     }
   },
   "exceptions": {},

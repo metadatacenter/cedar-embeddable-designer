@@ -60,8 +60,12 @@
 }
 
 .user-menu-trigger {
-  @apply flex items-center hover:opacity-80 transition-opacity cursor-pointer text-left;
+  @apply flex items-center cursor-pointer text-left;
   gap: var(--cedar-space-2);
+  border-radius: var(--cedar-radius);
+}
+.user-menu-trigger:hover .user-menu-avatar {
+  color: var(--cedar-color-primary);
 }
 
 .user-menu-dropdown {
@@ -205,8 +209,10 @@
   color: var(--cedar-text-muted);
   cursor: pointer;
 }
+/* The user menu's trigger hovers as the panel toggles beside it do. */
 .panel-toggle:hover,
-.panel-toggle[aria-expanded='true'] {
+.panel-toggle[aria-expanded='true'],
+.user-menu-trigger:hover {
   color: var(--cedar-color-primary);
   background: var(--cedar-surface-subtle);
 }
