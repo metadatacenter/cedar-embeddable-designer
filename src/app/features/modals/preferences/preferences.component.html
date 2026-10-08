@@ -46,7 +46,7 @@
                 type="checkbox"
                 [ngModel]="service.preferences().showRequired"
                 (ngModelChange)="updatePref('showRequired', $event)"
-                class="settings-dialog-check checkbox-white"
+                class="settings-dialog-check"
               />
               <div class="flex-1">
                 <span class="preferences-label">{{ 'preferences.fieldOptions.required.label' | translate }}</span>
@@ -59,7 +59,7 @@
                 type="checkbox"
                 [ngModel]="service.preferences().showAllowMultiple"
                 (ngModelChange)="updatePref('showAllowMultiple', $event)"
-                class="settings-dialog-check checkbox-white"
+                class="settings-dialog-check"
               />
               <div class="flex-1">
                 <span class="preferences-label">{{ 'preferences.fieldOptions.allowMultiple.label' | translate }}</span>
@@ -72,7 +72,7 @@
                 type="checkbox"
                 [ngModel]="service.preferences().showDefaultValue"
                 (ngModelChange)="updatePref('showDefaultValue', $event)"
-                class="settings-dialog-check checkbox-white"
+                class="settings-dialog-check"
               />
               <div class="flex-1">
                 <span class="preferences-label">{{ 'preferences.fieldOptions.defaultValue.label' | translate }}</span>
@@ -91,7 +91,7 @@
                 type="checkbox"
                 [ngModel]="service.preferences().showElements"
                 (ngModelChange)="updatePref('showElements', $event)"
-                class="settings-dialog-check checkbox-white"
+                class="settings-dialog-check"
               />
               <div class="flex-1">
                 <span class="preferences-label">{{ 'preferences.features.elements.label' | translate }}</span>
@@ -113,7 +113,7 @@
                   name="fieldSelectionStyle"
                   [checked]="service.preferences().fieldSelectionStyle === 'modal'"
                   (change)="updatePref('fieldSelectionStyle', 'modal')"
-                  class="settings-dialog-check radio-white"
+                  class="settings-dialog-check"
                 />
                 <div class="flex-1">
                   <span class="preferences-label">{{ 'preferences.selection.inline.label' | translate }}</span>
@@ -127,7 +127,7 @@
                   name="fieldSelectionStyle"
                   [checked]="service.preferences().fieldSelectionStyle === 'sidebar'"
                   (change)="updatePref('fieldSelectionStyle', 'sidebar')"
-                  class="settings-dialog-check radio-white"
+                  class="settings-dialog-check"
                 />
                 <div class="flex-1">
                   <span class="preferences-label">{{ 'preferences.selection.sidebar.label' | translate }}</span>
@@ -169,7 +169,7 @@
                     type="checkbox"
                     [checked]="service.preferences().visibleFieldTypes[item.key] ?? true"
                     (change)="updateFieldVisibility(item.key, $any($event.target).checked)"
-                    class="settings-dialog-check checkbox-white"
+                    class="settings-dialog-check"
                   />
                   <div class="preferences-field-icon">
                     <app-icon [key]="item.key" size="default"></app-icon>

@@ -38,7 +38,7 @@ li {
   padding: 0 var(--cedar-space-2);
 }
 .outline-row.invalid {
-  box-shadow: inset spacing.$invalid-stripe-width 0 var(--cedar-status-error-text);
+  box-shadow: inset spacing.$designer-invalid-stripe-width 0 var(--cedar-status-error-text);
 }
 .validation-badge {
   display: inline-flex;

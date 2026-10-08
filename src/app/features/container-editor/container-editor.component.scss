@@ -16,7 +16,7 @@
 .template-header-card::before {
   content: '';
   display: block;
-  height: spacing.$template-card-accent-height;
+  height: spacing.$designer-template-card-accent-height;
   background: linear-gradient(90deg, var(--cedar-color-primary), var(--cedar-surface-selected));
 }
 .template-header-card__body {
@@ -37,8 +37,8 @@
 }
 .template-header-card__icon {
   display: flex;
-  width: spacing.$template-icon-tile-size;
-  height: spacing.$template-icon-tile-size;
+  width: spacing.$designer-template-icon-tile-size;
+  height: spacing.$designer-template-icon-tile-size;
   border-radius: var(--cedar-radius);
   background: var(--cedar-surface-selected);
   color: var(--cedar-color-primary);

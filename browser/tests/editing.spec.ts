@@ -239,8 +239,9 @@ test('CED identifies its build beside the logo', async ({ page }) => {
   const logoBox = (await identity.locator('svg').boundingBox())!;
   const nameBox = (await identity.locator('.designer-identity__name').boundingBox())!;
   const versionBox = (await version.boundingBox())!;
-  expect(logoBox.width).toBe(40);
-  expect(logoBox.height).toBe(40);
+  // The mark is Workspace's brand mark, as tall as the header's controls.
+  expect(logoBox.width).toBe(36);
+  expect(logoBox.height).toBe(36);
   // The name and the version share a left edge to the right of the mark, the version beneath the name.
   expect(nameBox.x).toBe(logoBox.x + logoBox.width + 8);
   expect(versionBox.x).toBe(nameBox.x);

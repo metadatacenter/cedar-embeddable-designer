@@ -168,5 +168,8 @@ test('brand tokens reach template bindings and native choice controls', async ({
   await expect(designer.locator('.field-type-icon').first()).toHaveCSS('color', 'rgb(80, 20, 120)');
   await designer.locator('.user-menu-container button').first().click();
   await designer.getByRole('button', { name: 'Preferences', exact: true }).click();
-  await expect(designer.locator('input.radio-white:checked')).toHaveCSS('border-color', 'rgb(80, 20, 120)');
+  await expect(designer.locator("input.settings-dialog-check[type='radio']:checked")).toHaveCSS(
+    'accent-color',
+    'rgb(80, 20, 120)',
+  );
 });
