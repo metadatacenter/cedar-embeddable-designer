@@ -66,6 +66,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A published field or element no longer says that only its configuration can change
+  where nothing can configure it. Designed on its own, it has no parent, and a
+  read-only document configures nothing.
 - A renamed template, element or field is written with the title its name gives. The
   model library reads a title that way, so the stored title used to change between a
   save and the next reopening.

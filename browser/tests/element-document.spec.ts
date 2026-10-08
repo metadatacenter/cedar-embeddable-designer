@@ -232,6 +232,39 @@ async function loadStandalone(page: import('@playwright/test').Page, kind: strin
   }, element);
 }
 
+test('a standalone element claims a configuration only while it can still configure a child', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await applyPreset(page, 'modular');
+  await addElementFixture(page, designer);
+  await nestFixtureFields(page, ['Element']);
+  const element = ((await currentTemplate(page)).properties as Record<string, any>).Element;
+  element.properties[element._ui.order[0]]['bibo:status'] = 'bibo:published';
+  const open = (artifact: object, readOnly: boolean) =>
+    page.evaluate(
+      ({ artifact, readOnly }) => {
+        const host = document.querySelector('cedar-embeddable-designer') as HTMLElement & {
+          artifact: object;
+          readOnly: boolean;
+        };
+        host.artifact = artifact;
+        host.readOnly = readOnly;
+      },
+      { artifact, readOnly },
+    );
+  const claims = designer.getByText(/is published, so only its configuration can change/);
+  // A draft element configures its published child, which is then all that can change.
+  await open(element, false);
+  await expect(claims).toHaveText(['This field is published, so only its configuration can change.']);
+  // Read only, it configures nothing.
+  await open(element, true);
+  await expect(claims).toHaveCount(0);
+  // Published, it is opened read only, and nothing places the element itself.
+  element['bibo:status'] = 'bibo:published';
+  await open(element, true);
+  await expect(directHeader(designer.locator('app-container-editor').first())).toBeVisible();
+  await expect(claims).toHaveCount(0);
+});
+
 for (const width of [1280, 375]) {
   test(`standalone element uses the compact shared authoring header at ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
