@@ -21,8 +21,8 @@
   --spacing: var(--cedar-space-1);
   /*
     The font and the type scale, so `text-sm` and friends emit CEDAR's px values
-    rather than Tailwind's rem defaults. `CEE Roboto` is the namespaced family the
-    embedded faces declare; the fallbacks are CEE's.
+    rather than Tailwind's rem defaults. `CEDAR Roboto` is the namespaced family
+    the embedded faces declare, and the fallbacks are the shared stack's.
   */
   --font-sans: var(--cedar-font-family);
   --text-xs: var(--text-xs);
@@ -128,8 +128,8 @@
     directly, would fall through to Tailwind's default stack and render the
     designer in the system font.
 
-    `CEE Roboto` is the namespaced family the embedded faces declare; the
-    fallbacks are CEE's.
+    `CEDAR Roboto` is the namespaced family the embedded faces declare, and the
+    fallbacks are the shared stack's.
   */
   --font-sans: var(--cedar-font-family);
 
