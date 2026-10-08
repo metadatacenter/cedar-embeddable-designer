@@ -1,4 +1,4 @@
-import { IconComponent } from '../../shared/components/icon/icon.component';
+import { DialogHeaderComponent } from '../../shared/components/dialog-header/dialog-header.component';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -21,6 +21,7 @@ import { TerminologyEdit } from '../../core/services/terminology-edit-commands';
 import { TemplateService } from '../../core/services/template.service';
 import { TerminologyService } from '../../core/services/terminology.service';
 import { PickedConstraint } from '../../core/model/term-picker';
+import { fieldDisplayName } from '../../core/model/field-display-name';
 import { TranslatePipe } from '@ngx-translate/core';
 import { CedLanguageService } from '../../i18n/ced-language.service';
 
@@ -41,7 +42,7 @@ interface FieldElement extends HTMLElement {
 }
 
 @Component({
-  imports: [IconComponent, TranslatePipe],
+  imports: [DialogHeaderComponent, TranslatePipe],
   selector: 'app-field-default-value',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './field-default-value.component.html',
@@ -51,6 +52,7 @@ interface FieldElement extends HTMLElement {
 export class FieldDefaultValueComponent {
   readonly field = input.required<Field>();
   readonly service = inject(TemplateService);
+  readonly displayName = fieldDisplayName;
   /** Whether the field's own definition is locked: it is published, or inside a published element. */
   locked(): boolean {
     return !!this.field().publishedDefinition || this.service.definitionLocked(this.field().id);
