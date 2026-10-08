@@ -149,6 +149,23 @@ describe('the Configuration tab', () => {
     expect(control(fixture, 'min')!.disabled).toBe(false);
   });
 
+  it('holds an attribute-value minimum at 0 unless a stated one must be cleared', async () => {
+    const { service, fixture } = create('attributeValue');
+    await refresh(service, fixture);
+    expect(control(fixture, 'min')!.disabled).toBe(true);
+    expect(control(fixture, 'max')!.disabled).toBe(false);
+    // A panel opened on a field already stating a higher minimum leaves it open to be cleared.
+    service.updateFieldSettings(service.fields()[0].id, { minItems: 2 });
+    const stated = TestBed.createComponent(FieldSettingsComponent);
+    stated.componentRef.setInput('field', service.fields()[0]);
+    await refresh(service, stated);
+    expect(control(stated, 'min')!.disabled).toBe(false);
+    stated.componentInstance.min = 0;
+    stated.componentInstance.saveBounds();
+    await refresh(service, stated);
+    expect(control(stated, 'min')!.disabled).toBe(true);
+  });
+
   it('hides the requirement and Allow multiple where the profile does, and the bounds of a single field', async () => {
     const { service, fixture } = create('text');
     service.updatePreference('showRequired', false);

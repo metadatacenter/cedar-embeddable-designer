@@ -154,10 +154,21 @@ describe('central editing validation', () => {
       const field = service.fields()[0];
       service.updateFieldSettings(field.id, { minItems: 2, maxItems: 1 });
       expect(service.validationReport().issues.some((issue) => issue.setting === 'occurrences')).toBe(true);
-      service.updateFieldSettings(field.id, { minItems: 2, maxItems: 3 });
+      service.updateFieldSettings(field.id, { minItems: type === 'attributeValue' ? 0 : 2, maxItems: 3 });
       expect(service.validationReport().issues.some((issue) => issue.setting === 'occurrences')).toBe(false);
     },
   );
+
+  it('reports an attribute-value minimum above zero as an occurrence failure', () => {
+    service.addField('attributeValue', 0);
+    const field = service.fields()[0];
+    service.updateFieldSettings(field.id, { minItems: 1 });
+    const issue = service.validationReport().issues.find((candidate) => candidate.setting === 'occurrences');
+    expect(issue?.message).toMatch(/attribute-value field's minimum must be 0/);
+    expect(service.validationReport().canSave).toBe(false);
+    service.updateFieldSettings(field.id, { minItems: 0 });
+    expect(service.validationReport().issues.some((candidate) => candidate.setting === 'occurrences')).toBe(false);
+  });
 
   it('retries a conflicting property key once its sibling releases it', () => {
     service.addField('text', 0);

@@ -58,6 +58,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Hidden and Continue previous line are reported as the `layout` setting rather than
   `display`. The Presentation and Metadata tabs keep the identifiers `Display`,
   `Field metadata`, `Element metadata` and `Template Metadata`.
+- An attribute-value field takes no minimum above 0, because whoever fills in the form
+  names its attributes. A higher minimum is reported on the field's `occurrences`
+  setting, as an inverted range is, and the template cannot be saved until the
+  minimum is cleared or set to 0. The minimum control is disabled at 0, except on a
+  template that already states a higher minimum, where it stays open to be cleared.
 
 ### Fixed
 

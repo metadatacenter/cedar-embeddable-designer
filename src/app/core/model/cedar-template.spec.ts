@@ -721,17 +721,23 @@ describe('typed field defaults', () => {
   });
 });
 
-for (const type of ['text', 'checkboxes', 'multipleChoiceList', 'attributeValue']) {
+// An attribute-value field takes no minimum above 0, because its attributes need names.
+for (const [type, minItems] of [
+  ['text', 2],
+  ['checkboxes', 2],
+  ['multipleChoiceList', 2],
+  ['attributeValue', 0],
+] as const) {
   it(`preserves ${type} occurrence limits in JSON and YAML`, () => {
     const original = buildTemplate(
-      templateOf(field({ type, allowMultiple: true, minItems: 2, maxItems: 5, options: ['A', 'B'] })),
+      templateOf(field({ type, allowMultiple: true, minItems, maxItems: 5, options: ['A', 'B'] })),
     );
     for (const source of [templateToJson(original), templateToYaml(original)]) {
       const state = toDesignerTemplate(readTemplate(source));
-      expect(state.fields[0].minItems).toBe(2);
+      expect(state.fields[0].minItems).toBe(minItems);
       expect(state.fields[0].maxItems).toBe(5);
       const rebuilt = buildTemplate(state);
-      expect(fieldDeployment(rebuilt, 'Title')?.minItems).toBe(2);
+      expect(fieldDeployment(rebuilt, 'Title')?.minItems).toBe(minItems);
       expect(fieldDeployment(rebuilt, 'Title')?.maxItems).toBe(5);
     }
   });
@@ -739,6 +745,11 @@ for (const type of ['text', 'checkboxes', 'multipleChoiceList', 'attributeValue'
 it('refuses inverted occurrence limits before writing', () => {
   expect(() => buildTemplate(templateOf(field({ allowMultiple: true, minItems: 5, maxItems: 2 })))).toThrow(
     /Minimum and maximum/,
+  );
+});
+it('refuses an attribute-value minimum above zero before writing', () => {
+  expect(() => buildTemplate(templateOf(field({ type: 'attributeValue', minItems: 1 })))).toThrow(
+    /attribute-value field's minimum must be 0/,
   );
 });
 
