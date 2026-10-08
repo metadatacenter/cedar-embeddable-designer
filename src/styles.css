@@ -136,6 +136,16 @@
   --radius: var(--cedar-radius);
 }
 
+/* CEDAR has no monospace face: code and preformatted text are set in the body font rather than
+   the monospace Tailwind's preflight and the browser give them. Unlayered, so it outranks the
+   preflight. */
+code,
+kbd,
+samp,
+pre {
+  font-family: inherit;
+}
+
 @layer base {
   * {
     border-color: var(--cedar-border-rule);
