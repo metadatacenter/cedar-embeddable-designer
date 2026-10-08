@@ -72,6 +72,21 @@ export class CedarEmbeddableDesignerElementComponent {
     return this.i18n.language();
   }
 
+  /**
+   * Whether the host lets the user change the document.
+   *
+   * Read only, nothing in the document can be edited, the designer cannot be saved from, and it
+   * points at none of the document's problems, since a reader can fix none of them. The validation
+   * report still names them all. The field designer takes the same property.
+   */
+  @Input()
+  set readOnly(value: boolean) {
+    this.service.validation.setReadOnly(!!value);
+  }
+  get readOnly(): boolean {
+    return this.service.validation.readOnly();
+  }
+
   @Input() set childSource(source: CedChildSource | null) {
     this.service.childSource.set(source);
     this.service.childPicker.set(null);

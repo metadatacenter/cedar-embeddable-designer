@@ -77,6 +77,11 @@ export interface CedarEmbeddableDesignerElement extends HTMLElement {
    */
   get language(): CedLanguage;
   set language(value: CedLanguage | string | null);
+  /**
+   * Host read-only mode: nothing can be edited or saved, and the designer points at none of the
+   * document's problems, which `validationReport` still lists.
+   */
+  readOnly: boolean;
   /** Host-owned repository search and artifact retrieval. Replaceable between documents. */
   childSource: CedChildSource | null;
   /** A template or element document. The legacy property name remains supported. */

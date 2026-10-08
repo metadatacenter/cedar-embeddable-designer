@@ -329,7 +329,7 @@ export class FieldSettingsComponent implements OnChanges {
   }
   get keyError(): string | null {
     return (
-      this.service.validationReport().issues.find((issue) => issue.nodeId === this.field.id && issue.setting === 'key')
+      this.service.displayedIssues().find((issue) => issue.nodeId === this.field.id && issue.setting === 'key')
         ?.message ?? null
     );
   }

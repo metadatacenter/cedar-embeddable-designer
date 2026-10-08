@@ -216,7 +216,12 @@ export class TemplateService {
   optionErrorVisible(id: number, index: number): boolean {
     return this.validation.optionVisible(id, index);
   }
-  readonly visibleIssues = computed(() => this.validationReport().issues.filter((issue) => issue.shown));
+  /**
+   * The problems the designer points at: the validation report's, or none while the designer is read
+   * only. A reader can fix none of them, and the report itself still names them all to the host.
+   */
+  readonly displayedIssues = computed(() => (this.validation.readOnly() ? [] : this.validationReport().issues));
+  readonly visibleIssues = computed(() => this.displayedIssues().filter((issue) => issue.shown));
   visibleIssuesFor(id: number): CedValidationIssue[] {
     return this.visibleIssues().filter((issue) => issue.path.includes(id));
   }
@@ -229,9 +234,10 @@ export class TemplateService {
   }
   readonly validationReport = this.validation.report;
   settingError(id: number, setting: string): string | null {
+    if (this.validation.readOnly()) return null;
     return (
       this.validation.error(id, setting) ??
-      this.validationReport().issues.find(
+      this.displayedIssues().find(
         (issue) => issue.source === 'model' && issue.nodeId === id && issue.setting === setting,
       )?.message ??
       null

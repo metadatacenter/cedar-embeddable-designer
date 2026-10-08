@@ -367,6 +367,11 @@ messages or persist session IDs across documents.
 Validation checks the settings CED supports; it does not replace server validation,
 permission checks, or save/publish lifecycle rules.
 
+Set `designer.readOnly` when the user may not change the document. Nothing in it can
+then be edited and `canSave` is false. CED also marks none of the document's
+problems, since a reader can fix none of them. `validationReport` still lists them,
+so a host can tell why the document would not save.
+
 CED marks affected cards and Overview entries, including ancestor elements, and
 provides a summary linking to the relevant settings. One coordinator retains rejected
 settings, retries them when related values change, and supplies the report to every
