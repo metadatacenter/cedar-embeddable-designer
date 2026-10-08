@@ -160,8 +160,7 @@
 /* The card's outline, border and selection bar keep the error colour over the selected and focused
    states. Like the badge, they follow a host's --cedar-control-error before the shared error role. */
 .field-drag-container.invalid {
-  outline: 2px solid var(--cedar-control-error, var(--cedar-status-error-text));
-  outline-offset: 1px;
+  @include patterns.invalid-outline;
   border-color: var(--cedar-control-error, var(--cedar-status-error-text));
 }
 .field-drag-container.invalid > .field-selection-bar {

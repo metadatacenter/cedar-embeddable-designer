@@ -195,8 +195,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: spacing.$designer-panel-toggle-size;
+  height: spacing.$designer-panel-toggle-size;
   flex: none;
   padding: 0;
   border: 0;
@@ -350,8 +350,7 @@
 
   &.selected {
     border-color: var(--cedar-color-primary);
-    outline: 1px solid var(--cedar-color-primary);
-    outline-offset: -1px;
+    @include patterns.selected-outline;
   }
 }
 

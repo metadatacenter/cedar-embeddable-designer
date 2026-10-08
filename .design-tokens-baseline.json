@@ -15,27 +15,6 @@
       "value": "0.5rem",
       "count": 2
     },
-    "26df980f8ce4f59d5183": {
-      "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
-      "rule": "geometry",
-      "property": "z-index",
-      "value": "30",
-      "count": 1
-    },
-    "289cd52dae0d8f276c52": {
-      "file": "src/app/app.component.scss",
-      "rule": "geometry",
-      "property": "outline",
-      "value": "1px solid var(--cedar-color-primary)",
-      "count": 1
-    },
-    "2ba7cb24714134eb068c": {
-      "file": "src/app/features/container-editor/container-editor.component.scss",
-      "rule": "geometry",
-      "property": "outline-offset",
-      "value": "1px",
-      "count": 1
-    },
     "304aeb4d62f704889f9c": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
       "rule": "geometry",
@@ -43,68 +22,12 @@
       "value": "0.25rem",
       "count": 1
     },
-    "3f264d923175cc10b439": {
-      "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.scss",
-      "rule": "geometry",
-      "property": "height",
-      "value": "22px",
-      "count": 1
-    },
-    "5087aa813d1586492b11": {
-      "file": "src/app/features/field-settings/field-settings.component.scss",
-      "rule": "geometry",
-      "property": "height",
-      "value": "14px",
-      "count": 1
-    },
-    "5aef387fdb216dac4c64": {
-      "file": "src/styles.css",
-      "rule": "geometry",
-      "property": "height",
-      "value": "8px",
-      "count": 2
-    },
-    "8231c0886c09a2f55234": {
-      "file": "src/app/app.component.scss",
-      "rule": "geometry",
-      "property": "height",
-      "value": "32px",
-      "count": 1
-    },
-    "8c47ddcd9e7845b5f914": {
-      "file": "src/app/features/container-editor/container-editor.component.scss",
-      "rule": "geometry",
-      "property": "outline",
-      "value": "2px solid var(--cedar-control-error, var(--cedar-status-error-text))",
-      "count": 1
-    },
-    "95a655f7d6e4650d75cf": {
-      "file": "src/app/features/cee-preview/cee-preview.component.scss",
-      "rule": "geometry",
-      "property": "height",
-      "value": "28px",
-      "count": 2
-    },
     "a68276631bc8463265ec": {
       "file": "src/app/features/field-library-sidebar/field-library-sidebar.component.html",
       "rule": "dynamic-style",
       "property": "height",
       "value": "uninspectable-binding",
       "count": 2
-    },
-    "aa3a2714f35892743810": {
-      "file": "src/app/features/cee-preview/cee-preview.component.scss",
-      "rule": "geometry",
-      "property": "min-height",
-      "value": "40px",
-      "count": 1
-    },
-    "bd9600b167a429fb1d6b": {
-      "file": "src/app/app.component.scss",
-      "rule": "geometry",
-      "property": "outline-offset",
-      "value": "-1px",
-      "count": 1
     },
     "bdfc32f6dd0cc875fddc": {
       "file": "src/styles.css",
@@ -118,13 +41,6 @@
       "rule": "geometry",
       "property": "min-height",
       "value": "500px",
-      "count": 1
-    },
-    "fd1bbd3d0ee3ccef3ce7": {
-      "file": "src/app/features/field-settings/field-settings.component.scss",
-      "rule": "geometry",
-      "property": "z-index",
-      "value": "11",
       "count": 1
     }
   },

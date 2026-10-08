@@ -1,3 +1,5 @@
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
+
 .sidebar-container {
   border-right: 1px solid var(--cedar-border-rule);
   background-color: var(--cedar-surface-raised);
@@ -7,7 +9,7 @@
   transition-duration: var(--cedar-motion-duration-normal);
   position: absolute;
   left: 0;
-  z-index: 30;
+  z-index: spacing.$designer-library-layer;
 }
 
 /* Sections */
@@ -335,10 +337,10 @@
 }
 
 .badge-count-indicator {
-  min-width: 22px;
+  min-width: spacing.$designer-library-badge-size;
   padding: 0 var(--cedar-space-1);
   box-sizing: border-box;
-  height: 22px;
+  height: spacing.$designer-library-badge-size;
   border-radius: var(--cedar-radius-pill);
   display: flex;
   align-items: center;

@@ -118,13 +118,13 @@ button:focus-visible {
 .settings-toggle {
   /* Keep the compact toggle above the between-card insertion hover area. */
   position: relative;
-  z-index: 11;
+  z-index: spacing.$designer-settings-toggle-layer;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto;
   width: 36px;
-  height: 14px;
+  height: spacing.$designer-settings-toggle-height;
   padding: 0;
   border: 0;
   background: transparent;

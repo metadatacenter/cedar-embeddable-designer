@@ -216,7 +216,7 @@
     left: 50%;
     top: 50%;
     width: 4px;
-    height: 8px;
+    height: var(--choice-mark-size);
     border: solid var(--cedar-color-on-primary);
     border-width: 0 2px 2px 0;
     transform: translate(-50%, -60%) rotate(45deg);
@@ -249,8 +249,8 @@
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 8px;
-    height: 8px;
+    width: var(--choice-mark-size);
+    height: var(--choice-mark-size);
     border-radius: 50%;
     background-color: var(--cedar-color-primary);
     transform: translate(-50%, -50%);

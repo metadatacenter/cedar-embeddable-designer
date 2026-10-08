@@ -17,7 +17,7 @@
   justify-content: space-between;
   flex: 0 0 auto;
   box-sizing: border-box;
-  min-height: 40px;
+  min-height: spacing.$designer-preview-bar-height;
   gap: var(--cedar-space-2);
   @include spacing.apply(padding, control-row);
   border-bottom: 1px solid var(--cedar-border-rule);
@@ -50,7 +50,7 @@
 }
 .cee-preview__bar select {
   box-sizing: border-box;
-  height: 28px;
+  height: spacing.$designer-preview-control-size;
   margin: 0;
   align-self: center;
   min-width: 0;
@@ -74,8 +74,8 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  width: 28px;
-  height: 28px;
+  width: spacing.$designer-preview-control-size;
+  height: spacing.$designer-preview-control-size;
   margin: 0;
   padding: 0;
   flex: none;

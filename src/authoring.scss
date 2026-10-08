@@ -1,6 +1,13 @@
 // Selector adapter only. Authoring geometry and typography belong to design tokens.
 @use '@org.metadatacenter/cedar-design-tokens/authoring';
 @use '@org.metadatacenter/cedar-design-tokens/patterns';
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
+
+/* The designer's sizes that the plain-CSS global stylesheet draws with. Sass names cannot reach
+   that file, so each is bound here as a property both elements' shadow roots inherit. */
+:host {
+  --choice-mark-size: #{spacing.$designer-choice-mark-size};
+}
 
 /* Inline authoring actions share typography, independent of the surrounding panel. */
 .ced-text-action {
