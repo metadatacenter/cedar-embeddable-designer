@@ -64,6 +64,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   setting, as an inverted range is, and the template cannot be saved until the
   minimum is cleared or set to 0. The minimum control is disabled at 0, except on a
   template that already states a higher minimum, where it stays open to be cleared.
+- An unnamed template, element or field draws the line under its name in the warning
+  colour, and in the error colour once the name is reported missing. Focus and a selected
+  field card still draw it in the primary colour, and a locked name keeps the rule. Each
+  name's placeholder takes the regular weight rather than the name's medium weight.
 
 ### Fixed
 

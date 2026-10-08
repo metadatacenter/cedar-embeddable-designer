@@ -157,16 +157,21 @@ test('an unnamed template, element or field shows a line to write its name on, w
       probe.remove();
       return colour;
     }, token);
-  const rule = await resolve('--cedar-border-rule');
+  const warning = await resolve('--cedar-status-warning-text');
+  const error = await resolve('--cedar-status-error-text');
   const primary = await resolve('--cedar-color-primary');
+  const weight = (name: Locator) => name.evaluate((el) => getComputedStyle(el, '::placeholder').fontWeight);
   const underline = (name: Locator) => name.evaluate((el) => getComputedStyle(el).borderBottomColor);
   const line = (name: Locator) => name.evaluate((el) => getComputedStyle(el).backgroundImage);
   const height = (name: Locator) => name.evaluate((el) => el.getBoundingClientRect().height);
 
-  // A template and an element use the header input's own underline, which focus turns primary.
+  // A template and an element use the header input's own underline: in the warning colour as a name
+  // still to be written, primary while focused, and in the error colour once the name is reported
+  // missing. Each placeholder takes the regular weight.
   const template = templateName(page);
   await expect(template).toHaveValue('');
-  await expect.poll(() => underline(template)).toBe(rule);
+  await expect.poll(() => underline(template)).toBe(warning);
+  expect(await weight(template)).toBe('400');
   await template.focus();
   await expect.poll(() => underline(template)).toBe(primary);
   const unnamed = await height(template);
@@ -182,9 +187,12 @@ test('an unnamed template, element or field shows a line to write its name on, w
   await element.fill('');
   await expect.poll(() => underline(element)).toBe(primary);
   await element.blur();
-  await expect.poll(() => underline(element)).toBe(rule);
+  await expect(element).toHaveAttribute('aria-invalid', 'true');
+  await expect.poll(() => underline(element)).toBe(error);
+  expect(await weight(element)).toBe('400');
 
-  // A field name has no border, so its line is drawn inside the box: primary while the card is selected.
+  // A field name has no border, so its line is drawn inside the box: primary while the card is
+  // selected, and in the error colour once the author moves on and the name is reported missing.
   const field = fieldName(page);
   expect(await line(field)).toBe('none');
   const named = await height(field);
@@ -192,7 +200,9 @@ test('an unnamed template, element or field shows a line to write its name on, w
   await expect.poll(() => line(field)).toBe(`linear-gradient(${primary}, ${primary})`);
   expect(await height(field)).toBe(named);
   await fieldName(page, 1).focus();
-  await expect.poll(() => line(field)).toBe(`linear-gradient(${rule}, ${rule})`);
+  await expect(field).toHaveAttribute('aria-invalid', 'true');
+  await expect.poll(() => line(field)).toBe(`linear-gradient(${error}, ${error})`);
+  expect(await weight(field)).toBe('400');
 });
 
 for (const width of [1440, 768, 375]) {
