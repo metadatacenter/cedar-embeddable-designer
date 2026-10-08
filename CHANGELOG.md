@@ -11,8 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - CEFD (`cedar-embeddable-field-designer`) in the CED bundle: a standalone field
   definition editor sharing CED's controls, with JSON/YAML loading, all field
-  types, validation and dirty events, isolated instances and host read-only mode.
-  Container placement controls remain in CED. The host owns repository saves.
+  types, validation and dirty events, isolated instances and host read-only mode,
+  which the host explains, as it does for CED. Container placement controls remain
+  in CED. The host owns repository saves.
 - CEFD contract, field-type round-trip, metadata preservation and browser tests;
   split Designer coverage for standalone field creation, updates and stale saves.
 - English and Hungarian. Both elements take a `language` property and attribute
