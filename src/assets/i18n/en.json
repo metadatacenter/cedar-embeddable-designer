@@ -296,7 +296,8 @@
     },
     "namedField": "{{name}}: {{message}}",
     "occurrences": {
-      "range": "Minimum and maximum must be nonnegative numbers, with minimum no greater than maximum."
+      "range": "Minimum and maximum must be nonnegative numbers, with minimum no greater than maximum.",
+      "attributeValueMinimum": "An attribute-value field's minimum must be 0, because whoever fills in the form names its attributes."
     },
     "yaml": {
       "lossy": "YAML cannot preserve every property of this template, such as custom schema metadata. Export JSON to retain the complete definitions.",

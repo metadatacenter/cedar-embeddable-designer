@@ -64,6 +64,14 @@ export class FieldCardComponent {
     return this.service.fieldDocumentMode() ? this.field.name : fieldDisplayName(this.field);
   }
 
+  /**
+   * Whether the field is published and its parent can still configure it, which is then all that
+   * can change. A field designed on its own has no parent, and a read-only document configures nothing.
+   */
+  get configurationOnly(): boolean {
+    return !!this.field.publishedDefinition && !this.standalone && this.service.validation.canPlace(this.field.id);
+  }
+
   /** A field designed on its own has no placement, so its header edits its definition. */
   get headerLocked(): boolean {
     return this.service.fieldDocumentMode()

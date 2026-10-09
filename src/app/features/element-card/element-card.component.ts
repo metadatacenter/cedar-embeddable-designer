@@ -45,8 +45,8 @@ export class ElementCardComponent {
   error(): string | null {
     return (
       this.service
-        .validationReport()
-        .issues.find(
+        .displayedIssues()
+        .find(
           (issue) =>
             issue.nodeId === this.node().id &&
             issue.tab === this.activeTab &&
@@ -58,7 +58,7 @@ export class ElementCardComponent {
   readonly keyDraft = signal<string | null>(null);
   readonly keyError = computed(
     () =>
-      this.service.validationReport().issues.find((issue) => issue.nodeId === this.node().id && issue.setting === 'key')
+      this.service.displayedIssues().find((issue) => issue.nodeId === this.node().id && issue.setting === 'key')
         ?.message ?? null,
   );
   expanded = false;

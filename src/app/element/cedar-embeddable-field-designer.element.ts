@@ -66,9 +66,7 @@ import { provideCedTranslations } from '../i18n/i18n';
     <app-validation-summary />
     <section class="field-editor" [attr.aria-label]="'fieldElement.label' | translate">
       @if (field(); as field) {
-        @if (readOnly) {
-          <p role="status">{{ 'fieldElement.readOnly' | translate }}</p>
-        }
+        <!-- The host says why the field is read only, as it does for CED. -->
         <fieldset [disabled]="readOnly" [attr.inert]="readOnly ? '' : null">
           <app-field-card [field]="field" [standalone]="true" />
         </fieldset>

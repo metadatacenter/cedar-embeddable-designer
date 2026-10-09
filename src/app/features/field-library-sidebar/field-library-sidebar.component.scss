@@ -1,3 +1,5 @@
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
+
 .sidebar-container {
   border-right: 1px solid var(--cedar-border-rule);
   background-color: var(--cedar-surface-raised);
@@ -7,7 +9,7 @@
   transition-duration: var(--cedar-motion-duration-normal);
   position: absolute;
   left: 0;
-  z-index: 30;
+  z-index: spacing.$designer-library-layer;
 }
 
 /* Sections */
@@ -121,8 +123,8 @@
 }
 
 .draggable-indicator {
-  width: 0.5rem;
-  height: 0.5rem;
+  width: spacing.$designer-drag-indicator-size;
+  height: spacing.$designer-drag-indicator-size;
   border-radius: var(--cedar-radius-pill);
   flex-shrink: 0;
   background-color: var(--cedar-control-border-default);
@@ -145,7 +147,7 @@
 
 /* Draggable Divider */
 .resizable-divider {
-  height: 0.5rem;
+  height: spacing.$designer-resize-handle-width;
   background-color: var(--cedar-surface-subtle);
   cursor: ns-resize;
   display: flex;
@@ -166,7 +168,7 @@
 
 .divider-handle {
   width: 2rem;
-  height: 0.25rem;
+  height: spacing.$designer-divider-grip-height;
   background-color: var(--cedar-border-rule);
   border-radius: var(--cedar-radius);
 }
@@ -335,10 +337,10 @@
 }
 
 .badge-count-indicator {
-  min-width: 22px;
+  min-width: spacing.$designer-library-badge-size;
   padding: 0 var(--cedar-space-1);
   box-sizing: border-box;
-  height: 22px;
+  height: spacing.$designer-library-badge-size;
   border-radius: var(--cedar-radius-pill);
   display: flex;
   align-items: center;
@@ -357,7 +359,7 @@
 
 /* Scrollbar styles */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+  width: spacing.$designer-scrollbar-width;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
   background: var(--cedar-surface-subtle);

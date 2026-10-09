@@ -101,8 +101,13 @@ export class ContainerEditorComponent {
   readonly definitionLocked = computed(() => this.locks().definition);
   /** Whether its placement in its parent is locked: it is inside a published element. */
   readonly placementLocked = computed(() => this.locks().placement);
-  /** Whether this element is itself published, which its header says once for everything inside it. */
-  readonly published = computed(() => publishedContainer(this.container()) && !this.placementLocked());
+  /**
+   * Whether this element is itself published and its parent can still configure it, which its header
+   * says once for everything inside it. A read-only document configures nothing.
+   */
+  readonly published = computed(
+    () => publishedContainer(this.container()) && this.service.validation.canPlace(this.container().id),
+  );
   rename(value: string): void {
     const node = this.placementNode();
     if (node) this.service.updateElementDisplayName(node, value);

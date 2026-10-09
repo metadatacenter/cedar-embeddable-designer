@@ -16,7 +16,7 @@
 .template-header-card::before {
   content: '';
   display: block;
-  height: spacing.$template-card-accent-height;
+  height: spacing.$designer-template-card-accent-height;
   background: linear-gradient(90deg, var(--cedar-color-primary), var(--cedar-surface-selected));
 }
 .template-header-card__body {
@@ -37,8 +37,8 @@
 }
 .template-header-card__icon {
   display: flex;
-  width: spacing.$template-icon-tile-size;
-  height: spacing.$template-icon-tile-size;
+  width: spacing.$designer-template-icon-tile-size;
+  height: spacing.$designer-template-icon-tile-size;
   border-radius: var(--cedar-radius);
   background: var(--cedar-surface-selected);
   color: var(--cedar-color-primary);
@@ -160,8 +160,7 @@
 /* The card's outline, border and selection bar keep the error colour over the selected and focused
    states. Like the badge, they follow a host's --cedar-control-error before the shared error role. */
 .field-drag-container.invalid {
-  outline: 2px solid var(--cedar-control-error, var(--cedar-status-error-text));
-  outline-offset: 1px;
+  @include patterns.invalid-outline;
   border-color: var(--cedar-control-error, var(--cedar-status-error-text));
 }
 .field-drag-container.invalid > .field-selection-bar {
@@ -255,9 +254,21 @@ textarea.template-input {
 .template-input--name {
   font-weight: var(--cedar-font-weight-medium);
   color: var(--cedar-text-title);
-  // An unnamed template or element shows the header input's underline at rest, as a line to write
-  // the name on. Focus turns it primary, as it does on every header input.
+  // The placeholder is a hint, not a name, so it keeps the regular weight of every other one.
+  &::placeholder {
+    font-weight: var(--cedar-font-weight-regular);
+  }
+  // An unnamed template or element shows the header input's underline at rest in the warning
+  // colour, as a name still to be written, and in the error colour once the name is reported
+  // missing. Focus turns it primary, as it does on every header input, and a locked name keeps the
+  // rule, since nobody can write one.
   &:placeholder-shown:not(:focus) {
+    border-bottom-color: var(--cedar-status-warning-text);
+  }
+  &[aria-invalid='true']:not(:focus) {
+    border-bottom-color: var(--cedar-status-error-text);
+  }
+  &:placeholder-shown:disabled {
     border-bottom-color: var(--cedar-border-rule);
   }
 }

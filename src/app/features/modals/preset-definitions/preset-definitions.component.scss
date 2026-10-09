@@ -1,7 +1,8 @@
 @use '@org.metadatacenter/cedar-design-tokens/authoring';
 @use '@org.metadatacenter/cedar-design-tokens/patterns';
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+  width: spacing.$designer-scrollbar-width;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
   background: var(--cedar-surface-subtle);

@@ -227,6 +227,14 @@ export class FieldSettingsComponent implements OnChanges {
   get multiple(): boolean {
     return descriptorOf(this.field.type).deployment === 'alwaysMultiple' || this.field.allowMultiple;
   }
+  /**
+   * Whether the minimum is held at 0. Whoever fills in the form names an attribute-value field's
+   * attributes, so its minimum can be nothing else. A template stating a higher one keeps the
+   * control open so that its author can clear it.
+   */
+  get minimumHeld(): boolean {
+    return this.field.type === 'attributeValue' && !((this.min ?? 0) > 0);
+  }
   /** Whether the type takes a requirement and the profile shows the control. */
   get offersRequirement(): boolean {
     return this.service.preferences().showRequired && allowsStatus(this.field.type);
@@ -329,7 +337,7 @@ export class FieldSettingsComponent implements OnChanges {
   }
   get keyError(): string | null {
     return (
-      this.service.validationReport().issues.find((issue) => issue.nodeId === this.field.id && issue.setting === 'key')
+      this.service.displayedIssues().find((issue) => issue.nodeId === this.field.id && issue.setting === 'key')
         ?.message ?? null
     );
   }

@@ -51,7 +51,7 @@
                         type="checkbox"
                         [ngModel]="service.presetDefinitions()[preset].showRequired"
                         (ngModelChange)="updateDef(preset, 'showRequired', $event)"
-                        class="settings-dialog-check checkbox-white"
+                        class="settings-dialog-check"
                       />
                     </td>
                   }
@@ -67,7 +67,7 @@
                         type="checkbox"
                         [ngModel]="service.presetDefinitions()[preset].showAllowMultiple"
                         (ngModelChange)="updateDef(preset, 'showAllowMultiple', $event)"
-                        class="settings-dialog-check checkbox-white"
+                        class="settings-dialog-check"
                       />
                     </td>
                   }
@@ -83,7 +83,7 @@
                         type="checkbox"
                         [ngModel]="service.presetDefinitions()[preset].showDefaultValue"
                         (ngModelChange)="updateDef(preset, 'showDefaultValue', $event)"
-                        class="settings-dialog-check checkbox-white"
+                        class="settings-dialog-check"
                       />
                     </td>
                   }
@@ -117,7 +117,7 @@
                         type="checkbox"
                         [ngModel]="service.presetDefinitions()[preset].showElements"
                         (ngModelChange)="updateDef(preset, 'showElements', $event)"
-                        class="settings-dialog-check checkbox-white"
+                        class="settings-dialog-check"
                       />
                     </td>
                   }
@@ -155,7 +155,7 @@
                           type="checkbox"
                           [checked]="!service.presetDefinitions()[preset].hiddenFieldTypes.includes(item.key)"
                           (change)="toggleFieldType(preset, item.key)"
-                          class="settings-dialog-check checkbox-white"
+                          class="settings-dialog-check"
                         />
                       </td>
                     }

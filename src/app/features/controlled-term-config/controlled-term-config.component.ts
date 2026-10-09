@@ -22,6 +22,7 @@ import { termPickerAvailable } from '../../core/model/term-picker';
 import { fieldToJson } from '../../core/model/cedar-template';
 import { fieldDisplayName } from '../../core/model/field-display-name';
 import { trapTab } from '../../shared/focus-trap';
+import { DialogHeaderComponent } from '../../shared/components/dialog-header/dialog-header.component';
 
 @Component({
   selector: 'app-controlled-term-config',
@@ -30,7 +31,7 @@ import { trapTab } from '../../shared/focus-trap';
   templateUrl: './controlled-term-config.component.html',
   styleUrl: './controlled-term-config.component.scss',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  imports: [TranslatePipe],
+  imports: [DialogHeaderComponent, TranslatePipe],
 })
 export class ControlledTermConfigComponent implements OnChanges {
   readonly displayName = fieldDisplayName;

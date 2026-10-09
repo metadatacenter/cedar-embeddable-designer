@@ -296,7 +296,8 @@
     },
     "namedField": "{{name}}: {{message}}",
     "occurrences": {
-      "range": "A minimum és a maximum nem lehet negatív, és a minimum nem lehet nagyobb a maximumnál."
+      "range": "A minimum és a maximum nem lehet negatív, és a minimum nem lehet nagyobb a maximumnál.",
+      "attributeValueMinimum": "Az attribútum-érték mező minimuma csak 0 lehet, mert az attribútumokat az nevezi meg, aki az űrlapot kitölti."
     },
     "yaml": {
       "lossy": "A YAML nem tudja megőrizni a sablon minden tulajdonságát, például az egyéni sémametaadatokat. A teljes definíciók megtartásához exportáljon JSON-t.",

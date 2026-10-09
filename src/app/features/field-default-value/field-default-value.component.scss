@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
 @use '@org.metadatacenter/cedar-design-tokens/spacing';
 @use '@org.metadatacenter/cedar-design-tokens/authoring';
 @use '../../shared/field-error';
@@ -12,28 +13,11 @@
   padding: var(--cedar-space-6);
 }
 .default-dialog {
+  @include patterns.dialog-surface($padding: 0);
   width: 100%;
   max-width: 896px;
   max-height: 90vh;
   overflow: auto;
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    @include spacing.apply(padding, control-row);
-    background: var(--cedar-surface-subtle);
-    font-size: var(--cedar-font-size);
-    color: var(--cedar-text-muted);
-  }
-  i {
-    margin-left: var(--cedar-space-2);
-    color: var(--cedar-text-muted);
-  }
-  header button {
-    background: none;
-    border: 0;
-    cursor: pointer;
-  }
   p {
     @include spacing.apply(margin, control-row);
     font-size: var(--cedar-font-size);

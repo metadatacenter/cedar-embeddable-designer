@@ -11,8 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - CEFD (`cedar-embeddable-field-designer`) in the CED bundle: a standalone field
   definition editor sharing CED's controls, with JSON/YAML loading, all field
-  types, validation and dirty events, isolated instances and host read-only mode.
-  Container placement controls remain in CED. The host owns repository saves.
+  types, validation and dirty events, isolated instances and host read-only mode,
+  which the host explains, as it does for CED. Container placement controls remain
+  in CED. The host owns repository saves.
 - CEFD contract, field-type round-trip, metadata preservation and browser tests;
   split Designer coverage for standalone field creation, updates and stale saves.
 - English and Hungarian. Both elements take a `language` property and attribute
@@ -58,9 +59,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Hidden and Continue previous line are reported as the `layout` setting rather than
   `display`. The Presentation and Metadata tabs keep the identifiers `Display`,
   `Field metadata`, `Element metadata` and `Template Metadata`.
+- An attribute-value field takes no minimum above 0, because whoever fills in the form
+  names its attributes. A higher minimum is reported on the field's `occurrences`
+  setting, as an inverted range is, and the template cannot be saved until the
+  minimum is cleared or set to 0. The minimum control is disabled at 0, except on a
+  template that already states a higher minimum, where it stays open to be cleared.
+- An unnamed template, element or field draws the line under its name in the warning
+  colour, and in the error colour once the name is reported missing. Focus and a selected
+  field card still draw it in the primary colour, and a locked name keeps the rule. Each
+  name's placeholder takes the regular weight rather than the name's medium weight.
 
 ### Fixed
 
+- A published field or element no longer says that only its configuration can change
+  where nothing can configure it. Designed on its own, it has no parent, and a
+  read-only document configures nothing.
 - A renamed template, element or field is written with the title its name gives. The
   model library reads a title that way, so the stored title used to change between a
   save and the next reopening.

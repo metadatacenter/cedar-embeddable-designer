@@ -117,6 +117,10 @@ function buildContainerArtifact(
       ) {
         throw new LocalizedError(message('errors.occurrences.range'));
       }
+      // Whoever fills in an instance names its attributes, so no template can require some.
+      if (field.type === 'attributeValue' && min !== null && min > 0) {
+        throw new LocalizedError(message('errors.occurrences.attributeValueMinimum'));
+      }
       deployment.withMinItems(min).withMaxItems(max);
     }
     builder.addChild(built, deployment.build());

@@ -178,12 +178,25 @@ app-icon {
   @include spacing.apply(padding-bottom, compact);
   min-width: 0;
   background: transparent;
-  // An unnamed field shows a line beneath its name to write on, in primary while the card is
-  // selected. A background draws it rather than a border, so the line adds no height and the name
-  // does not move when the first character takes the line away.
-  --unnamed-line: var(--cedar-border-rule);
-  &.selected {
+  // An unnamed field shows a line beneath its name to write on: in the warning colour, as a name
+  // still to be written, in primary while the card is selected, and in the error colour once the
+  // name is reported missing and the author has moved on. A locked name keeps the rule, since
+  // nobody can write one. A background draws the line rather than a border, so it adds no height
+  // and the name does not move when the first character takes the line away.
+  --unnamed-line: var(--cedar-status-warning-text);
+  &.selected,
+  &:focus {
     --unnamed-line: var(--cedar-color-primary);
+  }
+  &[aria-invalid='true']:not(:focus) {
+    --unnamed-line: var(--cedar-status-error-text);
+  }
+  &:disabled {
+    --unnamed-line: var(--cedar-border-rule);
+  }
+  // The placeholder is a hint, not a name, so it keeps the regular weight of every other one.
+  &::placeholder {
+    font-weight: var(--cedar-font-weight-regular);
   }
   &:placeholder-shown {
     background: linear-gradient(var(--unnamed-line), var(--unnamed-line)) bottom / 100% 2px no-repeat;

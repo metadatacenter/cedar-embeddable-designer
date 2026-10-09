@@ -1,6 +1,14 @@
 // Selector adapter only. Authoring geometry and typography belong to design tokens.
 @use '@org.metadatacenter/cedar-design-tokens/authoring';
 @use '@org.metadatacenter/cedar-design-tokens/patterns';
+@use '@org.metadatacenter/cedar-design-tokens/controls';
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
+
+/* Checkboxes and radio buttons are the browser's own, in the primary colour, as Workspace draws them. */
+input[type='checkbox'],
+input[type='radio'] {
+  @include controls.native-choice;
+}
 
 /* Inline authoring actions share typography, independent of the surrounding panel. */
 .ced-text-action {
@@ -39,4 +47,21 @@ app-property-picker .dialog,
 app-types-picker .dialog,
 app-field-default-value .default-dialog {
   @include patterns.dialog-surface($padding: 0);
+}
+
+/* Thin scrollbars on the designer's scrolling lists and dialogs. */
+.custom-scrollbar::-webkit-scrollbar {
+  width: spacing.$designer-scrollbar-width;
+  height: spacing.$designer-scrollbar-width;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--cedar-surface-subtle);
+  border-radius: var(--cedar-radius);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--cedar-border-rule);
+  border-radius: var(--cedar-radius);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--cedar-border-rule);
 }

@@ -1,0 +1,43 @@
+@use '@org.metadatacenter/cedar-design-tokens/controls';
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
+@use '@org.metadatacenter/cedar-design-tokens/spacing';
+
+// Permissions' header: the title in the title role with the close button on the content edge, the
+// subject beneath it, and a rule under both. The inset is the picker's, so the title starts on the
+// same edge as the picker's headings below it.
+:host {
+  display: block;
+  padding: var(--cedar-space-3);
+  border-bottom: 1px solid var(--cedar-border-rule);
+}
+.dialog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cedar-space-3);
+}
+h2 {
+  @include patterns.artifact-title;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+// A full square hit target whose glyph still lines up with the content edge.
+.dialog-close {
+  @include patterns.icon-button(default);
+  @include spacing.apply(margin-inline-end, dialog-close-alignment);
+  border: 0;
+  border-radius: var(--cedar-radius);
+  background: transparent;
+  color: var(--cedar-color-primary);
+  cursor: pointer;
+  @include controls.action-states;
+}
+.dialog-context {
+  margin: var(--cedar-space-1) 0 0;
+  color: var(--cedar-text-primary);
+  font-size: var(--cedar-font-size);
+  font-weight: var(--cedar-font-weight-medium);
+  overflow-wrap: anywhere;
+}

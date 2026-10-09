@@ -230,7 +230,8 @@ export function inspectDocument(document: ContainerDraft, drafts: DraftIssues, t
               {
                 id: field.id,
                 name: field.name,
-                type: 'text',
+                // An attribute-value field keeps its type, the only one that refuses a minimum above 0.
+                type: field.type === 'attributeValue' ? 'attributeValue' : 'text',
                 status: field.status,
                 options: [],
                 defaultValue: { kind: 'none' },

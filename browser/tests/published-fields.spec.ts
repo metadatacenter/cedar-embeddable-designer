@@ -15,6 +15,17 @@ test('a published field keeps its definition while its parent configures, rename
   await expect(card.getByRole('status')).toContainText(
     'This field is published, so only its configuration can change.',
   );
+  // A read-only document configures nothing, so the claim goes while it is read only.
+  const setReadOnly = (value: boolean) =>
+    page.evaluate((value) => {
+      (document.querySelector('cedar-embeddable-designer') as HTMLElement & { readOnly: boolean }).readOnly = value;
+    }, value);
+  await setReadOnly(true);
+  await expect(card.getByText('This field is published, so only its configuration can change.')).toHaveCount(0);
+  await setReadOnly(false);
+  await expect(card.getByRole('status')).toContainText(
+    'This field is published, so only its configuration can change.',
+  );
   // Its own definition is locked: its Presentation tab and its values.
   const display = await openSettings(card, 'Presentation');
   await expect(display.getByLabel('Field name', { exact: true })).toBeDisabled();

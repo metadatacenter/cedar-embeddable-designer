@@ -21,8 +21,8 @@
   --spacing: var(--cedar-space-1);
   /*
     The font and the type scale, so `text-sm` and friends emit CEDAR's px values
-    rather than Tailwind's rem defaults. `CEE Roboto` is the namespaced family the
-    embedded faces declare; the fallbacks are CEE's.
+    rather than Tailwind's rem defaults. `CEDAR Roboto` is the namespaced family
+    the embedded faces declare, and the fallbacks are the shared stack's.
   */
   --font-sans: var(--cedar-font-family);
   --text-xs: var(--text-xs);
@@ -128,12 +128,22 @@
     directly, would fall through to Tailwind's default stack and render the
     designer in the system font.
 
-    `CEE Roboto` is the namespaced family the embedded faces declare; the
-    fallbacks are CEE's.
+    `CEDAR Roboto` is the namespaced family the embedded faces declare, and the
+    fallbacks are the shared stack's.
   */
   --font-sans: var(--cedar-font-family);
 
   --radius: var(--cedar-radius);
+}
+
+/* CEDAR has no monospace face: code and preformatted text are set in the body font rather than
+   the monospace Tailwind's preflight and the browser give them. Unlayered, so it outranks the
+   preflight. */
+code,
+kbd,
+samp,
+pre {
+  font-family: inherit;
 }
 
 @layer base {
@@ -187,78 +197,6 @@
     color: var(--cedar-text-muted);
     opacity: 1;
   }
-
-  input[type='checkbox'],
-  input[type='radio'] {
-    accent-color: var(--cedar-color-primary);
-  }
-
-  /* Custom checkbox styling for white background */
-  input[type='checkbox'].checkbox-white {
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-color: var(--cedar-surface-raised);
-    border: 1.5px solid var(--cedar-control-border-default);
-    border-radius: var(--cedar-radius);
-    cursor: pointer;
-    position: relative;
-  }
-
-  input[type='checkbox'].checkbox-white:checked {
-    background-color: var(--cedar-color-primary);
-    border-color: var(--cedar-color-primary);
-  }
-
-  input[type='checkbox'].checkbox-white:checked::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 4px;
-    height: 8px;
-    border: solid var(--cedar-color-on-primary);
-    border-width: 0 2px 2px 0;
-    transform: translate(-50%, -60%) rotate(45deg);
-  }
-
-  input[type='checkbox'].checkbox-white:hover {
-    border-color: var(--cedar-color-primary);
-  }
-
-  /* Radio button white styling */
-  input[type='radio'].radio-white {
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-color: var(--cedar-surface-raised);
-    border: 1.5px solid var(--cedar-control-border-default);
-    border-radius: 50%;
-    cursor: pointer;
-    position: relative;
-  }
-
-  input[type='radio'].radio-white:checked {
-    background-color: var(--cedar-surface-raised);
-    border-color: var(--cedar-color-primary);
-    border-width: 2px;
-  }
-
-  input[type='radio'].radio-white:checked::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: var(--cedar-color-primary);
-    transform: translate(-50%, -50%);
-  }
-
-  input[type='radio'].radio-white:hover {
-    border-color: var(--cedar-color-primary);
-  }
 }
 
 @keyframes fade-in {
@@ -302,25 +240,6 @@
 
 .animate-modal-fade-in {
   animation: modal-fade-in var(--cedar-motion-duration-normal) var(--cedar-motion-ease-standard);
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: var(--cedar-surface-subtle);
-  border-radius: var(--cedar-radius);
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--cedar-border-rule);
-  border-radius: var(--cedar-radius);
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--cedar-border-rule);
 }
 
 /* Shared focus geometry also covers toolbar and dialog actions. */

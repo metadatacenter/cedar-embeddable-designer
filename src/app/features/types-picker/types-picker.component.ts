@@ -19,6 +19,7 @@ import { TemplateService } from '../../core/services/template.service';
 import { TerminologyService } from '../../core/services/terminology.service';
 import { termPickerAvailable } from '../../core/model/term-picker';
 import { trapTab } from '../../shared/focus-trap';
+import { DialogHeaderComponent } from '../../shared/components/dialog-header/dialog-header.component';
 import { TranslatePipe } from '@ngx-translate/core';
 import { CedLanguageService } from '../../i18n/ced-language.service';
 
@@ -26,7 +27,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
   selector: 'app-types-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  imports: [IconComponent, ManualIriComponent, TranslatePipe],
+  imports: [DialogHeaderComponent, IconComponent, ManualIriComponent, TranslatePipe],
   template: `
     <div class="property">
       <div class="type-list">
@@ -77,6 +78,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
           (keydown)="keydown($event)"
           class="dialog"
         >
+          <app-dialog-header [heading]="'typesPicker.add' | translate" (closed)="close()" />
           @if (error()) {
             <p role="alert">{{ error() }}</p>
           }
@@ -157,6 +159,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       padding: var(--cedar-space-6);
     }
     .dialog {
+      @include patterns.dialog-surface($padding: 0);
       width: 100%;
       max-width: 64rem;
       max-height: 90vh;

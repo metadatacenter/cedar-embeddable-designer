@@ -180,6 +180,21 @@ test('isolates two instances and enforces host read-only state', async ({ page }
   await expect(page.locator('#field').getByRole('textbox', { name: 'Field display name', exact: true })).toBeEnabled();
 });
 
+test('a published standalone field is read only and states no notice of its own', async ({ page }) => {
+  await page.evaluate(() => {
+    const designer = document.getElementById('field') as CedarEmbeddableFieldDesignerElement;
+    designer.newArtifact('text');
+  });
+  await page.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Published text');
+  await page.evaluate(() => {
+    const designer = document.getElementById('field') as CedarEmbeddableFieldDesignerElement;
+    designer.loadArtifact({ ...(designer.currentArtifact as object), 'bibo:status': 'bibo:published' });
+  });
+  // Nothing places a field designed on its own, and the host says why it is read only.
+  await expect(page.getByRole('textbox', { name: 'Field display name', exact: true })).toBeDisabled();
+  await expect(page.locator('#field').getByRole('status')).toHaveCount(0);
+});
+
 test('keeps invalid numeric settings dirty and unsaveable until corrected', async ({ page }) => {
   await page.getByRole('button', { name: 'Number', exact: true }).click();
   await page.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Measured value');

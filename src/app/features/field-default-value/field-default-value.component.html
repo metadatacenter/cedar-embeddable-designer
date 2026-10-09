@@ -72,18 +72,12 @@
                 [attr.aria-label]="'defaultValue.chooseTerm' | translate"
                 class="default-dialog"
               >
-                <header>
-                  <span
-                    >{{ 'defaultValue.label' | translate }} <i>{{ field().name }}</i></span
-                  >
-                  <button
-                    type="button"
-                    [attr.aria-label]="'defaultValue.cancelSelection' | translate"
-                    (click)="cancelPicker()"
-                  >
-                    <app-icon key="close" size="small" />
-                  </button>
-                </header>
+                <app-dialog-header
+                  [heading]="'defaultValue.label' | translate"
+                  [context]="displayName(field())"
+                  closeLabel="defaultValue.cancelSelection"
+                  (closed)="cancelPicker()"
+                />
                 @if (checking()) {
                   <p role="status">{{ 'defaultValue.checkingTerm' | translate }}</p>
                 }

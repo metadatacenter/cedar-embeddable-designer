@@ -49,6 +49,29 @@ function source(type: string, depth: number, kind: 'template' | 'element' = 'tem
   return artifact;
 }
 
+// A reader can fix none of a document's problems, so a read-only designer marks none of them. The
+// report still lists them, so the host can tell why the document would not save.
+test('a read-only designer marks none of the problems its report lists', async ({ page }) => {
+  const designer = await openDesigner(page, '?cee=stub');
+  await applyPreset(page, 'modular');
+  const setReadOnly = (value: boolean) =>
+    page.evaluate((value) => {
+      (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).readOnly = value;
+    }, value);
+  await setReadOnly(true);
+  await load(page, source('number', 1));
+  await expect.poll(async () => (await report(page)).issues.length).toBe(1);
+  expect(await report(page)).toMatchObject({ canSave: false, issues: [{ setting: 'defaultValue', shown: true }] });
+  const markers = designer.locator(
+    '.validation-summary, .outline-row.invalid, .field-drag-container.invalid, .validation-badge, .has-errors, .ced-field-error',
+  );
+  await expect(markers).toHaveCount(0);
+  // Editable again, the designer points at the same problem.
+  await setReadOnly(false);
+  await expect(designer.locator('.validation-summary')).toHaveCount(1);
+  await expect(designer.locator('.outline-row.invalid')).toHaveCount(2);
+});
+
 for (const type of ['link', 'controlledTerms', 'orcid', 'ror', 'pfas', 'rrid', 'pubmed', 'nihGrantId', 'doi']) {
   for (const depth of [0, 3, 6]) {
     test(`${type} at depth ${depth}: imported default remains reachable without CEF and can be cleared`, async ({
