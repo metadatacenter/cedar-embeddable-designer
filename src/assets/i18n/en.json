@@ -106,7 +106,7 @@
     "readOnly": "Read-only",
     "editable": "Editable",
     "close": "Close preview",
-    "editableNotice": "Try filling in the form. Entries reset when the template or preview mode changes.",
+    "editableNotice": "Try filling in the form. Entries reset when the preview mode changes.",
     "missing": {
       "before": "Preview renders the template with",
       "after": ", which the page embedding this designer has not loaded. The two are sibling web components: load CEE's script alongside this one."

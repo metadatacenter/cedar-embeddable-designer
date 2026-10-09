@@ -4,7 +4,7 @@ import { CedJsonObject } from '../../ced-public-api';
 import { fieldToJson, newContainer } from '../model/cedar-template';
 import { findContainer } from '../model/container-draft';
 import { childKeyError } from '../model/child-key-policy';
-import { buildContainer } from '../model/cedar-template';
+import { buildContainer, PREVIEW_ELEMENT_KEY } from '../model/cedar-template';
 import { TestBed } from '@angular/core/testing';
 import nestedTemplate from '../model/fixtures/corpus/template-028.json';
 import { TemplateService } from './template.service';
@@ -553,13 +553,15 @@ describe('preview paths', () => {
     expect(service.previewPath(service.session.document().id)).toBeNull();
   });
 
-  it('starts an element designed on its own with the name the preview holds it under', () => {
+  it('starts an element designed on its own with the key the preview holds it under, whatever its name', () => {
     service.resetTemplate('element');
     service.templateName.set('Address');
     service.addField('text', 0);
     const id = service.selectedField()!;
 
-    expect(service.previewPath(id)).toEqual(['Address', service.childKey(id)]);
+    expect(service.previewPath(id)).toEqual([PREVIEW_ELEMENT_KEY, service.childKey(id)]);
+    service.templateName.set('Postal address');
+    expect(service.previewPath(id)).toEqual([PREVIEW_ELEMENT_KEY, service.childKey(id)]);
   });
 });
 

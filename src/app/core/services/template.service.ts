@@ -40,6 +40,7 @@ import {
   readField,
   buildContainer,
   containerPreview,
+  PREVIEW_ELEMENT_KEY,
   newContainer,
   templateToJson,
 } from '../model/cedar-template';
@@ -660,7 +661,7 @@ export class TemplateService {
    * preview addresses it. Null for the template itself, or while two siblings share a key.
    *
    * An element designed on its own is previewed inside a template that holds it under
-   * its name, so its path starts there.
+   * `PREVIEW_ELEMENT_KEY`, so its path starts there.
    */
   previewPath(id: number): string[] | null {
     const document = this.session.document();
@@ -681,7 +682,7 @@ export class TemplateService {
       }
       return null;
     };
-    return search(document, document.kind === 'element' ? [document.name || 'Element'] : []);
+    return search(document, document.kind === 'element' ? [PREVIEW_ELEMENT_KEY] : []);
   }
 
   childKey(id: number): string {

@@ -106,7 +106,7 @@
     "readOnly": "Csak olvasható",
     "editable": "Szerkeszthető",
     "close": "Előnézet bezárása",
-    "editableNotice": "Próbálja ki az űrlap kitöltését. A bejegyzések törlődnek, ha a sablon vagy az előnézeti mód megváltozik.",
+    "editableNotice": "Próbálja ki az űrlap kitöltését. A bejegyzések törlődnek, ha az előnézeti mód megváltozik.",
     "missing": {
       "before": "Az előnézet ezzel a komponenssel jeleníti meg a sablont:",
       "after": ". A tervezőt beágyazó oldal ezt nem töltötte be. A kettő egymás mellett működő webkomponens: töltse be a CEE szkriptjét is a tervezőé mellett."

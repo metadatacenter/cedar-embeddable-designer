@@ -7,6 +7,7 @@ import {
   templateToYaml,
   readTemplate,
   containerPreview,
+  PREVIEW_ELEMENT_KEY,
 } from './cedar-template';
 import { fieldNode, newNodeId } from './container-draft';
 
@@ -97,7 +98,7 @@ describe('recursive container codec', () => {
       }
       const preview = templateToJson(containerPreview(root));
       expect(preview['@type']).toBe('https://schema.metadatacenter.org/core/Template');
-      expect((preview['properties'] as Record<string, unknown>)['Study']).toEqual(json);
+      expect((preview['properties'] as Record<string, unknown>)[PREVIEW_ELEMENT_KEY]).toEqual(json);
     },
   );
 });

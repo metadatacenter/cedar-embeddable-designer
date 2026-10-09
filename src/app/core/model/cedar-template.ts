@@ -33,6 +33,7 @@ export {
   containerArtifactMetadata,
   buildContainer,
   containerPreview,
+  PREVIEW_ELEMENT_KEY,
 } from './cedar-model/container-writer';
 export { readTemplate, toDesignerTemplate, readField, toContainerDraft, readContainer } from './cedar-model/reader';
 export { ReservedNames } from './cedar-model/reserved-names';

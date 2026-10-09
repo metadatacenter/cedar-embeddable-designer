@@ -263,6 +263,16 @@ export function buildContainer(draft: ContainerDraft): Template | TemplateElemen
   return result;
 }
 
+/**
+ * The key an element designed on its own sits under in the template that previews it.
+ *
+ * Fixed rather than the element's name. CEE moves a reader's answers to the next form
+ * by key, so a key that followed the name would leave every answer behind whenever the
+ * author renamed the element. CEE labels the element by its own name, so the key is not
+ * shown.
+ */
+export const PREVIEW_ELEMENT_KEY = 'Element';
+
 /** CEE always takes a template, including when the authored document is an element. */
 export function containerPreview(draft: ContainerDraft): Template {
   const model = buildContainer(draft);
@@ -272,6 +282,6 @@ export function containerPreview(draft: ContainerDraft): Template {
     .withSchemaName(draft.name)
     .withSchemaVersion(SchemaVersion.CURRENT)
     .withStatus(BiboStatus.DRAFT)
-    .addChild(model, model.createDeploymentBuilder(draft.name || 'Element').build())
+    .addChild(model, model.createDeploymentBuilder(PREVIEW_ELEMENT_KEY).build())
     .build();
 }

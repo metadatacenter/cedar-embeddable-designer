@@ -60,7 +60,9 @@ export const CEE_PREVIEW_CONFIG: CeePreviewConfig = {
  * `config` is set-once: CEE accepts the first assignment and reports and ignores
  * any later one. `templateObject` is not, while no instance has been supplied —
  * each assignment builds the form afresh, which is what lets a preview follow an
- * author's edits without discarding the editor.
+ * author's edits without discarding the editor. A template keeping the previous
+ * one's `@id` is an edit of it, and the new form keeps as much of what an author
+ * entered while trying the form as it will take without showing an error.
  *
  * It was set-once for every host until this preview asked otherwise. Replacing the
  * element per edit cost about a second of Angular bootstrapping whatever the size
