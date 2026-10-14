@@ -219,8 +219,8 @@ export class TemplateService {
     return !this.access.readOnly() && this.validation.optionVisible(id, index);
   }
   /**
-   * The problems the designer points at: the validation report's, or none while the designer is read
-   * only. A reader can fix none of them, and the report itself still names them all to the host.
+   * Inline authoring markers are hidden during inspection. The separate read-only
+   * summary and public report still expose every validation finding.
    */
   readonly displayedIssues = computed(() => (this.validation.readOnly() ? [] : this.validationReport().issues));
   readonly visibleIssues = computed(() => this.displayedIssues().filter((issue) => issue.shown));
@@ -249,8 +249,10 @@ export class TemplateService {
     return { ...field, ...this.validation.changes(field.id) };
   }
   revealIssue(issue: CedValidationIssue): void {
-    if (issue.setting === 'name') this.touchName(issue.nodeId);
-    if (issue.setting === 'option-0') this.touchOption(issue.nodeId, 0);
+    if (!this.access.readOnly()) {
+      if (issue.setting === 'name') this.touchName(issue.nodeId);
+      if (issue.setting === 'option-0') this.touchOption(issue.nodeId, 0);
+    }
     this.openContainer(this.parentContainerId(issue.nodeId));
     this.selectedField.set(issue.nodeId);
     this.scrollRequest.set(issue.nodeId);

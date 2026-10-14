@@ -370,7 +370,10 @@ cannot unlock a published root. Save is unavailable in read-only mode. Entering
 read-only cancels pending terminology checks, closes editing dialogs and preserves
 existing unsaved input. Restoring access does not revive old asynchronous replies
 or reopen those dialogs. Unknown node identities cannot be edited. Validation
-still reports stored defects, while the inspection UI suppresses repair markers.
+still reports stored defects. A subdued “Validation issues (N)” disclosure lists
+every finding and navigates to its field and settings tab, without repair controls
+or inline error styling. Header icons toggle Overview and Preview; the panels
+have no duplicate close buttons.
 
 `loadArtifact`, `artifact`/`template`, and `newArtifact` are explicit host document
 replacement APIs, so they continue to work while read-only without temporarily

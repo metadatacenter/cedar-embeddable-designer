@@ -14,15 +14,6 @@
         <app-icon key="chevron-down" size="small" />
       </span>
     }
-    <button
-      (click)="service.showPreview.set(false)"
-      class="cee-preview__close"
-      [title]="'ceePreview.close' | translate"
-      [attr.aria-label]="'ceePreview.close' | translate"
-      type="button"
-    >
-      <app-icon key="close" size="small" />
-    </button>
   </div>
 
   @if (editorAvailable) {

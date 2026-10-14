@@ -685,6 +685,7 @@
     "templateMetadata": "Metaadatok"
   },
   "validation": {
+    "inspectionSummary": "Ellenőrzési problémák ({{count}})",
     "summary": {
       "one": "{{count}} hiba – javítsa mentés előtt",
       "other": "{{count}} hiba – javítsa mentés előtt"

@@ -685,6 +685,7 @@
     "templateMetadata": "Metadata"
   },
   "validation": {
+    "inspectionSummary": "Validation issues ({{count}})",
     "summary": {
       "one": "{{count}} error — fix before saving",
       "other": "{{count}} errors — fix before saving"

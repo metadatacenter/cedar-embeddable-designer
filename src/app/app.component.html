@@ -167,14 +167,6 @@
                     </button>
                   </div>
                 }
-                <button
-                  class="overview-panel__close"
-                  [attr.aria-label]="'app.overview.close' | translate"
-                  [title]="'app.overview.close' | translate"
-                  (click)="showFieldsOverview.set(false)"
-                >
-                  <app-icon key="close" size="small" />
-                </button>
               </div>
               <div class="overview-panel__list">
                 <app-container-outline [container]="service.session.document()" />

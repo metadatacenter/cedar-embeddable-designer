@@ -180,6 +180,10 @@ export class FieldSettingsComponent implements OnChanges {
       const issue = this.service.validationTarget();
       if (!issue || issue.setting === 'name' || issue === focused || issue.nodeId !== this.field?.id) return;
       focused = issue;
+      if (this.service.access.readOnly()) {
+        this.host.nativeElement.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')?.focus();
+        return;
+      }
       const panel = this.host.nativeElement.querySelector<HTMLElement>('[role="tabpanel"]:not([hidden])');
       // A panel holding several settings marks each one's controls, so an issue reaches its own.
       const group = panel?.querySelector<HTMLElement>(`[data-setting="${CSS.escape(issue.setting)}"]`) ?? panel;

@@ -27,7 +27,7 @@ test('Overview resizes within bounds without changing the artifact', async ({ pa
   await expect(handle).toHaveAttribute('aria-valuenow', '224');
   await handle.press('ArrowRight');
   await expect(handle).toHaveAttribute('aria-valuenow', '240');
-  await designer.locator('.overview-panel__close').click();
+  await designer.getByRole('button', { name: 'Close Overview', exact: true }).click();
   await designer.getByRole('button', { name: 'Open Overview', exact: true }).click();
   await expect(handle).toHaveAttribute('aria-valuenow', '240');
   await handle.press('End');

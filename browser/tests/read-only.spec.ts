@@ -112,7 +112,7 @@ for (const mode of ['host', 'published'] as const)
         await expect
           .poll(() => page.evaluate(() => (window as any).__ceeMounts.at(-1)?.config.readOnlyMode))
           .toBe(true);
-        await preview.locator('button').click();
+        await designer.getByRole('button', { name: 'Close Preview', exact: true }).click();
         if (width === 1280) {
           await designer.getByRole('button', { name: 'Close Overview', exact: true }).first().click();
           await designer.getByRole('button', { name: 'Open Overview', exact: true }).click();

@@ -56,12 +56,12 @@ describe('the designer element', () => {
     expect(fixture.componentInstance.language).toBe('hu');
     expect(text(fixture, '.overview-panel__title')).toBe('Áttekintés (3)');
     expect(text(fixture, '.field-type-label')).toBe('Szöveg');
-    expect(attribute(fixture, '.overview-panel__close', 'aria-label')).toBe('Áttekintés bezárása');
+    expect(attribute(fixture, '.overview-toggle', 'aria-label')).toBe('Áttekintés bezárása');
 
     fixture.componentRef.setInput('language', 'en');
     expect(text(fixture, '.overview-panel__title')).toBe('Overview (3)');
     expect(text(fixture, '.field-type-label')).toBe('Text');
-    expect(attribute(fixture, '.overview-panel__close', 'aria-label')).toBe('Close Overview');
+    expect(attribute(fixture, '.overview-toggle', 'aria-label')).toBe('Close Overview');
   });
 
   it('falls back to English for a language it does not have', () => {

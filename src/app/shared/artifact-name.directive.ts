@@ -74,7 +74,13 @@ export class ArtifactNameDirective {
       const issue = this.service.validationTarget();
       if (issue && issue !== focused && issue.setting === 'name' && issue.nodeId === this.appArtifactName()) {
         focused = issue;
-        this.element.nativeElement.focus({ preventScroll: true });
+        if (this.service.access.readOnly()) {
+          const card = this.element.nativeElement.closest<HTMLElement>('app-field-card, .template-header-card');
+          card?.setAttribute('tabindex', '-1');
+          card?.focus();
+        } else {
+          this.element.nativeElement.focus({ preventScroll: true });
+        }
       }
     });
   }

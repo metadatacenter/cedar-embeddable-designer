@@ -288,3 +288,19 @@ for (const name of ['Preferences', 'Define Presets']) {
     await expect(dialog).toHaveScreenshot(`settings-${name.toLowerCase().replaceAll(' ', '-')}.png`, SHOT);
   });
 }
+
+for (const width of [1280, 375]) {
+  test(`read-only validation report at ${width}`, async ({ page }) => {
+    await sequentialIdentifiers(page);
+    await page.setViewportSize({ width, height: 900 });
+    const designer = await designerShowing(page, ['Text']);
+    await designer.getByRole('textbox', { name: 'Field display name', exact: true }).fill('');
+    await designer.evaluate((el: any) => {
+      el.readOnly = true;
+    });
+    const summary = designer.locator('.validation-summary');
+    await expect(summary).toHaveScreenshot(`read-only-issues-collapsed-${width}.png`, SHOT);
+    await summary.locator('summary').click();
+    await expect(summary).toHaveScreenshot(`read-only-issues-expanded-${width}.png`, SHOT);
+  });
+}

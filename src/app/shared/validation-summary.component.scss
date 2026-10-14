@@ -11,3 +11,11 @@
 .validation-summary summary:focus-visible {
   @include controls.focus-ring(var(--cedar-color-primary));
 }
+
+.validation-summary--readonly {
+  --cedar-icon-color: var(--cedar-text-muted);
+  color: var(--cedar-text-muted);
+  background: var(--cedar-surface-subtle);
+  border-bottom: 1px solid var(--cedar-border-rule);
+  overflow-wrap: anywhere;
+}
