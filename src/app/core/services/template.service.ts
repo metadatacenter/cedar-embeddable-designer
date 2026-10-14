@@ -6,6 +6,7 @@ import {
 } from '../model/field-display-name';
 import { fieldSetting, ValidationCoordinator } from './validation-coordinator';
 import { CedChildSource, CedJsonObject, CedValidationIssue } from '../../ced-public-api';
+import { retainSessionIds } from '../model/retain-session-ids';
 import { EditorSession } from './editor-session';
 import { TerminologyService } from './terminology.service';
 import { TerminologyEditCommands } from './terminology-edit-commands';
@@ -195,7 +196,6 @@ export class TemplateService {
   });
   readonly terminologyEdits = new TerminologyEditCommands(this, inject(TerminologyService), this.i18n);
   readonly nameFocusRequest = signal<number | null>(null);
-  readonly initialInsertionId = signal<number | null>(null);
   touchName(id: number): void {
     this.validation.touchName(id);
     const node = parentOf(this.session.document(), id)?.children.find((child) => child.id === id);
@@ -778,7 +778,6 @@ export class TemplateService {
     this.loadError.set(null);
     this.mintedIdentifier.set(newTemplateIdentifier());
     const document = newContainer(kind);
-    this.initialInsertionId.set(!withStarterFields ? document.id : null);
     if (kind === 'template') {
       document.identifier = '';
       document.children = withStarterFields ? containerFromFlat({ ...document, fields: starterFields() }).children : [];
@@ -804,7 +803,7 @@ export class TemplateService {
    * return — leaving the author looking at their previous template with nothing to
    * say the file had not been read.
    */
-  loadTemplate(source: unknown): void {
+  loadTemplate(source: unknown, preserveView = false): void {
     if (source === null || source === undefined || source === '') {
       return;
     }
@@ -816,20 +815,30 @@ export class TemplateService {
       this.loadError.set(this.i18n.describe(error));
       throw error;
     }
+    const previous = this.session.document();
+    const retainView = preserveView && previous.kind === state.kind;
+    if (retainView) state = retainSessionIds(previous, state);
     this.loadError.set(null);
 
-    this.initialInsertionId.set(null);
     // A name the template arrived with is the author's, not a blank the designer has just
     // put in front of them, so a missing one is stated at once. Held back like a new
     // field's, it refused Save with nothing on screen to say why.
     this.validation.reset(namedIds(state));
     this.nameFocusRequest.set(null);
     this.childPicker.set(null);
-    this.selectedField.set(null);
     this.validationTarget.set(null);
     this.showPicker.set(null);
-    this.session.replace(state);
-    this.collapsedElements.set(new Set());
+    if (retainView) {
+      this.session.document.set(state);
+      if (!findContainer(state, this.session.activeId())) this.session.activeId.set(state.id);
+      const selected = this.selectedField();
+      if (selected !== null && !parentOf(state, selected)) this.selectedField.set(null);
+      this.collapsedElements.update((ids) => new Set([...ids].filter((id) => !!findContainer(state, id))));
+    } else {
+      this.selectedField.set(null);
+      this.session.replace(state);
+      this.collapsedElements.set(new Set());
+    }
     this.markSaved();
   }
   readonly children = computed(() => this.session.active().children);

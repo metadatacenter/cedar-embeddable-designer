@@ -304,3 +304,21 @@ for (const width of [1280, 375]) {
     await expect(summary).toHaveScreenshot(`read-only-issues-expanded-${width}.png`, SHOT);
   });
 }
+
+for (const kind of ['template', 'element'] as const)
+  for (const width of [1280, 375]) {
+    test(`empty ${kind} insertion at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      const designer = await openDesigner(page);
+      await applyPreset(page, 'modular');
+      await designer.evaluate((el: any, kind) => el.newArtifact(kind), kind);
+      await designer
+        .getByRole('textbox', { name: kind === 'template' ? 'Template name' : 'Element name', exact: true })
+        .fill('Study');
+      await designer
+        .getByRole('textbox', { name: kind === 'template' ? 'Template name' : 'Element name', exact: true })
+        .blur();
+      await page.mouse.move(0, 0);
+      await expect(designer.locator('app-container-editor')).toHaveScreenshot(`empty-${kind}-${width}.png`, SHOT);
+    });
+  }

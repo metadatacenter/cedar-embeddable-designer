@@ -346,6 +346,21 @@ The Overview shows each field's type icon and a right-aligned reorder handle.
 Dragging reorders siblings within the Overview; the document and main editor update
 only when the field is dropped. Focused handles also support Arrow Up/Down.
 
+### Empty containers and save continuity
+
+Empty editable templates and elements keep their insertion pills visible, including
+loaded empty documents and containers whose last child was deleted. Populated
+containers retain hover/focus disclosure on desktop. Nested insertion rows reserve
+one row of pills plus eight pixels of padding on each side vertically; wrapped pills
+grow naturally on narrow screens.
+
+After a successful save, hosts may call `loadArtifact(savedArtifact, { preserveView: true })`
+to adopt server-assigned identifiers and metadata while keeping open tabs, expansion
+and selection. CED matches child occurrences by their deployment path and kind/type,
+not by reusable artifact IRIs. Ordinary loads still reset the document view. The host
+must verify that the saved response still belongs to the currently submitted document
+before adopting it, so a late save cannot replace newer edits.
+
 ### Read-only access
 
 `readOnly = true` permits inspection without permitting document edits. Tabs,

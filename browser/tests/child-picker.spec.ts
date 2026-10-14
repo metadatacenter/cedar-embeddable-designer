@@ -212,7 +212,7 @@ test('bottom insertion actions reveal on hover and keyboard focus without shifti
 });
 
 for (const kind of ['template', 'element'] as const) {
-  test(`new empty ${kind}s reveal insertion actions until the first hover exit`, async ({ page }) => {
+  test(`empty ${kind}s keep insertion actions visible when new or loaded`, async ({ page }) => {
     const designer = await openDesigner(page);
     await page.mouse.move(0, 0);
     const start = () =>
@@ -232,14 +232,14 @@ for (const kind of ['template', 'element'] as const) {
     const before = await zone.boundingBox();
     await zone.hover();
     await page.mouse.move(0, 0);
-    await expect(actions).toHaveCSS('opacity', '0');
+    await expect(actions).toHaveCSS('opacity', '1');
     expect(await zone.boundingBox()).toEqual(before);
     await zone.hover();
     await expect(actions).toHaveCSS('opacity', '1');
     await page.mouse.move(0, 0);
     await actions.getByRole('button', { name: 'Add field', exact: true }).focus();
     await expect(actions).toHaveCSS('opacity', '1');
-    // A subsequent new document gets its own initial hint; opening a saved one does not.
+    // New and saved empty documents both keep their insertion actions visible.
     await start();
     await expect(actions).toHaveCSS('opacity', '1');
     await designer
@@ -249,7 +249,7 @@ for (const kind of ['template', 'element'] as const) {
       const element = document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement;
       element.loadArtifact(element.currentArtifact);
     });
-    await expect(actions).toHaveCSS('opacity', '0');
+    await expect(actions).toHaveCSS('opacity', '1');
   });
 }
 

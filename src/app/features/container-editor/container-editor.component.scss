@@ -124,7 +124,6 @@
 @container (max-width: 400px) {
   .nested-content {
     @include spacing.apply(--element-child-inset, control-inset);
-    @include spacing.apply(padding-bottom, control-inset);
   }
   .nested-header {
     @include spacing.apply(--element-child-inset, control-inset);
@@ -144,7 +143,7 @@
 
 .container-content > .add-field-section {
   margin-top: 0;
-  padding-block: var(--cedar-space-4);
+  padding-block: var(--cedar-space-2);
 }
 
 .element-type-label {
@@ -216,7 +215,7 @@ textarea.template-input {
   .bottom-insert-zone > app-insertion-actions {
     opacity: 0;
   }
-  .bottom-insert-zone.initially-visible > app-insertion-actions,
+  .bottom-insert-zone.empty-container > app-insertion-actions,
   .bottom-insert-zone:hover > app-insertion-actions,
   .bottom-insert-zone:focus-within > app-insertion-actions {
     opacity: 1;

@@ -1,3 +1,9 @@
+/** Options for adopting a saved artifact without resetting inspection state. */
+export interface CedLoadOptions {
+  /** Retain tabs, expansion and selection for matching deployment paths and field types. */
+  preserveView?: boolean;
+}
+
 /**
  * The contract an embedding page programs against.
  *
@@ -78,8 +84,8 @@ export interface CedarEmbeddableDesignerElement extends HTMLElement {
   get language(): CedLanguage;
   set language(value: CedLanguage | string | null);
   /**
-   * Host read-only mode: nothing can be edited or saved, and the designer points at none of the
-   * document's problems, which `validationReport` still lists.
+   * Host read-only mode: inspection and the validation report remain available;
+   * editing, saving and inline authoring error markers are disabled.
    */
   readOnly: boolean;
   /** Host-owned repository search and artifact retrieval. Replaceable between documents. */
@@ -88,7 +94,7 @@ export interface CedarEmbeddableDesignerElement extends HTMLElement {
   template: CedJsonObject | string | null;
   artifact: CedJsonObject | string | null;
   /** Load a document synchronously; throws if it cannot be read. */
-  loadArtifact(source: CedJsonObject | string): void;
+  loadArtifact(source: CedJsonObject | string, options?: CedLoadOptions): void;
   /** Start an empty template or element, without the demo's starter fields. */
   newArtifact(kind: 'template' | 'element'): void;
   /** Includes invalid, uncommitted setting edits. Reset by loading a saved document. */
@@ -220,7 +226,7 @@ export interface CedarEmbeddableFieldDesignerElement extends HTMLElement {
   /** Host read-only mode; published definitions are always read only. */
   readOnly: boolean;
   /** Throws on invalid input, preserving the currently open document. */
-  loadArtifact(source: CedJsonObject | string): void;
+  loadArtifact(source: CedJsonObject | string, options?: CedLoadOptions): void;
   /** Omit the type to show the field-type chooser. Resets the dirty baseline. */
   newArtifact(type?: CedFieldType): void;
   /** Null before choosing a type. May throw for an invalid draft; check canSave first. */

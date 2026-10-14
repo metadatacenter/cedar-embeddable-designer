@@ -240,18 +240,10 @@
   </div>
 
   <!-- Bottom insertion zone (modal style) -->
-  @if (service.preferences().fieldSelectionStyle === 'modal' && !definitionLocked()) {
+  @if ((service.preferences().fieldSelectionStyle === 'modal' || !container().children.length) && !definitionLocked()) {
     <div class="add-field-section">
-      <div
-        class="bottom-insert-zone"
-        [class.initially-visible]="service.initialInsertionId() === container().id && !container().children.length"
-        (mouseleave)="service.initialInsertionId.set(null)"
-      >
-        <app-insertion-actions
-          [targetId]="container().id"
-          [position]="container().children.length"
-          (used)="service.initialInsertionId.set(null)"
-        />
+      <div class="bottom-insert-zone" [class.empty-container]="!container().children.length">
+        <app-insertion-actions [targetId]="container().id" [position]="container().children.length" />
       </div>
       @if (pickerAt(container().children.length)) {
         <div class="add-field-section__picker">

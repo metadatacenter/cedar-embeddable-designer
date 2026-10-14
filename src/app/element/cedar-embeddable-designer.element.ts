@@ -1,3 +1,4 @@
+import type { CedLoadOptions } from '../ced-public-api';
 import { DesignerConfigService } from '../core/services/designer-config.service';
 import {
   Component,
@@ -143,7 +144,8 @@ export class CedarEmbeddableDesignerElementComponent {
     return this.cedarTemplate();
   }
   /** Explicit host loading reports failures instead of retaining a different document silently. */
-  @Input() readonly loadArtifact = (source: object | string): void => this.service.loadTemplate(source);
+  @Input() readonly loadArtifact = (source: object | string, options?: CedLoadOptions): void =>
+    this.service.loadTemplate(source, options?.preserveView);
   @Input() readonly newArtifact = (kind: 'template' | 'element'): void => this.service.resetTemplate(kind, false);
   @Input() get isDirty(): boolean {
     return this.service.isDirty() || this.service.validationReport().issues.some((issue) => issue.source === 'draft');

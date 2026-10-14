@@ -1,3 +1,4 @@
+import type { CedLoadOptions } from '../ced-public-api';
 import { ValidationSummaryComponent } from '../shared/validation-summary.component';
 import { DesignerConfigService } from '../core/services/designer-config.service';
 import {
@@ -126,10 +127,11 @@ export class CedarEmbeddableFieldDesignerElementComponent {
   @Input() set artifact(source: object | string | null) {
     if (source !== null) this.loadArtifact(source);
   }
-  @Input() readonly loadArtifact = (source: object | string): void => {
+  @Input() readonly loadArtifact = (source: object | string, options?: CedLoadOptions): void => {
     // Parse before replacing anything: a failed load must preserve the author's work.
     const field = readField(typeof source === 'string' ? source : JSON.stringify(source));
-    this.replace(field);
+    const current = this.field();
+    this.replace(options?.preserveView && current?.type === field.type ? { ...field, id: current.id } : field);
   };
   /** No argument opens the type chooser. A type starts a new, unnamed definition. */
   @Input() readonly newArtifact = (type?: CedFieldType): void => {
