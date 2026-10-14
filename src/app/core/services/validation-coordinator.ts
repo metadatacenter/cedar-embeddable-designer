@@ -85,8 +85,7 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
  * change-detection hook. Controls keep input buffers, not independent verdicts.
  */
 export class ValidationCoordinator {
-  private readonly locked = signal(false);
-  readonly readOnly = this.locked.asReadonly();
+  readonly readOnly;
   private editabilityRevision = 0;
   private readonly intents = new Map<number, symbol>();
   private readonly edits = signal<Record<string, Edit>>({});
@@ -102,6 +101,7 @@ export class ValidationCoordinator {
     private readonly t: Translate,
     private readonly accepted: (id: number, changes: Partial<Field>) => void = () => {},
   ) {
+    this.readOnly = session.access.readOnly;
     session.reconcile = (document) => this.reconcile(document);
   }
 
@@ -146,20 +146,17 @@ export class ValidationCoordinator {
   });
 
   setReadOnly(value: boolean): void {
-    if (value === this.readOnly()) return;
+    if (!this.session.access.setHostReadOnly(value)) return;
     this.editabilityRevision++;
-    this.locked.set(value);
     this.replaceChecks({});
   }
   /** Whether the child's own definition, or the root's, can change. */
   canEdit(id: number): boolean {
-    const document = this.session.document();
-    return !this.readOnly() && !!nodeOf(document, id) && !childLocks(document, id).definition;
+    return this.session.access.canEditDefinition(id);
   }
   /** Whether the child's placement in its parent can change. */
   canPlace(id: number): boolean {
-    const document = this.session.document();
-    return !this.readOnly() && !!parentOf(document, id) && !childLocks(document, id).placement;
+    return this.session.access.canEditPlacement(id);
   }
 
   reset(touched: number[] = []): void {
@@ -199,6 +196,11 @@ export class ValidationCoordinator {
     value?: string | FieldDefaultValue,
     settings?: SettingsInputDraft,
   ): void {
+    if (
+      message &&
+      (PLACEMENT_SETTINGS.has(setting) && !this.session.access.fieldDocument() ? !this.canPlace(id) : !this.canEdit(id))
+    )
+      return;
     const key = keyOf(id, setting);
     this.inputErrors.update((previous) => {
       const next = { ...previous };
@@ -294,6 +296,7 @@ export class ValidationCoordinator {
   }
   submit(id: number, changes: Partial<Field>, setting: string, tab: string): string | null {
     if (this.readOnly()) return this.t('fieldElement.readOnly');
+    if (!this.session.access.canChange(id, Object.keys(changes))) return this.t('errors.publishedReadOnly');
     if (!parentOf(this.session.document(), id)) return this.t('errors.elementMissing');
     this.intents.set(id, Symbol());
     // A new editing intent supersedes checks of the previous field, even if
@@ -406,7 +409,7 @@ export class ValidationCoordinator {
       if (!available(Number(id), setting)) delete inputs[key];
     }
     const commit = (id: number, changes: Partial<Field>): boolean => {
-      if (this.readOnly()) return false;
+      if (!this.session.access.canChange(id, Object.keys(changes), document)) return false;
       const result = this.candidate(document, id, changes);
       if (result.error !== null || !result.node) return false;
       const parent = parentOf(document, id)!;

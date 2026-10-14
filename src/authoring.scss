@@ -65,3 +65,31 @@ app-field-default-value .default-dialog {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: var(--cedar-border-rule);
 }
+
+/* Read-only content remains legible. Only actions look disabled; navigation stays active. */
+:host(.ced-read-only) :is(input, textarea, select):disabled {
+  opacity: 1;
+  color: var(--cedar-text-primary);
+  -webkit-text-fill-color: var(--cedar-text-primary);
+  cursor: default;
+}
+:host(.ced-read-only) button:disabled {
+  opacity: var(--cedar-control-disabled-opacity);
+  cursor: default;
+}
+.field-drag-handle.locked,
+.element-drag-handle.locked app-icon {
+  visibility: hidden;
+}
+.element-drag-handle.locked {
+  cursor: default;
+}
+
+// Text editing actions need no space in an inspection view, especially on narrow hosts.
+:host(.ced-read-only) :is(app-types-picker, app-property-picker) button:disabled {
+  display: none;
+}
+:host(.ced-read-only) :is(input, textarea):disabled::placeholder {
+  color: var(--cedar-text-muted);
+  -webkit-text-fill-color: var(--cedar-text-muted);
+}

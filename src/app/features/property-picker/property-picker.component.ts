@@ -170,6 +170,12 @@ export class PropertyPickerComponent {
   private readonly trigger = viewChild<ElementRef<HTMLButtonElement>>('trigger');
   constructor() {
     effect(() => this.dialog()?.nativeElement.focus());
+    effect(() => {
+      if (this.disabled()) {
+        this.opened.set(false);
+        this.manualOpened.set(false);
+      }
+    });
   }
   open(): void {
     if (this.disabled()) return;

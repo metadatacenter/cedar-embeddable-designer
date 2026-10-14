@@ -59,6 +59,8 @@
           <span
             class="field-drag-handle"
             cdkDragHandle
+            [class.locked]="headerLocked"
+            [attr.aria-hidden]="headerLocked ? true : null"
             [title]="'fieldCard.dragToReorder' | translate"
             [attr.aria-label]="'fieldCard.dragToReorder' | translate"
           >
@@ -206,7 +208,7 @@
     </app-field-settings>
   </div>
 
-  @if (choiceDefaultConflict(field); as conflict) {
+  @if (!service.definitionLocked(field.id) && choiceDefaultConflict(field); as conflict) {
     <div class="field-content">
       <p role="alert" class="ced-field-error">{{ conflict }}</p>
       <button type="button" class="ced-text-action" (click)="service.updateDefaultValue(field.id, { kind: 'none' })">

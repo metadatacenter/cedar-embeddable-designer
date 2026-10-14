@@ -20,7 +20,8 @@ import { TemplateService } from '../core/services/template.service';
 import { TerminologyService } from '../core/services/terminology.service';
 import { PreferencesService } from '../core/services/preferences.service';
 import { CedConfig, CedFieldType, CedLanguage, CedValidationReport } from '../ced-public-api';
-import { fieldToJson, readField } from '../core/model/cedar-template';
+import { fieldToJson, readField, newFieldIdentity } from '../core/model/cedar-template';
+import { newNodeId } from '../core/model/container-draft';
 import { Field, FIELD_TYPES } from '../core/models/types';
 import { FieldCardComponent } from '../features/field-card/field-card.component';
 import { FieldTypePickerComponent } from '../features/field-type-picker/field-type-picker.component';
@@ -43,6 +44,7 @@ import { provideCedTranslations } from '../i18n/i18n';
     DesignerConfigService,
   ],
   encapsulation: ViewEncapsulation.ShadowDom,
+  host: { '[class.ced-read-only]': 'readOnly' },
   styleUrls: ['../../styles.css', '../../authoring.scss', './cedar-embeddable-field-designer.element.scss'],
   styles: [
     `
@@ -67,9 +69,7 @@ import { provideCedTranslations } from '../i18n/i18n';
     <section class="field-editor" [attr.aria-label]="'fieldElement.label' | translate">
       @if (field(); as field) {
         <!-- The host says why the field is read only, as it does for CED. -->
-        <fieldset [disabled]="readOnly" [attr.inert]="readOnly ? '' : null">
-          <app-field-card [field]="field" [standalone]="true" />
-        </fieldset>
+        <app-field-card [field]="field" [standalone]="true" />
       } @else {
         <button type="button" [disabled]="readOnly" (click)="choosingType.set(true)">
           {{ 'fieldElement.chooseType' | translate }}
@@ -121,7 +121,7 @@ export class CedarEmbeddableFieldDesignerElementComponent {
     this.service.validation.setReadOnly(value);
   }
   get readOnly(): boolean {
-    return this.service.validation.readOnly() || !!this.field()?.publishedDefinition;
+    return this.service.access.readOnly();
   }
   @Input() set artifact(source: object | string | null) {
     if (source !== null) this.loadArtifact(source);
@@ -137,8 +137,22 @@ export class CedarEmbeddableFieldDesignerElementComponent {
     this.reset();
     this.choosingType.set(!type);
     if (type) {
-      this.service.addField(type, 0);
-      this.service.updateFieldName(this.service.fields()[0].id, '');
+      // Explicit host replacement bypasses editing commands without changing permissions.
+      this.service.fields.set([
+        {
+          ...newFieldIdentity(),
+          id: newNodeId(),
+          type,
+          name: '',
+          status: 'optional',
+          options: type === 'multipleChoice' || type === 'checkboxes' ? [''] : [],
+          defaultValue: { kind: 'none' },
+          allowMultiple: false,
+        },
+      ]);
+      const field = this.service.fields()[0];
+      if (field.options[0] === '') this.service.validation.startOption(field.id);
+      this.service.nameFocusRequest.set(field.id);
     }
     this.baseline.set(JSON.stringify(this.field() ?? null));
   };

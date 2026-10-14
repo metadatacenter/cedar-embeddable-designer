@@ -9,6 +9,7 @@
   @if (placementNode()) {
     <span
       cdkDragHandle
+      [class.locked]="placementLocked()"
       class="element-drag-handle"
       [title]="'containerEditor.dragElement' | translate"
       [attr.aria-label]="'containerEditor.dragElement' | translate"
@@ -80,7 +81,7 @@
               [attr.aria-label]="'containerEditor.version' | translate"
               [placeholder]="'common.notSpecified' | translate"
             />
-            @if (placementNode()) {
+            @if (placementNode() && !placementLocked()) {
               <dialog
                 #deleteDialog
                 class="delete-dialog"
@@ -145,7 +146,9 @@
           (ngModelChange)="describe($event)"
           [disabled]="placementLocked()"
           class="template-input template-input--description"
-          [placeholder]="'containerEditor.descriptionPlaceholder' | translate"
+          [placeholder]="
+            (placementLocked() ? 'common.notSpecified' : 'containerEditor.descriptionPlaceholder') | translate
+          "
         ></textarea>
       </div>
     </div>

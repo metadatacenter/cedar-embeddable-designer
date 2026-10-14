@@ -38,6 +38,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
               type="button"
               class="remove"
               [attr.aria-label]="'typesPicker.remove' | translate: { iri: iri }"
+              [disabled]="locked()"
               (click)="remove(iri)"
             >
               <app-icon key="trash" size="small" />
@@ -48,16 +49,23 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
         }
       </div>
       @if (available && baseUrl()) {
-        <button #trigger type="button" (click)="open()" [attr.aria-label]="'typesPicker.add' | translate">
+        <button
+          #trigger
+          type="button"
+          [disabled]="locked()"
+          (click)="open()"
+          [attr.aria-label]="'typesPicker.add' | translate"
+        >
           {{ 'typesPicker.add' | translate }}
         </button>
       }
-      <button #manualTrigger type="button" (click)="manualOpened.set(!manualOpened())">
+      <button #manualTrigger type="button" [disabled]="locked()" (click)="manualOpened.set(!manualOpened())">
         {{ 'manualIri.open' | translate }}
       </button>
     </div>
     @if (manualOpened()) {
       <app-manual-iri
+        [disabled]="locked()"
         [existing]="types()"
         action="manualIri.addType"
         (accepted)="acceptManual($event)"
@@ -174,6 +182,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
 export class TypesPickerComponent {
   readonly container = input.required<ContainerDraft>();
   readonly service = inject(TemplateService);
+  readonly locked = computed(() => this.service.definitionLocked(this.container().id));
   readonly types = computed(() => [
     ...new Set(
       this.container().metadata?.instanceTypes ??
@@ -202,8 +211,15 @@ export class TypesPickerComponent {
   private readonly trigger = viewChild<ElementRef<HTMLButtonElement>>('trigger');
   constructor() {
     effect(() => this.dialog()?.nativeElement.focus());
+    effect(() => {
+      if (this.locked()) {
+        this.opened.set(false);
+        this.manualOpened.set(false);
+      }
+    });
   }
   open(): void {
+    if (this.locked()) return;
     this.manualOpened.set(false);
     this.error.set(null);
     this.opened.set(true);
@@ -223,7 +239,7 @@ export class TypesPickerComponent {
     this.saveTypes(this.types().filter((type) => type !== iri));
   }
   select(event: Event): void {
-    if (!this.opened()) return;
+    if (this.locked() || !this.opened()) return;
     const set = (event as CustomEvent<ControlledTermSet>).detail;
     if (
       !Array.isArray(set?.constraints) ||
@@ -244,6 +260,7 @@ export class TypesPickerComponent {
     this.close();
   }
   private saveTypes(types: string[]): void {
+    if (this.locked()) return;
     const container = this.container();
     const metadata = container.metadata ?? {
       artifact: containerArtifactMetadata(container),

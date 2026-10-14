@@ -50,6 +50,7 @@ import { provideCedTranslations } from '../i18n/i18n';
   template: `<ced-font-registrar /><app-root></app-root>`,
   styleUrls: ['../../styles.css', '../../authoring.scss', './cedar-embeddable-designer.element.scss'],
   encapsulation: ViewEncapsulation.ShadowDom,
+  host: { '[class.ced-read-only]': 'readOnly' },
 })
 export class CedarEmbeddableDesignerElementComponent {
   readonly service = inject(TemplateService);
@@ -84,7 +85,7 @@ export class CedarEmbeddableDesignerElementComponent {
     this.service.validation.setReadOnly(!!value);
   }
   get readOnly(): boolean {
-    return this.service.validation.readOnly();
+    return this.service.access.readOnly();
   }
 
   @Input() set childSource(source: CedChildSource | null) {

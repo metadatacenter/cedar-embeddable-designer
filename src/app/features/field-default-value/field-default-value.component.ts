@@ -137,6 +137,13 @@ export class FieldDefaultValueComponent {
 
   constructor() {
     const destroyRef = this.destroyRef;
+    effect(() => {
+      if (this.locked()) {
+        this.pending?.cancel();
+        this.pending = null;
+        this.pickerOpen.set(false);
+      }
+    });
     for (const [tag, ready] of [
       [FIELD_TAG, this.available],
       ['cedar-embeddable-term-picker', this.pickerAvailable],

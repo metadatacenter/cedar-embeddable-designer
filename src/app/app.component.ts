@@ -59,7 +59,11 @@ export class AppComponent {
   private readonly availableWidth = signal(1280);
   readonly overviewMaxWidth = computed(() => {
     const library =
-      this.service.preferences().fieldSelectionStyle === 'sidebar' ? (this.service.sidebarCollapsed() ? 48 : 288) : 0;
+      this.service.preferences().fieldSelectionStyle === 'sidebar' && !this.service.access.readOnly()
+        ? this.service.sidebarCollapsed()
+          ? 48
+          : 288
+        : 0;
     return Math.max(this.overviewMinWidth, Math.min(480, Math.floor((this.availableWidth() - library) * 0.4)));
   });
   readonly overviewWidth = computed(() =>
@@ -198,8 +202,8 @@ export class AppComponent {
       'flex-1': !preview,
       'w-full': !preview,
       'designer-scroll--split': preview,
-      'pl-72': selectionStyle === 'sidebar' && !collapsed,
-      'pl-12': selectionStyle === 'sidebar' && collapsed,
+      'pl-72': selectionStyle === 'sidebar' && !this.service.access.readOnly() && !collapsed,
+      'pl-12': selectionStyle === 'sidebar' && !this.service.access.readOnly() && collapsed,
     };
   }
 

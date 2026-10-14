@@ -77,7 +77,7 @@ export class CeePreviewComponent {
     effect((onCleanup) => {
       const host = this.mount()?.nativeElement;
       const state = this.service.previewState();
-      const readOnly = this.readOnly();
+      const readOnly = this.service.access.readOnly() || this.readOnly();
       const language = this.language();
       if (host === undefined) {
         return;
@@ -90,6 +90,12 @@ export class CeePreviewComponent {
         return;
       }
       const template = state.artifact;
+      // Permission changes replace an editable sibling immediately; do not leave a
+      // writable form alive during the document-edit debounce window.
+      if (this.editor && this.editorReadOnly !== readOnly) {
+        this.show(host, template, readOnly, language);
+        return;
+      }
       const timer = setTimeout(() => this.show(host, template, readOnly, language), REBUILD_QUIET_MS);
       onCleanup(() => clearTimeout(timer));
     });

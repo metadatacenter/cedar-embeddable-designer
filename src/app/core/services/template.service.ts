@@ -4,7 +4,6 @@ import {
   fieldDisplayDescription,
   fieldDisplayName,
 } from '../model/field-display-name';
-import { childLocks } from '../model/child-locks';
 import { fieldSetting, ValidationCoordinator } from './validation-coordinator';
 import { CedChildSource, CedJsonObject, CedValidationIssue } from '../../ced-public-api';
 import { EditorSession } from './editor-session';
@@ -18,7 +17,6 @@ import {
   ElementNode,
   fieldNode,
   containers,
-  isPlacementKey,
   moveChild,
   parentOf,
   updateContainer,
@@ -30,7 +28,7 @@ import { deploymentKeys, keyedChild } from '../model/child-key-policy';
 import { CedLanguageService } from '../../i18n/ced-language.service';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
 import { LocalizedError, message } from '../../i18n/messages';
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, effect } from '@angular/core';
 import { Field, FieldDefaultValue, CustomField, ControlledTermSet, UserPreferences } from '../models/types';
 import { PreferencesService } from './preferences.service';
 import {
@@ -174,7 +172,9 @@ export class TemplateService {
   private readonly i18n = inject(CedLanguageService);
 
   /** A standalone field has no container-owned placement settings. */
-  readonly fieldDocumentMode = signal(false);
+  get fieldDocumentMode() {
+    return this.access.fieldDocument;
+  }
 
   readonly fieldEditorConfig = signal<{ bridgeBaseUrl?: string; terminologyBaseUrl?: string }>({});
 
@@ -187,6 +187,7 @@ export class TemplateService {
       fields: starterFields(),
     }),
   );
+  readonly access = this.session.access;
   readonly templateName = this.session.property('name');
   readonly loadError = signal<string | null>(null);
   readonly validation = new ValidationCoordinator(this.session, this.i18n.t, (id, changes) => {
@@ -200,22 +201,22 @@ export class TemplateService {
     const node = parentOf(this.session.document(), id)?.children.find((child) => child.id === id);
     if (node?.definition.name.trim()) this.automaticKeys.delete(id);
   }
-  /** Whether a child's own definition can no longer change: it is published, or inside a published element. */
+  /** Definition editability, including host access and publication ownership. */
   definitionLocked(id: number): boolean {
-    return childLocks(this.session.document(), id).definition;
+    return !this.access.canEditDefinition(id);
   }
-  /** Whether a child's placement in its parent can no longer change: it is inside a published element. */
+  /** Parent-owned placement editability; roots have no placement. */
   placementLocked(id: number): boolean {
-    return childLocks(this.session.document(), id).placement;
+    return !this.access.canEditPlacement(id);
   }
   nameError(id: number, name: string, kind: 'field' | 'element' | 'template'): string | null {
-    return this.validation.nameError(id, name, kind);
+    return this.access.readOnly() ? null : this.validation.nameError(id, name, kind);
   }
   touchOption(id: number, index: number): void {
     this.validation.touchOption(id, index);
   }
   optionErrorVisible(id: number, index: number): boolean {
-    return this.validation.optionVisible(id, index);
+    return !this.access.readOnly() && this.validation.optionVisible(id, index);
   }
   /**
    * The problems the designer points at: the validation report's, or none while the designer is read
@@ -348,6 +349,13 @@ export class TemplateService {
   }
 
   constructor() {
+    effect(() => {
+      if (this.validation.readOnly()) {
+        this.showPicker.set(null);
+        this.childPicker.set(null);
+        this.fieldTypeDropdownLibrary.set(null);
+      }
+    });
     this.markSaved();
   }
 
@@ -693,13 +701,7 @@ export class TemplateService {
   }
 
   updateFieldSettings(id: number, changes: Partial<Field>): string | null {
-    const locks = childLocks(this.session.document(), id);
-    const keys = Object.keys(changes);
-    if (
-      (locks.definition && keys.some((key) => !isPlacementKey(key))) ||
-      (locks.placement && keys.some(isPlacementKey))
-    )
-      return this.i18n.t('errors.publishedReadOnly');
+    if (!this.access.canChange(id, Object.keys(changes))) return this.i18n.t('errors.publishedReadOnly');
     const current = this.fieldsFor(id)().find((field) => field.id === id);
     if (current && !this.canAddField(changes.type ?? current.type, this.parentContainerId(id)))
       return this.i18n.t('errors.pageBreakPlacement');
@@ -739,6 +741,7 @@ export class TemplateService {
   }
 
   moveField(dragIndex: number, hoverIndex: number) {
+    if (this.definitionLocked(this.session.active().id)) return;
     this.fields.update((prev) => {
       const updated = [...prev];
       const dragField = updated[dragIndex];
@@ -882,6 +885,7 @@ export class TemplateService {
     type?: 'field' | 'element',
   ): void {
     this.showPicker.set(null);
+    if (this.definitionLocked(targetId)) return;
     this.childPicker.set({ targetId, position, type });
   }
 

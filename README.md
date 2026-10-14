@@ -346,6 +346,42 @@ The Overview shows each field's type icon and a right-aligned reorder handle.
 Dragging reorders siblings within the Overview; the document and main editor update
 only when the field is dropped. Focused handles also support Arrow Up/Down.
 
+### Read-only access
+
+`readOnly = true` permits inspection without permitting document edits. Tabs,
+expand/collapse, outline selection, card keyboard navigation, preview and display
+preferences remain available. Preview itself stays read-only. Text stays legible;
+editing controls are disabled, insertion palettes are absent, and drag handles
+cannot reorder content. Read-only is separate from the host's temporary `inert`
+state while loading or saving.
+
+One session-owned `EditorAccess` policy governs commands and controls:
+
+| Open document / node | Definition edits | Parent placement edits | Inspection |
+| --- | --- | --- | --- |
+| Editable draft | Allowed | Allowed for children | Allowed |
+| Published child in an editable parent | Blocked | Allowed | Allowed |
+| Descendant of a published element | Blocked | Blocked | Allowed |
+| Published root or host read-only | Blocked | Blocked | Allowed |
+| Standalone field | Allowed only when draft and host-writable | No parent placement | Allowed |
+
+The public `readOnly` getter reports effective access: clearing the host flag
+cannot unlock a published root. Save is unavailable in read-only mode. Entering
+read-only cancels pending terminology checks, closes editing dialogs and preserves
+existing unsaved input. Restoring access does not revive old asynchronous replies
+or reopen those dialogs. Unknown node identities cannot be edited. Validation
+still reports stored defects, while the inspection UI suppresses repair markers.
+
+`loadArtifact`, `artifact`/`template`, and `newArtifact` are explicit host document
+replacement APIs, so they continue to work while read-only without temporarily
+granting editing permission. A successful replacement resets the edit baseline;
+view navigation never changes artifact content or dirty state.
+
+The access matrix and command matrix cover host access, publication, both container
+kinds, standalone fields and nested ownership. Browser tests inspect every field
+type, all settings tabs, keyboard access and wide/narrow layouts. Existing seeded
+terminology histories cover delayed responses across read-only transitions.
+
 ### Settings validation and saving
 
 Use `designer.validate()` (or the read-only `validationReport` property) before

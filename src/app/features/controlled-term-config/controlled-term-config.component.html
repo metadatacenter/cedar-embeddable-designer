@@ -18,6 +18,7 @@
       #editButton
       class="ced-text-action"
       type="button"
+      [disabled]="service.definitionLocked(field.id)"
       (click)="openPicker()"
       [attr.aria-label]="'controlledTerms.edit' | translate"
     >
