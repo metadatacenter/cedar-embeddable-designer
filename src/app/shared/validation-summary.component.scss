@@ -14,6 +14,8 @@
 
 .validation-summary--readonly {
   --cedar-icon-color: var(--cedar-text-muted);
+  // The count keeps its own surface to stay in view over a long list, and takes it from here.
+  --_cedar-validation-surface: var(--cedar-surface-subtle);
   color: var(--cedar-text-muted);
   background: var(--cedar-surface-subtle);
   border-bottom: 1px solid var(--cedar-border-rule);

@@ -57,6 +57,13 @@ import { provideCedTranslations } from '../i18n/i18n';
       .field-editor {
         padding: var(--cedar-space-4);
       }
+      /* The field designer grows with its field, so whatever embeds it scrolls. The summary stays
+         at the top of that scrolling area rather than leaving it. */
+      .field-summary {
+        position: sticky;
+        top: 0;
+        z-index: var(--cedar-layer-sticky);
+      }
       fieldset {
         border: 0;
         padding: 0;
@@ -66,7 +73,7 @@ import { provideCedTranslations } from '../i18n/i18n';
     `,
   ],
   template: `<ced-font-registrar />
-    <app-validation-summary />
+    <div class="field-summary"><app-validation-summary /></div>
     <section class="field-editor" [attr.aria-label]="'fieldElement.label' | translate">
       @if (field(); as field) {
         <!-- The host says why the field is read only, as it does for CED. -->
