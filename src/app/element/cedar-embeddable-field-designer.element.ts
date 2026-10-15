@@ -1,4 +1,4 @@
-import type { CedLoadOptions } from '../ced-public-api';
+import type { CedHostFinding, CedLoadOptions } from '../ced-public-api';
 import { ValidationSummaryComponent } from '../shared/validation-summary.component';
 import { DesignerConfigService } from '../core/services/designer-config.service';
 import {
@@ -168,6 +168,11 @@ export class CedarEmbeddableFieldDesignerElementComponent {
       this.validationReport.issues.some((issue) => issue.source === 'draft')
     );
   }
+  @Input() set validationFindings(findings: CedHostFinding[]) {
+    this.service.setHostFindings(findings);
+  }
+  @Input() readonly revealValidationFinding = (location: string): boolean =>
+    this.service.revealValidationFinding(location);
   @Input() get validationReport(): CedValidationReport {
     const report = structuredClone(this.service.validationReport());
     return { ...report, canSave: !!this.field() && !this.readOnly && report.canSave };

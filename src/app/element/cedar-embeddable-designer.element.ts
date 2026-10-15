@@ -1,4 +1,4 @@
-import type { CedLoadOptions } from '../ced-public-api';
+import type { CedHostFinding, CedLoadOptions } from '../ced-public-api';
 import { DesignerConfigService } from '../core/services/designer-config.service';
 import {
   Component,
@@ -152,6 +152,11 @@ export class CedarEmbeddableDesignerElementComponent {
   }
   @Output() dirtyChange = new EventEmitter<boolean>();
 
+  @Input() set validationFindings(findings: CedHostFinding[]) {
+    this.service.setHostFindings(findings);
+  }
+  @Input() readonly revealValidationFinding = (location: string): boolean =>
+    this.service.revealValidationFinding(location);
   @Input() get validationReport(): CedValidationReport {
     return structuredClone(this.service.validationReport());
   }

@@ -5,6 +5,8 @@
       }}<input
         spellcheck="false"
         autocomplete="off"
+        [appArtifactName]="field()?.id ?? container()?.id ?? -1"
+        artifactSetting="annotations"
         [attr.aria-label]="'annotations.newName' | translate"
         [ngModel]="draft().name"
         (ngModelChange)="editDraft({ name: $event })"

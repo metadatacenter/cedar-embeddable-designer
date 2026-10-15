@@ -139,6 +139,12 @@
       <div class="template-field-group template-description">
         <label class="template-field-label">{{ 'containerEditor.description' | translate }}</label>
         <textarea
+          [appArtifactName]="container().id"
+          artifactSetting="description"
+          [attr.aria-invalid]="!!service.settingError(container().id, 'description')"
+          [attr.aria-describedby]="
+            service.settingError(container().id, 'description') ? 'description-error-' + container().id : null
+          "
           spellcheck="false"
           autocomplete="off"
           rows="1"
@@ -150,6 +156,9 @@
             (placementLocked() ? 'common.notSpecified' : 'containerEditor.descriptionPlaceholder') | translate
           "
         ></textarea>
+        @if (service.settingError(container().id, 'description'); as error) {
+          <p class="ced-field-error" [id]="'description-error-' + container().id">{{ error }}</p>
+        }
       </div>
     </div>
     @if (container().children.length) {

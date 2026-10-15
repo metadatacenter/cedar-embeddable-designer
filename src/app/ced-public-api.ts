@@ -104,6 +104,10 @@ export interface CedarEmbeddableDesignerElement extends HTMLElement {
     listener: (event: CustomEvent<boolean>) => void,
     options?: boolean | AddEventListenerOptions,
   ): void;
+  /** Findings for the current accepted artifact; replaced by assignment, cleared by an accepted edit or load. */
+  set validationFindings(findings: CedHostFinding[]);
+  /** Reveal a mapped host finding; false for stale or unsupported paths. */
+  revealValidationFinding(location: string): boolean;
   readonly validationReport: CedValidationReport;
   readonly canSave: boolean;
   validate(): CedValidationReport;
@@ -138,6 +142,13 @@ declare global {
  * `label` and `message` are written for the author, in the element's `language`. `tab`
  * and `code` are identifiers, and stay the same in every language.
  */
+export interface CedHostFinding {
+  /** JSON Pointer into the schema artifact, including properties and items segments. */
+  location: string;
+  message: string;
+  severity: 'error' | 'warning';
+}
+
 export interface CedValidationIssue {
   nodeId: number;
   path: number[];
@@ -146,8 +157,11 @@ export interface CedValidationIssue {
   tab: string;
   code: string;
   message: string;
-  severity: 'error';
-  source: 'model' | 'draft';
+  severity: 'error' | 'warning';
+  source: 'model' | 'draft' | 'host';
+  location?: string;
+  /** Unsupported paths remain in the report without navigating to an unrelated control. */
+  unmapped?: boolean;
   /**
    * Whether the designer's error summary lists the issue. A name nobody has touched yet, and a new
    * choice field's blank starter option, block saving without being listed until the author
@@ -233,6 +247,9 @@ export interface CedarEmbeddableFieldDesignerElement extends HTMLElement {
   readonly currentArtifact: CedJsonObject | null;
   readonly isDirty: boolean;
   readonly canSave: boolean;
+  /** Same snapshot-scoped finding contract as the template designer. */
+  set validationFindings(findings: CedHostFinding[]);
+  revealValidationFinding(location: string): boolean;
   readonly validationReport: CedValidationReport;
   validate(): CedValidationReport;
   addEventListener(

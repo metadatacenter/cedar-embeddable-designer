@@ -1,3 +1,4 @@
+import { ArtifactNameDirective } from '../../shared/artifact-name.directive';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { invalidSettingsInputs } from '../../shared/settings-input';
 import { ElementLabelsComponent } from '../element-labels/element-labels.component';
@@ -19,6 +20,7 @@ import { TemplateService } from '../../core/services/template.service';
 @Component({
   selector: 'app-element-card',
   imports: [
+    ArtifactNameDirective,
     IconComponent,
     ElementLabelsComponent,
     LanguageSelectorComponent,

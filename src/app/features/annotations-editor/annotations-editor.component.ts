@@ -1,3 +1,4 @@
+import { ArtifactNameDirective } from '../../shared/artifact-name.directive';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -14,7 +15,7 @@ type Annotation = NonNullable<Field['annotations']>[number];
 
 @Component({
   selector: 'app-annotations-editor',
-  imports: [FormsModule, IconComponent, TranslatePipe],
+  imports: [ArtifactNameDirective, FormsModule, IconComponent, TranslatePipe],
   templateUrl: './annotations-editor.component.html',
   styleUrl: './annotations-editor.component.scss',
 })

@@ -196,7 +196,9 @@ export class FieldSettingsComponent implements OnChanges {
             ? panel?.querySelector<HTMLElement>(
                 `input[aria-label="${CSS.escape(this.i18n.t('fieldCard.option', { number: Number(issue.setting.slice(7)) + 1 }))}"]`,
               )
-            : group?.querySelector<HTMLElement>('input, select, textarea, button');
+            : group?.matches('input, select, textarea, button')
+              ? group
+              : group?.querySelector<HTMLElement>('input, select, textarea, button');
       control?.focus({ preventScroll: true });
     });
     effect(() => {

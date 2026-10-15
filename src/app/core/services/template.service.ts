@@ -5,7 +5,8 @@ import {
   fieldDisplayName,
 } from '../model/field-display-name';
 import { fieldSetting, ValidationCoordinator } from './validation-coordinator';
-import { CedChildSource, CedJsonObject, CedValidationIssue } from '../../ced-public-api';
+import { CedChildSource, CedHostFinding, CedJsonObject, CedValidationIssue } from '../../ced-public-api';
+import { hostFindings } from '../model/host-findings';
 import { retainSessionIds } from '../model/retain-session-ids';
 import { EditorSession } from './editor-session';
 import { TerminologyService } from './terminology.service';
@@ -210,7 +211,13 @@ export class TemplateService {
     return !this.access.canEditPlacement(id);
   }
   nameError(id: number, name: string, kind: 'field' | 'element' | 'template'): string | null {
-    return this.access.readOnly() ? null : this.validation.nameError(id, name, kind);
+    return this.access.readOnly()
+      ? null
+      : (this.validation.nameError(id, name, kind) ??
+          this.displayedIssues().find(
+            (issue) => issue.source === 'host' && issue.nodeId === id && issue.setting === 'name',
+          )?.message ??
+          null);
   }
   touchOption(id: number, index: number): void {
     this.validation.touchOption(id, index);
@@ -222,7 +229,9 @@ export class TemplateService {
    * Inline authoring markers are hidden during inspection. The separate read-only
    * summary and public report still expose every validation finding.
    */
-  readonly displayedIssues = computed(() => (this.validation.readOnly() ? [] : this.validationReport().issues));
+  readonly displayedIssues = computed(() =>
+    this.validation.readOnly() ? [] : this.validationReport().issues.filter((issue) => issue.severity === 'error'),
+  );
   readonly visibleIssues = computed(() => this.displayedIssues().filter((issue) => issue.shown));
   visibleIssuesFor(id: number): CedValidationIssue[] {
     return this.visibleIssues().filter((issue) => issue.path.includes(id));
@@ -234,13 +243,46 @@ export class TemplateService {
   setSettingsError(id: number, setting: string, message: string | null, tab = 'Constraints'): void {
     this.validation.setInputError(id, setting, message, tab);
   }
-  readonly validationReport = this.validation.report;
+  private readonly hostReport = signal<{ document: ContainerDraft; findings: CedHostFinding[] } | null>(null);
+  setHostFindings(findings: CedHostFinding[]): void {
+    // Copy host-owned data. No input assignment edits the artifact or pending settings.
+    if (
+      !Array.isArray(findings) ||
+      findings.some(
+        (f) =>
+          !f ||
+          typeof f.location !== 'string' ||
+          typeof f.message !== 'string' ||
+          !['error', 'warning'].includes(f.severity),
+      )
+    )
+      throw new TypeError('Validation findings require a location, message and error/warning severity');
+    this.hostReport.set(findings.length ? { document: this.document(), findings: structuredClone(findings) } : null);
+  }
+  readonly validationReport = computed(() => {
+    const local = this.validation.report();
+    const host = this.hostReport();
+    const issues =
+      host?.document === this.document()
+        ? hostFindings(this.document(), host.findings, this.access.fieldDocument())
+        : [];
+    const valid = local.valid && !issues.some((issue) => issue.severity === 'error');
+    return { ...local, valid, canSave: local.canSave && valid, issues: [...local.issues, ...issues] };
+  });
+  revealValidationFinding(location: string): boolean {
+    const issue = this.validationReport().issues.find(
+      (issue) => issue.source === 'host' && issue.location === location && !issue.unmapped,
+    );
+    if (!issue) return false;
+    this.revealIssue(issue);
+    return true;
+  }
   settingError(id: number, setting: string): string | null {
     if (this.validation.readOnly()) return null;
     return (
       this.validation.error(id, setting) ??
       this.displayedIssues().find(
-        (issue) => issue.source === 'model' && issue.nodeId === id && issue.setting === setting,
+        (issue) => issue.source !== 'draft' && issue.nodeId === id && issue.setting === setting,
       )?.message ??
       null
     );

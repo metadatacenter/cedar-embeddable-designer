@@ -43,5 +43,10 @@
     "file": "src/app/element/cedar-embeddable-field-designer.element.ts",
     "text": "Unsupported field type:",
     "reason": "Thrown into the host's own code for an invalid argument to newArtifact, so it is a developer diagnostic."
+  },
+  {
+    "file": "src/app/core/services/template.service.ts",
+    "text": "Validation findings require a location, message and error/warning severity",
+    "reason": "Developer-facing TypeError for malformed embedding API input; never presented as an authoring validation message."
   }
 ]

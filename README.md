@@ -373,13 +373,13 @@ state while loading or saving.
 
 One session-owned `EditorAccess` policy governs commands and controls:
 
-| Open document / node | Definition edits | Parent placement edits | Inspection |
-| --- | --- | --- | --- |
-| Editable draft | Allowed | Allowed for children | Allowed |
-| Published child in an editable parent | Blocked | Allowed | Allowed |
-| Descendant of a published element | Blocked | Blocked | Allowed |
-| Published root or host read-only | Blocked | Blocked | Allowed |
-| Standalone field | Allowed only when draft and host-writable | No parent placement | Allowed |
+| Open document / node                  | Definition edits                          | Parent placement edits | Inspection |
+| ------------------------------------- | ----------------------------------------- | ---------------------- | ---------- |
+| Editable draft                        | Allowed                                   | Allowed for children   | Allowed    |
+| Published child in an editable parent | Blocked                                   | Allowed                | Allowed    |
+| Descendant of a published element     | Blocked                                   | Blocked                | Allowed    |
+| Published root or host read-only      | Blocked                                   | Blocked                | Allowed    |
+| Standalone field                      | Allowed only when draft and host-writable | No parent placement    | Allowed    |
 
 The public `readOnly` getter reports effective access: clearing the host flag
 cannot unlock a published root. Save is unavailable in read-only mode. Entering
@@ -412,8 +412,8 @@ events alone are therefore not a save-readiness check.
 Listen for `validationChange` to update the wrapper's Save button and error list.
 Its detail is the same report: `{ valid, canSave, issues }`. Each issue includes a
 session `nodeId`, an ancestor-ID `path`, a display `label`, `setting`, settings `tab`,
-stable category `code`, user-facing `message`, `severity: 'error'`, `source`
-(`model` or `draft`), and `shown`. An issue that is not `shown` still blocks saving,
+stable category `code`, user-facing `message`, `severity` (`error` or `warning`), `source`
+(`model`, `draft` or `host`), and `shown`. An error that is not `shown` still blocks saving,
 but CED's error summary holds it back until the author reaches it: a name nobody has
 touched yet, or a new choice field's blank starter option while its name is still
 being entered. Leaving the name reveals any unfinished option. A host that explains a
@@ -421,6 +421,34 @@ disabled Save by pointing at errors should count only the shown ones. Do not par
 messages or persist session IDs across documents.
 Validation checks the settings CED supports; it does not replace server validation,
 permission checks, or save/publish lifecycle rules.
+
+Assign `designer.validationFindings` (also supported by CEFD) to replace the host's report:
+
+```javascript
+designer.validationFindings = [
+  {
+    location: '/properties/Visits/items/properties/Code/_valueConstraints/regex',
+    message: 'Review the pattern accepted by the server.',
+    severity: 'error',
+  },
+];
+```
+
+Locations are JSON Pointers into the schema artifact, including `properties`, `items`
+and escaped placement keys. Recognized paths join the navigable validation summary and
+error markers beside their controls. `revealValidationFinding(location)` opens the mapped
+setting and returns `true`; unsupported or stale paths return `false`. Unsupported findings
+remain visible with their original path (`unmapped: true`) rather than pointing at a different
+control. Host issues retain `source: 'host'` and `location` in the public report. Warnings
+appear in the summary and do not block saving or mark controls as erroneous.
+
+Findings belong to the accepted document at assignment. Any accepted artifact edit or
+document replacement retires them; reverting that edit does not revive them. Incomplete
+setting drafts remain intact and keep their own local errors until corrected or discarded.
+Assign `[]` to clear a report without touching the document or those drafts. The host must
+discard asynchronous findings for an obsolete submission before assigning them, owns server
+requests and permission checks, and should pass a new report only when its contents change.
+Messages are supplied by the host and displayed as text, without translation or HTML rendering.
 
 Set `designer.readOnly` when the user may not change the document. Nothing in it can
 then be edited and `canSave` is false. CED also marks none of the document's

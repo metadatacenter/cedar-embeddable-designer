@@ -14,7 +14,8 @@ import { IconComponent } from './components/icon/icon.component';
 })
 export class ValidationSummaryComponent {
   readonly service = inject(TemplateService);
+  readonly advisory = computed(() => this.issues().some((issue) => issue.severity === 'warning'));
   readonly issues = computed(() =>
-    this.service.access.readOnly() ? this.service.validationReport().issues : this.service.visibleIssues(),
+    this.service.validationReport().issues.filter((issue) => this.service.access.readOnly() || issue.shown),
   );
 }
