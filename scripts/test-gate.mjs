@@ -1,5 +1,7 @@
 // Read-only checks overlap unit tests within the worker budget. Angular unit
 // tests and dist share a cache, so dist waits; browsers inspect only verified bytes.
+// The visual baselines run in their container beside the browser suite. One worker takes them
+// about two minutes, longer than the browser suite, so a budget that can spare two gives two.
 import { spawn } from 'node:child_process';
 import { performance } from 'node:perf_hooks';
 import { availableParallelism } from 'node:os';
@@ -10,6 +12,7 @@ const budget = Number(
 if (!Number.isInteger(budget) || budget < 1 || budget > 16) {
   throw new Error('CEDAR_TEST_WORKERS must be an integer between 1 and 16');
 }
+const visualWeight = budget >= 6 ? 2 : 1;
 const stages = [
   { name: 'unit', script: 'test', weight: Math.max(1, budget - 3) },
   { name: 'lint', script: 'lint' },
@@ -17,7 +20,8 @@ const stages = [
   { name: 'boundaries', script: 'test:boundaries' },
   { name: 'packaging', script: 'test:packaging' },
   { name: 'dist', script: 'dist', weight: budget, after: ['unit', 'lint', 'types', 'boundaries', 'packaging'] },
-  { name: 'browser', script: 'test:browser:prebuilt', weight: budget, after: ['dist'] },
+  { name: 'browser', script: 'test:browser:prebuilt', weight: Math.max(1, budget - visualWeight), after: ['dist'] },
+  { name: 'visual', script: 'test:visual', weight: visualWeight, after: ['dist'] },
 ];
 const pending = [...stages];
 const running = new Map();

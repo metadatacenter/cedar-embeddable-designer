@@ -289,20 +289,21 @@ directly rather than importing their facade; the key policy uses a leaf adapter
 for reserved names. `test:boundaries` enforces the library boundary and rejects
 dependency cycles reachable from the adapter.
 
-| Command                  | What it does                                                        |
-| ------------------------ | ------------------------------------------------------------------- |
-| `npm test`               | unit tests, through the Angular CLI's Vitest builder                |
-| `npm run test:packaging` | the publish-channel rule, under `node --test`                       |
-| `npm run test:browser`   | builds the distribution, then drives it in a real browser           |
-| `npm run test:visual`    | the screenshot baselines, in the container they are taken in        |
-| `npm run test:ci`        | bounded parallel checks, then distribution and browser verification |
+| Command                  | What it does                                                                |
+| ------------------------ | --------------------------------------------------------------------------- |
+| `npm test`               | unit tests, through the Angular CLI's Vitest builder                        |
+| `npm run test:packaging` | the publish-channel rule, under `node --test`                               |
+| `npm run test:browser`   | builds the distribution, then drives it in a real browser                   |
+| `npm run test:visual`    | the screenshot baselines, in the container they are taken in                |
+| `npm run test:ci`        | bounded parallel checks, then distribution, browser and visual verification |
 
 `test:ci` overlaps unit, lint, type, boundary and packaging checks within
 `CEDAR_TEST_WORKERS` (1–16; by default half the available CPUs, capped at 8).
 The distribution waits for every check, so Angular builds and unit tests never
-share a live cache. Browser tests then use the full budget. A failed stage blocks
-the distribution and browser stages; each stage prints its elapsed time.
-`test:visual` remains a separate required gate in the frontend reactor.
+share a live cache. The browser tests and the visual baselines then share the
+budget: the baselines take two workers in their container when the budget is at
+least six, one otherwise, and the browser tests the rest. A failed stage blocks the distribution, browser and visual stages; each stage
+prints its elapsed time. `test:ci` therefore needs Docker, as `test:visual` does.
 
 The browser suite is the one that matters most, because it is the only one that
 can see the failures this component has actually had: an element that never

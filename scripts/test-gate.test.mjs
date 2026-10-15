@@ -58,13 +58,17 @@ for (const budget of [1, 2, 8])
         assert.ok(active <= budget);
         if (event.script === 'dist') assert.equal(finished.size, 5);
         if (event.script === 'test:browser:prebuilt') assert.ok(finished.has('dist'));
+        if (event.script === 'test:visual') {
+          assert.ok(finished.has('dist'));
+          assert.equal(event.workers, budget >= 6 ? '2' : '1');
+        }
       } else {
         active -= Number(event.workers);
         finished.add(event.script);
       }
     }
     assert.equal(peak, budget);
-    assert.equal(finished.size, 7);
+    assert.equal(finished.size, 8);
   });
 
 test('failure fails the gate without running downstream stages', () => {
@@ -91,4 +95,5 @@ test('parallel failure drains active checks and blocks dist and browsers', () =>
   assert.ok(starts.includes('lint'));
   assert.ok(!starts.includes('dist'));
   assert.ok(!starts.includes('test:browser:prebuilt'));
+  assert.ok(!starts.includes('test:visual'));
 });
