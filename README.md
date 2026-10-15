@@ -602,3 +602,17 @@ only when a shared role, a recipe or a designer size in the tokens package's
 local rule at its owner, and retain desktop/narrow-width, host-override and real-CEF
 checks. Do not substitute an unrelated token merely because its current numeric
 value happens to match.
+
+### Recovering unfinished work
+
+`captureDraft()` returns a JSON-serializable `CedRecoveryDraft` for either Designer
+or Field Designer. It includes unfinished control input, pending validation gates,
+the document and its clean baseline. It is a recovery file, not a CEDAR artifact:
+use `currentArtifact` only after validation permits saving to the server.
+
+`restoreDraft(draft)` validates the complete snapshot before replacing the current
+session and throws on malformed or incompatible input. The host's current read-only
+policy remains in force. Restored asynchronous checks must be retried at their
+controls. A host owns storage, account/deployment isolation, download/import UI and
+fresh permission/revision checks; restoring a snapshot never authorizes a write or
+proves whether an interrupted save committed.

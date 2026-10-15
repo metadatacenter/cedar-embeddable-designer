@@ -4,6 +4,14 @@ export interface CedLoadOptions {
   preserveView?: boolean;
 }
 
+/** Opaque JSON recovery state, including unfinished controls; never submit it as an artifact. */
+export interface CedRecoveryDraft {
+  format: 'cedar-designer-draft';
+  version: 1;
+  kind: 'template' | 'element' | 'field';
+  state: string;
+}
+
 /**
  * The contract an embedding page programs against.
  *
@@ -95,6 +103,9 @@ export interface CedarEmbeddableDesignerElement extends HTMLElement {
   artifact: CedJsonObject | string | null;
   /** Load a document synchronously; throws if it cannot be read. */
   loadArtifact(source: CedJsonObject | string, options?: CedLoadOptions): void;
+  captureDraft(): CedRecoveryDraft;
+  /** Throws before replacing the working document if the draft cannot be restored. */
+  restoreDraft(draft: CedRecoveryDraft): void;
   /** Start an empty template or element, without the demo's starter fields. */
   newArtifact(kind: 'template' | 'element'): void;
   /** Includes invalid, uncommitted setting edits. Reset by loading a saved document. */
@@ -241,6 +252,8 @@ export interface CedarEmbeddableFieldDesignerElement extends HTMLElement {
   readOnly: boolean;
   /** Throws on invalid input, preserving the currently open document. */
   loadArtifact(source: CedJsonObject | string, options?: CedLoadOptions): void;
+  captureDraft(): CedRecoveryDraft;
+  restoreDraft(draft: CedRecoveryDraft): void;
   /** Omit the type to show the field-type chooser. Resets the dirty baseline. */
   newArtifact(type?: CedFieldType): void;
   /** Null before choosing a type. May throw for an invalid draft; check canSave first. */

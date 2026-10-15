@@ -27,6 +27,15 @@ interface Edit {
   tab: string;
   changes: Partial<Field>;
 }
+export interface ValidationRecovery {
+  edits: Record<string, Edit>;
+  inputs: Record<
+    string,
+    { message: string; tab: string; value?: string | FieldDefaultValue; settings?: SettingsInputDraft }
+  >;
+  touched: number[];
+  quiet: number[];
+}
 export interface ValidationCheck {
   readonly signal: AbortSignal;
   active(): boolean;
@@ -167,6 +176,40 @@ export class ValidationCoordinator {
     this.replaceChecks({});
     this.touchedNames.set(new Set(touched));
     this.quietOptions.set(new Set());
+  }
+
+  captureRecovery(): ValidationRecovery {
+    // Requests cannot survive a reload. Retain their save gate until the author retries the control.
+    const inputs = { ...this.inputErrors() };
+    for (const [key, check] of Object.entries(this.checks()))
+      inputs[key] ??= { message: check.message, tab: check.tab };
+    const present = (id: number) => !!nodeOf(this.session.document(), id);
+    return structuredClone({
+      edits: this.edits(),
+      inputs,
+      touched: [...this.touchedNames()].filter(present),
+      quiet: [...this.quietOptions()].filter(present),
+    });
+  }
+  restoreRecovery(value: ValidationRecovery): void {
+    const copy = structuredClone(value);
+    if (!copy?.edits || !copy.inputs || !Array.isArray(copy.touched) || !Array.isArray(copy.quiet)) throw new Error();
+    for (const [key, entry] of Object.entries({ ...copy.inputs, ...copy.edits })) {
+      const match = key.match(/^(\d+):(.+)$/);
+      if (!match || !nodeOf(this.session.document(), Number(match[1])) || typeof entry.tab !== 'string')
+        throw new Error();
+    }
+    for (const [key, edit] of Object.entries(copy.edits))
+      if (key !== keyOf(edit.id, edit.setting) || !edit.changes || typeof edit.changes !== 'object') throw new Error();
+    for (const input of Object.values(copy.inputs)) if (typeof input.message !== 'string') throw new Error();
+    if (
+      [...copy.touched, ...copy.quiet].some((id) => !Number.isSafeInteger(id) || !nodeOf(this.session.document(), id))
+    )
+      throw new Error();
+    this.reset(copy.touched);
+    this.edits.set(copy.edits);
+    this.inputErrors.set(copy.inputs);
+    this.quietOptions.set(new Set(copy.quiet));
   }
   startOption(id: number): void {
     this.quietOptions.update((ids) => new Set([...ids, id]));

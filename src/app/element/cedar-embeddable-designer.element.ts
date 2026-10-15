@@ -1,4 +1,4 @@
-import type { CedHostFinding, CedLoadOptions } from '../ced-public-api';
+import type { CedHostFinding, CedLoadOptions, CedRecoveryDraft } from '../ced-public-api';
 import { DesignerConfigService } from '../core/services/designer-config.service';
 import {
   Component,
@@ -147,6 +147,8 @@ export class CedarEmbeddableDesignerElementComponent {
   @Input() readonly loadArtifact = (source: object | string, options?: CedLoadOptions): void =>
     this.service.loadTemplate(source, options?.preserveView);
   @Input() readonly newArtifact = (kind: 'template' | 'element'): void => this.service.resetTemplate(kind, false);
+  @Input() readonly captureDraft = (): CedRecoveryDraft => this.service.captureDraft();
+  @Input() readonly restoreDraft = (draft: CedRecoveryDraft): void => this.service.restoreDraft(draft);
   @Input() get isDirty(): boolean {
     return this.service.isDirty() || this.service.validationReport().issues.some((issue) => issue.source === 'draft');
   }

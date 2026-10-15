@@ -1,4 +1,4 @@
-import type { CedHostFinding, CedLoadOptions } from '../ced-public-api';
+import type { CedHostFinding, CedLoadOptions, CedRecoveryDraft } from '../ced-public-api';
 import { ValidationSummaryComponent } from '../shared/validation-summary.component';
 import { DesignerConfigService } from '../core/services/designer-config.service';
 import {
@@ -175,6 +175,17 @@ export class CedarEmbeddableFieldDesignerElementComponent {
       this.validationReport.issues.some((issue) => issue.source === 'draft')
     );
   }
+  @Input() readonly captureDraft = (): CedRecoveryDraft => {
+    const draft = this.service.captureDraft();
+    return { ...draft, state: JSON.stringify({ ...JSON.parse(draft.state), fieldBaseline: this.baseline() }) };
+  };
+  @Input() readonly restoreDraft = (draft: CedRecoveryDraft): void => {
+    const { fieldBaseline } = JSON.parse(draft.state);
+    if (typeof fieldBaseline !== 'string') throw new Error();
+    this.service.restoreDraft(draft);
+    this.baseline.set(fieldBaseline);
+    this.choosingType.set(false);
+  };
   @Input() set validationFindings(findings: CedHostFinding[]) {
     this.service.setHostFindings(findings);
   }

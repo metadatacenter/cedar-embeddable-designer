@@ -5,7 +5,14 @@ import {
   fieldDisplayName,
 } from '../model/field-display-name';
 import { fieldSetting, ValidationCoordinator } from './validation-coordinator';
-import { CedChildSource, CedHostFinding, CedJsonObject, CedValidationIssue } from '../../ced-public-api';
+import {
+  CedChildSource,
+  CedHostFinding,
+  CedJsonObject,
+  CedValidationIssue,
+  CedRecoveryDraft,
+} from '../../ced-public-api';
+import { recoveryDocument } from '../model/recovery-document';
 import { hostFindings } from '../model/host-findings';
 import { retainSessionIds } from '../model/retain-session-ids';
 import { EditorSession } from './editor-session';
@@ -14,6 +21,7 @@ import { TerminologyEditCommands } from './terminology-edit-commands';
 import {
   containerFromFlat,
   newNodeId,
+  reserveNodeIds,
   ContainerDraft,
   ChildNode,
   ElementNode,
@@ -833,6 +841,69 @@ export class TemplateService {
     this.session.replace(document);
     this.collapsedElements.set(new Set());
     this.markSaved();
+  }
+
+  captureDraft(): CedRecoveryDraft {
+    return {
+      format: 'cedar-designer-draft',
+      version: 1,
+      kind: this.fieldDocumentMode() ? 'field' : this.session.document().kind,
+      state: JSON.stringify({
+        document: this.session.document(),
+        validation: this.validation.captureRecovery(),
+        baseline: this.savedState(),
+        identifier: this.mintedIdentifier(),
+        automaticKeys: [...this.automaticKeys].filter((id) => !!parentOf(this.document(), id)),
+      }),
+    };
+  }
+  restoreDraft(draft: CedRecoveryDraft): void {
+    if (
+      draft?.format !== 'cedar-designer-draft' ||
+      draft.version !== 1 ||
+      !['template', 'element', 'field'].includes(draft.kind) ||
+      (draft.kind === 'field') !== this.fieldDocumentMode()
+    )
+      throw new Error();
+    const parsed = JSON.parse(draft.state);
+    const { document, maximumId } = recoveryDocument(parsed.document);
+    if (
+      (draft.kind !== 'field' && draft.kind !== document.kind) ||
+      typeof parsed.baseline !== 'string' ||
+      typeof parsed.identifier !== 'string' ||
+      (draft.kind === 'field' &&
+        (document.children.length > 1 || document.children.some((node) => node.kind !== 'field')))
+    )
+      throw new Error();
+    if (
+      !Array.isArray(parsed.automaticKeys) ||
+      parsed.automaticKeys.some(
+        (id: unknown) => typeof id !== 'number' || !Number.isSafeInteger(id) || !parentOf(document, id),
+      )
+    )
+      throw new Error();
+    // Validate in a detached session. Invalid author input is allowed; malformed state is not.
+    const candidate = new EditorSession(document);
+    candidate.access.fieldDocument.set(this.fieldDocumentMode());
+    const validation = new ValidationCoordinator(candidate, this.i18n.t);
+    validation.restoreRecovery(parsed.validation);
+    validation.report();
+    reserveNodeIds(maximumId);
+    this.validation.reset();
+    this.session.replace(document);
+    this.validation.restoreRecovery(parsed.validation);
+    this.savedState.set(parsed.baseline);
+    this.mintedIdentifier.set(parsed.identifier);
+    this.automaticKeys.clear();
+    for (const id of parsed.automaticKeys) this.automaticKeys.add(id);
+    this.loadError.set(null);
+    this.hostReport.set(null);
+    this.nameFocusRequest.set(null);
+    this.childPicker.set(null);
+    this.validationTarget.set(null);
+    this.showPicker.set(null);
+    this.selectedField.set(null);
+    this.collapsedElements.set(new Set());
   }
 
   /**
