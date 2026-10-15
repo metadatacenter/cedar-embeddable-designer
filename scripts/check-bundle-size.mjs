@@ -82,7 +82,11 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // add 645 raw / 209 gzip-9 bytes: 1,495,399 raw / 426,752 gzip-9, compared with
 // 1,494,754 / 426,543 on the same dependencies before the fix. No dependency was
 // added. Allow 601 bytes raw headroom; retain the compressed ceiling.
-const RAW_LIMIT = 1_496_000;
+// 2026-10-15: versioned recovery snapshots retain raw control drafts, validation
+// gates and editor baselines. Measured 1,499,517 raw / 427,846 gzip-9 bytes,
+// adding 4,118 raw / 1,094 compressed bytes to the repair-target build above.
+// No dependency was added. Allow 4.5 KB raw headroom; keep the gzip ceiling.
+const RAW_LIMIT = 1_504_000;
 const GZIP_LIMIT = 438_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
