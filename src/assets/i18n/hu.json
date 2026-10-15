@@ -282,7 +282,8 @@
         "one": "Az alapértelmezett érték legfeljebb {{count}} karaktert tartalmazhat.",
         "other": "Az alapértelmezett érték legfeljebb {{count}} karaktert tartalmazhat."
       },
-      "defaultPattern": "Az alapértelmezett értéknek illeszkednie kell a reguláris kifejezésre."
+      "defaultPattern": "Az alapértelmezett értéknek illeszkednie kell a reguláris kifejezésre.",
+      "invalidPattern": "A reguláris kifejezés hiányos vagy érvénytelen. Ellenőrizze a szögletes és kerek zárójeleket, valamint az escape-karaktereket, vagy törölje a kifejezést a mintakorlátozás eltávolításához."
     },
     "media": {
       "dimensions": "A médiaméreteknek pozitív számoknak kell lenniük."

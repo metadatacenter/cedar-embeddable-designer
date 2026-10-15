@@ -78,7 +78,11 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // replace 508 local style findings. Measured 1,487,706 raw / 424,364 gzip-9:
 // longer CSS role names cost raw bytes, without another dependency. Keep the
 // compressed ceiling unchanged and allow 7 KB raw headroom for this adoption.
-const RAW_LIMIT = 1_495_000;
+// 2026-10-15: actionable English/Hungarian pattern errors and exact repair targets
+// add 645 raw / 209 gzip-9 bytes: 1,495,399 raw / 426,752 gzip-9, compared with
+// 1,494,754 / 426,543 on the same dependencies before the fix. No dependency was
+// added. Allow 601 bytes raw headroom; retain the compressed ceiling.
+const RAW_LIMIT = 1_496_000;
 const GZIP_LIMIT = 438_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;

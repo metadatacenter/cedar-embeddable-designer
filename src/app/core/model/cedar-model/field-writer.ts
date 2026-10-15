@@ -212,7 +212,15 @@ function buildField(field: Field): TemplateField {
     ) {
       throw new LocalizedError(message('errors.text.lengths'));
     }
-    const pattern = accepts(field.type, 'textPattern') && regex ? new RegExp(regex) : null;
+    let pattern: RegExp | null = null;
+    if (accepts(field.type, 'textPattern') && regex) {
+      try {
+        pattern = new RegExp(regex);
+      } catch (cause) {
+        // Keep the rejected pattern in the rule identity, independently of its translated message.
+        throw new LocalizedError(message('errors.text.invalidPattern', { pattern: regex }), { cause });
+      }
+    }
     if (field.defaultValue.kind === 'literal') {
       const value = field.defaultValue.value;
       if (minLength !== null && value.length < minLength)

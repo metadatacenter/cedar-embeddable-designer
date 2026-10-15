@@ -40,11 +40,12 @@ export function fieldValidationIssues(
     try {
       fieldToJson(probe);
     } catch (error) {
+      const rule = failureRule(error, Object.fromEntries(group.keys.map((key) => [key, field[key]])));
       issues.push({
-        setting: group.setting,
+        setting: rule.code === 'errors.text.invalidPattern' ? 'regex' : group.setting,
         tab: group.tab,
         message: describeError(error, t),
-        rule: failureRule(error, Object.fromEntries(group.keys.map((key) => [key, field[key]]))),
+        rule,
       });
       // Validate defaults against every usable constraint, even when another
       // setting is broken. Report that setting separately rather than twice.

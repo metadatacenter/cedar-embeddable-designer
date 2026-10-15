@@ -282,7 +282,8 @@
         "one": "Default value must contain no more than {{count}} character.",
         "other": "Default value must contain no more than {{count}} characters."
       },
-      "defaultPattern": "Default value must match the regular expression."
+      "defaultPattern": "Default value must match the regular expression.",
+      "invalidPattern": "The regular expression is incomplete or invalid. Check its brackets, parentheses and escape characters, or clear it to remove the pattern constraint."
     },
     "media": {
       "dimensions": "Media dimensions must be positive numbers."

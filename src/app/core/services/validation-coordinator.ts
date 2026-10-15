@@ -106,11 +106,11 @@ export class ValidationCoordinator {
   }
 
   private readonly draftIssues = computed((): DraftIssues => {
-    const issues = { ...this.inputErrors() };
+    const issues: Record<string, DraftIssues[string]> = { ...this.inputErrors() };
     const document = this.session.document();
     for (const [key, edit] of Object.entries(this.edits())) {
       const result = this.candidate(document, edit.id, edit.changes);
-      if (result.error !== null) issues[key] = { message: result.error, tab: edit.tab };
+      if (result.error !== null) issues[key] = { message: result.error, tab: edit.tab, setting: result.setting };
     }
     return issues;
   });
@@ -332,7 +332,7 @@ export class ValidationCoordinator {
     document: ContainerDraft,
     id: number,
     changes: Partial<Field>,
-  ): { node?: ChildNode; error: string | null } {
+  ): { node?: ChildNode; error: string | null; setting?: string } {
     const parent = parentOf(document, id);
     const node = parent?.children.find((child) => child.id === id);
     if (!node || !parent) return { error: this.t('errors.elementMissing') };
@@ -375,7 +375,8 @@ export class ValidationCoordinator {
     const error = ownIssues(next).find(
       (issue) => !before.some((old) => old.setting === issue.setting && sameRule(old.rule, issue.rule)),
     );
-    return { node: next, error: error?.message ?? null };
+    // Grouped edits still own their errors; a malformed pattern identifies its exact repair control.
+    return { node: next, error: error?.message ?? null, setting: error?.setting === 'regex' ? 'regex' : undefined };
   }
 
   private reconcile(document: ContainerDraft): ContainerDraft {

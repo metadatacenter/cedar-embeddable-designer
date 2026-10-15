@@ -9,7 +9,7 @@ import { descriptorOf, buildContainer, buildTemplate, allowsOptions } from './ce
 import { Translate, describeError, english } from '../../i18n/messages';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
 
-export type DraftIssues = Readonly<Record<string, { message: string; tab: string }>>;
+export type DraftIssues = Readonly<Record<string, { message: string; tab: string; setting?: string }>>;
 
 /** An issue names a child as its card heading does, so a key or plain name never stands in for a display name. */
 function issueLabel(node: ChildNode): string {
@@ -83,7 +83,16 @@ export function inspectDocument(document: ContainerDraft, drafts: DraftIssues, t
     const pending = (id: number, label: string, nodePath: number[], name = label) => {
       for (const [key, value] of Object.entries(drafts)) {
         if (key.startsWith(`${id}:`))
-          add(id, label, nodePath, key.slice(key.indexOf(':') + 1), value.message, value.tab, 'draft', name);
+          add(
+            id,
+            label,
+            nodePath,
+            value.setting ?? key.slice(key.indexOf(':') + 1),
+            value.message,
+            value.tab,
+            'draft',
+            name,
+          );
       }
     };
     const nameError = artifactNameError(container.name, container.kind, t);

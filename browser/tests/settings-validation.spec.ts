@@ -15,6 +15,54 @@ const report = (page: import('@playwright/test').Page) =>
     (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).validate(),
   );
 
+for (const width of [1280, 375]) {
+  for (const origin of ['draft', 'imported']) {
+    test(`invalid pattern ${origin} at ${width}: summary focuses the pattern and correction preserves other settings`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 1000 });
+      const designer = await openDesigner(page, '?cee=stub');
+      await designer.getByLabel('Template name', { exact: true }).fill('Pattern study');
+      const source = await currentTemplate(page);
+      child(source, 'Title')._valueConstraints = {
+        ...(child(source, 'Title')._valueConstraints as Record<string, unknown>),
+        minLength: 2,
+        maxLength: 8,
+        regex: origin === 'imported' ? '[' : '^[A-Z]+$',
+      };
+      await designer.evaluate(
+        (element: CedarEmbeddableDesignerElement, artifact) => element.loadArtifact(artifact as never),
+        source,
+      );
+      const card = designer.locator('app-field-card').first();
+      const panel = await openSettings(card, 'Constraints');
+      const pattern = panel.locator('input[name=regex]');
+      if (origin === 'draft') await pattern.fill('[');
+      await expect.poll(async () => (await report(page)).canSave).toBe(false);
+      expect((await report(page)).issues).toMatchObject([
+        { setting: 'regex', source: origin === 'draft' ? 'draft' : 'model' },
+      ]);
+      await expect(panel.getByRole('alert')).toHaveText(
+        'The regular expression is incomplete or invalid. Check its brackets, parentheses and escape characters, or clear it to remove the pattern constraint.',
+      );
+      await openSettings(card, 'Presentation');
+      const summary = designer.locator('.validation-summary');
+      await summary.locator('summary').focus();
+      await page.keyboard.press('Enter');
+      await summary.getByRole('button').focus();
+      await page.keyboard.press('Enter');
+      await expect(pattern).toBeFocused();
+      await expect(pattern).toHaveValue('[');
+      await pattern.fill('^[a-z]+$');
+      await expect.poll(async () => (await report(page)).canSave).toBe(true);
+      await expect(summary).toHaveCount(0);
+      const corrected = structuredClone(source);
+      (child(corrected, 'Title')._valueConstraints as Record<string, unknown>).regex = '^[a-z]+$';
+      expect(await currentTemplate(page)).toEqual(corrected);
+    });
+  }
+}
+
 async function addNamedField(designer: import('@playwright/test').Locator) {
   await designer.getByRole('button', { name: 'Add field', exact: true }).first().click();
   await designer.getByRole('button', { name: 'Text', exact: true }).click();
