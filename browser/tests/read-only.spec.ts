@@ -15,6 +15,9 @@ async function inspectTabs(scope: Locator) {
   const toggle = scope.locator('.settings-toggle').first();
   if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click();
   const tabs = scope.getByRole('tab');
+  // The tabs render on the coalesced pass after the click; listing them sooner finds none and
+  // checks nothing.
+  await expect(tabs.first()).toBeVisible();
   for (const tab of await tabs.all()) {
     await tab.click();
     await expect(tab).toHaveAttribute('aria-selected', 'true');
