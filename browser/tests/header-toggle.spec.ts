@@ -150,7 +150,20 @@ for (const kind of ['field', 'element'] as const) {
       const toggle = card.getByRole('button', { name: `Expand ${kind} settings`, exact: true });
       await expect(name).toBeFocused();
       await card.evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
-      const bounds = (await toggle.boundingBox())!;
+      // The designer reveals a new card with a smooth scroll that can still be running here. A press
+      // measured mid-scroll is released somewhere else, and the expand click is lost.
+      let bounds = (await toggle.boundingBox())!;
+      await expect
+        .poll(async () => {
+          await page.evaluate(
+            () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))),
+          );
+          const settled = (await toggle.boundingBox())!;
+          const still = settled.x === bounds.x && settled.y === bounds.y;
+          bounds = settled;
+          return still;
+        })
+        .toBe(true);
       await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
       await page.mouse.down();
       // Hold across a render; locator clicks can retry after the error moves the button.
