@@ -187,9 +187,15 @@ jobs:
           test -s "$CEF_BUNDLE"
           sha256sum "$CEF_BUNDLE" cedar-embeddable-designer/dist-bundle/cedar-embeddable-designer.js
 
+      # The test job already runs the whole browser suite against the same build, and nothing but a
+      # spec's own reading of CEF_BUNDLE or PICKER_BUNDLE differs here. So this job runs only the
+      # files that read them, each in full, rather than every test a second time.
       - name: Test CED with the real CEE and CEF bundle
         working-directory: cedar-embeddable-designer
-        run: npm run test:browser:prebuilt
+        run: >
+          npm run test:browser:prebuilt --
+          cef-defaults cef-parity constraints field-summary multiple-stability property-picker
+          style-comparison surfaces ui-attribute-matrix
 
       - name: Keep failure traces
         if: failure()
