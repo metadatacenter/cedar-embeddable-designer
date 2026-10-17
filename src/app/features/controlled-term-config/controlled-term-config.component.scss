@@ -47,7 +47,8 @@ cedar-embeddable-field {
   @include patterns.dialog-surface($padding: 0);
   display: flex;
   flex-direction: column;
-  height: min(90vh, 64rem);
+  height: 90vh;
+  max-height: 64rem;
   overflow: auto;
 }
 .picker-dialog > cedar-embeddable-term-picker {
