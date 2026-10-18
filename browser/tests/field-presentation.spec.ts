@@ -191,13 +191,16 @@ test('an unnamed template, element or field shows a line to write its name on, w
   await expect.poll(() => underline(element)).toBe(error);
   expect(await weight(element)).toBe('400');
 
-  // A field name has no border, so its line is drawn inside the box: primary while the card is
-  // selected, and in the error colour once the author moves on and the name is reported missing.
+  // A field name has no border, so its line is drawn inside the box. While the name has focus the
+  // shared focus ring marks where to write and no line is drawn; once the author moves on and the
+  // name is reported missing, the line returns in the error colour.
   const field = fieldName(page);
   expect(await line(field)).toBe('none');
   const named = await height(field);
   await field.fill('');
-  await expect.poll(() => line(field)).toBe(`linear-gradient(${primary}, ${primary})`);
+  await expect(field).toBeFocused();
+  await expect(field).toHaveCSS('outline-style', 'solid');
+  expect(await line(field)).toBe('none');
   expect(await height(field)).toBe(named);
   await fieldName(page, 1).focus();
   await expect(field).toHaveAttribute('aria-invalid', 'true');
