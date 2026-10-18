@@ -229,15 +229,6 @@ function buildField(field: Field): TemplateField {
     ) {
       throw new LocalizedError(message('errors.text.lengths'));
     }
-    let pattern: RegExp | null = null;
-    if (accepts(field.type, 'textPattern') && regex) {
-      try {
-        pattern = new RegExp(regex);
-      } catch (cause) {
-        // Keep the rejected pattern in the rule identity, independently of its translated message.
-        throw new LocalizedError(message('errors.text.invalidPattern', { pattern: regex }), { cause });
-      }
-    }
     if (field.defaultValue.kind === 'literal') {
       const value = field.defaultValue.value;
       if (minLength !== null && TextPolicy.codePointLength(value) < minLength)
@@ -248,7 +239,6 @@ function buildField(field: Field): TemplateField {
         throw new LocalizedError(
           message(countKey('errors.text.defaultTooLong', maxLength), { count: String(maxLength) }),
         );
-      if (pattern && !pattern.test(value)) throw new LocalizedError(message('errors.text.defaultPattern'));
     }
     (builder as TextFieldBuilder | TextAreaBuilder).withMinLength(minLength).withMaxLength(maxLength);
     if (accepts(field.type, 'textPattern')) (builder as TextFieldBuilder).withRegex(regex);
@@ -383,7 +373,7 @@ export function buildFieldNaming(field: Field): TemplateField {
   try {
     return buildField(field);
   } catch (error) {
-    const name = field.name.trim() || message('common.anUnnamedField');
+    const name = TextPolicy.isBlank(field.name) ? message('common.anUnnamedField') : field.name;
     throw new LocalizedError(message('errors.namedField', { name, message: errorParam(error) }), { cause: error });
   }
 }

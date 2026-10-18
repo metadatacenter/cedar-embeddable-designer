@@ -1,7 +1,7 @@
 import { Field } from '../models/types';
 import { Translate, describeError } from '../../i18n/messages';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
-import { choiceDefaultConflict, defaultValueFailure, fieldToJson } from './cedar-template';
+import { accepts, RegexChecks, choiceDefaultConflict, defaultValueFailure, fieldToJson } from './cedar-template';
 import { failureRule, ValidationRule } from './validation-rule';
 
 interface SettingGroup {
@@ -83,5 +83,26 @@ export function fieldValidationIssues(
             terms: defaults.controlledTermConstraints,
           }),
     });
+  const pattern = field.textConstraints?.regex;
+  if (accepts(field.type, 'textPattern') && pattern) {
+    const value = field.defaultValue.kind === 'literal' ? field.defaultValue.value : null;
+    const verdict = RegexChecks.inspect(pattern, value);
+    if (verdict !== 'valid' && verdict !== 'match') {
+      const code =
+        verdict === 'pending'
+          ? 'regex.pending'
+          : verdict === 'invalid'
+            ? 'errors.text.invalidPattern'
+            : verdict === 'mismatch'
+              ? 'errors.text.defaultPattern'
+              : 'errors.text.patternEvaluation';
+      issues.push({
+        setting: verdict === 'mismatch' ? 'defaultValue' : 'regex',
+        tab: SETTINGS_TABS.constraints,
+        message: verdict === 'pending' ? '' : t(code as 'errors.text.invalidPattern'),
+        rule: { code, parameters: { pattern, value, verdict } },
+      });
+    }
+  }
   return issues;
 }

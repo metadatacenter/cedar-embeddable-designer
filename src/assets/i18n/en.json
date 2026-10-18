@@ -282,6 +282,7 @@
         "one": "Default value must contain no more than {{count}} character.",
         "other": "Default value must contain no more than {{count}} characters."
       },
+      "patternEvaluation": "The regular expression could not be checked within the allowed time or browser resources. Simplify it and try again.",
       "defaultPattern": "Default value must match the regular expression.",
       "invalidPattern": "The regular expression is incomplete or invalid. Check its brackets, parentheses and escape characters, or clear it to remove the pattern constraint."
     },

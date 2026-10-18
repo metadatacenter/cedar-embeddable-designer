@@ -39,4 +39,4 @@ export { readTemplate, toDesignerTemplate, readField, toContainerDraft, readCont
 export { ReservedNames } from './cedar-model/reserved-names';
 export type { AttributeValueFieldParent } from './cedar-model/reserved-names';
 
-export { NumericPolicy, JsonSourcePolicy } from './cedar-model/value-policy';
+export { NumericPolicy, JsonSourcePolicy, RegexChecks } from './cedar-model/value-policy';

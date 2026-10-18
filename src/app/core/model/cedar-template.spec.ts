@@ -792,9 +792,10 @@ it('rejects text constraint changes that invalidate a saved default', () => {
       ),
     ),
   ).toThrow(/Default value/);
+  // Pattern validation is asynchronous; serialization must retain the authored pattern.
   expect(() =>
     buildTemplate(templateOf(field({ textConstraints: { minLength: 1, maxLength: 2, regex: '[' } }))),
-  ).toThrow();
+  ).not.toThrow();
 });
 
 it('preserves authored numeric constraints and refuses a conflicting default', () => {

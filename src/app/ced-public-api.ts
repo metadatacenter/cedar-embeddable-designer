@@ -187,6 +187,8 @@ export interface CedValidationIssue {
   shown: boolean;
 }
 export interface CedValidationReport {
+  /** Save remains unavailable while bounded pattern checks are running. */
+  pendingValidation?: boolean;
   valid: boolean;
   canSave: boolean;
   issues: CedValidationIssue[];

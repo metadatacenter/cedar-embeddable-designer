@@ -1,3 +1,4 @@
+import { isBlank } from '../../core/model/cedar-model/text-policy';
 import { JsonSourcePolicy } from '../../core/model/cedar-template';
 import { NumericPolicy } from '../../core/model/cedar-template';
 import { invalidSettingsInputs } from '../../shared/settings-input';
@@ -227,7 +228,7 @@ export class FieldSettingsComponent implements OnChanges {
         .map((issue) => issue.message)
         .join(' ') || null;
     const prefix = this.i18n.t('errors.namedField', {
-      name: this.field.name.trim() || this.i18n.t('common.anUnnamedField'),
+      name: isBlank(this.field.name) ? this.i18n.t('common.anUnnamedField') : this.field.name,
       message: '',
     });
     return message?.startsWith(prefix) ? message.slice(prefix.length) : message;

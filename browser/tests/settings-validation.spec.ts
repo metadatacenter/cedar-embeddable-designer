@@ -39,9 +39,9 @@ for (const width of [1280, 375]) {
       const pattern = panel.locator('input[name=regex]');
       if (origin === 'draft') await pattern.fill('[');
       await expect.poll(async () => (await report(page)).canSave).toBe(false);
-      expect((await report(page)).issues).toMatchObject([
-        { setting: 'regex', source: origin === 'draft' ? 'draft' : 'model' },
-      ]);
+      await expect
+        .poll(async () => (await report(page)).issues)
+        .toMatchObject([{ setting: 'regex', source: origin === 'draft' ? 'draft' : 'model' }]);
       await expect(panel.getByRole('alert')).toHaveText(
         'The regular expression is incomplete or invalid. Check its brackets, parentheses and escape characters, or clear it to remove the pattern constraint.',
       );
@@ -513,3 +513,37 @@ for (const kind of ['template', 'element'] as const) {
     await expect.poll(async () => (await report(page)).canSave).toBe(true);
   });
 }
+
+test('bounded patterns keep the designer responsive and preserve defaults through timeout and correction', async ({
+  page,
+}) => {
+  const designer = await openDesigner(page, '?cee=stub');
+  const source = await currentTemplate(page);
+  source['schema:name'] = 'Pattern study';
+  const value = 'a'.repeat(100) + '!';
+  const constraints = child(source, 'Title')._valueConstraints as Record<string, unknown>;
+  constraints.defaultValue = value;
+  await designer.evaluate(
+    (element: CedarEmbeddableDesignerElement, artifact) => element.loadArtifact(artifact as never),
+    source,
+  );
+  const panel = await openSettings(designer.locator('app-field-card').first(), 'Constraints');
+  await expect(panel.getByRole('alert')).toHaveCount(0);
+  const pattern = panel.locator('input[name=regex]');
+  const pending = await pattern.evaluate((input: HTMLInputElement) => {
+    input.value = '(a+)+';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    return (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).validate();
+  });
+  expect(pending).toMatchObject({ pendingValidation: true, canSave: false, issues: [] });
+  await expect(panel.getByRole('alert')).toContainText('allowed time');
+  expect((child(await currentTemplate(page), 'Title')._valueConstraints as Record<string, unknown>).defaultValue).toBe(
+    value,
+  );
+  await pattern.fill('a+!');
+  await expect.poll(async () => (await report(page)).canSave).toBe(true);
+  await expect(panel.getByRole('alert')).toHaveCount(0);
+  expect((child(await currentTemplate(page), 'Title')._valueConstraints as Record<string, unknown>).defaultValue).toBe(
+    value,
+  );
+});

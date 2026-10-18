@@ -91,7 +91,8 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // adds 4,694 raw bytes versus the recovery baseline; keep the compressed ceiling.
 // 2026-10-18: exact numeric editing and lossless source/snapshot paths measure
 // 1,514,113 raw / 432,071 gzip-9 bytes. Retain the compressed ceiling.
-const RAW_LIMIT = 1_518_000;
+// Shared bounded regex sessions add 7,038 bytes to the previously verified bundle.
+const RAW_LIMIT = 1_526_000;
 const GZIP_LIMIT = 438_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;

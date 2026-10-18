@@ -78,8 +78,8 @@ function isCompactYaml(document: string): boolean {
  * file rather than for whoever wrote the reader.
  */
 export function readTemplate(source: string | object): Template {
-  const trimmed = typeof source === 'string' ? source.trim() : null;
-  if (trimmed === null || trimmed.startsWith('{')) {
+  const trimmed = typeof source === 'string' ? source : null;
+  if (trimmed === null || trimmed.trimStart().startsWith('{')) {
     const json = (trimmed === null ? source : JsonSourcePolicy.parse(trimmed)) as JsonNode;
     const template = CedarReaders.json()
       .getStrict()
@@ -313,8 +313,8 @@ function readingKey(field: TemplateField): string {
 }
 
 export function readField(source: string): Field {
-  const text = source.trim();
-  if (text.startsWith('{')) {
+  const text = source;
+  if (text.trimStart().startsWith('{')) {
     const sourceNode = JsonSourcePolicy.parse(text);
     const field = CedarReaders.json()
       .getStrict()
@@ -386,8 +386,8 @@ export function toContainerDraft(container: Template | TemplateElement): Contain
 }
 
 export function readContainer(source: string | object): ContainerDraft {
-  const text = typeof source === 'string' ? source.trim() : null;
-  if (text === null || text.startsWith('{')) {
+  const text = typeof source === 'string' ? source : null;
+  if (text === null || text.trimStart().startsWith('{')) {
     const json = (text === null ? source : JsonSourcePolicy.parse(text)) as JsonNode;
     const type = json['@type'];
     if (

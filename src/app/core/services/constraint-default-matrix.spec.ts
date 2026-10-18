@@ -289,9 +289,10 @@ describe('a constraint edited under an existing default', () => {
 
   it.each(cases.map((c) => [c.edit.name, c.placement, c.recovery ?? 'nothing to recover', c] as const))(
     '%s at %s, then %s',
-    (_name, _placement, _recovery, { edit, depth, recovery }) => {
+    async (_name, _placement, _recovery, { edit, depth, recovery }) => {
       const service = TestBed.inject(TemplateService);
       service.loadTemplate(templateHolding(edit.field, depth));
+      await service.validation.settled();
       const parent = deepest(service.document());
       const id = parent.children[0].id;
       const current = () => service.session.fieldBinding(parent.id)()[0];
@@ -310,6 +311,7 @@ describe('a constraint edited under an existing default', () => {
 
       if (edit.act) edit.act(service, id);
       else service.updateFieldSettings(id, edit.changes!);
+      await service.validation.settled();
 
       if (edit.outcome.kind !== 'held') {
         const value = edit.outcome.kind === 'adjusted' ? edit.outcome.to : edit.field.defaultValue;
@@ -333,6 +335,7 @@ describe('a constraint edited under an existing default', () => {
       if (recovery === 'revert the constraint') service.updateFieldSettings(id, before as Partial<Field>);
       else
         service.updateDefaultValue(id, recovery === 'clear the default' ? { kind: 'none' } : edit.outcome.correction);
+      await service.validation.settled();
       const settled = {
         settings: recovery === 'revert the constraint' ? before : touched,
         defaultValue:

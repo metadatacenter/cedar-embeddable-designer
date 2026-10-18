@@ -45,6 +45,10 @@ const DESIGNER = 'cedar-embeddable-designer';
 const sequentialIdentifiers = (page: Page) =>
   page.addInitScript(() => {
     let sequence = 0;
+    // These single-field photographs own the next two fixture identifiers.
+    (window as unknown as { __nextFieldIdentity: () => void }).__nextFieldIdentity = () => {
+      sequence = 19;
+    };
     Object.defineProperty(crypto, 'randomUUID', {
       value: () => `00000000-0000-4000-8000-${String(++sequence).padStart(12, '0')}`,
     });
@@ -107,6 +111,7 @@ async function designerShowing(
       .getByRole('button', { name: /^Add field$/ })
       .first()
       .click();
+    await page.evaluate(() => (window as unknown as { __nextFieldIdentity?: () => void }).__nextFieldIdentity?.());
     await designer.getByRole('button', { name: label, exact: true }).click();
     await designer.locator('input[aria-label="Field display name"]:focus').fill(label);
   }

@@ -317,11 +317,12 @@ describe('default/constraint transition matrix', () => {
       for (const multiple of [false, true])
         for (const entry of conflicts)
           for (const recovery of ['correct', 'clear', ...(entry.relaxed ? ['relax'] : [])]) {
-            it(`${kind}, depth=${depth}, multiple=${multiple}, ${entry.name}: import → rename → reject another default → ${recovery} → reload`, () => {
+            it(`${kind}, depth=${depth}, multiple=${multiple}, ${entry.name}: import → rename → reject another default → ${recovery} → reload`, async () => {
               const service = TestBed.inject(TemplateService);
               const source = sourceFor(entry.field, entry.rawDefault, depth, kind, multiple);
               const unchanged = structuredClone(source);
               service.loadTemplate(source);
+              await service.validation.settled();
               expect(source).toEqual(unchanged);
               const parent = deepest(service.document());
               const id = parent.children[0].id;
@@ -350,8 +351,10 @@ describe('default/constraint transition matrix', () => {
               expect(service.validationReport().canSave).toBe(false);
               if (recovery === 'relax') service.updateFieldSettings(id, entry.relaxed!);
               else service.updateDefaultValue(id, recovery === 'clear' ? { kind: 'none' } : entry.correction);
+              await service.validation.settled();
               expect(service.validationReport()).toMatchObject({ valid: true, canSave: true, issues: [] });
               service.loadTemplate(service.templateJson());
+              await service.validation.settled();
               expect(service.validationReport().canSave).toBe(true);
             });
           }
@@ -411,7 +414,7 @@ describe('deep container and field defects stay independent', () => {
         });
       }
   for (const entry of conflicts) {
-    it(`standalone ${entry.name}: preserves an invalid default before insertion into a deep element`, () => {
+    it(`standalone ${entry.name}: preserves an invalid default before insertion into a deep element`, async () => {
       const source = sourceFor(entry.field, entry.rawDefault) as { properties: Record<string, object> };
       const imported = readField(JSON.stringify(source.properties['Value']));
       expect(imported.defaultValue).toEqual(entry.invalid);
@@ -419,6 +422,7 @@ describe('deep container and field defects stay independent', () => {
       service.loadTemplate(sourceFor(field('text'), 'Valid', 6, 'element'));
       const parent = deepest(service.document());
       service.importChildren([{ type: 'field', artifact: source.properties['Value'] as never }], parent.id, 1);
+      await service.validation.settled();
       const id = deepest(service.document()).children[1].id;
       // Its sibling is also called Value, so the key it takes from its name is reported at once too.
       expect(service.validationReport().issues).toEqual([
@@ -427,6 +431,7 @@ describe('deep container and field defects stay independent', () => {
       ]);
       expect(service.updateFieldSettings(id, { deploymentName: 'Imported value' })).toBeNull();
       service.updateDefaultValue(id, entry.correction);
+      await service.validation.settled();
       expect(service.validationReport().canSave).toBe(true);
     });
   }

@@ -621,3 +621,14 @@ policy remains in force. Restored asynchronous checks must be retried at their
 controls. A host owns storage, account/deployment isolation, download/import UI and
 fresh permission/revision checks; restoring a snapshot never authorizes a write or
 proves whether an interrupted save committed.
+
+### Pattern validation and source preservation
+
+Regular expressions use the shared ECMAScript policy: a full-string match with no flags,
+evaluated in a bounded worker. Hosts must permit `worker-src blob:` or the existing validation
+report explains that evaluation is unavailable. `validationReport.pendingValidation` is present
+while checks run; `valid` and `canSave` remain false, and `validationChange` reports completion.
+A pending or rejected edit retains the author's input and accepted document. Changing or opening
+a document cancels obsolete checks. Serialization itself preserves stored patterns and defaults;
+validate before saving. JSON input is passed unchanged to the strict source parser, so Unicode
+whitespace is never silently removed from imported source or stored identity.

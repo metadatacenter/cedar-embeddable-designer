@@ -1,3 +1,6 @@
+import { RegexChecks } from './cedar-template';
+import { fieldValidationIssues } from './field-validation';
+import { english } from '../../i18n/messages';
 /**
  * Real templates, opened and saved.
  *
@@ -138,15 +141,16 @@ describe.each(
    * a default that breaks its own constraints cannot be written back — rather than a
    * file name someone noticed once.
    */
-  it('saves, unless its own default contradicts its own constraints', () => {
+  it('validates before save, refusing defaults that contradict their constraints', async () => {
     const state = toDesignerTemplate(readTemplate(template.source));
 
     if (defaultContradictsConstraints(template.source)) {
-      // And it says which field, which is the difference between a refusal an author
-      // can act on and one that only says the template is wrong somewhere.
-      const offender = state.fields.find((field) => field.textConstraints)?.name;
-      expect(() => buildTemplate(state)).toThrow(/Default value must/);
-      expect(() => buildTemplate(state)).toThrow(new RegExp(`^${offender}: `));
+      const issues = await RegexChecks.validate(() =>
+        state.fields.flatMap((field) => fieldValidationIssues(field, english)),
+      );
+      expect(issues.some((issue) => issue.setting === 'defaultValue' && /Default value must/.test(issue.message))).toBe(
+        true,
+      );
       return;
     }
     expect(() => buildTemplate(state)).not.toThrow();

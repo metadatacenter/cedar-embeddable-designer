@@ -1,3 +1,4 @@
+import { isBlank, trimInputPadding } from '../model/cedar-model/text-policy';
 import { JsonSourcePolicy } from '../model/cedar-template';
 import {
   elementDisplayDescription,
@@ -39,7 +40,7 @@ import { deploymentKeys, keyedChild } from '../model/child-key-policy';
 import { CedLanguageService } from '../../i18n/ced-language.service';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
 import { LocalizedError, message } from '../../i18n/messages';
-import { Injectable, signal, computed, inject, effect } from '@angular/core';
+import { Injectable, signal, computed, inject, effect, DestroyRef } from '@angular/core';
 import { Field, FieldDefaultValue, CustomField, ControlledTermSet, UserPreferences } from '../models/types';
 import { PreferencesService } from './preferences.service';
 import {
@@ -130,7 +131,7 @@ function choiceDefault(field: Field, options: string[], renamed?: { from: string
   if (value.kind !== 'literal' && value.kind !== 'literals') return value;
   const selected = (value.kind === 'literal' ? [value.value] : value.values)
     .map((label) => (renamed && label === renamed.from ? renamed.to : label))
-    .filter((label) => label.trim() !== '' && (options.includes(label) || !field.options.includes(label)));
+    .filter((label) => !isBlank(label) && (options.includes(label) || !field.options.includes(label)));
   if (!selected.length) return { kind: 'none' };
   return value.kind === 'literal'
     ? { kind: 'literal', value: selected[0] }
@@ -153,7 +154,7 @@ export class TemplateService {
    * clashes with a sibling's key, or is reserved, is kept and reported, so the author sees it.
    */
   private generatedKey(name: string): string | undefined {
-    return name.trim() || undefined;
+    return isBlank(name) ? undefined : trimInputPadding(name);
   }
   /** Set while a key is taken from a name, which is not the author choosing one. */
   private takingKey = false;
@@ -209,7 +210,7 @@ export class TemplateService {
   touchName(id: number): void {
     this.validation.touchName(id);
     const node = parentOf(this.session.document(), id)?.children.find((child) => child.id === id);
-    if (node?.definition.name.trim()) this.automaticKeys.delete(id);
+    if (node && !isBlank(node.definition.name)) this.automaticKeys.delete(id);
   }
   /** Definition editability, including host access and publication ownership. */
   definitionLocked(id: number): boolean {
@@ -404,6 +405,7 @@ export class TemplateService {
   }
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => this.validation.dispose());
     effect(() => {
       if (this.validation.readOnly()) {
         this.showPicker.set(null);
@@ -895,8 +897,12 @@ export class TemplateService {
     const candidate = new EditorSession(document);
     candidate.access.fieldDocument.set(this.fieldDocumentMode());
     const validation = new ValidationCoordinator(candidate, this.i18n.t);
-    validation.restoreRecovery(parsed.validation);
-    validation.report();
+    try {
+      validation.restoreRecovery(parsed.validation);
+      validation.report();
+    } finally {
+      validation.dispose();
+    }
     reserveNodeIds(maximumId);
     this.validation.reset();
     this.session.replace(document);
@@ -998,7 +1004,7 @@ export class TemplateService {
       ancestor;
       ancestor = parentOf(this.document(), ancestor.id)
     ) {
-      if (!ancestor.name.trim()) this.touchName(ancestor.id);
+      if (isBlank(ancestor.name)) this.touchName(ancestor.id);
     }
     this.loadError.set(null);
     this.session.document.update((root) =>

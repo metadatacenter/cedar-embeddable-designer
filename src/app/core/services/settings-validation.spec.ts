@@ -11,11 +11,12 @@ describe('settings validation report', () => {
     service = TestBed.inject(TemplateService);
     service.templateName.set('Test template');
   });
-  it('identifies the pattern control without changing the accepted artifact or accepting another invalid pattern', () => {
+  it('identifies the pattern control without changing the accepted artifact or accepting another invalid pattern', async () => {
     const id = service.fields()[0].id;
     const saved = service.templateJson();
     for (const regex of ['[', '(', '\\']) {
       service.updateFieldSettings(id, { textConstraints: { minLength: null, maxLength: null, regex } });
+      await service.validation.settled();
       expect(service.validationReport()).toMatchObject({
         canSave: false,
         issues: [{ setting: 'regex', source: 'draft' }],
@@ -26,19 +27,21 @@ describe('settings validation report', () => {
     expect(service.validationReport()).toMatchObject({ canSave: true, issues: [] });
   });
 
-  it('keeps an imported invalid pattern distinct from a newly rejected pattern', () => {
+  it('keeps an imported invalid pattern distinct from a newly rejected pattern', async () => {
     const id = service.fields()[0].id;
     service.fields.update((fields) =>
       fields.map((field) =>
         field.id === id ? { ...field, textConstraints: { minLength: null, maxLength: null, regex: '[' } } : field,
       ),
     );
+    await service.validation.settled();
     expect(service.validationReport()).toMatchObject({
       canSave: false,
       issues: [{ setting: 'regex', source: 'model' }],
     });
     service.updateFieldSettings(id, { textConstraints: { minLength: null, maxLength: null, regex: '(' } });
     expect(service.fields()[0].textConstraints?.regex).toBe('[');
+    await service.validation.settled();
     expect(service.validationReport()).toMatchObject({
       canSave: false,
       issues: [{ setting: 'regex', source: 'draft' }],

@@ -580,12 +580,15 @@ describe('default editing', () => {
     expect(() => service.templateJson()).not.toThrow();
   });
 
-  it('validates text defaults and prevents incompatible constraint changes', () => {
+  it('validates text defaults and prevents incompatible constraint changes', async () => {
     expect(
       service.updateFieldSettings(1, { textConstraints: { minLength: 2, maxLength: 4, regex: '^[A-Z]+$' } }),
     ).toBeNull();
+    await service.validation.settled();
     service.updateDefaultValue(1, { kind: 'literal', value: 'ABC' });
+    await service.validation.settled();
     service.updateDefaultValue(1, { kind: 'literal', value: 'abc' });
+    await service.validation.settled();
     expect(service.fields()[0].defaultValue).toEqual({ kind: 'literal', value: 'ABC' });
     expect(
       service.updateFieldSettings(1, { textConstraints: { minLength: 2, maxLength: 2, regex: null } }),

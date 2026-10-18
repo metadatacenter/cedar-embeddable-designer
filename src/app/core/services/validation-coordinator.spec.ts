@@ -244,3 +244,70 @@ describe('central editing validation', () => {
     expect(child.kind === 'field' && fieldView(child).textConstraints?.maxLength).toBe(1);
   });
 });
+
+describe('bounded pattern validation', () => {
+  let service: TemplateService;
+  beforeEach(() => {
+    service = TestBed.inject(TemplateService);
+    service.templateName.set('Patterns');
+  });
+  const constraints = (regex: string | null) => ({ textConstraints: { minLength: null, maxLength: null, regex } });
+
+  it('holds pending edits without an error and lets only the newest result commit', async () => {
+    const id = service.fields()[0].id;
+    service.updateFieldSettings(id, constraints('['));
+    expect(service.validationReport()).toMatchObject({ canSave: false, pendingValidation: true, issues: [] });
+    expect(service.fields()[0].textConstraints?.regex).toBeUndefined();
+    service.updateFieldSettings(id, constraints('ABC'));
+    await service.validation.settled();
+    expect(service.fields()[0].textConstraints?.regex).toBe('ABC');
+    expect(service.validationReport()).toMatchObject({ canSave: true, issues: [] });
+    service.updateDefaultValue(id, { kind: 'literal', value: 'XABCX' });
+    expect(service.validationReport().pendingValidation).toBe(true);
+    await service.validation.settled();
+    expect(service.validationReport().canSave).toBe(false);
+    expect(service.editingField(service.fields()[0]).defaultValue).toEqual({ kind: 'literal', value: 'XABCX' });
+    expect(service.fields()[0].defaultValue).toEqual({ kind: 'none' });
+    service.updateDefaultValue(id, { kind: 'literal', value: 'ABC' });
+    await service.validation.settled();
+    expect(service.validationReport().canSave).toBe(true);
+  });
+
+  it('times out pathological input, retains it, and accepts a corrected pattern', async () => {
+    const id = service.fields()[0].id;
+    const value = 'a'.repeat(100) + '!';
+    service.updateDefaultValue(id, { kind: 'literal', value });
+    service.updateFieldSettings(id, constraints('(a+)+'));
+    await service.validation.settled();
+    expect(service.validationReport()).toMatchObject({ canSave: false, issues: [{ setting: 'regex' }] });
+    expect(service.validationReport().issues[0].message).toMatch(/allowed time/);
+    expect(service.fields()[0].defaultValue).toEqual({ kind: 'literal', value });
+    service.updateFieldSettings(id, constraints('a+!'));
+    await service.validation.settled();
+    expect(service.validationReport().canSave).toBe(true);
+    expect(service.fields()[0].defaultValue).toEqual({ kind: 'literal', value });
+  });
+
+  it('cancels previous-document checks on replacement', async () => {
+    const id = service.fields()[0].id;
+    service.updateFieldSettings(id, constraints('['));
+    service.validation.reset();
+    service.updateFieldSettings(id, constraints(null));
+    await service.validation.settled();
+    expect(service.validationReport()).toMatchObject({ canSave: true, issues: [] });
+  });
+});
+
+describe('shared Unicode authoring rules', () => {
+  it('keeps no-break spaces as name data and rejects Java blank separators', () => {
+    const service = TestBed.inject(TemplateService);
+    service.templateName.set('\u00a0');
+    expect(service.validationReport().canSave).toBe(true);
+    service.templateName.set('\u001c');
+    expect(service.validationReport().issues).toContainEqual(expect.objectContaining({ setting: 'name' }));
+    service.templateName.set('Study');
+    const id = service.fields()[0].id;
+    service.updateFieldSettings(id, { deploymentName: ' \u00a0 ' });
+    expect(service.fields()[0].deploymentName).toBe('\u00a0');
+  });
+});

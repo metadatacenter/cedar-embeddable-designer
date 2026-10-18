@@ -1,3 +1,4 @@
+import { validAbsoluteIri } from '../../core/model/cedar-model/iri-syntax';
 import { ManualIriComponent } from '../manual-iri/manual-iri.component';
 import {
   ChangeDetectionStrategy,
@@ -205,7 +206,7 @@ export class PropertyPickerComponent {
     if (
       selected?.sourceType !== 'ontology-property' ||
       typeof selected.sourceId !== 'string' ||
-      !/^[a-z][a-z0-9+.-]*:\S+$/i.test(selected.sourceId)
+      !validAbsoluteIri(selected.sourceId)
     ) {
       this.error.set(this.i18n.t('propertyPicker.selectOne'));
       return;

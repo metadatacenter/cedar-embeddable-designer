@@ -282,6 +282,7 @@
         "one": "Az alapértelmezett érték legfeljebb {{count}} karaktert tartalmazhat.",
         "other": "Az alapértelmezett érték legfeljebb {{count}} karaktert tartalmazhat."
       },
+      "patternEvaluation": "A reguláris kifejezés ellenőrzése nem fejeződött be az engedélyezett időn vagy böngésző-erőforrásokon belül. Egyszerűsítse, és próbálja újra.",
       "defaultPattern": "Az alapértelmezett értéknek illeszkednie kell a reguláris kifejezésre.",
       "invalidPattern": "A reguláris kifejezés hiányos vagy érvénytelen. Ellenőrizze a szögletes és kerek zárójeleket, valamint az escape-karaktereket, vagy törölje a kifejezést a mintakorlátozás eltávolításához."
     },

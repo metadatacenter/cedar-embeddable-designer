@@ -23,7 +23,7 @@ export function artifactNameError(
   kind: 'field' | 'element' | 'template',
   t: Translate = english,
 ): string | null {
-  return name.trim() ? null : t(`validation.nameRequired.${kind}`);
+  return isBlank(name) ? t(`validation.nameRequired.${kind}`) : null;
 }
 
 /**
@@ -44,6 +44,7 @@ export function validateDocument(
 export function inspectDocument(document: ContainerDraft, drafts: DraftIssues, t: Translate = english) {
   const issues: (CedValidationIssue & { rule: ValidationRule })[] = [];
   let modelInvalid = false;
+  let pendingValidation = false;
   const visit = (container: ContainerDraft, ancestors: number[]) => {
     const path = [...ancestors, container.id];
     const add = (
@@ -58,6 +59,10 @@ export function inspectDocument(document: ContainerDraft, drafts: DraftIssues, t
       name = label,
       rule: ValidationRule = { code: `${setting}.invalid` },
     ) => {
+      if (rule.code === 'regex.pending') {
+        pendingValidation = true;
+        return;
+      }
       if (source === 'model') modelInvalid = true;
       // A control has one current verdict. Its rejected draft supersedes the
       // accepted model's error for that same setting, not errors in other settings.
@@ -66,7 +71,7 @@ export function inspectDocument(document: ContainerDraft, drafts: DraftIssues, t
         issues.some((issue) => issue.nodeId === id && issue.setting === setting && issue.source === 'draft')
       )
         return;
-      const prefix = t('errors.namedField', { name: name.trim() || t('common.anUnnamedField'), message: '' });
+      const prefix = t('errors.namedField', { name: isBlank(name) ? t('common.anUnnamedField') : name, message: '' });
       issues.push({
         nodeId: id,
         label,
@@ -288,5 +293,10 @@ export function inspectDocument(document: ContainerDraft, drafts: DraftIssues, t
       });
     }
   }
-  return { valid: issues.length === 0, canSave: issues.length === 0, issues };
+  return {
+    valid: !pendingValidation && issues.length === 0,
+    canSave: !pendingValidation && issues.length === 0,
+    issues,
+    ...(pendingValidation ? { pendingValidation: true } : {}),
+  };
 }

@@ -224,9 +224,11 @@ export class FieldDefaultValueComponent {
   }
 
   private readonly acceptValue = (event: Event): void => {
-    const detail = (event as CustomEvent<{ value: FieldDefaultValue; valid: boolean }>).detail;
+    const detail = (event as CustomEvent<{ value: FieldDefaultValue; valid: boolean; pendingValidation?: boolean }>)
+      .detail;
     if (this.allowsControlledTerms() || this.locked()) return;
-    if (detail?.valid === true) this.save(defaultFromCef(this.field(), detail.value));
+    if (detail?.valid === true || detail?.pendingValidation === true)
+      this.save(defaultFromCef(this.field(), detail.value));
     else this.setError(this.i18n.t('defaultValue.invalid'), true, detail?.value);
   };
 

@@ -1,3 +1,4 @@
+import { validAbsoluteIri } from '../../core/model/cedar-model/iri-syntax';
 import { ManualIriComponent } from '../manual-iri/manual-iri.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import {
@@ -248,7 +249,7 @@ export class TypesPickerComponent {
           c.sourceType !== 'ontology-term' ||
           (c.termType && c.termType !== 'OntologyClass') ||
           typeof c.sourceId !== 'string' ||
-          !/^[a-z][a-z0-9+.-]*:\S+$/i.test(c.sourceId),
+          !validAbsoluteIri(c.sourceId),
       )
     ) {
       this.error.set(this.i18n.t('typesPicker.classesOnly'));
