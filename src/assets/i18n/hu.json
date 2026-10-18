@@ -118,21 +118,21 @@
       "selectHint": "Válasszon mezőket az alábbi találatok közül.",
       "searchLabel": "Mezők keresése",
       "none": "Nem található mező.",
-      "prompt": "Indítson keresést az újrafelhasználható mezők megtalálásához."
+      "prompt": "Adjon meg egy nevet az újrafelhasználható mezők megtalálásához."
     },
     "elements": {
       "title": "Elemek importálása",
       "selectHint": "Válasszon elemeket az alábbi találatok közül.",
       "searchLabel": "Elemek keresése",
       "none": "Nem található elem.",
-      "prompt": "Indítson keresést az újrafelhasználható elemek megtalálásához."
+      "prompt": "Adjon meg egy nevet az újrafelhasználható elemek megtalálásához."
     },
     "children": {
       "title": "Mezők és elemek importálása",
       "selectHint": "Válasszon mezőket és elemeket az alábbi találatok közül.",
-      "searchLabel": "Mezők vagy elemek keresése",
+      "searchLabel": "Mezők és elemek keresése",
       "none": "Nem található mező vagy elem.",
-      "prompt": "Indítson keresést az újrafelhasználható mezők és elemek megtalálásához."
+      "prompt": "Adjon meg egy nevet az újrafelhasználható mezők és elemek megtalálásához."
     },
     "selectedHeading": "Kiválasztott elemek ({{count}})",
     "adding": "Hozzáadás…",

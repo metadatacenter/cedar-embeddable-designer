@@ -68,7 +68,7 @@ for (const width of [1280, 375])
     await open();
 
     const dialog = designer.getByRole('dialog', { name: 'Import Fields and Elements' });
-    await expect(dialog.getByRole('searchbox', { name: 'Search for fields or elements' })).toBeVisible();
+    await expect(dialog.getByRole('searchbox', { name: 'Search fields and elements' })).toBeVisible();
     // Cancel and Done close the dialog from its bottom right, as the designer's other dialogs do.
     await page.evaluate(() => document.fonts.ready);
     // A native dialog recentres as its content settles. Read every box in one layout

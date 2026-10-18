@@ -114,25 +114,25 @@
   },
   "childPicker": {
     "fields": {
-      "title": "Import fields",
+      "title": "Import Fields",
       "selectHint": "Select fields from the results below.",
       "searchLabel": "Search fields",
       "none": "No fields found.",
-      "prompt": "Enter a search to find reusable fields."
+      "prompt": "Enter a name to find reusable fields."
     },
     "elements": {
-      "title": "Import elements",
+      "title": "Import Elements",
       "selectHint": "Select elements from the results below.",
       "searchLabel": "Search elements",
       "none": "No elements found.",
-      "prompt": "Enter a search to find reusable elements."
+      "prompt": "Enter a name to find reusable elements."
     },
     "children": {
       "title": "Import Fields and Elements",
       "selectHint": "Select fields and elements from the results below.",
-      "searchLabel": "Search for fields or elements",
-      "none": "No fields and elements found.",
-      "prompt": "Enter a search to find reusable fields and elements."
+      "searchLabel": "Search fields and elements",
+      "none": "No fields or elements found.",
+      "prompt": "Enter a name to find reusable fields and elements."
     },
     "selectedHeading": "Selected items ({{count}})",
     "adding": "Adding…",
