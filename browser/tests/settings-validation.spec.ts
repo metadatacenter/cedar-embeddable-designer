@@ -94,13 +94,17 @@ test('invalid edits reach wrappers, cards and overview; summary opens the affect
   // The template accepts a default once the asynchronous pattern check has passed it, not on the keystroke.
   await expect
     .poll(
-      async () => (child(await currentTemplate(page), 'Title')._valueConstraints as Record<string, unknown>).defaultValue,
+      async () =>
+        (child(await currentTemplate(page), 'Title')._valueConstraints as Record<string, unknown>).defaultValue,
     )
     .toBe('OK');
   const saved = await currentTemplate(page);
   await input.fill('lower');
-  await expect.poll(async () => (await report(page)).canSave).toBe(false);
-  expect((await report(page)).issues[0]).toMatchObject({ setting: 'defaultValue', source: 'draft', severity: 'error' });
+  // A pending check already blocks saving, so wait for the verdict itself rather than for canSave.
+  await expect
+    .poll(async () => (await report(page)).issues[0])
+    .toMatchObject({ setting: 'defaultValue', source: 'draft', severity: 'error' });
+  expect((await report(page)).canSave).toBe(false);
   await expect(card.locator('.validation-badge')).toContainText('1 error');
   const invalidCard = designer.locator('.field-drag-container.invalid');
   await expect(invalidCard).toHaveCount(1);
