@@ -91,6 +91,12 @@ test('invalid edits reach wrappers, cards and overview; summary opens the affect
   const panel = await openSettings(card, 'Constraints');
   const input = panel.getByRole('textbox', { name: 'Default value', exact: true });
   await input.fill('OK');
+  // The template accepts a default once the asynchronous pattern check has passed it, not on the keystroke.
+  await expect
+    .poll(
+      async () => (child(await currentTemplate(page), 'Title')._valueConstraints as Record<string, unknown>).defaultValue,
+    )
+    .toBe('OK');
   const saved = await currentTemplate(page);
   await input.fill('lower');
   await expect.poll(async () => (await report(page)).canSave).toBe(false);
