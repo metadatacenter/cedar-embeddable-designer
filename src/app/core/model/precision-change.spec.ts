@@ -35,3 +35,8 @@ describe('reducing precision', () => {
     expect(reducePrecision(field, { temporal }).defaultValue).toBeUndefined();
   });
 });
+
+it('truncates exact large decimals only when precision is explicitly reduced', () => {
+  expect(truncateDecimal('9007199254740993.1234', 2)).toBe('9007199254740993.12');
+  expect(truncateDecimal('-0.10000000000000001', 16)).toBe(-0.1);
+});

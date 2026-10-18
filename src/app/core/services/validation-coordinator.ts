@@ -347,7 +347,10 @@ export class ValidationCoordinator {
     this.replaceChecks(Object.fromEntries(Object.entries(this.checks()).filter(([, check]) => check.id !== id)));
     const key = keyOf(id, setting);
     this.setInputError(id, setting, null, tab);
-    this.edits.update((previous) => ({ ...previous, [key]: { id, changes: structuredClone(changes), setting, tab } }));
+    this.edits.update((previous) => ({
+      ...previous,
+      [key]: { id, changes: structuredClone(changes), setting, tab },
+    }));
     this.session.document.update((document) => document);
     return this.error(id, setting);
   }

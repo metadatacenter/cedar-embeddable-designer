@@ -1,3 +1,4 @@
+import { JsonSourcePolicy } from '../../core/model/cedar-template';
 import {
   Component,
   CUSTOM_ELEMENTS_SCHEMA,
@@ -141,7 +142,7 @@ export class ControlledTermConfigComponent implements OnChanges {
 
   async applyPicked(event: Event): Promise<void> {
     if (this.checking()) return;
-    const set = this.orderedConstraints(structuredClone((event as CustomEvent<ControlledTermSet>).detail));
+    const set = this.orderedConstraints(JsonSourcePolicy.clone((event as CustomEvent<ControlledTermSet>).detail));
     this.invalidDefault.set(false);
     const attempt = this.service.terminologyEdits.changeConstraints(this.field.id, set);
     this.pending = attempt;

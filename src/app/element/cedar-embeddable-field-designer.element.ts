@@ -1,3 +1,4 @@
+import { JsonSourcePolicy } from '../core/model/cedar-template';
 import type { CedHostFinding, CedLoadOptions, CedRecoveryDraft } from '../ced-public-api';
 import { ValidationSummaryComponent } from '../shared/validation-summary.component';
 import { DesignerConfigService } from '../core/services/designer-config.service';
@@ -136,7 +137,7 @@ export class CedarEmbeddableFieldDesignerElementComponent {
   }
   @Input() readonly loadArtifact = (source: object | string, options?: CedLoadOptions): void => {
     // Parse before replacing anything: a failed load must preserve the author's work.
-    const field = readField(typeof source === 'string' ? source : JSON.stringify(source));
+    const field = readField(typeof source === 'string' ? source : JsonSourcePolicy.stringify(source));
     const current = this.field();
     this.replace(options?.preserveView && current?.type === field.type ? { ...field, id: current.id } : field);
   };
@@ -163,7 +164,7 @@ export class CedarEmbeddableFieldDesignerElementComponent {
       if (field.options[0] === '') this.service.validation.startOption(field.id);
       this.service.nameFocusRequest.set(field.id);
     }
-    this.baseline.set(JSON.stringify(this.field() ?? null));
+    this.baseline.set(JsonSourcePolicy.stringify(this.field() ?? null));
   };
   @Input() get currentArtifact(): object | null {
     const field = this.field();
@@ -171,16 +172,19 @@ export class CedarEmbeddableFieldDesignerElementComponent {
   }
   @Input() get isDirty(): boolean {
     return (
-      JSON.stringify(this.field() ?? null) !== this.baseline() ||
+      JsonSourcePolicy.stringify(this.field() ?? null) !== this.baseline() ||
       this.validationReport.issues.some((issue) => issue.source === 'draft')
     );
   }
   @Input() readonly captureDraft = (): CedRecoveryDraft => {
     const draft = this.service.captureDraft();
-    return { ...draft, state: JSON.stringify({ ...JSON.parse(draft.state), fieldBaseline: this.baseline() }) };
+    return {
+      ...draft,
+      state: JsonSourcePolicy.stringify({ ...JsonSourcePolicy.parse(draft.state), fieldBaseline: this.baseline() }),
+    };
   };
   @Input() readonly restoreDraft = (draft: CedRecoveryDraft): void => {
-    const { fieldBaseline } = JSON.parse(draft.state);
+    const { fieldBaseline } = JsonSourcePolicy.parse(draft.state);
     if (typeof fieldBaseline !== 'string') throw new Error();
     this.service.restoreDraft(draft);
     this.baseline.set(fieldBaseline);
@@ -192,7 +196,7 @@ export class CedarEmbeddableFieldDesignerElementComponent {
   @Input() readonly revealValidationFinding = (location: string): boolean =>
     this.service.revealValidationFinding(location);
   @Input() get validationReport(): CedValidationReport {
-    const report = structuredClone(this.service.validationReport());
+    const report = JsonSourcePolicy.clone(this.service.validationReport());
     return { ...report, canSave: !!this.field() && !this.readOnly && report.canSave };
   }
   @Input() get canSave(): boolean {
@@ -233,7 +237,7 @@ export class CedarEmbeddableFieldDesignerElementComponent {
   }
   private replace(field: Field): void {
     this.reset();
-    this.service.fields.set([structuredClone(field)]);
-    this.baseline.set(JSON.stringify(this.field()));
+    this.service.fields.set([JsonSourcePolicy.clone(field)]);
+    this.baseline.set(JsonSourcePolicy.stringify(this.field()));
   }
 }

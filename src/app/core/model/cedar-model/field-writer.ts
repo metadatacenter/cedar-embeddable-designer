@@ -13,6 +13,8 @@ import {
 } from '../../../i18n/messages';
 import type { FieldBuilder } from './types';
 import {
+  NumericPolicy,
+  TextPolicy,
   AnnotationAtId,
   AnnotationAtValue,
   Annotations,
@@ -46,12 +48,11 @@ import { applyArtifactMetadata, artifactMetadataOf, derivedDescription, derivedT
 import { buildControlledTermSet } from './terminology';
 import { annotationError } from '../annotations';
 
-const INTEGER_RANGES: Record<string, readonly [number, number]> = {
-  'xsd:byte': [-128, 127],
-  'xsd:short': [-32768, 32767],
-  'xsd:int': [-2147483648, 2147483647],
-  // The model stores JavaScript numbers, so the full 64-bit range is not lossless.
-  'xsd:long': [Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER],
+const INTEGER_RANGES: Record<string, readonly [string, string]> = {
+  'xsd:byte': ['-128', '127'],
+  'xsd:short': ['-32768', '32767'],
+  'xsd:int': ['-2147483648', '2147483647'],
+  'xsd:long': ['-9223372036854775808', '9223372036854775807'],
 };
 
 function validateNumericSettings(field: Field): void {
@@ -60,7 +61,7 @@ function validateNumericSettings(field: Field): void {
     throw new LocalizedError(message('errors.numeric.datatype'));
   const typeLabel = type.replace('xsd:', '');
   const range = INTEGER_RANGES[type];
-  const values: [Message, number | null][] = [
+  const values: [Message, number | string | null][] = [
     [message('errors.numeric.minimumValue'), min],
     [message('errors.numeric.maximumValue'), max],
   ];
@@ -68,22 +69,35 @@ function validateNumericSettings(field: Field): void {
     values.push([message('errors.numeric.defaultValue'), field.defaultValue.value]);
   for (const [label, value] of values) {
     if (value === null) continue;
-    if (!Number.isFinite(value)) throw new LocalizedError(message('errors.numeric.infinite', { label }));
+    try {
+      NumericPolicy.value(value);
+    } catch {
+      throw new LocalizedError(message('errors.numeric.infinite', { label }));
+    }
     if (range) {
-      if (!Number.isInteger(value))
+      if (typeof value === 'number' && Number.isInteger(value) && !Number.isSafeInteger(value))
+        throw new LocalizedError(
+          message('errors.numeric.range', {
+            min: String(Number.MIN_SAFE_INTEGER),
+            max: String(Number.MAX_SAFE_INTEGER),
+          }),
+        );
+      if (!NumericPolicy.isInteger(value))
         throw new LocalizedError(message('errors.numeric.integerOnly', { label, type: typeLabel }));
-      if (value < range[0] || value > range[1]) {
+      if (NumericPolicy.compare(value, range[0]) < 0 || NumericPolicy.compare(value, range[1]) > 0) {
         throw new LocalizedError(message('errors.numeric.range', { min: String(range[0]), max: String(range[1]) }));
       }
     }
     if (type === 'xsd:float') {
-      const magnitude = Math.abs(value);
-      if (magnitude > 3.4028234663852886e38) throw new LocalizedError(message('errors.numeric.floatRange'));
-      if (magnitude !== 0 && magnitude < 1.401298464324817e-45)
+      const magnitude = String(value).replace(/^-/, '');
+      if (NumericPolicy.compare(magnitude, '3.4028234663852886e38') > 0)
+        throw new LocalizedError(message('errors.numeric.floatRange'));
+      if (NumericPolicy.compare(magnitude, 0) !== 0 && NumericPolicy.compare(magnitude, '1.401298464324817e-45') < 0)
         throw new LocalizedError(message('errors.numeric.floatTooSmall'));
     }
   }
-  if (min !== null && max !== null && min > max) throw new LocalizedError(message('errors.numeric.minAboveMax'));
+  if (min !== null && max !== null && NumericPolicy.compare(min, max) > 0)
+    throw new LocalizedError(message('errors.numeric.minAboveMax'));
   if (decimalPlaces !== null && (!Number.isSafeInteger(decimalPlaces) || decimalPlaces < 0))
     throw new LocalizedError(message('errors.numeric.decimalPlacesNegative'));
   if (range && decimalPlaces !== null && decimalPlaces !== 0)
@@ -92,8 +106,7 @@ function validateNumericSettings(field: Field): void {
     for (const [label, value] of values) {
       if (value === null) continue;
       // Count decimal digits without multiplication or rounding, including exponent notation.
-      const [coefficient, exponent = '0'] = String(value).toLowerCase().split('e');
-      const places = Math.max(0, (coefficient.split('.')[1]?.length ?? 0) - Number(exponent));
+      const places = NumericPolicy.fractionalDigits(value);
       if (places > decimalPlaces)
         throw new LocalizedError(
           message(countKey('errors.numeric.tooManyPlaces', decimalPlaces), {
@@ -105,7 +118,10 @@ function validateNumericSettings(field: Field): void {
   }
   if (field.defaultValue?.kind === 'number') {
     const value = field.defaultValue.value;
-    if ((min !== null && value < min) || (max !== null && value > max))
+    if (
+      (min !== null && NumericPolicy.compare(value, min) < 0) ||
+      (max !== null && NumericPolicy.compare(value, max) > 0)
+    )
       throw new LocalizedError(message('errors.numeric.defaultOutsideRange'));
   }
 }
@@ -224,11 +240,11 @@ function buildField(field: Field): TemplateField {
     }
     if (field.defaultValue.kind === 'literal') {
       const value = field.defaultValue.value;
-      if (minLength !== null && value.length < minLength)
+      if (minLength !== null && TextPolicy.codePointLength(value) < minLength)
         throw new LocalizedError(
           message(countKey('errors.text.defaultTooShort', minLength), { count: String(minLength) }),
         );
-      if (maxLength !== null && value.length > maxLength)
+      if (maxLength !== null && TextPolicy.codePointLength(value) > maxLength)
         throw new LocalizedError(
           message(countKey('errors.text.defaultTooLong', maxLength), { count: String(maxLength) }),
         );

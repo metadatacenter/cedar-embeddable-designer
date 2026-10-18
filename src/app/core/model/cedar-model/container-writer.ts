@@ -1,3 +1,4 @@
+import { ExactDecimal, NumericPolicy } from 'cedar-model-typescript-library';
 import type { DesignerTemplate } from './types';
 import {
   AbstractDynamicChildDeploymentInfoBuilder,
@@ -195,6 +196,7 @@ export function templateToYaml(template: Template | TemplateElement): string {
         ? CedarReaders.yaml().getStrict().getTemplateReader().readFromString(yaml).template
         : CedarReaders.yaml().getStrict().getTemplateElementReader().readFromString(yaml).element;
     const canonical = (value: unknown): string => {
+      if (typeof value === 'number' || ExactDecimal.isExact(value)) return NumericPolicy.canonical(value);
       if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
       if (value !== null && typeof value === 'object')
         return (

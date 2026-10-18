@@ -1,15 +1,22 @@
+import { NumericPolicy } from './cedar-template';
 import { Field } from '../models/types';
 import { temporalDefaultError } from './field-default';
 
 /** Truncate decimal digits toward zero without floating-point multiplication or rounding. */
-export function truncateDecimal(value: number, places: number): number {
-  if (!Number.isFinite(value)) return value;
-  const [coefficient, exponent = '0'] = String(Math.abs(value)).split('e');
+export function truncateDecimal(value: number | string, places: number): number | string {
+  try {
+    NumericPolicy.value(value);
+  } catch {
+    return value;
+  }
+  const negative = NumericPolicy.compare(value, 0) < 0;
+  const [coefficient, exponent = '0'] = String(value).replace(/^[+-]/, '').toLowerCase().split('e');
   const digits = coefficient.replace('.', '');
   const keep = coefficient.split('.')[0].length + Number(exponent) + places;
   if (keep >= digits.length) return value;
   if (keep <= 0) return 0;
-  return Number(`${value < 0 ? '-' : ''}${digits.slice(0, keep)}e-${places}`) || 0;
+  const exact = NumericPolicy.value(`${negative ? '-' : ''}${digits.slice(0, keep)}e-${places}`);
+  return typeof exact === 'number' ? (exact === 0 ? 0 : exact) : String(exact);
 }
 
 /** Only an explicit reduction in precision discards data; loading and ordinary edits stay strict. */

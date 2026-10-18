@@ -89,7 +89,9 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // 2026-10-18: shared Unicode, identifier and grapheme policies measure 1,504,211
 // raw / 429,004 gzip-9 bytes after removing a duplicate policy bundle. The model
 // adds 4,694 raw bytes versus the recovery baseline; keep the compressed ceiling.
-const RAW_LIMIT = 1_508_000;
+// 2026-10-18: exact numeric editing and lossless source/snapshot paths measure
+// 1,514,113 raw / 432,071 gzip-9 bytes. Retain the compressed ceiling.
+const RAW_LIMIT = 1_518_000;
 const GZIP_LIMIT = 438_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;

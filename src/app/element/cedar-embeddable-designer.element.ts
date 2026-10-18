@@ -1,3 +1,4 @@
+import { JsonSourcePolicy } from '../core/model/cedar-template';
 import type { CedHostFinding, CedLoadOptions, CedRecoveryDraft } from '../ced-public-api';
 import { DesignerConfigService } from '../core/services/designer-config.service';
 import {
@@ -160,12 +161,12 @@ export class CedarEmbeddableDesignerElementComponent {
   @Input() readonly revealValidationFinding = (location: string): boolean =>
     this.service.revealValidationFinding(location);
   @Input() get validationReport(): CedValidationReport {
-    return structuredClone(this.service.validationReport());
+    return JsonSourcePolicy.clone(this.service.validationReport());
   }
   @Input() get canSave(): boolean {
     return this.validationReport.canSave;
   }
-  @Input() readonly validate = (): CedValidationReport => structuredClone(this.service.validationReport());
+  @Input() readonly validate = (): CedValidationReport => JsonSourcePolicy.clone(this.service.validationReport());
   @Output() validationChange = new EventEmitter<CedValidationReport>();
   @Output() artifactChange = new EventEmitter<object>();
   @Output() templateChange = new EventEmitter<object>();
@@ -186,9 +187,12 @@ export class CedarEmbeddableDesignerElementComponent {
       injector: inject(EnvironmentInjector),
     });
     inject(DestroyRef).onDestroy(() => dirty.destroy());
-    const validation = effect(() => this.validationChange.emit(structuredClone(this.service.validationReport())), {
-      injector: inject(EnvironmentInjector),
-    });
+    const validation = effect(
+      () => this.validationChange.emit(JsonSourcePolicy.clone(this.service.validationReport())),
+      {
+        injector: inject(EnvironmentInjector),
+      },
+    );
     inject(DestroyRef).onDestroy(() => validation.destroy());
     const changes = effect(
       () => {
@@ -201,7 +205,7 @@ export class CedarEmbeddableDesignerElementComponent {
           return;
         }
         // Each public channel owns its snapshot, including synchronous subscribers.
-        this.templateChange.emit(structuredClone(artifact));
+        this.templateChange.emit(JsonSourcePolicy.clone(artifact));
         this.artifactChange.emit(artifact);
       },
       {
@@ -212,6 +216,6 @@ export class CedarEmbeddableDesignerElementComponent {
   }
 
   private cedarTemplate(): object {
-    return structuredClone(this.service.templateJson());
+    return JsonSourcePolicy.clone(this.service.templateJson());
   }
 }

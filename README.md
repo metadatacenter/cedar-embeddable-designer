@@ -53,7 +53,12 @@ names are refused; page breaks are offered only in templates.
 The public `currentArtifact` and change events always contain the complete root
 document, including while a nested element is selected. CEE preview wraps a root
 element in a temporary template; host-facing documents retain their element type.
-The public artifact input accepts JSON and full YAML.
+The public artifact input accepts JSON and full YAML. Numeric constraints and defaults
+are compared without binary floating-point rounding, including the full signed 64-bit
+long range. Artifact getters and events may contain `CedExactNumber` atoms where a
+JavaScript number would lose precision; `String(value)` reads every digit. The shared
+model library's `JsonSourcePolicy.stringify` serializes those atoms as numeric tokens.
+Getters, change events, recovery snapshots and host reassignment preserve them.
 
 ## Language
 

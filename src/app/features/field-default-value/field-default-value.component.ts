@@ -1,3 +1,4 @@
+import { NumericPolicy, JsonSourcePolicy } from '../../core/model/cedar-template';
 import { DialogHeaderComponent } from '../../shared/components/dialog-header/dialog-header.component';
 import {
   ChangeDetectionStrategy,
@@ -208,7 +209,7 @@ export class FieldDefaultValueComponent {
         this.artifactKey = null;
         return;
       }
-      const key = JSON.stringify(artifact);
+      const key = JsonSourcePolicy.stringify(artifact);
       const rebuilt = key !== this.artifactKey;
       if (rebuilt) {
         this.editor.fieldObject = artifact;
@@ -237,11 +238,12 @@ export class FieldDefaultValueComponent {
       return;
     }
     if (this.field().type === 'number') {
-      if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(text.trim()) || !Number.isFinite(Number(text))) {
+      try {
+        const value = NumericPolicy.value(text);
+        this.save({ kind: 'number', value: typeof value === 'number' ? value : text });
+      } catch {
         this.setError(this.i18n.t('defaultValue.invalidNumber'), false, text);
-        return;
       }
-      this.save({ kind: 'number', value: Number(text) });
     } else {
       this.save({ kind: 'literal', value: text });
     }

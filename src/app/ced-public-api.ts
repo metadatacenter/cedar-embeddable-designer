@@ -58,7 +58,13 @@ export interface CedConfig {
 }
 
 /** A JSON-serialisable value, as it appears in a CEDAR artifact. */
-export type CedJsonValue = string | number | boolean | null | CedJsonObject | CedJsonValue[];
+/** Exact numeric artifact atom; use String(value) to inspect it without rounding. */
+export interface CedExactNumber {
+  readonly cedarExactDecimal: true;
+  toString(): string;
+  toJSON(): unknown;
+}
+export type CedJsonValue = string | number | CedExactNumber | boolean | null | CedJsonObject | CedJsonValue[];
 
 export interface CedJsonObject {
   [key: string]: CedJsonValue;

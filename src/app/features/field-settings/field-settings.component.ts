@@ -1,3 +1,5 @@
+import { JsonSourcePolicy } from '../../core/model/cedar-template';
+import { NumericPolicy } from '../../core/model/cedar-template';
 import { invalidSettingsInputs } from '../../shared/settings-input';
 import { publicationStatusLabel } from '../../shared/publication-status';
 import { fieldDisplayDescription, fieldDisplayName } from '../../core/model/field-display-name';
@@ -279,7 +281,7 @@ export class FieldSettingsComponent implements OnChanges {
       // An unparseable number has no typed draft. Retain its input buffer until
       // that control changes; typed rejected values belong to the coordinator.
       if (!discard && this.service.validation.inputError(this.field.id, groups[key] ?? key)) return current;
-      return structuredClone(incoming);
+      return JsonSourcePolicy.clone(incoming);
     };
 
     this.deploymentName = take(
@@ -362,6 +364,15 @@ export class FieldSettingsComponent implements OnChanges {
       temporal: { ...this.temporal },
       type: this.temporal.type === 'xsd:time' ? 'time' : 'date',
     });
+  }
+  editNumericBound(key: 'min' | 'max', text: string, form: HTMLFormElement, changed: string): void {
+    try {
+      const value = text === '' ? null : NumericPolicy.value(text);
+      this.numeric[key] = value === null || typeof value === 'number' ? value : text;
+    } catch {
+      this.numeric[key] = text;
+    }
+    this.saveNumeric(form, changed);
   }
   saveNumeric(form?: HTMLFormElement, changed?: string): void {
     if (this.badInput(form, 'numeric', 'Constraints', { numeric: { ...this.numeric } }, changed)) return;

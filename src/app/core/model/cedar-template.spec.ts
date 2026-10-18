@@ -15,6 +15,7 @@
  * that fails loudest if anything here still thinks in terms of JSON keys.
  */
 import {
+  JsonSourcePolicy,
   AbstractDynamicChildDeploymentInfo,
   CedarWriters,
   ControlledTermField,
@@ -1059,7 +1060,7 @@ describe('complete field specification transfer', () => {
   }
 });
 
-const numericField = (numeric: Partial<NonNullable<Field['numeric']>>, value?: number) =>
+const numericField = (numeric: Partial<NonNullable<Field['numeric']>>, value?: number | string) =>
   templateOf(
     field({
       type: 'number',
@@ -1234,4 +1235,21 @@ describe('a standalone field whose name is not a usable key', () => {
     const yaml = CedarWriters.yaml().getStrict().getFieldWriterForField(built).getAsYamlString(built, false);
     expect(readField(yaml).name).toBe(name);
   });
+});
+
+it('preserves exact numeric defaults and bounds through designer JSON and YAML imports', () => {
+  for (const [type, min, max, value] of [
+    ['xsd:decimal', '1.00000000000000001', '1.00000000000000003', '1.00000000000000002'],
+    ['xsd:long', '-9223372036854775808', '9223372036854775807', '9223372036854775807'],
+  ]) {
+    const original = buildTemplate(numericField({ type, min, max }, value));
+    const json = JsonSourcePolicy.stringify(templateToJson(original));
+    for (const source of [json, templateToYaml(original)]) {
+      const read = toDesignerTemplate(readTemplate(source));
+      expect(read.fields[0].numeric?.min).toBe(min);
+      expect(read.fields[0].numeric?.max).toBe(max);
+      expect(read.fields[0].defaultValue).toEqual({ kind: 'number', value });
+      expect(JsonSourcePolicy.stringify(templateToJson(buildTemplate(read)))).toBe(json);
+    }
+  }
 });

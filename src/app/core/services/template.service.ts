@@ -1,3 +1,4 @@
+import { JsonSourcePolicy } from '../model/cedar-template';
 import {
   elementDisplayDescription,
   elementDisplayName,
@@ -265,7 +266,9 @@ export class TemplateService {
       )
     )
       throw new TypeError('Validation findings require a location, message and error/warning severity');
-    this.hostReport.set(findings.length ? { document: this.document(), findings: structuredClone(findings) } : null);
+    this.hostReport.set(
+      findings.length ? { document: this.document(), findings: JsonSourcePolicy.clone(findings) } : null,
+    );
   }
   readonly validationReport = computed(() => {
     const local = this.validation.report();
@@ -413,7 +416,7 @@ export class TemplateService {
 
   /** Everything a save would write, and nothing that changes on its own. */
   private stateKey(): string {
-    return JSON.stringify(this.session.document());
+    return JsonSourcePolicy.stringify(this.session.document());
   }
 
   /** Take the current state as the baseline, after a save, an open or a reset. */
@@ -507,7 +510,7 @@ export class TemplateService {
       this.loadError.set(this.i18n.t('errors.pageBreakPlacement'));
       return;
     }
-    const definition = structuredClone(customField.definition);
+    const definition = JsonSourcePolicy.clone(customField.definition);
     const newField: Field = {
       ...definition,
       ...copiedPlacement(definition.name, definition.helpText ?? ''),
@@ -848,7 +851,7 @@ export class TemplateService {
       format: 'cedar-designer-draft',
       version: 1,
       kind: this.fieldDocumentMode() ? 'field' : this.session.document().kind,
-      state: JSON.stringify({
+      state: JsonSourcePolicy.stringify({
         document: this.session.document(),
         validation: this.validation.captureRecovery(),
         baseline: this.savedState(),
@@ -865,7 +868,13 @@ export class TemplateService {
       (draft.kind === 'field') !== this.fieldDocumentMode()
     )
       throw new Error();
-    const parsed = JSON.parse(draft.state);
+    const parsed = JsonSourcePolicy.parse(draft.state) as unknown as {
+      document: unknown;
+      baseline: unknown;
+      identifier: unknown;
+      automaticKeys: unknown;
+      validation: Parameters<ValidationCoordinator['restoreRecovery']>[0];
+    };
     const { document, maximumId } = recoveryDocument(parsed.document);
     if (
       (draft.kind !== 'field' && draft.kind !== document.kind) ||
@@ -1025,7 +1034,7 @@ export class TemplateService {
     if (this.definitionLocked(targetId)) throw new LocalizedError(message('errors.publishedReadOnly'));
     const nodes = sources.map(({ type, artifact }): ChildNode => {
       if (type === 'field') {
-        const field = readField(JSON.stringify(artifact));
+        const field = readField(JsonSourcePolicy.stringify(artifact));
         if (!allowedInContainer(field.type, target.kind))
           throw new LocalizedError(message('errors.pageBreakPlacement'));
         return fieldNode({

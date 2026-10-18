@@ -38,3 +38,5 @@ export {
 export { readTemplate, toDesignerTemplate, readField, toContainerDraft, readContainer } from './cedar-model/reader';
 export { ReservedNames } from './cedar-model/reserved-names';
 export type { AttributeValueFieldParent } from './cedar-model/reserved-names';
+
+export { NumericPolicy, JsonSourcePolicy } from './cedar-model/value-policy';

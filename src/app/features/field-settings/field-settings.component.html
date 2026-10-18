@@ -266,8 +266,8 @@
                   data-setting="minValue"
                   type="number"
                   step="any"
-                  [(ngModel)]="numeric.min"
-                  (ngModelChange)="saveNumeric(numericForm, 'numericMin')"
+                  [value]="numeric.min ?? ''"
+                  (input)="editNumericBound('min', $any($event.target).value, numericForm, 'numericMin')"
               /></label>
               <label
                 >{{ 'fieldSettings.numeric.max' | translate
@@ -278,8 +278,8 @@
                   data-setting="maxValue"
                   type="number"
                   step="any"
-                  [(ngModel)]="numeric.max"
-                  (ngModelChange)="saveNumeric(numericForm, 'numericMax')"
+                  [value]="numeric.max ?? ''"
+                  (input)="editNumericBound('max', $any($event.target).value, numericForm, 'numericMax')"
               /></label>
               <div class="numeric-default" role="group" [attr.aria-labelledby]="'numeric-default-label-' + field.id">
                 <span class="default-label" [id]="'numeric-default-label-' + field.id">{{
