@@ -68,7 +68,21 @@ for (const width of [1280, 375])
     await open();
 
     const dialog = designer.getByRole('dialog', { name: 'Import Fields and Elements' });
-    await expect(dialog.getByRole('searchbox', { name: 'Search fields and elements' })).toBeVisible();
+    const searchbox = dialog.getByRole('searchbox', { name: 'Search fields and elements' });
+    await expect(searchbox).toBeVisible();
+    // A focused field draws the shared focus ring, not the browser's own.
+    await searchbox.focus();
+    const ring = await searchbox.evaluate((input) => {
+      const probe = document.createElement('span');
+      probe.style.color = 'var(--cedar-control-focus, var(--cedar-color-primary))';
+      input.after(probe);
+      const expected = getComputedStyle(probe).color;
+      probe.remove();
+      const style = getComputedStyle(input);
+      return { style: style.outlineStyle, color: style.outlineColor, expected };
+    });
+    expect(ring.style).toBe('solid');
+    expect(ring.color).toBe(ring.expected);
     // Cancel and Done close the dialog from its bottom right, as the designer's other dialogs do.
     await page.evaluate(() => document.fonts.ready);
     // A native dialog recentres as its content settles. Read every box in one layout
