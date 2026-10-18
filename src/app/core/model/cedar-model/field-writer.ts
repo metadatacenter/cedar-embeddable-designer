@@ -1,3 +1,4 @@
+import { isBlank } from './text-policy';
 import { ArtifactMetadata, Field, FieldDefaultValue } from '../../models/types';
 import { NUMERIC_TYPES, accepts, allowsOptions, descriptorOf, temporalGranularities } from './capabilities';
 import {
@@ -149,7 +150,7 @@ function buildOptions(builder: FieldBuilder, field: Field): void {
      * empty because the card seeds a blank and lets the placeholder show the
      * hint, so writing it would put `{"label": ""}` in the artifact.
      */
-    if (option.trim() === '') {
+    if (isBlank(option)) {
       continue;
     }
     descriptorOf(field.type).options!(builder, option, selected.includes(option));

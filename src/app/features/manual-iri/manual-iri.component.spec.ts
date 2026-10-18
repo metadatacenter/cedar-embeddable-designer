@@ -17,7 +17,15 @@ it('checks an IRI as it is typed, trims it and rejects duplicate types', async (
   expect(editor.message()).toBeNull();
   editor.submit();
   expect(editor.message()).toBe('An IRI is required.');
-  for (const value of ['relative', 'dddd', 'https://example.org/a b', 'urn:bad%xx']) {
+  for (const value of [
+    'relative',
+    'dddd',
+    'https://example.org/a b',
+    'urn:bad%xx',
+    'urn:x\ud800',
+    'urn:x#a#b',
+    'urn:x\u00a0',
+  ]) {
     editor.value.set(value);
     expect(editor.problem()).toBe('Enter an absolute IRI, such as https://example.org/vocab/term.');
     editor.submit();
@@ -29,11 +37,11 @@ it('checks an IRI as it is typed, trims it and rejects duplicate types', async (
   fixture.componentRef.setInput('example', 'https://example.org/property');
   editor.value.set('dddd');
   expect(editor.problem()).toBe('Enter an absolute IRI, such as https://example.org/property.');
-  for (const value of ['urn:custom', ' https://example.org/語彙/term ']) {
+  for (const value of ['urn:custom', ' https://example.org/語彙/term ', 'urn:x\ufeff']) {
     editor.value.set(value);
     editor.submit();
   }
-  expect(received).toEqual(['urn:custom', 'https://example.org/語彙/term']);
+  expect(received).toEqual(['urn:custom', 'https://example.org/語彙/term', 'urn:x\ufeff']);
 });
 
 it('adds manual types through the shared form and leaves values unchanged on cancel', async () => {

@@ -365,6 +365,10 @@ it.each(['multipleChoice', 'checkboxes', 'singleChoiceList', 'multipleChoiceList
     );
     service.updateOption(id, 1, '   ');
     expect(service.validationReport().canSave).toBe(false);
+    service.updateOption(id, 1, '\u00a0');
+    expect(service.validationReport().canSave).toBe(true);
+    service.updateOption(id, 1, '\u001c');
+    expect(service.validationReport().canSave).toBe(false);
     service.updateOption(id, 1, 'Second');
     expect(service.validationReport().canSave).toBe(true);
     service.addOption(id);

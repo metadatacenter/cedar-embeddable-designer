@@ -1,4 +1,5 @@
 import { AttributeValueFieldParent, ReservedNames } from './cedar-model/reserved-names';
+import { isBlank, trimInputPadding } from './cedar-model/text-policy';
 import type { ChildNode } from './container-draft';
 import { LocalizedError, Translate, english, message } from '../../i18n/messages';
 
@@ -15,8 +16,8 @@ export function childKeyError(
   t: Translate = english,
   parent: AttributeValueFieldParent = 'template',
 ): string | null {
-  const key = value.trim();
-  if (!key) return t('validation.key.required');
+  const key = value;
+  if (isBlank(key)) return t('validation.key.required');
   if (['__proto__', 'prototype', 'constructor'].includes(key)) return t('validation.key.objectInternals');
   if (ReservedNames.isReservedName(key)) return t('validation.key.cedarMetadata');
   if ([...key].some((character) => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127))
@@ -70,7 +71,9 @@ export function freshChildKey(
   parent: AttributeValueFieldParent,
   taken: (key: string) => boolean,
 ): string {
-  const candidate = name.trim().toLowerCase().replace(/\s+/g, '_');
+  const candidate = trimInputPadding(name)
+    .toLowerCase()
+    .replace(/[\t\n\r ]+/g, '_');
   const base = candidate.startsWith('@') || controlCharacter(candidate) ? child.kind : candidate || child.kind;
   return suffixed(base, (key) => !taken(key) && !childKeyError(key, child.attributeValue, english, parent));
 }
@@ -89,8 +92,8 @@ function keptChildKey(
   parent: AttributeValueFieldParent,
   taken: (key: string) => boolean,
 ): string {
-  const written = name.trim();
-  if (!written || childKeyError(written, child.attributeValue, english, parent))
+  const written = trimInputPadding(name);
+  if (isBlank(written) || childKeyError(written, child.attributeValue, english, parent))
     return freshChildKey(name, child, parent, taken);
   return suffixed(written, (key) => !taken(key) && !childKeyError(key, child.attributeValue, english, parent));
 }
@@ -116,7 +119,7 @@ export function deploymentKeys(children: readonly KeyedChild[], parent: Attribut
   const seen = new Set<string>();
   for (const { deploymentName } of children) {
     if (deploymentName === undefined) continue;
-    if (!deploymentName.trim()) throw new LocalizedError(message('validation.key.required'));
+    if (isBlank(deploymentName)) throw new LocalizedError(message('validation.key.required'));
     if (seen.has(deploymentName)) throw new LocalizedError(message('validation.key.duplicate'));
     seen.add(deploymentName);
   }

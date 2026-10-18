@@ -77,3 +77,11 @@ describe('derived child keys', () => {
     expect(childKeys(repeated, 'template')).toEqual(['a', 'a']);
   });
 });
+
+it('uses model blankness and preserves Unicode key spelling', () => {
+  for (const key of ['\u001c', '\u001d', '\u001e', '\u001f']) expect(childKeyError(key)).not.toBeNull();
+  for (const key of ['\u00a0', '\u2007', '\u202f', '\ufeff', 'é', 'e\u0301']) {
+    expect(childKeyError(key)).toBeNull();
+    expect(deploymentKeys([child('Name', { deploymentName: key })], 'template')).toEqual([key]);
+  }
+});

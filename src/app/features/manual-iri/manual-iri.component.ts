@@ -1,3 +1,5 @@
+import { validAbsoluteIri } from '../../core/model/cedar-model/iri-syntax';
+import { trimIriInputPadding } from '../../core/model/cedar-model/iri-syntax';
 import { Component, ElementRef, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -92,7 +94,7 @@ export class ManualIriComponent {
   /** Set by a submit with nothing entered; cleared by the next edit. */
   readonly error = signal<string | null>(null);
   /** What is wrong with the text entered so far, checked as it is typed. Nothing entered is not yet a problem. */
-  readonly problem = computed(() => this.check(this.value().trim()));
+  readonly problem = computed(() => this.check(trimIriInputPadding(this.value())));
   readonly message = computed(() => this.problem() ?? this.error());
   private readonly control = viewChild<ElementRef<HTMLInputElement>>('control');
   constructor() {
@@ -100,7 +102,7 @@ export class ManualIriComponent {
   }
   submit(): void {
     if (this.disabled() || this.problem()) return;
-    const iri = this.value().trim();
+    const iri = trimIriInputPadding(this.value());
     if (!iri) {
       this.error.set(this.i18n.t('manualIri.required'));
       return;
@@ -109,8 +111,7 @@ export class ManualIriComponent {
   }
   private check(iri: string): string | null {
     if (!iri) return null;
-    if (!/^[a-z][a-z0-9+.-]*:[^\s<>"{}|\\^`]+$/i.test(iri) || /%(?![0-9a-f]{2})/i.test(iri))
-      return this.i18n.t('manualIri.invalid', { example: this.example() });
+    if (!validAbsoluteIri(iri)) return this.i18n.t('manualIri.invalid', { example: this.example() });
     if (this.existing().includes(iri)) return this.i18n.t('manualIri.duplicate');
     return null;
   }

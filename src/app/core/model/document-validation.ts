@@ -1,3 +1,4 @@
+import { isBlank } from './cedar-model/text-policy';
 import { failureRule, ValidationRule } from './validation-rule';
 import { annotationError } from './annotations';
 import { childKeyError, childKeys, keyedChild } from './child-key-policy';
@@ -201,7 +202,7 @@ export function inspectDocument(document: ContainerDraft, drafts: DraftIssues, t
       pending(node.id, issueLabel(node), nodePath, field.name);
       if (allowsOptions(field.type)) {
         field.options.forEach((option, index) => {
-          if (!option.trim())
+          if (isBlank(option))
             add(
               node.id,
               issueLabel(node),
