@@ -1,7 +1,6 @@
-import { JsonSourcePolicy } from 'cedar-model-typescript-library/policy';
 import { Injectable, effect, signal } from '@angular/core';
 import { CustomField, Library } from '../models/types';
-import { validateFieldSpecification } from '../model/cedar-template';
+import { JsonSourcePolicy, validateFieldSpecification } from '../model/cedar-template';
 
 const STORAGE_KEY = 'ced-field-library-v1';
 @Injectable({ providedIn: 'root' })
