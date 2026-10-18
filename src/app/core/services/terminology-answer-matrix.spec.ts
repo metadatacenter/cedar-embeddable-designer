@@ -4,9 +4,8 @@ import { CedLanguage, describeError, translateIn } from '../../i18n/messages';
 import { TerminologyService } from './terminology.service';
 
 /**
- * Both of the designer's terminology requests, against every way the server can fail to answer
- * them, in both languages. What the author reads is the designer's own text in the language it
- * speaks, never the browser's "Failed to fetch" or the parser's complaint about a token.
+ * Search failures are localized. Unavailable membership evidence permits a selection under
+ * template save policy while remaining an explicit verification warning in the document report.
  */
 type Call = 'membership check' | 'search';
 const CALLS: Record<Call, (service: TerminologyService) => Promise<unknown>> = {
@@ -61,6 +60,14 @@ describe('The terminology server failing a designer request', () => {
           const service = TestBed.inject(TerminologyService);
           service.configure({ terminologyBaseUrl: 'https://terminology.example/' });
           globalThis.fetch = (() => answer()) as typeof fetch;
+          if (call === 'membership check') {
+            await expect(run(service)).resolves.toBe(true);
+            await expect(service.verifyDefault({}, 'https://example.org/term')).resolves.toMatchObject({
+              status: 'unavailable',
+              code: 'semanticUnavailable',
+            });
+            return;
+          }
           const failure = await run(service).then(
             () => null,
             (error: unknown) => error,

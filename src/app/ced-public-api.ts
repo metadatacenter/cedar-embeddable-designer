@@ -187,6 +187,15 @@ export interface CedValidationIssue {
   shown: boolean;
 }
 export interface CedValidationReport {
+  /** Semantic coverage is independent of local consistency and save permission. */
+  semanticChecks?: Array<{
+    nodeId: number;
+    path: number[];
+    iri: string;
+    code: string;
+    message: string;
+    status: 'passed' | 'failed' | 'notChecked' | 'unavailable';
+  }>;
   /** Save remains unavailable while bounded pattern checks are running. */
   pendingValidation?: boolean;
   valid: boolean;

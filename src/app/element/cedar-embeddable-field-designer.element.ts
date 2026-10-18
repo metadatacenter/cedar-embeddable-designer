@@ -202,7 +202,10 @@ export class CedarEmbeddableFieldDesignerElementComponent {
   @Input() get canSave(): boolean {
     return this.validationReport.canSave;
   }
-  @Input() readonly validate = (): CedValidationReport => this.validationReport;
+  @Input() readonly validate = (): CedValidationReport => {
+    this.service.validate();
+    return this.validationReport;
+  };
   @Output() artifactChange = new EventEmitter<object>();
   @Output() dirtyChange = new EventEmitter<boolean>();
   @Output() validationChange = new EventEmitter<CedValidationReport>();

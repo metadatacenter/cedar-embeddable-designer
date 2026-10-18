@@ -1,13 +1,22 @@
 import { Field, FieldDefaultValue } from '../models/types';
 import { Translate, english } from '../../i18n/messages';
-import { validAbsoluteIri } from './cedar-model/iri-syntax';
+import { FieldValuePolicy } from './cedar-model/value-policy';
 
 export function defaultFormatError(field: Field, value: FieldDefaultValue, t: Translate = english): string | null {
-  if (value.kind === 'iri' && !validAbsoluteIri(value.iri)) return t('defaultValue.invalidIri');
-  if (value.kind === 'literal' && field.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.value))
-    return t('defaultValue.invalidEmail');
-  if (value.kind === 'literal' && field.type === 'phone' && !/^[+0-9\s\-()]+$/.test(value.value))
-    return t('defaultValue.invalidPhone');
+  if (
+    value.kind === 'iri' &&
+    FieldValuePolicy.validate({ _ui: { inputType: 'link' } }, value.iri, '', 'template').length
+  )
+    return t('defaultValue.invalidIri');
+  if (value.kind === 'literal' && ['email', 'phone'].includes(field.type)) {
+    const findings = FieldValuePolicy.validate(
+      { _ui: { inputType: field.type === 'phone' ? 'phone-number' : 'email' } },
+      value.value,
+      '',
+      'template',
+    );
+    if (findings.length) return t(field.type === 'email' ? 'defaultValue.invalidEmail' : 'defaultValue.invalidPhone');
+  }
   return temporalDefaultError(field, value, t);
 }
 
@@ -62,12 +71,32 @@ export function defaultToCef(field: Field): FieldDefaultValue {
 export function temporalDefaultError(field: Field, value: FieldDefaultValue, t: Translate = english): string | null {
   if (value.kind !== 'temporal') return null;
   const { type, granularity } = settings(field);
+  const findings = FieldValuePolicy.validate(
+    {
+      _ui: {
+        inputType: 'temporal',
+        temporalGranularity: granularity,
+        timezoneEnabled: field.temporal?.timezoneEnabled,
+      },
+      _valueConstraints: { temporalType: type },
+    },
+    value.value,
+    '',
+    'template',
+  );
+  if (!findings.length) return null;
+  // Preserve the existing precise, translated explanations; the shared policy owns the verdict.
+  return temporalDefaultDiagnostic(field, value.value, t) ?? t('defaultValue.temporal.pattern');
+}
+
+function temporalDefaultDiagnostic(field: Field, value: string, t: Translate): string | null {
+  const { type, granularity } = settings(field);
   const date = '(\\d{4})(?:-(\\d{2}))?(?:-(\\d{2}))?';
   const time = '(\\d{2})(?::(\\d{2}))?(?::(\\d{2})(?:\\.(\\d+))?)?';
   const zone = '(Z|[+-]\\d{2}:\\d{2})?';
   const pattern =
     type === 'xsd:date' || granularity === 'day' ? date : type === 'xsd:time' ? time + zone : date + 'T' + time + zone;
-  const match = new RegExp('^' + pattern + '$').exec(value.value);
+  const match = new RegExp('^' + pattern + '$').exec(value);
   if (!match) return t('defaultValue.temporal.pattern');
   let clock = 1;
   if (type !== 'xsd:time') {

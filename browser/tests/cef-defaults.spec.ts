@@ -2,6 +2,7 @@ import { fieldNode, newNodeId } from '../../src/app/core/model/container-draft';
 import { expect, test, Page } from '@playwright/test';
 import { buildTemplate, templateToJson, newContainer, buildContainer } from '../../src/app/core/model/cedar-template';
 import { Field } from '../../src/app/core/models/types';
+import type { CedarEmbeddableDesignerElement, CedJsonObject } from '../../src/app/ced-public-api';
 import { openSettings, applyPreset, child, currentTemplate, openDesigner, openPreview } from './support';
 
 // CI supplies a pinned real sibling; local runs opt in by setting CEF_BUNDLE.
@@ -155,19 +156,25 @@ test('a full datetime default retains its granularity and offset in CEF', async 
 });
 
 const authorities = [
-  ['orcid', 'https://orcid.org/0000-0002-1825-0097'],
-  ['ror', 'https://ror.org/03yrm5c26'],
-  ['pfas', 'https://comptox.epa.gov/dashboard/chemical/details/DTXSID7020182'],
-  ['rrid', 'https://scicrunch.org/resolver/RRID:AB_90755'],
-  ['pubmed', 'https://pubmed.ncbi.nlm.nih.gov/12345678/'],
-  ['nihGrantId', 'https://reporter.nih.gov/project-details/12345678'],
-  ['doi', 'https://doi.org/10.1000/example'],
+  ['orcid', 'https://orcid.org/0000-0002-1825-0097', 'orcid'],
+  ['ror', 'https://ror.org/03yrm5c26', 'ror'],
+  ['pfas', 'https://comptox.epa.gov/dashboard/chemical/details/DTXSID7020182', 'comp-tox'],
+  ['rrid', 'https://scicrunch.org/resolver/RRID:AB_90755', 'rrid'],
+  ['pubmed', 'https://pubmed.ncbi.nlm.nih.gov/12345678/', 'pmid'],
+  ['nihGrantId', 'https://reporter.nih.gov/project-details/12345678', 'nih-grant'],
+  ['doi', 'https://doi.org/10.1000/example', 'doi'],
 ] as const;
-for (const [type, iri] of authorities) {
+for (const [type, iri, authority] of authorities) {
   test(`${type} default uses the configured authority lookup`, async ({ page }) => {
     await page.route('**/fake-bridge/ext-auth/**', (route) =>
       route.fulfill({ json: { found: true, results: { [iri]: { name: 'Sample record' } } } }),
     );
+    await page.route('**/fake-bridge/ext-auth/*/verify', (route) => {
+      expect(new URL(route.request().url()).pathname).toBe(`/fake-bridge/ext-auth/${authority}/verify`);
+      expect(route.request().method()).toBe('POST');
+      expect(route.request().postDataJSON()).toEqual({ iri });
+      return route.fulfill({ json: { iri, status: 'passed', code: 'authorityVerified', message: 'Record exists.' } });
+    });
     const control = await openField(page, type);
     const input = control.locator('input').first();
     await input.click();
@@ -176,6 +183,15 @@ for (const [type, iri] of authorities) {
     await page.getByRole('option', { name: /Sample record/ }).click();
     await expect.poll(async () => (await constraints(page))['defaultValue']).toBe(iri);
     await expect(page.locator('app-field-summary .cee-spec-box')).toContainText('default ' + iri);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).validationReport
+              .semanticChecks,
+        ),
+      )
+      .toEqual([expect.objectContaining({ iri, status: 'passed', code: 'authorityVerified' })]);
   });
 }
 
@@ -209,11 +225,19 @@ test('choosing an allowed term leaves the default visibly empty and absent from 
 
 test('controlled default uses the term picker and verifies field membership', async ({ page }) => {
   let checked = false;
-  await page.route('**/fake-terminology/bioportal/integrated-search', async (route) => {
+  let expectedConstraints: Record<string, unknown>;
+  const iri = 'http://purl.obolibrary.org/obo/DOID_162';
+  const defaultValue = { termUri: iri, 'rdfs:label': 'cancer' };
+  await page.route('**/fake-terminology/bioportal/validate-term', async (route) => {
     checked = true;
     const body = route.request().postDataJSON();
-    expect(body.parameterObject.valueConstraints.ontologies[0].acronym).toBe('DOID');
-    await route.fulfill({ json: { collection: [{ '@id': 'http://purl.obolibrary.org/obo/DOID_162' }] } });
+    expect(route.request().method()).toBe('POST');
+    // The default editor has no declared default; CEF's specification summary retains it.
+    expect([
+      { iri, valueConstraints: expectedConstraints },
+      { iri, valueConstraints: { ...expectedConstraints, defaultValue } },
+    ]).toContainEqual(body);
+    await route.fulfill({ json: { iri, status: 'passed', code: 'controlledTermVerified', message: 'Within scope.' } });
   });
   const control = await openField(
     page,
@@ -226,6 +250,8 @@ test('controlled default uses the term picker and verifies field membership', as
     },
     '?picker=stub',
   );
+  // A standalone field is optional; requiredness belongs to its authored deployment.
+  expectedConstraints = { ...(await constraints(page)), requiredValue: false };
   const chooser = control.getByRole('button', { name: 'Edit default term' });
   const defaultInput = control.getByRole('textbox', { name: 'Default value', exact: true });
   await expect(defaultInput).toHaveValue('');
@@ -264,6 +290,137 @@ test('controlled default uses the term picker and verifies field membership', as
   await control.getByRole('button', { name: 'Clear default' }).click();
   await expect.poll(async () => (await constraints(page))['defaultValue']).toBeUndefined();
   await expect(defaultInput).toHaveValue('');
+});
+
+for (const status of ['unavailable', 'notChecked'] as const) {
+  for (const type of ['controlledTerms', 'ror'] as const) {
+    test(`${type} accepts an ${status} default with a warning through selection and reload`, async ({ page }) => {
+      const controlled = type === 'controlledTerms';
+      const iri = controlled ? 'http://purl.obolibrary.org/obo/DOID_162' : 'https://ror.org/03yrm5c26';
+      const code = status === 'unavailable' ? 'semanticUnavailable' : 'semanticNotChecked';
+      if (!controlled)
+        await page.route('**/fake-bridge/ext-auth/**', (route) =>
+          route.fulfill({ json: { found: true, results: { [iri]: { name: 'Sample record' } } } }),
+        );
+      await page.route(
+        controlled ? '**/fake-terminology/bioportal/validate-term' : '**/fake-bridge/ext-auth/ror/verify',
+        (route) =>
+          status === 'unavailable'
+            ? route.fulfill({ status: 503, body: 'Unavailable' })
+            : route.fulfill({ json: { iri, status, code, message: 'Not checked.' } }),
+      );
+      const control = await openField(
+        page,
+        type,
+        controlled
+          ? {
+              controlledTermConstraints: {
+                constraints: [{ sourceType: 'ontology', ontologyId: 'DOID', ontologyName: 'Disease Ontology' }],
+                actions: [],
+              },
+            }
+          : {},
+        '?picker=stub',
+      );
+      const report = () =>
+        page.evaluate(() =>
+          (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).validate(),
+        );
+      await expect.poll(async () => (await report()).valid).toBe(true);
+      await expect(page.locator('.validation-summary')).toHaveCount(0);
+      if (controlled) {
+        await control.getByRole('button', { name: 'Edit default term' }).click();
+        await control.locator('#stub-pick').click();
+        await expect(control.locator('#stub-pick')).toHaveCount(0);
+      } else {
+        const input = control.locator('input').first();
+        await input.fill('Sample');
+        await page.getByRole('option', { name: /Sample record/ }).click();
+      }
+      const expected = controlled ? { termUri: iri, 'rdfs:label': 'cancer' } : iri;
+      await expect.poll(async () => (await constraints(page))['defaultValue']).toEqual(expected);
+      const expectWarning = async () => {
+        await expect.poll(report).toMatchObject({
+          valid: false,
+          canSave: true,
+          semanticChecks: [{ iri, status, code }],
+          issues: [{ code, severity: 'warning', setting: 'defaultValue' }],
+        });
+        await expect(page.locator('.validation-summary')).toContainText('Validation issues (1)');
+        await page.locator('.validation-summary summary').click();
+        await expect(page.locator('.validation-summary')).toContainText('could not be verified');
+        await page.locator('.validation-summary summary').click();
+      };
+      await expectWarning();
+      await page.locator('.validation-summary summary').click();
+      await test.info().attach('unverified-default-warning', {
+        body: await page.screenshot({ path: test.info().outputPath('unverified-default-warning.png') }),
+        contentType: 'image/png',
+      });
+      await page.locator('.validation-summary summary').click();
+      const saved = await currentTemplate(page);
+      await page.evaluate((artifact) => {
+        (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).template =
+          artifact as CedJsonObject;
+      }, saved);
+      await expectWarning();
+      expect((await constraints(page))['defaultValue']).toEqual(expected);
+      await openSettings(page.locator('app-field-card').first());
+      if (controlled) await control.getByRole('button', { name: 'Clear default' }).click();
+      else await control.locator('input').first().fill('');
+      await expect.poll(async () => (await report()).valid).toBe(true);
+      await expect(page.locator('.validation-summary')).toHaveCount(0);
+      await test.info().attach('cleared-default', {
+        body: await page.screenshot({ path: test.info().outputPath('cleared-default.png') }),
+        contentType: 'image/png',
+      });
+    });
+  }
+}
+
+test('a known invalid controlled default is rejected by selection and blocks an imported definition', async ({
+  page,
+}) => {
+  const iri = 'http://purl.obolibrary.org/obo/DOID_162';
+  await page.route('**/fake-terminology/bioportal/validate-term', (route) =>
+    route.fulfill({ json: { iri, status: 'failed', code: 'controlledTermMembership', message: 'Outside scope.' } }),
+  );
+  const control = await openField(
+    page,
+    'controlledTerms',
+    {
+      controlledTermConstraints: {
+        constraints: [{ sourceType: 'ontology', ontologyId: 'DOID', ontologyName: 'Disease Ontology' }],
+        actions: [],
+      },
+    },
+    '?picker=stub',
+  );
+  await control.getByRole('button', { name: 'Edit default term' }).click();
+  await control.locator('#stub-pick').click();
+  await expect(control).toContainText('not permitted');
+  expect((await constraints(page))['defaultValue']).toBeUndefined();
+  const artifact = await currentTemplate(page);
+  (child(artifact, 'Value')['_valueConstraints'] as Record<string, unknown>)['defaultValue'] = {
+    termUri: iri,
+    'rdfs:label': 'cancer',
+  };
+  await page.evaluate((artifact) => {
+    (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).template =
+      artifact as CedJsonObject;
+  }, artifact);
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).validate(),
+      ),
+    )
+    .toMatchObject({
+      valid: false,
+      canSave: false,
+      semanticChecks: [{ iri, status: 'failed', code: 'controlledTermMembership' }],
+      issues: [{ code: 'controlledTermMembership', severity: 'error' }],
+    });
 });
 
 test('the real picker selects a default within the field vocabulary', async ({ page }) => {
@@ -326,11 +483,15 @@ test('the real picker selects a default within the field vocabulary', async ({ p
       },
     });
   });
-  await page.route('**/fake-terminology/bioportal/integrated-search', (route) => {
-    const constraints = route.request().postDataJSON().parameterObject.valueConstraints;
-    expect(constraints.ontologies).toHaveLength(3);
-    expect(constraints.actions).toHaveLength(1);
-    return route.fulfill({ json: { collection: [{ '@id': iri }] } });
+  let expectedConstraints: Record<string, unknown>;
+  const defaultValue = { termUri: iri, 'rdfs:label': 'cancer' };
+  await page.route('**/fake-terminology/bioportal/validate-term', (route) => {
+    expect(route.request().method()).toBe('POST');
+    expect([
+      { iri, valueConstraints: expectedConstraints },
+      { iri, valueConstraints: { ...expectedConstraints, defaultValue } },
+    ]).toContainEqual(route.request().postDataJSON());
+    return route.fulfill({ json: { iri, status: 'passed', code: 'controlledTermVerified', message: 'Within scope.' } });
   });
   const control = await openField(page, 'controlledTerms', {
     controlledTermConstraints: {
@@ -359,6 +520,7 @@ test('the real picker selects a default within the field vocabulary', async ({ p
       ],
     },
   });
+  expectedConstraints = { ...(await constraints(page)), requiredValue: false };
   await page.addScriptTag({ path: process.env.PICKER_BUNDLE! });
   await control.getByRole('button', { name: 'Edit default term' }).click();
   const picker = control.locator('cedar-embeddable-term-picker');
@@ -481,7 +643,9 @@ for (const type of ['number', 'date']) {
     const control = await openField(
       page,
       type,
-      type === 'date' ? { temporal: { type: 'xsd:date', granularity: 'year' } } : {},
+      type === 'date'
+        ? { temporal: { type: 'xsd:date', granularity: 'year', timezoneEnabled: false, inputTimeFormat: null } }
+        : {},
     );
     const settings = page.locator('app-field-settings');
     const neighbor = settings.getByRole('combobox', {

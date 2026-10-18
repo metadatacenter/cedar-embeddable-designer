@@ -92,8 +92,13 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // 2026-10-18: exact numeric editing and lossless source/snapshot paths measure
 // 1,514,113 raw / 432,071 gzip-9 bytes. Retain the compressed ceiling.
 // Shared bounded regex sessions add 7,038 bytes to the previously verified bundle.
-const RAW_LIMIT = 1_526_000;
-const GZIP_LIMIT = 438_000;
+// 2026-10-18: common field/default consistency findings and all-document semantic
+// verification measure 1,544,934 raw / 441,025 gzip-9 in the sibling reactor.
+// The existing model entry supplies the shared policies; there is no second
+// policy bundle or new runtime dependency. Allow about 5 KB raw / 2 KB compressed
+// headroom for this validation coverage and bounded verification cache.
+const RAW_LIMIT = 1_550_000;
+const GZIP_LIMIT = 443_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
 

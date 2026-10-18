@@ -33,10 +33,14 @@ export function fieldValidationIssues(
   };
   for (const group of groups) for (const key of group.keys) delete base[key];
   const defaults = { ...field, publishedDefinition: undefined, annotations: undefined, language: undefined };
+  // The bounded shared regex check below owns pattern findings and their exact
+  // repair control. Incidental model construction must not report it a second time.
+  if (defaults.textConstraints) defaults.textConstraints = { ...defaults.textConstraints, regex: null };
   for (const group of groups) {
     if (!group.keys.some((key) => field[key] !== undefined)) continue;
     const probe = { ...base };
     for (const key of group.keys) Object.assign(probe, { [key]: field[key] });
+    if (probe.textConstraints) probe.textConstraints = { ...probe.textConstraints, regex: null };
     try {
       fieldToJson(probe);
     } catch (error) {

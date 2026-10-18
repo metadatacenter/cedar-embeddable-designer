@@ -1,3 +1,4 @@
+import { DefaultSemanticChecks } from './default-semantic-checks';
 import { isBlank, trimInputPadding } from '../model/cedar-model/text-policy';
 import { JsonSourcePolicy } from '../model/cedar-template';
 import {
@@ -271,6 +272,11 @@ export class TemplateService {
       findings.length ? { document: this.document(), findings: JsonSourcePolicy.clone(findings) } : null,
     );
   }
+  private readonly defaultSemantics = new DefaultSemanticChecks();
+  validate() {
+    this.defaultSemantics.refreshExpired();
+    return this.validationReport();
+  }
   readonly validationReport = computed(() => {
     const local = this.validation.report();
     const host = this.hostReport();
@@ -278,8 +284,22 @@ export class TemplateService {
       host?.document === this.document()
         ? hostFindings(this.document(), host.findings, this.access.fieldDocument())
         : [];
-    const valid = local.valid && !issues.some((issue) => issue.severity === 'error');
-    return { ...local, valid, canSave: local.canSave && valid, issues: [...local.issues, ...issues] };
+    const semantic = this.defaultSemantics.inspect(this.session.document(), this.fieldEditorConfig(), this.i18n.t);
+    const errors = [...issues, ...semantic.issues].some((issue) => issue.severity === 'error');
+    const pendingValidation = !!local.pendingValidation || semantic.pendingValidation;
+    const valid =
+      local.valid &&
+      !errors &&
+      !pendingValidation &&
+      semantic.semanticChecks.every((check) => check.status === 'passed');
+    return {
+      ...local,
+      valid,
+      canSave: local.canSave && !errors && !pendingValidation,
+      ...(pendingValidation ? { pendingValidation: true } : {}),
+      semanticChecks: semantic.semanticChecks,
+      issues: [...local.issues, ...issues, ...semantic.issues],
+    };
   });
   revealValidationFinding(location: string): boolean {
     const issue = this.validationReport().issues.find(
@@ -405,7 +425,10 @@ export class TemplateService {
   }
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => this.validation.dispose());
+    inject(DestroyRef).onDestroy(() => {
+      this.validation.dispose();
+      this.defaultSemantics.dispose();
+    });
     effect(() => {
       if (this.validation.readOnly()) {
         this.showPicker.set(null);

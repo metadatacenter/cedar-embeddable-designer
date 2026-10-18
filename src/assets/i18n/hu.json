@@ -251,6 +251,7 @@
   },
   "errors": {
     "numeric": {
+      "inconsistent": "A numerikus beállítások ellentmondásosak.",
       "datatype": "Válasszon adattípust a listából.",
       "minimumValue": "A minimális érték",
       "maximumValue": "A maximális érték",
@@ -528,7 +529,7 @@
     "notConfigured": "A terminológiai kiszolgáló nincs beállítva.",
     "checkFailed": "Az alapértelmezett fogalmat nem sikerült ellenőrizni ({{status}}).",
     "noResultCollection": "A terminológiai kiszolgáló nem adott vissza találatgyűjteményt.",
-    "unverified": "A fogalmat nem sikerült igazolni a kapott találatok között.",
+    "unverified": "Az alapértelmezett értéket nem sikerült ellenőrizni a terminológiai szolgáltatással vagy a nyilvántartással.",
     "searchNotConfigured": "A kontrollált fogalmak keresése nincs beállítva.",
     "answered": "A terminológiai kiszolgáló válasza: {{status}} {{statusText}}.",
     "noResultsCollection": "A terminológiai kiszolgáló nem adott vissza találati gyűjteményt.",

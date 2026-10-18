@@ -1,5 +1,5 @@
 import { expect, Page, test } from '@playwright/test';
-import type { CedarEmbeddableDesignerElement } from '../../src/app/ced-public-api';
+import type { CedarEmbeddableDesignerElement, CedJsonObject } from '../../src/app/ced-public-api';
 import { buildContainer, newContainer, templateToJson } from '../../src/app/core/model/cedar-template';
 import { fieldNode } from '../../src/app/core/model/container-draft';
 import type { Field } from '../../src/app/core/models/types';
@@ -12,7 +12,9 @@ const report = (page: Page) =>
 const load = (page: Page, artifact: object) =>
   page.evaluate(
     (artifact) =>
-      (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).loadArtifact(artifact),
+      (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).loadArtifact(
+        artifact as CedJsonObject,
+      ),
     artifact,
   );
 
@@ -88,6 +90,13 @@ for (const type of ['link', 'controlledTerms', 'orcid', 'ror', 'pfas', 'rrid', '
       expect(issues).toHaveLength(1);
       expect(issues[0]).toMatchObject({ setting: 'defaultValue', tab: 'Constraints', shown: true });
       expect(issues[0].path).toHaveLength(depth + 2);
+      if (type !== 'link') {
+        const semantic = (await report(page)).semanticChecks;
+        expect(semantic).toEqual([
+          expect.objectContaining({ iri: 'relative/path', status: 'notChecked', code: 'semanticNotChecked' }),
+        ]);
+        expect(semantic![0].message).toContain('well-formed absolute IRI');
+      }
       await expect(preview.getByRole('status')).toContainText('Preview is unavailable');
       await expect(designer.locator('.outline-row.invalid')).toHaveCount(depth + 1);
       if (depth) await clickCentred(designer.locator('.element-toggle[aria-label="Collapse Level 1"]'));

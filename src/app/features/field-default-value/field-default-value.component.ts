@@ -224,10 +224,25 @@ export class FieldDefaultValueComponent {
   }
 
   private readonly acceptValue = (event: Event): void => {
-    const detail = (event as CustomEvent<{ value: FieldDefaultValue; valid: boolean; pendingValidation?: boolean }>)
-      .detail;
+    const detail = (
+      event as CustomEvent<{
+        value: FieldDefaultValue;
+        valid: boolean;
+        pendingValidation?: boolean;
+        structurallyValid?: boolean;
+        semanticChecks?: Array<{ status: string }>;
+        problems?: Array<{ category?: string }>;
+      }>
+    ).detail;
     if (this.allowsControlledTerms() || this.locked()) return;
-    if (detail?.valid === true || detail?.pendingValidation === true)
+    if (
+      detail?.valid === true ||
+      detail?.pendingValidation === true ||
+      (detail?.structurallyValid === true &&
+        detail.semanticChecks?.length &&
+        detail.semanticChecks.every((check) => check.status === 'notChecked' || check.status === 'unavailable') &&
+        detail.problems?.every((problem) => problem.category === 'verification'))
+    )
       this.save(defaultFromCef(this.field(), detail.value));
     else this.setError(this.i18n.t('defaultValue.invalid'), true, detail?.value);
   };

@@ -166,7 +166,7 @@ export class CedarEmbeddableDesignerElementComponent {
   @Input() get canSave(): boolean {
     return this.validationReport.canSave;
   }
-  @Input() readonly validate = (): CedValidationReport => JsonSourcePolicy.clone(this.service.validationReport());
+  @Input() readonly validate = (): CedValidationReport => JsonSourcePolicy.clone(this.service.validate());
   @Output() validationChange = new EventEmitter<CedValidationReport>();
   @Output() artifactChange = new EventEmitter<object>();
   @Output() templateChange = new EventEmitter<object>();

@@ -31,6 +31,85 @@ describe('TemplateService', () => {
     service = TestBed.inject(TemplateService);
   });
 
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it('explicit validation refreshes expired semantic evidence even for an unchanged document', async () => {
+    let now = 1_000;
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
+    const iri = 'https://ror.org/03yrm5c26';
+    let status = 'unavailable';
+    const fetcher = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            iri,
+            status,
+            code: status === 'passed' ? 'authorityVerified' : 'semanticUnavailable',
+            message: 'Checked.',
+          }),
+        ),
+    );
+    vi.stubGlobal('fetch', fetcher);
+    service.templateName.set('Authority defaults');
+    service.fields.set([
+      {
+        id: 8,
+        type: 'ror',
+        name: 'Organization',
+        status: 'optional',
+        options: [],
+        allowMultiple: false,
+        defaultValue: { kind: 'iri', iri, label: null },
+      },
+    ]);
+    service.fieldEditorConfig.set({ bridgeBaseUrl: 'https://bridge.example.org/' });
+    service.validate();
+    await vi.waitFor(() => expect(service.validationReport().semanticChecks?.[0].status).toBe('unavailable'));
+    expect(service.validationReport()).toMatchObject({ valid: false, canSave: true });
+    now += 30_000;
+    status = 'passed';
+    expect(service.validate()).toMatchObject({ pendingValidation: true, canSave: false });
+    service.validate();
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    await vi.waitFor(() => expect(service.validationReport()).toMatchObject({ valid: true, canSave: true }));
+  });
+
+  it.each(['passed', 'failed', 'unavailable'] as const)(
+    'rechecks imported authority defaults and exposes %s save policy',
+    async (status) => {
+      const iri = 'https://orcid.org/0000-0002-1825-0097';
+      service.templateName.set('Authority defaults');
+      service.fields.set([
+        {
+          id: 8,
+          type: 'orcid',
+          name: 'Researcher',
+          status: 'optional',
+          options: [],
+          allowMultiple: false,
+          defaultValue: { kind: 'iri', iri, label: 'A researcher' },
+        },
+      ]);
+      const stored = templateToJson(service.template());
+      const code =
+        status === 'passed' ? 'authorityVerified' : status === 'failed' ? 'authorityMembership' : 'semanticUnavailable';
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => new Response(JSON.stringify({ iri, status, code, message: 'Verification result.' }))),
+      );
+      service.fieldEditorConfig.set({ bridgeBaseUrl: 'https://bridge.example.org/' });
+      service.loadTemplate(stored);
+      expect(service.validationReport()).toMatchObject({ pendingValidation: true, canSave: false });
+      await vi.waitFor(() => expect(service.validationReport().semanticChecks?.[0].status).toBe(status));
+      expect(service.validationReport()).toMatchObject({ valid: status === 'passed', canSave: status !== 'failed' });
+      // Authority defaults store their identifier; display labels are not part of that schema slot.
+      expect(service.fields()[0].defaultValue).toEqual({ kind: 'iri', iri, label: null });
+    },
+  );
+
   it('names new fields through their display name and rejects clearing that name', () => {
     service.addField('text', 0);
     const id = service.selectedField()!;

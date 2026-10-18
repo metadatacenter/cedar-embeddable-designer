@@ -172,102 +172,77 @@ describe('TerminologyService', () => {
   });
 
   describe('default term membership', () => {
-    const field = { _valueConstraints: { ontologies: [{ acronym: 'DOID', version: { id: 'release' } }] } };
-
+    const field = {
+      _valueConstraints: {
+        ontologies: [{ acronym: 'DOID', version: { id: 'release' } }],
+        actions: [{ action: 'delete', termUri: 'urn:removed' }],
+      },
+    };
     beforeEach(() => service.configure({ terminologyBaseUrl: 'https://terminology.example.org/' }));
 
-    it('stops pagination after cancellation even if the transport completes its old request', async () => {
-      const controller = new AbortController();
-      let reply!: (response: Response) => void;
-      const fetcher = vi.fn().mockImplementation(
-        () =>
-          new Promise<Response>((done) => {
-            reply = done;
+    it('uses the exact identifier and complete versioned constraints without label search', async () => {
+      const bodies: unknown[] = [];
+      globalThis.fetch = (async (url, init) => {
+        expect(String(url)).toBe('https://terminology.example.org/bioportal/validate-term');
+        bodies.push(JSON.parse(String(init?.body)));
+        return new Response(
+          JSON.stringify({
+            iri: 'urn:chosen',
+            status: 'passed',
+            code: 'controlledTermVerified',
+            message: 'Permitted.',
           }),
-      );
-      globalThis.fetch = fetcher;
-      const pending = service.allowsDefault(field, 'urn:chosen', 'cancer', controller.signal);
-      const verdict = expect(pending).rejects.toMatchObject({ name: 'AbortError' });
-      expect(fetcher.mock.calls[0][1].signal.aborted).toBe(false);
-      controller.abort();
-      expect(fetcher.mock.calls[0][1].signal.aborted).toBe(true);
-      reply(
-        new Response(JSON.stringify({ collection: Array.from({ length: 50 }, (_, i) => ({ '@id': `urn:${i}` })) })),
-      );
-      await verdict;
-      expect(fetcher).toHaveBeenCalledTimes(1);
+        );
+      }) as typeof fetch;
+      await expect(service.allowsDefault(field, 'urn:chosen', 'a stale label')).resolves.toBe(true);
+      expect(bodies).toEqual([{ iri: 'urn:chosen', valueConstraints: field._valueConstraints }]);
     });
 
-    it('reports expiration of the whole lookup deadline as a retryable timeout', async () => {
-      const deadline = new AbortController();
-      const timeout = vi.spyOn(AbortSignal, 'timeout').mockReturnValue(deadline.signal);
+    it('distinguishes failed membership from unavailable and omitted verification', async () => {
+      respondWith({ iri: 'urn:chosen', status: 'failed', code: 'controlledTermMembership', message: 'Outside scope.' });
+      await expect(service.allowsDefault(field, 'urn:chosen', 'label')).resolves.toBe(false);
+      respondWith({}, false, 503);
+      await expect(service.verifyDefault(field, 'urn:chosen')).resolves.toMatchObject({
+        status: 'unavailable',
+        code: 'semanticUnavailable',
+      });
+      await expect(service.allowsDefault(field, 'urn:chosen', 'label')).resolves.toBe(true);
+      respondWith({ iri: 'urn:chosen', status: 'notChecked', code: 'semanticNotChecked', message: 'Not checked.' });
+      await expect(service.verifyDefault(field, 'urn:chosen')).resolves.toMatchObject({ status: 'notChecked' });
+      await expect(service.allowsDefault(field, 'urn:chosen', 'label')).resolves.toBe(true);
+      service.configure({});
+      await expect(service.verifyDefault(field, 'urn:chosen')).resolves.toMatchObject({
+        status: 'notChecked',
+        code: 'semanticNotChecked',
+      });
+      await expect(service.allowsDefault(field, 'urn:chosen', 'label')).resolves.toBe(true);
+    });
+
+    it('does not accept malformed or mismatched service responses as proof', async () => {
+      for (const result of [
+        {},
+        { iri: 'urn:other', status: 'passed', code: 'controlledTermVerified', message: 'Permitted.' },
+        { iri: 'urn:chosen', status: 'failed', code: 'unexpectedStructuralCode', message: 'Unknown code.' },
+        { iri: 'urn:chosen', status: 'failed', code: 'controlledTermVerified', message: 'Wrong status.' },
+        { iri: 'urn:chosen', status: 'passed', code: 'controlledTermMembership', message: 'Wrong status.' },
+        { iri: 'urn:chosen', status: 'passed', code: 'authorityVerified', message: 'Wrong service.' },
+      ]) {
+        respondWith(result);
+        await expect(service.verifyDefault(field, 'urn:chosen')).resolves.toMatchObject({ status: 'unavailable' });
+      }
+    });
+
+    it('passes cancellation to the transport', async () => {
+      const controller = new AbortController();
       globalThis.fetch = vi.fn(
-        (_input, init) =>
+        (_url, init) =>
           new Promise<Response>((_resolve, reject) => {
             init?.signal?.addEventListener('abort', () => reject(init.signal!.reason), { once: true });
           }),
       );
-      try {
-        const pending = service.allowsDefault(field, 'urn:chosen', 'cancer');
-        const verdict = expect(pending).rejects.toThrow('The terminology lookup took too long. Try again.');
-        expect(timeout).toHaveBeenCalledWith(30_000);
-        deadline.abort(new DOMException('Expired', 'TimeoutError'));
-        await verdict;
-      } finally {
-        timeout.mockRestore();
-      }
-    });
-
-    it('checks every result page with the full field constraints', async () => {
-      const bodies: Record<string, unknown>[] = [];
-      globalThis.fetch = (async (_input, init) => {
-        bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
-        const collection =
-          bodies.length === 1
-            ? Array.from({ length: 50 }, (_, i) => ({ '@id': `urn:other:${i}` }))
-            : [{ '@id': 'urn:chosen' }];
-        return new Response(JSON.stringify({ collection }));
-      }) as typeof fetch;
-      await expect(service.allowsDefault(field, 'urn:chosen', 'cancer')).resolves.toBe(true);
-      expect(bodies.map((body) => body['offset'])).toEqual([0, 50]);
-      expect(bodies.every((body) => body['limit'] === 50 && !('page' in body) && !('pageSize' in body))).toBe(true);
-      expect(bodies[1]['parameterObject']).toEqual({ inputText: 'cancer', valueConstraints: field._valueConstraints });
-    });
-
-    it('stops at the server count rather than asking past the end', async () => {
-      let calls = 0;
-      globalThis.fetch = (async () => {
-        calls++;
-        const collection = Array.from({ length: 50 }, (_, i) => ({ '@id': `urn:other:${calls}:${i}` }));
-        return new Response(JSON.stringify({ collection, totalCount: 100 }));
-      }) as typeof fetch;
-
-      await expect(service.allowsDefault(field, 'urn:chosen', 'cancer')).resolves.toBe(false);
-      expect(calls).toBe(2);
-    });
-
-    it('reports a term it could not reach as unverified rather than refused', async () => {
-      let calls = 0;
-      globalThis.fetch = (async () => {
-        calls++;
-        const collection = Array.from({ length: 50 }, (_, i) => ({ '@id': `urn:other:${calls}:${i}` }));
-        return new Response(JSON.stringify({ collection, totalCount: 1_000_000 }));
-      }) as typeof fetch;
-
-      await expect(service.allowsDefault(field, 'urn:chosen', 'cancer')).rejects.toThrow();
-      expect(calls).toBe(100);
-    });
-
-    it('refuses a term outside the returned constraint results', async () => {
-      respondWith({ collection: [{ '@id': 'urn:other' }] });
-      await expect(service.allowsDefault(field, 'urn:chosen', 'cancer')).resolves.toBe(false);
-    });
-
-    it('reports server failure and malformed results rather than admitting the term', async () => {
-      respondWith({}, false, 503);
-      await expect(service.allowsDefault(field, 'urn:chosen', 'cancer')).rejects.toThrow(/503/);
-      respondWith({});
-      await expect(service.allowsDefault(field, 'urn:chosen', 'cancer')).rejects.toThrow(/no result collection/);
+      const pending = service.verifyDefault(field, 'urn:chosen', controller.signal);
+      controller.abort();
+      await expect(pending).resolves.toMatchObject({ status: 'unavailable' });
     });
   });
 });

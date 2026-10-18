@@ -14,6 +14,7 @@ import {
 import type { FieldBuilder } from './types';
 import {
   NumericPolicy,
+  FieldValuePolicy,
   TextPolicy,
   AnnotationAtId,
   AnnotationAtValue,
@@ -57,15 +58,60 @@ const INTEGER_RANGES: Record<string, readonly [string, string]> = {
 
 function validateNumericSettings(field: Field): void {
   const { type, min, max, decimalPlaces } = field.numeric!;
+  const bound = (value: number | string) => {
+    try {
+      return NumericPolicy.value(value);
+    } catch {
+      return value;
+    }
+  };
+  const configuration = FieldValuePolicy.validateConfiguration({
+    _ui: { inputType: 'numeric' },
+    _valueConstraints: {
+      numberType: type,
+      ...(min !== null ? { minValue: bound(min) } : {}),
+      ...(max !== null ? { maxValue: bound(max) } : {}),
+      ...(decimalPlaces !== null ? { decimalPlace: decimalPlaces } : {}),
+    },
+  });
   if (!NUMERIC_TYPES.some((candidate) => candidate === type))
     throw new LocalizedError(message('errors.numeric.datatype'));
   const typeLabel = type.replace('xsd:', '');
   const range = INTEGER_RANGES[type];
+  if (
+    range &&
+    [min, max, ...(field.defaultValue.kind === 'number' ? [field.defaultValue.value] : [])].some(
+      (value) => typeof value === 'number' && Number.isInteger(value) && !Number.isSafeInteger(value),
+    )
+  )
+    throw new LocalizedError(
+      message('errors.numeric.range', { min: String(Number.MIN_SAFE_INTEGER), max: String(Number.MAX_SAFE_INTEGER) }),
+    );
   const values: [Message, number | string | null][] = [
     [message('errors.numeric.minimumValue'), min],
     [message('errors.numeric.maximumValue'), max],
   ];
-  if (field.defaultValue?.kind === 'number')
+  const defaultFindings =
+    field.defaultValue?.kind === 'number'
+      ? FieldValuePolicy.validate(
+          {
+            _ui: { inputType: 'numeric' },
+            _valueConstraints: {
+              numberType: type,
+              minValue: min,
+              maxValue: max,
+              decimalPlace: decimalPlaces,
+            },
+          },
+          field.defaultValue.value,
+          '',
+          'template',
+        )
+      : [];
+  if (!configuration.length && !defaultFindings.length) return;
+  // These checks also choose precise localized diagnostics. A conforming default
+  // is accepted by the shared policy and needs no second host-side verdict.
+  if (field.defaultValue?.kind === 'number' && defaultFindings.length)
     values.push([message('errors.numeric.defaultValue'), field.defaultValue.value]);
   for (const [label, value] of values) {
     if (value === null) continue;
@@ -116,14 +162,10 @@ function validateNumericSettings(field: Field): void {
         );
     }
   }
-  if (field.defaultValue?.kind === 'number') {
-    const value = field.defaultValue.value;
-    if (
-      (min !== null && NumericPolicy.compare(value, min) < 0) ||
-      (max !== null && NumericPolicy.compare(value, max) > 0)
-    )
-      throw new LocalizedError(message('errors.numeric.defaultOutsideRange'));
-  }
+  if (defaultFindings.some((finding) => finding.code === 'minValue' || finding.code === 'maxValue'))
+    throw new LocalizedError(message('errors.numeric.defaultOutsideRange'));
+  if (defaultFindings.length) throw new LocalizedError(message('defaultValue.invalid'));
+  if (configuration.length) throw new LocalizedError(message('errors.numeric.inconsistent'));
 }
 
 function buildTemporal(builder: FieldBuilder, field: Field): void {
@@ -231,11 +273,17 @@ function buildField(field: Field): TemplateField {
     }
     if (field.defaultValue.kind === 'literal') {
       const value = field.defaultValue.value;
-      if (minLength !== null && TextPolicy.codePointLength(value) < minLength)
+      const findings = FieldValuePolicy.validate(
+        { _ui: { inputType: 'textfield' }, _valueConstraints: { minLength, maxLength } },
+        value,
+        '',
+        'template',
+      );
+      if (findings.some((finding) => finding.code === 'minLength') && minLength !== null)
         throw new LocalizedError(
           message(countKey('errors.text.defaultTooShort', minLength), { count: String(minLength) }),
         );
-      if (maxLength !== null && TextPolicy.codePointLength(value) > maxLength)
+      if (findings.some((finding) => finding.code === 'maxLength') && maxLength !== null)
         throw new LocalizedError(
           message(countKey('errors.text.defaultTooLong', maxLength), { count: String(maxLength) }),
         );
