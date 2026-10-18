@@ -1,7 +1,7 @@
 import { applyPreset } from './support';
 import nestedTemplate from '../../src/app/core/model/fixtures/corpus/template-028.json' with { type: 'json' };
 import { expect, test } from '@playwright/test';
-import { openDesigner, currentTemplate, fieldOrder } from './support';
+import { openDesigner, currentTemplate, expectSharedFocusRing, fieldOrder } from './support';
 import type { CedarEmbeddableDesignerElement, CedJsonObject } from '../../src/app/ced-public-api';
 
 for (const width of [1280, 375])
@@ -70,19 +70,7 @@ for (const width of [1280, 375])
     const dialog = designer.getByRole('dialog', { name: 'Import Fields and Elements' });
     const searchbox = dialog.getByRole('searchbox', { name: 'Search fields and elements' });
     await expect(searchbox).toBeVisible();
-    // A focused field draws the shared focus ring, not the browser's own.
-    await searchbox.focus();
-    const ring = await searchbox.evaluate((input) => {
-      const probe = document.createElement('span');
-      probe.style.color = 'var(--cedar-control-focus, var(--cedar-color-primary))';
-      input.after(probe);
-      const expected = getComputedStyle(probe).color;
-      probe.remove();
-      const style = getComputedStyle(input);
-      return { style: style.outlineStyle, color: style.outlineColor, expected };
-    });
-    expect(ring.style).toBe('solid');
-    expect(ring.color).toBe(ring.expected);
+    await expectSharedFocusRing(searchbox);
     // Cancel and Done close the dialog from its bottom right, as the designer's other dialogs do.
     await page.evaluate(() => document.fonts.ready);
     // A native dialog recentres as its content settles. Read every box in one layout

@@ -174,7 +174,6 @@ app-icon {
 }
 .field-name {
   border: none;
-  outline: none;
   @include spacing.apply(padding-bottom, compact);
   min-width: 0;
   background: transparent;
@@ -237,15 +236,9 @@ app-field-summary {
 }
 .choice-option-input {
   border: none;
-  outline: none;
   background: transparent;
   flex: 1;
   min-width: 0;
-  border-bottom-width: 1px;
-  border-bottom-color: var(--cedar-border-rule);
-}
-.choice-option-input:focus {
-  border-color: var(--cedar-color-primary);
 }
 .choice-add-action {
   display: flex;
@@ -275,8 +268,4 @@ app-field-summary {
   border: 1px solid var(--cedar-control-border-default);
   border-radius: var(--cedar-radius);
   @include spacing.apply(padding, control-row);
-}
-.field-content-control:focus {
-  outline: none;
-  border-color: var(--cedar-color-primary);
 }
