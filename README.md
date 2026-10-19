@@ -107,7 +107,7 @@ states user-visible text without going through them.
 
 ## Requirements
 
-Node 24.19.0, as named by `.nvmrc` and matching CEE and the term picker.
+Node 24.22.0, as named by `.nvmrc` and matching CEE and the term picker.
 
 ```bash
 nvm use

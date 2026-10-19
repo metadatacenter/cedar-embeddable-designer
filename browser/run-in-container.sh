@@ -37,7 +37,7 @@
 # with `npm run test:browser`. This is only for the pixels.
 set -euo pipefail
 
-IMAGE="mcr.microsoft.com/playwright:v1.63.0-noble"
+IMAGE="mcr.microsoft.com/playwright:v1.64.1-noble"
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # Which half to run. `behaviour` excludes the baselines by naming everything else.
