@@ -8,6 +8,11 @@ let nextId = 10000;
 export function newNodeId(): number {
   return ++nextId;
 }
+/** Restored session identities must never collide with subsequently added children. */
+export function reserveNodeIds(maximum: number): void {
+  if (!Number.isSafeInteger(maximum) || maximum < 0 || maximum > Number.MAX_SAFE_INTEGER - 1000000) throw new Error();
+  nextId = Math.max(nextId, maximum);
+}
 
 const placementKeys = [
   'deploymentName',

@@ -1,14 +1,22 @@
-@if (service.visibleIssues().length; as count) {
-  <details class="validation-summary">
+@if (issues().length; as count) {
+  <details class="validation-summary" [class.validation-summary--readonly]="service.access.readOnly()">
     <summary>
       <app-icon key="chevron-down" size="small" class="validation-disclosure" />
-      <app-icon key="warning" size="small" />
-      <span>{{ 'validation.summary' | countKey: count | translate: { count: count } }}</span>
+      @if (service.access.readOnly() || advisory()) {
+        <span>{{ 'validation.inspectionSummary' | translate: { count: count } }}</span>
+      } @else {
+        <app-icon key="warning" size="small" />
+        <span>{{ 'validation.summary' | countKey: count | translate: { count: count } }}</span>
+      }
     </summary>
     <ul>
-      @for (issue of service.visibleIssues(); track $index) {
+      @for (issue of issues(); track $index) {
         <li>
-          <button type="button" (click)="service.revealIssue(issue)">{{ issue.label }}: {{ issue.message }}</button>
+          @if (issue.unmapped) {
+            <span>{{ issue.location }}: {{ issue.message }}</span>
+          } @else {
+            <button type="button" (click)="service.revealIssue(issue)">{{ issue.label }}: {{ issue.message }}</button>
+          }
         </li>
       }
     </ul>

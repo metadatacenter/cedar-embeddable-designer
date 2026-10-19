@@ -1,3 +1,5 @@
+import { RegexChecks } from '../model/cedar-template';
+import { trimInputPadding } from '../model/cedar-model/text-policy';
 import { sameRule } from '../model/validation-rule';
 import { computed, signal } from '@angular/core';
 import { CedValidationReport } from '../../ced-public-api';
@@ -26,6 +28,15 @@ interface Edit {
   setting: string;
   tab: string;
   changes: Partial<Field>;
+}
+export interface ValidationRecovery {
+  edits: Record<string, Edit>;
+  inputs: Record<
+    string,
+    { message: string; tab: string; value?: string | FieldDefaultValue; settings?: SettingsInputDraft }
+  >;
+  touched: number[];
+  quiet: number[];
 }
 export interface ValidationCheck {
   readonly signal: AbortSignal;
@@ -85,8 +96,27 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
  * change-detection hook. Controls keep input buffers, not independent verdicts.
  */
 export class ValidationCoordinator {
-  private readonly locked = signal(false);
-  readonly readOnly = this.locked.asReadonly();
+  readonly readOnly;
+  private readonly regexRevision = signal(0);
+  private regex = this.newRegexChecks();
+  private newRegexChecks(): RegexChecks {
+    return new RegexChecks(() => {
+      this.regexRevision.update((value) => value + 1);
+      this.session.document.update((document) => document);
+    });
+  }
+  async settled(): Promise<void> {
+    this.report();
+    while (this.regex.pending) {
+      await this.regex.settled();
+      this.report();
+    }
+  }
+  dispose(): void {
+    this.regex.dispose();
+    this.replaceChecks({});
+  }
+
   private editabilityRevision = 0;
   private readonly intents = new Map<number, symbol>();
   private readonly edits = signal<Record<string, Edit>>({});
@@ -102,67 +132,84 @@ export class ValidationCoordinator {
     private readonly t: Translate,
     private readonly accepted: (id: number, changes: Partial<Field>) => void = () => {},
   ) {
-    session.reconcile = (document) => this.reconcile(document);
+    this.readOnly = session.access.readOnly;
+    session.reconcile = (document) =>
+      this.regex.run(() => {
+        const next = this.reconcile(document);
+        this.evaluate(next);
+        return next;
+      });
   }
 
-  private readonly draftIssues = computed((): DraftIssues => {
-    const issues = { ...this.inputErrors() };
-    const document = this.session.document();
+  private evaluate(document: ContainerDraft) {
+    const draftIssues: Record<string, DraftIssues[string]> = { ...this.inputErrors() };
+    let pendingValidation = false;
     for (const [key, edit] of Object.entries(this.edits())) {
       const result = this.candidate(document, edit.id, edit.changes);
-      if (result.error !== null) issues[key] = { message: result.error, tab: edit.tab };
+      pendingValidation ||= !!result.pendingValidation;
+      if (result.error !== null) draftIssues[key] = { message: result.error, tab: edit.tab, setting: result.setting };
     }
-    return issues;
+    const pendingIssues: DraftIssues = {
+      ...Object.fromEntries(
+        Object.entries(this.checks()).map(([key, check]) => [key, { message: check.message, tab: check.tab }]),
+      ),
+      ...draftIssues,
+    };
+    const modelReport = validateDocument(document, {}, this.t);
+    const report = Object.keys(pendingIssues).length ? validateDocument(document, pendingIssues, this.t) : modelReport;
+    pendingValidation ||= !!report.pendingValidation;
+    return {
+      draftIssues,
+      pendingIssues,
+      modelReport,
+      report: {
+        ...report,
+        valid: report.valid && !pendingValidation,
+        canSave: !this.readOnly() && report.canSave && !pendingValidation,
+        ...(pendingValidation ? { pendingValidation: true } : {}),
+        issues: report.issues.map((issue) => ({
+          ...issue,
+          shown:
+            issue.setting === 'name'
+              ? this.touchedNames().has(issue.nodeId)
+              : issue.setting !== 'option-0' || this.optionVisible(issue.nodeId, 0),
+        })),
+      },
+    };
+  }
+  private readonly evaluated = computed(() => {
+    this.regexRevision();
+    return this.regex.run(() => this.evaluate(this.session.document()));
   });
-  readonly pendingIssues = computed((): DraftIssues => ({
-    ...Object.fromEntries(
-      Object.entries(this.checks()).map(([key, check]) => [key, { message: check.message, tab: check.tab }]),
-    ),
-    ...this.draftIssues(),
-  }));
+  private readonly draftIssues = computed(() => this.evaluated().draftIssues);
+  readonly pendingIssues = computed(() => this.evaluated().pendingIssues);
+  readonly modelReport = computed(() => this.evaluated().modelReport);
+  readonly report = computed((): CedValidationReport => this.evaluated().report);
   readonly hasPendingEdits = computed(
     () =>
       Object.keys(this.edits()).length > 0 ||
       Object.keys(this.inputErrors()).length > 0 ||
       Object.keys(this.checks()).length > 0,
   );
-  readonly modelReport = computed(() => validateDocument(this.session.document(), {}, this.t));
-  readonly report = computed((): CedValidationReport => {
-    const pending = this.pendingIssues();
-    const report = Object.keys(pending).length
-      ? validateDocument(this.session.document(), pending, this.t)
-      : this.modelReport();
-    return {
-      ...report,
-      canSave: !this.readOnly() && report.canSave,
-      issues: report.issues.map((issue) => ({
-        ...issue,
-        shown:
-          issue.setting === 'name'
-            ? this.touchedNames().has(issue.nodeId)
-            : issue.setting !== 'option-0' || this.optionVisible(issue.nodeId, 0),
-      })),
-    };
-  });
 
   setReadOnly(value: boolean): void {
-    if (value === this.readOnly()) return;
+    if (!this.session.access.setHostReadOnly(value)) return;
     this.editabilityRevision++;
-    this.locked.set(value);
     this.replaceChecks({});
   }
   /** Whether the child's own definition, or the root's, can change. */
   canEdit(id: number): boolean {
-    const document = this.session.document();
-    return !this.readOnly() && !!nodeOf(document, id) && !childLocks(document, id).definition;
+    return this.session.access.canEditDefinition(id);
   }
   /** Whether the child's placement in its parent can change. */
   canPlace(id: number): boolean {
-    const document = this.session.document();
-    return !this.readOnly() && !!parentOf(document, id) && !childLocks(document, id).placement;
+    return this.session.access.canEditPlacement(id);
   }
 
   reset(touched: number[] = []): void {
+    this.regex.dispose();
+    this.regex = this.newRegexChecks();
+    this.regexRevision.update((value) => value + 1);
     this.editabilityRevision++;
     this.intents.clear();
     this.edits.set({});
@@ -170,6 +217,40 @@ export class ValidationCoordinator {
     this.replaceChecks({});
     this.touchedNames.set(new Set(touched));
     this.quietOptions.set(new Set());
+  }
+
+  captureRecovery(): ValidationRecovery {
+    // Requests cannot survive a reload. Retain their save gate until the author retries the control.
+    const inputs = { ...this.inputErrors() };
+    for (const [key, check] of Object.entries(this.checks()))
+      inputs[key] ??= { message: check.message, tab: check.tab };
+    const present = (id: number) => !!nodeOf(this.session.document(), id);
+    return structuredClone({
+      edits: this.edits(),
+      inputs,
+      touched: [...this.touchedNames()].filter(present),
+      quiet: [...this.quietOptions()].filter(present),
+    });
+  }
+  restoreRecovery(value: ValidationRecovery): void {
+    const copy = structuredClone(value);
+    if (!copy?.edits || !copy.inputs || !Array.isArray(copy.touched) || !Array.isArray(copy.quiet)) throw new Error();
+    for (const [key, entry] of Object.entries({ ...copy.inputs, ...copy.edits })) {
+      const match = key.match(/^(\d+):(.+)$/);
+      if (!match || !nodeOf(this.session.document(), Number(match[1])) || typeof entry.tab !== 'string')
+        throw new Error();
+    }
+    for (const [key, edit] of Object.entries(copy.edits))
+      if (key !== keyOf(edit.id, edit.setting) || !edit.changes || typeof edit.changes !== 'object') throw new Error();
+    for (const input of Object.values(copy.inputs)) if (typeof input.message !== 'string') throw new Error();
+    if (
+      [...copy.touched, ...copy.quiet].some((id) => !Number.isSafeInteger(id) || !nodeOf(this.session.document(), id))
+    )
+      throw new Error();
+    this.reset(copy.touched);
+    this.edits.set(copy.edits);
+    this.inputErrors.set(copy.inputs);
+    this.quietOptions.set(new Set(copy.quiet));
   }
   startOption(id: number): void {
     this.quietOptions.update((ids) => new Set([...ids, id]));
@@ -199,6 +280,11 @@ export class ValidationCoordinator {
     value?: string | FieldDefaultValue,
     settings?: SettingsInputDraft,
   ): void {
+    if (
+      message &&
+      (PLACEMENT_SETTINGS.has(setting) && !this.session.access.fieldDocument() ? !this.canPlace(id) : !this.canEdit(id))
+    )
+      return;
     const key = keyOf(id, setting);
     this.inputErrors.update((previous) => {
       const next = { ...previous };
@@ -294,6 +380,7 @@ export class ValidationCoordinator {
   }
   submit(id: number, changes: Partial<Field>, setting: string, tab: string): string | null {
     if (this.readOnly()) return this.t('fieldElement.readOnly');
+    if (!this.session.access.canChange(id, Object.keys(changes))) return this.t('errors.publishedReadOnly');
     if (!parentOf(this.session.document(), id)) return this.t('errors.elementMissing');
     this.intents.set(id, Symbol());
     // A new editing intent supersedes checks of the previous field, even if
@@ -301,7 +388,10 @@ export class ValidationCoordinator {
     this.replaceChecks(Object.fromEntries(Object.entries(this.checks()).filter(([, check]) => check.id !== id)));
     const key = keyOf(id, setting);
     this.setInputError(id, setting, null, tab);
-    this.edits.update((previous) => ({ ...previous, [key]: { id, changes: structuredClone(changes), setting, tab } }));
+    this.edits.update((previous) => ({
+      ...previous,
+      [key]: { id, changes: structuredClone(changes), setting, tab },
+    }));
     this.session.document.update((document) => document);
     return this.error(id, setting);
   }
@@ -310,7 +400,7 @@ export class ValidationCoordinator {
     const parent = parentOf(document, id);
     if (!parent) return this.t('errors.elementMissing');
     const node = parent.children.find((child) => child.id === id)!;
-    const key = value.trim();
+    const key = trimInputPadding(value);
     const invalid = childKeyError(
       key,
       node.kind === 'field' && node.definition.type === 'attributeValue',
@@ -329,7 +419,7 @@ export class ValidationCoordinator {
     document: ContainerDraft,
     id: number,
     changes: Partial<Field>,
-  ): { node?: ChildNode; error: string | null } {
+  ): { node?: ChildNode; error: string | null; setting?: string; pendingValidation?: boolean } {
     const parent = parentOf(document, id);
     const node = parent?.children.find((child) => child.id === id);
     if (!node || !parent) return { error: this.t('errors.elementMissing') };
@@ -337,7 +427,7 @@ export class ValidationCoordinator {
     if (changes.deploymentName !== undefined) {
       const error = this.keyError(document, id, changes.deploymentName);
       if (error) return { error };
-      changes = { ...changes, deploymentName: changes.deploymentName.trim() };
+      changes = { ...changes, deploymentName: trimInputPadding(changes.deploymentName) };
     }
     if (node.kind === 'field') {
       const current = fieldView(node);
@@ -367,12 +457,19 @@ export class ValidationCoordinator {
         },
         {},
         this.t,
-      ).issues.filter((issue) => issue.setting !== 'name' && !issue.setting.startsWith('option-'));
-    const before = ownIssues(node);
-    const error = ownIssues(next).find(
-      (issue) => !before.some((old) => old.setting === issue.setting && sameRule(old.rule, issue.rule)),
-    );
-    return { node: next, error: error?.message ?? null };
+      );
+    const before = ownIssues(node).issues;
+    const after = ownIssues(next);
+    const error = after.issues
+      .filter((issue) => issue.setting !== 'name' && !issue.setting.startsWith('option-'))
+      .find((issue) => !before.some((old) => old.setting === issue.setting && sameRule(old.rule, issue.rule)));
+    // Grouped edits still own their errors; a malformed pattern identifies its exact repair control.
+    return {
+      node: next,
+      error: error?.message ?? null,
+      setting: error?.setting === 'regex' ? 'regex' : undefined,
+      pendingValidation: after.pendingValidation,
+    };
   }
 
   private reconcile(document: ContainerDraft): ContainerDraft {
@@ -406,9 +503,9 @@ export class ValidationCoordinator {
       if (!available(Number(id), setting)) delete inputs[key];
     }
     const commit = (id: number, changes: Partial<Field>): boolean => {
-      if (this.readOnly()) return false;
+      if (!this.session.access.canChange(id, Object.keys(changes), document)) return false;
       const result = this.candidate(document, id, changes);
-      if (result.error !== null || !result.node) return false;
+      if (result.pendingValidation || result.error !== null || !result.node) return false;
       const parent = parentOf(document, id)!;
       this.accepted(id, changes);
       document = updateContainer(document, parent.id, (container) => ({

@@ -47,6 +47,7 @@
             spellcheck="false"
             autocomplete="off"
             rows="1"
+            [disabled]="service.definitionLocked(container().id)"
             [ngModel]="container().metadata?.header ?? ''"
             (ngModelChange)="update('header', $event)"
           ></textarea>
@@ -57,6 +58,7 @@
             spellcheck="false"
             autocomplete="off"
             rows="1"
+            [disabled]="service.definitionLocked(container().id)"
             [ngModel]="container().metadata?.footer ?? ''"
             (ngModelChange)="update('footer', $event)"
           ></textarea>
@@ -111,6 +113,7 @@
           autocomplete="off"
           [id]="'container-identifier-' + container().id"
           name="schemaIdentifier"
+          [disabled]="service.definitionLocked(container().id)"
           [ngModel]="container().schemaIdentifier"
           (ngModelChange)="service.updateContainerDefinition(container().id, { schemaIdentifier: $event })"
         />

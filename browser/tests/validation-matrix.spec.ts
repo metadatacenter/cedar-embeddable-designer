@@ -1,5 +1,5 @@
 import { expect, Page, test } from '@playwright/test';
-import type { CedarEmbeddableDesignerElement } from '../../src/app/ced-public-api';
+import type { CedarEmbeddableDesignerElement, CedJsonObject } from '../../src/app/ced-public-api';
 import { buildContainer, newContainer, templateToJson } from '../../src/app/core/model/cedar-template';
 import { fieldNode } from '../../src/app/core/model/container-draft';
 import type { Field } from '../../src/app/core/models/types';
@@ -12,7 +12,9 @@ const report = (page: Page) =>
 const load = (page: Page, artifact: object) =>
   page.evaluate(
     (artifact) =>
-      (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).loadArtifact(artifact),
+      (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).loadArtifact(
+        artifact as CedJsonObject,
+      ),
     artifact,
   );
 
@@ -49,8 +51,7 @@ function source(type: string, depth: number, kind: 'template' | 'element' = 'tem
   return artifact;
 }
 
-// A reader can fix none of a document's problems, so a read-only designer marks none of them. The
-// report still lists them, so the host can tell why the document would not save.
+// Read-only findings remain inspectable without inline authoring markers.
 test('a read-only designer marks none of the problems its report lists', async ({ page }) => {
   const designer = await openDesigner(page, '?cee=stub');
   await applyPreset(page, 'modular');
@@ -63,9 +64,10 @@ test('a read-only designer marks none of the problems its report lists', async (
   await expect.poll(async () => (await report(page)).issues.length).toBe(1);
   expect(await report(page)).toMatchObject({ canSave: false, issues: [{ setting: 'defaultValue', shown: true }] });
   const markers = designer.locator(
-    '.validation-summary, .outline-row.invalid, .field-drag-container.invalid, .validation-badge, .has-errors, .ced-field-error',
+    '.outline-row.invalid, .field-drag-container.invalid, .validation-badge, .has-errors, .ced-field-error',
   );
   await expect(markers).toHaveCount(0);
+  await expect(designer.locator('.validation-summary')).toContainText('Validation issues (1)');
   // Editable again, the designer points at the same problem.
   await setReadOnly(false);
   await expect(designer.locator('.validation-summary')).toHaveCount(1);
@@ -88,6 +90,13 @@ for (const type of ['link', 'controlledTerms', 'orcid', 'ror', 'pfas', 'rrid', '
       expect(issues).toHaveLength(1);
       expect(issues[0]).toMatchObject({ setting: 'defaultValue', tab: 'Constraints', shown: true });
       expect(issues[0].path).toHaveLength(depth + 2);
+      if (type !== 'link') {
+        const semantic = (await report(page)).semanticChecks;
+        expect(semantic).toEqual([
+          expect.objectContaining({ iri: 'relative/path', status: 'notChecked', code: 'semanticNotChecked' }),
+        ]);
+        expect(semantic![0].message).toContain('well-formed absolute IRI');
+      }
       await expect(preview.getByRole('status')).toContainText('Preview is unavailable');
       await expect(designer.locator('.outline-row.invalid')).toHaveCount(depth + 1);
       if (depth) await clickCentred(designer.locator('.element-toggle[aria-label="Collapse Level 1"]'));
@@ -189,3 +198,84 @@ for (const depth of [0, 3, 6])
       await expect(designer.locator('.outline-row.invalid')).toHaveCount(0);
     });
   }
+
+for (const kind of ['template', 'element'] as const)
+  for (const mode of ['host', 'published'] as const)
+    for (const depth of [0, 3])
+      for (const width of [375, 1280]) {
+        test(`read-only report: ${kind}, ${mode}, depth ${depth}, width ${width}`, async ({ page }) => {
+          await page.setViewportSize({ width, height: 1000 });
+          const designer = await openDesigner(page, '?cee=stub');
+          const artifact = source('number', depth, kind);
+          if (mode === 'published') artifact['bibo:status'] = 'bibo:published';
+          await load(page, artifact);
+          if (mode === 'host')
+            await designer.evaluate((el: any) => {
+              el.readOnly = true;
+            });
+          const findings = await report(page);
+          const summary = designer.locator('.validation-summary');
+          await expect(summary).toContainText('Validation issues (1)');
+          const before = await page.evaluate(() => (window as any).__events);
+          await expect(summary).not.toHaveAttribute('open');
+          await expect(summary).toHaveCSS('background-color', 'rgb(244, 246, 246)');
+          if (depth) await clickCentred(designer.locator('.element-toggle[aria-label="Collapse Level 1"]'));
+          await summary.locator('summary').focus();
+          await page.keyboard.press('Enter');
+          const link = summary.getByRole('button');
+          await expect(link).toHaveCount(1);
+          await link.focus();
+          await page.keyboard.press('Enter');
+          const card = designer.locator('app-field-card');
+          await expect(card.getByRole('tabpanel', { name: 'Constraints', exact: true })).toBeVisible();
+          await expect(card.getByRole('tab', { name: 'Constraints', exact: true })).toBeFocused();
+          await expect(card.getByRole('textbox', { name: 'Field display name', exact: true })).toBeDisabled();
+          await expect(
+            designer.locator(
+              '.outline-row.invalid, .field-drag-container.invalid, .validation-badge, .has-errors, .ced-field-error:visible, [aria-invalid="true"]',
+            ),
+          ).toHaveCount(0);
+          expect(await page.evaluate(() => (window as any).__events)).toEqual(before);
+          expect(await report(page)).toEqual(findings);
+          expect(await designer.evaluate((el: any) => el.isDirty)).toBe(false);
+          await summary.locator('summary').click();
+          await expect(summary).not.toHaveAttribute('open');
+          await summary.locator('summary').click();
+          if (kind === 'template' && mode === 'host' && depth === 0)
+            await page.screenshot({ path: `/tmp/ced-inspection-report-${width}.png` });
+          // A replacement with no findings removes the disclosure.
+          const valid = structuredClone(artifact) as any;
+          let parent = valid;
+          for (let level = 1; level <= depth; level++) parent = child(parent, `Level ${level}`);
+          delete (child(parent, 'Value')._valueConstraints as any).defaultValue;
+          await load(page, valid);
+          await expect(summary).toHaveCount(0);
+        });
+      }
+
+test('read-only standalone report includes untouched names without revealing editable errors', async ({ page }) => {
+  await page.goto('/field-host.html');
+  await page.waitForFunction(() => typeof (document.getElementById('field') as any)?.newArtifact === 'function');
+  const field = page.locator('#field');
+  await field.evaluate((el: any) => {
+    el.newArtifact('text');
+    el.readOnly = true;
+  });
+  const before = await field.evaluate((el: any) => ({ artifact: el.currentArtifact, report: el.validate() }));
+  expect(before.report.issues).toHaveLength(1);
+  expect(before.report.issues[0].shown).toBe(false);
+  const summary = field.locator('.validation-summary');
+  await expect(summary).toContainText('Validation issues (1)');
+  await summary.locator('summary').click();
+  await summary.getByRole('button').click();
+  await expect(field.locator('app-field-card')).toBeFocused();
+  expect(await field.evaluate((el: any) => ({ artifact: el.currentArtifact, report: el.validate() }))).toEqual(before);
+  await field.evaluate((el: any) => {
+    el.language = 'hu';
+  });
+  await expect(summary).toContainText('Ellenőrzési problémák (1)');
+  await field.evaluate((el: any) => {
+    el.readOnly = false;
+  });
+  await expect(summary).toHaveCount(0);
+});

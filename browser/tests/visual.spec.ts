@@ -45,6 +45,10 @@ const DESIGNER = 'cedar-embeddable-designer';
 const sequentialIdentifiers = (page: Page) =>
   page.addInitScript(() => {
     let sequence = 0;
+    // These single-field photographs own the next two fixture identifiers.
+    (window as unknown as { __nextFieldIdentity: () => void }).__nextFieldIdentity = () => {
+      sequence = 19;
+    };
     Object.defineProperty(crypto, 'randomUUID', {
       value: () => `00000000-0000-4000-8000-${String(++sequence).padStart(12, '0')}`,
     });
@@ -107,6 +111,7 @@ async function designerShowing(
       .getByRole('button', { name: /^Add field$/ })
       .first()
       .click();
+    await page.evaluate(() => (window as unknown as { __nextFieldIdentity?: () => void }).__nextFieldIdentity?.());
     await designer.getByRole('button', { name: label, exact: true }).click();
     await designer.locator('input[aria-label="Field display name"]:focus').fill(label);
   }
@@ -288,3 +293,37 @@ for (const name of ['Preferences', 'Define Presets']) {
     await expect(dialog).toHaveScreenshot(`settings-${name.toLowerCase().replaceAll(' ', '-')}.png`, SHOT);
   });
 }
+
+for (const width of [1280, 375]) {
+  test(`read-only validation report at ${width}`, async ({ page }) => {
+    await sequentialIdentifiers(page);
+    await page.setViewportSize({ width, height: 900 });
+    const designer = await designerShowing(page, ['Text']);
+    await designer.getByRole('textbox', { name: 'Field display name', exact: true }).fill('');
+    await designer.evaluate((el: any) => {
+      el.readOnly = true;
+    });
+    const summary = designer.locator('.validation-summary');
+    await expect(summary).toHaveScreenshot(`read-only-issues-collapsed-${width}.png`, SHOT);
+    await summary.locator('summary').click();
+    await expect(summary).toHaveScreenshot(`read-only-issues-expanded-${width}.png`, SHOT);
+  });
+}
+
+for (const kind of ['template', 'element'] as const)
+  for (const width of [1280, 375]) {
+    test(`empty ${kind} insertion at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      const designer = await openDesigner(page);
+      await applyPreset(page, 'modular');
+      await designer.evaluate((el: any, kind) => el.newArtifact(kind), kind);
+      await designer
+        .getByRole('textbox', { name: kind === 'template' ? 'Template name' : 'Element name', exact: true })
+        .fill('Study');
+      await designer
+        .getByRole('textbox', { name: kind === 'template' ? 'Template name' : 'Element name', exact: true })
+        .blur();
+      await page.mouse.move(0, 0);
+      await expect(designer.locator('app-container-editor')).toHaveScreenshot(`empty-${kind}-${width}.png`, SHOT);
+    });
+  }

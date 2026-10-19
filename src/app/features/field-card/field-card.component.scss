@@ -174,21 +174,20 @@ app-icon {
 }
 .field-name {
   border: none;
-  outline: none;
   @include spacing.apply(padding-bottom, compact);
   min-width: 0;
   background: transparent;
   // An unnamed field shows a line beneath its name to write on: in the warning colour, as a name
   // still to be written, in primary while the card is selected, and in the error colour once the
   // name is reported missing and the author has moved on. A locked name keeps the rule, since
-  // nobody can write one. A background draws the line rather than a border, so it adds no height
+  // nobody can write one. While the name has focus the shared focus ring marks where to write, so
+  // the line steps aside. A background draws the line rather than a border, so it adds no height
   // and the name does not move when the first character takes the line away.
   --unnamed-line: var(--cedar-status-warning-text);
-  &.selected,
-  &:focus {
+  &.selected {
     --unnamed-line: var(--cedar-color-primary);
   }
-  &[aria-invalid='true']:not(:focus) {
+  &[aria-invalid='true'] {
     --unnamed-line: var(--cedar-status-error-text);
   }
   &:disabled {
@@ -198,7 +197,7 @@ app-icon {
   &::placeholder {
     font-weight: var(--cedar-font-weight-regular);
   }
-  &:placeholder-shown {
+  &:placeholder-shown:not(:focus) {
     background: linear-gradient(var(--unnamed-line), var(--unnamed-line)) bottom / 100% 2px no-repeat;
   }
 }
@@ -237,15 +236,9 @@ app-field-summary {
 }
 .choice-option-input {
   border: none;
-  outline: none;
   background: transparent;
   flex: 1;
   min-width: 0;
-  border-bottom-width: 1px;
-  border-bottom-color: var(--cedar-border-rule);
-}
-.choice-option-input:focus {
-  border-color: var(--cedar-color-primary);
 }
 .choice-add-action {
   display: flex;
@@ -275,8 +268,4 @@ app-field-summary {
   border: 1px solid var(--cedar-control-border-default);
   border-radius: var(--cedar-radius);
   @include spacing.apply(padding, control-row);
-}
-.field-content-control:focus {
-  outline: none;
-  border-color: var(--cedar-color-primary);
 }

@@ -53,7 +53,12 @@ names are refused; page breaks are offered only in templates.
 The public `currentArtifact` and change events always contain the complete root
 document, including while a nested element is selected. CEE preview wraps a root
 element in a temporary template; host-facing documents retain their element type.
-The public artifact input accepts JSON and full YAML.
+The public artifact input accepts JSON and full YAML. Numeric constraints and defaults
+are compared without binary floating-point rounding, including the full signed 64-bit
+long range. Artifact getters and events may contain `CedExactNumber` atoms where a
+JavaScript number would lose precision; `String(value)` reads every digit. The shared
+model library's `JsonSourcePolicy.stringify` serializes those atoms as numeric tokens.
+Getters, change events, recovery snapshots and host reassignment preserve them.
 
 ## Language
 
@@ -289,20 +294,21 @@ directly rather than importing their facade; the key policy uses a leaf adapter
 for reserved names. `test:boundaries` enforces the library boundary and rejects
 dependency cycles reachable from the adapter.
 
-| Command                  | What it does                                                        |
-| ------------------------ | ------------------------------------------------------------------- |
-| `npm test`               | unit tests, through the Angular CLI's Vitest builder                |
-| `npm run test:packaging` | the publish-channel rule, under `node --test`                       |
-| `npm run test:browser`   | builds the distribution, then drives it in a real browser           |
-| `npm run test:visual`    | the screenshot baselines, in the container they are taken in        |
-| `npm run test:ci`        | bounded parallel checks, then distribution and browser verification |
+| Command                  | What it does                                                                |
+| ------------------------ | --------------------------------------------------------------------------- |
+| `npm test`               | unit tests, through the Angular CLI's Vitest builder                        |
+| `npm run test:packaging` | the publish-channel rule, under `node --test`                               |
+| `npm run test:browser`   | builds the distribution, then drives it in a real browser                   |
+| `npm run test:visual`    | the screenshot baselines, in the container they are taken in                |
+| `npm run test:ci`        | bounded parallel checks, then distribution, browser and visual verification |
 
 `test:ci` overlaps unit, lint, type, boundary and packaging checks within
 `CEDAR_TEST_WORKERS` (1–16; by default half the available CPUs, capped at 8).
 The distribution waits for every check, so Angular builds and unit tests never
-share a live cache. Browser tests then use the full budget. A failed stage blocks
-the distribution and browser stages; each stage prints its elapsed time.
-`test:visual` remains a separate required gate in the frontend reactor.
+share a live cache. The browser tests and the visual baselines then share the
+budget: the baselines take two workers in their container when the budget is at
+least six, one otherwise, and the browser tests the rest. A failed stage blocks the distribution, browser and visual stages; each stage
+prints its elapsed time. `test:ci` therefore needs Docker, as `test:visual` does.
 
 The browser suite is the one that matters most, because it is the only one that
 can see the failures this component has actually had: an element that never
@@ -346,6 +352,60 @@ The Overview shows each field's type icon and a right-aligned reorder handle.
 Dragging reorders siblings within the Overview; the document and main editor update
 only when the field is dropped. Focused handles also support Arrow Up/Down.
 
+### Empty containers and save continuity
+
+Empty editable templates and elements keep their insertion pills visible, including
+loaded empty documents and containers whose last child was deleted. Populated
+containers retain hover/focus disclosure on desktop. Nested insertion rows reserve
+one row of pills plus eight pixels of padding on each side vertically; wrapped pills
+grow naturally on narrow screens.
+
+After a successful save, hosts may call `loadArtifact(savedArtifact, { preserveView: true })`
+to adopt server-assigned identifiers and metadata while keeping open tabs, expansion
+and selection. CED matches child occurrences by their deployment path and kind/type,
+not by reusable artifact IRIs. Ordinary loads still reset the document view. The host
+must verify that the saved response still belongs to the currently submitted document
+before adopting it, so a late save cannot replace newer edits.
+
+### Read-only access
+
+`readOnly = true` permits inspection without permitting document edits. Tabs,
+expand/collapse, outline selection, card keyboard navigation, preview and display
+preferences remain available. Preview itself stays read-only. Text stays legible;
+editing controls are disabled, insertion palettes are absent, and drag handles
+cannot reorder content. Read-only is separate from the host's temporary `inert`
+state while loading or saving.
+
+One session-owned `EditorAccess` policy governs commands and controls:
+
+| Open document / node                  | Definition edits                          | Parent placement edits | Inspection |
+| ------------------------------------- | ----------------------------------------- | ---------------------- | ---------- |
+| Editable draft                        | Allowed                                   | Allowed for children   | Allowed    |
+| Published child in an editable parent | Blocked                                   | Allowed                | Allowed    |
+| Descendant of a published element     | Blocked                                   | Blocked                | Allowed    |
+| Published root or host read-only      | Blocked                                   | Blocked                | Allowed    |
+| Standalone field                      | Allowed only when draft and host-writable | No parent placement    | Allowed    |
+
+The public `readOnly` getter reports effective access: clearing the host flag
+cannot unlock a published root. Save is unavailable in read-only mode. Entering
+read-only cancels pending terminology checks, closes editing dialogs and preserves
+existing unsaved input. Restoring access does not revive old asynchronous replies
+or reopen those dialogs. Unknown node identities cannot be edited. Validation
+still reports stored defects. A subdued “Validation issues (N)” disclosure lists
+every finding and navigates to its field and settings tab, without repair controls
+or inline error styling. Header icons toggle Overview and Preview; the panels
+have no duplicate close buttons.
+
+`loadArtifact`, `artifact`/`template`, and `newArtifact` are explicit host document
+replacement APIs, so they continue to work while read-only without temporarily
+granting editing permission. A successful replacement resets the edit baseline;
+view navigation never changes artifact content or dirty state.
+
+The access matrix and command matrix cover host access, publication, both container
+kinds, standalone fields and nested ownership. Browser tests inspect every field
+type, all settings tabs, keyboard access and wide/narrow layouts. Existing seeded
+terminology histories cover delayed responses across read-only transitions.
+
 ### Settings validation and saving
 
 Use `designer.validate()` (or the read-only `validationReport` property) before
@@ -357,8 +417,8 @@ events alone are therefore not a save-readiness check.
 Listen for `validationChange` to update the wrapper's Save button and error list.
 Its detail is the same report: `{ valid, canSave, issues }`. Each issue includes a
 session `nodeId`, an ancestor-ID `path`, a display `label`, `setting`, settings `tab`,
-stable category `code`, user-facing `message`, `severity: 'error'`, `source`
-(`model` or `draft`), and `shown`. An issue that is not `shown` still blocks saving,
+stable category `code`, user-facing `message`, `severity` (`error` or `warning`), `source`
+(`model`, `draft` or `host`), and `shown`. An error that is not `shown` still blocks saving,
 but CED's error summary holds it back until the author reaches it: a name nobody has
 touched yet, or a new choice field's blank starter option while its name is still
 being entered. Leaving the name reveals any unfinished option. A host that explains a
@@ -366,6 +426,34 @@ disabled Save by pointing at errors should count only the shown ones. Do not par
 messages or persist session IDs across documents.
 Validation checks the settings CED supports; it does not replace server validation,
 permission checks, or save/publish lifecycle rules.
+
+Assign `designer.validationFindings` (also supported by CEFD) to replace the host's report:
+
+```javascript
+designer.validationFindings = [
+  {
+    location: '/properties/Visits/items/properties/Code/_valueConstraints/regex',
+    message: 'Review the pattern accepted by the server.',
+    severity: 'error',
+  },
+];
+```
+
+Locations are JSON Pointers into the schema artifact, including `properties`, `items`
+and escaped placement keys. Recognized paths join the navigable validation summary and
+error markers beside their controls. `revealValidationFinding(location)` opens the mapped
+setting and returns `true`; unsupported or stale paths return `false`. Unsupported findings
+remain visible with their original path (`unmapped: true`) rather than pointing at a different
+control. Host issues retain `source: 'host'` and `location` in the public report. Warnings
+appear in the summary and do not block saving or mark controls as erroneous.
+
+Findings belong to the accepted document at assignment. Any accepted artifact edit or
+document replacement retires them; reverting that edit does not revive them. Incomplete
+setting drafts remain intact and keep their own local errors until corrected or discarded.
+Assign `[]` to clear a report without touching the document or those drafts. The host must
+discard asynchronous findings for an obsolete submission before assigning them, owns server
+requests and permission checks, and should pass a new report only when its contents change.
+Messages are supplied by the host and displayed as text, without translation or HTML rendering.
 
 Set `designer.readOnly` when the user may not change the document. Nothing in it can
 then be edited and `canSave` is false. CED also marks none of the document's
@@ -519,3 +607,28 @@ only when a shared role, a recipe or a designer size in the tokens package's
 local rule at its owner, and retain desktop/narrow-width, host-override and real-CEF
 checks. Do not substitute an unrelated token merely because its current numeric
 value happens to match.
+
+### Recovering unfinished work
+
+`captureDraft()` returns a JSON-serializable `CedRecoveryDraft` for either Designer
+or Field Designer. It includes unfinished control input, pending validation gates,
+the document and its clean baseline. It is a recovery file, not a CEDAR artifact:
+use `currentArtifact` only after validation permits saving to the server.
+
+`restoreDraft(draft)` validates the complete snapshot before replacing the current
+session and throws on malformed or incompatible input. The host's current read-only
+policy remains in force. Restored asynchronous checks must be retried at their
+controls. A host owns storage, account/deployment isolation, download/import UI and
+fresh permission/revision checks; restoring a snapshot never authorizes a write or
+proves whether an interrupted save committed.
+
+### Pattern validation and source preservation
+
+Regular expressions use the shared ECMAScript policy: a full-string match with no flags,
+evaluated in a bounded worker. Hosts must permit `worker-src blob:` or the existing validation
+report explains that evaluation is unavailable. `validationReport.pendingValidation` is present
+while checks run; `valid` and `canSave` remain false, and `validationChange` reports completion.
+A pending or rejected edit retains the author's input and accepted document. Changing or opening
+a document cancels obsolete checks. Serialization itself preserves stored patterns and defaults;
+validate before saving. JSON input is passed unchanged to the strict source parser, so Unicode
+whitespace is never silently removed from imported source or stored identity.

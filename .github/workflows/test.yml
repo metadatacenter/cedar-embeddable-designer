@@ -133,14 +133,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: metadatacenter/cedar-embeddable-editor
-          ref: 4a9d85a3103df604942c063a403da6462e91bdf0
+          ref: 426bfa6b33056bf15008469b0f1ab8a67ed63ceb
           path: cedar-embeddable-editor
 
       - name: Check out the supported term picker revision
         uses: actions/checkout@v4
         with:
           repository: metadatacenter/cedar-embeddable-term-picker
-          ref: ecacc5dd3f70190539dffaf1ea60048218601ed7
+          ref: 2427d27d1dce91b456dc04df9882ba70a578049d
           path: cedar-embeddable-term-picker
 
       - name: Use Node.js 24
@@ -187,9 +187,15 @@ jobs:
           test -s "$CEF_BUNDLE"
           sha256sum "$CEF_BUNDLE" cedar-embeddable-designer/dist-bundle/cedar-embeddable-designer.js
 
+      # The test job already runs the whole browser suite against the same build, and nothing but a
+      # spec's own reading of CEF_BUNDLE or PICKER_BUNDLE differs here. So this job runs only the
+      # files that read them, each in full, rather than every test a second time.
       - name: Test CED with the real CEE and CEF bundle
         working-directory: cedar-embeddable-designer
-        run: npm run test:browser:prebuilt
+        run: >
+          npm run test:browser:prebuilt --
+          cef-defaults cef-parity constraints field-summary multiple-stability property-picker
+          style-comparison surfaces ui-attribute-matrix
 
       - name: Keep failure traces
         if: failure()

@@ -4,7 +4,7 @@ import { CedJsonObject } from '../../ced-public-api';
 import { fieldToJson, newContainer } from '../model/cedar-template';
 import { findContainer } from '../model/container-draft';
 import { childKeyError } from '../model/child-key-policy';
-import { buildContainer } from '../model/cedar-template';
+import { buildContainer, PREVIEW_ELEMENT_KEY } from '../model/cedar-template';
 import { TestBed } from '@angular/core/testing';
 import nestedTemplate from '../model/fixtures/corpus/template-028.json';
 import { TemplateService } from './template.service';
@@ -30,6 +30,85 @@ describe('TemplateService', () => {
     TestBed.configureTestingModule({});
     service = TestBed.inject(TemplateService);
   });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it('explicit validation refreshes expired semantic evidence even for an unchanged document', async () => {
+    let now = 1_000;
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
+    const iri = 'https://ror.org/03yrm5c26';
+    let status = 'unavailable';
+    const fetcher = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            iri,
+            status,
+            code: status === 'passed' ? 'authorityVerified' : 'semanticUnavailable',
+            message: 'Checked.',
+          }),
+        ),
+    );
+    vi.stubGlobal('fetch', fetcher);
+    service.templateName.set('Authority defaults');
+    service.fields.set([
+      {
+        id: 8,
+        type: 'ror',
+        name: 'Organization',
+        status: 'optional',
+        options: [],
+        allowMultiple: false,
+        defaultValue: { kind: 'iri', iri, label: null },
+      },
+    ]);
+    service.fieldEditorConfig.set({ bridgeBaseUrl: 'https://bridge.example.org/' });
+    service.validate();
+    await vi.waitFor(() => expect(service.validationReport().semanticChecks?.[0].status).toBe('unavailable'));
+    expect(service.validationReport()).toMatchObject({ valid: false, canSave: true });
+    now += 30_000;
+    status = 'passed';
+    expect(service.validate()).toMatchObject({ pendingValidation: true, canSave: false });
+    service.validate();
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    await vi.waitFor(() => expect(service.validationReport()).toMatchObject({ valid: true, canSave: true }));
+  });
+
+  it.each(['passed', 'failed', 'unavailable'] as const)(
+    'rechecks imported authority defaults and exposes %s save policy',
+    async (status) => {
+      const iri = 'https://orcid.org/0000-0002-1825-0097';
+      service.templateName.set('Authority defaults');
+      service.fields.set([
+        {
+          id: 8,
+          type: 'orcid',
+          name: 'Researcher',
+          status: 'optional',
+          options: [],
+          allowMultiple: false,
+          defaultValue: { kind: 'iri', iri, label: 'A researcher' },
+        },
+      ]);
+      const stored = templateToJson(service.template());
+      const code =
+        status === 'passed' ? 'authorityVerified' : status === 'failed' ? 'authorityMembership' : 'semanticUnavailable';
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => new Response(JSON.stringify({ iri, status, code, message: 'Verification result.' }))),
+      );
+      service.fieldEditorConfig.set({ bridgeBaseUrl: 'https://bridge.example.org/' });
+      service.loadTemplate(stored);
+      expect(service.validationReport()).toMatchObject({ pendingValidation: true, canSave: false });
+      await vi.waitFor(() => expect(service.validationReport().semanticChecks?.[0].status).toBe(status));
+      expect(service.validationReport()).toMatchObject({ valid: status === 'passed', canSave: status !== 'failed' });
+      // Authority defaults store their identifier; display labels are not part of that schema slot.
+      expect(service.fields()[0].defaultValue).toEqual({ kind: 'iri', iri, label: null });
+    },
+  );
 
   it('names new fields through their display name and rejects clearing that name', () => {
     service.addField('text', 0);
@@ -553,13 +632,15 @@ describe('preview paths', () => {
     expect(service.previewPath(service.session.document().id)).toBeNull();
   });
 
-  it('starts an element designed on its own with the name the preview holds it under', () => {
+  it('starts an element designed on its own with the key the preview holds it under, whatever its name', () => {
     service.resetTemplate('element');
     service.templateName.set('Address');
     service.addField('text', 0);
     const id = service.selectedField()!;
 
-    expect(service.previewPath(id)).toEqual(['Address', service.childKey(id)]);
+    expect(service.previewPath(id)).toEqual([PREVIEW_ELEMENT_KEY, service.childKey(id)]);
+    service.templateName.set('Postal address');
+    expect(service.previewPath(id)).toEqual([PREVIEW_ELEMENT_KEY, service.childKey(id)]);
   });
 });
 
@@ -578,12 +659,15 @@ describe('default editing', () => {
     expect(() => service.templateJson()).not.toThrow();
   });
 
-  it('validates text defaults and prevents incompatible constraint changes', () => {
+  it('validates text defaults and prevents incompatible constraint changes', async () => {
     expect(
       service.updateFieldSettings(1, { textConstraints: { minLength: 2, maxLength: 4, regex: '^[A-Z]+$' } }),
     ).toBeNull();
+    await service.validation.settled();
     service.updateDefaultValue(1, { kind: 'literal', value: 'ABC' });
+    await service.validation.settled();
     service.updateDefaultValue(1, { kind: 'literal', value: 'abc' });
+    await service.validation.settled();
     expect(service.fields()[0].defaultValue).toEqual({ kind: 'literal', value: 'ABC' });
     expect(
       service.updateFieldSettings(1, { textConstraints: { minLength: 2, maxLength: 2, regex: null } }),

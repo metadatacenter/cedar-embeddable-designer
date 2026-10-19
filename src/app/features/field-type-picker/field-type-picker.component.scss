@@ -96,11 +96,6 @@
   font-size: var(--cedar-font-size);
   border: 1px solid var(--cedar-control-border-default);
   border-radius: var(--cedar-radius);
-  outline: none;
-
-  &:focus {
-    border-color: var(--cedar-text-muted);
-  }
 }
 
 .dropdown-options-list {

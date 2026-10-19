@@ -112,7 +112,7 @@ interface SettingsCase {
   seed: Partial<Field>;
   input: string;
   prepare(panel: FieldSettingsComponent, value: number | null): void;
-  read(panel: FieldSettingsComponent): number | null;
+  read(panel: FieldSettingsComponent): number | string | null;
   save(panel: FieldSettingsComponent, form?: HTMLFormElement, changed?: string): void;
 }
 const settings: SettingsCase[] = [

@@ -44,6 +44,23 @@ test('opens the shared field picker in a dialog, supports cancel and keeps inval
   await expect(summary).toHaveCount(0);
 });
 
+test('keeps the summary at the top of the window while the page scrolls the field', async ({ page }) => {
+  // Short enough that the field's settings run past the bottom of the window.
+  await page.setViewportSize({ width: 1000, height: 420 });
+  await page
+    .getByRole('dialog', { name: 'Choose field type', exact: true })
+    .getByRole('button', { name: 'Text', exact: true })
+    .click();
+  await page.getByRole('textbox', { name: 'Field display name', exact: true }).press('Tab');
+  const summary = page.locator('.validation-summary');
+  await expect(summary).toBeVisible();
+  await page.mouse.move(500, 380);
+  await page.mouse.wheel(0, 2000);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+  expect(Math.round((await summary.boundingBox())!.y)).toBe(0);
+  await expect(summary.locator('summary')).toBeInViewport();
+});
+
 for (const [label, type] of [
   ['Text', 'textfield'],
   ['Paragraph', 'textarea'],

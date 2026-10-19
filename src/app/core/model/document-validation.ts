@@ -1,3 +1,4 @@
+import { isBlank } from './cedar-model/text-policy';
 import { failureRule, ValidationRule } from './validation-rule';
 import { annotationError } from './annotations';
 import { childKeyError, childKeys, keyedChild } from './child-key-policy';
@@ -9,7 +10,7 @@ import { descriptorOf, buildContainer, buildTemplate, allowsOptions } from './ce
 import { Translate, describeError, english } from '../../i18n/messages';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
 
-export type DraftIssues = Readonly<Record<string, { message: string; tab: string }>>;
+export type DraftIssues = Readonly<Record<string, { message: string; tab: string; setting?: string }>>;
 
 /** An issue names a child as its card heading does, so a key or plain name never stands in for a display name. */
 function issueLabel(node: ChildNode): string {
@@ -22,7 +23,7 @@ export function artifactNameError(
   kind: 'field' | 'element' | 'template',
   t: Translate = english,
 ): string | null {
-  return name.trim() ? null : t(`validation.nameRequired.${kind}`);
+  return isBlank(name) ? t(`validation.nameRequired.${kind}`) : null;
 }
 
 /**
@@ -43,6 +44,7 @@ export function validateDocument(
 export function inspectDocument(document: ContainerDraft, drafts: DraftIssues, t: Translate = english) {
   const issues: (CedValidationIssue & { rule: ValidationRule })[] = [];
   let modelInvalid = false;
+  let pendingValidation = false;
   const visit = (container: ContainerDraft, ancestors: number[]) => {
     const path = [...ancestors, container.id];
     const add = (
@@ -57,6 +59,10 @@ export function inspectDocument(document: ContainerDraft, drafts: DraftIssues, t
       name = label,
       rule: ValidationRule = { code: `${setting}.invalid` },
     ) => {
+      if (rule.code === 'regex.pending') {
+        pendingValidation = true;
+        return;
+      }
       if (source === 'model') modelInvalid = true;
       // A control has one current verdict. Its rejected draft supersedes the
       // accepted model's error for that same setting, not errors in other settings.
@@ -65,7 +71,7 @@ export function inspectDocument(document: ContainerDraft, drafts: DraftIssues, t
         issues.some((issue) => issue.nodeId === id && issue.setting === setting && issue.source === 'draft')
       )
         return;
-      const prefix = t('errors.namedField', { name: name.trim() || t('common.anUnnamedField'), message: '' });
+      const prefix = t('errors.namedField', { name: isBlank(name) ? t('common.anUnnamedField') : name, message: '' });
       issues.push({
         nodeId: id,
         label,
@@ -83,7 +89,16 @@ export function inspectDocument(document: ContainerDraft, drafts: DraftIssues, t
     const pending = (id: number, label: string, nodePath: number[], name = label) => {
       for (const [key, value] of Object.entries(drafts)) {
         if (key.startsWith(`${id}:`))
-          add(id, label, nodePath, key.slice(key.indexOf(':') + 1), value.message, value.tab, 'draft', name);
+          add(
+            id,
+            label,
+            nodePath,
+            value.setting ?? key.slice(key.indexOf(':') + 1),
+            value.message,
+            value.tab,
+            'draft',
+            name,
+          );
       }
     };
     const nameError = artifactNameError(container.name, container.kind, t);
@@ -192,7 +207,7 @@ export function inspectDocument(document: ContainerDraft, drafts: DraftIssues, t
       pending(node.id, issueLabel(node), nodePath, field.name);
       if (allowsOptions(field.type)) {
         field.options.forEach((option, index) => {
-          if (!option.trim())
+          if (isBlank(option))
             add(
               node.id,
               issueLabel(node),
@@ -278,5 +293,10 @@ export function inspectDocument(document: ContainerDraft, drafts: DraftIssues, t
       });
     }
   }
-  return { valid: issues.length === 0, canSave: issues.length === 0, issues };
+  return {
+    valid: !pendingValidation && issues.length === 0,
+    canSave: !pendingValidation && issues.length === 0,
+    issues,
+    ...(pendingValidation ? { pendingValidation: true } : {}),
+  };
 }

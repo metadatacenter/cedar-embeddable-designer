@@ -35,6 +35,25 @@ export async function currentTemplate(page: Page): Promise<Record<string, unknow
   );
 }
 
+/**
+ * Focus a control and expect the shared focus ring on it: a solid outline in the focus colour,
+ * resolved where the control sits, not the browser's own ring.
+ */
+export async function expectSharedFocusRing(control: Locator): Promise<void> {
+  await control.focus();
+  const ring = await control.evaluate((element) => {
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--cedar-control-focus, var(--cedar-color-primary))';
+    element.after(probe);
+    const expected = getComputedStyle(probe).color;
+    probe.remove();
+    const style = getComputedStyle(element);
+    return { style: style.outlineStyle, color: style.outlineColor, expected };
+  });
+  expect(ring.style).toBe('solid');
+  expect(ring.color).toBe(ring.expected);
+}
+
 /** Every `templateChange` the host has been sent, in order. */
 export async function publishedTemplates(page: Page): Promise<Array<Record<string, unknown>>> {
   return page.evaluate(() => (window as unknown as { __events: Array<Record<string, unknown>> }).__events);

@@ -1,3 +1,6 @@
+import { isBlank } from '../../core/model/cedar-model/text-policy';
+import { JsonSourcePolicy } from '../../core/model/cedar-template';
+import { NumericPolicy } from '../../core/model/cedar-template';
 import { invalidSettingsInputs } from '../../shared/settings-input';
 import { publicationStatusLabel } from '../../shared/publication-status';
 import { fieldDisplayDescription, fieldDisplayName } from '../../core/model/field-display-name';
@@ -180,6 +183,10 @@ export class FieldSettingsComponent implements OnChanges {
       const issue = this.service.validationTarget();
       if (!issue || issue.setting === 'name' || issue === focused || issue.nodeId !== this.field?.id) return;
       focused = issue;
+      if (this.service.access.readOnly()) {
+        this.host.nativeElement.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')?.focus();
+        return;
+      }
       const panel = this.host.nativeElement.querySelector<HTMLElement>('[role="tabpanel"]:not([hidden])');
       // A panel holding several settings marks each one's controls, so an issue reaches its own.
       const group = panel?.querySelector<HTMLElement>(`[data-setting="${CSS.escape(issue.setting)}"]`) ?? panel;
@@ -192,7 +199,9 @@ export class FieldSettingsComponent implements OnChanges {
             ? panel?.querySelector<HTMLElement>(
                 `input[aria-label="${CSS.escape(this.i18n.t('fieldCard.option', { number: Number(issue.setting.slice(7)) + 1 }))}"]`,
               )
-            : group?.querySelector<HTMLElement>('input, select, textarea, button');
+            : group?.matches('input, select, textarea, button')
+              ? group
+              : group?.querySelector<HTMLElement>('input, select, textarea, button');
       control?.focus({ preventScroll: true });
     });
     effect(() => {
@@ -219,7 +228,7 @@ export class FieldSettingsComponent implements OnChanges {
         .map((issue) => issue.message)
         .join(' ') || null;
     const prefix = this.i18n.t('errors.namedField', {
-      name: this.field.name.trim() || this.i18n.t('common.anUnnamedField'),
+      name: isBlank(this.field.name) ? this.i18n.t('common.anUnnamedField') : this.field.name,
       message: '',
     });
     return message?.startsWith(prefix) ? message.slice(prefix.length) : message;
@@ -273,7 +282,7 @@ export class FieldSettingsComponent implements OnChanges {
       // An unparseable number has no typed draft. Retain its input buffer until
       // that control changes; typed rejected values belong to the coordinator.
       if (!discard && this.service.validation.inputError(this.field.id, groups[key] ?? key)) return current;
-      return structuredClone(incoming);
+      return JsonSourcePolicy.clone(incoming);
     };
 
     this.deploymentName = take(
@@ -356,6 +365,15 @@ export class FieldSettingsComponent implements OnChanges {
       temporal: { ...this.temporal },
       type: this.temporal.type === 'xsd:time' ? 'time' : 'date',
     });
+  }
+  editNumericBound(key: 'min' | 'max', text: string, form: HTMLFormElement, changed: string): void {
+    try {
+      const value = text === '' ? null : NumericPolicy.value(text);
+      this.numeric[key] = value === null || typeof value === 'number' ? value : text;
+    } catch {
+      this.numeric[key] = text;
+    }
+    this.saveNumeric(form, changed);
   }
   saveNumeric(form?: HTMLFormElement, changed?: string): void {
     if (this.badInput(form, 'numeric', 'Constraints', { numeric: { ...this.numeric } }, changed)) return;

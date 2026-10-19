@@ -15,6 +15,54 @@ const report = (page: import('@playwright/test').Page) =>
     (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).validate(),
   );
 
+for (const width of [1280, 375]) {
+  for (const origin of ['draft', 'imported']) {
+    test(`invalid pattern ${origin} at ${width}: summary focuses the pattern and correction preserves other settings`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 1000 });
+      const designer = await openDesigner(page, '?cee=stub');
+      await designer.getByLabel('Template name', { exact: true }).fill('Pattern study');
+      const source = await currentTemplate(page);
+      child(source, 'Title')._valueConstraints = {
+        ...(child(source, 'Title')._valueConstraints as Record<string, unknown>),
+        minLength: 2,
+        maxLength: 8,
+        regex: origin === 'imported' ? '[' : '^[A-Z]+$',
+      };
+      await designer.evaluate(
+        (element: CedarEmbeddableDesignerElement, artifact) => element.loadArtifact(artifact as never),
+        source,
+      );
+      const card = designer.locator('app-field-card').first();
+      const panel = await openSettings(card, 'Constraints');
+      const pattern = panel.locator('input[name=regex]');
+      if (origin === 'draft') await pattern.fill('[');
+      await expect.poll(async () => (await report(page)).canSave).toBe(false);
+      await expect
+        .poll(async () => (await report(page)).issues)
+        .toMatchObject([{ setting: 'regex', source: origin === 'draft' ? 'draft' : 'model' }]);
+      await expect(panel.getByRole('alert')).toHaveText(
+        'The regular expression is incomplete or invalid. Check its brackets, parentheses and escape characters, or clear it to remove the pattern constraint.',
+      );
+      await openSettings(card, 'Presentation');
+      const summary = designer.locator('.validation-summary');
+      await summary.locator('summary').focus();
+      await page.keyboard.press('Enter');
+      await summary.getByRole('button').focus();
+      await page.keyboard.press('Enter');
+      await expect(pattern).toBeFocused();
+      await expect(pattern).toHaveValue('[');
+      await pattern.fill('^[a-z]+$');
+      await expect.poll(async () => (await report(page)).canSave).toBe(true);
+      await expect(summary).toHaveCount(0);
+      const corrected = structuredClone(source);
+      (child(corrected, 'Title')._valueConstraints as Record<string, unknown>).regex = '^[a-z]+$';
+      expect(await currentTemplate(page)).toEqual(corrected);
+    });
+  }
+}
+
 async function addNamedField(designer: import('@playwright/test').Locator) {
   await designer.getByRole('button', { name: 'Add field', exact: true }).first().click();
   await designer.getByRole('button', { name: 'Text', exact: true }).click();
@@ -43,10 +91,20 @@ test('invalid edits reach wrappers, cards and overview; summary opens the affect
   const panel = await openSettings(card, 'Constraints');
   const input = panel.getByRole('textbox', { name: 'Default value', exact: true });
   await input.fill('OK');
+  // The template accepts a default once the asynchronous pattern check has passed it, not on the keystroke.
+  await expect
+    .poll(
+      async () =>
+        (child(await currentTemplate(page), 'Title')._valueConstraints as Record<string, unknown>).defaultValue,
+    )
+    .toBe('OK');
   const saved = await currentTemplate(page);
   await input.fill('lower');
-  await expect.poll(async () => (await report(page)).canSave).toBe(false);
-  expect((await report(page)).issues[0]).toMatchObject({ setting: 'defaultValue', source: 'draft', severity: 'error' });
+  // A pending check already blocks saving, so wait for the verdict itself rather than for canSave.
+  await expect
+    .poll(async () => (await report(page)).issues[0])
+    .toMatchObject({ setting: 'defaultValue', source: 'draft', severity: 'error' });
+  expect((await report(page)).canSave).toBe(false);
   await expect(card.locator('.validation-badge')).toContainText('1 error');
   const invalidCard = designer.locator('.field-drag-container.invalid');
   await expect(invalidCard).toHaveCount(1);
@@ -465,3 +523,37 @@ for (const kind of ['template', 'element'] as const) {
     await expect.poll(async () => (await report(page)).canSave).toBe(true);
   });
 }
+
+test('bounded patterns keep the designer responsive and preserve defaults through timeout and correction', async ({
+  page,
+}) => {
+  const designer = await openDesigner(page, '?cee=stub');
+  const source = await currentTemplate(page);
+  source['schema:name'] = 'Pattern study';
+  const value = 'a'.repeat(100) + '!';
+  const constraints = child(source, 'Title')._valueConstraints as Record<string, unknown>;
+  constraints.defaultValue = value;
+  await designer.evaluate(
+    (element: CedarEmbeddableDesignerElement, artifact) => element.loadArtifact(artifact as never),
+    source,
+  );
+  const panel = await openSettings(designer.locator('app-field-card').first(), 'Constraints');
+  await expect(panel.getByRole('alert')).toHaveCount(0);
+  const pattern = panel.locator('input[name=regex]');
+  const pending = await pattern.evaluate((input: HTMLInputElement) => {
+    input.value = '(a+)+';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    return (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).validate();
+  });
+  expect(pending).toMatchObject({ pendingValidation: true, canSave: false, issues: [] });
+  await expect(panel.getByRole('alert')).toContainText('allowed time');
+  expect((child(await currentTemplate(page), 'Title')._valueConstraints as Record<string, unknown>).defaultValue).toBe(
+    value,
+  );
+  await pattern.fill('a+!');
+  await expect.poll(async () => (await report(page)).canSave).toBe(true);
+  await expect(panel.getByRole('alert')).toHaveCount(0);
+  expect((child(await currentTemplate(page), 'Title')._valueConstraints as Record<string, unknown>).defaultValue).toBe(
+    value,
+  );
+});

@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { CedarEmbeddableDesignerElementComponent } from './cedar-embeddable-designer.element';
 import { TemplateService } from '../core/services/template.service';
 import { TerminologyService } from '../core/services/terminology.service';
-import { templateToJson } from '../core/model/cedar-template';
+import { templateToJson, JsonSourcePolicy } from '../core/model/cedar-template';
 import { CedConfig } from '../ced-public-api';
 
 /**
@@ -167,6 +167,43 @@ describe('CedarEmbeddableDesignerElementComponent', () => {
   });
 
   describe('what it publishes', () => {
+    it('preserves exact atoms in getters, events, recovery and host reassignment', async () => {
+      const fixture = create();
+      const element = fixture.componentInstance;
+      service.templateName.set('Precise');
+      service.addField('number', service.fields().length);
+      const field = service.fields().find((item) => item.type === 'number')!;
+      service.fields.update((fields) =>
+        fields.map((item) =>
+          item.id !== field.id
+            ? item
+            : {
+                ...item,
+                name: 'Exact',
+                numeric: {
+                  type: 'xsd:long',
+                  min: '9223372036854775806',
+                  max: '9223372036854775807',
+                  decimalPlaces: null,
+                  unit: null,
+                },
+                defaultValue: { kind: 'number', value: '9223372036854775807' },
+              },
+        ),
+      );
+      const expected = JsonSourcePolicy.stringify(element.currentArtifact);
+      expect(expected).toContain('9223372036854775806');
+      const events: string[] = [];
+      element.templateChange.subscribe((artifact) => events.push(JsonSourcePolicy.stringify(artifact)));
+      await fixture.whenStable();
+      expect(events.at(-1)).toBe(expected);
+      const draft = element.captureDraft();
+      element.loadArtifact(element.currentArtifact);
+      expect(JsonSourcePolicy.stringify(element.currentArtifact)).toBe(expected);
+      element.restoreDraft(draft);
+      expect(JsonSourcePolicy.stringify(element.currentArtifact)).toBe(expected);
+    });
+
     it('isolates public snapshots and event channels from host mutations', async () => {
       const fixture = create();
       const element = fixture.componentInstance;

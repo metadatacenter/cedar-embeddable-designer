@@ -1,10 +1,9 @@
 import { Injectable, signal } from '@angular/core';
 import { CeeTemplateObject } from '../model/cee-preview';
 import { CedConfig } from '../../ced-public-api';
-import { LocalizedError, message } from '../../i18n/messages';
+import { LocalizedError, message, english } from '../../i18n/messages';
+import { ValidationPolicy } from '../model/cedar-model/value-policy';
 
-/** How deep a default check reads before it gives up and reports the term as unverified. */
-const MEMBERSHIP_CHECK_DEPTH = 5_000;
 const LOOKUP_TIMEOUT_MS = 30_000;
 
 function checkAborted(signal: AbortSignal | null | undefined): void {
@@ -103,37 +102,23 @@ export class TerminologyService {
     this.configured.set(this.searchUrl !== null);
   }
 
-  /**
-   * Check membership with the same constrained endpoint that supplies CEE's values, walking its pages
-   * by offset until the term turns up, a page comes back short, or the server's count is reached.
-   */
-  async allowsDefault(field: CeeTemplateObject, iri: string, label: string, signal?: AbortSignal): Promise<boolean> {
+  /** Exact identifier verification; labels never participate in membership. */
+  async verifyDefault(field: CeeTemplateObject, iri: string, signal?: AbortSignal): Promise<SemanticAnswer> {
     const base = this.baseUrl();
-    if (!base) throw new LocalizedError(message('terminology.notConfigured'));
-    const limit = 50;
-    const deadline = AbortSignal.timeout(LOOKUP_TIMEOUT_MS);
-    const lifetime = signal ? AbortSignal.any([signal, deadline]) : deadline;
-    for (let offset = 0; offset < MEMBERSHIP_CHECK_DEPTH; offset += limit) {
-      const result = (await answer(
-        `${base}bioportal/integrated-search`,
-        {
-          method: 'POST',
-          signal: lifetime,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            parameterObject: { inputText: label, valueConstraints: field['_valueConstraints'] },
-            limit,
-            offset,
-          }),
-        },
-        (response) => message('terminology.checkFailed', { status: String(response.status) }),
-      )) as { collection?: Array<{ '@id': string }>; totalCount?: number };
-      if (!Array.isArray(result.collection)) throw new LocalizedError(message('terminology.noResultCollection'));
-      if (result.collection.some((term) => term['@id'] === iri)) return true;
-      if (result.collection.length < limit) return false;
-      if (typeof result.totalCount === 'number' && offset + result.collection.length >= result.totalCount) return false;
-    }
-    throw new LocalizedError(message('terminology.unverified'));
+    if (!base)
+      return { iri, status: 'notChecked', code: 'semanticNotChecked', message: english('terminology.notConfigured') };
+    return verifySemantic(
+      `${base}bioportal/validate-term`,
+      { iri, valueConstraints: field['_valueConstraints'] ?? {} },
+      iri,
+      signal,
+    );
+  }
+
+  /** Selection follows template save policy; document checks retain unverified warnings. */
+  async allowsDefault(field: CeeTemplateObject, iri: string, _label: string, signal?: AbortSignal): Promise<boolean> {
+    const result = await this.verifyDefault(field, iri, signal);
+    return !ValidationPolicy.blocksSave(result.code, 'template');
   }
 
   /**
@@ -237,4 +222,45 @@ function toHit(item: Record<string, unknown>): TerminologyHit {
     sourceAcronym: acronymOf(source),
     type: typeof item['type'] === 'string' ? item['type'] : undefined,
   };
+}
+
+export interface SemanticAnswer {
+  iri: string;
+  status: 'passed' | 'failed' | 'notChecked' | 'unavailable';
+  code: string;
+  message: string;
+}
+
+/** Transport does not turn an unavailable authority into a non-existent identifier. */
+export async function verifySemantic(
+  url: string,
+  body: unknown,
+  iri: string,
+  signal?: AbortSignal,
+): Promise<SemanticAnswer> {
+  const deadline = AbortSignal.timeout(LOOKUP_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(body),
+      signal: signal ? AbortSignal.any([signal, deadline]) : deadline,
+    });
+    if (!response.ok) throw new LocalizedError(message('terminology.checkFailed', { status: String(response.status) }));
+    const value: SemanticAnswer = await response.json();
+    if (
+      !value ||
+      !ValidationPolicy.acceptsSemanticResult(
+        !!body && typeof body === 'object' && Object.hasOwn(body, 'valueConstraints'),
+        value.status,
+        value.code,
+      ) ||
+      typeof value.message !== 'string' ||
+      value.iri !== iri
+    )
+      throw new LocalizedError(message('terminology.unreadable'));
+    return value;
+  } catch {
+    return { iri, status: 'unavailable', code: 'semanticUnavailable', message: english('terminology.unverified') };
+  }
 }

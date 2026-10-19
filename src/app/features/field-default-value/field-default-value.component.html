@@ -60,6 +60,7 @@
             type="button"
             class="ced-text-action"
             [attr.aria-label]="'defaultValue.editTerm' | translate"
+            [disabled]="locked()"
             (click)="openPicker()"
           >
             {{ 'defaultValue.edit' | translate }}
@@ -97,7 +98,7 @@
           }
         }
         @if (field().defaultValue.kind !== 'none' && invalidDefaultText() === null) {
-          <button type="button" class="ced-text-action" (click)="clear()">
+          <button type="button" class="ced-text-action" [disabled]="locked()" (click)="clear()">
             {{ 'defaultValue.clear' | translate }}
           </button>
         }

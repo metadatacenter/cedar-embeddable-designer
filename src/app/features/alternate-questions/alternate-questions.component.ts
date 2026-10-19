@@ -1,3 +1,4 @@
+import { isBlank, trimInputPadding } from '../../core/model/cedar-model/text-policy';
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -50,12 +51,12 @@ export class AlternateQuestionsComponent {
   }
   add(): void {
     if (this.disabled()) return;
-    const question = this.question().trim();
-    if (!question) {
+    const question = trimInputPadding(this.question());
+    if (isBlank(question)) {
       this.error.set(this.i18n.t(this.keys() + 'blank'));
       return;
     }
-    if (this.questions().some((existing) => existing.trim() === question)) {
+    if (this.questions().some((existing) => existing === question)) {
       this.error.set(this.i18n.t(this.keys() + 'unique'));
       return;
     }

@@ -330,3 +330,19 @@ for (const width of [1280, 375]) {
     expect(geometry.width).toBeLessThanOrEqual(geometry.available);
   });
 }
+
+test('side panels use only the header toggles to close', async ({ page }) => {
+  const designer = await openDesigner(page, '?cee=stub');
+  const header = designer.locator('.app-header');
+  await expect(designer.locator('.overview-panel__header button')).toHaveCount(0);
+  await header.getByRole('button', { name: 'Open Preview', exact: true }).click();
+  await expect(designer.locator('.cee-preview__bar button')).toHaveCount(0);
+  await expect(designer.getByRole('button', { name: 'Close Overview', exact: true })).toHaveCount(1);
+  await expect(designer.getByRole('button', { name: 'Close Preview', exact: true })).toHaveCount(1);
+  await header.getByRole('button', { name: 'Close Overview', exact: true }).click();
+  await expect(designer.locator('.overview-panel')).toHaveCount(0);
+  await header.getByRole('button', { name: 'Open Overview', exact: true }).click();
+  await expect(designer.locator('.overview-panel')).toBeVisible();
+  await header.getByRole('button', { name: 'Close Preview', exact: true }).click();
+  await expect(designer.locator('app-cee-preview')).toHaveCount(0);
+});

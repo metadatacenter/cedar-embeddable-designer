@@ -106,7 +106,7 @@
     "readOnly": "Read-only",
     "editable": "Editable",
     "close": "Close preview",
-    "editableNotice": "Try filling in the form. Entries reset when the template or preview mode changes.",
+    "editableNotice": "Try filling in the form. Entries reset when the preview mode changes.",
     "missing": {
       "before": "Preview renders the template with",
       "after": ", which the page embedding this designer has not loaded. The two are sibling web components: load CEE's script alongside this one."
@@ -114,25 +114,25 @@
   },
   "childPicker": {
     "fields": {
-      "title": "Import fields",
+      "title": "Import Fields",
       "selectHint": "Select fields from the results below.",
       "searchLabel": "Search fields",
       "none": "No fields found.",
-      "prompt": "Enter a search to find reusable fields."
+      "prompt": "Enter a name to find reusable fields."
     },
     "elements": {
-      "title": "Import elements",
+      "title": "Import Elements",
       "selectHint": "Select elements from the results below.",
       "searchLabel": "Search elements",
       "none": "No elements found.",
-      "prompt": "Enter a search to find reusable elements."
+      "prompt": "Enter a name to find reusable elements."
     },
     "children": {
       "title": "Import Fields and Elements",
       "selectHint": "Select fields and elements from the results below.",
-      "searchLabel": "Search for fields or elements",
-      "none": "No fields and elements found.",
-      "prompt": "Enter a search to find reusable fields and elements."
+      "searchLabel": "Search fields and elements",
+      "none": "No fields or elements found.",
+      "prompt": "Enter a name to find reusable fields and elements."
     },
     "selectedHeading": "Selected items ({{count}})",
     "adding": "Adding…",
@@ -251,6 +251,7 @@
   },
   "errors": {
     "numeric": {
+      "inconsistent": "The numeric settings are inconsistent.",
       "datatype": "Choose a datatype from the list.",
       "minimumValue": "Minimum value",
       "maximumValue": "Maximum value",
@@ -282,7 +283,9 @@
         "one": "Default value must contain no more than {{count}} character.",
         "other": "Default value must contain no more than {{count}} characters."
       },
-      "defaultPattern": "Default value must match the regular expression."
+      "patternEvaluation": "The regular expression could not be checked within the allowed time or browser resources. Simplify it and try again.",
+      "defaultPattern": "Default value must match the regular expression.",
+      "invalidPattern": "The regular expression is incomplete or invalid. Check its brackets, parentheses and escape characters, or clear it to remove the pattern constraint."
     },
     "media": {
       "dimensions": "Media dimensions must be positive numbers."
@@ -526,7 +529,7 @@
     "notConfigured": "Terminology server is not configured.",
     "checkFailed": "Could not check the default term ({{status}}).",
     "noResultCollection": "The terminology server returned no result collection.",
-    "unverified": "The term could not be verified in the returned results.",
+    "unverified": "The default could not be verified with the terminology or authority service.",
     "searchNotConfigured": "Controlled-term search is not configured.",
     "answered": "The terminology server answered {{status}} {{statusText}}.",
     "noResultsCollection": "The terminology server returned no results collection.",
@@ -685,6 +688,7 @@
     "templateMetadata": "Metadata"
   },
   "validation": {
+    "inspectionSummary": "Validation issues ({{count}})",
     "summary": {
       "one": "{{count}} error — fix before saving",
       "other": "{{count}} errors — fix before saving"

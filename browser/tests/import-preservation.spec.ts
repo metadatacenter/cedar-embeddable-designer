@@ -20,26 +20,38 @@ test('opens an element-containing template without dropping nested content', asy
   expect(await currentTemplate(page)).toEqual(saved);
 });
 
-test('keeps publication and provenance when the template is edited', async ({ page }) => {
-  await openDesigner(page);
-  const original = await currentTemplate(page);
-  const imported = {
-    ...original,
-    'bibo:status': 'bibo:published',
-    'pav:createdOn': '2026-09-01T00:00:00Z',
-    'pav:createdBy': 'urn:test:creator',
-  };
-  await page.evaluate((template) => {
-    (document.querySelector('cedar-embeddable-designer') as HTMLElement & { template: object }).template = template;
-  }, imported);
-  await templateName(page).fill('Edited title');
-  await templateName(page).blur();
-  await expect
-    .poll(() => currentTemplate(page))
-    .toMatchObject({
-      'schema:name': 'Edited title',
-      'bibo:status': 'bibo:published',
-      'pav:createdOn': imported['pav:createdOn'],
-      'pav:createdBy': imported['pav:createdBy'],
-    });
-});
+for (const published of [false, true]) {
+  test(`preserves provenance and publication while ${published ? 'inspecting a published template' : 'editing a draft'}`, async ({
+    page,
+  }) => {
+    const designer = await openDesigner(page);
+    const original = await currentTemplate(page);
+    const imported = {
+      ...original,
+      'bibo:status': published ? 'bibo:published' : 'bibo:draft',
+      'pav:createdOn': '2026-09-01T00:00:00Z',
+      'pav:createdBy': 'urn:test:creator',
+    };
+    await designer.evaluate((el: any, template) => {
+      el.template = template;
+    }, imported);
+    if (published) {
+      await expect(templateName(page)).toBeDisabled();
+      const settings = designer.locator('app-container-settings');
+      await settings.locator('.settings-toggle').click();
+      await settings.getByRole('tab', { name: 'Metadata', exact: true }).click();
+      await expect(settings.getByRole('tabpanel')).toContainText('2026-09-01T00:00:00Z');
+    } else {
+      await templateName(page).fill('Edited title');
+      await templateName(page).blur();
+    }
+    await expect
+      .poll(() => currentTemplate(page))
+      .toMatchObject({
+        'schema:name': published ? original['schema:name'] : 'Edited title',
+        'bibo:status': imported['bibo:status'],
+        'pav:createdOn': imported['pav:createdOn'],
+        'pav:createdBy': imported['pav:createdBy'],
+      });
+  });
+}

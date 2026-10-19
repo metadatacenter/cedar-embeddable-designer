@@ -182,14 +182,6 @@
   color: var(--cedar-text-primary);
 }
 
-.overview-panel__close {
-  @apply cursor-pointer;
-  color: var(--cedar-text-muted);
-  &:hover {
-    color: var(--cedar-text-muted);
-  }
-}
-
 .overview-panel__list {
   @apply divide-y divide-[var(--cedar-border-rule)];
 }

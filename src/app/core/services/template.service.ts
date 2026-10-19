@@ -1,24 +1,35 @@
+import { DefaultSemanticChecks } from './default-semantic-checks';
+import { isBlank, trimInputPadding } from '../model/cedar-model/text-policy';
+import { JsonSourcePolicy } from '../model/cedar-template';
 import {
   elementDisplayDescription,
   elementDisplayName,
   fieldDisplayDescription,
   fieldDisplayName,
 } from '../model/field-display-name';
-import { childLocks } from '../model/child-locks';
 import { fieldSetting, ValidationCoordinator } from './validation-coordinator';
-import { CedChildSource, CedJsonObject, CedValidationIssue } from '../../ced-public-api';
+import {
+  CedChildSource,
+  CedHostFinding,
+  CedJsonObject,
+  CedValidationIssue,
+  CedRecoveryDraft,
+} from '../../ced-public-api';
+import { recoveryDocument } from '../model/recovery-document';
+import { hostFindings } from '../model/host-findings';
+import { retainSessionIds } from '../model/retain-session-ids';
 import { EditorSession } from './editor-session';
 import { TerminologyService } from './terminology.service';
 import { TerminologyEditCommands } from './terminology-edit-commands';
 import {
   containerFromFlat,
   newNodeId,
+  reserveNodeIds,
   ContainerDraft,
   ChildNode,
   ElementNode,
   fieldNode,
   containers,
-  isPlacementKey,
   moveChild,
   parentOf,
   updateContainer,
@@ -30,7 +41,7 @@ import { deploymentKeys, keyedChild } from '../model/child-key-policy';
 import { CedLanguageService } from '../../i18n/ced-language.service';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
 import { LocalizedError, message } from '../../i18n/messages';
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, effect, DestroyRef } from '@angular/core';
 import { Field, FieldDefaultValue, CustomField, ControlledTermSet, UserPreferences } from '../models/types';
 import { PreferencesService } from './preferences.service';
 import {
@@ -40,6 +51,7 @@ import {
   readField,
   buildContainer,
   containerPreview,
+  PREVIEW_ELEMENT_KEY,
   newContainer,
   templateToJson,
 } from '../model/cedar-template';
@@ -120,7 +132,7 @@ function choiceDefault(field: Field, options: string[], renamed?: { from: string
   if (value.kind !== 'literal' && value.kind !== 'literals') return value;
   const selected = (value.kind === 'literal' ? [value.value] : value.values)
     .map((label) => (renamed && label === renamed.from ? renamed.to : label))
-    .filter((label) => label.trim() !== '' && (options.includes(label) || !field.options.includes(label)));
+    .filter((label) => !isBlank(label) && (options.includes(label) || !field.options.includes(label)));
   if (!selected.length) return { kind: 'none' };
   return value.kind === 'literal'
     ? { kind: 'literal', value: selected[0] }
@@ -143,7 +155,7 @@ export class TemplateService {
    * clashes with a sibling's key, or is reserved, is kept and reported, so the author sees it.
    */
   private generatedKey(name: string): string | undefined {
-    return name.trim() || undefined;
+    return isBlank(name) ? undefined : trimInputPadding(name);
   }
   /** Set while a key is taken from a name, which is not the author choosing one. */
   private takingKey = false;
@@ -173,7 +185,9 @@ export class TemplateService {
   private readonly i18n = inject(CedLanguageService);
 
   /** A standalone field has no container-owned placement settings. */
-  readonly fieldDocumentMode = signal(false);
+  get fieldDocumentMode() {
+    return this.access.fieldDocument;
+  }
 
   readonly fieldEditorConfig = signal<{ bridgeBaseUrl?: string; terminologyBaseUrl?: string }>({});
 
@@ -186,6 +200,7 @@ export class TemplateService {
       fields: starterFields(),
     }),
   );
+  readonly access = this.session.access;
   readonly templateName = this.session.property('name');
   readonly loadError = signal<string | null>(null);
   readonly validation = new ValidationCoordinator(this.session, this.i18n.t, (id, changes) => {
@@ -193,34 +208,41 @@ export class TemplateService {
   });
   readonly terminologyEdits = new TerminologyEditCommands(this, inject(TerminologyService), this.i18n);
   readonly nameFocusRequest = signal<number | null>(null);
-  readonly initialInsertionId = signal<number | null>(null);
   touchName(id: number): void {
     this.validation.touchName(id);
     const node = parentOf(this.session.document(), id)?.children.find((child) => child.id === id);
-    if (node?.definition.name.trim()) this.automaticKeys.delete(id);
+    if (node && !isBlank(node.definition.name)) this.automaticKeys.delete(id);
   }
-  /** Whether a child's own definition can no longer change: it is published, or inside a published element. */
+  /** Definition editability, including host access and publication ownership. */
   definitionLocked(id: number): boolean {
-    return childLocks(this.session.document(), id).definition;
+    return !this.access.canEditDefinition(id);
   }
-  /** Whether a child's placement in its parent can no longer change: it is inside a published element. */
+  /** Parent-owned placement editability; roots have no placement. */
   placementLocked(id: number): boolean {
-    return childLocks(this.session.document(), id).placement;
+    return !this.access.canEditPlacement(id);
   }
   nameError(id: number, name: string, kind: 'field' | 'element' | 'template'): string | null {
-    return this.validation.nameError(id, name, kind);
+    return this.access.readOnly()
+      ? null
+      : (this.validation.nameError(id, name, kind) ??
+          this.displayedIssues().find(
+            (issue) => issue.source === 'host' && issue.nodeId === id && issue.setting === 'name',
+          )?.message ??
+          null);
   }
   touchOption(id: number, index: number): void {
     this.validation.touchOption(id, index);
   }
   optionErrorVisible(id: number, index: number): boolean {
-    return this.validation.optionVisible(id, index);
+    return !this.access.readOnly() && this.validation.optionVisible(id, index);
   }
   /**
-   * The problems the designer points at: the validation report's, or none while the designer is read
-   * only. A reader can fix none of them, and the report itself still names them all to the host.
+   * Inline authoring markers are hidden during inspection. The separate read-only
+   * summary and public report still expose every validation finding.
    */
-  readonly displayedIssues = computed(() => (this.validation.readOnly() ? [] : this.validationReport().issues));
+  readonly displayedIssues = computed(() =>
+    this.validation.readOnly() ? [] : this.validationReport().issues.filter((issue) => issue.severity === 'error'),
+  );
   readonly visibleIssues = computed(() => this.displayedIssues().filter((issue) => issue.shown));
   visibleIssuesFor(id: number): CedValidationIssue[] {
     return this.visibleIssues().filter((issue) => issue.path.includes(id));
@@ -232,13 +254,67 @@ export class TemplateService {
   setSettingsError(id: number, setting: string, message: string | null, tab = 'Constraints'): void {
     this.validation.setInputError(id, setting, message, tab);
   }
-  readonly validationReport = this.validation.report;
+  private readonly hostReport = signal<{ document: ContainerDraft; findings: CedHostFinding[] } | null>(null);
+  setHostFindings(findings: CedHostFinding[]): void {
+    // Copy host-owned data. No input assignment edits the artifact or pending settings.
+    if (
+      !Array.isArray(findings) ||
+      findings.some(
+        (f) =>
+          !f ||
+          typeof f.location !== 'string' ||
+          typeof f.message !== 'string' ||
+          !['error', 'warning'].includes(f.severity),
+      )
+    )
+      throw new TypeError('Validation findings require a location, message and error/warning severity');
+    this.hostReport.set(
+      findings.length ? { document: this.document(), findings: JsonSourcePolicy.clone(findings) } : null,
+    );
+  }
+  private readonly defaultSemantics = new DefaultSemanticChecks();
+  validate() {
+    this.defaultSemantics.refreshExpired();
+    return this.validationReport();
+  }
+  readonly validationReport = computed(() => {
+    const local = this.validation.report();
+    const host = this.hostReport();
+    const issues =
+      host?.document === this.document()
+        ? hostFindings(this.document(), host.findings, this.access.fieldDocument())
+        : [];
+    const semantic = this.defaultSemantics.inspect(this.session.document(), this.fieldEditorConfig(), this.i18n.t);
+    const errors = [...issues, ...semantic.issues].some((issue) => issue.severity === 'error');
+    const pendingValidation = !!local.pendingValidation || semantic.pendingValidation;
+    const valid =
+      local.valid &&
+      !errors &&
+      !pendingValidation &&
+      semantic.semanticChecks.every((check) => check.status === 'passed');
+    return {
+      ...local,
+      valid,
+      canSave: local.canSave && !errors && !pendingValidation,
+      ...(pendingValidation ? { pendingValidation: true } : {}),
+      semanticChecks: semantic.semanticChecks,
+      issues: [...local.issues, ...issues, ...semantic.issues],
+    };
+  });
+  revealValidationFinding(location: string): boolean {
+    const issue = this.validationReport().issues.find(
+      (issue) => issue.source === 'host' && issue.location === location && !issue.unmapped,
+    );
+    if (!issue) return false;
+    this.revealIssue(issue);
+    return true;
+  }
   settingError(id: number, setting: string): string | null {
     if (this.validation.readOnly()) return null;
     return (
       this.validation.error(id, setting) ??
       this.displayedIssues().find(
-        (issue) => issue.source === 'model' && issue.nodeId === id && issue.setting === setting,
+        (issue) => issue.source !== 'draft' && issue.nodeId === id && issue.setting === setting,
       )?.message ??
       null
     );
@@ -247,8 +323,10 @@ export class TemplateService {
     return { ...field, ...this.validation.changes(field.id) };
   }
   revealIssue(issue: CedValidationIssue): void {
-    if (issue.setting === 'name') this.touchName(issue.nodeId);
-    if (issue.setting === 'option-0') this.touchOption(issue.nodeId, 0);
+    if (!this.access.readOnly()) {
+      if (issue.setting === 'name') this.touchName(issue.nodeId);
+      if (issue.setting === 'option-0') this.touchOption(issue.nodeId, 0);
+    }
     this.openContainer(this.parentContainerId(issue.nodeId));
     this.selectedField.set(issue.nodeId);
     this.scrollRequest.set(issue.nodeId);
@@ -347,12 +425,23 @@ export class TemplateService {
   }
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => {
+      this.validation.dispose();
+      this.defaultSemantics.dispose();
+    });
+    effect(() => {
+      if (this.validation.readOnly()) {
+        this.showPicker.set(null);
+        this.childPicker.set(null);
+        this.fieldTypeDropdownLibrary.set(null);
+      }
+    });
     this.markSaved();
   }
 
   /** Everything a save would write, and nothing that changes on its own. */
   private stateKey(): string {
-    return JSON.stringify(this.session.document());
+    return JsonSourcePolicy.stringify(this.session.document());
   }
 
   /** Take the current state as the baseline, after a save, an open or a reset. */
@@ -446,7 +535,7 @@ export class TemplateService {
       this.loadError.set(this.i18n.t('errors.pageBreakPlacement'));
       return;
     }
-    const definition = structuredClone(customField.definition);
+    const definition = JsonSourcePolicy.clone(customField.definition);
     const newField: Field = {
       ...definition,
       ...copiedPlacement(definition.name, definition.helpText ?? ''),
@@ -660,7 +749,7 @@ export class TemplateService {
    * preview addresses it. Null for the template itself, or while two siblings share a key.
    *
    * An element designed on its own is previewed inside a template that holds it under
-   * its name, so its path starts there.
+   * `PREVIEW_ELEMENT_KEY`, so its path starts there.
    */
   previewPath(id: number): string[] | null {
     const document = this.session.document();
@@ -681,7 +770,7 @@ export class TemplateService {
       }
       return null;
     };
-    return search(document, document.kind === 'element' ? [document.name || 'Element'] : []);
+    return search(document, document.kind === 'element' ? [PREVIEW_ELEMENT_KEY] : []);
   }
 
   childKey(id: number): string {
@@ -692,13 +781,7 @@ export class TemplateService {
   }
 
   updateFieldSettings(id: number, changes: Partial<Field>): string | null {
-    const locks = childLocks(this.session.document(), id);
-    const keys = Object.keys(changes);
-    if (
-      (locks.definition && keys.some((key) => !isPlacementKey(key))) ||
-      (locks.placement && keys.some(isPlacementKey))
-    )
-      return this.i18n.t('errors.publishedReadOnly');
+    if (!this.access.canChange(id, Object.keys(changes))) return this.i18n.t('errors.publishedReadOnly');
     const current = this.fieldsFor(id)().find((field) => field.id === id);
     if (current && !this.canAddField(changes.type ?? current.type, this.parentContainerId(id)))
       return this.i18n.t('errors.pageBreakPlacement');
@@ -738,6 +821,7 @@ export class TemplateService {
   }
 
   moveField(dragIndex: number, hoverIndex: number) {
+    if (this.definitionLocked(this.session.active().id)) return;
     this.fields.update((prev) => {
       const updated = [...prev];
       const dragField = updated[dragIndex];
@@ -772,7 +856,6 @@ export class TemplateService {
     this.loadError.set(null);
     this.mintedIdentifier.set(newTemplateIdentifier());
     const document = newContainer(kind);
-    this.initialInsertionId.set(!withStarterFields ? document.id : null);
     if (kind === 'template') {
       document.identifier = '';
       document.children = withStarterFields ? containerFromFlat({ ...document, fields: starterFields() }).children : [];
@@ -788,6 +871,79 @@ export class TemplateService {
     this.markSaved();
   }
 
+  captureDraft(): CedRecoveryDraft {
+    return {
+      format: 'cedar-designer-draft',
+      version: 1,
+      kind: this.fieldDocumentMode() ? 'field' : this.session.document().kind,
+      state: JsonSourcePolicy.stringify({
+        document: this.session.document(),
+        validation: this.validation.captureRecovery(),
+        baseline: this.savedState(),
+        identifier: this.mintedIdentifier(),
+        automaticKeys: [...this.automaticKeys].filter((id) => !!parentOf(this.document(), id)),
+      }),
+    };
+  }
+  restoreDraft(draft: CedRecoveryDraft): void {
+    if (
+      draft?.format !== 'cedar-designer-draft' ||
+      draft.version !== 1 ||
+      !['template', 'element', 'field'].includes(draft.kind) ||
+      (draft.kind === 'field') !== this.fieldDocumentMode()
+    )
+      throw new Error();
+    const parsed = JsonSourcePolicy.parse(draft.state) as unknown as {
+      document: unknown;
+      baseline: unknown;
+      identifier: unknown;
+      automaticKeys: unknown;
+      validation: Parameters<ValidationCoordinator['restoreRecovery']>[0];
+    };
+    const { document, maximumId } = recoveryDocument(parsed.document);
+    if (
+      (draft.kind !== 'field' && draft.kind !== document.kind) ||
+      typeof parsed.baseline !== 'string' ||
+      typeof parsed.identifier !== 'string' ||
+      (draft.kind === 'field' &&
+        (document.children.length > 1 || document.children.some((node) => node.kind !== 'field')))
+    )
+      throw new Error();
+    if (
+      !Array.isArray(parsed.automaticKeys) ||
+      parsed.automaticKeys.some(
+        (id: unknown) => typeof id !== 'number' || !Number.isSafeInteger(id) || !parentOf(document, id),
+      )
+    )
+      throw new Error();
+    // Validate in a detached session. Invalid author input is allowed; malformed state is not.
+    const candidate = new EditorSession(document);
+    candidate.access.fieldDocument.set(this.fieldDocumentMode());
+    const validation = new ValidationCoordinator(candidate, this.i18n.t);
+    try {
+      validation.restoreRecovery(parsed.validation);
+      validation.report();
+    } finally {
+      validation.dispose();
+    }
+    reserveNodeIds(maximumId);
+    this.validation.reset();
+    this.session.replace(document);
+    this.validation.restoreRecovery(parsed.validation);
+    this.savedState.set(parsed.baseline);
+    this.mintedIdentifier.set(parsed.identifier);
+    this.automaticKeys.clear();
+    for (const id of parsed.automaticKeys) this.automaticKeys.add(id);
+    this.loadError.set(null);
+    this.hostReport.set(null);
+    this.nameFocusRequest.set(null);
+    this.childPicker.set(null);
+    this.validationTarget.set(null);
+    this.showPicker.set(null);
+    this.selectedField.set(null);
+    this.collapsedElements.set(new Set());
+  }
+
   /**
    * Load a template a host or a file supplied, in either serialization.
    *
@@ -798,7 +954,7 @@ export class TemplateService {
    * return — leaving the author looking at their previous template with nothing to
    * say the file had not been read.
    */
-  loadTemplate(source: unknown): void {
+  loadTemplate(source: unknown, preserveView = false): void {
     if (source === null || source === undefined || source === '') {
       return;
     }
@@ -810,20 +966,30 @@ export class TemplateService {
       this.loadError.set(this.i18n.describe(error));
       throw error;
     }
+    const previous = this.session.document();
+    const retainView = preserveView && previous.kind === state.kind;
+    if (retainView) state = retainSessionIds(previous, state);
     this.loadError.set(null);
 
-    this.initialInsertionId.set(null);
     // A name the template arrived with is the author's, not a blank the designer has just
     // put in front of them, so a missing one is stated at once. Held back like a new
     // field's, it refused Save with nothing on screen to say why.
     this.validation.reset(namedIds(state));
     this.nameFocusRequest.set(null);
     this.childPicker.set(null);
-    this.selectedField.set(null);
     this.validationTarget.set(null);
     this.showPicker.set(null);
-    this.session.replace(state);
-    this.collapsedElements.set(new Set());
+    if (retainView) {
+      this.session.document.set(state);
+      if (!findContainer(state, this.session.activeId())) this.session.activeId.set(state.id);
+      const selected = this.selectedField();
+      if (selected !== null && !parentOf(state, selected)) this.selectedField.set(null);
+      this.collapsedElements.update((ids) => new Set([...ids].filter((id) => !!findContainer(state, id))));
+    } else {
+      this.selectedField.set(null);
+      this.session.replace(state);
+      this.collapsedElements.set(new Set());
+    }
     this.markSaved();
   }
   readonly children = computed(() => this.session.active().children);
@@ -861,7 +1027,7 @@ export class TemplateService {
       ancestor;
       ancestor = parentOf(this.document(), ancestor.id)
     ) {
-      if (!ancestor.name.trim()) this.touchName(ancestor.id);
+      if (isBlank(ancestor.name)) this.touchName(ancestor.id);
     }
     this.loadError.set(null);
     this.session.document.update((root) =>
@@ -881,6 +1047,7 @@ export class TemplateService {
     type?: 'field' | 'element',
   ): void {
     this.showPicker.set(null);
+    if (this.definitionLocked(targetId)) return;
     this.childPicker.set({ targetId, position, type });
   }
 
@@ -896,7 +1063,7 @@ export class TemplateService {
     if (this.definitionLocked(targetId)) throw new LocalizedError(message('errors.publishedReadOnly'));
     const nodes = sources.map(({ type, artifact }): ChildNode => {
       if (type === 'field') {
-        const field = readField(JSON.stringify(artifact));
+        const field = readField(JsonSourcePolicy.stringify(artifact));
         if (!allowedInContainer(field.type, target.kind))
           throw new LocalizedError(message('errors.pageBreakPlacement'));
         return fieldNode({

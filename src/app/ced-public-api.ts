@@ -1,3 +1,17 @@
+/** Options for adopting a saved artifact without resetting inspection state. */
+export interface CedLoadOptions {
+  /** Retain tabs, expansion and selection for matching deployment paths and field types. */
+  preserveView?: boolean;
+}
+
+/** Opaque JSON recovery state, including unfinished controls; never submit it as an artifact. */
+export interface CedRecoveryDraft {
+  format: 'cedar-designer-draft';
+  version: 1;
+  kind: 'template' | 'element' | 'field';
+  state: string;
+}
+
 /**
  * The contract an embedding page programs against.
  *
@@ -44,7 +58,13 @@ export interface CedConfig {
 }
 
 /** A JSON-serialisable value, as it appears in a CEDAR artifact. */
-export type CedJsonValue = string | number | boolean | null | CedJsonObject | CedJsonValue[];
+/** Exact numeric artifact atom; use String(value) to inspect it without rounding. */
+export interface CedExactNumber {
+  readonly cedarExactDecimal: true;
+  toString(): string;
+  toJSON(): unknown;
+}
+export type CedJsonValue = string | number | CedExactNumber | boolean | null | CedJsonObject | CedJsonValue[];
 
 export interface CedJsonObject {
   [key: string]: CedJsonValue;
@@ -78,8 +98,8 @@ export interface CedarEmbeddableDesignerElement extends HTMLElement {
   get language(): CedLanguage;
   set language(value: CedLanguage | string | null);
   /**
-   * Host read-only mode: nothing can be edited or saved, and the designer points at none of the
-   * document's problems, which `validationReport` still lists.
+   * Host read-only mode: inspection and the validation report remain available;
+   * editing, saving and inline authoring error markers are disabled.
    */
   readOnly: boolean;
   /** Host-owned repository search and artifact retrieval. Replaceable between documents. */
@@ -88,7 +108,10 @@ export interface CedarEmbeddableDesignerElement extends HTMLElement {
   template: CedJsonObject | string | null;
   artifact: CedJsonObject | string | null;
   /** Load a document synchronously; throws if it cannot be read. */
-  loadArtifact(source: CedJsonObject | string): void;
+  loadArtifact(source: CedJsonObject | string, options?: CedLoadOptions): void;
+  captureDraft(): CedRecoveryDraft;
+  /** Throws before replacing the working document if the draft cannot be restored. */
+  restoreDraft(draft: CedRecoveryDraft): void;
   /** Start an empty template or element, without the demo's starter fields. */
   newArtifact(kind: 'template' | 'element'): void;
   /** Includes invalid, uncommitted setting edits. Reset by loading a saved document. */
@@ -98,6 +121,10 @@ export interface CedarEmbeddableDesignerElement extends HTMLElement {
     listener: (event: CustomEvent<boolean>) => void,
     options?: boolean | AddEventListenerOptions,
   ): void;
+  /** Findings for the current accepted artifact; replaced by assignment, cleared by an accepted edit or load. */
+  set validationFindings(findings: CedHostFinding[]);
+  /** Reveal a mapped host finding; false for stale or unsupported paths. */
+  revealValidationFinding(location: string): boolean;
   readonly validationReport: CedValidationReport;
   readonly canSave: boolean;
   validate(): CedValidationReport;
@@ -132,6 +159,13 @@ declare global {
  * `label` and `message` are written for the author, in the element's `language`. `tab`
  * and `code` are identifiers, and stay the same in every language.
  */
+export interface CedHostFinding {
+  /** JSON Pointer into the schema artifact, including properties and items segments. */
+  location: string;
+  message: string;
+  severity: 'error' | 'warning';
+}
+
 export interface CedValidationIssue {
   nodeId: number;
   path: number[];
@@ -140,8 +174,11 @@ export interface CedValidationIssue {
   tab: string;
   code: string;
   message: string;
-  severity: 'error';
-  source: 'model' | 'draft';
+  severity: 'error' | 'warning';
+  source: 'model' | 'draft' | 'host';
+  location?: string;
+  /** Unsupported paths remain in the report without navigating to an unrelated control. */
+  unmapped?: boolean;
   /**
    * Whether the designer's error summary lists the issue. A name nobody has touched yet, and a new
    * choice field's blank starter option, block saving without being listed until the author
@@ -150,6 +187,17 @@ export interface CedValidationIssue {
   shown: boolean;
 }
 export interface CedValidationReport {
+  /** Semantic coverage is independent of local consistency and save permission. */
+  semanticChecks?: Array<{
+    nodeId: number;
+    path: number[];
+    iri: string;
+    code: string;
+    message: string;
+    status: 'passed' | 'failed' | 'notChecked' | 'unavailable';
+  }>;
+  /** Save remains unavailable while bounded pattern checks are running. */
+  pendingValidation?: boolean;
   valid: boolean;
   canSave: boolean;
   issues: CedValidationIssue[];
@@ -220,13 +268,18 @@ export interface CedarEmbeddableFieldDesignerElement extends HTMLElement {
   /** Host read-only mode; published definitions are always read only. */
   readOnly: boolean;
   /** Throws on invalid input, preserving the currently open document. */
-  loadArtifact(source: CedJsonObject | string): void;
+  loadArtifact(source: CedJsonObject | string, options?: CedLoadOptions): void;
+  captureDraft(): CedRecoveryDraft;
+  restoreDraft(draft: CedRecoveryDraft): void;
   /** Omit the type to show the field-type chooser. Resets the dirty baseline. */
   newArtifact(type?: CedFieldType): void;
   /** Null before choosing a type. May throw for an invalid draft; check canSave first. */
   readonly currentArtifact: CedJsonObject | null;
   readonly isDirty: boolean;
   readonly canSave: boolean;
+  /** Same snapshot-scoped finding contract as the template designer. */
+  set validationFindings(findings: CedHostFinding[]);
+  revealValidationFinding(location: string): boolean;
   readonly validationReport: CedValidationReport;
   validate(): CedValidationReport;
   addEventListener(

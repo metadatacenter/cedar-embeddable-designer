@@ -1,3 +1,4 @@
+import { validAbsoluteIri } from '../../core/model/cedar-model/iri-syntax';
 import { ManualIriComponent } from '../manual-iri/manual-iri.component';
 import {
   ChangeDetectionStrategy,
@@ -170,6 +171,12 @@ export class PropertyPickerComponent {
   private readonly trigger = viewChild<ElementRef<HTMLButtonElement>>('trigger');
   constructor() {
     effect(() => this.dialog()?.nativeElement.focus());
+    effect(() => {
+      if (this.disabled()) {
+        this.opened.set(false);
+        this.manualOpened.set(false);
+      }
+    });
   }
   open(): void {
     if (this.disabled()) return;
@@ -199,7 +206,7 @@ export class PropertyPickerComponent {
     if (
       selected?.sourceType !== 'ontology-property' ||
       typeof selected.sourceId !== 'string' ||
-      !/^[a-z][a-z0-9+.-]*:\S+$/i.test(selected.sourceId)
+      !validAbsoluteIri(selected.sourceId)
     ) {
       this.error.set(this.i18n.t('propertyPicker.selectOne'));
       return;

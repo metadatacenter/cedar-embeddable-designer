@@ -1,3 +1,4 @@
+import { NumericPolicy, JsonSourcePolicy } from '../../core/model/cedar-template';
 import { DialogHeaderComponent } from '../../shared/components/dialog-header/dialog-header.component';
 import {
   ChangeDetectionStrategy,
@@ -137,6 +138,13 @@ export class FieldDefaultValueComponent {
 
   constructor() {
     const destroyRef = this.destroyRef;
+    effect(() => {
+      if (this.locked()) {
+        this.pending?.cancel();
+        this.pending = null;
+        this.pickerOpen.set(false);
+      }
+    });
     for (const [tag, ready] of [
       [FIELD_TAG, this.available],
       ['cedar-embeddable-term-picker', this.pickerAvailable],
@@ -201,7 +209,7 @@ export class FieldDefaultValueComponent {
         this.artifactKey = null;
         return;
       }
-      const key = JSON.stringify(artifact);
+      const key = JsonSourcePolicy.stringify(artifact);
       const rebuilt = key !== this.artifactKey;
       if (rebuilt) {
         this.editor.fieldObject = artifact;
@@ -216,9 +224,26 @@ export class FieldDefaultValueComponent {
   }
 
   private readonly acceptValue = (event: Event): void => {
-    const detail = (event as CustomEvent<{ value: FieldDefaultValue; valid: boolean }>).detail;
+    const detail = (
+      event as CustomEvent<{
+        value: FieldDefaultValue;
+        valid: boolean;
+        pendingValidation?: boolean;
+        structurallyValid?: boolean;
+        semanticChecks?: Array<{ status: string }>;
+        problems?: Array<{ category?: string }>;
+      }>
+    ).detail;
     if (this.allowsControlledTerms() || this.locked()) return;
-    if (detail?.valid === true) this.save(defaultFromCef(this.field(), detail.value));
+    if (
+      detail?.valid === true ||
+      detail?.pendingValidation === true ||
+      (detail?.structurallyValid === true &&
+        detail.semanticChecks?.length &&
+        detail.semanticChecks.every((check) => check.status === 'notChecked' || check.status === 'unavailable') &&
+        detail.problems?.every((problem) => problem.category === 'verification'))
+    )
+      this.save(defaultFromCef(this.field(), detail.value));
     else this.setError(this.i18n.t('defaultValue.invalid'), true, detail?.value);
   };
 
@@ -230,11 +255,12 @@ export class FieldDefaultValueComponent {
       return;
     }
     if (this.field().type === 'number') {
-      if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(text.trim()) || !Number.isFinite(Number(text))) {
+      try {
+        const value = NumericPolicy.value(text);
+        this.save({ kind: 'number', value: typeof value === 'number' ? value : text });
+      } catch {
         this.setError(this.i18n.t('defaultValue.invalidNumber'), false, text);
-        return;
       }
-      this.save({ kind: 'number', value: Number(text) });
     } else {
       this.save({ kind: 'literal', value: text });
     }

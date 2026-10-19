@@ -1,3 +1,5 @@
+import { JsonSourcePolicy } from '../core/model/cedar-template';
+import type { CedHostFinding, CedLoadOptions, CedRecoveryDraft } from '../ced-public-api';
 import { DesignerConfigService } from '../core/services/designer-config.service';
 import {
   Component,
@@ -50,6 +52,7 @@ import { provideCedTranslations } from '../i18n/i18n';
   template: `<ced-font-registrar /><app-root></app-root>`,
   styleUrls: ['../../styles.css', '../../authoring.scss', './cedar-embeddable-designer.element.scss'],
   encapsulation: ViewEncapsulation.ShadowDom,
+  host: { '[class.ced-read-only]': 'readOnly' },
 })
 export class CedarEmbeddableDesignerElementComponent {
   readonly service = inject(TemplateService);
@@ -84,7 +87,7 @@ export class CedarEmbeddableDesignerElementComponent {
     this.service.validation.setReadOnly(!!value);
   }
   get readOnly(): boolean {
-    return this.service.validation.readOnly();
+    return this.service.access.readOnly();
   }
 
   @Input() set childSource(source: CedChildSource | null) {
@@ -142,20 +145,28 @@ export class CedarEmbeddableDesignerElementComponent {
     return this.cedarTemplate();
   }
   /** Explicit host loading reports failures instead of retaining a different document silently. */
-  @Input() readonly loadArtifact = (source: object | string): void => this.service.loadTemplate(source);
+  @Input() readonly loadArtifact = (source: object | string, options?: CedLoadOptions): void =>
+    this.service.loadTemplate(source, options?.preserveView);
   @Input() readonly newArtifact = (kind: 'template' | 'element'): void => this.service.resetTemplate(kind, false);
+  @Input() readonly captureDraft = (): CedRecoveryDraft => this.service.captureDraft();
+  @Input() readonly restoreDraft = (draft: CedRecoveryDraft): void => this.service.restoreDraft(draft);
   @Input() get isDirty(): boolean {
     return this.service.isDirty() || this.service.validationReport().issues.some((issue) => issue.source === 'draft');
   }
   @Output() dirtyChange = new EventEmitter<boolean>();
 
+  @Input() set validationFindings(findings: CedHostFinding[]) {
+    this.service.setHostFindings(findings);
+  }
+  @Input() readonly revealValidationFinding = (location: string): boolean =>
+    this.service.revealValidationFinding(location);
   @Input() get validationReport(): CedValidationReport {
-    return structuredClone(this.service.validationReport());
+    return JsonSourcePolicy.clone(this.service.validationReport());
   }
   @Input() get canSave(): boolean {
     return this.validationReport.canSave;
   }
-  @Input() readonly validate = (): CedValidationReport => structuredClone(this.service.validationReport());
+  @Input() readonly validate = (): CedValidationReport => JsonSourcePolicy.clone(this.service.validate());
   @Output() validationChange = new EventEmitter<CedValidationReport>();
   @Output() artifactChange = new EventEmitter<object>();
   @Output() templateChange = new EventEmitter<object>();
@@ -176,9 +187,12 @@ export class CedarEmbeddableDesignerElementComponent {
       injector: inject(EnvironmentInjector),
     });
     inject(DestroyRef).onDestroy(() => dirty.destroy());
-    const validation = effect(() => this.validationChange.emit(structuredClone(this.service.validationReport())), {
-      injector: inject(EnvironmentInjector),
-    });
+    const validation = effect(
+      () => this.validationChange.emit(JsonSourcePolicy.clone(this.service.validationReport())),
+      {
+        injector: inject(EnvironmentInjector),
+      },
+    );
     inject(DestroyRef).onDestroy(() => validation.destroy());
     const changes = effect(
       () => {
@@ -191,7 +205,7 @@ export class CedarEmbeddableDesignerElementComponent {
           return;
         }
         // Each public channel owns its snapshot, including synchronous subscribers.
-        this.templateChange.emit(structuredClone(artifact));
+        this.templateChange.emit(JsonSourcePolicy.clone(artifact));
         this.artifactChange.emit(artifact);
       },
       {
@@ -202,6 +216,6 @@ export class CedarEmbeddableDesignerElementComponent {
   }
 
   private cedarTemplate(): object {
-    return structuredClone(this.service.templateJson());
+    return JsonSourcePolicy.clone(this.service.templateJson());
   }
 }

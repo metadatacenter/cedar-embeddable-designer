@@ -1,7 +1,7 @@
 import { Field } from '../models/types';
 import { Translate, describeError } from '../../i18n/messages';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
-import { choiceDefaultConflict, defaultValueFailure, fieldToJson } from './cedar-template';
+import { accepts, RegexChecks, choiceDefaultConflict, defaultValueFailure, fieldToJson } from './cedar-template';
 import { failureRule, ValidationRule } from './validation-rule';
 
 interface SettingGroup {
@@ -33,18 +33,23 @@ export function fieldValidationIssues(
   };
   for (const group of groups) for (const key of group.keys) delete base[key];
   const defaults = { ...field, publishedDefinition: undefined, annotations: undefined, language: undefined };
+  // The bounded shared regex check below owns pattern findings and their exact
+  // repair control. Incidental model construction must not report it a second time.
+  if (defaults.textConstraints) defaults.textConstraints = { ...defaults.textConstraints, regex: null };
   for (const group of groups) {
     if (!group.keys.some((key) => field[key] !== undefined)) continue;
     const probe = { ...base };
     for (const key of group.keys) Object.assign(probe, { [key]: field[key] });
+    if (probe.textConstraints) probe.textConstraints = { ...probe.textConstraints, regex: null };
     try {
       fieldToJson(probe);
     } catch (error) {
+      const rule = failureRule(error, Object.fromEntries(group.keys.map((key) => [key, field[key]])));
       issues.push({
-        setting: group.setting,
+        setting: rule.code === 'errors.text.invalidPattern' ? 'regex' : group.setting,
         tab: group.tab,
         message: describeError(error, t),
-        rule: failureRule(error, Object.fromEntries(group.keys.map((key) => [key, field[key]]))),
+        rule,
       });
       // Validate defaults against every usable constraint, even when another
       // setting is broken. Report that setting separately rather than twice.
@@ -82,5 +87,26 @@ export function fieldValidationIssues(
             terms: defaults.controlledTermConstraints,
           }),
     });
+  const pattern = field.textConstraints?.regex;
+  if (accepts(field.type, 'textPattern') && pattern) {
+    const value = field.defaultValue.kind === 'literal' ? field.defaultValue.value : null;
+    const verdict = RegexChecks.inspect(pattern, value);
+    if (verdict !== 'valid' && verdict !== 'match') {
+      const code =
+        verdict === 'pending'
+          ? 'regex.pending'
+          : verdict === 'invalid'
+            ? 'errors.text.invalidPattern'
+            : verdict === 'mismatch'
+              ? 'errors.text.defaultPattern'
+              : 'errors.text.patternEvaluation';
+      issues.push({
+        setting: verdict === 'mismatch' ? 'defaultValue' : 'regex',
+        tab: SETTINGS_TABS.constraints,
+        message: verdict === 'pending' ? '' : t(code as 'errors.text.invalidPattern'),
+        rule: { code, parameters: { pattern, value, verdict } },
+      });
+    }
+  }
   return issues;
 }

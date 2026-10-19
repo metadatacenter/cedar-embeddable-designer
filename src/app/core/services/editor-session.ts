@@ -1,3 +1,4 @@
+import { EditorAccess } from './editor-access';
 import { computed, signal } from '@angular/core';
 import { ContainerDraft, findContainer, flatView, replaceFields, updateContainer } from '../model/container-draft';
 import type { Field } from '../models/types';
@@ -9,6 +10,7 @@ export class EditorSession {
   readonly document;
   readonly activeId;
   readonly active;
+  readonly access;
   constructor(document: ContainerDraft) {
     const state = signal(document);
     const set = (next: ContainerDraft) => state.set(this.reconcile(next));
@@ -19,6 +21,7 @@ export class EditorSession {
         update: (update: (previous: ContainerDraft) => ContainerDraft) => set(update(state())),
       },
     );
+    this.access = new EditorAccess(this.document);
     this.activeId = signal(document.id);
     this.active = computed(() => findContainer(this.document(), this.activeId()) ?? this.document());
   }

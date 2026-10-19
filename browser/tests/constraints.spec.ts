@@ -177,6 +177,36 @@ test('the real picker preserves saved actions and explicitly clears an invalid d
       ],
     }),
   );
+  const summaryConstraints = child(template, 'Disease')['_valueConstraints'] as Record<string, unknown>;
+  const loadedConstraints = { ...summaryConstraints };
+  delete loadedConstraints['defaultValue'];
+  const loadedOntologies = loadedConstraints['ontologies'] as Array<{ version: { id: string } }>;
+  const editedConstraints = { ...loadedConstraints, ontologies: loadedOntologies.slice(1) };
+  let checkedLoaded = false;
+  let checkedEdited = false;
+  await page.route('**/fake-terminology/bioportal/validate-term', (route) => {
+    const request = route.request().postDataJSON();
+    const loaded = request.valueConstraints.ontologies.length === 2;
+    expect(route.request().method()).toBe('POST');
+    // CED checks the default separately, while CEF's summary retains the declared
+    // default as a specification fact. Both carry every membership constraint.
+    expect(
+      (loaded ? [loadedConstraints, summaryConstraints] : [editedConstraints]).map((valueConstraints) => ({
+        iri: 'urn:cancer',
+        valueConstraints,
+      })),
+    ).toContainEqual(request);
+    if (loaded) checkedLoaded = true;
+    else checkedEdited = true;
+    return route.fulfill({
+      json: {
+        iri: 'urn:cancer',
+        status: loaded ? 'passed' : 'failed',
+        code: loaded ? 'controlledTermVerified' : 'controlledTermMembership',
+        message: loaded ? 'Within the stored scope.' : 'Outside the edited scope.',
+      },
+    });
+  });
   await page.evaluate((value) => {
     (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = value;
   }, template);
@@ -232,16 +262,6 @@ test('the real picker preserves saved actions and explicitly clears an invalid d
       },
     }),
   );
-  let checked = false;
-  await page.route('**/fake-terminology/bioportal/integrated-search', (route) => {
-    const vc = route.request().postDataJSON().parameterObject.valueConstraints;
-    expect(vc.ontologies.map((o: { version: { id: string } }) => o.version.id)).toEqual(['other']);
-    expect(vc.actions).toEqual([
-      { action: 'delete', termUri: 'urn:cancer', sourceUri: 'urn:doid', source: 'DOID', type: 'OntologyClass' },
-    ]);
-    checked = true;
-    return route.fulfill({ json: { collection: [] } });
-  });
   await expect(designer.locator('app-controlled-term-config')).toBeAttached();
   await openSettings(designer.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') }));
   const panel = designer.locator('app-controlled-term-config');
@@ -265,7 +285,8 @@ test('the real picker preserves saved actions and explicitly clears an invalid d
   await picker.getByRole('button', { name: 'Remove constraint 1', exact: true }).click();
   await picker.getByRole('button', { name: 'Done', exact: true }).click();
   await expect(panel.getByRole('alert')).toContainText('existing default is not permitted');
-  expect(checked).toBe(true);
+  expect(checkedLoaded).toBe(true);
+  expect(checkedEdited).toBe(true);
   const before = child(await currentTemplate(page), 'Disease')['_valueConstraints'] as Record<string, unknown>;
   expect(before['defaultValue']).toEqual({ termUri: 'urn:cancer', 'rdfs:label': 'Cancer' });
   await picker.locator('.constraint-set').evaluate((node) => {

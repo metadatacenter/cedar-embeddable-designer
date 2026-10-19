@@ -1,4 +1,7 @@
 import {
+  ExactDecimal,
+  NumericPolicy,
+  JsonSourcePolicy,
   AbstractDynamicChildDeploymentInfo,
   AbstractFieldChildDeploymentInfo,
   AnnotationAtId,
@@ -75,9 +78,9 @@ function isCompactYaml(document: string): boolean {
  * file rather than for whoever wrote the reader.
  */
 export function readTemplate(source: string | object): Template {
-  const trimmed = typeof source === 'string' ? source.trim() : null;
-  if (trimmed === null || trimmed.startsWith('{')) {
-    const json = (trimmed === null ? source : JSON.parse(trimmed)) as JsonNode;
+  const trimmed = typeof source === 'string' ? source : null;
+  if (trimmed === null || trimmed.trimStart().startsWith('{')) {
+    const json = (trimmed === null ? source : JsonSourcePolicy.parse(trimmed)) as JsonNode;
     const template = CedarReaders.json()
       .getStrict()
       .getTemplateReader()
@@ -154,7 +157,8 @@ function defaultOf(field: TemplateField): FieldDefaultValue {
     if (term) return { kind: 'iri', iri: term.termUri.getValue() ?? '', label: term.rdfsLabel };
   }
   if (value instanceof Iri) return { kind: 'iri', iri: value.getValue() ?? '', label: null };
-  if (typeof value === 'number') return { kind: 'number', value };
+  if (typeof value === 'number' || ExactDecimal.isExact(value))
+    return { kind: 'number', value: typeof value === 'number' ? value : String(value) };
   if (typeof value === 'string')
     return descriptor.defaultKind === 'temporal' ? { kind: 'temporal', value } : { kind: 'literal', value };
   return { kind: 'none' };
@@ -198,7 +202,9 @@ function projectContainerFields(template: Template | TemplateElement): DesignerT
         info instanceof AbstractFieldChildDeploymentInfo ? info.valueRecommendationEnabled : false,
       publishedDefinition:
         field.bibo_status === BiboStatus.PUBLISHED
-          ? JSON.stringify(CedarWriters.json().getStrict().getFieldWriterForField(field).getAsJsonNode(field))
+          ? JsonSourcePolicy.stringify(
+              CedarWriters.json().getStrict().getFieldWriterForField(field).getAsJsonNode(field),
+            )
           : undefined,
       type: paletteTypeOf(field),
       name: field.schema_name ?? info.name,
@@ -241,8 +247,8 @@ function projectContainerFields(template: Template | TemplateElement): DesignerT
         field.cedarFieldType === CedarFieldType.NUMERIC
           ? {
               type: (field as NumericField).valueConstraints.numberType.getValue() ?? 'xsd:decimal',
-              min: (field as NumericField).valueConstraints.minValue,
-              max: (field as NumericField).valueConstraints.maxValue,
+              min: editableNumber((field as NumericField).valueConstraints.minValue),
+              max: editableNumber((field as NumericField).valueConstraints.maxValue),
               decimalPlaces: (field as NumericField).valueConstraints.decimalPlaces,
               unit: (field as NumericField).valueConstraints.unitOfMeasure,
             }
@@ -307,9 +313,9 @@ function readingKey(field: TemplateField): string {
 }
 
 export function readField(source: string): Field {
-  const text = source.trim();
-  if (text.startsWith('{')) {
-    const sourceNode = JSON.parse(text);
+  const text = source;
+  if (text.trimStart().startsWith('{')) {
+    const sourceNode = JsonSourcePolicy.parse(text);
     const field = CedarReaders.json()
       .getStrict()
       .getTemplateFieldReader()
@@ -318,13 +324,14 @@ export function readField(source: string): Field {
     const key = readingKey(field);
     const container = CedarBuilders.templateBuilder().withSchemaName('Field import').build();
     container.addChild(field, field.createDeploymentBuilder(key).build());
-    const document = JSON.parse(JSON.stringify(templateToJson(container)));
-    const property = document.properties[key];
+    const document = JsonSourcePolicy.parse(JsonSourcePolicy.stringify(templateToJson(container)));
+    const properties = document['properties'] as JsonNode;
+    const property = properties[key] as JsonNode;
     // Attribute-value standalone artifacts already carry the deployment array
     // envelope. Reuse its definition rather than nesting one array inside another.
-    if (property.items) property.items = sourceNode.type === 'array' ? sourceNode.items : sourceNode;
-    else document.properties[key] = sourceNode;
-    return toDesignerTemplate(readTemplate(JSON.stringify(document))).fields[0];
+    if (property['items']) property['items'] = sourceNode['type'] === 'array' ? sourceNode['items'] : sourceNode;
+    else properties[key] = sourceNode;
+    return toDesignerTemplate(readTemplate(JsonSourcePolicy.stringify(document))).fields[0];
   }
   // A field document carries the same marker as a template, and the same reason applies.
   if (isCompactYaml(text)) {
@@ -379,9 +386,9 @@ export function toContainerDraft(container: Template | TemplateElement): Contain
 }
 
 export function readContainer(source: string | object): ContainerDraft {
-  const text = typeof source === 'string' ? source.trim() : null;
-  if (text === null || text.startsWith('{')) {
-    const json = (text === null ? source : JSON.parse(text)) as JsonNode;
+  const text = typeof source === 'string' ? source : null;
+  if (text === null || text.trimStart().startsWith('{')) {
+    const json = (text === null ? source : JsonSourcePolicy.parse(text)) as JsonNode;
     const type = json['@type'];
     if (
       type !== 'https://schema.metadatacenter.org/core/Template' &&
@@ -436,13 +443,13 @@ function deferredDefault(source: JsonNode): DeferredDefault | undefined {
   const type = (source['_ui'] as JsonNode | undefined)?.['inputType'];
   const value = (source['_valueConstraints'] as JsonNode | undefined)?.['defaultValue'];
   if (type === 'temporal' && typeof value === 'string') return value;
-  if (
-    type === 'numeric' &&
-    (typeof value === 'number' ||
-      (typeof value === 'string' && /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(value))) &&
-    Number.isFinite(Number(value))
-  )
-    return Number(value);
+  if (type === 'numeric' && (typeof value === 'number' || typeof value === 'string' || ExactDecimal.isExact(value))) {
+    try {
+      return editableNumber(NumericPolicy.value(value)) ?? undefined;
+    } catch {
+      return undefined;
+    }
+  }
   if (typeof type === 'string' && IRI_INPUT_TYPES.has(type) && typeof value === 'string' && value !== '')
     return validAbsoluteIri(value) ? undefined : { iri: value };
   if (value && typeof value === 'object' && !Array.isArray(value)) {
@@ -485,7 +492,7 @@ function isControlledTermField(field: TemplateField): field is ControlledTermFie
 }
 
 function withoutCheckedDefaults(source: JsonNode): JsonNode {
-  const copy = structuredClone(source);
+  const copy = JsonSourcePolicy.clone(source);
   const visit = (node: JsonNode) => {
     if (deferredDefault(node) !== undefined) delete (node['_valueConstraints'] as JsonNode)['defaultValue'];
     const properties = node['properties'] as JsonNode | undefined;
@@ -509,8 +516,8 @@ function restoreDeclaredDefaults(model: Template | TemplateElement | TemplateFie
     }
   } else {
     const value = deferredDefault(definition);
-    if (model.cedarFieldType === CedarFieldType.NUMERIC && typeof value === 'number')
-      (model as NumericField).valueConstraints.defaultValue = value;
+    if (model.cedarFieldType === CedarFieldType.NUMERIC && (typeof value === 'number' || typeof value === 'string'))
+      (model as NumericField).valueConstraints.defaultValue = NumericPolicy.value(value);
     if (model.cedarFieldType === CedarFieldType.TEMPORAL && typeof value === 'string')
       (model as TemporalField).valueConstraints.defaultValue = value;
     if (value && typeof value === 'object' && 'iri' in value && isIriDefaultField(model))
@@ -536,4 +543,8 @@ function restoreContainerLanguages(model: Template | TemplateElement, source: Js
 /** Older Workbench versions persisted this untranslated empty-description fallback. */
 function descriptionText(value: string | null | undefined): string {
   return value === 'VALIDATION.noDescriptionField' ? '' : (value ?? '');
+}
+
+function editableNumber(value: number | ExactDecimal | null): number | string | null {
+  return ExactDecimal.isExact(value) ? String(value) : value;
 }

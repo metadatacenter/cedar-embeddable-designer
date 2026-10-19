@@ -69,29 +69,6 @@
   color: var(--cedar-text-muted);
 }
 
-.cee-preview__close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: spacing.$designer-preview-control-size;
-  height: spacing.$designer-preview-control-size;
-  margin: 0;
-  padding: 0;
-  flex: none;
-  line-height: var(--cedar-line-height-tight);
-  border: 0;
-  border-radius: var(--cedar-radius);
-  background: transparent;
-  color: var(--cedar-text-muted);
-  cursor: pointer;
-
-  &:hover {
-    background: var(--cedar-surface-selected);
-    color: var(--cedar-color-primary);
-  }
-}
-
 /*
   CEE brings its own shadow root and its own stylesheet, so nothing here reaches
   inside it. The mount only has to give it room and let it scroll.

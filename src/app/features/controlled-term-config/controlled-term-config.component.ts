@@ -1,3 +1,4 @@
+import { JsonSourcePolicy } from '../../core/model/cedar-template';
 import {
   Component,
   CUSTOM_ELEMENTS_SCHEMA,
@@ -81,6 +82,13 @@ export class ControlledTermConfigComponent implements OnChanges {
     // Runs when the dialog appears, which is after the click that opened it: the
     // view child resolves only once the overlay has rendered.
     effect(() => this.dialog()?.nativeElement.focus());
+    effect(() => {
+      if (this.service.definitionLocked(this.field.id)) {
+        this.pending?.cancel();
+        this.pending = null;
+        this.pickerOpen.set(false);
+      }
+    });
     inject(DestroyRef).onDestroy(() => this.pending?.cancel());
   }
 
@@ -114,6 +122,7 @@ export class ControlledTermConfigComponent implements OnChanges {
   }
 
   openPicker(): void {
+    if (this.service.definitionLocked(this.field.id)) return;
     this.draftChanged();
     this.pickerOpen.set(true);
   }
@@ -133,7 +142,7 @@ export class ControlledTermConfigComponent implements OnChanges {
 
   async applyPicked(event: Event): Promise<void> {
     if (this.checking()) return;
-    const set = this.orderedConstraints(structuredClone((event as CustomEvent<ControlledTermSet>).detail));
+    const set = this.orderedConstraints(JsonSourcePolicy.clone((event as CustomEvent<ControlledTermSet>).detail));
     this.invalidDefault.set(false);
     const attempt = this.service.terminologyEdits.changeConstraints(this.field.id, set);
     this.pending = attempt;

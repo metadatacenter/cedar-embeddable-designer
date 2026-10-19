@@ -1,3 +1,4 @@
+import { isBlank } from './text-policy';
 import { ArtifactMetadata, Field, FieldDefaultValue } from '../../models/types';
 import { NUMERIC_TYPES, accepts, allowsOptions, descriptorOf, temporalGranularities } from './capabilities';
 import {
@@ -12,6 +13,9 @@ import {
 } from '../../../i18n/messages';
 import type { FieldBuilder } from './types';
 import {
+  NumericPolicy,
+  FieldValuePolicy,
+  TextPolicy,
   AnnotationAtId,
   AnnotationAtValue,
   Annotations,
@@ -45,44 +49,101 @@ import { applyArtifactMetadata, artifactMetadataOf, derivedDescription, derivedT
 import { buildControlledTermSet } from './terminology';
 import { annotationError } from '../annotations';
 
-const INTEGER_RANGES: Record<string, readonly [number, number]> = {
-  'xsd:byte': [-128, 127],
-  'xsd:short': [-32768, 32767],
-  'xsd:int': [-2147483648, 2147483647],
-  // The model stores JavaScript numbers, so the full 64-bit range is not lossless.
-  'xsd:long': [Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER],
+const INTEGER_RANGES: Record<string, readonly [string, string]> = {
+  'xsd:byte': ['-128', '127'],
+  'xsd:short': ['-32768', '32767'],
+  'xsd:int': ['-2147483648', '2147483647'],
+  'xsd:long': ['-9223372036854775808', '9223372036854775807'],
 };
 
 function validateNumericSettings(field: Field): void {
   const { type, min, max, decimalPlaces } = field.numeric!;
+  const bound = (value: number | string) => {
+    try {
+      return NumericPolicy.value(value);
+    } catch {
+      return value;
+    }
+  };
+  const configuration = FieldValuePolicy.validateConfiguration({
+    _ui: { inputType: 'numeric' },
+    _valueConstraints: {
+      numberType: type,
+      ...(min !== null ? { minValue: bound(min) } : {}),
+      ...(max !== null ? { maxValue: bound(max) } : {}),
+      ...(decimalPlaces !== null ? { decimalPlace: decimalPlaces } : {}),
+    },
+  });
   if (!NUMERIC_TYPES.some((candidate) => candidate === type))
     throw new LocalizedError(message('errors.numeric.datatype'));
   const typeLabel = type.replace('xsd:', '');
   const range = INTEGER_RANGES[type];
-  const values: [Message, number | null][] = [
+  if (
+    range &&
+    [min, max, ...(field.defaultValue.kind === 'number' ? [field.defaultValue.value] : [])].some(
+      (value) => typeof value === 'number' && Number.isInteger(value) && !Number.isSafeInteger(value),
+    )
+  )
+    throw new LocalizedError(
+      message('errors.numeric.range', { min: String(Number.MIN_SAFE_INTEGER), max: String(Number.MAX_SAFE_INTEGER) }),
+    );
+  const values: [Message, number | string | null][] = [
     [message('errors.numeric.minimumValue'), min],
     [message('errors.numeric.maximumValue'), max],
   ];
-  if (field.defaultValue?.kind === 'number')
+  const defaultFindings =
+    field.defaultValue?.kind === 'number'
+      ? FieldValuePolicy.validate(
+          {
+            _ui: { inputType: 'numeric' },
+            _valueConstraints: {
+              numberType: type,
+              minValue: min,
+              maxValue: max,
+              decimalPlace: decimalPlaces,
+            },
+          },
+          field.defaultValue.value,
+          '',
+          'template',
+        )
+      : [];
+  if (!configuration.length && !defaultFindings.length) return;
+  // These checks also choose precise localized diagnostics. A conforming default
+  // is accepted by the shared policy and needs no second host-side verdict.
+  if (field.defaultValue?.kind === 'number' && defaultFindings.length)
     values.push([message('errors.numeric.defaultValue'), field.defaultValue.value]);
   for (const [label, value] of values) {
     if (value === null) continue;
-    if (!Number.isFinite(value)) throw new LocalizedError(message('errors.numeric.infinite', { label }));
+    try {
+      NumericPolicy.value(value);
+    } catch {
+      throw new LocalizedError(message('errors.numeric.infinite', { label }));
+    }
     if (range) {
-      if (!Number.isInteger(value))
+      if (typeof value === 'number' && Number.isInteger(value) && !Number.isSafeInteger(value))
+        throw new LocalizedError(
+          message('errors.numeric.range', {
+            min: String(Number.MIN_SAFE_INTEGER),
+            max: String(Number.MAX_SAFE_INTEGER),
+          }),
+        );
+      if (!NumericPolicy.isInteger(value))
         throw new LocalizedError(message('errors.numeric.integerOnly', { label, type: typeLabel }));
-      if (value < range[0] || value > range[1]) {
+      if (NumericPolicy.compare(value, range[0]) < 0 || NumericPolicy.compare(value, range[1]) > 0) {
         throw new LocalizedError(message('errors.numeric.range', { min: String(range[0]), max: String(range[1]) }));
       }
     }
     if (type === 'xsd:float') {
-      const magnitude = Math.abs(value);
-      if (magnitude > 3.4028234663852886e38) throw new LocalizedError(message('errors.numeric.floatRange'));
-      if (magnitude !== 0 && magnitude < 1.401298464324817e-45)
+      const magnitude = String(value).replace(/^-/, '');
+      if (NumericPolicy.compare(magnitude, '3.4028234663852886e38') > 0)
+        throw new LocalizedError(message('errors.numeric.floatRange'));
+      if (NumericPolicy.compare(magnitude, 0) !== 0 && NumericPolicy.compare(magnitude, '1.401298464324817e-45') < 0)
         throw new LocalizedError(message('errors.numeric.floatTooSmall'));
     }
   }
-  if (min !== null && max !== null && min > max) throw new LocalizedError(message('errors.numeric.minAboveMax'));
+  if (min !== null && max !== null && NumericPolicy.compare(min, max) > 0)
+    throw new LocalizedError(message('errors.numeric.minAboveMax'));
   if (decimalPlaces !== null && (!Number.isSafeInteger(decimalPlaces) || decimalPlaces < 0))
     throw new LocalizedError(message('errors.numeric.decimalPlacesNegative'));
   if (range && decimalPlaces !== null && decimalPlaces !== 0)
@@ -91,8 +152,7 @@ function validateNumericSettings(field: Field): void {
     for (const [label, value] of values) {
       if (value === null) continue;
       // Count decimal digits without multiplication or rounding, including exponent notation.
-      const [coefficient, exponent = '0'] = String(value).toLowerCase().split('e');
-      const places = Math.max(0, (coefficient.split('.')[1]?.length ?? 0) - Number(exponent));
+      const places = NumericPolicy.fractionalDigits(value);
       if (places > decimalPlaces)
         throw new LocalizedError(
           message(countKey('errors.numeric.tooManyPlaces', decimalPlaces), {
@@ -102,11 +162,10 @@ function validateNumericSettings(field: Field): void {
         );
     }
   }
-  if (field.defaultValue?.kind === 'number') {
-    const value = field.defaultValue.value;
-    if ((min !== null && value < min) || (max !== null && value > max))
-      throw new LocalizedError(message('errors.numeric.defaultOutsideRange'));
-  }
+  if (defaultFindings.some((finding) => finding.code === 'minValue' || finding.code === 'maxValue'))
+    throw new LocalizedError(message('errors.numeric.defaultOutsideRange'));
+  if (defaultFindings.length) throw new LocalizedError(message('defaultValue.invalid'));
+  if (configuration.length) throw new LocalizedError(message('errors.numeric.inconsistent'));
 }
 
 function buildTemporal(builder: FieldBuilder, field: Field): void {
@@ -149,7 +208,7 @@ function buildOptions(builder: FieldBuilder, field: Field): void {
      * empty because the card seeds a blank and lets the placeholder show the
      * hint, so writing it would put `{"label": ""}` in the artifact.
      */
-    if (option.trim() === '') {
+    if (isBlank(option)) {
       continue;
     }
     descriptorOf(field.type).options!(builder, option, selected.includes(option));
@@ -212,18 +271,22 @@ function buildField(field: Field): TemplateField {
     ) {
       throw new LocalizedError(message('errors.text.lengths'));
     }
-    const pattern = accepts(field.type, 'textPattern') && regex ? new RegExp(regex) : null;
     if (field.defaultValue.kind === 'literal') {
       const value = field.defaultValue.value;
-      if (minLength !== null && value.length < minLength)
+      const findings = FieldValuePolicy.validate(
+        { _ui: { inputType: 'textfield' }, _valueConstraints: { minLength, maxLength } },
+        value,
+        '',
+        'template',
+      );
+      if (findings.some((finding) => finding.code === 'minLength') && minLength !== null)
         throw new LocalizedError(
           message(countKey('errors.text.defaultTooShort', minLength), { count: String(minLength) }),
         );
-      if (maxLength !== null && value.length > maxLength)
+      if (findings.some((finding) => finding.code === 'maxLength') && maxLength !== null)
         throw new LocalizedError(
           message(countKey('errors.text.defaultTooLong', maxLength), { count: String(maxLength) }),
         );
-      if (pattern && !pattern.test(value)) throw new LocalizedError(message('errors.text.defaultPattern'));
     }
     (builder as TextFieldBuilder | TextAreaBuilder).withMinLength(minLength).withMaxLength(maxLength);
     if (accepts(field.type, 'textPattern')) (builder as TextFieldBuilder).withRegex(regex);
@@ -358,7 +421,7 @@ export function buildFieldNaming(field: Field): TemplateField {
   try {
     return buildField(field);
   } catch (error) {
-    const name = field.name.trim() || message('common.anUnnamedField');
+    const name = TextPolicy.isBlank(field.name) ? message('common.anUnnamedField') : field.name;
     throw new LocalizedError(message('errors.namedField', { name, message: errorParam(error) }), { cause: error });
   }
 }

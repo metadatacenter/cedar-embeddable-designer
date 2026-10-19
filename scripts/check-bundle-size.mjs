@@ -78,8 +78,27 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // replace 508 local style findings. Measured 1,487,706 raw / 424,364 gzip-9:
 // longer CSS role names cost raw bytes, without another dependency. Keep the
 // compressed ceiling unchanged and allow 7 KB raw headroom for this adoption.
-const RAW_LIMIT = 1_495_000;
-const GZIP_LIMIT = 438_000;
+// 2026-10-15: actionable English/Hungarian pattern errors and exact repair targets
+// add 645 raw / 209 gzip-9 bytes: 1,495,399 raw / 426,752 gzip-9, compared with
+// 1,494,754 / 426,543 on the same dependencies before the fix. No dependency was
+// added. Allow 601 bytes raw headroom; retain the compressed ceiling.
+// 2026-10-15: versioned recovery snapshots retain raw control drafts, validation
+// gates and editor baselines. Measured 1,499,517 raw / 427,846 gzip-9 bytes,
+// adding 4,118 raw / 1,094 compressed bytes to the repair-target build above.
+// No dependency was added. Allow 4.5 KB raw headroom; keep the gzip ceiling.
+// 2026-10-18: shared Unicode, identifier and grapheme policies measure 1,504,211
+// raw / 429,004 gzip-9 bytes after removing a duplicate policy bundle. The model
+// adds 4,694 raw bytes versus the recovery baseline; keep the compressed ceiling.
+// 2026-10-18: exact numeric editing and lossless source/snapshot paths measure
+// 1,514,113 raw / 432,071 gzip-9 bytes. Retain the compressed ceiling.
+// Shared bounded regex sessions add 7,038 bytes to the previously verified bundle.
+// 2026-10-18: common field/default consistency findings and all-document semantic
+// verification measure 1,544,934 raw / 441,025 gzip-9 in the sibling reactor.
+// The existing model entry supplies the shared policies; there is no second
+// policy bundle or new runtime dependency. Allow about 5 KB raw / 2 KB compressed
+// headroom for this validation coverage and bounded verification cache.
+const RAW_LIMIT = 1_550_000;
+const GZIP_LIMIT = 443_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
 

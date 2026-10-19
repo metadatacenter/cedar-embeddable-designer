@@ -11,7 +11,7 @@ import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService } from '../../core/services/template.service';
 import { fieldView, findContainer } from '../../core/model/container-draft';
 import { elementDisplayDescription, elementDisplayName } from '../../core/model/field-display-name';
-import { childLocks, publishedContainer } from '../../core/model/child-locks';
+import { publishedContainer } from '../../core/model/child-locks';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { FieldCardComponent } from '../field-card/field-card.component';
 import { FieldTypePickerComponent } from '../field-type-picker/field-type-picker.component';
@@ -96,11 +96,10 @@ export class ContainerEditorComponent {
     const node = this.placementNode();
     return node ? elementDisplayDescription(node) : this.container().description;
   });
-  private readonly locks = computed(() => childLocks(this.service.session.document(), this.container().id));
   /** Whether this element's own content is locked: it is published, or inside a published element. */
-  readonly definitionLocked = computed(() => this.locks().definition);
+  readonly definitionLocked = computed(() => this.service.definitionLocked(this.container().id));
   /** Whether its placement in its parent is locked: it is inside a published element. */
-  readonly placementLocked = computed(() => this.locks().placement);
+  readonly placementLocked = computed(() => !this.service.access.canEditHeader(this.container().id));
   /**
    * Whether this element is itself published and its parent can still configure it, which its header
    * says once for everything inside it. A read-only document configures nothing.

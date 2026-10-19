@@ -7,6 +7,7 @@ import {
   templateToYaml,
   readTemplate,
   containerPreview,
+  PREVIEW_ELEMENT_KEY,
 } from './cedar-template';
 import { fieldNode, newNodeId } from './container-draft';
 
@@ -39,15 +40,7 @@ describe('recursive container codec', () => {
     it(`preserves fields and nested elements in ${path}`, () => {
       const before = templateToJson(readTemplate(source as object));
       const draft = readContainer(source as object);
-      // One known corpus field has a default inconsistent with its own regex.
-      if (JSON.stringify(source).includes('"regex"')) {
-        try {
-          buildContainer(draft);
-        } catch (error) {
-          expect(String(error)).toMatch(/default/i);
-          return;
-        }
-      }
+      // Serialization retains imported defaults; asynchronous validation owns save eligibility.
       const first = templateToJson(buildContainer(draft));
       expect(treeShape(first)).toEqual(treeShape(before));
       expect(first['_ui']).toEqual(before['_ui']);
@@ -97,7 +90,16 @@ describe('recursive container codec', () => {
       }
       const preview = templateToJson(containerPreview(root));
       expect(preview['@type']).toBe('https://schema.metadatacenter.org/core/Template');
-      expect((preview['properties'] as Record<string, unknown>)['Study']).toEqual(json);
+      expect((preview['properties'] as Record<string, unknown>)[PREVIEW_ELEMENT_KEY]).toEqual(json);
     },
   );
+});
+
+it('does not trim non-JSON whitespace before strict source parsing', () => {
+  const json = JSON.stringify(templateToJson(buildContainer(newContainer('template', 'Whitespace'))));
+  for (const padding of ['\u00a0', '\ufeff', '\u001c']) {
+    expect(() => readContainer(padding + json)).toThrow();
+    expect(() => readTemplate(json + padding)).toThrow();
+  }
+  expect(readContainer(' \t\r\n' + json).name).toBe('Whitespace');
 });

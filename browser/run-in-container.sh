@@ -64,6 +64,10 @@ cleanup() { docker rm -f "$CONTAINER" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
+# The test gate runs this beside the host's browser suite in the same checkout. Playwright empties
+# its output directory when a run starts, and the container writes as root, so sharing the default
+# `test-results` would let this run delete the host run's artifacts and, on Linux, leave a
+# directory the host can no longer write. This run keeps its own.
 docker run --name "$CONTAINER" --rm --init \
   --platform linux/arm64 \
   --ipc=host \
@@ -74,4 +78,4 @@ docker run --name "$CONTAINER" --rm --init \
   -e CI="${CI:-}" \
   -e CED_VISUAL="$([ "$TARGET" = 'visual.spec.ts' ] && echo 1 || echo '')" \
   "$IMAGE" \
-  bash -lc "npm ci --no-audit --no-fund && npx playwright test ${TARGET} \"\$@\"" -- "$@"
+  bash -lc "npm ci --no-audit --no-fund && npx playwright test --output=test-results-container ${TARGET} \"\$@\"" -- "$@"

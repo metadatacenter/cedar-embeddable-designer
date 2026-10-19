@@ -89,6 +89,7 @@
                       [disabled]="!draft().allowMultiple"
                       [(ngModel)]="draft().minItems"
                       name="minItems"
+                      data-setting="minItems"
                       (ngModelChange)="applyPlacement('minItems')"
                   /></label>
                   <label
@@ -103,6 +104,7 @@
                       [disabled]="!draft().allowMultiple"
                       [(ngModel)]="draft().maxItems"
                       name="maxItems"
+                      data-setting="maxItems"
                       (ngModelChange)="applyPlacement('maxItems')"
                   /></label>
                 </div>
@@ -182,7 +184,10 @@
                   <input
                     spellcheck="false"
                     autocomplete="off"
+                    [appArtifactName]="node().id"
+                    artifactSetting="ownName"
                     name="name"
+                    data-setting="ownName"
                     [ngModel]="node().definition.name"
                     (ngModelChange)="service.updateOwnElementName(node(), $event)"
                     (blur)="service.touchName(node().id)"
@@ -192,7 +197,10 @@
                   <input
                     spellcheck="false"
                     autocomplete="off"
+                    [appArtifactName]="node().id"
+                    artifactSetting="ownDescription"
                     name="description"
+                    data-setting="ownDescription"
                     [ngModel]="node().definition.description"
                     (ngModelChange)="service.updateOwnElementDescription(node(), $event)"
                 /></label>

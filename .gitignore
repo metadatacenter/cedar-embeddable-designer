@@ -47,6 +47,7 @@ Thumbs.db
 
 # Browser test output
 /browser/test-results
+/browser/test-results-container
 /browser/playwright-report
 
 # Sibling web components, staged into the development host by `npm start`.

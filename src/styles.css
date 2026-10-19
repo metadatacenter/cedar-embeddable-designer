@@ -14,6 +14,8 @@
 @import '@org.metadatacenter/cedar-design-tokens/custom-properties.css';
 @import '@org.metadatacenter/cedar-design-tokens/icon-contract.css';
 @import '@org.metadatacenter/cedar-design-tokens/motion.css';
+/* The shared focus ring for everything focusable that does not draw its own. */
+@import '@org.metadatacenter/cedar-design-tokens/focus.css';
 @source "./app/**/*.{html,ts}";
 @source not "./app/**/*.spec.ts";
 
@@ -240,14 +242,6 @@ pre {
 
 .animate-modal-fade-in {
   animation: modal-fade-in var(--cedar-motion-duration-normal) var(--cedar-motion-ease-standard);
-}
-
-/* Shared focus geometry also covers toolbar and dialog actions. */
-button:focus-visible,
-a:focus-visible,
-[tabindex]:focus-visible {
-  outline: var(--cedar-focus-ring-width) solid var(--cedar-control-focus, var(--cedar-color-primary));
-  outline-offset: var(--cedar-focus-ring-offset);
 }
 
 input[aria-invalid='true'],

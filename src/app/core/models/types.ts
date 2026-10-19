@@ -131,7 +131,7 @@ export interface ControlledTermSet {
 export type FieldDefaultValue =
   | { kind: 'none' }
   | { kind: 'literal'; value: string }
-  | { kind: 'number'; value: number }
+  | { kind: 'number'; value: number | string }
   | { kind: 'temporal'; value: string }
   | { kind: 'iri'; iri: string; label: string | null }
   | { kind: 'literals'; values: string[] };
@@ -145,8 +145,8 @@ export interface TemporalSettings {
 
 export interface NumericSettings {
   type: string;
-  min: number | null;
-  max: number | null;
+  min: number | string | null;
+  max: number | string | null;
   decimalPlaces: number | null;
   unit: string | null;
 }

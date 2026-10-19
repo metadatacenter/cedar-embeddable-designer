@@ -1,3 +1,5 @@
+import { JsonSourcePolicy } from '../core/model/cedar-template';
+import type { CedHostFinding, CedLoadOptions, CedRecoveryDraft } from '../ced-public-api';
 import { ValidationSummaryComponent } from '../shared/validation-summary.component';
 import { DesignerConfigService } from '../core/services/designer-config.service';
 import {
@@ -20,7 +22,8 @@ import { TemplateService } from '../core/services/template.service';
 import { TerminologyService } from '../core/services/terminology.service';
 import { PreferencesService } from '../core/services/preferences.service';
 import { CedConfig, CedFieldType, CedLanguage, CedValidationReport } from '../ced-public-api';
-import { fieldToJson, readField } from '../core/model/cedar-template';
+import { fieldToJson, readField, newFieldIdentity } from '../core/model/cedar-template';
+import { newNodeId } from '../core/model/container-draft';
 import { Field, FIELD_TYPES } from '../core/models/types';
 import { FieldCardComponent } from '../features/field-card/field-card.component';
 import { FieldTypePickerComponent } from '../features/field-type-picker/field-type-picker.component';
@@ -43,6 +46,7 @@ import { provideCedTranslations } from '../i18n/i18n';
     DesignerConfigService,
   ],
   encapsulation: ViewEncapsulation.ShadowDom,
+  host: { '[class.ced-read-only]': 'readOnly' },
   styleUrls: ['../../styles.css', '../../authoring.scss', './cedar-embeddable-field-designer.element.scss'],
   styles: [
     `
@@ -54,6 +58,13 @@ import { provideCedTranslations } from '../i18n/i18n';
       .field-editor {
         padding: var(--cedar-space-4);
       }
+      /* The field designer grows with its field, so whatever embeds it scrolls. The summary stays
+         at the top of that scrolling area rather than leaving it. */
+      .field-summary {
+        position: sticky;
+        top: 0;
+        z-index: var(--cedar-layer-sticky);
+      }
       fieldset {
         border: 0;
         padding: 0;
@@ -63,13 +74,11 @@ import { provideCedTranslations } from '../i18n/i18n';
     `,
   ],
   template: `<ced-font-registrar />
-    <app-validation-summary />
+    <div class="field-summary"><app-validation-summary /></div>
     <section class="field-editor" [attr.aria-label]="'fieldElement.label' | translate">
       @if (field(); as field) {
         <!-- The host says why the field is read only, as it does for CED. -->
-        <fieldset [disabled]="readOnly" [attr.inert]="readOnly ? '' : null">
-          <app-field-card [field]="field" [standalone]="true" />
-        </fieldset>
+        <app-field-card [field]="field" [standalone]="true" />
       } @else {
         <button type="button" [disabled]="readOnly" (click)="choosingType.set(true)">
           {{ 'fieldElement.chooseType' | translate }}
@@ -121,15 +130,16 @@ export class CedarEmbeddableFieldDesignerElementComponent {
     this.service.validation.setReadOnly(value);
   }
   get readOnly(): boolean {
-    return this.service.validation.readOnly() || !!this.field()?.publishedDefinition;
+    return this.service.access.readOnly();
   }
   @Input() set artifact(source: object | string | null) {
     if (source !== null) this.loadArtifact(source);
   }
-  @Input() readonly loadArtifact = (source: object | string): void => {
+  @Input() readonly loadArtifact = (source: object | string, options?: CedLoadOptions): void => {
     // Parse before replacing anything: a failed load must preserve the author's work.
-    const field = readField(typeof source === 'string' ? source : JSON.stringify(source));
-    this.replace(field);
+    const field = readField(typeof source === 'string' ? source : JsonSourcePolicy.stringify(source));
+    const current = this.field();
+    this.replace(options?.preserveView && current?.type === field.type ? { ...field, id: current.id } : field);
   };
   /** No argument opens the type chooser. A type starts a new, unnamed definition. */
   @Input() readonly newArtifact = (type?: CedFieldType): void => {
@@ -137,10 +147,24 @@ export class CedarEmbeddableFieldDesignerElementComponent {
     this.reset();
     this.choosingType.set(!type);
     if (type) {
-      this.service.addField(type, 0);
-      this.service.updateFieldName(this.service.fields()[0].id, '');
+      // Explicit host replacement bypasses editing commands without changing permissions.
+      this.service.fields.set([
+        {
+          ...newFieldIdentity(),
+          id: newNodeId(),
+          type,
+          name: '',
+          status: 'optional',
+          options: type === 'multipleChoice' || type === 'checkboxes' ? [''] : [],
+          defaultValue: { kind: 'none' },
+          allowMultiple: false,
+        },
+      ]);
+      const field = this.service.fields()[0];
+      if (field.options[0] === '') this.service.validation.startOption(field.id);
+      this.service.nameFocusRequest.set(field.id);
     }
-    this.baseline.set(JSON.stringify(this.field() ?? null));
+    this.baseline.set(JsonSourcePolicy.stringify(this.field() ?? null));
   };
   @Input() get currentArtifact(): object | null {
     const field = this.field();
@@ -148,18 +172,40 @@ export class CedarEmbeddableFieldDesignerElementComponent {
   }
   @Input() get isDirty(): boolean {
     return (
-      JSON.stringify(this.field() ?? null) !== this.baseline() ||
+      JsonSourcePolicy.stringify(this.field() ?? null) !== this.baseline() ||
       this.validationReport.issues.some((issue) => issue.source === 'draft')
     );
   }
+  @Input() readonly captureDraft = (): CedRecoveryDraft => {
+    const draft = this.service.captureDraft();
+    return {
+      ...draft,
+      state: JsonSourcePolicy.stringify({ ...JsonSourcePolicy.parse(draft.state), fieldBaseline: this.baseline() }),
+    };
+  };
+  @Input() readonly restoreDraft = (draft: CedRecoveryDraft): void => {
+    const { fieldBaseline } = JsonSourcePolicy.parse(draft.state);
+    if (typeof fieldBaseline !== 'string') throw new Error();
+    this.service.restoreDraft(draft);
+    this.baseline.set(fieldBaseline);
+    this.choosingType.set(false);
+  };
+  @Input() set validationFindings(findings: CedHostFinding[]) {
+    this.service.setHostFindings(findings);
+  }
+  @Input() readonly revealValidationFinding = (location: string): boolean =>
+    this.service.revealValidationFinding(location);
   @Input() get validationReport(): CedValidationReport {
-    const report = structuredClone(this.service.validationReport());
+    const report = JsonSourcePolicy.clone(this.service.validationReport());
     return { ...report, canSave: !!this.field() && !this.readOnly && report.canSave };
   }
   @Input() get canSave(): boolean {
     return this.validationReport.canSave;
   }
-  @Input() readonly validate = (): CedValidationReport => this.validationReport;
+  @Input() readonly validate = (): CedValidationReport => {
+    this.service.validate();
+    return this.validationReport;
+  };
   @Output() artifactChange = new EventEmitter<object>();
   @Output() dirtyChange = new EventEmitter<boolean>();
   @Output() validationChange = new EventEmitter<CedValidationReport>();
@@ -194,7 +240,7 @@ export class CedarEmbeddableFieldDesignerElementComponent {
   }
   private replace(field: Field): void {
     this.reset();
-    this.service.fields.set([structuredClone(field)]);
-    this.baseline.set(JSON.stringify(this.field()));
+    this.service.fields.set([JsonSourcePolicy.clone(field)]);
+    this.baseline.set(JsonSourcePolicy.stringify(this.field()));
   }
 }

@@ -106,7 +106,7 @@
     "readOnly": "Csak olvasható",
     "editable": "Szerkeszthető",
     "close": "Előnézet bezárása",
-    "editableNotice": "Próbálja ki az űrlap kitöltését. A bejegyzések törlődnek, ha a sablon vagy az előnézeti mód megváltozik.",
+    "editableNotice": "Próbálja ki az űrlap kitöltését. A bejegyzések törlődnek, ha az előnézeti mód megváltozik.",
     "missing": {
       "before": "Az előnézet ezzel a komponenssel jeleníti meg a sablont:",
       "after": ". A tervezőt beágyazó oldal ezt nem töltötte be. A kettő egymás mellett működő webkomponens: töltse be a CEE szkriptjét is a tervezőé mellett."
@@ -118,21 +118,21 @@
       "selectHint": "Válasszon mezőket az alábbi találatok közül.",
       "searchLabel": "Mezők keresése",
       "none": "Nem található mező.",
-      "prompt": "Indítson keresést az újrafelhasználható mezők megtalálásához."
+      "prompt": "Adjon meg egy nevet az újrafelhasználható mezők megtalálásához."
     },
     "elements": {
       "title": "Elemek importálása",
       "selectHint": "Válasszon elemeket az alábbi találatok közül.",
       "searchLabel": "Elemek keresése",
       "none": "Nem található elem.",
-      "prompt": "Indítson keresést az újrafelhasználható elemek megtalálásához."
+      "prompt": "Adjon meg egy nevet az újrafelhasználható elemek megtalálásához."
     },
     "children": {
       "title": "Mezők és elemek importálása",
       "selectHint": "Válasszon mezőket és elemeket az alábbi találatok közül.",
-      "searchLabel": "Mezők vagy elemek keresése",
+      "searchLabel": "Mezők és elemek keresése",
       "none": "Nem található mező vagy elem.",
-      "prompt": "Indítson keresést az újrafelhasználható mezők és elemek megtalálásához."
+      "prompt": "Adjon meg egy nevet az újrafelhasználható mezők és elemek megtalálásához."
     },
     "selectedHeading": "Kiválasztott elemek ({{count}})",
     "adding": "Hozzáadás…",
@@ -251,6 +251,7 @@
   },
   "errors": {
     "numeric": {
+      "inconsistent": "A numerikus beállítások ellentmondásosak.",
       "datatype": "Válasszon adattípust a listából.",
       "minimumValue": "A minimális érték",
       "maximumValue": "A maximális érték",
@@ -282,7 +283,9 @@
         "one": "Az alapértelmezett érték legfeljebb {{count}} karaktert tartalmazhat.",
         "other": "Az alapértelmezett érték legfeljebb {{count}} karaktert tartalmazhat."
       },
-      "defaultPattern": "Az alapértelmezett értéknek illeszkednie kell a reguláris kifejezésre."
+      "patternEvaluation": "A reguláris kifejezés ellenőrzése nem fejeződött be az engedélyezett időn vagy böngésző-erőforrásokon belül. Egyszerűsítse, és próbálja újra.",
+      "defaultPattern": "Az alapértelmezett értéknek illeszkednie kell a reguláris kifejezésre.",
+      "invalidPattern": "A reguláris kifejezés hiányos vagy érvénytelen. Ellenőrizze a szögletes és kerek zárójeleket, valamint az escape-karaktereket, vagy törölje a kifejezést a mintakorlátozás eltávolításához."
     },
     "media": {
       "dimensions": "A médiaméreteknek pozitív számoknak kell lenniük."
@@ -526,7 +529,7 @@
     "notConfigured": "A terminológiai kiszolgáló nincs beállítva.",
     "checkFailed": "Az alapértelmezett fogalmat nem sikerült ellenőrizni ({{status}}).",
     "noResultCollection": "A terminológiai kiszolgáló nem adott vissza találatgyűjteményt.",
-    "unverified": "A fogalmat nem sikerült igazolni a kapott találatok között.",
+    "unverified": "Az alapértelmezett értéket nem sikerült ellenőrizni a terminológiai szolgáltatással vagy a nyilvántartással.",
     "searchNotConfigured": "A kontrollált fogalmak keresése nincs beállítva.",
     "answered": "A terminológiai kiszolgáló válasza: {{status}} {{statusText}}.",
     "noResultsCollection": "A terminológiai kiszolgáló nem adott vissza találati gyűjteményt.",
@@ -685,6 +688,7 @@
     "templateMetadata": "Metaadatok"
   },
   "validation": {
+    "inspectionSummary": "Ellenőrzési problémák ({{count}})",
     "summary": {
       "one": "{{count}} hiba – javítsa mentés előtt",
       "other": "{{count}} hiba – javítsa mentés előtt"

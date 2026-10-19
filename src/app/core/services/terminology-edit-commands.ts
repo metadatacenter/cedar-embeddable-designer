@@ -1,3 +1,4 @@
+import { JsonSourcePolicy } from '../model/cedar-template';
 import { fieldToJson } from '../model/cedar-template';
 import { fieldView, parentOf } from '../model/container-draft';
 import type { ControlledTermSet, Field } from '../models/types';
@@ -21,7 +22,7 @@ export class TerminologyEditCommands {
   ) {}
 
   selectDefault(id: number, value: { iri: string; label: string }): TerminologyEdit {
-    const selected = structuredClone(value);
+    const selected = JsonSourcePolicy.clone(value);
     return this.run(id, 'defaultValue', async (field, signal) => {
       const allowed = await this.terminology.allowsDefault(
         fieldToJson({ ...field, defaultValue: { kind: 'none' }, importedChoiceDefault: undefined }),
@@ -36,7 +37,7 @@ export class TerminologyEditCommands {
   }
 
   changeConstraints(id: number, constraints: ControlledTermSet): TerminologyEdit {
-    const set = structuredClone(constraints);
+    const set = JsonSourcePolicy.clone(constraints);
     return this.run(id, 'controlledTerms', async (field, signal) => {
       const artifact = fieldToJson({ ...field, controlledTermConstraints: set, defaultValue: { kind: 'none' } });
       if (

@@ -1,7 +1,7 @@
 import { applyPreset } from './support';
 import nestedTemplate from '../../src/app/core/model/fixtures/corpus/template-028.json' with { type: 'json' };
 import { expect, test } from '@playwright/test';
-import { openDesigner, currentTemplate, fieldOrder } from './support';
+import { openDesigner, currentTemplate, expectSharedFocusRing, fieldOrder } from './support';
 import type { CedarEmbeddableDesignerElement, CedJsonObject } from '../../src/app/ced-public-api';
 
 for (const width of [1280, 375])
@@ -68,7 +68,9 @@ for (const width of [1280, 375])
     await open();
 
     const dialog = designer.getByRole('dialog', { name: 'Import Fields and Elements' });
-    await expect(dialog.getByRole('searchbox', { name: 'Search for fields or elements' })).toBeVisible();
+    const searchbox = dialog.getByRole('searchbox', { name: 'Search fields and elements' });
+    await expect(searchbox).toBeVisible();
+    await expectSharedFocusRing(searchbox);
     // Cancel and Done close the dialog from its bottom right, as the designer's other dialogs do.
     await page.evaluate(() => document.fonts.ready);
     // A native dialog recentres as its content settles. Read every box in one layout
@@ -212,7 +214,7 @@ test('bottom insertion actions reveal on hover and keyboard focus without shifti
 });
 
 for (const kind of ['template', 'element'] as const) {
-  test(`new empty ${kind}s reveal insertion actions until the first hover exit`, async ({ page }) => {
+  test(`empty ${kind}s keep insertion actions visible when new or loaded`, async ({ page }) => {
     const designer = await openDesigner(page);
     await page.mouse.move(0, 0);
     const start = () =>
@@ -232,14 +234,14 @@ for (const kind of ['template', 'element'] as const) {
     const before = await zone.boundingBox();
     await zone.hover();
     await page.mouse.move(0, 0);
-    await expect(actions).toHaveCSS('opacity', '0');
+    await expect(actions).toHaveCSS('opacity', '1');
     expect(await zone.boundingBox()).toEqual(before);
     await zone.hover();
     await expect(actions).toHaveCSS('opacity', '1');
     await page.mouse.move(0, 0);
     await actions.getByRole('button', { name: 'Add field', exact: true }).focus();
     await expect(actions).toHaveCSS('opacity', '1');
-    // A subsequent new document gets its own initial hint; opening a saved one does not.
+    // New and saved empty documents both keep their insertion actions visible.
     await start();
     await expect(actions).toHaveCSS('opacity', '1');
     await designer
@@ -249,7 +251,7 @@ for (const kind of ['template', 'element'] as const) {
       const element = document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement;
       element.loadArtifact(element.currentArtifact);
     });
-    await expect(actions).toHaveCSS('opacity', '0');
+    await expect(actions).toHaveCSS('opacity', '1');
   });
 }
 

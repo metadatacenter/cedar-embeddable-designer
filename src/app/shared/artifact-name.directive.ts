@@ -1,16 +1,21 @@
 import { DestroyRef, Directive, ElementRef, afterRenderEffect, inject, input } from '@angular/core';
 import { TemplateService } from '../core/services/template.service';
 
-/** Validation-summary navigation targets the name in the header, outside settings. */
-@Directive({ selector: 'input[appArtifactName]', host: { '(focus)': 'onFocus()', '(blur)': 'onBlur($event)' } })
+/** Validation-summary targets share focus handling; only name controls own deferred name validation. */
+@Directive({
+  selector: 'input[appArtifactName], textarea[appArtifactName]',
+  host: { '(focus)': 'onFocus()', '(blur)': 'onBlur($event)' },
+})
 export class ArtifactNameDirective {
   readonly appArtifactName = input.required<number>();
+  readonly artifactSetting = input('name');
   private readonly service = inject(TemplateService);
   private readonly element = inject<ElementRef<HTMLInputElement>>(ElementRef);
   private cancelPendingTouch?: () => void;
   private stopTrackingPointer?: () => void;
   private pointerPressed = false;
   onFocus(): void {
+    if (this.artifactSetting() !== 'name') return;
     this.stopTrackingPointer?.();
     const document = this.element.nativeElement.ownerDocument;
     const press = () => (this.pointerPressed = true);
@@ -25,7 +30,8 @@ export class ArtifactNameDirective {
       this.pointerPressed = false;
     };
   }
-  onBlur(event: FocusEvent): void {
+  onBlur(event: Event): void {
+    if (this.artifactSetting() !== 'name') return;
     this.cancelPendingTouch?.();
     // Non-focusable header space has no relatedTarget in WebKit. Track the
     // press while the name is focused so that click receives the same protection.
@@ -33,7 +39,8 @@ export class ArtifactNameDirective {
     this.stopTrackingPointer?.();
     const id = this.appArtifactName();
     const touch = () => this.service.touchName(id);
-    if (!pointerPressed && (!(event.relatedTarget instanceof Element) || !event.relatedTarget.matches(':active'))) {
+    const relatedTarget = event instanceof FocusEvent ? event.relatedTarget : null;
+    if (!pointerPressed && (!(relatedTarget instanceof Element) || !relatedTarget.matches(':active'))) {
       touch();
       return;
     }
@@ -67,14 +74,25 @@ export class ArtifactNameDirective {
     });
     let focused: unknown;
     afterRenderEffect(() => {
-      if (this.service.nameFocusRequest() === this.appArtifactName()) {
+      if (this.artifactSetting() === 'name' && this.service.nameFocusRequest() === this.appArtifactName()) {
         this.element.nativeElement.focus({ preventScroll: true });
         this.service.nameFocusRequest.set(null);
       }
       const issue = this.service.validationTarget();
-      if (issue && issue !== focused && issue.setting === 'name' && issue.nodeId === this.appArtifactName()) {
+      if (
+        issue &&
+        issue !== focused &&
+        issue.setting === this.artifactSetting() &&
+        issue.nodeId === this.appArtifactName()
+      ) {
         focused = issue;
-        this.element.nativeElement.focus({ preventScroll: true });
+        if (this.service.access.readOnly()) {
+          const card = this.element.nativeElement.closest<HTMLElement>('app-field-card, .template-header-card');
+          card?.setAttribute('tabindex', '-1');
+          card?.focus();
+        } else {
+          this.element.nativeElement.focus({ preventScroll: true });
+        }
       }
     });
   }

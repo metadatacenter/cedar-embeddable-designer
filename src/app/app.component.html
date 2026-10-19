@@ -105,11 +105,11 @@
     class="main-content"
     [style.--preferred-overview-width]="overviewWidth() + 'px'"
     [class.has-overview]="service.session.document().children.length > 0 && showFieldsOverview()"
-    [class.has-library]="service.preferences().fieldSelectionStyle === 'sidebar'"
+    [class.has-library]="service.preferences().fieldSelectionStyle === 'sidebar' && !service.access.readOnly()"
     [class.library-collapsed]="service.sidebarCollapsed()"
   >
     <!-- Field Library Sidebar -->
-    @if (service.preferences().fieldSelectionStyle === 'sidebar') {
+    @if (service.preferences().fieldSelectionStyle === 'sidebar' && !service.access.readOnly()) {
       <app-field-library-sidebar></app-field-library-sidebar>
     }
 
@@ -167,14 +167,6 @@
                     </button>
                   </div>
                 }
-                <button
-                  class="overview-panel__close"
-                  [attr.aria-label]="'app.overview.close' | translate"
-                  [title]="'app.overview.close' | translate"
-                  (click)="showFieldsOverview.set(false)"
-                >
-                  <app-icon key="close" size="small" />
-                </button>
               </div>
               <div class="overview-panel__list">
                 <app-container-outline [container]="service.session.document()" />

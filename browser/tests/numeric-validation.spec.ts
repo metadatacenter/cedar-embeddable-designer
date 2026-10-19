@@ -69,3 +69,38 @@ test('native numeric defaults validate numbers, bounds and integer datatype with
   await input.fill('');
   await expect.poll(value).toBeUndefined();
 });
+
+test('long bounds and defaults retain digits beyond JavaScript safe integers', async ({ page }) => {
+  const designer = await openDesigner(page);
+  const source = await currentTemplate(page);
+  const field = child(source, 'Title');
+  field._ui = { inputType: 'numeric' };
+  field._valueConstraints = { numberType: 'xsd:long' };
+  await page.evaluate((artifact) => {
+    (document.querySelector('cedar-embeddable-designer') as HTMLElement & { artifact: object }).artifact = artifact;
+  }, source);
+  const panel = await openSettings(designer.locator('app-field-card').first(), 'Constraints');
+  await panel.getByLabel('Minimum value', { exact: true }).fill('9223372036854775806');
+  await panel.getByLabel('Maximum value', { exact: true }).fill('9223372036854775807');
+  await expect(panel.getByRole('alert')).toHaveCount(0);
+  const bounds = () =>
+    page.evaluate(() => {
+      const element = document.querySelector('cedar-embeddable-designer') as HTMLElement & { currentTemplate: any };
+      const field = element.currentTemplate.properties.Title;
+      const constraints = (field.items ?? field)._valueConstraints;
+      return [String(constraints.minValue), String(constraints.maxValue)];
+    });
+  await expect.poll(bounds).toEqual(['9223372036854775806', '9223372036854775807']);
+  await panel.getByLabel('Maximum value', { exact: true }).fill('9223372036854775808');
+  await expect(panel.getByRole('alert')).toBeVisible();
+  expect(await bounds()).toEqual(['9223372036854775806', '9223372036854775807']);
+  await panel.getByLabel('Maximum value', { exact: true }).fill('9223372036854775807');
+  const defaults = await openSettings(designer.locator('app-field-card').first());
+  await defaults.getByRole('textbox', { name: 'Default value', exact: true }).fill('9223372036854775807');
+  await expect
+    .poll(
+      async () =>
+        (child(await currentTemplate(page), 'Title')._valueConstraints as Record<string, unknown>).defaultValue,
+    )
+    .toBe('9223372036854775807');
+});

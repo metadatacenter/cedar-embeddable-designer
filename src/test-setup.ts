@@ -1,3 +1,4 @@
+import '../scripts/test-support/regex-worker';
 /**
  * Quieten jsdom's CSS parser, which cannot read the stylesheet the element ships.
  *

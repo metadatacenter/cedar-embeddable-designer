@@ -1,7 +1,7 @@
 <div class="cee-preview">
   <div class="cee-preview__bar">
     <span class="cee-preview__title">{{ 'ceePreview.title' | translate }}</span>
-    @if (editorAvailable) {
+    @if (editorAvailable && !service.access.readOnly()) {
       <span class="cee-preview__mode">
         <select
           [attr.aria-label]="'ceePreview.mode' | translate"
@@ -14,19 +14,10 @@
         <app-icon key="chevron-down" size="small" />
       </span>
     }
-    <button
-      (click)="service.showPreview.set(false)"
-      class="cee-preview__close"
-      [title]="'ceePreview.close' | translate"
-      [attr.aria-label]="'ceePreview.close' | translate"
-      type="button"
-    >
-      <app-icon key="close" size="small" />
-    </button>
   </div>
 
   @if (editorAvailable) {
-    @if (!readOnly()) {
+    @if (!readOnly() && !service.access.readOnly()) {
       <p class="cee-preview__notice">
         {{ 'ceePreview.editableNotice' | translate }}
       </p>

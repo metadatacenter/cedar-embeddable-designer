@@ -40,8 +40,20 @@ cedar-embeddable-field {
   justify-content: center;
   padding: var(--cedar-space-6);
 }
+// One height whatever the picker holds, so the dialog does not shrink and grow with each answer.
+// The picker's results take the room the rest leaves. The dialog scrolls only on a screen too short
+// for the picker's own minimum.
 .picker-dialog {
   @include patterns.dialog-surface($padding: 0);
+  display: flex;
+  flex-direction: column;
+  height: 90vh;
+  max-height: 64rem;
+  overflow: auto;
+}
+.picker-dialog > cedar-embeddable-term-picker {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 .picker-status {
   padding: var(--cedar-space-3);

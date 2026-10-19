@@ -9,6 +9,7 @@
   @if (placementNode()) {
     <span
       cdkDragHandle
+      [class.locked]="placementLocked()"
       class="element-drag-handle"
       [title]="'containerEditor.dragElement' | translate"
       [attr.aria-label]="'containerEditor.dragElement' | translate"
@@ -80,7 +81,7 @@
               [attr.aria-label]="'containerEditor.version' | translate"
               [placeholder]="'common.notSpecified' | translate"
             />
-            @if (placementNode()) {
+            @if (placementNode() && !placementLocked()) {
               <dialog
                 #deleteDialog
                 class="delete-dialog"
@@ -138,6 +139,12 @@
       <div class="template-field-group template-description">
         <label class="template-field-label">{{ 'containerEditor.description' | translate }}</label>
         <textarea
+          [appArtifactName]="container().id"
+          artifactSetting="description"
+          [attr.aria-invalid]="!!service.settingError(container().id, 'description')"
+          [attr.aria-describedby]="
+            service.settingError(container().id, 'description') ? 'description-error-' + container().id : null
+          "
           spellcheck="false"
           autocomplete="off"
           rows="1"
@@ -145,8 +152,13 @@
           (ngModelChange)="describe($event)"
           [disabled]="placementLocked()"
           class="template-input template-input--description"
-          [placeholder]="'containerEditor.descriptionPlaceholder' | translate"
+          [placeholder]="
+            (placementLocked() ? 'common.notSpecified' : 'containerEditor.descriptionPlaceholder') | translate
+          "
         ></textarea>
+        @if (service.settingError(container().id, 'description'); as error) {
+          <p class="ced-field-error" [id]="'description-error-' + container().id">{{ error }}</p>
+        }
       </div>
     </div>
     @if (container().children.length) {
@@ -237,18 +249,10 @@
   </div>
 
   <!-- Bottom insertion zone (modal style) -->
-  @if (service.preferences().fieldSelectionStyle === 'modal' && !definitionLocked()) {
+  @if ((service.preferences().fieldSelectionStyle === 'modal' || !container().children.length) && !definitionLocked()) {
     <div class="add-field-section">
-      <div
-        class="bottom-insert-zone"
-        [class.initially-visible]="service.initialInsertionId() === container().id && !container().children.length"
-        (mouseleave)="service.initialInsertionId.set(null)"
-      >
-        <app-insertion-actions
-          [targetId]="container().id"
-          [position]="container().children.length"
-          (used)="service.initialInsertionId.set(null)"
-        />
+      <div class="bottom-insert-zone" [class.empty-container]="!container().children.length">
+        <app-insertion-actions [targetId]="container().id" [position]="container().children.length" />
       </div>
       @if (pickerAt(container().children.length)) {
         <div class="add-field-section__picker">

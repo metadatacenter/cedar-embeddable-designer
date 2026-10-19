@@ -1,3 +1,5 @@
+import { JsonSourcePolicy } from '../../core/model/cedar-template';
+import { ArtifactNameDirective } from '../../shared/artifact-name.directive';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { invalidSettingsInputs } from '../../shared/settings-input';
 import { ElementLabelsComponent } from '../element-labels/element-labels.component';
@@ -19,6 +21,7 @@ import { TemplateService } from '../../core/services/template.service';
 @Component({
   selector: 'app-element-card',
   imports: [
+    ArtifactNameDirective,
     IconComponent,
     ElementLabelsComponent,
     LanguageSelectorComponent,
@@ -110,7 +113,7 @@ export class ElementCardComponent {
       const signature = JSON.stringify([this.node().id, placement]);
       if (signature === this.loadedPlacement) return;
       this.loadedPlacement = signature;
-      this.draft.set(structuredClone(placement));
+      this.draft.set(JsonSourcePolicy.clone(placement));
       this.keyDraft.set(placement.deploymentName ?? null);
     });
   }
