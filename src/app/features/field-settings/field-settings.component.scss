@@ -47,7 +47,7 @@ textarea {
   border: 1px solid var(--cedar-control-border-default);
   border-radius: var(--cedar-radius);
   font: inherit;
-  font-weight: var(--cedar-font-weight-regular, 400);
+  font-weight: var(--cedar-font-weight-regular);
 }
 button {
   padding: var(--cedar-space-1) var(--cedar-space-2);
@@ -304,5 +304,5 @@ fieldset[aria-invalid='true'] {
 }
 
 .identity dt {
-  font-weight: var(--cedar-font-weight-medium, 500);
+  font-weight: var(--cedar-font-weight-medium);
 }
