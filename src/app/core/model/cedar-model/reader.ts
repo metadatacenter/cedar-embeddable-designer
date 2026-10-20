@@ -25,7 +25,6 @@ import {
   Iri,
   JsonNode,
   JsonPath,
-  Language,
   LinkField,
   NumericField,
   StaticImageField,
@@ -86,12 +85,6 @@ export function readTemplate(source: string | object): Template {
       .getTemplateReader()
       .readFromObject(withoutCheckedDefaults(json)).template;
     restoreDeclaredDefaults(template, json);
-    // The model writer places container language in the instance context; its
-    // current JSON reader only consults the top-level context.
-    const context = (json['properties'] as JsonNode | undefined)?.['@context'] as JsonNode | undefined;
-    if (typeof context?.['@language'] === 'string') {
-      template.language = Language.forValue(context['@language']);
-    }
     return template;
   }
 
@@ -401,7 +394,6 @@ export function readContainer(source: string | object): ContainerDraft {
             .element
         : readTemplate(json);
     restoreDeclaredDefaults(model, json);
-    restoreContainerLanguages(model, json);
     return toContainerDraft(model);
   }
   if (isCompactYaml(text)) throw new LocalizedError(message('errors.yaml.compactReopen'));
@@ -524,19 +516,6 @@ function restoreDeclaredDefaults(model: Template | TemplateElement | TemplateFie
       model.valueConstraints.defaultValue = new Iri(value.iri);
     if (value && typeof value === 'object' && 'term' in value && isControlledTermField(model))
       model.valueConstraints.defaultValue = new ControlledTermDefaultValue(new Iri(value.term), value.label);
-  }
-}
-
-function restoreContainerLanguages(model: Template | TemplateElement, source: JsonNode): void {
-  const properties = source['properties'] as JsonNode | undefined;
-  const context = properties?.['@context'] as JsonNode | undefined;
-  if (typeof context?.['@language'] === 'string') model.language = Language.forValue(context['@language']);
-  for (const info of model.getChildrenInfo().children) {
-    const child = model.getChild(info.name);
-    if (child instanceof TemplateElement) {
-      const property = properties?.[info.name] as JsonNode | undefined;
-      if (property) restoreContainerLanguages(child, (property['items'] ?? property) as JsonNode);
-    }
   }
 }
 

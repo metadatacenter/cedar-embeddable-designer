@@ -100,6 +100,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A template or element with a language of its own saves. The model library wrote that language
+  where the meta-schema refuses it, so the artifact server refused the save, and the designer
+  read it back from there itself. The library now writes it in the template's own context.
 - A published field or element no longer says that only its configuration can change
   where nothing can configure it. Designed on its own, it has no parent, and a
   read-only document configures nothing.

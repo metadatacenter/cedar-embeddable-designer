@@ -7,6 +7,7 @@ import {
   CedarArtifactId,
   CedarUser,
   IsoDate,
+  JsonNode,
   Language,
 } from 'cedar-model-typescript-library';
 import { buildTemplate, readTemplate, templateToJson, templateToYaml, toDesignerTemplate } from './cedar-template';
@@ -37,6 +38,10 @@ for (const format of ['JSON', 'YAML']) {
       template.annotations.add(new AnnotationAtValue('note', 'Preserve me'));
       template.annotations.add(new AnnotationAtId('source', 'urn:test:annotation'));
       const original = templateToJson(template);
+      // The language is the template's own, in its own context. The meta-schema refuses one in the
+      // schema of its instances' context, so a template written there could not be saved.
+      expect(original['@context']).toMatchObject({ '@language': 'en' });
+      expect((original['properties'] as JsonNode)['@context']).not.toHaveProperty('@language');
       const source = format === 'JSON' ? original : templateToYaml(template);
       const state = toDesignerTemplate(readTemplate(source));
       expect(templateToJson(buildTemplate(state))).toEqual(original);
