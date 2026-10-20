@@ -106,7 +106,7 @@ for (const type of ['link', 'controlledTerms', 'orcid', 'ror', 'pfas', 'rrid', '
       await expect(card.getByRole('tabpanel', { name: 'Constraints', exact: true })).toBeVisible();
       await expect(card).toContainText('Default value: relative/path');
       await expect(designer.locator('.outline-row.active .node-name')).toHaveText('Value');
-      await card.getByLabel('Field display name', { exact: true }).fill('Renamed value');
+      await card.getByLabel('Enter field name', { exact: true }).fill('Renamed value');
       await openSettings(card, 'Metadata');
       await card.locator('input[name=schemaIdentifier]').fill('Identifier');
       await openSettings(card);
@@ -150,7 +150,7 @@ for (const kind of ['template', 'element'] as const)
           await expect(value).toHaveValue('1000');
           await expect(value).toHaveAttribute('aria-invalid', 'true');
           await expect(designer.locator('.outline-row.active .node-name')).toHaveText('Value');
-          await card.getByLabel('Field display name', { exact: true }).fill('Renamed number');
+          await card.getByLabel('Enter field name', { exact: true }).fill('Renamed number');
           await openSettings(card, 'Presentation');
           await openSettings(card);
           await expect(value).toHaveValue('1000');
@@ -229,7 +229,7 @@ for (const kind of ['template', 'element'] as const)
           const card = designer.locator('app-field-card');
           await expect(card.getByRole('tabpanel', { name: 'Constraints', exact: true })).toBeVisible();
           await expect(card.getByRole('tab', { name: 'Constraints', exact: true })).toBeFocused();
-          await expect(card.getByRole('textbox', { name: 'Field display name', exact: true })).toBeDisabled();
+          await expect(card.getByRole('textbox', { name: 'Enter field name', exact: true })).toBeDisabled();
           await expect(
             designer.locator(
               '.outline-row.invalid, .field-drag-container.invalid, .validation-badge, .has-errors, .ced-field-error:visible, [aria-invalid="true"]',

@@ -691,7 +691,7 @@ for (const host of ['CED', 'CEFD']) {
       await page.goto('/field-host.html');
       await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
       await page.getByRole('button', { name: 'Temporal', exact: true }).click();
-      await page.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Date field');
+      await page.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Date field');
       await openSettings(page.locator('app-field-card'), 'Constraints');
     }
     const native = page.getByRole('combobox', { name: 'Temporal type', exact: true });
@@ -920,13 +920,13 @@ for (const [labels, wanted] of [
       page.locator('app-container-outline').getByRole('button', { name: `Reorder ${wanted}`, exact: true }),
     ).toBeVisible();
     expect((await currentTemplate(page)).properties).toHaveProperty('Value');
-    await expect(page.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue(wanted);
+    await expect(page.getByRole('textbox', { name: 'Enter field name', exact: true })).toHaveValue(wanted);
   });
 }
 
 test('editing a display name updates Overview without renaming the field key', async ({ page }) => {
   await openField(page, 'shortText', { preferredLabel: 'Lab ID', displayLabel: 'Value' });
-  const heading = page.getByRole('textbox', { name: 'Field display name', exact: true });
+  const heading = page.getByRole('textbox', { name: 'Enter field name', exact: true });
   await expect(heading).toHaveValue('Lab ID');
   await expect(page.locator('app-container-outline .node-name')).toHaveText('Lab ID');
   await heading.fill('Laboratory identifier');

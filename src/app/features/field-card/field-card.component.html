@@ -20,7 +20,7 @@
             [style.color]="'var(--cedar-color-primary)'"
           />
 
-          <!-- Field Title Name editing -->
+          <!-- Field Title Name editing. The placeholder is the box's only visible label, so the box is named by it. -->
           <input
             spellcheck="false"
             autocomplete="off"
@@ -34,7 +34,7 @@
             [class.selected]="service.selectedField() === field.id"
             (focus)="service.selectedField.set(field.id)"
             [placeholder]="'fieldCard.namePlaceholder' | translate"
-            [attr.aria-label]="'fieldCard.displayName' | translate"
+            [attr.aria-label]="'fieldCard.namePlaceholder' | translate"
           />
           @if (field.status === 'required' && allowsStatus(field.type)) {
             <sup class="required-mark" role="img" [attr.aria-label]="'common.required' | translate">*</sup>

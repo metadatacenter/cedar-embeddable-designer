@@ -155,7 +155,7 @@ scenarios['picker-unavailable'] = async (page) => {
   await d.getByRole('button', { name: /^Add field$/ }).click();
   await d.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
   const card = d.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') });
-  await card.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Controlled Terms');
+  await card.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Controlled Terms');
   await openSettings(card);
 };
 scenarios['invalid-field'] = async (page) => {
@@ -179,7 +179,7 @@ scenarios['temporal-constraints'] = async (page) => {
   await d.getByRole('button', { name: /^Add field$/ }).click();
   await d.getByRole('button', { name: 'Temporal', exact: true }).click();
   const card = d.locator('app-field-card').last();
-  await card.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Temporal');
+  await card.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Temporal');
   await openSettings(card);
 };
 scenarios['element-metadata'] = async (page) => {

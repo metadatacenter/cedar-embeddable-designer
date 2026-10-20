@@ -338,7 +338,6 @@
     "elementMissing": "The element no longer exists."
   },
   "fieldCard": {
-    "displayName": "Field display name",
     "published": "This field is published, so only its configuration can change.",
     "namePlaceholder": "Enter field name",
     "occurrenceRange": "Occurrence range",

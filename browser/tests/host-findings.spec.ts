@@ -69,7 +69,7 @@ test('root findings focus descriptions; unknown warnings remain visible and advi
 test('standalone field host findings navigate without clearing unsaved input', async ({ page }) => {
   await page.goto('/field-host.html');
   await page.getByRole('button', { name: 'Text', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Unsaved field');
+  await page.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Unsaved field');
   await page.evaluate(() => {
     const element = document.getElementById('field') as CedarEmbeddableFieldDesignerElement;
     element.validationFindings = [{ location: '/schema:description', message: 'Add useful help', severity: 'error' }];
@@ -79,7 +79,7 @@ test('standalone field host findings navigate without clearing unsaved input', a
   await summary.getByRole('button', { name: /Add useful help/ }).click();
   const description = page.getByPlaceholder('Field description', { exact: true });
   await expect(description).toBeFocused();
-  await expect(page.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue('Unsaved field');
+  await expect(page.getByRole('textbox', { name: 'Enter field name', exact: true })).toHaveValue('Unsaved field');
   await description.fill('Useful help');
   await expect(summary).toHaveCount(0);
 });

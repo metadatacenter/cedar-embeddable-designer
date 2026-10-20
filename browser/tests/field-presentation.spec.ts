@@ -28,7 +28,7 @@ for (const width of [1440, 768, 375]) {
     await expect(metadata.getByLabel('Field name', { exact: true })).toHaveValue('Live label');
     // A draft's own name is the name its parent shows it by, so the header follows the Presentation tab as it
     // is typed, and the key stays where it was.
-    await expect(card.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue('Live label');
+    await expect(card.getByRole('textbox', { name: 'Enter field name', exact: true })).toHaveValue('Live label');
     const saved = await currentTemplate(page);
     expect((saved.properties as any).Title['schema:name']).toBe('Live label');
     expect((saved._ui as any).propertyLabels.Title).toBe('Live label');

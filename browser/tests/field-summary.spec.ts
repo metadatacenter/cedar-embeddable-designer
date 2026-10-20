@@ -225,7 +225,7 @@ test('occurrence ranges follow limits and repetition beside the field name', asy
   await expect(required).toHaveCount(0);
   await expect(range).toHaveText('(3 .. 4)');
   await expect(range).toHaveCSS('align-self', 'baseline');
-  await expect(card.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveCSS(
+  await expect(card.getByRole('textbox', { name: 'Enter field name', exact: true })).toHaveCSS(
     'align-self',
     'baseline',
   );
@@ -261,7 +261,7 @@ test('toggling repetition keeps the field header and preview stationary', async 
     document.body.style.setProperty('--cedar-font-size-small', '14px');
   });
   const targets = [
-    card.getByRole('textbox', { name: 'Field display name', exact: true }),
+    card.getByRole('textbox', { name: 'Enter field name', exact: true }),
     card.locator('app-field-summary'),
     card.locator('.field-header'),
     card.locator('.field-type-icon'),

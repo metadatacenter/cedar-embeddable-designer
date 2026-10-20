@@ -45,7 +45,7 @@ async function controlledTermsField(page: Page): Promise<Locator> {
   await designer.getByRole('button', { name: /^Add field$/ }).click();
   await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
   const field = designer.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') });
-  await field.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Disease');
+  await field.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Disease');
   await openSettings(field);
   return field;
 }

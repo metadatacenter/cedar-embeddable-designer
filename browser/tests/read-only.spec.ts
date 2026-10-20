@@ -39,7 +39,7 @@ for (const type of Object.keys(FIELD_TYPES))
       );
       await page.evaluate((type) => (document.getElementById('field') as any).newArtifact(type), type);
       const field = page.locator('#field');
-      await field.getByRole('textbox', { name: 'Field display name', exact: true }).fill(`Read-only ${type}`);
+      await field.getByRole('textbox', { name: 'Enter field name', exact: true }).fill(`Read-only ${type}`);
       await page.evaluate((mode) => {
         const editor = document.getElementById('field') as CedarEmbeddableFieldDesignerElement;
         const artifact = editor.currentArtifact!;
@@ -49,7 +49,7 @@ for (const type of Object.keys(FIELD_TYPES))
         editor.readOnly = mode === 'host';
       }, mode);
       const before = await field.evaluate((el: any) => el.currentArtifact);
-      await expect(field.getByRole('textbox', { name: 'Field display name', exact: true })).toBeDisabled();
+      await expect(field.getByRole('textbox', { name: 'Enter field name', exact: true })).toBeDisabled();
       await inspectTabs(field);
       await expect(field.locator('.field-name')).toHaveCSS('opacity', '1');
       expect(
@@ -175,7 +175,7 @@ test('host document replacement works while read-only without granting editing a
     el.newArtifact('number');
   });
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(field.getByRole('textbox', { name: 'Field display name', exact: true })).toBeDisabled();
+  await expect(field.getByRole('textbox', { name: 'Enter field name', exact: true })).toBeDisabled();
   await field.getByRole('tab', { name: 'Constraints', exact: true }).click();
   await expect(field.locator('select[name="numericType"]')).toBeDisabled();
   expect(

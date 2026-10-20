@@ -86,12 +86,12 @@ for (const width of [1280, 375]) {
     await placement.getByRole('button', { name: 'Expand element settings', exact: true }).click();
     await placement.getByRole('tab', { name: 'Configuration', exact: true }).click();
     const moved = nested.locator('app-field-card').first();
-    await expect(moved.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue('Title');
+    await expect(moved.getByRole('textbox', { name: 'Enter field name', exact: true })).toHaveValue('Title');
     await placement.getByLabel('Minimum', { exact: true }).fill('8');
     await expect(placement.getByRole('alert')).toBeVisible();
     // Select the root, then edit the nested field without navigating into it.
     await directHeader(root).getByPlaceholder('Template name').click();
-    await moved.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Nested title');
+    await moved.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Nested title');
     await expect(placement.getByLabel('Minimum', { exact: true })).toHaveValue('8');
     await placement.getByLabel('Minimum', { exact: true }).fill('2');
     await expect(placement.getByRole('alert')).toHaveCount(0);
@@ -101,14 +101,14 @@ for (const width of [1280, 375]) {
     await expect(directContent(parent)).toBeHidden();
     const collapsed = await currentTemplate(page);
     await directHeader(parent).getByRole('button', { name: 'Expand Samples', exact: true }).click();
-    await expect(moved.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue('Nested display');
+    await expect(moved.getByRole('textbox', { name: 'Enter field name', exact: true })).toHaveValue('Nested display');
     expect(await currentTemplate(page)).toEqual(collapsed);
     // Root fields still respond while a different element is selected.
     await directHeader(nested).getByPlaceholder('Enter element name').click();
     const rootCategory = root
       .locator(':scope > .container-content > .fields-drop-list > .field-drop-item app-field-card')
       .first();
-    await rootCategory.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Root category');
+    await rootCategory.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Root category');
     const saved = await currentTemplate(page);
     const properties = saved.properties as Record<string, any>;
     expect(properties.Element.properties.Element.minItems).toBe(2);
@@ -511,7 +511,7 @@ test('a published element keeps its content while its parent names, configures a
   await name.fill('Shown element');
   // What it holds is its own: its children and the places a child could be added are locked.
   const inner = directContent(editor).locator('app-field-card').first();
-  await expect(inner.getByRole('textbox', { name: 'Field display name', exact: true })).toBeDisabled();
+  await expect(inner.getByRole('textbox', { name: 'Enter field name', exact: true })).toBeDisabled();
   await expect(inner.getByTitle('Delete field', { exact: true })).toBeDisabled();
   await expect(directContent(editor).locator('app-insertion-actions')).toHaveCount(0);
   const card = header.locator('app-element-card');

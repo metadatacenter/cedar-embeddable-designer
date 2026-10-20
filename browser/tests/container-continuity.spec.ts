@@ -85,7 +85,7 @@ for (const kind of ['template', 'element'] as const)
       await expect(card).toHaveCount(1);
       await card.locator('.settings-toggle').click();
       await card.getByRole('tab', { name: 'Metadata', exact: true }).click();
-      await card.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Edited value');
+      await card.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Edited value');
       const saved = await currentTemplate(page);
       saved['@id'] =
         'https://repo.metadatacenter.org/' + (kind === 'template' ? 'templates/' : 'template-elements/') + 'saved';
@@ -95,7 +95,7 @@ for (const kind of ['template', 'element'] as const)
       await expect(card.getByRole('tabpanel', { name: 'Metadata', exact: true })).toBeVisible();
       expect(await designer.evaluate((el: any) => el.isDirty)).toBe(false);
       expect((await currentTemplate(page))['@id']).toBe(saved['@id']);
-      await card.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Another edit');
+      await card.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Another edit');
       expect(await designer.evaluate((el: any) => el.isDirty)).toBe(true);
       // Ordinary navigation to a different document still resets the field settings.
       await designer.evaluate((el: any, value) => el.loadArtifact(value), saved);
@@ -121,7 +121,7 @@ test('standalone field save adoption preserves the selected settings tab', async
   await page.waitForFunction(() => typeof (document.getElementById('field') as any)?.newArtifact === 'function');
   const designer = page.locator('#field');
   await designer.evaluate((el: any) => el.newArtifact('text'));
-  await designer.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Value');
+  await designer.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Value');
   await designer.getByRole('tab', { name: 'Metadata', exact: true }).click();
   await designer.evaluate((el: any) => {
     const saved = el.currentArtifact;

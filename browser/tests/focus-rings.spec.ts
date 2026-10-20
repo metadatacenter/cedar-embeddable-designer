@@ -27,12 +27,12 @@ test("a field card's name, option labels and content draw the shared focus ring"
       .click();
     await designer.getByRole('button', { name: type, exact: true }).click();
     const id = await designer
-      .locator('input[aria-label="Field display name"]:focus')
+      .locator('input[aria-label="Enter field name"]:focus')
       .evaluate((input) => input.closest('[id^=field-card-]')!.id);
     return designer.locator('#' + id);
   };
   const choice = await addField('Multiple Choice');
-  await expectSharedFocusRing(choice.getByLabel('Field display name', { exact: true }));
+  await expectSharedFocusRing(choice.getByLabel('Enter field name', { exact: true }));
   // Option labels and content are edited in the card's settings.
   await expectSharedFocusRing((await openSettings(choice)).locator('.choice-option-input').first());
   const text = await addField('Rich Text');

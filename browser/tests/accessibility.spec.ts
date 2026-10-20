@@ -29,6 +29,34 @@ const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const LABEL_IN_NAME = 'label-content-name-mismatch';
 
 /**
+ * Criterion 2.5.3 for a text box whose placeholder is its only visible text, which is then its
+ * visible label. axe-core's rule reads only names a control takes from its content, so it passes
+ * such a box whatever its name says. A box with a label of its own shows its placeholder as a
+ * hint. A header box's label sits beside it unassociated, because a click on that label toggles
+ * the settings.
+ */
+async function placeholdersOutsideNames(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const failures: string[] = [];
+    const visit = (root: Document | ShadowRoot) => {
+      for (const element of root.querySelectorAll('*')) {
+        if (element.shadowRoot) visit(element.shadowRoot);
+        if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) continue;
+        const placeholder = element.placeholder.trim();
+        if (!placeholder || element.value || !element.checkVisibility()) continue;
+        if (element.labels?.length || element.hasAttribute('aria-labelledby')) continue;
+        if (element.closest('.template-field-group')?.querySelector(':scope > label')) continue;
+        const name = element.getAttribute('aria-label') || element.title || placeholder;
+        if (!name.toLocaleLowerCase().includes(placeholder.toLocaleLowerCase()))
+          failures.push(`placeholder-in-name: "${placeholder}" is named "${name}"`);
+      }
+    };
+    visit(document);
+    return failures;
+  });
+}
+
+/**
  * Check the whole page once its animations finish, so contrast is read at full opacity.
  *
  * A click renders on the next coalesced pass, so the fade it starts does not exist until two
@@ -52,9 +80,12 @@ async function expectAccessible(page: Page, state: string): Promise<void> {
   // A label on an element whose role takes none is one axe cannot always decide, and a screen
   // reader ignores it either way, so the undecided case fails too.
   const ignoredLabels = incomplete.filter((result) => result.id === 'aria-prohibited-attr');
-  const failures = [...violations, ...ignoredLabels].flatMap((violation) =>
-    violation.nodes.map((node) => `${violation.id}: ${JSON.stringify(node.target)}`),
-  );
+  const failures = [
+    ...[...violations, ...ignoredLabels].flatMap((violation) =>
+      violation.nodes.map((node) => `${violation.id}: ${JSON.stringify(node.target)}`),
+    ),
+    ...(await placeholdersOutsideNames(page)),
+  ];
   expect(failures, state).toEqual([]);
 }
 
@@ -96,6 +127,10 @@ test('the template settings, user menu, Preferences and Add field palette', asyn
   await designer.getByRole('button', { name: 'Done' }).click();
   await designer.getByRole('button', { name: /^Add field$/ }).click();
   await expectAccessible(page, 'Add field palette');
+  // A new field's name box is empty, so its placeholder is the only text it shows.
+  await designer.getByRole('button', { name: 'Text', exact: true }).click();
+  await expect(designer.getByPlaceholder('Enter field name').last()).toHaveValue('');
+  await expectAccessible(page, 'a new, unnamed field');
 });
 
 test('every settings tab of every field in the template', async ({ page }) => {
@@ -103,6 +138,20 @@ test('every settings tab of every field in the template', async ({ page }) => {
   const cards = designer.locator('[id^=field-card-]');
   for (let index = 0; index < (await cards.count()); index++)
     await expectTabsAccessible(page, cards.nth(index), `field ${index + 1}`);
+});
+
+test('the Hungarian text, on a template and every settings tab of its fields', async ({ page }) => {
+  // The stub picker brings the property IRI's Choose and Replace buttons, whose Hungarian names
+  // must hold their visible words.
+  const designer = await openDesigner(page, '?picker=stub');
+  await page.evaluate(() => {
+    (document.querySelector('cedar-embeddable-designer') as unknown as { language: string }).language = 'hu';
+  });
+  await expect(designer.locator('.overview-panel__title')).toHaveText('Áttekintés (3)');
+  await expectAccessible(page, 'Hungarian template');
+  const cards = designer.locator('[id^=field-card-]');
+  for (let index = 0; index < (await cards.count()); index++)
+    await expectTabsAccessible(page, cards.nth(index), `Hungarian field ${index + 1}`);
 });
 
 test('the child picker, a nested element and a collapsed element', async ({ page }) => {
@@ -191,7 +240,7 @@ for (const type of Object.keys(FIELD_TYPES))
       type,
     );
     const field = page.locator('#field');
-    await field.getByRole('textbox', { name: 'Field display name', exact: true }).fill(`Study ${type}`);
+    await field.getByRole('textbox', { name: 'Enter field name', exact: true }).fill(`Study ${type}`);
     await expectAccessible(page, `${type} settings closed`);
     await expectTabsAccessible(page, field, type);
   });

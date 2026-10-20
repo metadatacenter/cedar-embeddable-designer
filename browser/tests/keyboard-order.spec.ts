@@ -34,7 +34,7 @@ async function tabUntil(page: Page, last: string, limit = 120): Promise<string[]
 const FIELD = (name: string) => [
   'button "Add field here"',
   `group "${name}"`,
-  'textbox "Field display name"',
+  'textbox "Enter field name"',
   'button "Delete field"',
   'button "Expand field settings"',
 ];
@@ -151,7 +151,7 @@ test('a nested element runs from its header through its children to its own inse
     'button "Add element here"',
     'button "Import fields and elements here"',
     'group "Title"',
-    'textbox "Field display name"',
+    'textbox "Enter field name"',
     'button "Delete field"',
     'button "Expand field settings"',
     'button "Add field"',
@@ -314,7 +314,7 @@ async function controlledTermsField(page: Page) {
   await designer.getByRole('button', { name: /^Add field$/ }).click();
   await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
   const card = designer.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') });
-  await card.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Disease');
+  await card.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Disease');
   await openSettings(card);
   return card;
 }

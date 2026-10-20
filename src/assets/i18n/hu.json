@@ -338,7 +338,6 @@
     "elementMissing": "Az elem már nem létezik."
   },
   "fieldCard": {
-    "displayName": "Mező megjelenítési neve",
     "published": "Ez a mező közzétett, ezért csak a konfigurációja módosítható.",
     "namePlaceholder": "Adja meg a mező nevét",
     "occurrenceRange": "Előfordulási tartomány",
@@ -576,7 +575,7 @@
   },
   "propertyPicker": {
     "placeholder": "Válasszon tulajdonság IRI-t",
-    "replaceLabel": "Tulajdonság IRI cseréje",
+    "replaceLabel": "Tulajdonság IRI-csere",
     "chooseLabel": "Tulajdonság IRI kiválasztása",
     "replace": "Csere",
     "choose": "Kiválasztás",

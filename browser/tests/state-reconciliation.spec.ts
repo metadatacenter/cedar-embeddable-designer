@@ -36,9 +36,9 @@ for (const kind of ['template', 'element'] as const) {
       await designer.getByRole('button', { name: 'Add field', exact: true }).click();
       await designer.getByRole('button', { name: type, exact: true }).click();
       const card = designer.locator('app-field-card');
-      await expect(card.getByLabel('Field display name', { exact: true })).toBeFocused();
+      await expect(card.getByLabel('Enter field name', { exact: true })).toBeFocused();
       await expect(designer.locator('.validation-summary')).toHaveCount(0);
-      await card.getByLabel('Field display name', { exact: true }).fill('Decision');
+      await card.getByLabel('Enter field name', { exact: true }).fill('Decision');
       await name.click();
       await expect(designer.locator('.validation-summary')).toContainText('1 error — fix before saving');
       await expect(designer.locator('.outline-row.invalid')).toHaveCount(1);
@@ -178,13 +178,11 @@ test('library rows use the same display names, unnamed labels and errors as the 
   await designer
     .locator('app-field-card')
     .first()
-    .getByLabel('Field display name', { exact: true })
+    .getByLabel('Enter field name', { exact: true })
     .fill('Renamed title');
   await expect(sidebar.locator('.draggable-name').first()).toHaveText('Renamed title');
   await sidebar.getByRole('button', { name: 'Text', exact: true }).click();
-  await expect(
-    designer.locator('app-field-card').last().getByLabel('Field display name', { exact: true }),
-  ).toBeFocused();
+  await expect(designer.locator('app-field-card').last().getByLabel('Enter field name', { exact: true })).toBeFocused();
   await expect(sidebar.locator('.draggable-name').last()).toHaveText('Unnamed field');
   await designer.getByLabel('Template name', { exact: true }).click();
   await expect(sidebar.locator('.draggable-field-item.invalid')).toContainText('1 error');

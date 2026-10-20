@@ -109,6 +109,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Both elements mark their text with the language it is shown in, so a screen reader
   reads Hungarian as Hungarian inside an English page. The `lang` attribute sits on
   the root inside the shadow tree, and the host element keeps the page's.
+- A field card's name box is named Enter field name, the placeholder it shows, so
+  speech input reaches it by the only text it displays. It was named Field display
+  name. The Hungarian name of the property IRI's Replace button now holds the word
+  the button shows.
 
 ## [0.1.0-dev.20260916.2593d382] - 2026-09-16 (Nexus)
 

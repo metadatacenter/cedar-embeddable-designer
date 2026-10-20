@@ -67,10 +67,10 @@ async function addNamedField(designer: import('@playwright/test').Locator) {
   await designer.getByRole('button', { name: 'Add field', exact: true }).first().click();
   await designer.getByRole('button', { name: 'Text', exact: true }).click();
   const id = await designer
-    .locator('input[aria-label="Field display name"]:focus')
+    .locator('input[aria-label="Enter field name"]:focus')
     .evaluate((input) => input.closest('[id^=field-card-]')!.id);
   const card = designer.locator('#' + id).locator('app-field-card');
-  await card.getByLabel('Field display name', { exact: true }).fill('Study title');
+  await card.getByLabel('Enter field name', { exact: true }).fill('Study title');
   return card;
 }
 
@@ -226,7 +226,7 @@ test('blank and whitespace names block saving and summary navigation focuses the
   for (const name of [
     designer.getByRole('textbox', { name: 'Template name', exact: true }),
     designer.getByRole('textbox', { name: 'Element display name', exact: true }).first(),
-    newField.getByRole('textbox', { name: 'Field display name', exact: true }),
+    newField.getByRole('textbox', { name: 'Enter field name', exact: true }),
   ]) {
     const original = await name.inputValue();
     for (const blank of ['', '   ']) {
@@ -251,7 +251,7 @@ test('new fields and elements focus an unnamed draft and defer errors until blur
   await applyPreset(page, 'modular');
   await designer.getByRole('button', { name: 'Add field', exact: true }).first().click();
   await designer.getByRole('button', { name: 'Text', exact: true }).click();
-  const field = designer.getByRole('textbox', { name: 'Field display name', exact: true }).last();
+  const field = designer.getByRole('textbox', { name: 'Enter field name', exact: true }).last();
   await expect(field).toBeFocused();
   await expect(field).toHaveValue('');
   await expect(field).toHaveAttribute('aria-invalid', 'false');
@@ -279,7 +279,7 @@ test('new fields and elements focus an unnamed draft and defer errors until blur
 test('field error badge aligns its icon and text with the field name', async ({ page }) => {
   const designer = await openDesigner(page);
   const card = await addNamedField(designer);
-  const name = card.getByRole('textbox', { name: 'Field display name', exact: true });
+  const name = card.getByRole('textbox', { name: 'Enter field name', exact: true });
   await name.fill('');
   await name.blur();
   const badge = card.locator('.validation-badge');
@@ -307,7 +307,7 @@ test('validation summary centers its heading and indents expanded issues', async
   const designer = await openDesigner(page);
   await designer.getByLabel('Template name', { exact: true }).fill('Study');
   const card = await addNamedField(designer);
-  const name = card.getByLabel('Field display name', { exact: true });
+  const name = card.getByLabel('Enter field name', { exact: true });
   await name.fill('');
   await name.blur();
   const notice = designer.locator('.validation-summary');
@@ -332,7 +332,7 @@ test('an invalid blank field name remains editable with real keystrokes', async 
   const designer = await openDesigner(page);
   await designer.getByLabel('Template name', { exact: true }).fill('Study');
   const card = await addNamedField(designer);
-  const name = card.getByLabel('Field display name', { exact: true });
+  const name = card.getByLabel('Enter field name', { exact: true });
   await name.fill('');
   await name.blur();
   await expect(name).toHaveAttribute('aria-invalid', 'true');
@@ -485,7 +485,7 @@ test('adding a field reveals the missing template name while its own name waits 
   );
   await designer.getByRole('button', { name: 'Add field', exact: true }).click();
   await designer.getByRole('button', { name: 'Text', exact: true }).click();
-  const name = designer.getByRole('textbox', { name: 'Field display name', exact: true });
+  const name = designer.getByRole('textbox', { name: 'Enter field name', exact: true });
   await expect(name).toBeFocused();
   await expect(designer.locator('.validation-summary')).toContainText('1 error — fix before saving');
   await expect(designer.locator('.validation-summary li')).toHaveCount(1);
@@ -512,7 +512,7 @@ for (const kind of ['template', 'element'] as const) {
     await designer.getByRole('button', { name: 'Add field', exact: true }).click();
     await designer.getByRole('button', { name: 'Text', exact: true }).click();
     await expect(containerName).toHaveAttribute('aria-invalid', 'true');
-    await designer.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Study title');
+    await designer.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Study title');
     await expect(designer.locator('.validation-summary')).toContainText('1 error — fix before saving');
     await expect.poll(async () => (await report(page)).canSave).toBe(false);
     await designer.locator('.validation-summary summary').click();
