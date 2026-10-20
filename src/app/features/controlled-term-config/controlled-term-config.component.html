@@ -1,4 +1,4 @@
-<div class="constraint-summary" [attr.aria-label]="'controlledTerms.constraints' | translate">
+<div class="constraint-summary" role="group" [attr.aria-label]="'controlledTerms.constraints' | translate">
   @if (!field.controlledTermConstraints?.constraints?.length) {
     <span class="empty-constraint">{{ 'controlledTerms.chooseConstraint' | translate }}</span>
   } @else if (summaryAvailable && summaryArtifact) {

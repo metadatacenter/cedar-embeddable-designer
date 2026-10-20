@@ -37,10 +37,10 @@
             [attr.aria-label]="'fieldCard.displayName' | translate"
           />
           @if (field.status === 'required' && allowsStatus(field.type)) {
-            <sup class="required-mark" [attr.aria-label]="'common.required' | translate">*</sup>
+            <sup class="required-mark" role="img" [attr.aria-label]="'common.required' | translate">*</sup>
           }
           @if (occurrenceRange; as range) {
-            <span class="occurrence-range" [attr.aria-label]="'fieldCard.occurrenceRange' | translate">{{
+            <span class="occurrence-range" role="group" [attr.aria-label]="'fieldCard.occurrenceRange' | translate">{{
               range
             }}</span>
           }

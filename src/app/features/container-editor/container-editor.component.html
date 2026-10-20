@@ -124,7 +124,7 @@
             );
             as status
           ) {
-            <span class="publication-status" [attr.aria-label]="'common.publicationStatus' | translate">{{
+            <span class="publication-status" role="group" [attr.aria-label]="'common.publicationStatus' | translate">{{
               status | translate
             }}</span>
           }

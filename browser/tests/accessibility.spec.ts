@@ -39,8 +39,11 @@ async function expectAccessible(page: Page, state: string): Promise<void> {
         .map((animation) => animation.finished.catch(() => undefined)),
     );
   });
-  const { violations } = await new AxeBuilder({ page }).withTags(WCAG).analyze();
-  const failures = violations.flatMap((violation) =>
+  const { violations, incomplete } = await new AxeBuilder({ page }).withTags(WCAG).analyze();
+  // A label on an element whose role takes none is one axe cannot always decide, and a screen
+  // reader ignores it either way, so the undecided case fails too.
+  const ignoredLabels = incomplete.filter((result) => result.id === 'aria-prohibited-attr');
+  const failures = [...violations, ...ignoredLabels].flatMap((violation) =>
     violation.nodes.map((node) => `${violation.id}: ${JSON.stringify(node.target)}`),
   );
   expect(failures, state).toEqual([]);
