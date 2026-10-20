@@ -104,8 +104,15 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // 440,372 on the same dependencies. No dependency was added. Allow about 3 KB raw / 1.4 KB
 // compressed headroom. The standalone application's `build-app` budget in angular.json moves
 // by the same 5 KB.
-const RAW_LIMIT = 1_555_000;
-const GZIP_LIMIT = 445_000;
+// 2026-10-20: named type and selection icons in the child picker, the grouped selection
+// radios and pressed preset buttons in Preferences, row headers and table names in Define
+// Presets, the library menu's expanded state, and field values marked with their declared
+// language measure 1,555,305 raw / 444,582 gzip-9 bytes. That adds 1,567 raw / 425
+// compressed bytes to 1,553,738 / 444,157 on the same dependencies. No dependency was
+// added. Allow about 2.7 KB raw / 1.4 KB compressed headroom. The standalone application's
+// `build-app` budget in angular.json moves by the same 3 KB.
+const RAW_LIMIT = 1_558_000;
+const GZIP_LIMIT = 446_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
 

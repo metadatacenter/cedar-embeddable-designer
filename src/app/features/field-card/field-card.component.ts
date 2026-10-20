@@ -1,4 +1,5 @@
 import { fieldDisplayName } from '../../core/model/field-display-name';
+import { valueLanguage } from '../../core/model/value-language';
 import { ArtifactNameDirective } from '../../shared/artifact-name.directive';
 import { FieldSummaryComponent } from '../field-summary/field-summary.component';
 import { HeaderToggleDirective } from '../../shared/header-toggle.directive';
@@ -58,6 +59,9 @@ export class FieldCardComponent {
   readonly service = inject(TemplateService);
 
   readonly FIELD_TYPES_LIST = FIELD_TYPES;
+
+  /** The language the field declares for its values, which its options and rich text are written in. */
+  readonly valueLanguage = valueLanguage;
 
   /** The name the header shows: the parent's display name, or the field's own where it has no parent. */
   get shownName(): string {

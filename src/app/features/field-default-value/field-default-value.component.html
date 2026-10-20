@@ -7,6 +7,7 @@
         #control
         [attr.aria-label]="'defaultValue.label' | translate"
         rows="1"
+        [attr.lang]="valueLanguage()"
         [value]="draft()"
         [disabled]="locked()"
         [attr.aria-invalid]="!!error()"
@@ -19,6 +20,7 @@
         #control
         type="text"
         [attr.aria-label]="'defaultValue.label' | translate"
+        [attr.lang]="valueLanguage()"
         [value]="draft()"
         [attr.inputmode]="field().type === 'number' ? 'decimal' : null"
         [disabled]="locked()"

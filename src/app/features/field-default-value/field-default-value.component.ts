@@ -23,6 +23,7 @@ import { TemplateService } from '../../core/services/template.service';
 import { TerminologyService } from '../../core/services/terminology.service';
 import { PickedConstraint } from '../../core/model/term-picker';
 import { fieldDisplayName } from '../../core/model/field-display-name';
+import { valueLanguage } from '../../core/model/value-language';
 import { TranslatePipe } from '@ngx-translate/core';
 import { CedLanguageService } from '../../i18n/ced-language.service';
 import { trapTab } from '../../shared/focus-trap';
@@ -78,6 +79,8 @@ export class FieldDefaultValueComponent {
     return value.kind === 'iri' ? value.label || value.iri : '';
   });
   readonly native = computed(() => ['text', 'paragraph', 'number'].includes(this.field().type));
+  /** The language the field declares for its values, which a text default is written in. A number has none. */
+  readonly valueLanguage = computed(() => (this.field().type === 'number' ? null : valueLanguage(this.field())));
   readonly draft = signal('');
   private defaultKey = '';
   readonly checking = computed(() => this.service.validation.isChecking(this.field().id, 'defaultValue'));

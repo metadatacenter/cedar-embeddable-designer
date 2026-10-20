@@ -122,6 +122,7 @@
                   size="default"
                   class="choice-option-icon"
                 ></app-icon>
+                <!-- An option is a value, so it carries the language the field declares for its values. -->
                 <input
                   spellcheck="false"
                   autocomplete="off"
@@ -136,6 +137,7 @@
                   (blur)="service.touchOption(field.id, optIdx)"
                   (ngModelChange)="service.updateOption(field.id, optIdx, $event)"
                   class="choice-option-input"
+                  [attr.lang]="valueLanguage(field)"
                   (focus)="service.selectedField.set(field.id)"
                   [placeholder]="'fieldCard.option' | translate: { number: optIdx + 1 }"
                   [attr.aria-label]="'fieldCard.option' | translate: { number: optIdx + 1 }"
@@ -179,7 +181,7 @@
     The one value a static field carries: the markup of a rich text block, the
     address of an image, the id of a video. Editable, where the preview below is
     only a placeholder, because this is content the author writes rather than a
-    hint about what a form-filler will type.
+    hint about what a form-filler will type. Markup carries the field's language.
   -->
         @if (contentLabel(field.type); as label) {
           <div class="field-content">
@@ -190,6 +192,7 @@
                 autocomplete="off"
                 [id]="'field-content-' + field.id"
                 rows="4"
+                [attr.lang]="valueLanguage(field)"
                 [ngModel]="field.content || ''"
                 (ngModelChange)="service.updateContent(field.id, $event)"
                 class="field-content-control"
