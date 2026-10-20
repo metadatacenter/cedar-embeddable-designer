@@ -17,6 +17,14 @@
       <dt>{{ 'version.reuse' | translate }}</dt>
       <dd>{{ 'version.state.' + state.kind | translate }}</dd>
     }
+    @if (artifact().derivedFrom; as derivedFrom) {
+      <dt>{{ 'settings.derivedFrom' | translate }}</dt>
+      <dd>{{ derivedFrom }}</dd>
+    }
+    @if (artifact().previousVersion; as previousVersion) {
+      <dt>{{ 'settings.previousVersion' | translate }}</dt>
+      <dd>{{ previousVersion }}</dd>
+    }
     @if (linkedOrigin()?.owner; as owner) {
       <dt>{{ 'version.owner' | translate }}</dt>
       <dd>{{ owner }}</dd>

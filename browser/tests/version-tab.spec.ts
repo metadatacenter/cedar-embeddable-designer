@@ -146,3 +146,14 @@ test("the template's Version tab summarizes its linked children", async ({ page 
   await panel.getByRole('button', { name: 'Upgrade all compatible' }).click();
   await expect.poll(async () => ((await currentTemplate(page)).properties as any).Title['@id']).toBe(NEWER);
 });
+
+test('the header shows the version and never edits it, in a draft as in a published artifact', async ({ page }) => {
+  const designer = await openDesigner(page);
+  const version = designer.getByRole('textbox', { name: 'Version', exact: true }).first();
+  await expect(version).toHaveValue('0.0.1');
+  await expect(version).not.toBeEditable();
+  await version.click();
+  await page.keyboard.type('9');
+  await expect(version).toHaveValue('0.0.1');
+  expect((await currentTemplate(page))['pav:version']).toBe('0.0.1');
+});

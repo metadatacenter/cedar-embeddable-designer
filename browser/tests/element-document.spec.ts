@@ -174,7 +174,7 @@ test('nested element Identifier edits the element in its Metadata tab', async ({
   expect(artifact['schema:identifier'] ?? null).toBeNull();
 });
 
-test('element metadata shows provenance without changing the artifact and hides empty optional values', async ({
+test('element metadata and versions show provenance without changing the artifact and hide empty optional values', async ({
   page,
 }) => {
   const designer = await openDesigner(page);
@@ -195,13 +195,29 @@ test('element metadata shows provenance without changing the artifact and hides 
     await settings.getByRole('tab', { name: 'Metadata', exact: true }).click();
     return settings.getByRole('tabpanel', { name: 'Metadata', exact: true });
   };
+  const versionTab = () => {
+    const settings = designer.locator('app-element-card').first();
+    return settings
+      .getByRole('tab', { name: 'Version', exact: true })
+      .click()
+      .then(() => settings.getByRole('tabpanel', { name: 'Version', exact: true }));
+  };
   const panel = await load();
   const before = await currentTemplate(page);
   await expect(panel).toContainText(element['@id']);
   await expect(panel).toContainText('2026-08-18T16:07:23-07:00');
   await expect(panel).toContainText('2026-09-11T07:27:46-07:00');
-  await expect(panel).toContainText('https://example.org/elements/source');
-  await expect(panel).toContainText('https://example.org/elements/previous');
+  // Where the element came from and what it follows are on the Version tab.
+  await expect(panel).not.toContainText('https://example.org/elements/source');
+  await expect(panel).not.toContainText('https://example.org/elements/previous');
+  const provenance = await versionTab();
+  const value = (label: string) =>
+    provenance
+      .locator('dt')
+      .filter({ hasText: new RegExp('^' + label + '$') })
+      .locator('+ dd');
+  await expect(value('Derived from')).toHaveText('https://example.org/elements/source');
+  await expect(value('Previous version')).toHaveText('https://example.org/elements/previous');
   expect(await currentTemplate(page)).toEqual(before);
   element['bibo:status'] = 'bibo:published';
   await load();
@@ -224,6 +240,10 @@ test('element metadata shows provenance without changing the artifact and hides 
   await expect(empty.locator('dd').filter({ hasText: /^Draft$/ })).toHaveCount(0);
   for (const label of ['Version', 'Publication status', 'Derived from', 'Previous version']) {
     await expect(empty.locator('dt').filter({ hasText: new RegExp('^' + label + '$') })).toHaveCount(0);
+  }
+  const unversioned = await versionTab();
+  for (const label of ['Derived from', 'Previous version']) {
+    await expect(unversioned.locator('dt').filter({ hasText: new RegExp('^' + label + '$') })).toHaveCount(0);
   }
 });
 
@@ -533,7 +553,7 @@ test('a published element keeps its content while its parent names, configures a
   // The header names and describes it as its parent shows it, which the parent still decides.
   const name = header.getByRole('textbox', { name: 'Element display name', exact: true });
   await expect(name).toBeEnabled();
-  await expect(header.getByRole('textbox', { name: 'Version', exact: true })).toBeDisabled();
+  await expect(header.getByRole('textbox', { name: 'Version', exact: true })).not.toBeEditable();
   await name.fill('Shown element');
   // What it holds is its own: its children and the places a child could be added are locked.
   const inner = directContent(editor).locator('app-field-card').first();

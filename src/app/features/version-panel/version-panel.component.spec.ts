@@ -192,7 +192,12 @@ describe('the Version tab', () => {
         ...(readable && !readOnly ? ['Replace with origin v1.3.0 (compatible)'] : []),
         ...(save && !readOnly ? ['Save as reusable draft', 'Publish as reusable'] : []),
       ]);
-      expect(tab.rows()).toMatchObject({ Version: '0.0.1', 'Publication status': 'Draft', Reuse: 'Copy' });
+      expect(tab.rows()).toMatchObject({
+        Version: '0.0.1',
+        'Publication status': 'Draft',
+        Reuse: 'Copy',
+        'Derived from': iri('v110'),
+      });
       expect(tab.notes()[0]).toBe(readable ? 'Derived from Sample v1.1.0.' : `Derived from ${iri('v110')}.`);
       // The owner and folder are the origin's, not the copy's, so a copy shows neither.
       expect(tab.rows()).not.toHaveProperty('Owner');
@@ -300,6 +305,8 @@ describe('the settings panels', () => {
     expect(element.querySelector('[role="tab"][id$="-Version"]')?.textContent?.trim()).toBe('Version');
     expect(metadataLabels(element, '-Field-metadata')).not.toContain('Version');
     expect(metadataLabels(element, '-Field-metadata')).not.toContain('Publication status');
+    expect(metadataLabels(element, '-Field-metadata')).not.toContain('Derived from');
+    expect(metadataLabels(element, '-Field-metadata')).not.toContain('Previous version');
     expect(element.querySelector('[role="tabpanel"][id$="-Version"] app-version-panel')).not.toBeNull();
   });
 

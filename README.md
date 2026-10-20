@@ -506,9 +506,10 @@ the selector.
 
 ### Versions of Reused Children
 
-Every field, element and template has a **Version** tab. It shows the version and
-publication status, which the Metadata tab no longer shows, and how the child relates
-to stored artifacts. A child made in the document is local and unversioned. A linked
+Every field, element and template has a **Version** tab. It shows the version, the
+publication status, the version it was derived from and its previous version, none of
+which the Metadata tab shows any longer, and how the child relates to stored
+artifacts. The header of a template or element shows its version but never edits it. A child made in the document is local and unversioned. A linked
 child is a published artifact embedded as itself. A copy names the stored version it
 came from. A child inside a linked element belongs to that element and changes only
 when the element is upgraded. The tab offers only the actions that are possible, so it

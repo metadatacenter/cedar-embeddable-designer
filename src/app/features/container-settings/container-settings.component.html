@@ -88,14 +88,6 @@
       <dd>{{ artifact().createdOn || ('settings.notYetRecorded' | translate) }}</dd>
       <dt>{{ 'settings.modified' | translate }}</dt>
       <dd>{{ artifact().modifiedOn || ('settings.notYetRecorded' | translate) }}</dd>
-      @if (artifact().derivedFrom) {
-        <dt>{{ 'settings.derivedFrom' | translate }}</dt>
-        <dd>{{ artifact().derivedFrom }}</dd>
-      }
-      @if (artifact().previousVersion) {
-        <dt>{{ 'settings.previousVersion' | translate }}</dt>
-        <dd>{{ artifact().previousVersion }}</dd>
-      }
       <dt class="editable">
         <label [for]="'container-identifier-' + container().id">{{ 'containerEditor.identifier' | translate }}</label>
       </dt>
