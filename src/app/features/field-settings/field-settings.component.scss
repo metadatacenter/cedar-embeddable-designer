@@ -115,10 +115,28 @@ button:focus-visible {
   outline: var(--cedar-focus-ring-width) solid var(--cedar-color-primary);
   outline-offset: var(--cedar-focus-ring-offset);
 }
+/*
+  The chevron keeps the card's centre, so the outer columns are equal. The last one ends where the
+  header does, which puts what the card places there under its delete button.
+*/
+.settings-toggle-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+}
+.settings-toggle-end {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  /* Above the between-card insertion hover area, like the toggle. */
+  position: relative;
+  z-index: spacing.$designer-settings-toggle-layer;
+}
 .settings-toggle {
   /* Keep the compact toggle above the between-card insertion hover area. */
   position: relative;
   z-index: spacing.$designer-settings-toggle-layer;
+  grid-column: 2;
   display: flex;
   align-items: center;
   justify-content: center;

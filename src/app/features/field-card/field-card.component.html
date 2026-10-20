@@ -11,7 +11,7 @@
     -->
     <fieldset [disabled]="headerLocked" class="field-edit-scope">
       <!-- Header Row: Icon and Name editing -->
-      <div appHeaderToggle (headerToggle)="toggleSettings()" class="field-header" [class.standalone]="standalone">
+      <div appHeaderToggle (headerToggle)="toggleSettings()" class="field-header">
         <div class="field-heading">
           <app-icon
             [key]="getFieldIcon(field)"
@@ -59,38 +59,23 @@
             </button>
           }
         </div>
-        @if (!standalone) {
-          <!-- Pointer-only, so hidden from assistive technology. The Overview's handles reorder from the keyboard. -->
-          <span
-            class="field-drag-handle"
-            cdkDragHandle
-            [class.locked]="headerLocked"
-            aria-hidden="true"
-            [title]="'fieldCard.dragToReorder' | translate"
-          >
-            <app-icon key="list" size="small"></app-icon>
-          </span>
-        }
-
-        <div class="field-controls">
-          <div class="field-summary">
-            <!-- Label Badge details -->
-            <div class="field-type-label">
-              {{ getFieldTypeName(field) | translate }}
-            </div>
+        <div class="field-summary">
+          <!-- Label Badge details -->
+          <div class="field-type-label">
+            {{ getFieldTypeName(field) | translate }}
           </div>
-          <div class="field-actions">
-            @if (!standalone) {
-              <button
-                (click)="deleteField()"
-                class="field-icon-action shrink-0"
-                [title]="'fieldCard.delete' | translate"
-                [attr.aria-label]="'fieldCard.delete' | translate"
-              >
-                <app-icon key="trash" size="small"></app-icon>
-              </button>
-            }
-          </div>
+        </div>
+        <div class="field-actions">
+          @if (!standalone) {
+            <button
+              (click)="deleteField()"
+              class="field-icon-action shrink-0"
+              [title]="'fieldCard.delete' | translate"
+              [attr.aria-label]="'fieldCard.delete' | translate"
+            >
+              <app-icon key="trash" size="small"></app-icon>
+            </button>
+          }
         </div>
       </div>
     </fieldset>
@@ -212,6 +197,22 @@
           </div>
         }
       </fieldset>
+      <!--
+        Pointer-only, so hidden from assistive technology. The Overview's handles reorder from the keyboard.
+        It sits beside the settings chevron, under the delete button.
+      -->
+      @if (!standalone) {
+        <span
+          settings-toggle-end
+          class="field-drag-handle"
+          cdkDragHandle
+          [class.locked]="headerLocked"
+          aria-hidden="true"
+          [title]="'fieldCard.dragToReorder' | translate"
+        >
+          <app-icon key="drag" size="small"></app-icon>
+        </span>
+      }
     </app-field-settings>
   </div>
 

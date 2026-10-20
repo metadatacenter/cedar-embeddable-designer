@@ -28,8 +28,8 @@ for (const width of [1280, 375]) {
               '.field-heading',
               '.field-heading > input',
               '.field-type-icon',
-              '.field-controls',
-              '.field-drag-handle',
+              '.field-summary',
+              '.field-actions',
             ].map((s) => {
               const r = el.querySelector(s)!.getBoundingClientRect();
               return [s, { y: r.y, height: r.height }];

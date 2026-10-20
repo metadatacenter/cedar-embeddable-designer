@@ -130,15 +130,18 @@
   }
 }
 
+/* A nested element's drag handle takes the corner under the delete button, and its children toggle sits beside it. */
 .element-drag-handle {
   position: absolute;
-  top: calc(var(--cedar-space-3) + var(--cedar-space-1));
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: var(--cedar-space-1);
+  right: var(--cedar-space-1);
   @include patterns.icon-button;
   color: var(--cedar-text-muted);
   cursor: grab;
   z-index: var(--cedar-layer-sticky);
+}
+.nested-header .element-toggle {
+  right: calc(2 * var(--cedar-space-1) + #{spacing.$icon-button-small});
 }
 
 .container-content > .add-field-section {
@@ -146,10 +149,20 @@
   padding-block: var(--cedar-space-2);
 }
 
-.element-type-label {
+/*
+  The template's or element's type, centred over the settings chevron on the header's first line.
+  It lies over the header, so a click on it reaches the header and toggles the settings, as a click
+  on a field's type does.
+*/
+.container-type-label {
+  pointer-events: none;
   position: absolute;
-  left: 100%;
-  margin-left: var(--cedar-space-2);
+  top: calc(var(--cedar-space-3) + var(--cedar-space-1));
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  height: spacing.$icon-button-small;
   color: var(--cedar-text-muted);
   font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-regular);

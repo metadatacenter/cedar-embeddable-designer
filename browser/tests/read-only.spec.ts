@@ -93,7 +93,7 @@ for (const mode of ['host', 'published'] as const)
         await expect(root.locator(':scope > .template-header-card input').first()).toBeDisabled();
         await inspectTabs(rootSettings);
         if (kind === 'template') {
-          await expect(designer.locator('.element-type-label')).toBeVisible();
+          await expect(designer.locator('.nested-header > .container-type-label').first()).toBeVisible();
           const nested = designer.locator('app-element-card').first();
           await inspectTabs(nested);
           if (width === 1280) {

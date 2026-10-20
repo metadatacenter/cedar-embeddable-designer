@@ -66,7 +66,7 @@ import { CountKeyPipe } from '../../i18n/count-key.pipe';
             [title]="'outline.reorderHint' | translate"
             (keydown)="moveWithKeyboard($event, node)"
           >
-            <app-icon key="list" size="small" />
+            <app-icon key="drag" size="small" />
           </button>
         </div>
         @if (node.kind === 'element') {

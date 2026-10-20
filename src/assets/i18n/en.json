@@ -170,6 +170,7 @@
     "published": "This element is published, so only its configuration can change.",
     "dragElement": "Drag element to reorder",
     "elementLabel": "Element",
+    "templateLabel": "Template",
     "name": "Name",
     "elementName": "Element name",
     "templateName": "Template name",

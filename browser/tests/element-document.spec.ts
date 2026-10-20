@@ -289,7 +289,9 @@ for (const width of [1280, 375]) {
 }
 
 for (const width of [1280, 375]) {
-  test(`nested element header has half the child inset and a bottom-corner toggle at ${width}`, async ({ page }) => {
+  test(`nested element header has half the child inset and a bottom-corner drag handle at ${width}`, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width, height: 1000 });
     const designer = await openDesigner(page);
     await applyPreset(page, 'modular');
@@ -303,23 +305,40 @@ for (const width of [1280, 375]) {
       const header = node.querySelector(':scope > .template-header-card')!.getBoundingClientRect();
       const child = node.querySelector('.nested-content .field-drag-container')!.getBoundingClientRect();
       const toggle = node.querySelector('.element-toggle')!.getBoundingClientRect();
+      const handle = node.querySelector('.element-drag-handle')!.getBoundingClientRect();
       const bin = node.querySelector('.element-delete')!.getBoundingClientRect();
+      const type = node
+        .querySelector(':scope > .template-header-card > .container-type-label')!
+        .getBoundingClientRect();
+      const chevron = node.querySelector(':scope > .template-header-card .settings-toggle')!.getBoundingClientRect();
       const version = node.querySelector('.version-group .template-field-label')!.getBoundingClientRect();
       return {
         headerInset: header.left - edge,
         childInset: child.left - edge,
         binAlignment: Math.abs(bin.top - version.top),
-        binOverToggle: Math.abs(bin.left + bin.width / 2 - (toggle.left + toggle.width / 2)),
-        toggleBottom: header.bottom - toggle.bottom,
-        toggleRight: header.right - toggle.right,
+        binOverHandle: Math.abs(bin.left + bin.width / 2 - (handle.left + handle.width / 2)),
+        handleBottom: header.bottom - handle.bottom,
+        handleRight: header.right - handle.right,
+        toggleBesideHandle: handle.left - toggle.right,
+        toggleLevel: Math.abs(toggle.top - handle.top),
+        typeOverChevron: Math.abs(type.left + type.width / 2 - (chevron.left + chevron.width / 2)),
       };
     });
     expect(geometry.headerInset).toBeGreaterThan(0);
     expect(geometry.headerInset * 2).toBeCloseTo(geometry.childInset, 1);
     expect(geometry.binAlignment).toBeLessThan(1);
-    expect(geometry.binOverToggle).toBeLessThan(0.5);
-    expect(geometry.toggleBottom).toBeLessThanOrEqual(6);
-    expect(geometry.toggleRight).toBeLessThanOrEqual(6);
+    expect(geometry.binOverHandle).toBeLessThan(0.5);
+    expect(geometry.handleBottom).toBeLessThanOrEqual(6);
+    expect(geometry.handleRight).toBeLessThanOrEqual(6);
+    // The children toggle gives the corner to the handle and sits just before it.
+    expect(geometry.toggleBesideHandle).toBeGreaterThanOrEqual(0);
+    expect(geometry.toggleBesideHandle).toBeLessThanOrEqual(8);
+    expect(geometry.toggleLevel).toBeLessThan(0.5);
+    expect(geometry.typeOverChevron).toBeLessThan(0.5);
+    await expect(header.locator(':scope > .container-type-label')).toHaveText('Element');
+    await expect(
+      directHeader(designer.locator('app-container-editor').first()).locator(':scope > .container-type-label'),
+    ).toHaveText('Template');
     await header.getByRole('button', { name: 'Collapse Element', exact: true }).click();
     await expect(directContent(element)).toBeHidden();
     await header.getByRole('button', { name: 'Expand Element', exact: true }).click();
@@ -342,7 +361,7 @@ for (const collapsed of [false, true]) {
     await handle.scrollIntoViewIfNeeded();
     const from = (await handle.boundingBox())!;
     const bin = (await directHeader(element).locator('.element-delete').boundingBox())!;
-    expect(from.y + from.height / 2).toBe(bin.y + bin.height / 2);
+    expect(from.x + from.width / 2).toBe(bin.x + bin.width / 2);
     const first = root.locator(':scope > .container-content > .fields-drop-list > .field-drop-item').first();
     const to = (await first.boundingBox())!;
     await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);

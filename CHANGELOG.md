@@ -33,6 +33,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Drag handles draw the shared `drag` grip instead of the `list` icon, in the canvas, the
+  Overview, the field library and the child picker. On a field or element card the handle
+  sits in the bottom-right corner, under the delete button and level with the settings
+  chevron. A field's type moves to the centre of its header, over the chevron, where the
+  handle was. An element keeps its centred Element label, and its children toggle moves one
+  icon left to leave the corner to the handle. The template header shows Template in the
+  same place.
 - A child's settings open on a new Configuration tab, which holds how its parent places
   it. The display name and a wider display description share its first row. The
   requirement select follows with Hidden and Continue previous line, each where the

@@ -6,18 +6,9 @@
   @if (placementNode() && service.visibleIssuesFor(container().id).length; as count) {
     <span class="validation-badge">{{ 'common.errorBadge' | countKey: count | translate: { count: count } }}</span>
   }
-  @if (placementNode()) {
-    <!-- Dragging is pointer-only, so only the visible label is exposed. The Overview's handles reorder from the keyboard. -->
-    <span
-      cdkDragHandle
-      [class.locked]="placementLocked()"
-      class="element-drag-handle"
-      [title]="'containerEditor.dragElement' | translate"
-    >
-      <app-icon key="list" size="small" />
-      <span class="element-type-label">{{ 'containerEditor.elementLabel' | translate }}</span>
-    </span>
-  }
+  <span class="container-type-label">{{
+    (container().kind === 'element' ? 'containerEditor.elementLabel' : 'containerEditor.templateLabel') | translate
+  }}</span>
   <div class="template-header-card__body" appHeaderToggle (headerToggle)="toggleSettings()">
     <div class="template-header-card__icon">
       <app-icon
@@ -176,6 +167,21 @@
       >
         <app-icon [key]="collapsed() ? 'expand-all' : 'collapse-all'" size="small" />
       </button>
+    }
+    @if (placementNode()) {
+      <!--
+        Pointer-only, so hidden from assistive technology. The Overview's handles reorder from the keyboard.
+        It takes the corner under the delete button.
+      -->
+      <span
+        cdkDragHandle
+        [class.locked]="placementLocked()"
+        class="element-drag-handle"
+        aria-hidden="true"
+        [title]="'containerEditor.dragElement' | translate"
+      >
+        <app-icon key="drag" size="small" />
+      </span>
     }
   </div>
   @if (placementNode(); as element) {

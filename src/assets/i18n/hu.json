@@ -170,6 +170,7 @@
     "published": "Ez az elem közzétett, ezért csak a konfigurációja módosítható.",
     "dragElement": "Húzza az elemet az átrendezéshez",
     "elementLabel": "Elem",
+    "templateLabel": "Sablon",
     "name": "Név",
     "elementName": "Elem neve",
     "templateName": "Sablon neve",

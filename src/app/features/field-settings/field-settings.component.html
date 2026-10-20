@@ -519,14 +519,18 @@
     </dl>
   </section>
 </div>
-<button
-  type="button"
-  class="settings-toggle"
-  [attr.aria-expanded]="expanded"
-  [attr.aria-controls]="'field-settings-' + field.id"
-  [attr.aria-label]="(expanded ? 'fieldSettings.collapse' : 'fieldSettings.expand') | translate"
-  [title]="(expanded ? 'fieldSettings.collapse' : 'fieldSettings.expand') | translate"
-  (click)="toggleExpanded()"
->
-  <app-icon key="chevron-down" size="small" [class.expanded]="expanded" />
-</button>
+<div class="settings-toggle-row">
+  <button
+    type="button"
+    class="settings-toggle"
+    [attr.aria-expanded]="expanded"
+    [attr.aria-controls]="'field-settings-' + field.id"
+    [attr.aria-label]="(expanded ? 'fieldSettings.collapse' : 'fieldSettings.expand') | translate"
+    [title]="(expanded ? 'fieldSettings.collapse' : 'fieldSettings.expand') | translate"
+    (click)="toggleExpanded()"
+  >
+    <app-icon key="chevron-down" size="small" [class.expanded]="expanded" />
+  </button>
+  <!-- The card's drag handle, at the end of the chevron's row. -->
+  <div class="settings-toggle-end"><ng-content select="[settings-toggle-end]" /></div>
+</div>
