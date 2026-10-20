@@ -106,6 +106,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - An attribute-value field's stand-in input is named by its type, the annotations
   table can be scrolled from the keyboard on a narrow host, and the template
   description box takes its accessible name from its label.
+- Both elements mark their text with the language it is shown in, so a screen reader
+  reads Hungarian as Hungarian inside an English page. The `lang` attribute sits on
+  the root inside the shadow tree, and the host element keeps the page's.
 
 ## [0.1.0-dev.20260916.2593d382] - 2026-09-16 (Nexus)
 

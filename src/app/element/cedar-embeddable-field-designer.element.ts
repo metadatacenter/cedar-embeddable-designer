@@ -81,32 +81,36 @@ import { provideCedTranslations } from '../i18n/i18n';
       }
     `,
   ],
+  // One root inside the shadow tree carries the language, because the host element and its
+  // attributes belong to the embedding page.
   template: `<ced-font-registrar />
-    <app-live-region />
-    <div class="field-summary"><app-validation-summary /></div>
-    <section class="field-editor" [attr.aria-label]="'fieldElement.label' | translate">
-      @if (field(); as field) {
-        <!-- The host says why the field is read only, as it does for CED. -->
-        <app-field-card [field]="field" [standalone]="true" />
-      } @else {
-        <button type="button" [disabled]="readOnly" (click)="choosingType.set(true)">
-          {{ 'fieldElement.chooseType' | translate }}
-        </button>
-        @if (choosingType() && !readOnly) {
-          <dialog
-            #typeDialog
-            [attr.aria-label]="'fieldElement.chooseType' | translate"
-            (cancel)="choosingType.set(false)"
-          >
-            <app-field-type-picker
-              [standalone]="true"
-              (fieldSelected)="newArtifact($event)"
-              (dismissed)="choosingType.set(false)"
-            />
-          </dialog>
+    <div [attr.lang]="language">
+      <app-live-region />
+      <div class="field-summary"><app-validation-summary /></div>
+      <section class="field-editor" [attr.aria-label]="'fieldElement.label' | translate">
+        @if (field(); as field) {
+          <!-- The host says why the field is read only, as it does for CED. -->
+          <app-field-card [field]="field" [standalone]="true" />
+        } @else {
+          <button type="button" [disabled]="readOnly" (click)="choosingType.set(true)">
+            {{ 'fieldElement.chooseType' | translate }}
+          </button>
+          @if (choosingType() && !readOnly) {
+            <dialog
+              #typeDialog
+              [attr.aria-label]="'fieldElement.chooseType' | translate"
+              (cancel)="choosingType.set(false)"
+            >
+              <app-field-type-picker
+                [standalone]="true"
+                (fieldSelected)="newArtifact($event)"
+                (dismissed)="choosingType.set(false)"
+              />
+            </dialog>
+          }
         }
-      }
-    </section>`,
+      </section>
+    </div>`,
 })
 export class CedarEmbeddableFieldDesignerElementComponent {
   readonly service = inject(TemplateService);
