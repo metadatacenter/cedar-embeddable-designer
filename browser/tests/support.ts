@@ -48,7 +48,15 @@ export async function focusedControl(page: Page): Promise<string> {
     return holder.__focusMark;
   });
   if (mark === null) return '(page)';
-  const snapshot = await page.locator(`[data-test-focused="${mark}"]`).ariaSnapshot();
+  // The focused control can leave the page before it is read: a menu item that opens a dialog is
+  // removed on the next render. A snapshot would wait for it for ever, so a short one stands in, and
+  // a control that went reads `(gone)` for a poll to ask about again.
+  let snapshot: string;
+  try {
+    snapshot = await page.locator(`[data-test-focused="${mark}"]`).ariaSnapshot({ timeout: 1000 });
+  } catch {
+    return '(gone)';
+  }
   await page.evaluate(() =>
     (window as unknown as { __focusMarked?: Element }).__focusMarked?.removeAttribute('data-test-focused'),
   );
