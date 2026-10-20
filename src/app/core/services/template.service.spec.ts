@@ -186,7 +186,7 @@ describe('TemplateService', () => {
     expect(service.updateFieldSettings(field.id, { deploymentName: 'name' })).not.toBeNull();
   });
 
-  it('inserts a mixed reusable batch in order, retaining definitions and resolving placement names', () => {
+  it('inserts a mixed reusable batch in order, forking drafts and resolving placement names', () => {
     const field = fieldToJson(service.fields()[0]) as CedJsonObject;
     const element = templateToJson(buildContainer(newContainer('element', 'Section'))) as CedJsonObject;
     const root = service.session.document();
@@ -199,16 +199,20 @@ describe('TemplateService', () => {
       1,
     );
     const inserted = service.session.document().children.slice(1, 3);
+    // Both sources are drafts, so each arrives as a copy with an identifier of its own that names
+    // the version it came from.
     expect(inserted[0]).toMatchObject({
       kind: 'field',
-      definition: { name: 'Title', atId: field['@id'] },
+      definition: { name: 'Title', artifact: { derivedFrom: field['@id'], version: '0.0.1' } },
       placement: { displayLabel: 'Title' },
     });
+    expect(inserted[0].definition).not.toMatchObject({ atId: field['@id'] });
     expect(inserted[1]).toMatchObject({
       kind: 'element',
-      definition: { identifier: element['@id'], name: 'Section' },
+      definition: { name: 'Section', metadata: { artifact: { derivedFrom: element['@id'] } } },
       placement: { deploymentName: 'Section', displayLabel: 'Section' },
     });
+    expect(inserted[1].definition).not.toMatchObject({ identifier: element['@id'] });
     // The field's name is a sibling's key already: that key is reported at once, and the field waits
     // under a usable one until the author chooses.
     expect(service.validation.changes(inserted[0].id).deploymentName).toBe('Title');

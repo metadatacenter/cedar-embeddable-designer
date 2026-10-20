@@ -11,6 +11,8 @@ import { ArtifactMetadata } from '../../models/types';
 
 const TEMPLATE_IRI_PREFIX = 'https://repo.metadatacenter.org/templates/';
 
+const ELEMENT_IRI_PREFIX = 'https://repo.metadatacenter.org/template-elements/';
+
 const FIELD_IRI_PREFIX = 'https://repo.metadatacenter.org/template-fields/';
 
 const PROPERTY_IRI_PREFIX = 'https://schema.metadatacenter.org/properties/';
@@ -83,4 +85,9 @@ export function newFieldIdentity(): { atId: string; propertyIri: string } {
 /** A template identifier for a template that does not have one yet. */
 export function newTemplateIdentifier(): string {
   return `${TEMPLATE_IRI_PREFIX}${crypto.randomUUID()}`;
+}
+
+/** An element identifier for an element that becomes an artifact of its own, such as a copy. */
+export function newElementIdentifier(): string {
+  return `${ELEMENT_IRI_PREFIX}${crypto.randomUUID()}`;
 }

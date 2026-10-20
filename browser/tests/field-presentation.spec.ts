@@ -37,8 +37,8 @@ for (const width of [1440, 768, 375]) {
     const tab = card.getByRole('tab', { name: 'Presentation', exact: true });
     await tab.focus();
     await page.keyboard.press('End');
-    await expect(card.getByRole('tab', { name: 'Metadata', exact: true })).toBeFocused();
-    await expect(card.getByRole('tabpanel', { name: 'Metadata', exact: true })).toBeVisible();
+    await expect(card.getByRole('tab', { name: 'Version', exact: true })).toBeFocused();
+    await expect(card.getByRole('tabpanel', { name: 'Version', exact: true })).toBeVisible();
     const measurements = await card.evaluate((el) => {
       const rect = el.getBoundingClientRect();
       const arrow = el.querySelector('.settings-toggle')!.getBoundingClientRect();

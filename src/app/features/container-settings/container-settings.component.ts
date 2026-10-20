@@ -10,7 +10,7 @@ import { SETTINGS_TABS, settingsTabKey } from '../../shared/settings-tabs';
 import { ContainerDraft } from '../../core/model/container-draft';
 import { containerArtifactMetadata } from '../../core/model/cedar-template';
 import { TemplateService } from '../../core/services/template.service';
-import { publicationStatusLabel } from '../../shared/publication-status';
+import { VersionPanelComponent } from '../version-panel/version-panel.component';
 import { TypesPickerComponent } from '../types-picker/types-picker.component';
 
 @Component({
@@ -23,6 +23,7 @@ import { TypesPickerComponent } from '../types-picker/types-picker.component';
     FormsModule,
     TypesPickerComponent,
     TranslatePipe,
+    VersionPanelComponent,
   ],
   templateUrl: './container-settings.component.html',
   styleUrls: [
@@ -42,7 +43,6 @@ export class ContainerSettingsComponent {
   readonly service = inject(TemplateService);
   readonly tabKey = settingsTabKey;
   readonly artifact = computed(() => containerArtifactMetadata(this.container()));
-  readonly status = computed(() => publicationStatusLabel(this.artifact().publicationStatus));
   constructor() {
     effect(() => {
       const issue = this.service.validationTarget();
@@ -58,7 +58,7 @@ export class ContainerSettingsComponent {
   readonly metadataTab = computed<string>(() =>
     this.container().kind === 'template' ? SETTINGS_TABS.templateMetadata : SETTINGS_TABS.elementMetadata,
   );
-  readonly tabs = computed(() => ['Display', 'Annotations', this.metadataTab()]);
+  readonly tabs = computed(() => ['Display', 'Annotations', this.metadataTab(), SETTINGS_TABS.version]);
   tabId(tab: string): string {
     return 'container-settings-' + this.container().id + '-' + tab.replaceAll(' ', '-');
   }

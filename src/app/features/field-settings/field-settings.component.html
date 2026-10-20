@@ -480,14 +480,6 @@
     <dl class="identity">
       <dt>{{ 'fieldSettings.metadata.fieldIri' | translate }}</dt>
       <dd>{{ field.atId || ('settings.notYetAssigned' | translate) }}</dd>
-      @if (artifact.version) {
-        <dt>{{ 'settings.version' | translate }}</dt>
-        <dd>{{ artifact.version }}</dd>
-      }
-      @if (publicationStatusLabel(artifact.publicationStatus); as status) {
-        <dt>{{ 'common.publicationStatus' | translate }}</dt>
-        <dd>{{ status | translate }}</dd>
-      }
       <dt>{{ 'settings.modelVersion' | translate }}</dt>
       <dd>{{ artifact.schemaVersion || ('common.notSpecified' | translate) }}</dd>
       <dt>{{ 'settings.created' | translate }}</dt>
@@ -517,6 +509,15 @@
         />
       </dd>
     </dl>
+  </section>
+  <section
+    class="settings"
+    role="tabpanel"
+    [hidden]="selectedTab !== 'Version'"
+    [id]="'field-panel-' + field.id + '-Version'"
+    [attr.aria-labelledby]="'field-tab-' + field.id + '-Version'"
+  >
+    <app-version-panel [nodeId]="field.id" [active]="expanded && selectedTab === 'Version'" />
   </section>
 </div>
 <div class="settings-toggle-row">

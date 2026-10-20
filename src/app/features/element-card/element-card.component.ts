@@ -7,7 +7,7 @@ import { LanguageSelectorComponent } from '../language-selector/language-selecto
 import { AnnotationsEditorComponent } from '../annotations-editor/annotations-editor.component';
 import { TypesPickerComponent } from '../types-picker/types-picker.component';
 import { PropertyPickerComponent } from '../property-picker/property-picker.component';
-import { publicationStatusLabel } from '../../shared/publication-status';
+import { VersionPanelComponent } from '../version-panel/version-panel.component';
 import { Component, input, inject, signal, effect, computed, ChangeDetectorRef, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -30,6 +30,7 @@ import { TemplateService } from '../../core/services/template.service';
     PropertyPickerComponent,
     TypesPickerComponent,
     TranslatePipe,
+    VersionPanelComponent,
   ],
   templateUrl: './element-card.component.html',
   styleUrls: ['../field-settings/field-settings.component.scss', './element-card.component.scss'],
@@ -71,6 +72,7 @@ export class ElementCardComponent {
     SETTINGS_TABS.display,
     SETTINGS_TABS.annotations,
     SETTINGS_TABS.elementMetadata,
+    SETTINGS_TABS.version,
   ];
   readonly artifact = computed(() => containerArtifactMetadata(this.node().definition));
   /** Whether the element's own definition is locked: it is published, or inside a published element. */
@@ -78,7 +80,6 @@ export class ElementCardComponent {
   /** Whether its placement in the parent is locked: it is inside a published element. */
   readonly placementLocked = computed(() => this.service.placementLocked(this.node().id));
   readonly shownDescription = computed(() => elementDisplayDescription(this.node()));
-  readonly publicationStatus = computed(() => publicationStatusLabel(this.artifact().publicationStatus));
   tabId(tab: string): string {
     return 'element-settings-' + this.node().id + '-' + tab.replaceAll(' ', '-');
   }

@@ -14,6 +14,7 @@ export const SETTINGS_TABS = {
   fieldMetadata: 'Field metadata',
   elementMetadata: 'Element metadata',
   templateMetadata: 'Template Metadata',
+  version: 'Version',
 } as const;
 
 const TAB_KEYS: Readonly<Record<string, string>> = {
@@ -25,6 +26,7 @@ const TAB_KEYS: Readonly<Record<string, string>> = {
   [SETTINGS_TABS.fieldMetadata]: 'tabs.fieldMetadata',
   [SETTINGS_TABS.elementMetadata]: 'tabs.elementMetadata',
   [SETTINGS_TABS.templateMetadata]: 'tabs.templateMetadata',
+  [SETTINGS_TABS.version]: 'tabs.version',
 };
 
 /** The translation key of a tab's label. */

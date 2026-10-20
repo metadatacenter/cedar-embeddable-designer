@@ -204,8 +204,15 @@ test('element metadata shows provenance without changing the artifact and hides 
   await expect(panel).toContainText('https://example.org/elements/previous');
   expect(await currentTemplate(page)).toEqual(before);
   element['bibo:status'] = 'bibo:published';
-  const published = await load();
-  await expect(published.locator('dd').filter({ hasText: /^Published$/ })).toBeVisible();
+  await load();
+  // The publication status is on the Version tab, beside the version.
+  const card = designer.locator('app-element-card').first();
+  await card.getByRole('tab', { name: 'Version', exact: true }).click();
+  const version = card.getByRole('tabpanel', { name: 'Version', exact: true });
+  await expect(version.locator('dd').filter({ hasText: /^Published$/ })).toBeVisible();
+  await expect(card.getByRole('tabpanel', { name: 'Metadata', exact: true, includeHidden: true })).not.toContainText(
+    'Published',
+  );
   for (const key of ['pav:version', 'bibo:status', 'pav:derivedFrom', 'pav:previousVersion']) delete element[key];
   const empty = await load();
   await expect(
