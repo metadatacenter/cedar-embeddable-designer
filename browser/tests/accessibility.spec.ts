@@ -16,10 +16,17 @@ import {
  *
  * A rule engine decides names, roles, ARIA validity, the contrast it can compute and target
  * sizes. It cannot decide focus order, where focus returns or what a screen reader announces,
- * so those need assertions of their own. The tags are Workspace's gate with WCAG 2.1 level A
- * added, since AA conformance includes it.
+ * so those need assertions of their own. The tags are WCAG 2.0, 2.1 and 2.2 at levels A and AA,
+ * as in Workspace's, the term picker's and CEE's gates.
  */
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
+
+/**
+ * WCAG 2.1's Label in Name, criterion 2.5.3: a control's accessible name contains the text it shows,
+ * so that speech input reaches it by its visible label. axe-core's rule for it is experimental, and
+ * a tag selection leaves experimental rules out, so it runs by name.
+ */
+const LABEL_IN_NAME = 'label-content-name-mismatch';
 
 /**
  * Check the whole page once its animations finish, so contrast is read at full opacity.
@@ -39,7 +46,9 @@ async function expectAccessible(page: Page, state: string): Promise<void> {
         .map((animation) => animation.finished.catch(() => undefined)),
     );
   });
-  const { violations, incomplete } = await new AxeBuilder({ page }).withTags(WCAG).analyze();
+  const { violations: tagged, incomplete } = await new AxeBuilder({ page }).withTags(WCAG).analyze();
+  const { violations: named } = await new AxeBuilder({ page }).withRules([LABEL_IN_NAME]).analyze();
+  const violations = [...tagged, ...named];
   // A label on an element whose role takes none is one axe cannot always decide, and a screen
   // reader ignores it either way, so the undecided case fails too.
   const ignoredLabels = incomplete.filter((result) => result.id === 'aria-prohibited-attr');
