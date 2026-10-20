@@ -123,8 +123,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The sidebar's library toggles report whether they are expanded, and their arrow is
   no longer read as part of their names.
 - The child picker's type icons are read as Field or Element, and a selected result's
-  check is read as Selected. Preferences groups its field selection radios under their
-  heading and reports which preset button is pressed. Define Presets heads each row
+  check is read as Selected. Preferences groups its field selection radios, and each
+  set of its checkboxes, under the heading that names them, and reports which preset
+  button is pressed. Define Presets heads each row
   with its setting and names each table by its group. The Add field palette's library
   menu reports whether it is open, and its arrow is no longer read.
 - A field that declares a language marks its text default, its choice options and its

@@ -81,6 +81,29 @@ test('Preferences groups the selection style and says which preset is on', async
     await expect(preset(name)).toHaveAttribute('aria-pressed', 'false');
 });
 
+test('Preferences groups each set of boxes under the heading that names it', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await designer.getByRole('button', { name: 'User Menu' }).click();
+  await designer.getByRole('button', { name: 'Preferences', exact: true }).click();
+  const dialog = designer.getByRole('dialog', { name: 'Preferences' });
+
+  for (const name of ['Field configuration options', 'Feature visibility', 'Visible field types']) {
+    const group = dialog.getByRole('group', { name, exact: true });
+    await expect(group).toHaveCount(1);
+    expect(await group.getByRole('checkbox').count()).toBeGreaterThan(0);
+  }
+  // Every box sits in one of those groups.
+  const grouped = await Promise.all(
+    ['Field configuration options', 'Feature visibility', 'Visible field types'].map((name) =>
+      dialog.getByRole('group', { name, exact: true }).getByRole('checkbox').count(),
+    ),
+  );
+  expect(grouped.reduce((sum, count) => sum + count, 0)).toBe(await dialog.getByRole('checkbox').count());
+  await expect(dialog.getByRole('group', { name: 'Visible field types', exact: true })).toHaveAccessibleDescription(
+    'Control which field types appear in the "Add Field" section and dropdown menus',
+  );
+});
+
 test('Define Presets heads each row with its setting and names each table by its group', async ({ page }) => {
   const designer = await openDesigner(page);
   await designer.getByRole('button', { name: 'User Menu' }).click();

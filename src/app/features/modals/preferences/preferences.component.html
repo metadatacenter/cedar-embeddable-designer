@@ -46,8 +46,15 @@
         </div>
         <!-- Field configuration options -->
         <div>
-          <h3 class="preferences-label preferences-spaced">{{ 'preferences.fieldOptions.heading' | translate }}</h3>
-          <div class="settings-dialog-group preferences-choice-list">
+          <h3 id="preferences-field-options-heading" class="preferences-label preferences-spaced">
+            {{ 'preferences.fieldOptions.heading' | translate }}
+          </h3>
+          <!-- Each set of boxes is a group named by its heading, as the radio group below is. -->
+          <div
+            class="settings-dialog-group preferences-choice-list"
+            role="group"
+            aria-labelledby="preferences-field-options-heading"
+          >
             <label class="preferences-option">
               <input
                 spellcheck="false"
@@ -91,8 +98,14 @@
         </div>
         <!-- Feature visibility -->
         <div>
-          <h3 class="preferences-label preferences-spaced">{{ 'preferences.features.heading' | translate }}</h3>
-          <div class="settings-dialog-group preferences-choice-list">
+          <h3 id="preferences-features-heading" class="preferences-label preferences-spaced">
+            {{ 'preferences.features.heading' | translate }}
+          </h3>
+          <div
+            class="settings-dialog-group preferences-choice-list"
+            role="group"
+            aria-labelledby="preferences-features-heading"
+          >
             <label class="preferences-option">
               <input
                 spellcheck="false"
@@ -158,7 +171,9 @@
         <!-- Visible field types -->
         <div>
           <div class="preferences-section-header">
-            <h3 class="preferences-label">{{ 'preferences.fieldTypes.heading' | translate }}</h3>
+            <h3 id="preferences-field-types-heading" class="preferences-label">
+              {{ 'preferences.fieldTypes.heading' | translate }}
+            </h3>
             <div class="preferences-actions">
               <button
                 (click)="service.toggleAllFieldTypes(true)"
@@ -176,10 +191,15 @@
             </div>
           </div>
           <div class="settings-dialog-group">
-            <p class="preferences-help preferences-spaced">
+            <p id="preferences-field-types-help" class="preferences-help preferences-spaced">
               {{ 'preferences.fieldTypes.help' | translate }}
             </p>
-            <div class="preferences-field-grid max-h-60 custom-scrollbar">
+            <div
+              class="preferences-field-grid max-h-60 custom-scrollbar"
+              role="group"
+              aria-labelledby="preferences-field-types-heading"
+              aria-describedby="preferences-field-types-help"
+            >
               @for (item of fieldTypesList; track item.key) {
                 <label class="preferences-field-option">
                   <input
