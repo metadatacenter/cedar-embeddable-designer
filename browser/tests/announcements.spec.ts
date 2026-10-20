@@ -6,8 +6,8 @@ import { DESIGNER, applyPreset, clickCentred, openDesigner, openSettings } from 
  *
  * The region is in the page from the first render, which is what makes a screen reader
  * announce its changes: one that arrives with its text already in it is often missed. Each
- * test performs an event and reads the region. Errors are not here; they keep their alerts
- * beside the control they concern.
+ * test performs an event and reads the region. Errors are not here. They keep their alerts
+ * beside the control they concern, and error-announcements.spec.ts covers them.
  */
 
 const region = (scope: Locator) => scope.locator('app-live-region').getByRole('status');
@@ -106,6 +106,12 @@ test('Clear default and apply says the default went, and what the constraints no
 
 test('a chosen default term is named', async ({ page }) => {
   const field = await controlledTermsField(page);
+  // A verified term brings no warning, which the validation summary would announce after the name.
+  await page.route('**/fake-terminology/bioportal/validate-term', (route) =>
+    route.fulfill({
+      json: { iri: route.request().postDataJSON().iri, status: 'passed', code: 'controlledTermVerified', message: '' },
+    }),
+  );
   await pickConstraint(page, field);
   await openSettings(field);
   await clickCentred(field.getByRole('button', { name: 'Edit default term' }));

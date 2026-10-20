@@ -64,7 +64,7 @@
             "
           />
           @if (service.nameError(container().id, container().name, container().kind); as error) {
-            <p class="ced-field-error" [id]="'name-error-' + container().id">{{ error }}</p>
+            <p class="ced-field-error" [id]="'name-error-' + container().id" role="alert">{{ error }}</p>
           }
         </div>
 
@@ -160,7 +160,7 @@
           "
         ></textarea>
         @if (service.settingError(container().id, 'description'); as error) {
-          <p class="ced-field-error" [id]="'description-error-' + container().id">{{ error }}</p>
+          <p class="ced-field-error" [id]="'description-error-' + container().id" role="alert">{{ error }}</p>
         }
       </div>
     </div>

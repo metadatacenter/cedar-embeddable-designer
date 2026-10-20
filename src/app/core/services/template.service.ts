@@ -306,10 +306,25 @@ export class TemplateService {
    */
   readonly announcement = signal('');
   private pendingAnnouncement: ReturnType<typeof setTimeout> | undefined;
+  private pendingMessage: string | null = null;
   announce(text: string): void {
+    this.pendingMessage = text;
+    this.show(text);
+  }
+  /**
+   * Say `text` after a message `announce` has not shown yet, rather than in its place. A second
+   * call replaces the first one's text and keeps the message.
+   */
+  announceAfter(text: string): void {
+    this.show(this.pendingMessage === null ? text : `${this.pendingMessage} ${text}`);
+  }
+  private show(text: string): void {
     clearTimeout(this.pendingAnnouncement);
     this.announcement.set('');
-    this.pendingAnnouncement = setTimeout(() => this.announcement.set(text), 100);
+    this.pendingAnnouncement = setTimeout(() => {
+      this.pendingMessage = null;
+      this.announcement.set(text);
+    }, 100);
   }
 
   /**

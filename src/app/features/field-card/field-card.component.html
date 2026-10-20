@@ -95,7 +95,7 @@
       <app-field-summary [field]="field" />
     }
     @if (service.nameError(field.id, field.name, 'field'); as error) {
-      <p class="ced-field-error" [id]="'name-error-' + field.id">{{ error }}</p>
+      <p class="ced-field-error" [id]="'name-error-' + field.id" role="alert">{{ error }}</p>
     }
 
     <app-field-settings
