@@ -130,6 +130,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A field that declares a language marks its text default, its choice options and its
   rich text with it, so a screen reader reads them in that language. A number default,
   and the names and descriptions the author writes, keep the designer's language.
+- On a 320px host the annotations table no longer makes the whole canvas scroll sideways.
+  Its Actions column is named for a screen reader without visually hidden text, which had
+  reached past the table's own scroller.
 
 ## [0.1.0-dev.20260916.2593d382] - 2026-09-16 (Nexus)
 

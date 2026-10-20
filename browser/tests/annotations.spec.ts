@@ -200,3 +200,22 @@ test('existing multiline annotation literals survive opening and saving', async 
   await expect(value).toHaveText('First line\nSecond line');
   expect(child(await currentTemplate(page), 'Title')._annotations).toEqual(field._annotations);
 });
+
+/**
+ * The Actions column is named for a screen reader without visually hidden text in its header. That
+ * text was positioned against a box outside the table's scroller, so on a 320px host it reached past
+ * the table and the whole canvas scrolled sideways by 7px.
+ */
+test('names the Actions column and leaves the canvas still sideways on a 320px host', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  const designer = await openDesigner(page);
+  const card = designer.locator('app-field-card').first();
+  await openSettings(card, 'Annotations');
+  const editor = card.locator('app-annotations-editor');
+  await expect(editor.getByRole('columnheader', { name: 'Actions', exact: true })).toBeVisible();
+  // The table scrolls inside its own region, and nothing around it does.
+  const region = editor.getByRole('region', { name: 'Annotations', exact: true });
+  expect(await region.evaluate((node) => node.scrollWidth > node.clientWidth)).toBe(true);
+  for (const scroller of [designer.locator('.designer-scroll'), page.locator('html')])
+    expect(await scroller.evaluate((node) => node.scrollWidth - node.clientWidth)).toBe(0);
+});

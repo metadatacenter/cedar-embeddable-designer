@@ -111,10 +111,6 @@ p[role='alert'] {
   --cedar-icon-color: var(--cedar-control-error, var(--cedar-status-error-text));
   color: var(--cedar-control-error, var(--cedar-status-error-text));
 }
-.sr-only {
-  @include patterns.visually-hidden;
-}
-
 .remove {
   @include patterns.icon-button;
   border: 0;
