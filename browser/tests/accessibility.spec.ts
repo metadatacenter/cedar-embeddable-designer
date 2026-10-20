@@ -22,15 +22,6 @@ import {
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
 /**
- * The template description box is 23px tall, a pixel under WCAG 2.2's 24px target minimum.
- * Growing it changes the header's layout, which waits on a design decision. Until then it is
- * the one exception, and any other control that fails the rule fails the test.
- */
-function pending(rule: string, html: string): boolean {
-  return rule === 'target-size' && html.includes('template-input--description');
-}
-
-/**
  * Check the whole page once its animations finish, so contrast is read at full opacity.
  *
  * A click renders on the next coalesced pass, so the fade it starts does not exist until two
@@ -50,9 +41,7 @@ async function expectAccessible(page: Page, state: string): Promise<void> {
   });
   const { violations } = await new AxeBuilder({ page }).withTags(WCAG).analyze();
   const failures = violations.flatMap((violation) =>
-    violation.nodes
-      .filter((node) => !pending(violation.id, node.html))
-      .map((node) => `${violation.id}: ${JSON.stringify(node.target)}`),
+    violation.nodes.map((node) => `${violation.id}: ${JSON.stringify(node.target)}`),
   );
   expect(failures, state).toEqual([]);
 }

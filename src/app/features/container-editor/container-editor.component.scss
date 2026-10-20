@@ -277,6 +277,9 @@ textarea.template-input {
 }
 .template-input--description {
   color: var(--cedar-text-muted);
+  // One line and its underline come to 23px. The label sits directly above, so the box needs the
+  // full minimum target rather than the spacing that excuses the name and version beside it.
+  min-height: spacing.$target-size-minimum;
 }
 .inline-picker {
   margin-block: var(--cedar-space-3);
