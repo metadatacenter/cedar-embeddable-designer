@@ -37,6 +37,7 @@
                 (click)="service.applyPreset(preset)"
                 class="preferences-preset"
                 [class.active]="service.getActivePreset() === preset"
+                [attr.aria-pressed]="service.getActivePreset() === preset"
               >
                 {{ 'preferences.presets.' + preset | translate }}
               </button>
@@ -109,10 +110,20 @@
         </div>
         <!-- Field selection style -->
         <div>
-          <h3 class="preferences-label preferences-spaced">{{ 'preferences.selection.heading' | translate }}</h3>
+          <h3 id="preferences-selection-heading" class="preferences-label preferences-spaced">
+            {{ 'preferences.selection.heading' | translate }}
+          </h3>
           <div class="settings-dialog-group">
-            <p class="preferences-help preferences-spaced">{{ 'preferences.selection.help' | translate }}</p>
-            <div class="preferences-selection-list">
+            <p id="preferences-selection-help" class="preferences-help preferences-spaced">
+              {{ 'preferences.selection.help' | translate }}
+            </p>
+            <!-- A role rather than a fieldset, so the heading above stays where it is drawn. -->
+            <div
+              class="preferences-selection-list"
+              role="radiogroup"
+              aria-labelledby="preferences-selection-heading"
+              aria-describedby="preferences-selection-help"
+            >
               <label class="preferences-option preferences-choice">
                 <input
                   spellcheck="false"

@@ -122,6 +122,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   previous one's, else the control that adds a type. Focus used to fall to the page.
   The sidebar's library toggles report whether they are expanded, and their arrow is
   no longer read as part of their names.
+- The child picker's type icons are read as Field or Element, and a selected result's
+  check is read as Selected. Preferences groups its field selection radios under their
+  heading and reports which preset button is pressed. Define Presets heads each row
+  with its setting and names each table by its group. The Add field palette's library
+  menu reports whether it is open, and its arrow is no longer read.
 
 ## [0.1.0-dev.20260916.2593d382] - 2026-09-16 (Nexus)
 

@@ -148,6 +148,11 @@
     },
     "removeRow": "{{name}} eltávolítása",
     "selectRow": "{{name}} kiválasztása",
+    "selected": "Kiválasztva",
+    "types": {
+      "field": "Mező",
+      "element": "Elem"
+    },
     "unavailable": "Ebben a befogadó alkalmazásban a tárban való keresés nem érhető el.",
     "searchPlaceholder": "Keresés név szerint",
     "search": "Keresés",

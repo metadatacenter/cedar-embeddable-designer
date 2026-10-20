@@ -148,6 +148,11 @@
     },
     "removeRow": "Remove {{name}}",
     "selectRow": "Select {{name}}",
+    "selected": "Selected",
+    "types": {
+      "field": "Field",
+      "element": "Element"
+    },
     "unavailable": "Repository search is unavailable in this host.",
     "searchPlaceholder": "Search by name",
     "search": "Search",

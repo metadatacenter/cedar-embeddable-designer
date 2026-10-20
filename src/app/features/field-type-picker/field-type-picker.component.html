@@ -6,9 +6,13 @@
       <!-- Library Dropdown with Autocomplete -->
       @if (!standalone() && service.libraries().length > 0) {
         <div class="library-dropdown-container">
-          <button (click)="showDropdown.set(!showDropdown())" class="btn-library-dropdown">
+          <button
+            (click)="showDropdown.set(!showDropdown())"
+            class="btn-library-dropdown"
+            [attr.aria-expanded]="showDropdown()"
+          >
             <span class="dropdown-text">{{ selectedLibraryName ?? ('fieldTypePicker.standard' | translate) }}</span>
-            <span class="dropdown-arrow">▼</span>
+            <span class="dropdown-arrow" aria-hidden="true">▼</span>
           </button>
           <!-- Dropdown Options Panel -->
           @if (showDropdown()) {
