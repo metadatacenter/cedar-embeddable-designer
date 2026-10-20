@@ -1,4 +1,5 @@
 <div class="app-shell">
+  <app-live-region />
   @if (service.loadError()) {
     <p class="ced-field-error" role="alert">{{ service.loadError() }}</p>
   }
@@ -54,9 +55,16 @@
 
       <div class="app-header__actions">
         <!-- User Menu -->
-        <div class="relative user-menu-container">
+        <div
+          class="relative user-menu-container"
+          (keydown)="onUserMenuKeydown($event)"
+          (focusout)="onUserMenuFocusout($event)"
+        >
           <button
+            #userMenuTrigger
+            type="button"
             (click)="service.showUserMenu.set(!service.showUserMenu())"
+            [attr.aria-expanded]="service.showUserMenu()"
             class="user-menu-trigger"
             [title]="'app.userMenu.title' | translate"
           >
@@ -189,8 +197,8 @@
   </div>
 
   <!-- Modals -->
-  <app-preferences-modal></app-preferences-modal>
-  <app-preset-definitions-modal></app-preset-definitions-modal>
+  <app-preferences-modal (closed)="focusUserMenu()"></app-preferences-modal>
+  <app-preset-definitions-modal (closed)="focusUserMenu()"></app-preset-definitions-modal>
 </div>
 
 @if (service.childPicker(); as target) {

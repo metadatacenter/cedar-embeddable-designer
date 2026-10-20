@@ -179,7 +179,15 @@
     "description": "Description",
     "descriptionPlaceholder": "Add description...",
     "expandChildren": "Expand children",
-    "collapseChildren": "Collapse children"
+    "collapseChildren": "Collapse children",
+    "collapseUnnamed": {
+      "template": "Collapse template",
+      "element": "Collapse element"
+    },
+    "expandUnnamed": {
+      "template": "Expand template",
+      "element": "Expand element"
+    }
   },
   "containerSettings": {
     "template": {
@@ -348,7 +356,8 @@
       "markup": "Content",
       "url": "Image URL",
       "videoId": "YouTube video ID"
-    }
+    },
+    "deleteOptionNumbered": "Delete option {{number}}"
   },
   "fieldElement": {
     "label": "Field designer",
@@ -631,7 +640,8 @@
   },
   "presetDefinitions": {
     "intro": "Customize what each preset configuration includes. These settings will be applied when users select a preset in their preferences.",
-    "fieldTypes": "Available field types"
+    "fieldTypes": "Available field types",
+    "cell": "{{setting}} in the {{preset}} preset"
   },
   "settings": {
     "fieldName": "Field name",
@@ -712,5 +722,30 @@
       "element": "Unnamed element",
       "template": "Unnamed template"
     }
+  },
+  "announce": {
+    "constraints": {
+      "count": {
+        "one": "{{field}} now has {{count}} constraint.",
+        "other": "{{field}} now has {{count}} constraints."
+      },
+      "none": "{{field}} no longer has constraints.",
+      "defaultCleared": "Default cleared. {{constraints}}"
+    },
+    "defaultTerm": "Default set to {{term}}.",
+    "hostFindings": {
+      "one": "The host reported {{issues}}.",
+      "both": "The host reported {{errors}} and {{warnings}}.",
+      "errors": {
+        "one": "{{count}} error",
+        "other": "{{count}} errors"
+      },
+      "warnings": {
+        "one": "{{count}} warning",
+        "other": "{{count}} warnings"
+      },
+      "cleared": "The host's reported issues are cleared."
+    },
+    "moved": "{{name}} moved to position {{position}} of {{count}}."
   }
 }

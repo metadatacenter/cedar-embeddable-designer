@@ -57,6 +57,7 @@
           <p role="status" class="default-help">{{ 'defaultValue.pickerUnavailable' | translate }}</p>
         } @else if (field().controlledTermConstraints?.constraints?.length) {
           <button
+            #editTermButton
             type="button"
             class="ced-text-action"
             [attr.aria-label]="'defaultValue.editTerm' | translate"
@@ -68,16 +69,19 @@
           @if (pickerOpen()) {
             <div class="default-dialog-overlay">
               <section
+                #termDialog
                 role="dialog"
                 aria-modal="true"
+                tabindex="-1"
                 [attr.aria-label]="'defaultValue.chooseTerm' | translate"
+                (keydown)="onDialogKeydown($event)"
                 class="default-dialog"
               >
                 <app-dialog-header
                   [heading]="'defaultValue.label' | translate"
                   [context]="displayName(field())"
                   closeLabel="defaultValue.cancelSelection"
-                  (closed)="cancelPicker()"
+                  (closed)="dismissPicker()"
                 />
                 @if (checking()) {
                   <p role="status">{{ 'defaultValue.checkingTerm' | translate }}</p>
@@ -91,7 +95,7 @@
                   [selectionMode]="'term'"
                   [sources]="pickerSources()"
                   (selected)="selectTerm($event)"
-                  (cancelled)="cancelPicker()"
+                  (cancelled)="dismissPicker()"
                 ></cedar-embeddable-term-picker>
               </section>
             </div>

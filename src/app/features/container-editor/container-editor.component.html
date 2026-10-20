@@ -101,11 +101,7 @@
                 </p>
                 <form method="dialog">
                   <button autofocus>{{ 'common.cancel' | translate }}</button>
-                  <button
-                    type="button"
-                    class="primary"
-                    (click)="deleteDialog.close(); service.deleteChild(container().id)"
-                  >
+                  <button type="button" class="primary" (click)="deleteDialog.close(); deleteElement()">
                     {{ 'common.delete' | translate }}
                   </button>
                 </form>
@@ -116,7 +112,7 @@
                 [disabled]="placementLocked()"
                 [attr.aria-label]="'containerEditor.deleteNamed' | translate: { name: container().name }"
                 [title]="'containerEditor.delete' | translate"
-                (click)="container().children.length ? deleteDialog.showModal() : service.deleteChild(container().id)"
+                (click)="container().children.length ? deleteDialog.showModal() : deleteElement()"
               >
                 <app-icon key="trash" />
               </button>
@@ -171,9 +167,7 @@
         class="element-toggle"
         [attr.aria-expanded]="!collapsed()"
         [title]="(collapsed() ? 'containerEditor.expandChildren' : 'containerEditor.collapseChildren') | translate"
-        [attr.aria-label]="
-          (collapsed() ? 'common.expandNamed' : 'common.collapseNamed') | translate: { name: container().name }
-        "
+        [attr.aria-label]="toggleLabel().key | translate: toggleLabel().params"
         [attr.aria-controls]="'element-content-' + container().id"
         (click)="$event.stopPropagation(); service.toggleElement(container().id)"
       >
@@ -254,7 +248,7 @@
 
   <!-- Bottom insertion zone (modal style) -->
   @if ((service.preferences().fieldSelectionStyle === 'modal' || !container().children.length) && !definitionLocked()) {
-    <div class="add-field-section">
+    <div class="add-field-section" #bottomZone>
       <div class="bottom-insert-zone" [class.empty-container]="!container().children.length">
         <app-insertion-actions [targetId]="container().id" [position]="container().children.length" />
       </div>

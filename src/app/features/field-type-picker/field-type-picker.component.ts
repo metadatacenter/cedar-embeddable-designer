@@ -19,6 +19,7 @@ import { TemplateService } from '../../core/services/template.service';
 import { CustomField } from '../../core/models/types';
 import { CedFieldType } from '../../ced-public-api';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { deepestActiveElement } from '../../shared/focus-trap';
 
 @Component({
   selector: 'app-field-type-picker',
@@ -31,6 +32,8 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 export class FieldTypePickerComponent {
   readonly service = inject(TemplateService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  /** The control that opened the palette, which takes focus back when the author closes it. */
+  private readonly opener = deepestActiveElement();
 
   constructor() {
     afterNextRender(() => {
@@ -104,6 +107,27 @@ export class FieldTypePickerComponent {
   close() {
     this.service.showPicker.set(null);
     this.dismissed.emit();
+    if (this.opener instanceof HTMLElement && this.opener.isConnected) this.opener.focus();
+  }
+
+  /**
+   * Escape closes the library list if it is open, and otherwise the palette. Focus usually stays on
+   * the button that opened the palette, so the key is taken anywhere in this designer, not only
+   * inside the palette. In the field designer the palette sits in a native dialog, whose own Escape
+   * closes it and restores focus.
+   */
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Escape' || event.defaultPrevented || this.standalone()) return;
+    const root = this.host.nativeElement.getRootNode();
+    const designer = root instanceof ShadowRoot ? root.host : this.host.nativeElement;
+    if (!event.composedPath().includes(designer)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (this.showDropdown()) {
+      this.showDropdown.set(false);
+      this.searchText = '';
+    } else this.close();
   }
 
   @HostListener('document:mousedown', ['$event'])

@@ -25,6 +25,7 @@ import { PickedConstraint } from '../../core/model/term-picker';
 import { fieldDisplayName } from '../../core/model/field-display-name';
 import { TranslatePipe } from '@ngx-translate/core';
 import { CedLanguageService } from '../../i18n/ced-language.service';
+import { trapTab } from '../../shared/focus-trap';
 
 const FIELD_TAG = 'cedar-embeddable-field';
 
@@ -124,6 +125,12 @@ export class FieldDefaultValueComponent {
   });
   readonly editorReportsError = signal(false);
   private readonly mount = viewChild<ElementRef<HTMLDivElement>>('mount');
+  /**
+   * The term dialog and the button that opens it. The dialog takes focus when it opens, as the
+   * constraint dialog does, and focus goes back to the button when it closes.
+   */
+  private readonly termDialog = viewChild<ElementRef<HTMLElement>>('termDialog');
+  private readonly editTermButton = viewChild<ElementRef<HTMLElement>>('editTermButton');
   private pending: TerminologyEdit | null = null;
   private editor: FieldElement | null = null;
   private artifactKey: string | null = null;
@@ -138,6 +145,7 @@ export class FieldDefaultValueComponent {
 
   constructor() {
     const destroyRef = this.destroyRef;
+    effect(() => this.termDialog()?.nativeElement.focus());
     effect(() => {
       if (this.locked()) {
         this.pending?.cancel();
@@ -284,6 +292,24 @@ export class FieldDefaultValueComponent {
     this.setError(null);
   }
 
+  /** Closes the term dialog at the author's request: its close button, the picker's Cancel, or Escape. */
+  dismissPicker(): void {
+    this.cancelPicker();
+    this.editTermButton()?.nativeElement.focus();
+  }
+
+  /** Tab must not leave the dialog while it covers the card, and an Escape the picker has not used closes it. */
+  onDialogKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && !event.defaultPrevented) {
+      event.preventDefault();
+      event.stopPropagation();
+      this.dismissPicker();
+      return;
+    }
+    const dialog = this.termDialog()?.nativeElement;
+    if (dialog) trapTab(dialog, event);
+  }
+
   clear(): void {
     if (this.locked()) return;
     this.draft.set('');
@@ -309,6 +335,10 @@ export class FieldDefaultValueComponent {
     const outcome = await attempt.result;
     if (this.destroyRef.destroyed || this.pending !== attempt) return;
     this.pending = null;
-    if (outcome === 'applied') this.pickerOpen.set(false);
+    if (outcome === 'applied') {
+      this.pickerOpen.set(false);
+      this.editTermButton()?.nativeElement.focus();
+      this.service.announce(this.i18n.t('announce.defaultTerm', { term: picked.termLabel || picked.termIri }));
+    }
   }
 }

@@ -40,7 +40,7 @@ import { FieldLibraryService } from './field-library.service';
 import { deploymentKeys, keyedChild } from '../model/child-key-policy';
 import { CedLanguageService } from '../../i18n/ced-language.service';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
-import { LocalizedError, message } from '../../i18n/messages';
+import { countKey, LocalizedError, message } from '../../i18n/messages';
 import { Injectable, signal, computed, inject, effect, DestroyRef } from '@angular/core';
 import { Field, FieldDefaultValue, CustomField, ControlledTermSet, UserPreferences } from '../models/types';
 import { PreferencesService } from './preferences.service';
@@ -57,6 +57,10 @@ import {
 } from '../model/cedar-template';
 
 export { FIELD_TYPES } from '../models/types';
+
+/** A control that should take focus once it renders: a child's card, or a container's Add field. */
+export type FocusRequest =
+  { readonly kind: 'card'; readonly id: number } | { readonly kind: 'add-field'; readonly containerId: number };
 
 /** Every container and child whose name the author can see, throughout the document. */
 /**
@@ -268,9 +272,61 @@ export class TemplateService {
       )
     )
       throw new TypeError('Validation findings require a location, message and error/warning severity');
+    const previous = this.hostReport()?.findings ?? [];
     this.hostReport.set(
       findings.length ? { document: this.document(), findings: JsonSourcePolicy.clone(findings) } : null,
     );
+    // A host that reports the same set again, or keeps reporting none, says nothing new.
+    if (JSON.stringify(findings) === JSON.stringify(previous)) return;
+    if (findings.length) this.announce(this.hostFindingsMessage(findings));
+    else this.announce(this.i18n.t('announce.hostFindings.cleared'));
+  }
+  private hostFindingsMessage(findings: CedHostFinding[]): string {
+    const counted = (key: string, count: number) => ({ key: countKey(key, count), params: { count } });
+    const errors = findings.filter((finding) => finding.severity === 'error').length;
+    const warnings = findings.length - errors;
+    if (errors && warnings)
+      return this.i18n.t('announce.hostFindings.both', {
+        errors: counted('announce.hostFindings.errors', errors),
+        warnings: counted('announce.hostFindings.warnings', warnings),
+      });
+    return this.i18n.t('announce.hostFindings.one', {
+      issues: errors
+        ? counted('announce.hostFindings.errors', errors)
+        : counted('announce.hostFindings.warnings', warnings),
+    });
+  }
+
+  /**
+   * What the designer last said to assistive technology, which its one polite live region shows.
+   *
+   * The region is in the page from the first render, because a screen reader announces a change
+   * to a live region it already knows and often misses one that arrives with its text. The text
+   * is cleared first and set a moment later, so a message that repeats the last one is read again.
+   */
+  readonly announcement = signal('');
+  private pendingAnnouncement: ReturnType<typeof setTimeout> | undefined;
+  announce(text: string): void {
+    clearTimeout(this.pendingAnnouncement);
+    this.announcement.set('');
+    this.pendingAnnouncement = setTimeout(() => this.announcement.set(text), 100);
+  }
+
+  /**
+   * A control to focus once the view has rendered, after an action removed the one that had focus.
+   *
+   * The service holds the request and the component that renders the control performs it, as with
+   * `nameFocusRequest`, because only the component can find the control inside the shadow root.
+   */
+  readonly focusRequest = signal<FocusRequest | null>(null);
+
+  /** Where focus belongs once `id` is gone: its next sibling, else its previous one, else Add field. */
+  focusAfterRemoving(id: number): FocusRequest | null {
+    const parent = parentOf(this.session.document(), id);
+    if (!parent) return null;
+    const index = parent.children.findIndex((child) => child.id === id);
+    const sibling = parent.children[index + 1] ?? parent.children[index - 1];
+    return sibling ? { kind: 'card', id: sibling.id } : { kind: 'add-field', containerId: parent.id };
   }
   private readonly defaultSemantics = new DefaultSemanticChecks();
   validate() {
@@ -428,6 +484,7 @@ export class TemplateService {
     inject(DestroyRef).onDestroy(() => {
       this.validation.dispose();
       this.defaultSemantics.dispose();
+      clearTimeout(this.pendingAnnouncement);
     });
     effect(() => {
       if (this.validation.readOnly()) {
@@ -554,13 +611,15 @@ export class TemplateService {
     this.scrollRequest.set(newField.id);
   }
 
-  deleteField(id: number) {
-    if (!this.validation.canPlace(id)) return;
+  /** Removes the field and returns whether it did; a field inside a published element stays. */
+  deleteField(id: number): boolean {
+    if (!this.validation.canPlace(id)) return false;
     this.fieldsFor(id).update((prev) => prev.filter((f) => f.id !== id));
     this.pruneCollapsed();
     if (this.selectedField() === id) {
       this.selectedField.set(null);
     }
+    return true;
   }
 
   private fieldOf(id: number): Field | undefined {
@@ -1051,12 +1110,15 @@ export class TemplateService {
     this.childPicker.set({ targetId, position, type });
   }
 
-  /** Parse the complete batch before changing the document. Source definitions keep their identity. */
+  /**
+   * Parse the complete batch before changing the document, then return the inserted children's ids
+   * in order. Source definitions keep their identity.
+   */
   importChildren(
     sources: { type: 'field' | 'element'; artifact: CedJsonObject }[],
     targetId: number,
     position: number,
-  ): void {
+  ): number[] {
     const root = this.session.document();
     const target = findContainer(root, targetId);
     if (!target) throw new LocalizedError(message('errors.destinationMissing'));
@@ -1094,6 +1156,7 @@ export class TemplateService {
       this.session.document.set(root);
       throw error;
     }
+    return nodes.map((node) => node.id);
   }
 
   /** Adds an inline element and returns its id, or -1 where the target cannot take one. */
@@ -1116,9 +1179,10 @@ export class TemplateService {
     this.nameFocusRequest.set(definition.id);
     return definition.id;
   }
-  deleteChild(id: number): void {
+  /** Removes the child and returns whether it did. */
+  deleteChild(id: number): boolean {
     const parent = parentOf(this.session.document(), id);
-    if (!parent || !this.validation.canPlace(id)) return;
+    if (!parent || !this.validation.canPlace(id)) return false;
     this.session.document.update((root) =>
       updateContainer(root, parent.id, (container) => ({
         ...container,
@@ -1127,6 +1191,7 @@ export class TemplateService {
     );
     this.pruneCollapsed();
     if (!this.containerChoices().some((choice) => choice.id === this.session.activeId())) this.openContainer(parent.id);
+    return true;
   }
   moveChild(id: number, targetId: number, index = Number.MAX_SAFE_INTEGER): void {
     // A child inside a published element stays where it is, and nothing moves into one.

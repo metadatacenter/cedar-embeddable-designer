@@ -3,6 +3,9 @@
   <div class="cedar-modal-backdrop settings-dialog-backdrop animate-backdrop-fade-in" (click)="close()"></div>
   <!-- Modal -->
   <div
+    appModalSurface
+    aria-labelledby="preset-definitions-title"
+    (dismissed)="close()"
     class="cedar-modal-surface settings-dialog-panel animate-modal-fade-in"
     style="left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: 800px"
   >
@@ -12,9 +15,9 @@
         <div class="settings-dialog-badge">
           <app-icon key="settings" [style.color]="'var(--cedar-color-primary)'" size="default"></app-icon>
         </div>
-        <h2 class="preset-title">{{ 'app.userMenu.definePresets' | translate }}</h2>
+        <h2 id="preset-definitions-title" class="preset-title">{{ 'app.userMenu.definePresets' | translate }}</h2>
       </div>
-      <button (click)="close()" class="settings-dialog-close">
+      <button [attr.aria-label]="'common.close' | translate" (click)="close()" class="settings-dialog-close">
         <app-icon key="close" size="default"></app-icon>
       </button>
     </div>
@@ -49,6 +52,14 @@
                       <input
                         spellcheck="false"
                         type="checkbox"
+                        [attr.aria-label]="
+                          'presetDefinitions.cell'
+                            | translate
+                              : {
+                                  setting: ('preferences.fieldOptions.required.label' | translate),
+                                  preset: ('preferences.presets.' + preset | translate),
+                                }
+                        "
                         [ngModel]="service.presetDefinitions()[preset].showRequired"
                         (ngModelChange)="updateDef(preset, 'showRequired', $event)"
                         class="settings-dialog-check"
@@ -65,6 +76,14 @@
                       <input
                         spellcheck="false"
                         type="checkbox"
+                        [attr.aria-label]="
+                          'presetDefinitions.cell'
+                            | translate
+                              : {
+                                  setting: ('preferences.fieldOptions.allowMultiple.label' | translate),
+                                  preset: ('preferences.presets.' + preset | translate),
+                                }
+                        "
                         [ngModel]="service.presetDefinitions()[preset].showAllowMultiple"
                         (ngModelChange)="updateDef(preset, 'showAllowMultiple', $event)"
                         class="settings-dialog-check"
@@ -81,6 +100,14 @@
                       <input
                         spellcheck="false"
                         type="checkbox"
+                        [attr.aria-label]="
+                          'presetDefinitions.cell'
+                            | translate
+                              : {
+                                  setting: ('preferences.fieldOptions.defaultValue.label' | translate),
+                                  preset: ('preferences.presets.' + preset | translate),
+                                }
+                        "
                         [ngModel]="service.presetDefinitions()[preset].showDefaultValue"
                         (ngModelChange)="updateDef(preset, 'showDefaultValue', $event)"
                         class="settings-dialog-check"
@@ -115,6 +142,14 @@
                       <input
                         spellcheck="false"
                         type="checkbox"
+                        [attr.aria-label]="
+                          'presetDefinitions.cell'
+                            | translate
+                              : {
+                                  setting: ('preferences.features.elements.label' | translate),
+                                  preset: ('preferences.presets.' + preset | translate),
+                                }
+                        "
                         [ngModel]="service.presetDefinitions()[preset].showElements"
                         (ngModelChange)="updateDef(preset, 'showElements', $event)"
                         class="settings-dialog-check"
@@ -140,7 +175,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (item of fieldTypesList; track item) {
+                @for (item of fieldTypesList; track item.key) {
                   <tr class="preset-row">
                     <td class="preset-row-label">
                       <div class="preset-field-label">
@@ -153,6 +188,14 @@
                         <input
                           spellcheck="false"
                           type="checkbox"
+                          [attr.aria-label]="
+                            'presetDefinitions.cell'
+                              | translate
+                                : {
+                                    setting: (item.value.labelKey | translate),
+                                    preset: ('preferences.presets.' + preset | translate),
+                                  }
+                          "
                           [checked]="!service.presetDefinitions()[preset].hiddenFieldTypes.includes(item.key)"
                           (change)="toggleFieldType(preset, item.key)"
                           class="settings-dialog-check"

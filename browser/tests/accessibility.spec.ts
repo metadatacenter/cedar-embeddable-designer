@@ -78,6 +78,10 @@ test('the template settings, user menu, Preferences and Add field palette', asyn
   await designer.getByRole('button', { name: 'Preferences' }).click();
   await expectAccessible(page, 'Preferences');
   await designer.getByRole('button', { name: 'Done' }).click();
+  await designer.locator('.user-menu-container button').first().click();
+  await designer.getByRole('button', { name: 'Define Presets' }).click();
+  await expectAccessible(page, 'Define Presets');
+  await designer.getByRole('button', { name: 'Done' }).click();
   await designer.getByRole('button', { name: /^Add field$/ }).click();
   await expectAccessible(page, 'Add field palette');
 });

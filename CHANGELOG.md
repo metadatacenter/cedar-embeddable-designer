@@ -23,6 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dates use the matching locale. English text is unchanged.
 - Tests that hold the two language maps to the same keys and that fail when a
   template or message states user-visible text outside them.
+- One polite live region in each element, present from the first render. It announces
+  an applied constraint set ("Disease now has 2 constraints."), a cleared default, a
+  chosen default term, a new or cleared set of host findings, and a move in the
+  Overview, in English or Hungarian. Errors keep their alerts.
+- Browser specs that run axe-core for WCAG 2.2 levels A and AA over every reachable
+  state, pin each surface's Tab order, check where focus lands after each action, and
+  read the live region after each announced event.
 
 ### Changed
 
@@ -68,6 +75,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   colour, and in the error colour once the name is reported missing. Focus and a selected
   field card still draw it in the primary colour, and a locked name keeps the rule. Each
   name's placeholder takes the regular weight rather than the name's medium weight.
+- Focus no longer drops to the top of the page after an action. A deleted field or
+  element gives focus to the next card, else the previous one, else its container's
+  Add field. An import gives focus to the first imported card, and a chosen default
+  term returns focus to Edit default term.
+- Escape closes the Add field palette, the constraint and default-term dialogs, the
+  user menu, Preferences and Define Presets, and focus returns to the control that
+  opened each. Tabbing out of the user menu closes it.
+- Preferences and Define Presets are modal dialogs. Each takes focus when it opens,
+  keeps Tab inside it, and is announced by its title. The default-term dialog takes
+  focus and keeps Tab inside it, as the constraint dialog does.
+- The template description box is at least 24px tall, WCAG 2.2's minimum target, which
+  moves everything below it down a pixel.
+- Card drag handles are hidden from assistive technology, since the Overview's handles
+  reorder from the keyboard. An unnamed template's collapse button reads "Collapse
+  template", and each choice option's delete button names its option's number.
 
 ### Fixed
 
@@ -77,6 +99,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A renamed template, element or field is written with the title its name gives. The
   model library reads a title that way, so the stored title used to change between a
   save and the next reopening.
+- Tabbing into Preferences' field-type checkboxes no longer loses focus. The list was
+  rebuilt on every key press, which removed the checkbox that had just taken focus.
+- Define Presets names each checkbox by its row and preset, and its close button has
+  a name.
+- An attribute-value field's stand-in input is named by its type, the annotations
+  table can be scrolled from the keyboard on a narrow host, and the template
+  description box takes its accessible name from its label.
 
 ## [0.1.0-dev.20260916.2593d382] - 2026-09-16 (Nexus)
 

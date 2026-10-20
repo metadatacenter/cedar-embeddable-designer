@@ -209,7 +209,8 @@ test('a published standalone field is read only and states no notice of its own'
   });
   // Nothing places a field designed on its own, and the host says why it is read only.
   await expect(page.getByRole('textbox', { name: 'Field display name', exact: true })).toBeDisabled();
-  await expect(page.locator('#field').getByRole('status')).toHaveCount(0);
+  // The element's live region is a status too, and says nothing until something is announced.
+  await expect(page.locator('#field').getByRole('status').filter({ hasText: /\S/ })).toHaveCount(0);
 });
 
 test('keeps invalid numeric settings dirty and unsaveable until corrected', async ({ page }) => {

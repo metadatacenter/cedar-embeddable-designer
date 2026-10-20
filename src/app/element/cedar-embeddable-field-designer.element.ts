@@ -1,3 +1,4 @@
+import { LiveRegionComponent } from '../shared/components/live-region/live-region.component';
 import { JsonSourcePolicy } from '../core/model/cedar-template';
 import type { CedHostFinding, CedLoadOptions, CedRecoveryDraft } from '../ced-public-api';
 import { ValidationSummaryComponent } from '../shared/validation-summary.component';
@@ -35,7 +36,14 @@ import { provideCedTranslations } from '../i18n/i18n';
 /** The same field controls CED uses, with one field document and no repository policy. */
 @Component({
   selector: 'app-cedar-embeddable-field-designer-element',
-  imports: [FieldCardComponent, FieldTypePickerComponent, FontRegistrar, ValidationSummaryComponent, TranslatePipe],
+  imports: [
+    FieldCardComponent,
+    FieldTypePickerComponent,
+    FontRegistrar,
+    LiveRegionComponent,
+    ValidationSummaryComponent,
+    TranslatePipe,
+  ],
   // Each element owns its translation service, and therefore its language.
   providers: [
     ...provideCedTranslations(),
@@ -74,6 +82,7 @@ import { provideCedTranslations } from '../i18n/i18n';
     `,
   ],
   template: `<ced-font-registrar />
+    <app-live-region />
     <div class="field-summary"><app-validation-summary /></div>
     <section class="field-editor" [attr.aria-label]="'fieldElement.label' | translate">
       @if (field(); as field) {

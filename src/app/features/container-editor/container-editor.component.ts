@@ -3,7 +3,7 @@ import { InsertionActionsComponent } from '../insertion-actions/insertion-action
 import { HeaderToggleDirective } from '../../shared/header-toggle.directive';
 import { ContainerSettingsComponent } from '../container-settings/container-settings.component';
 import { publicationStatusLabel } from '../../shared/publication-status';
-import { Component, inject, input, computed, viewChild, signal } from '@angular/core';
+import { Component, ElementRef, afterRenderEffect, inject, input, computed, viewChild, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { CountKeyPipe } from '../../i18n/count-key.pipe';
@@ -18,6 +18,15 @@ import { FieldTypePickerComponent } from '../field-type-picker/field-type-picker
 import { ElementCardComponent } from '../element-card/element-card.component';
 
 /** The same editing surface serves the root document and every nested element. */
+/** The collapse button's name for a container that has no name yet, by action and kind. */
+const UNNAMED_TOGGLE = {
+  collapse: {
+    template: 'containerEditor.collapseUnnamed.template',
+    element: 'containerEditor.collapseUnnamed.element',
+  },
+  expand: { template: 'containerEditor.expandUnnamed.template', element: 'containerEditor.expandUnnamed.element' },
+} as const;
+
 @Component({
   selector: 'app-container-editor',
   host: { '(click)': '$event.stopPropagation()' },
@@ -127,5 +136,44 @@ export class ContainerEditorComponent {
   }
   onDrop(event: CdkDragDrop<unknown>) {
     this.service.moveChild(event.item.data as number, this.container().id, event.currentIndex);
+  }
+
+  /** The collapse button's name, which falls back to the kind of container while it has no name. */
+  readonly toggleLabel = computed(() => {
+    const collapsed = this.collapsed();
+    const name = this.shownName();
+    if (!name.trim())
+      return { key: UNNAMED_TOGGLE[collapsed ? 'expand' : 'collapse'][this.container().kind], params: {} };
+    return { key: collapsed ? 'common.expandNamed' : 'common.collapseNamed', params: { name } };
+  });
+
+  /** Deletes this element, then gives focus to the next card, else the previous one, else Add field. */
+  deleteElement(): void {
+    const id = this.container().id;
+    const next = this.service.focusAfterRemoving(id);
+    if (this.service.deleteChild(id) && next) this.service.focusRequest.set(next);
+  }
+
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly bottomZone = viewChild<ElementRef<HTMLElement>>('bottomZone');
+
+  constructor() {
+    // A focus request for one of this container's own cards, or for its own Add field, is this editor's to perform.
+    afterRenderEffect(() => {
+      const request = this.service.focusRequest();
+      if (!request) return;
+      const container = this.container();
+      const target =
+        request.kind === 'card' && container.children.some((child) => child.id === request.id)
+          ? this.host.nativeElement.querySelector<HTMLElement>(
+              `[id="field-card-${request.id}"] > .field-drag-container`,
+            )
+          : request.kind === 'add-field' && request.containerId === container.id
+            ? (this.bottomZone()?.nativeElement.querySelector<HTMLElement>('button') ?? null)
+            : null;
+      if (!target) return;
+      target.focus();
+      this.service.focusRequest.set(null);
+    });
   }
 }

@@ -3,6 +3,9 @@
   <div class="cedar-modal-backdrop settings-dialog-backdrop animate-backdrop-fade-in" (click)="close()"></div>
   <!-- Modal -->
   <div
+    appModalSurface
+    aria-labelledby="preferences-title"
+    (dismissed)="close()"
     class="cedar-modal-surface settings-dialog-panel max-w-2xl animate-modal-fade-in"
     style="left: 50%; top: 50%; transform: translate(-50%, -50%)"
   >
@@ -12,7 +15,7 @@
         <div class="settings-dialog-badge">
           <app-icon key="settings" [style.color]="'var(--cedar-color-primary)'" size="default"></app-icon>
         </div>
-        <h2 class="preferences-title">{{ 'preferences.title' | translate }}</h2>
+        <h2 id="preferences-title" class="preferences-title">{{ 'preferences.title' | translate }}</h2>
       </div>
       <button [attr.aria-label]="'preferences.close' | translate" (click)="close()" class="settings-dialog-close">
         <app-icon key="close" size="default"></app-icon>
@@ -162,7 +165,7 @@
               {{ 'preferences.fieldTypes.help' | translate }}
             </p>
             <div class="preferences-field-grid max-h-60 custom-scrollbar">
-              @for (item of fieldTypesList; track item) {
+              @for (item of fieldTypesList; track item.key) {
                 <label class="preferences-field-option">
                   <input
                     spellcheck="false"

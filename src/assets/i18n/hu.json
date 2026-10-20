@@ -179,7 +179,15 @@
     "description": "Leírás",
     "descriptionPlaceholder": "Leírás hozzáadása...",
     "expandChildren": "Gyermekelemek kinyitása",
-    "collapseChildren": "Gyermekelemek összecsukása"
+    "collapseChildren": "Gyermekelemek összecsukása",
+    "collapseUnnamed": {
+      "template": "Sablon összecsukása",
+      "element": "Elem összecsukása"
+    },
+    "expandUnnamed": {
+      "template": "Sablon kinyitása",
+      "element": "Elem kinyitása"
+    }
   },
   "containerSettings": {
     "template": {
@@ -348,7 +356,8 @@
       "markup": "Tartalom",
       "url": "Kép webcíme",
       "videoId": "YouTube-videó azonosítója"
-    }
+    },
+    "deleteOptionNumbered": "{{number}}. lehetőség törlése"
   },
   "fieldElement": {
     "label": "Mezőtervező",
@@ -631,7 +640,8 @@
   },
   "presetDefinitions": {
     "intro": "Adja meg, mit tartalmazzanak az egyes előre beállított konfigurációk. Ezek a beállítások akkor lépnek érvénybe, amikor a felhasználók a beállításaikban kiválasztanak egy előbeállítást.",
-    "fieldTypes": "Elérhető mezőtípusok"
+    "fieldTypes": "Elérhető mezőtípusok",
+    "cell": "{{setting}} ({{preset}} konfiguráció)"
   },
   "settings": {
     "fieldName": "Mező neve",
@@ -712,5 +722,30 @@
       "element": "Névtelen elem",
       "template": "Névtelen sablon"
     }
+  },
+  "announce": {
+    "constraints": {
+      "count": {
+        "one": "{{field}}: {{count}} megkötés van érvényben.",
+        "other": "{{field}}: {{count}} megkötés van érvényben."
+      },
+      "none": "{{field}}: már nincs megkötés.",
+      "defaultCleared": "Az alapértelmezett érték törölve. {{constraints}}"
+    },
+    "defaultTerm": "Az alapértelmezett érték: {{term}}.",
+    "hostFindings": {
+      "one": "A befogadó alkalmazás {{issues}} jelzett.",
+      "both": "A befogadó alkalmazás {{errors}} és {{warnings}} jelzett.",
+      "errors": {
+        "one": "{{count}} hibát",
+        "other": "{{count}} hibát"
+      },
+      "warnings": {
+        "one": "{{count}} figyelmeztetést",
+        "other": "{{count}} figyelmeztetést"
+      },
+      "cleared": "A befogadó alkalmazás által jelzett problémák törölve."
+    },
+    "moved": "{{name}} áthelyezve: {{position}}. hely ({{count}} közül)."
   }
 }

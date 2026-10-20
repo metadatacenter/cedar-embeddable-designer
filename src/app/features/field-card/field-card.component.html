@@ -78,7 +78,7 @@
           <div class="field-actions">
             @if (!standalone) {
               <button
-                (click)="service.deleteField(field.id)"
+                (click)="deleteField()"
                 class="field-icon-action shrink-0"
                 [title]="'fieldCard.delete' | translate"
                 [attr.aria-label]="'fieldCard.delete' | translate"
@@ -142,7 +142,7 @@
                     (click)="service.deleteOption(field.id, optIdx)"
                     class="field-icon-action"
                     [title]="'fieldCard.deleteOption' | translate"
-                    [attr.aria-label]="'fieldCard.deleteOption' | translate"
+                    [attr.aria-label]="'fieldCard.deleteOptionNumbered' | translate: { number: optIdx + 1 }"
                   >
                     <app-icon key="trash" size="small"></app-icon>
                   </button>

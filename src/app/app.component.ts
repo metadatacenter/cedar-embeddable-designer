@@ -11,6 +11,7 @@ import {
   effect,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -25,6 +26,7 @@ import { PresetDefinitionsModalComponent } from './features/modals/preset-defini
 import { CeePreviewComponent } from './features/cee-preview/cee-preview.component';
 import { ContainerEditorComponent } from './features/container-editor/container-editor.component';
 import { ContainerOutlineComponent } from './features/container-outline/container-outline.component';
+import { LiveRegionComponent } from './shared/components/live-region/live-region.component';
 
 @Component({
   selector: 'app-root',
@@ -41,6 +43,7 @@ import { ContainerOutlineComponent } from './features/container-outline/containe
     CeePreviewComponent,
     ContainerEditorComponent,
     ContainerOutlineComponent,
+    LiveRegionComponent,
   ],
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -113,6 +116,33 @@ export class AppComponent {
   }
 
   private scrollAnchor: number | null = null;
+
+  private readonly userMenuTrigger = viewChild<ElementRef<HTMLElement>>('userMenuTrigger');
+
+  /** A settings dialog the user menu opened gives focus back to the menu's button when it closes. */
+  focusUserMenu(): void {
+    this.userMenuTrigger()?.nativeElement.focus();
+  }
+
+  /** Escape closes the user menu and gives focus back to the button that opened it. */
+  onUserMenuKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Escape' || event.defaultPrevented || !this.service.showUserMenu()) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.service.showUserMenu.set(false);
+    this.userMenuTrigger()?.nativeElement.focus();
+  }
+
+  /**
+   * Tabbing out of the user menu closes it. Only a move to another control counts: a pointer press
+   * outside is `handleClickOutside`'s, and Safari blurs the trigger without a target when a menu item
+   * is pressed, which must not close the menu before the item's click arrives.
+   */
+  onUserMenuFocusout(event: FocusEvent): void {
+    const next = event.relatedTarget;
+    if (next instanceof Node && !(event.currentTarget as HTMLElement).contains(next))
+      this.service.showUserMenu.set(false);
+  }
 
   constructor() {
     const destroyRef = inject(DestroyRef);

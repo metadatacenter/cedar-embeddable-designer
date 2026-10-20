@@ -23,6 +23,7 @@ import { termPickerAvailable } from '../../core/model/term-picker';
 import { fieldToJson } from '../../core/model/cedar-template';
 import { fieldDisplayName } from '../../core/model/field-display-name';
 import { trapTab } from '../../shared/focus-trap';
+import { countKey, Message } from '../../i18n/messages';
 import { DialogHeaderComponent } from '../../shared/components/dialog-header/dialog-header.component';
 
 @Component({
@@ -51,6 +52,8 @@ export class ControlledTermConfigComponent implements OnChanges {
   });
   readonly invalidDefault = signal(false);
   private pending: TerminologyEdit | null = null;
+  /** The set the pending Apply would commit, which "Clear default and apply" announces. */
+  private pendingSet: ControlledTermSet | null = null;
   @Input() field!: Field;
   pickerConstraints: ControlledTermSet = { constraints: [], actions: [] };
 
@@ -92,8 +95,17 @@ export class ControlledTermConfigComponent implements OnChanges {
     inject(DestroyRef).onDestroy(() => this.pending?.cancel());
   }
 
-  /** Tab must not leave the overlay while it is covering the card behind it. */
+  /**
+   * Tab must not leave the overlay while it is covering the card behind it, and Escape closes it.
+   * An Escape the picker has already used, to close something of its own, is left alone.
+   */
   onDialogKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && !event.defaultPrevented) {
+      event.preventDefault();
+      event.stopPropagation();
+      this.closePicker();
+      return;
+    }
     const dialog = this.dialog()?.nativeElement;
     if (dialog) trapTab(dialog, event);
   }
@@ -146,13 +158,33 @@ export class ControlledTermConfigComponent implements OnChanges {
     this.invalidDefault.set(false);
     const attempt = this.service.terminologyEdits.changeConstraints(this.field.id, set);
     this.pending = attempt;
+    this.pendingSet = set;
     const outcome = await attempt.result;
     if (this.pending !== attempt) return;
     if (outcome === 'needs-clear') this.invalidDefault.set(true);
-    if (outcome === 'applied') this.closePicker();
+    if (outcome === 'applied') {
+      this.closePicker();
+      const message = this.constraintsMessage(set);
+      this.service.announce(this.i18n.t(message.key, message.params));
+    }
   }
 
   clearDefaultAndApply(): void {
-    if (this.pending?.clearDefaultAndApply()) this.closePicker();
+    const set = this.pendingSet;
+    if (!this.pending?.clearDefaultAndApply()) return;
+    this.closePicker();
+    if (set)
+      this.service.announce(
+        this.i18n.t('announce.constraints.defaultCleared', { constraints: this.constraintsMessage(set) }),
+      );
+  }
+
+  /** What the field's constraints now amount to, as the live region says it. */
+  private constraintsMessage(set: ControlledTermSet): Message {
+    const field = this.displayName(this.field);
+    const count = set.constraints.length;
+    return count
+      ? { key: countKey('announce.constraints.count', count), params: { field, count } }
+      : { key: 'announce.constraints.none', params: { field } };
   }
 }

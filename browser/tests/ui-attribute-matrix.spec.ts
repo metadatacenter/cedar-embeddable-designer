@@ -516,7 +516,11 @@ const LIFECYCLES: readonly Lifecycle[] = [
       await card(page).getByLabel('Option 2', { exact: true }).fill('Beta');
     },
     restore: async (page) =>
-      clickCentred(card(page).getByRole('button', { name: 'Delete option', exact: true }).last()),
+      clickCentred(
+        card(page)
+          .getByRole('button', { name: /^Delete option \d+$/ })
+          .last(),
+      ),
   },
 
   // ── A static field's one value ──────────────────────────────────────────────

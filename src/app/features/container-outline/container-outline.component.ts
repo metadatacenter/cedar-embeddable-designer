@@ -1,7 +1,8 @@
 import { elementDisplayName, fieldDisplayName } from '../../core/model/field-display-name';
 import { Component, input, inject } from '@angular/core';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
-import { ContainerDraft, ChildNode, fieldView } from '../../core/model/container-draft';
+import { ContainerDraft, ChildNode, fieldView, findContainer } from '../../core/model/container-draft';
+import { CedLanguageService } from '../../i18n/ced-language.service';
 import { TemplateService } from '../../core/services/template.service';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -79,6 +80,7 @@ import { CountKeyPipe } from '../../i18n/count-key.pipe';
 export class ContainerOutlineComponent {
   readonly container = input.required<ContainerDraft>();
   readonly service = inject(TemplateService);
+  private readonly i18n = inject(CedLanguageService);
   displayName(node: ChildNode): string {
     return node.kind === 'field' ? fieldDisplayName(fieldView(node)) : elementDisplayName(node);
   }
@@ -98,7 +100,14 @@ export class ContainerOutlineComponent {
     const children = this.container().children;
     const index = children.findIndex((child) => child.id === node.id);
     const next = index + (event.key === 'ArrowUp' ? -1 : 1);
-    if (next >= 0 && next < children.length) this.service.moveChild(node.id, this.container().id, next);
+    if (next < 0 || next >= children.length) return;
+    this.service.moveChild(node.id, this.container().id, next);
+    // The input catches up on the next render, so the moved order is read from the document.
+    const moved = findContainer(this.service.session.document(), this.container().id)?.children ?? [];
+    if (moved[next]?.id === node.id)
+      this.service.announce(
+        this.i18n.t('announce.moved', { name: this.displayName(node), position: next + 1, count: moved.length }),
+      );
   }
   select(node: ChildNode): void {
     this.service.openContainer(node.kind === 'element' ? node.id : this.container().id);

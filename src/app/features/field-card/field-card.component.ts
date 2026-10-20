@@ -79,6 +79,12 @@ export class FieldCardComponent {
       : this.service.placementLocked(this.field.id);
   }
 
+  /** Deletes the field, then gives focus to the next card, else the previous one, else Add field. */
+  deleteField(): void {
+    const next = this.service.focusAfterRemoving(this.field.id);
+    if (this.service.deleteField(this.field.id) && next) this.service.focusRequest.set(next);
+  }
+
   updateDisplayName(value: string): void {
     this.service.updateFieldDisplayName(this.field.id, value);
   }

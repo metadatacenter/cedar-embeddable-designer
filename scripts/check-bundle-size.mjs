@@ -97,8 +97,15 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // The existing model entry supplies the shared policies; there is no second
 // policy bundle or new runtime dependency. Allow about 5 KB raw / 2 KB compressed
 // headroom for this validation coverage and bounded verification cache.
-const RAW_LIMIT = 1_550_000;
-const GZIP_LIMIT = 443_000;
+// 2026-10-19: keyboard and screen-reader access measures 1,552,034 raw / 443,595 gzip-9
+// bytes: one polite live region per element, focus returned after deletes, imports, default
+// terms and closed dialogs, modal settings dialogs, named preset checkboxes, and the English
+// and Hungarian announcements. That adds 9,939 raw / 3,223 compressed bytes to 1,542,095 /
+// 440,372 on the same dependencies. No dependency was added. Allow about 3 KB raw / 1.4 KB
+// compressed headroom. The standalone application's `build-app` budget in angular.json moves
+// by the same 5 KB.
+const RAW_LIMIT = 1_555_000;
+const GZIP_LIMIT = 445_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
 

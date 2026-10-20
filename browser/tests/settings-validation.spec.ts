@@ -417,7 +417,10 @@ for (const inputType of ['radio', 'checkbox', 'list']) {
     await card.getByLabel('Option 2', { exact: true }).fill('Second');
     await expect.poll(async () => (await report(page)).canSave).toBe(true);
     await clickCentred(card.getByRole('button', { name: 'Add option', exact: true }));
-    await card.getByRole('button', { name: 'Delete option', exact: true }).last().click();
+    await card
+      .getByRole('button', { name: /^Delete option \d+$/ })
+      .last()
+      .click();
     await expect.poll(async () => (await report(page)).canSave).toBe(true);
   });
 }
