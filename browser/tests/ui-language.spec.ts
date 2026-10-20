@@ -27,6 +27,16 @@ test('switches between English and Hungarian through the attribute and the prope
   await expect(designer.locator('.field-type-label').first()).toHaveText('Text');
 });
 
+test("describes the card's name box as the display name in each language", async ({ page }) => {
+  const designer = await openDesigner(page);
+  const name = designer.locator('app-field-card input.field-name').first();
+  await expect(name).toHaveAccessibleName('Enter field name');
+  await expect(name).toHaveAccessibleDescription('Display name');
+  await page.evaluate((tag) => document.querySelector(tag)!.setAttribute('language', 'hu'), DESIGNER);
+  await expect(name).toHaveAccessibleName('Adja meg a mező nevét');
+  await expect(name).toHaveAccessibleDescription('Megjelenített név');
+});
+
 test('falls back to English for a language it does not have', async ({ page }) => {
   const designer = await openDesigner(page);
   await page.evaluate((tag) => document.querySelector(tag)!.setAttribute('language', 'hu'), DESIGNER);

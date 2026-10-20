@@ -111,7 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the root inside the shadow tree, and the host element keeps the page's.
 - A field card's name box is named Enter field name, the placeholder it shows, so
   speech input reaches it by the only text it displays. It was named Field display
-  name. The Hungarian name of the property IRI's Replace button now holds the word
+  name, and its description now says it edits the display name. The Hungarian name of the property IRI's Replace button now holds the word
   the button shows.
 - Name and description errors are alerts, as the designer's other errors are, so a
   screen reader announces them without focus moving. The validation summary is
