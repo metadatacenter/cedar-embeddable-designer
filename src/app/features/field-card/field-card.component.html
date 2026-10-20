@@ -56,13 +56,13 @@
           }
         </div>
         @if (!standalone) {
+          <!-- Pointer-only, so hidden from assistive technology. The Overview's handles reorder from the keyboard. -->
           <span
             class="field-drag-handle"
             cdkDragHandle
             [class.locked]="headerLocked"
-            [attr.aria-hidden]="headerLocked ? true : null"
+            aria-hidden="true"
             [title]="'fieldCard.dragToReorder' | translate"
-            [attr.aria-label]="'fieldCard.dragToReorder' | translate"
           >
             <app-icon key="list" size="small"></app-icon>
           </span>

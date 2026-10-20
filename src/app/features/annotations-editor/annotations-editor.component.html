@@ -39,7 +39,8 @@
     <p role="alert">{{ message }}</p>
   }
 
-  <div class="table-scroll">
+  <!-- Focusable, so a keyboard can scroll the table where a narrow host clips it. -->
+  <div class="table-scroll" tabindex="0" role="region" [attr.aria-label]="'annotations.caption' | translate">
     <table>
       <caption>
         {{

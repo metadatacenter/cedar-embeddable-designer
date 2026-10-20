@@ -7,12 +7,12 @@
     <span class="validation-badge">{{ 'common.errorBadge' | countKey: count | translate: { count: count } }}</span>
   }
   @if (placementNode()) {
+    <!-- Dragging is pointer-only, so only the visible label is exposed. The Overview's handles reorder from the keyboard. -->
     <span
       cdkDragHandle
       [class.locked]="placementLocked()"
       class="element-drag-handle"
       [title]="'containerEditor.dragElement' | translate"
-      [attr.aria-label]="'containerEditor.dragElement' | translate"
     >
       <app-icon key="list" size="small" />
       <span class="element-type-label">{{ 'containerEditor.elementLabel' | translate }}</span>
@@ -137,8 +137,12 @@
 
       <!-- Bottom Row: Description -->
       <div class="template-field-group template-description">
-        <label class="template-field-label">{{ 'containerEditor.description' | translate }}</label>
+        <!-- Named through aria-labelledby rather than for, because a click on a header label toggles the settings. -->
+        <label class="template-field-label" [id]="'description-label-' + container().id">{{
+          'containerEditor.description' | translate
+        }}</label>
         <textarea
+          [attr.aria-labelledby]="'description-label-' + container().id"
           [appArtifactName]="container().id"
           artifactSetting="description"
           [attr.aria-invalid]="!!service.settingError(container().id, 'description')"

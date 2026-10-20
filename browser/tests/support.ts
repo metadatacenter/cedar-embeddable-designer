@@ -198,8 +198,15 @@ export async function nestFixtureFields(page: Page, path: string[], count = 1): 
   );
 }
 
-/** Supply an empty reusable element through the host contract for editing fixtures. */
-export async function addElementFixture(page: Page, scope = page.locator(DESIGNER)): Promise<void> {
+/**
+ * Supply an empty reusable element through the host contract for editing fixtures.
+ * `inspect` runs while the picker is open with the element selected, before it closes.
+ */
+export async function addElementFixture(
+  page: Page,
+  scope = page.locator(DESIGNER),
+  inspect?: () => Promise<void>,
+): Promise<void> {
   await page.evaluate((source) => {
     const element = structuredClone(source) as any;
     for (const key of element._ui.order) delete element.properties[key];
@@ -225,6 +232,7 @@ export async function addElementFixture(page: Page, scope = page.locator(DESIGNE
   await scope.getByRole('button', { name: 'Import fields and elements', exact: true }).first().click();
   await page.getByRole('button', { name: 'Search', exact: true }).click();
   await page.getByRole('row', { name: 'Select Element', exact: true }).click();
+  await inspect?.();
   await page.getByRole('button', { name: 'Done', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }

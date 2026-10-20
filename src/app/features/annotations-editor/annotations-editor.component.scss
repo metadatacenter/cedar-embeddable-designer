@@ -1,6 +1,7 @@
 @use '@org.metadatacenter/cedar-design-tokens/patterns';
 @use '@org.metadatacenter/cedar-design-tokens/spacing';
 @use '@org.metadatacenter/cedar-design-tokens/authoring';
+@use '@org.metadatacenter/cedar-design-tokens/controls';
 :host {
   display: block;
   min-width: 0;
@@ -14,6 +15,9 @@ fieldset {
 }
 .table-scroll {
   overflow-x: auto;
+  &:focus-visible {
+    @include controls.focus-ring;
+  }
 }
 table {
   border-collapse: collapse;

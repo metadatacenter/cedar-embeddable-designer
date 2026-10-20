@@ -338,7 +338,7 @@ for (const collapsed of [false, true]) {
     const element = nestedEditors(root).first();
     if (collapsed) await directHeader(element).locator('.element-toggle').click();
     const before = await currentTemplate(page);
-    const handle = directHeader(element).getByLabel('Drag element to reorder', { exact: true });
+    const handle = directHeader(element).getByTitle('Drag element to reorder', { exact: true });
     await handle.scrollIntoViewIfNeeded();
     const from = (await handle.boundingBox())!;
     const bin = (await directHeader(element).locator('.element-delete').boundingBox())!;

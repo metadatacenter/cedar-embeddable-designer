@@ -30,7 +30,14 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
         <cedar-embeddable-field [config]="config()" [fieldObject]="definition" [value]="emptyValue" />
       }
     } @else {
-      <input spellcheck="false" autocomplete="off" type="text" disabled [placeholder]="placeholder() | translate" />
+      <input
+        spellcheck="false"
+        autocomplete="off"
+        type="text"
+        disabled
+        [placeholder]="placeholder() | translate"
+        [attr.aria-label]="placeholder() ? null : (typeLabel() | translate)"
+      />
     }
   `,
   styles: `
@@ -76,6 +83,8 @@ export class FieldSummaryComponent {
       ? 'fieldTypes.dateTime.label'
       : FIELD_TYPES[this.field().type]?.previewKey || '',
   );
+  /** The translation key of the type's name, which names a stand-in that has no placeholder. */
+  readonly typeLabel = computed(() => FIELD_TYPES[this.field().type]?.labelKey || '');
   readonly artifact = computed(
     () => {
       // Attribute-value fields describe a collection rather than one scalar value.
