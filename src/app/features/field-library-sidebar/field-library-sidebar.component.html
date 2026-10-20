@@ -31,6 +31,7 @@
           <div class="field-empty-state">{{ 'sidebar.noFields' | translate }}</div>
         }
         @for (field of service.fields(); track field.id; let idx = $index) {
+          <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- no keyboard route selects a library field yet; tracked on the frontend roadmap -->
           <div
             cdkDrag
             (click)="select(field.id)"

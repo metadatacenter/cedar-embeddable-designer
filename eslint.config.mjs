@@ -71,7 +71,10 @@ export default tseslint.config(
   },
   {
     files: ['**/*.html'],
-    extends: [...angular.configs.templateRecommended],
+    // The accessibility rules catch what a template can state wrongly on its own: a label tied to
+    // nothing, a click with no key, a handler on something focus cannot reach. A deliberate
+    // exception is disabled on its line with the reason beside it.
+    extends: [...angular.configs.templateRecommended, ...angular.configs.templateAccessibility],
     rules: {
       // The migration this asks for is done: `ng update` rewrote every `*ngIf` and
       // `*ngFor` as `@if` and `@for` on the way to 21. The rule is what stops the old

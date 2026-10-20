@@ -30,6 +30,7 @@
       <!-- Top Row: Name, Version -->
       <div class="template-header-row">
         <div class="template-field-group flex-1">
+          <!-- eslint-disable-next-line @angular-eslint/template/label-has-associated-control -- the input names itself; a click on this label toggles the header settings -->
           <label class="template-field-label">{{ 'containerEditor.name' | translate }}</label>
           <input
             spellcheck="false"
@@ -68,6 +69,7 @@
         </div>
 
         <div class="template-field-group version-group w-24">
+          <!-- eslint-disable-next-line @angular-eslint/template/label-has-associated-control -- the input names itself; a click on this label toggles the header settings -->
           <label class="template-field-label">{{ 'containerEditor.version' | translate }}</label>
           <div class="version-value-row">
             <input
@@ -134,6 +136,7 @@
       <!-- Bottom Row: Description -->
       <div class="template-field-group template-description">
         <!-- Named through aria-labelledby rather than for, because a click on a header label toggles the settings. -->
+        <!-- eslint-disable-next-line @angular-eslint/template/label-has-associated-control -- names the box through aria-labelledby; a click on it toggles the header settings -->
         <label class="template-field-label" [id]="'description-label-' + container().id">{{
           'containerEditor.description' | translate
         }}</label>
@@ -219,6 +222,7 @@
           }
         }
         <!-- Drag Container -->
+        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events -- focusing the card selects it, as this click does -->
         <div
           cdkDrag
           [cdkDragData]="node.id"

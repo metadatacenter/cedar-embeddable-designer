@@ -9,6 +9,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
   selector: 'app-manual-iri',
   imports: [FormsModule, TranslatePipe],
   template: `
+    <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- catches Escape from the input inside it -->
     <div class="entry" (keydown.escape)="cancelled.emit(); $event.stopPropagation()">
       <label
         >{{ 'manualIri.label' | translate }}
