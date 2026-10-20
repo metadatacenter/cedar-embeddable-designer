@@ -117,6 +117,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   screen reader announces them without focus moving. The validation summary is
   announced through the live region only when it lists an issue no alert and no host
   announcement has already said, such as a defect in a document the host loaded.
+- Collapsing or expanding the library sidebar gives focus to the button that reverses
+  it, and removing a type gives focus to the next type's Remove button, else the
+  previous one's, else the control that adds a type. Focus used to fall to the page.
+  The sidebar's library toggles report whether they are expanded, and their arrow is
+  no longer read as part of their names.
 
 ## [0.1.0-dev.20260916.2593d382] - 2026-09-16 (Nexus)
 

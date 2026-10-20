@@ -39,28 +39,146 @@ const FIELD = (name: string) => [
   'button "Expand field settings"',
 ];
 
+/** The template's header, after the toolbar's Overview and Preview buttons. */
+const HEADER = [
+  'textbox "Template name"',
+  'textbox "Version"',
+  'textbox "Description"',
+  'button "Collapse template"',
+  'button "Expand template settings"',
+];
+
+/** The Overview of the three fields the fixture holds, then the template's header. */
+const OVERVIEW_AND_HEADER = [
+  'separator "Resize Overview"',
+  'button "Title Required"',
+  'button "Reorder Title"',
+  'button "Category"',
+  'button "Reorder Category"',
+  'button "Publication Date"',
+  'button "Reorder Publication Date"',
+  ...HEADER,
+];
+
+/** Each of the fixture's cards with the insertion buttons between them, then the template's Add field. */
+const CARDS = [...FIELD('Title'), ...FIELD('Category'), ...FIELD('Publication Date'), 'button "Add field"'];
+
+/** The field types Basic offers, in the order the palette and the library sidebar list them. */
+const BASIC_TYPES = [
+  'Text',
+  'Paragraph',
+  'Multiple Choice',
+  'Checkboxes',
+  'List',
+  'Multi-select List',
+  'Temporal',
+  'Email',
+  'Link',
+  'Phone',
+  'Number',
+  'Attribute Value',
+  'ORCID',
+  'ROR',
+  'PFAS',
+  'RRID',
+  'PubMed',
+  'NIH Grant ID',
+  'DOI',
+  'Image',
+  'Rich Text',
+  'YouTube',
+  'Section Break',
+  'Page Break',
+];
+
 test('a template runs from the toolbar through the Overview and header to each card', async ({ page }) => {
   const designer = await openDesigner(page);
   await designer.getByRole('button', { name: 'Close Overview' }).focus();
   expect(await tabUntil(page, '(page)')).toEqual([
     'button "User Menu"',
     'button "Open Preview"',
-    'separator "Resize Overview"',
-    'button "Title Required"',
-    'button "Reorder Title"',
-    'button "Category"',
-    'button "Reorder Category"',
-    'button "Publication Date"',
-    'button "Reorder Publication Date"',
-    'textbox "Template name"',
-    'textbox "Version"',
-    'textbox "Description"',
-    'button "Collapse template"',
-    'button "Expand template settings"',
-    ...FIELD('Title'),
-    ...FIELD('Category'),
-    ...FIELD('Publication Date'),
+    ...OVERVIEW_AND_HEADER,
+    ...CARDS,
+    '(page)',
+  ]);
+});
+
+test('the open preview follows the cards, and its mode select comes last', async ({ page }) => {
+  const designer = await openDesigner(page, '?cee=stub');
+  await designer.getByRole('button', { name: 'Open Preview' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('cedar-embeddable-editor')).toHaveCount(1);
+  // The toggle keeps focus and now closes the panel.
+  expect(await focusedControl(page)).toBe('button "Close Preview"');
+  await designer.getByRole('button', { name: 'Close Overview' }).focus();
+  expect(await tabUntil(page, '(page)')).toEqual([
+    'button "User Menu"',
+    'button "Close Preview"',
+    ...OVERVIEW_AND_HEADER,
+    ...CARDS,
+    'combobox "Preview mode"',
+    '(page)',
+  ]);
+});
+
+test('a 375px host runs from the toolbar through the header to each card, with no Overview', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await openDesigner(page);
+  // A click on the host's heading puts the start of the Tab sequence before the designer.
+  await page.locator('#host-heading').click();
+  expect(await tabUntil(page, '(page)')).toEqual([
+    'button "User Menu"',
+    'button "Open Preview"',
+    ...HEADER,
+    ...CARDS,
+    '(page)',
+  ]);
+});
+
+/** Choose the library sidebar in Preferences, in place of the inline palette. */
+async function useSidebar(page: Page): Promise<void> {
+  const designer = page.locator(DESIGNER);
+  await designer.getByRole('button', { name: 'User Menu' }).click();
+  await designer.getByRole('button', { name: 'Preferences', exact: true }).click();
+  await designer.getByRole('radio', { name: /Library Sidebar/ }).check();
+  await designer.getByRole('button', { name: 'Done', exact: true }).click();
+  await expect(designer.getByRole('button', { name: 'Collapse sidebar' })).toBeVisible();
+}
+
+/** A card in sidebar mode, which adds fields from the sidebar rather than between the cards. */
+const SIDEBAR_FIELD = (name: string) => FIELD(name).slice(1);
+
+test('sidebar mode runs from the toolbar through the library to the Overview and each card', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await useSidebar(page);
+  await designer.getByRole('button', { name: 'Close Overview' }).focus();
+  expect(await tabUntil(page, '(page)')).toEqual([
+    'button "User Menu"',
+    'button "Open Preview"',
     'button "Add field"',
+    'button "Collapse sidebar"',
+    'button "Built-in Fields"',
+    ...BASIC_TYPES.map((type) => `button "${type}"`),
+    ...OVERVIEW_AND_HEADER,
+    ...SIDEBAR_FIELD('Title'),
+    ...SIDEBAR_FIELD('Category'),
+    ...SIDEBAR_FIELD('Publication Date'),
+    '(page)',
+  ]);
+
+  // Collapsed, the sidebar keeps one stop: the button that expands it again.
+  await designer.getByRole('button', { name: 'Collapse sidebar' }).focus();
+  await page.keyboard.press('Enter');
+  await expect.poll(() => focusedControl(page)).toBe('button "Expand sidebar"');
+  await designer.getByRole('button', { name: 'Close Overview' }).focus();
+  expect(await tabUntil(page, '(page)')).toEqual([
+    'button "User Menu"',
+    'button "Open Preview"',
+    'button "Expand sidebar"',
+    ...OVERVIEW_AND_HEADER,
+    ...SIDEBAR_FIELD('Title'),
+    ...SIDEBAR_FIELD('Category'),
+    ...SIDEBAR_FIELD('Publication Date'),
     '(page)',
   ]);
 });
@@ -172,32 +290,7 @@ test('the Add field palette follows the button that opened it', async ({ page })
   expect(await focusedControl(page)).toBe('button "Add field"');
   expect(await tabUntil(page, '(page)', 40)).toEqual([
     'button "Close field picker"',
-    ...[
-      'Text',
-      'Paragraph',
-      'Multiple Choice',
-      'Checkboxes',
-      'List',
-      'Multi-select List',
-      'Temporal',
-      'Email',
-      'Link',
-      'Phone',
-      'Number',
-      'Attribute Value',
-      'ORCID',
-      'ROR',
-      'PFAS',
-      'RRID',
-      'PubMed',
-      'NIH Grant ID',
-      'DOI',
-      'Image',
-      'Rich Text',
-      'YouTube',
-      'Section Break',
-      'Page Break',
-    ].map((type) => `button "${type}"`),
+    ...BASIC_TYPES.map((type) => `button "${type}"`),
     '(page)',
   ]);
 });
@@ -334,5 +427,56 @@ test('the constraint and default-term dialogs open on themselves and keep Tab in
     'button "Cancel default selection"',
     'button "pick a term"',
     'button "Cancel default selection"',
+  ]);
+});
+
+test('the property dialog opens on itself and keeps Tab inside, both ways', async ({ page }) => {
+  const designer = await openDesigner(page, '?picker=stub');
+  const card = designer.locator('[id^=field-card-]').first();
+  await openSettings(card, 'Configuration');
+  await card.getByRole('button', { name: 'Replace property IRI', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect.poll(() => focusedControl(page)).toBe('dialog "Choose property IRI"');
+  expect(await tabSequence(page, 3)).toEqual(['button "Close"', 'button "pick a term"', 'button "Close"']);
+  expect(await tabSequence(page, 2, 'Shift+Tab')).toEqual(['button "pick a term"', 'button "Close"']);
+});
+
+test('the types dialog opens on itself and keeps Tab inside, both ways', async ({ page }) => {
+  const designer = await openDesigner(page, '?picker=stub');
+  await designer.getByRole('button', { name: 'Expand template settings', exact: true }).click();
+  const settings = designer.locator('app-container-settings').first();
+  await clickCentred(settings.getByRole('tab', { name: 'Metadata', exact: true }));
+  await settings.getByRole('button', { name: 'Add types', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect.poll(() => focusedControl(page)).toBe('dialog "Add types"');
+  expect(await tabSequence(page, 3)).toEqual(['button "Close"', 'button "pick a term"', 'button "Close"']);
+  expect(await tabSequence(page, 2, 'Shift+Tab')).toEqual(['button "pick a term"', 'button "Close"']);
+});
+
+test("manual IRI entry opens on its box and runs to its buttons, for a field's property and for types", async ({
+  page,
+}) => {
+  const designer = await openDesigner(page);
+  const card = designer.locator('[id^=field-card-]').first();
+  await openSettings(card, 'Configuration');
+  await card.getByRole('button', { name: 'Enter IRI manually', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect.poll(() => focusedControl(page)).toBe('textbox "IRI"');
+  expect(await tabUntil(page, 'button "Collapse field settings"', 10)).toEqual([
+    'button "Add property"',
+    'button "Cancel"',
+    'button "Collapse field settings"',
+  ]);
+
+  await designer.getByRole('button', { name: 'Expand template settings', exact: true }).click();
+  const settings = designer.locator('app-container-settings').first();
+  await clickCentred(settings.getByRole('tab', { name: 'Metadata', exact: true }));
+  await settings.getByRole('button', { name: 'Enter IRI manually', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect.poll(() => focusedControl(page)).toBe('textbox "IRI"');
+  expect(await tabUntil(page, 'button "Collapse template settings"', 10)).toEqual([
+    'button "Add type"',
+    'button "Cancel"',
+    'button "Collapse template settings"',
   ]);
 });

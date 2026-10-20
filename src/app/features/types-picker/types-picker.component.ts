@@ -6,6 +6,8 @@ import {
   Component,
   CUSTOM_ELEMENTS_SCHEMA,
   ElementRef,
+  Injector,
+  afterNextRender,
   effect,
   inject,
   input,
@@ -236,8 +238,27 @@ export class TypesPickerComponent {
       this.close();
     } else if (this.dialog()) trapTab(this.dialog()!.nativeElement, event);
   }
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
+  /**
+   * The removed type's button had focus. Once the list renders without it, the next type's button
+   * takes focus, else the previous one's, else the control that adds a type.
+   */
   remove(iri: string): void {
+    const index = this.types().indexOf(iri);
     this.saveTypes(this.types().filter((type) => type !== iri));
+    afterNextRender(
+      () => {
+        const buttons = this.host.nativeElement.querySelectorAll<HTMLButtonElement>('.remove');
+        (
+          buttons[index] ??
+          buttons[index - 1] ??
+          this.trigger()?.nativeElement ??
+          this.manualTrigger()?.nativeElement
+        )?.focus();
+      },
+      { injector: this.injector },
+    );
   }
   select(event: Event): void {
     if (this.locked() || !this.opened()) return;

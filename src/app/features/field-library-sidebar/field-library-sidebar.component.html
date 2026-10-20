@@ -17,11 +17,7 @@
           <app-icon key="list" size="small"></app-icon>
           <h3 class="sidebar-title">{{ 'sidebar.fields' | translate: { count: service.children().length } }}</h3>
         </div>
-        <button
-          (click)="service.sidebarCollapsed.set(true)"
-          class="btn-collapse"
-          [title]="'sidebar.collapse' | translate"
-        >
+        <button (click)="setCollapsed(true)" class="btn-collapse" [title]="'sidebar.collapse' | translate">
           <app-icon key="chevron-left" size="small" />
         </button>
       </div>
@@ -72,9 +68,13 @@
       <div class="sidebar-scrollable custom-scrollbar">
         <!-- Built-in Field Types -->
         <div class="library-group">
-          <button (click)="expandedBuiltIn.set(!expandedBuiltIn())" class="btn-library-toggle">
+          <button
+            (click)="expandedBuiltIn.set(!expandedBuiltIn())"
+            class="btn-library-toggle"
+            [attr.aria-expanded]="expandedBuiltIn()"
+          >
             <span class="library-toggle-text">{{ 'sidebar.builtIn' | translate }}</span>
-            <span class="library-toggle-icon" [class.rotated]="!expandedBuiltIn()">▼</span>
+            <span class="library-toggle-icon" [class.rotated]="!expandedBuiltIn()" aria-hidden="true">▼</span>
           </button>
           @if (expandedBuiltIn()) {
             <div class="library-content animate-fade-in">
@@ -93,9 +93,18 @@
         <!-- Library Fields -->
         @for (library of service.libraries(); track library) {
           <div class="library-group">
-            <button (click)="toggleLibrary(library.id)" class="btn-library-toggle">
+            <button
+              (click)="toggleLibrary(library.id)"
+              class="btn-library-toggle"
+              [attr.aria-expanded]="expandedLibraries().has(library.id)"
+            >
               <span class="library-toggle-text">{{ library.name }}</span>
-              <span class="library-toggle-icon" [class.rotated]="!expandedLibraries().has(library.id)">▼</span>
+              <span
+                class="library-toggle-icon"
+                [class.rotated]="!expandedLibraries().has(library.id)"
+                aria-hidden="true"
+                >▼</span
+              >
             </button>
             @if (expandedLibraries().has(library.id)) {
               <div class="library-content animate-fade-in">
@@ -129,7 +138,7 @@
     <div class="collapsed-view-container">
       <!-- Expand Button -->
       <div class="collapsed-header">
-        <button (click)="service.sidebarCollapsed.set(false)" class="btn-expand" [title]="'sidebar.expand' | translate">
+        <button (click)="setCollapsed(false)" class="btn-expand" [title]="'sidebar.expand' | translate">
           <app-icon key="chevron-right" size="small" />
         </button>
       </div>

@@ -348,3 +348,63 @@ test.describe('controls that stay', () => {
     await expect(handle).toBeFocused();
   });
 });
+
+test.describe('the library sidebar', () => {
+  test('collapsing it gives focus to Expand sidebar, and expanding it gives focus back to Collapse sidebar', async ({
+    page,
+  }) => {
+    const designer = await openDesigner(page);
+    await designer.getByRole('button', { name: 'User Menu' }).click();
+    await designer.getByRole('button', { name: 'Preferences', exact: true }).click();
+    await designer.getByRole('radio', { name: /Library Sidebar/ }).check();
+    await designer.getByRole('button', { name: 'Done', exact: true }).click();
+    await designer.getByRole('button', { name: 'Collapse sidebar' }).focus();
+    await page.keyboard.press('Enter');
+    await expect(designer.getByRole('button', { name: 'Expand sidebar' })).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(designer.getByRole('button', { name: 'Collapse sidebar' })).toBeFocused();
+  });
+});
+
+test.describe('the types list', () => {
+  const remove = (settings: Locator, iri: string) =>
+    settings.getByRole('button', { name: `Remove type ${iri}`, exact: true });
+  /** The template's Metadata tab with three types added by hand. */
+  async function withTypes(page: Page, picker = ''): Promise<Locator> {
+    const designer = await openDesigner(page, picker);
+    await designer.getByRole('button', { name: 'Expand template settings', exact: true }).click();
+    const settings = designer.locator('app-container-settings').first();
+    await clickCentred(settings.getByRole('tab', { name: 'Metadata', exact: true }));
+    for (const iri of ['urn:one', 'urn:two', 'urn:three']) {
+      await settings.getByRole('button', { name: 'Enter IRI manually', exact: true }).click();
+      await settings.getByRole('textbox', { name: 'IRI', exact: true }).fill(iri);
+      await settings.getByRole('textbox', { name: 'IRI', exact: true }).press('Enter');
+      // The list renders the type before the next one is added, as it does between a person's keys.
+      await expect(remove(settings, iri)).toBeVisible();
+    }
+    return settings;
+  }
+
+  test("removing a type gives focus to the next type's Remove, else the previous one's, else Add types", async ({
+    page,
+  }) => {
+    const settings = await withTypes(page, '?picker=stub');
+    await remove(settings, 'urn:two').focus();
+    await page.keyboard.press('Enter');
+    await expect(remove(settings, 'urn:three')).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(remove(settings, 'urn:one')).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(settings.getByRole('button', { name: 'Add types', exact: true })).toBeFocused();
+  });
+
+  test('without vocabulary search, removing the last type gives focus to Enter IRI manually', async ({ page }) => {
+    const settings = await withTypes(page);
+    for (const iri of ['urn:one', 'urn:two', 'urn:three']) {
+      await remove(settings, iri).focus();
+      await page.keyboard.press('Enter');
+      await expect(remove(settings, iri)).toHaveCount(0);
+    }
+    await expect(settings.getByRole('button', { name: 'Enter IRI manually', exact: true })).toBeFocused();
+  });
+});
