@@ -397,26 +397,42 @@ test('the template settings, user menu, Preferences and Add field palette', asyn
   await expectAccessible(page, 'a new, unnamed field');
 });
 
-test('every settings tab of every field in the template', async ({ page }) => {
-  const designer = await openDesigner(page);
-  const cards = designer.locator('[id^=field-card-]');
-  for (let index = 0; index < (await cards.count()); index++)
-    await expectTabsAccessible(page, cards.nth(index), `field ${index + 1}`);
-});
+/**
+ * The sample template's fields. Each gets a test of its own, because every tab of every field in
+ * one test outlasted the timeout on the build train's slower runner.
+ */
+const SAMPLE_FIELDS = 3;
 
-test('the Hungarian text, on a template and every settings tab of its fields', async ({ page }) => {
-  // The stub picker brings the property IRI's Choose and Replace buttons, whose Hungarian names
-  // must hold their visible words.
+for (let index = 0; index < SAMPLE_FIELDS; index++)
+  test(`every settings tab of field ${index + 1} in the template`, async ({ page }) => {
+    const designer = await openDesigner(page);
+    const cards = designer.locator('[id^=field-card-]');
+    await expect(cards).toHaveCount(SAMPLE_FIELDS);
+    await expectTabsAccessible(page, cards.nth(index), `field ${index + 1}`);
+  });
+
+/** Show the designer in Hungarian. The stub picker brings the property IRI's Choose and Replace buttons, whose Hungarian names must hold their visible words. */
+async function openHungarian(page: Page): Promise<Locator> {
   const designer = await openDesigner(page, '?picker=stub');
   await page.evaluate(() => {
     (document.querySelector('cedar-embeddable-designer') as unknown as { language: string }).language = 'hu';
   });
   await expect(designer.locator('.overview-panel__title')).toHaveText('Áttekintés (3)');
+  return designer;
+}
+
+test('the Hungarian text on a template', async ({ page }) => {
+  await openHungarian(page);
   await expectAccessible(page, 'Hungarian template');
-  const cards = designer.locator('[id^=field-card-]');
-  for (let index = 0; index < (await cards.count()); index++)
-    await expectTabsAccessible(page, cards.nth(index), `Hungarian field ${index + 1}`);
 });
+
+for (let index = 0; index < SAMPLE_FIELDS; index++)
+  test(`the Hungarian text on every settings tab of field ${index + 1}`, async ({ page }) => {
+    const designer = await openHungarian(page);
+    const cards = designer.locator('[id^=field-card-]');
+    await expect(cards).toHaveCount(SAMPLE_FIELDS);
+    await expectTabsAccessible(page, cards.nth(index), `Hungarian field ${index + 1}`);
+  });
 
 test('the child picker, a nested element and a collapsed element', async ({ page }) => {
   const designer = await openDesigner(page);
@@ -505,7 +521,12 @@ test('the library sidebar, expanded and collapsed', async ({ page }) => {
   await expectAccessible(page, 'collapsed sidebar');
 });
 
-test('the constraint and default-term dialogs, and the settings they change', async ({ page }) => {
+/**
+ * A Controlled Terms field on a fresh template, under the semantic preset, with the stub picker. The
+ * dialogs and the settings they change are checked in three tests, each from here, because one
+ * test of all of them outlasted the timeout on the build train's slower runner.
+ */
+async function controlledTermsCard(page: Page) {
   const designer = await openDesigner(page, '?picker=stub');
   await applyPreset(page, 'semantic');
   await designer.getByRole('textbox', { name: 'Template name', exact: true }).fill('Study');
@@ -513,13 +534,37 @@ test('the constraint and default-term dialogs, and the settings they change', as
   await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
   const card = designer.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') });
   await card.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Disease');
-  await expectTabsAccessible(page, card, 'controlled terms without constraints');
-  await clickCentred(card.getByRole('tab', { name: 'Constraints', exact: true }));
+  return { designer, card };
+}
+
+async function addConstraint(
+  page: Page,
+  { designer, card }: Awaited<ReturnType<typeof controlledTermsCard>>,
+  scan: boolean,
+) {
+  // The settings are still folded on a new field, so they are opened at the tab that holds the button.
+  await openSettings(card, 'Constraints');
   await clickCentred(card.getByRole('button', { name: 'Edit controlled-term constraints' }));
   await expect(designer.getByRole('dialog', { name: 'Controlled-term constraints' })).toBeVisible();
-  await expectAccessible(page, 'constraint dialog');
+  if (scan) await expectAccessible(page, 'constraint dialog');
   await designer.locator('#stub-pick').click();
-  await expectTabsAccessible(page, card, 'controlled terms with a constraint');
+}
+
+test('a controlled-terms field without constraints', async ({ page }) => {
+  const { card } = await controlledTermsCard(page);
+  await expectTabsAccessible(page, card, 'controlled terms without constraints');
+});
+
+test('the constraint dialog, and the settings a constraint changes', async ({ page }) => {
+  const field = await controlledTermsCard(page);
+  await addConstraint(page, field, true);
+  await expectTabsAccessible(page, field.card, 'controlled terms with a constraint');
+});
+
+test('the default-term dialog, and the settings a default changes', async ({ page }) => {
+  const field = await controlledTermsCard(page);
+  await addConstraint(page, field, false);
+  const { designer, card } = field;
   await clickCentred(card.getByRole('tab', { name: 'Constraints', exact: true }));
   await clickCentred(card.getByRole('button', { name: 'Edit default term' }));
   await expect(designer.getByRole('dialog', { name: 'Choose default term' })).toBeVisible();
@@ -582,33 +627,45 @@ test('the types picker, its dialog and its error, and manual entry', async ({ pa
 
 /**
  * One control of each kind, hovered and then focused from the keyboard, because a state's colours
- * are what axe-core measures, and hover and focus change them.
+ * are what axe-core measures, and hover and focus change them. Each kind gets a test of its own,
+ * because all of them in one test came close to the timeout on the build train's slower runner.
  */
-test('a button, an icon button, a text box, a select, a tab, a checkbox and a menu item, hovered and focused', async ({
-  page,
-}) => {
+const CONTROL_KINDS = ['button', 'icon button', 'text box', 'select', 'tab', 'checkbox'] as const;
+
+/**
+ * The control of `kind` to hover and the one to focus. A tab takes focus only when it is selected,
+ * so the selected tab is focused and another is hovered.
+ */
+async function controlOfKind(page: Page, kind: (typeof CONTROL_KINDS)[number]): Promise<[Locator, Locator]> {
   const designer = await openDesigner(page);
   const card = designer.locator('[id^=field-card-]').first();
   const panel = await openSettings(card, 'Configuration');
-  // A tab takes focus only when it is selected, so the selected tab is focused and another is hovered.
-  const controls: Array<[string, Locator, Locator?]> = [
-    ['button', designer.getByRole('button', { name: 'Add field', exact: true })],
-    ['icon button', card.getByRole('button', { name: 'Delete field', exact: true })],
-    ['text box', designer.getByRole('textbox', { name: 'Template name', exact: true })],
-    ['select', panel.getByRole('combobox', { name: 'Requirement', exact: true })],
-    [
-      'tab',
+  const controls: Record<(typeof CONTROL_KINDS)[number], [Locator, Locator?]> = {
+    button: [designer.getByRole('button', { name: 'Add field', exact: true })],
+    'icon button': [card.getByRole('button', { name: 'Delete field', exact: true })],
+    'text box': [designer.getByRole('textbox', { name: 'Template name', exact: true })],
+    select: [panel.getByRole('combobox', { name: 'Requirement', exact: true })],
+    tab: [
       card.getByRole('tab', { name: 'Presentation', exact: true }),
       card.getByRole('tab', { name: 'Configuration', exact: true }),
     ],
-    ['checkbox', panel.getByRole('checkbox', { name: 'Hidden', exact: true })],
-  ];
-  for (const [kind, hovered, focused = hovered] of controls) {
+    checkbox: [panel.getByRole('checkbox', { name: 'Hidden', exact: true })],
+  };
+  const [hovered, focused = hovered] = controls[kind];
+  return [hovered, focused];
+}
+
+for (const kind of CONTROL_KINDS)
+  test(`${kind === 'icon button' ? 'an' : 'a'} ${kind}, hovered and focused`, async ({ page }) => {
+    const [hovered, focused] = await controlOfKind(page, kind);
     await hover(hovered);
     await expectAccessible(page, `hovered ${kind}`);
     await focusFromKeyboard(page, focused);
     await expectAccessible(page, `focused ${kind}`);
-  }
+  });
+
+test('a menu item, hovered and focused', async ({ page }) => {
+  const designer = await openDesigner(page);
   await designer.getByRole('button', { name: 'User Menu' }).click();
   const item = designer.getByRole('button', { name: 'Preferences', exact: true });
   await hover(item);
