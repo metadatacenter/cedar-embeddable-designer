@@ -130,7 +130,8 @@ describe('the Version tab', () => {
     const VERDICTS: Array<[string, Host['verdict']]> = [
       ['no verdict', 'none'],
       ['compatible', { compatible: true }],
-      ['breaking', { compatible: false }],
+      ['breaking', { compatible: false, invalidatedInstances: 0 }],
+      ['unknown impact', { compatible: false }],
       ['breaking with instances', { compatible: false, invalidatedInstances: 2 }],
     ];
     const cases = [true, false].flatMap((newer) =>
@@ -148,7 +149,7 @@ describe('the Version tab', () => {
         service.validation.setReadOnly(readOnly);
         const tab = await panel(id);
         const upgrade =
-          newer && name !== 'breaking with instances' && !readOnly
+          newer && name !== 'breaking with instances' && name !== 'unknown impact' && !readOnly
             ? [
                 name === 'compatible'
                   ? 'Upgrade to v1.3.0 (compatible)'
@@ -170,7 +171,9 @@ describe('the Version tab', () => {
           Folder: 'Shared',
         });
         expect(tab.notes()[0]).toBe('This is Sample v1.2.0.');
-        if (!newer) expect(tab.notes()).toContain('This is the newest version.');
+        if (!newer) expect(tab.notes()).toContain('No newer published version is available.');
+        if (newer && name === 'unknown impact')
+          expect(tab.notes()).toContain('Whether it is compatible could not be checked.');
         if (newer && name === 'breaking with instances')
           expect(tab.notes()).toContain(
             'Upgrading would invalidate 2 instances of this template. Create a new version of the template to upgrade.',
@@ -201,7 +204,7 @@ describe('the Version tab', () => {
       expect(tab.notes()[0]).toBe(readable ? 'Derived from Sample v1.1.0.' : `Derived from ${iri('v110')}.`);
       // The owner and folder are the origin's, not the copy's, so a copy shows neither.
       expect(tab.rows()).not.toHaveProperty('Owner');
-      if (readable) expect(tab.notes()[1]).toBe("The origin's newest version is v1.3.0.");
+      if (readable) expect(tab.notes()[1]).toBe("The origin's newest available published version is v1.3.0.");
       if (!readable)
         expect(tab.notes()).toContain(
           'The origin cannot be read. It may have been deleted, or you may not have access to it.',
@@ -218,7 +221,7 @@ describe('the Version tab', () => {
       (tab.element.querySelector('.version-actions button') as HTMLButtonElement).click();
       expect(dialog.showModal).toHaveBeenCalled();
       expect(dialog.textContent).toContain(
-        'Sample becomes a copy of Sample v1.3.0, and the changes made to it here are lost.',
+        'Sample will use the published Sample v1.3.0. The changes made here will be lost.',
       );
       expect(service.session.document().children[0].definition).toMatchObject({ artifact: { version: '0.0.1' } });
       (dialog.querySelector('.primary') as HTMLButtonElement).click();
@@ -256,7 +259,7 @@ describe('the Version tab', () => {
     expect(tab.element.querySelector('.version-caption')?.textContent?.trim()).toBe('Linked and copied children');
     const summary = tab.element.querySelectorAll('dl.identity')[1];
     expect(summary.querySelector('dd')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
-      'Linked, v1.2.0. v1.3.0 is the newest version. It is compatible: every instance that is valid now stays valid.',
+      'Linked, v1.2.0. The newest available published version is v1.3.0. It is compatible: every instance that is valid now stays valid.',
     );
     expect(tab.buttons()).toEqual(['Upgrade all compatible']);
     (tab.element.querySelector('.version-actions button') as HTMLButtonElement).click();

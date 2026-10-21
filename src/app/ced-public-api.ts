@@ -233,12 +233,20 @@ export interface CedChildSource {
   versions?(reference: CedArtifactReference, options: { signal: AbortSignal }): Promise<CedArtifactVersion[] | null>;
   /**
    * Whether every instance that is valid under `current` stays valid under `candidate`. Both are
-   * complete JSON-LD artifacts of the same type. Without this method upgrades carry no verdict.
+   * complete JSON-LD artifacts of the same type. This guarantee is distinct from checking only
+   * currently stored instances. Without this method upgrades carry no verdict and the host must
+   * enforce its update policy when saving. A document edit retires the assessment.
    */
   compatibility?(
     current: CedJsonObject,
     candidate: CedJsonObject,
-    options: { type: CedChildResult['type']; signal: AbortSignal },
+    options: {
+      type: CedChildResult['type'];
+      signal: AbortSignal;
+      /** The full open document and exact proposed document, including retained placement. */
+      document: CedJsonObject;
+      replacement: CedJsonObject;
+    },
   ): Promise<CedCompatibility>;
   /**
    * Store a child as a new reusable artifact, as a draft or published, and return it as stored.
@@ -274,10 +282,14 @@ export interface CedArtifactVersion {
  *
  * `invalidatedInstances` counts the instances of the open template that the replacement would
  * invalidate. A breaking replacement is refused while that count is above zero, because those
- * instances belong to this version of the template; a new version of the template has none.
+ * instances belong to this version of the template. For a breaking replacement the count must be
+ * an explicit nonnegative safe integer, including zero to permit replacement. Missing, invalid or
+ * contradictory answers withhold replacement. The server must enforce the same policy at write
+ * time, including instances created after this assessment.
  */
 export interface CedCompatibility {
-  compatible: boolean;
+  /** null means schema compatibility is unknown; only an explicit zero impact permits replacement. */
+  compatible: boolean | null;
   invalidatedInstances?: number;
 }
 

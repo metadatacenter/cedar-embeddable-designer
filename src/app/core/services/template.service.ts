@@ -1189,18 +1189,34 @@ export class TemplateService {
    * child that can no longer be replaced, leaves the document as it was.
    */
   replaceChildren(replacements: readonly { id: number; type: 'field' | 'element'; artifact: CedJsonObject }[]): void {
+    this.replaceNodes(this.replacementNodes(replacements));
+  }
+
+  /** Serialize the exact proposed replacement without changing the editing session. */
+  replacementPreview(
+    replacements: readonly { id: number; type: 'field' | 'element'; artifact: CedJsonObject }[],
+  ): CedJsonObject {
+    return templateToJson(
+      buildContainer(this.withReplacements(this.session.document(), this.replacementNodes(replacements, false))),
+    ) as CedJsonObject;
+  }
+
+  private replacementNodes(
+    replacements: readonly { id: number; type: 'field' | 'element'; artifact: CedJsonObject }[],
+    checkAccess = true,
+  ): Map<number, ChildNode> {
     const root = this.session.document();
     const nodes = new Map<number, ChildNode>();
     for (const { id, type, artifact } of replacements) {
       const parent = parentOf(root, id);
       const existing = parent?.children.find((child) => child.id === id);
-      if (!parent || !existing || this.placementLocked(id))
+      if (!parent || !existing || (checkAccess && this.placementLocked(id)))
         throw new LocalizedError(message('errors.publishedReadOnly'));
       const replaced = replacedChild(existing, this.childFromArtifact(type, artifact, parent));
       if (!replaced) throw new LocalizedError(message('errors.chooseFieldOrElement'));
       nodes.set(id, replaced);
     }
-    this.replaceNodes(nodes);
+    return nodes;
   }
 
   /** Make a linked child an editable fork of the version it links to. Returns whether it did. */
@@ -1214,6 +1230,12 @@ export class TemplateService {
 
   private replaceNodes(nodes: ReadonlyMap<number, ChildNode>): void {
     if (!nodes.size) return;
+    this.loadError.set(null);
+    this.session.document.update((root) => this.withReplacements(root, nodes));
+    this.pruneCollapsed();
+  }
+
+  private withReplacements(root: ContainerDraft, nodes: ReadonlyMap<number, ChildNode>): ContainerDraft {
     const replace = (container: ContainerDraft): ContainerDraft => ({
       ...container,
       children: container.children.map((node) => {
@@ -1222,9 +1244,7 @@ export class TemplateService {
         return node.kind === 'element' ? { ...node, definition: replace(node.definition) } : node;
       }),
     });
-    this.loadError.set(null);
-    this.session.document.update(replace);
-    this.pruneCollapsed();
+    return replace(root);
   }
 
   /** Adds an inline element and returns its id, or -1 where the target cannot take one. */

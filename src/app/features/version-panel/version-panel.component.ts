@@ -15,7 +15,6 @@ import {
   reusedChildren,
   VersionAction,
   versionActions,
-  versionSignature,
   VersionState,
   versionState,
 } from '../../core/model/version-state';
@@ -68,6 +67,7 @@ function lookupNotes(state: VersionState, lookup: OriginLookup): Note[] {
     case 'pending':
       return [newest, { key: 'version.note.checking' }];
     case 'failed':
+    case 'unknown':
       return [newest, { key: 'version.note.uncheckable' }];
     case 'compatible':
       return [newest, { key: 'version.note.compatible' }];
@@ -275,21 +275,20 @@ export class VersionPanelComponent {
     return lookup.status === 'found' && !!lookup.candidate;
   }
 
-  /** What a lookup depends on, so that opening the tab, or a change that matters, looks again. */
-  private readonly lookupKey = computed(() => {
+  /** Bind assessments to the complete document, including parent placement and other children. */
+  private readonly lookupContext = computed(() => {
     if (!this.active()) return null;
-    const generation = this.versions.generation();
-    if (this.ownTab()) {
-      const root = this.document();
-      return JSON.stringify([generation, root.identifier, root.version, ...reusedChildren(root).map(versionSignature)]);
-    }
-    const node = this.node();
-    return node ? JSON.stringify([generation, versionSignature(node)]) : null;
+    return {
+      generation: this.versions.generation(),
+      document: this.document(),
+      id: this.nodeId(),
+      ownTab: this.ownTab(),
+    };
   });
 
   constructor() {
     effect(() => {
-      if (this.lookupKey() === null) return;
+      if (this.lookupContext() === null) return;
       untracked(() => {
         if (this.ownTab()) {
           this.versions.refreshDocument();

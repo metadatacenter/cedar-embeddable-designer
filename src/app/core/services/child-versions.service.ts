@@ -4,8 +4,8 @@
  *
  * A lookup starts when a Version tab opens, so what the tab shows is as fresh as the moment it was
  * opened, and nothing polls. Each child has at most one lookup in flight. An answer is kept only
- * while the child is still the one it was asked about, and replacing the child source or the
- * document abandons every lookup, so a late answer never reaches another child.
+ * while the document is still the snapshot it assessed, and replacing the child source or the
+ * document abandons every lookup, so a late answer never authorizes a changed document.
  */
 import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
 import type { CedArtifactReference, CedArtifactVersion, CedChildSource, CedJsonObject } from '../../ced-public-api';
@@ -13,13 +13,14 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
 import { LocalizedError, message } from '../../i18n/messages';
 import { buildContainer, fieldToJson, JsonSourcePolicy, templateToJson } from '../model/cedar-template';
 import { pathTo } from '../model/child-locks';
-import { ChildNode, fieldView } from '../model/container-draft';
+import { ChildNode, ContainerDraft, fieldView } from '../model/container-draft';
 import {
   candidateVersion,
   childIdentifier,
   childVersion,
   compatibleUpgrade,
   OriginLookup,
+  replaceable,
   reusedChildren,
   Verdict,
   versionSignature,
@@ -30,6 +31,12 @@ import { TemplateService } from './template.service';
 interface Entry {
   readonly signature: string;
   readonly lookup: OriginLookup;
+}
+
+interface ChildEntry extends Entry {
+  readonly document: ContainerDraft;
+  /** The exact candidate assessed, owned by this lookup rather than a cache of mutable host data. */
+  readonly artifact?: CedJsonObject;
 }
 
 const PENDING: OriginLookup = { status: 'pending' };
@@ -46,22 +53,26 @@ export function childArtifact(node: ChildNode): CedJsonObject {
   return artifact;
 }
 
-function verdictOf(compatible: boolean, invalidated: unknown): Verdict {
-  if (compatible) return { status: 'compatible' };
-  const count =
-    typeof invalidated === 'number' && Number.isFinite(invalidated) ? Math.max(0, Math.floor(invalidated)) : 0;
-  return { status: 'breaking', invalidatedInstances: count };
+function verdictOf(result: unknown): Verdict {
+  if (!isJsonObject(result) || (result['compatible'] !== null && typeof result['compatible'] !== 'boolean'))
+    return { status: 'failed' };
+  const compatible = result['compatible'];
+  const count = result['invalidatedInstances'];
+  if (count !== undefined && (typeof count !== 'number' || !Number.isSafeInteger(count) || count < 0))
+    return { status: 'failed' };
+  if (compatible === null) return count === 0 ? { status: 'unknown', invalidatedInstances: 0 } : { status: 'failed' };
+  // A missing count is unknown, not zero. A positive count contradicts universal compatibility.
+  if (compatible) return count === undefined || count === 0 ? { status: 'compatible' } : { status: 'failed' };
+  return typeof count === 'number' ? { status: 'breaking', invalidatedInstances: count } : { status: 'failed' };
 }
 
 @Injectable({ providedIn: 'root' })
 export class ChildVersionService {
   private readonly service = inject(TemplateService);
   private readonly language = inject(CedLanguageService);
-  private readonly entries = signal<ReadonlyMap<number, Entry>>(new Map());
+  private readonly entries = signal<ReadonlyMap<number, ChildEntry>>(new Map());
   private readonly documentEntry = signal<Entry | null>(null);
   private readonly controllers = new Map<number, AbortController>();
-  /** Candidate artifacts already loaded for a verdict, so an upgrade need not load them again. */
-  private readonly loaded = new Map<string, CedJsonObject>();
   /** The children with a save or replacement in progress. */
   readonly busy = signal<ReadonlySet<number>>(new Set());
   /** The last failed save or replacement, by child, as the message to show. */
@@ -82,7 +93,6 @@ export class ChildVersionService {
   private reset(): void {
     for (const controller of this.controllers.values()) controller.abort();
     this.controllers.clear();
-    this.loaded.clear();
     this.entries.set(new Map());
     this.documentEntry.set(null);
     this.busy.set(new Set());
@@ -94,11 +104,16 @@ export class ChildVersionService {
     return pathTo(this.service.session.document(), id)?.at(-1) ?? null;
   }
 
-  /** The lookup for the child, while the child is still the one it was made for. */
+  /** A verdict includes instance impact, so any document edit retires it, including sibling edits. */
   lookup(id: number): OriginLookup {
     const entry = this.entries().get(id);
     const node = this.node(id);
-    return entry && node && entry.signature === versionSignature(node) ? entry.lookup : PENDING;
+    return entry &&
+      entry.document === this.service.session.document() &&
+      node &&
+      entry.signature === versionSignature(node)
+      ? entry.lookup
+      : PENDING;
   }
 
   /** What the host supplies beyond search and load. */
@@ -107,31 +122,39 @@ export class ChildVersionService {
     return { open: !!source?.open, save: !!source?.save };
   }
 
-  private set(id: number, signature: string, lookup: OriginLookup): void {
-    this.entries.update((entries) => new Map(entries).set(id, { signature, lookup }));
+  private set(
+    id: number,
+    document: ContainerDraft,
+    signature: string,
+    lookup: OriginLookup,
+    artifact?: CedJsonObject,
+  ): void {
+    if (document !== this.service.session.document()) return;
+    this.entries.update((entries) => new Map(entries).set(id, { document, signature, lookup, artifact }));
   }
 
   /** Look up the origin of one child, abandoning any lookup for it still in flight. */
   refresh(id: number): void {
+    const document = this.service.session.document();
     const node = this.node(id);
-    const state = versionState(this.service.session.document(), id);
+    const state = versionState(document, id);
     if (!node || !state || (state.kind !== 'linked' && state.kind !== 'forked')) return;
     this.controllers.get(id)?.abort();
     this.controllers.delete(id);
     const signature = versionSignature(node);
     const source = this.service.childSource();
     if (!source?.versions) {
-      this.set(id, signature, { status: 'unavailable' });
+      this.set(id, document, signature, { status: 'unavailable' });
       return;
     }
     const controller = new AbortController();
     this.controllers.set(id, controller);
-    this.set(id, signature, PENDING);
+    this.set(id, document, signature, PENDING);
     const reference: CedArtifactReference = {
       id: state.kind === 'linked' ? state.identifier : state.origin,
       type: node.kind,
     };
-    void this.find(id, node, signature, source, reference, controller.signal);
+    void this.find(id, document, node, signature, source, reference, controller.signal);
   }
 
   /** Look up every linked and forked child the document's own tab summarizes. */
@@ -189,41 +212,49 @@ export class ChildVersionService {
 
   private async find(
     id: number,
+    document: ContainerDraft,
     node: ChildNode,
     signature: string,
     source: CedChildSource,
     reference: CedArtifactReference,
     signal: AbortSignal,
   ): Promise<void> {
-    const state = versionState(this.service.session.document(), id);
+    const state = versionState(document, id);
     if (!state) return;
+    const current = () =>
+      !signal.aborted && this.service.childSource() === source && this.service.session.document() === document;
     let versions: CedArtifactVersion[] | null;
     try {
       versions = await source.versions!(reference, { signal });
     } catch {
-      if (!signal.aborted) this.set(id, signature, { status: 'failed' });
+      if (current()) this.set(id, document, signature, { status: 'failed' });
       return;
     }
-    if (signal.aborted) return;
+    if (!current()) return;
     if (!Array.isArray(versions)) {
-      this.set(id, signature, { status: 'unreadable' });
+      this.set(id, document, signature, { status: 'unreadable' });
       return;
     }
-    const listed = [...versions];
+    const listed = versions.map((version) => ({ ...version }));
     const candidate = candidateVersion(state, childVersion(node), listed);
     const found = (verdict: Verdict): OriginLookup => ({ status: 'found', versions: listed, candidate, verdict });
     if (!candidate || !source.compatibility) {
-      this.set(id, signature, found({ status: 'unchecked' }));
+      this.set(id, document, signature, found({ status: 'unchecked' }));
       return;
     }
-    this.set(id, signature, found({ status: 'pending' }));
+    this.set(id, document, signature, found({ status: 'pending' }));
     try {
       const artifact = await this.candidateArtifact(source, candidate, node.kind, signal);
-      const result = await source.compatibility(childArtifact(node), artifact, { type: node.kind, signal });
-      if (!signal.aborted)
-        this.set(id, signature, found(verdictOf(!!result?.compatible, result?.invalidatedInstances)));
+      if (!current()) return;
+      const result = await source.compatibility(childArtifact(node), JsonSourcePolicy.clone(artifact), {
+        type: node.kind,
+        signal,
+        document: JsonSourcePolicy.clone(templateToJson(buildContainer(document))) as CedJsonObject,
+        replacement: this.service.replacementPreview([{ id, type: node.kind, artifact }]),
+      });
+      if (current()) this.set(id, document, signature, found(verdictOf(result)), artifact);
     } catch {
-      if (!signal.aborted) this.set(id, signature, found({ status: 'failed' }));
+      if (current()) this.set(id, document, signature, found({ status: 'failed' }));
     }
   }
 
@@ -233,15 +264,18 @@ export class ChildVersionService {
     type: ChildNode['kind'],
     signal: AbortSignal,
   ): Promise<CedJsonObject> {
-    const cached = this.loaded.get(candidate.id);
-    if (cached) return cached;
     const artifact = await source.load(
       { id: candidate.id, name: candidate.name, type, version: candidate.version },
       { signal },
     );
-    if (!isJsonObject(artifact)) throw new LocalizedError(message('version.hostArtifact'));
-    this.loaded.set(candidate.id, artifact);
-    return artifact;
+    if (
+      !isJsonObject(artifact) ||
+      artifact['@id'] !== candidate.id ||
+      artifact['bibo:status'] !== 'bibo:published' ||
+      (candidate.version !== null && artifact['pav:version'] !== candidate.version)
+    )
+      throw new LocalizedError(message('version.hostArtifact'));
+    return JsonSourcePolicy.clone(artifact);
   }
 
   /** Show the stored artifact a linked child is, where the host can. */
@@ -254,23 +288,34 @@ export class ChildVersionService {
   /** Replace each child with the candidate its lookup found, in one change to the document. */
   async replace(ids: readonly number[]): Promise<void> {
     const source = this.service.childSource();
+    const document = this.service.session.document();
     const targets = ids.flatMap((id) => {
       const lookup = this.lookup(id);
       const node = this.node(id);
-      return node && lookup.status === 'found' && lookup.candidate ? [{ id, node, candidate: lookup.candidate }] : [];
+      const state = versionState(document, id);
+      return node &&
+        (state?.kind === 'linked' || state?.kind === 'forked') &&
+        !this.service.placementLocked(id) &&
+        !this.busy().has(id) &&
+        replaceable(lookup) &&
+        lookup.status === 'found' &&
+        lookup.candidate
+        ? [{ id, node, candidate: lookup.candidate, artifact: this.entries().get(id)?.artifact }]
+        : [];
     });
-    if (!source || !targets.length) return;
+    if (!source || !targets.length || targets.length !== ids.length) return;
     await this.attempt(
       targets.map(({ id }) => id),
       async (signal) => {
         const replacements = await Promise.all(
-          targets.map(async ({ id, node, candidate }) => ({
+          targets.map(async ({ id, node, candidate, artifact }) => ({
             id,
             type: node.kind,
-            artifact: await this.candidateArtifact(source, candidate, node.kind, signal),
+            artifact: artifact ?? (await this.candidateArtifact(source, candidate, node.kind, signal)),
           })),
         );
-        if (targets.some(({ id, node }) => this.node(id) !== node)) return;
+        if (signal.aborted || this.service.childSource() !== source || this.service.session.document() !== document)
+          return;
         this.service.replaceChildren(replacements);
       },
     );
@@ -293,11 +338,18 @@ export class ChildVersionService {
   async save(id: number, publish: boolean): Promise<void> {
     const node = this.node(id);
     const source = this.service.childSource();
-    if (!node || !source?.save) return;
+    if (!node || !source?.save || this.busy().has(id) || this.service.placementLocked(id)) return;
+    const document = this.service.session.document();
     await this.attempt([id], async (signal) => {
       const stored: unknown = await source.save!(childArtifact(node), { type: node.kind, publish, signal });
       if (!isJsonObject(stored)) throw new LocalizedError(message('version.hostArtifact'));
-      if (this.node(id) !== node) return;
+      if (
+        signal.aborted ||
+        this.service.childSource() !== source ||
+        this.service.session.document() !== document ||
+        this.node(id) !== node
+      )
+        return;
       this.service.replaceChildren([{ id, type: node.kind, artifact: stored }]);
     });
   }

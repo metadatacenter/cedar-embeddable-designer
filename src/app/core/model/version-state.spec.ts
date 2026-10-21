@@ -216,10 +216,11 @@ describe('candidate versions', () => {
     expect(candidateVersion(linked, '1.2.0', [])).toBeNull();
     expect(candidateVersion(linked, '1.2.0', [version('v140', '1.4.0', false)])).toBeNull();
   });
-  it("offers a fork its origin's newest version, draft or published, even when that is its origin", () => {
-    expect(candidateVersion(forked, '0.0.1', newestDraft)?.id).toBe('v140');
+  it("offers a fork its origin's newest published version, even when that is its origin", () => {
+    expect(candidateVersion(forked, '0.0.1', newestDraft)?.id).toBe('v130');
     expect(candidateVersion(forked, '0.0.1', [version('v110', '1.1.0', true)])?.id).toBe('v110');
     expect(candidateVersion(forked, '0.0.1', [])).toBeNull();
+    expect(candidateVersion(forked, '0.0.1', [version('v140', '1.4.0', false)])).toBeNull();
   });
   it('offers a local or contained child nothing', () => {
     expect(candidateVersion({ kind: 'local' }, '0.0.1', newestPublished)).toBeNull();

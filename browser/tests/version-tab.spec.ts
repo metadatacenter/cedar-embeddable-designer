@@ -68,7 +68,7 @@ test('a linked field shows its version and status on the Version tab and upgrade
   await expect(value('Reuse')).toHaveText('Linked');
   await expect(value('Owner')).toHaveText('test1');
   await expect(version.getByText('This is Title v1.2.0.')).toBeVisible();
-  await expect(version.getByText('v1.3.0 is the newest version.')).toBeVisible();
+  await expect(version.getByText('The newest available published version is v1.3.0.')).toBeVisible();
   await expect(version.getByRole('button')).toHaveText([
     'Open original',
     'Upgrade to v1.3.0 (compatible)',
@@ -90,7 +90,7 @@ test('a linked field shows its version and status on the Version tab and upgrade
   // The child's key is how the template stores it, and an upgrade keeps it.
   expect(Object.keys((await currentTemplate(page)).properties as object)).toContain('Title');
   await expect(value('Version')).toHaveText('1.3.0');
-  await expect(version.getByText('This is the newest version.')).toBeVisible();
+  await expect(version.getByText('No newer published version is available.')).toBeVisible();
 });
 
 test('a breaking version that would invalidate instances is not offered, and detaching makes an editable copy', async ({
@@ -142,7 +142,7 @@ test("the template's Version tab summarizes its linked children", async ({ page 
       .locator('dt')
       .filter({ hasText: /^Title$/ })
       .locator('+ dd'),
-  ).toContainText('Linked, v1.2.0. v1.3.0 is the newest version.');
+  ).toContainText('Linked, v1.2.0. The newest available published version is v1.3.0.');
   await panel.getByRole('button', { name: 'Upgrade all compatible' }).click();
   await expect.poll(async () => ((await currentTemplate(page)).properties as any).Title['@id']).toBe(NEWER);
 });

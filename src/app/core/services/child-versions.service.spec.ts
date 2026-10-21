@@ -88,6 +88,14 @@ function repository({ newestPublished, readable, lookupFails, verdict }: Reposit
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
+
 describe('ChildVersionService', () => {
   let service: TemplateService;
   let versions: ChildVersionService;
@@ -115,6 +123,7 @@ describe('ChildVersionService', () => {
     'fails',
     { compatible: true },
     { compatible: false },
+    { compatible: false, invalidatedInstances: 0 },
     { compatible: false, invalidatedInstances: 4 },
   ];
   const cases = HOWS.flatMap((how) =>
@@ -141,15 +150,18 @@ describe('ChildVersionService', () => {
       if (!readable) return expect(lookup).toEqual({ status: 'unreadable' });
       if (lookup.status !== 'found') throw new Error(`expected a found lookup, not ${lookup.status}`);
       expect(lookup.versions.map((entry) => entry.version)).toEqual(['1.3.0', '1.2.0', '1.1.0']);
-      // A link moves only to a newer published version; a copy is offered its origin's newest.
-      const candidate = how === 'linked' ? (newestPublished ? iri('v130') : null) : iri('v130');
+      // Both use published releases. A copy may return to an older release in its origin's line.
+      const candidate =
+        how === 'linked' ? (newestPublished ? iri('v130') : null) : iri(newestPublished ? 'v130' : 'v120');
       expect(lookup.candidate?.id ?? null).toBe(candidate);
       if (!candidate || verdict === 'none') return expect(lookup.verdict).toEqual({ status: 'unchecked' });
       if (verdict === 'fails') return expect(lookup.verdict).toEqual({ status: 'failed' });
       expect(lookup.verdict).toEqual(
         verdict.compatible
           ? { status: 'compatible' }
-          : { status: 'breaking', invalidatedInstances: verdict.invalidatedInstances ?? 0 },
+          : verdict.invalidatedInstances === undefined
+            ? { status: 'failed' }
+            : { status: 'breaking', invalidatedInstances: verdict.invalidatedInstances },
       );
     },
   );
@@ -237,6 +249,142 @@ describe('ChildVersionService', () => {
     await settle();
     await versions.replace([id]);
     expect(versionState(service.session.document(), id)).toEqual({ kind: 'linked', identifier: iri('v130') });
+  });
+
+  it.each([
+    null,
+    {},
+    { compatible: 'false' },
+    { compatible: false },
+    { compatible: false, invalidatedInstances: null },
+    { compatible: false, invalidatedInstances: -1 },
+    { compatible: false, invalidatedInstances: 0.5 },
+    { compatible: false, invalidatedInstances: Number.NaN },
+    { compatible: false, invalidatedInstances: Number.POSITIVE_INFINITY },
+    { compatible: false, invalidatedInstances: Number.MAX_SAFE_INTEGER + 1 },
+    { compatible: true, invalidatedInstances: 1 },
+  ])('does not authorize replacement from an incomplete or inconsistent assessment: %j', async (answer) => {
+    const { source } = repository({ newestPublished: true, readable: true, lookupFails: false, verdict: 'none' });
+    const id = holding('copied', { ...source, compatibility: async () => answer as CedCompatibility });
+    versions.refresh(id);
+    await settle();
+    const before = service.session.document();
+    expect(versions.lookup(id)).toMatchObject({ verdict: { status: 'failed' } });
+    await versions.replace([id]);
+    expect(service.session.document()).toBe(before);
+  });
+
+  it('allows a breaking replacement only when the host explicitly reports no affected instances', async () => {
+    const { source } = repository({
+      newestPublished: true,
+      readable: true,
+      lookupFails: false,
+      verdict: { compatible: false, invalidatedInstances: 0 },
+    });
+    const id = holding('copied', source);
+    versions.refresh(id);
+    await settle();
+    expect(versions.lookup(id)).toMatchObject({ verdict: { status: 'breaking', invalidatedInstances: 0 } });
+    await versions.replace([id]);
+    expect(childIdentifier(service.session.document().children[0])).toBe(iri('v130'));
+  });
+
+  it.each(['child', 'sibling'] as const)(
+    'retires a verdict after a %s edit, even when all version identifiers stay the same',
+    async (target) => {
+      const { source } = repository({
+        newestPublished: true,
+        readable: true,
+        lookupFails: false,
+        verdict: { compatible: true },
+      });
+      const id = holding('copied', source);
+      versions.refresh(id);
+      await settle();
+      expect(versions.lookup(id)).toMatchObject({ verdict: { status: 'compatible' } });
+      const edited = target === 'child' ? id : service.fields().find((field) => field.id !== id)!.id;
+      service.updateFieldName(edited, 'Changed definition');
+      const before = service.session.document();
+      expect(versions.lookup(id)).toEqual({ status: 'pending' });
+      await versions.replace([id]);
+      expect(service.session.document()).toBe(before);
+    },
+  );
+
+  it('ignores a late compatibility answer after the copy was edited', async () => {
+    const { source } = repository({ newestPublished: true, readable: true, lookupFails: false, verdict: 'none' });
+    const reply = deferred<CedCompatibility>();
+    const id = holding('copied', { ...source, compatibility: () => reply.promise });
+    versions.refresh(id);
+    await settle();
+    service.updateFieldName(id, 'Local changes');
+    reply.resolve({ compatible: true });
+    await settle();
+    expect(versions.lookup(id)).toEqual({ status: 'pending' });
+    const before = service.session.document();
+    await versions.replace([id]);
+    expect(service.session.document()).toBe(before);
+  });
+
+  it('reloads a candidate on refresh and applies the exact snapshot assessed, isolated from host mutation', async () => {
+    const { source, artifacts } = repository({
+      newestPublished: true,
+      readable: true,
+      lookupFails: false,
+      verdict: 'none',
+    });
+    const load = vi.fn(source.load);
+    const names: unknown[] = [];
+    const id = holding('linked', {
+      ...source,
+      load,
+      compatibility: async (_current, candidate) => {
+        names.push(candidate['schema:name']);
+        candidate['schema:name'] = 'Mutated by the host';
+        return { compatible: true };
+      },
+    });
+    versions.refresh(id);
+    await settle();
+    artifacts[iri('v130')] = { ...artifacts[iri('v130')], 'schema:name': 'Refreshed candidate' };
+    versions.refresh(id);
+    await settle();
+    expect(load).toHaveBeenCalledTimes(2);
+    expect(names).toEqual(['Sample', 'Refreshed candidate']);
+    artifacts[iri('v130')]['schema:name'] = 'Changed after assessment';
+    await versions.replace([id]);
+    expect(service.session.document().children[0].definition.name).toBe('Refreshed candidate');
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not apply a late candidate after its source is replaced, even if the host ignores cancellation', async () => {
+    const { source } = repository({ newestPublished: true, readable: true, lookupFails: false, verdict: 'none' });
+    const reply = deferred<CedJsonObject>();
+    const id = holding('linked', { ...source, load: () => reply.promise });
+    versions.refresh(id);
+    await settle();
+    const replacing = versions.replace([id]);
+    service.childSource.set({ ...source });
+    TestBed.tick();
+    const before = service.session.document();
+    reply.resolve(artifact('v130', '1.3.0', true));
+    await replacing;
+    expect(service.session.document()).toBe(before);
+  });
+
+  it('never replaces a copy with an unpublished candidate', async () => {
+    const { source } = repository({
+      newestPublished: false,
+      readable: true,
+      lookupFails: false,
+      verdict: { compatible: true },
+    });
+    const id = holding('copied', source);
+    versions.refresh(id);
+    await settle();
+    expect(versions.lookup(id)).toMatchObject({ candidate: { id: iri('v120'), publicationStatus: 'bibo:published' } });
+    await versions.replace([id]);
+    expect(versionState(service.session.document(), id)).toEqual({ kind: 'linked', identifier: iri('v120') });
   });
 
   it.each([false, true])(

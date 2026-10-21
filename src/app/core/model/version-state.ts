@@ -112,6 +112,7 @@ export type Verdict =
   | { readonly status: 'pending' }
   | { readonly status: 'failed' }
   | { readonly status: 'compatible' }
+  | { readonly status: 'unknown'; readonly invalidatedInstances: 0 }
   | { readonly status: 'breaking'; readonly invalidatedInstances: number };
 
 /**
@@ -135,19 +136,19 @@ export type OriginLookup =
  * The version that could replace the child, from its origin's versions listed newest first.
  *
  * A linked child can move only to a newer published version, since only published artifacts are
- * linked. A fork can always be replaced with its origin's newest version, which discards its local
- * changes; that version may be the one it was copied from.
+ * linked. A fork can be replaced with its origin's newest published version, which discards its
+ * local changes; that version may be the one it was copied from. Drafts are never replacement targets.
  */
 export function candidateVersion(
   state: VersionState,
   current: string | null,
   versions: readonly CedArtifactVersion[],
 ): CedArtifactVersion | null {
+  const newest = versions.find((version) => version.publicationStatus === 'bibo:published');
   if (state.kind === 'linked') {
-    const newest = versions.find((version) => version.publicationStatus === 'bibo:published');
     return newest && newest.id !== state.identifier && compareVersions(newest.version, current) > 0 ? newest : null;
   }
-  return state.kind === 'forked' ? (versions[0] ?? null) : null;
+  return state.kind === 'forked' ? (newest ?? null) : null;
 }
 
 /** The version the child's origin identifier names, where the lookup listed it. */
@@ -189,10 +190,15 @@ export function blockedByInstances(lookup: OriginLookup): boolean {
  * because a breaking replacement must never be presented as an unlabelled one. A host that gives no
  * verdicts at all has chosen not to check, and its candidates carry no label.
  */
-function replaceable(lookup: OriginLookup): boolean {
+export function replaceable(lookup: OriginLookup): boolean {
   if (lookup.status !== 'found' || !lookup.candidate) return false;
   const status = lookup.verdict.status;
-  return status === 'unchecked' || status === 'compatible' || (status === 'breaking' && !blockedByInstances(lookup));
+  return (
+    status === 'unchecked' ||
+    status === 'compatible' ||
+    status === 'unknown' ||
+    (status === 'breaking' && !blockedByInstances(lookup))
+  );
 }
 
 /** The actions a child's Version tab offers, in the order it shows them. */

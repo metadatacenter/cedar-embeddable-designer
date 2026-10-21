@@ -777,10 +777,10 @@
       "pending": "Újabb verziók keresése.",
       "unreadable": "A forrás nem olvasható. Lehet, hogy törölték, vagy nincs hozzá hozzáférése.",
       "failed": "A forrás verzióit nem sikerült lekérdezni.",
-      "newest": "Ez a legújabb verzió.",
-      "originNewest": "A forrásnak nincs újabb verziója.",
-      "newer": "A legújabb verzió: v{{version}}.",
-      "originNewer": "A forrás legújabb verziója: v{{version}}.",
+      "newest": "Nincs elérhető újabb közzétett verzió.",
+      "originNewest": "A forrásnak nincs elérhető újabb közzétett verziója.",
+      "newer": "A legújabb elérhető közzétett verzió: v{{version}}.",
+      "originNewer": "A forrás legújabb elérhető közzétett verziója: v{{version}}.",
       "checking": "A kompatibilitás ellenőrzése folyamatban.",
       "compatible": "Kompatibilis: minden most érvényes példány érvényes marad.",
       "breaking": "Nem kompatibilis: egy most érvényes példány érvénytelenné válhat.",
@@ -814,7 +814,7 @@
     },
     "replaceDialog": {
       "title": "Csere a forrás v{{version}} verziójára?",
-      "description": "A(z) {{name}} a(z) {{origin}} v{{version}} másolata lesz, és az itt végzett módosításai elvesznek.",
+      "description": "A(z) {{name}} a(z) {{origin}} közzétett v{{version}} verzióját fogja használni. Az itt végzett módosítások elvesznek.",
       "confirm": "Csere"
     },
     "hostArtifact": "A gazdaoldal nem összetevőt adott vissza."

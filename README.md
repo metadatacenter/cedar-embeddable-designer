@@ -521,13 +521,24 @@ loses only the actions that need it.
 - `versions(reference, { signal })` returns every version of the referenced artifact's
   version line that the user can read, newest first, or `null` when the artifact
   cannot be read. The tab asks when it opens. A linked child is offered the newest
-  published version as an upgrade, and a copy is offered its origin's newest version
-  as a replacement.
-- `compatibility(current, candidate, { type, signal })` says whether every instance
+  published version as an upgrade, and a copy is offered its origin's newest published
+  version as a replacement. Neither can be replaced with a draft; when no published
+  version is available, no replacement is offered. Importing a draft still makes an
+  editable copy.
+- `compatibility(current, candidate, { type, signal, document, replacement })` says whether every instance
   that is valid under `current` stays valid under `candidate`. The upgrade and
-  replacement buttons name the verdict. A breaking replacement is refused while
-  `invalidatedInstances` is above zero, because those instances belong to the current
-  version of the template.
+  replacement buttons name the verdict. The options include the full before/after parent,
+  with the exact occurrence and its preserved placement. Schema compatibility is distinct from checking
+  only currently stored instances. A breaking replacement requires an explicit
+  `invalidatedInstances: 0`; a missing, invalid or positive count does not permit it.
+  `compatible: null` explicitly means unknown. With an explicit zero it permits a manual
+  replacement without a compatibility label, and never enters Upgrade all compatible.
+  Contradictory answers, such as `compatible: true` with a positive count, also withhold
+  replacement. A document edit retires the assessment, including edits to siblings or
+  placement, and an active Version tab checks again. Each refresh reloads its candidate;
+  replacement uses the exact snapshot that was assessed. Without this method, manual
+  replacements carry no verdict and are excluded from Upgrade all compatible. The host
+  must enforce its update policy at save time, including concurrent instance creation.
 - `save(artifact, { type, publish, signal })` stores a child as a new reusable
   artifact and returns it as stored. A published result is linked in the child's
   place; a stored draft is copied, since only published artifacts are linked.

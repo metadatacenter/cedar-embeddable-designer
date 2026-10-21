@@ -777,10 +777,10 @@
       "pending": "Looking for newer versions.",
       "unreadable": "The origin cannot be read. It may have been deleted, or you may not have access to it.",
       "failed": "The versions of the origin could not be looked up.",
-      "newest": "This is the newest version.",
-      "originNewest": "The origin has no newer version.",
-      "newer": "v{{version}} is the newest version.",
-      "originNewer": "The origin's newest version is v{{version}}.",
+      "newest": "No newer published version is available.",
+      "originNewest": "No newer published version of the origin is available.",
+      "newer": "The newest available published version is v{{version}}.",
+      "originNewer": "The origin's newest available published version is v{{version}}.",
       "checking": "Checking whether it is compatible.",
       "compatible": "It is compatible: every instance that is valid now stays valid.",
       "breaking": "It is breaking: an instance that is valid now may not stay valid.",
@@ -814,7 +814,7 @@
     },
     "replaceDialog": {
       "title": "Replace with origin v{{version}}?",
-      "description": "{{name}} becomes a copy of {{origin}} v{{version}}, and the changes made to it here are lost.",
+      "description": "{{name}} will use the published {{origin}} v{{version}}. The changes made here will be lost.",
       "confirm": "Replace"
     },
     "hostArtifact": "The host returned something other than an artifact."
