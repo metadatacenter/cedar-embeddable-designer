@@ -18,10 +18,9 @@ import {
  * The same four checks run over Workspace, the term picker, CEE and this designer, by one method:
  *
  * - Reflow. At 320 CSS px wide, neither the page nor any scroll container inside the designer
- *   scrolls sideways, and every control can be scrolled to and hit. A data table that needs both
- *   directions may scroll inside its own container, and each such container is named in
- *   `TABLE_SCROLLERS`. This designer also checks here that no text overlaps other text, because a
- *   header crowded at 320 px can be clear at every wider size.
+ *   scrolls sideways, no text overlaps other text, and every control can be scrolled to and hit. A
+ *   data table that needs both directions may scroll inside its own container, and each such
+ *   container is named in `TABLE_SCROLLERS`.
  * - Resize. A 640 by 400 viewport is a 1280 by 800 window at 200% zoom. No text is clipped, no
  *   text overlaps other text, and every control can be scrolled to and hit.
  * - Text spacing. At 1280 px wide, with criterion 1.4.12's line, letter, word and paragraph
