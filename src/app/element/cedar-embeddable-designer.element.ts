@@ -13,6 +13,7 @@ import {
   inject,
 } from '@angular/core';
 import { TemplateService } from '../core/services/template.service';
+import { ChildVersionService } from '../core/services/child-versions.service';
 import { TerminologyService } from '../core/services/terminology.service';
 import { PreferencesService } from '../core/services/preferences.service';
 import { CedChildSource, CedConfig, CedLanguage, CedValidationReport } from '../ced-public-api';
@@ -43,13 +44,16 @@ import { provideCedTranslations } from '../i18n/i18n';
     ...provideCedTranslations(),
     CedLanguageService,
     TemplateService,
+    ChildVersionService,
     TerminologyService,
     PreferencesService,
     DesignerConfigService,
   ],
   // The registrar renders nothing; it exists so its unencapsulated stylesheet,
   // which is only `@font-face` declarations, reaches the document.
-  template: `<ced-font-registrar /><app-root></app-root>`,
+  // The language is marked on the root inside the shadow tree, because the host element and its
+  // attributes belong to the embedding page.
+  template: `<ced-font-registrar /><app-root [attr.lang]="language"></app-root>`,
   styleUrls: ['../../styles.css', '../../authoring.scss', './cedar-embeddable-designer.element.scss'],
   encapsulation: ViewEncapsulation.ShadowDom,
   host: { '[class.ced-read-only]': 'readOnly' },

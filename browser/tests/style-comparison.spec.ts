@@ -8,7 +8,7 @@ test('comparison page renders the four real components and applies host profiles
   await page.goto('/style-comparison.html');
   await expect(page.locator('.status-reference span')).toHaveCount(4);
   await expect(page.locator('.status-reference .error')).toHaveCSS('background-color', 'rgb(254, 243, 242)');
-  await expect(page.getByRole('status')).toContainText('Both bundles loaded');
+  await expect(page.locator('#status')).toContainText('Both bundles loaded');
   for (const id of ['cee', 'cef', 'ced', 'cefd']) {
     await expect(page.locator(`#${id} input`).first()).toBeVisible();
   }
@@ -29,7 +29,7 @@ test('comparison page renders the four real components and applies host profiles
   await page.getByLabel('Narrow hosts').check();
   await expect(page.locator('main')).toHaveClass(/narrow/);
   await page.getByLabel('Read-only CEE, CEF and CEFD').check();
-  await expect(page.locator('#cefd').getByRole('textbox', { name: 'Field display name', exact: true })).toBeDisabled();
+  await expect(page.locator('#cefd').getByRole('textbox', { name: 'Enter field name', exact: true })).toBeDisabled();
 });
 
 for (const readOnly of [false, true]) {
@@ -73,7 +73,7 @@ for (const readOnly of [false, true]) {
       await expect(designer.locator('.template-field-label').first()).toHaveCSS('text-transform', 'none');
       await designer.screenshot({ path: testInfo.outputPath(`ced-${width}.png`) });
     }
-    const fieldName = page.locator('#cefd').getByRole('textbox', { name: 'Field display name', exact: true });
+    const fieldName = page.locator('#cefd').getByRole('textbox', { name: 'Enter field name', exact: true });
     if (readOnly) await expect(fieldName).toBeDisabled();
     else await expect(fieldName).toBeEnabled();
   });

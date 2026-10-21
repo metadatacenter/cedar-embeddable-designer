@@ -154,8 +154,11 @@ export class ChildPickerComponent implements OnDestroy {
       if (this.rootId !== this.service.session.document().id)
         throw new LocalizedError(message('childPicker.documentChanged'));
       const { targetId, position } = this.target();
-      this.service.importChildren(artifacts, targetId, position);
+      const [first] = this.service.importChildren(artifacts, targetId, position);
+      // Closing returns focus to the button that opened the picker; the first new card then takes it,
+      // as a field added from the palette does.
       this.close();
+      if (first !== undefined) this.service.focusRequest.set({ kind: 'card', id: first });
     } catch (error) {
       if (!request.signal.aborted)
         this.error.set(

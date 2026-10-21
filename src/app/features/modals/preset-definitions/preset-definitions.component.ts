@@ -1,16 +1,17 @@
 import { PALETTE_FIELD_TYPES } from '../../../core/models/types';
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, output, ChangeDetectionStrategy } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TemplateService } from '../../../core/services/template.service';
 import { PresetDefinition } from '../../../core/models/types';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { ModalSurfaceDirective } from '../../../shared/modal-surface.directive';
 
 @Component({
   selector: 'app-preset-definitions-modal',
   standalone: true,
-  imports: [FormsModule, IconComponent, TranslatePipe],
+  imports: [FormsModule, IconComponent, ModalSurfaceDirective, TranslatePipe],
   templateUrl: './preset-definitions.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./preset-definitions.component.scss'],
@@ -50,7 +51,11 @@ export class PresetDefinitionsModalComponent {
     });
   }
 
+  /** Said when the dialog closes, so the user menu's button, which opened it, can take focus back. */
+  readonly closed = output<void>();
+
   close() {
     this.service.showPresetDefinitionsModal.set(false);
+    this.closed.emit();
   }
 }

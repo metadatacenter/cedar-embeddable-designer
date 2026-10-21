@@ -27,9 +27,9 @@ test('removed details controls remain absent and imported metadata survives a re
   // The Presentation tab edits the field's own name. The header shows the name its parent shows it by,
   // which is the preferred label here, so the two are apart and a rename leaves the header alone.
   await expect(section.getByLabel('Field name', { exact: true })).toHaveValue('Title');
-  await expect(card.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue('Heading');
+  await expect(card.getByRole('textbox', { name: 'Enter field name', exact: true })).toHaveValue('Heading');
   await section.getByLabel('Field name', { exact: true }).fill('Visible title');
-  await expect(card.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue('Heading');
+  await expect(card.getByRole('textbox', { name: 'Enter field name', exact: true })).toHaveValue('Heading');
   expect(((await currentTemplate(page)).properties as any).Title).toMatchObject({
     'schema:name': 'Visible title',
     'skos:prefLabel': 'Heading',
@@ -43,7 +43,7 @@ for (const [stored, label] of [
   ['bibo:draft', 'Draft'],
   ['bibo:published', 'Published'],
 ]) {
-  test(`field metadata displays ${label} without exposing its schema prefix`, async ({ page }) => {
+  test(`the Version tab displays ${label} without exposing its schema prefix`, async ({ page }) => {
     const designer = await openDesigner(page);
     await page.evaluate((status) => {
       const host = document.querySelector('cedar-embeddable-designer') as any;
@@ -52,13 +52,25 @@ for (const [stored, label] of [
       host.artifact = template;
     }, stored);
     await expect.poll(async () => ((await currentTemplate(page)).properties as any).Title['bibo:status']).toBe(stored);
-    const section = await openSettings(designer.locator('app-field-card').first(), 'Metadata');
-    await expect(
+    const card = designer.locator('app-field-card').first();
+    const metadata = await openSettings(card, 'Metadata');
+    await expect(metadata.locator('dt').filter({ hasText: /^Publication status$/ })).toHaveCount(0);
+    const section = await openSettings(card, 'Version');
+    const value = (name: string) =>
       section
         .locator('dt')
-        .filter({ hasText: /^Publication status$/ })
-        .locator('+ dd'),
-    ).toHaveText(label);
+        .filter({ hasText: new RegExp(`^${name}$`) })
+        .locator('+ dd');
+    // A draft field made in this template is not a stored artifact, so it has no version or status
+    // of its own to show. A published one is linked, and shows both.
+    if (stored === 'bibo:draft') {
+      await expect(value('Version')).toHaveText('Not versioned');
+      await expect(value('Reuse')).toHaveText('Made here');
+      await expect(value('Publication status')).toHaveCount(0);
+    } else {
+      await expect(value('Publication status')).toHaveText(label);
+      await expect(value('Reuse')).toHaveText('Linked');
+    }
     await expect(section).not.toContainText('bibo:');
     expect(((await currentTemplate(page)).properties as any).Title['bibo:status']).toBe(stored);
   });

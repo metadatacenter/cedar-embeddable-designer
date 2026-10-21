@@ -29,7 +29,13 @@
       <tbody cdkDropList [cdkDropListData]="selected()" (cdkDropListDropped)="reorder($event)">
         @for (row of selected(); track key(row); let index = $index) {
           <tr cdkDrag [cdkDragDisabled]="saving()">
-            <td class="icon-cell"><app-icon [key]="row.type === 'field' ? 'artifact-field' : 'artifact-element'" /></td>
+            <td class="icon-cell">
+              <app-icon
+                role="img"
+                [attr.aria-label]="'childPicker.types.' + row.type | translate"
+                [key]="row.type === 'field' ? 'artifact-field' : 'artifact-element'"
+              />
+            </td>
             <td class="name-cell">{{ row.name }}</td>
             <td>{{ row.modifiedOn ? (row.modifiedOn | date: 'mediumDate' : undefined : locale()) : '—' }}</td>
             <td class="version-cell">
@@ -55,7 +61,7 @@
                 [attr.aria-label]="'childPicker.reorderRow' | translate: { name: row.name }"
                 (keydown)="moveWithKeyboard($event, index)"
               >
-                <app-icon key="list" />
+                <app-icon key="drag" />
               </button>
             </td>
           </tr>
@@ -111,12 +117,21 @@
               (keydown.space)="$event.preventDefault(); select(row)"
             >
               <td class="icon-cell">
-                <app-icon [key]="row.type === 'field' ? 'artifact-field' : 'artifact-element'" />
+                <app-icon
+                  role="img"
+                  [attr.aria-label]="'childPicker.types.' + row.type | translate"
+                  [key]="row.type === 'field' ? 'artifact-field' : 'artifact-element'"
+                />
               </td>
               <td class="name-cell">
                 {{ row.name }}
                 @if (isSelected(row)) {
-                  <app-icon key="check" size="small" />
+                  <app-icon
+                    key="check"
+                    size="small"
+                    role="img"
+                    [attr.aria-label]="'childPicker.selected' | translate"
+                  />
                 }
               </td>
               <td>{{ row.modifiedOn ? (row.modifiedOn | date: 'mediumDate' : undefined : locale()) : '—' }}</td>

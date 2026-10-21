@@ -28,7 +28,7 @@ for (const width of [1440, 768, 375]) {
     await expect(metadata.getByLabel('Field name', { exact: true })).toHaveValue('Live label');
     // A draft's own name is the name its parent shows it by, so the header follows the Presentation tab as it
     // is typed, and the key stays where it was.
-    await expect(card.getByRole('textbox', { name: 'Field display name', exact: true })).toHaveValue('Live label');
+    await expect(card.getByRole('textbox', { name: 'Enter field name', exact: true })).toHaveValue('Live label');
     const saved = await currentTemplate(page);
     expect((saved.properties as any).Title['schema:name']).toBe('Live label');
     expect((saved._ui as any).propertyLabels.Title).toBe('Live label');
@@ -37,23 +37,29 @@ for (const width of [1440, 768, 375]) {
     const tab = card.getByRole('tab', { name: 'Presentation', exact: true });
     await tab.focus();
     await page.keyboard.press('End');
-    await expect(card.getByRole('tab', { name: 'Metadata', exact: true })).toBeFocused();
-    await expect(card.getByRole('tabpanel', { name: 'Metadata', exact: true })).toBeVisible();
+    await expect(card.getByRole('tab', { name: 'Version', exact: true })).toBeFocused();
+    await expect(card.getByRole('tabpanel', { name: 'Version', exact: true })).toBeVisible();
     const measurements = await card.evaluate((el) => {
       const rect = el.getBoundingClientRect();
       const arrow = el.querySelector('.settings-toggle')!.getBoundingClientRect();
+      const name = el.querySelector('.field-name')!.getBoundingClientRect();
+      const type = el.querySelector('.field-type-label')!.getBoundingClientRect();
+      const bin = el.querySelector('[aria-label="Delete field"]')!.getBoundingClientRect();
+      const drag = el.querySelector('.field-drag-handle')!.getBoundingClientRect();
       return {
         center: Math.abs((arrow.left + arrow.right) / 2 - (rect.left + rect.right) / 2),
-        dragCenter: Math.abs(
-          (el.querySelector('.field-drag-handle')!.getBoundingClientRect().left +
-            el.querySelector('.field-drag-handle')!.getBoundingClientRect().right) /
-            2 -
-            (arrow.left + arrow.right) / 2,
-        ),
+        typeBesideName: Math.abs((type.top + type.bottom) / 2 - (name.top + name.bottom) / 2) < 4,
+        typeCenter: Math.abs((type.left + type.right) / 2 - (arrow.left + arrow.right) / 2),
+        dragUnderBin: Math.abs((drag.left + drag.right) / 2 - (bin.left + bin.right) / 2),
+        dragBesideArrow: Math.abs((drag.top + drag.bottom) / 2 - (arrow.top + arrow.bottom) / 2),
         overflow: el.scrollWidth - el.clientWidth,
       };
     });
-    expect(measurements.dragCenter).toBeLessThanOrEqual(1);
+    // A wide header centres the type over the chevron; a narrow one moves it to a second row with the delete button.
+    expect(measurements.typeBesideName).toBe(width === 1440);
+    if (width === 1440) expect(measurements.typeCenter).toBeLessThanOrEqual(1);
+    expect(measurements.dragUnderBin).toBeLessThanOrEqual(1);
+    expect(measurements.dragBesideArrow).toBeLessThanOrEqual(1);
     expect(measurements.center).toBeLessThanOrEqual(1);
     expect(measurements.overflow).toBeLessThanOrEqual(1);
     await page.screenshot({ path: `/tmp/ced-tabs-${width}.png` });
@@ -66,7 +72,7 @@ test('header controls share a vertical center and version is right aligned', asy
   await applyPreset(page, 'modular');
   const card = designer.locator('app-field-card').first();
   const centers = await card.evaluate((el) =>
-    ['.field-drag-handle', '.field-type-label', '[aria-label="Delete field"]'].map((s) => {
+    ['.field-type-label', '[aria-label="Delete field"]'].map((s) => {
       const r = el.querySelector(s)!.getBoundingClientRect();
       return r.y + r.height / 2;
     }),
@@ -93,7 +99,8 @@ test('compact cards keep controls close and enabled trash icons themed', async (
   });
   expect(spacing.top).toBeLessThanOrEqual(8);
   expect(spacing.afterHeader).toBeLessThanOrEqual(6);
-  expect(spacing.belowPreview).toBeLessThanOrEqual(18);
+  // The drag handle shares the chevron's row, so the row is as tall as the handle rather than the chevron.
+  expect(spacing.belowPreview).toBeLessThanOrEqual(24);
   expect(spacing.toggleHeight).toBe(14);
   await designer.evaluate((el) => (el as HTMLElement).style.setProperty('--cedar-color-primary', 'rgb(91, 32, 124)'));
   await expect(card.getByRole('button', { name: 'Delete field' }).locator('svg')).toHaveCSS(

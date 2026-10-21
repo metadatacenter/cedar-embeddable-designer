@@ -39,7 +39,8 @@
     <p role="alert">{{ message }}</p>
   }
 
-  <div class="table-scroll">
+  <!-- Focusable, so a keyboard can scroll the table where a narrow host clips it. -->
+  <div class="table-scroll" tabindex="0" role="region" [attr.aria-label]="'annotations.caption' | translate">
     <table>
       <caption>
         {{
@@ -51,9 +52,11 @@
           <th scope="col">{{ 'annotations.name' | translate }}</th>
           <th scope="col">{{ 'annotations.valueType' | translate }}</th>
           <th scope="col">{{ 'annotations.value' | translate }}</th>
-          <th scope="col">
-            <span class="sr-only">{{ 'common.actions' | translate }}</span>
-          </th>
+          <!--
+            Named rather than holding visually hidden text. That text is positioned against a box outside
+            the scroller, so on a narrow host it reached past the table and widened the whole canvas.
+          -->
+          <th scope="col" [attr.aria-label]="'common.actions' | translate"></th>
         </tr>
       </thead>
       <tbody>

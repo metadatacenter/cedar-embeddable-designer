@@ -1,6 +1,7 @@
 @use '@org.metadatacenter/cedar-design-tokens/patterns';
 @use '@org.metadatacenter/cedar-design-tokens/spacing';
 @use '@org.metadatacenter/cedar-design-tokens/authoring';
+@use '@org.metadatacenter/cedar-design-tokens/controls';
 :host {
   display: block;
   min-width: 0;
@@ -14,6 +15,9 @@ fieldset {
 }
 .table-scroll {
   overflow-x: auto;
+  &:focus-visible {
+    @include controls.focus-ring;
+  }
 }
 table {
   border-collapse: collapse;
@@ -73,7 +77,7 @@ button:disabled {
   align-items: end;
 }
 .add-row label {
-  font-weight: var(--cedar-font-weight-medium, 500);
+  font-weight: var(--cedar-font-weight-medium);
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -107,10 +111,6 @@ p[role='alert'] {
   --cedar-icon-color: var(--cedar-control-error, var(--cedar-status-error-text));
   color: var(--cedar-control-error, var(--cedar-status-error-text));
 }
-.sr-only {
-  @include patterns.visually-hidden;
-}
-
 .remove {
   @include patterns.icon-button;
   border: 0;

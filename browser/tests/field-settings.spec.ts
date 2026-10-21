@@ -209,7 +209,7 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
   await designer.locator('app-field-type-picker').getByRole('button', { name: 'Image', exact: true }).click();
   await expect(designer.locator('app-field-card')).toHaveCount(4);
   const card = designer.locator('app-field-card').last();
-  await card.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Picture');
+  await card.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Picture');
   const section = await openSettings(card, 'Content');
   await section.getByLabel('Width').fill('640');
   await expect.poll(async () => ((await currentTemplate(page)).properties as any).Picture._ui._size?.width).toBe(640);
@@ -223,7 +223,7 @@ test('authors media dimensions and multiline rich text', async ({ page }) => {
     .click();
   await designer.locator('app-field-type-picker').getByRole('button', { name: 'Rich Text', exact: true }).click();
   await expect(designer.locator('app-field-card')).toHaveCount(5);
-  await card.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Rich content');
+  await card.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Rich content');
   await openSettings(card, 'Content');
   await expect(card.getByRole('tab').first()).toHaveText('Configuration');
   await expect(card.getByRole('tab').nth(1)).toHaveText('Presentation');
@@ -255,7 +255,7 @@ test('one Temporal palette entry supports date, time and date-time without chang
   await expect(picker.getByRole('button', { name: 'Temporal', exact: true })).toHaveCount(1);
   await expect(picker.getByRole('button', { name: /^(Date|Time|Date and time)$/ })).toHaveCount(0);
   await picker.getByRole('button', { name: 'Temporal', exact: true }).click();
-  await designer.locator('input[aria-label="Field display name"]:focus').fill('Temporal');
+  await designer.locator('input[aria-label="Enter field name"]:focus').fill('Temporal');
   await expect(designer.locator('app-field-card')).toHaveCount(4);
   const card = designer.locator('app-field-card').last();
   const settings = await openSettings(card, 'Constraints');
@@ -283,8 +283,8 @@ test('metadata keys are editable and unique within their parent while names and 
   const cards = designer.locator('app-field-card');
   const first = cards.nth(0);
   const second = cards.nth(1);
-  await first.getByLabel('Field display name', { exact: true }).fill('Repeated');
-  await second.getByLabel('Field display name', { exact: true }).fill('Repeated');
+  await first.getByLabel('Enter field name', { exact: true }).fill('Repeated');
+  await second.getByLabel('Enter field name', { exact: true }).fill('Repeated');
   const display = await openSettings(first, 'Presentation');
   await expect(display.getByLabel('Preferred name', { exact: true })).toHaveCount(0);
   // A draft's own name is the name its header shows, so the Presentation tab shows what the header typed.
@@ -318,7 +318,7 @@ test('the header and Configuration edit the display name and Display the own nam
 }) => {
   const designer = await openDesigner(page);
   const card = () => designer.locator('app-field-card').first();
-  const header = () => card().getByRole('textbox', { name: 'Field display name', exact: true });
+  const header = () => card().getByRole('textbox', { name: 'Enter field name', exact: true });
   let display = await openSettings(card(), 'Presentation');
   await expect(display.getByLabel('Field name', { exact: true })).toHaveValue('Title');
   await expect(display.getByLabel('Field name', { exact: true })).toHaveAttribute('placeholder', 'Field name');

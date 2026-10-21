@@ -6,18 +6,9 @@
   @if (placementNode() && service.visibleIssuesFor(container().id).length; as count) {
     <span class="validation-badge">{{ 'common.errorBadge' | countKey: count | translate: { count: count } }}</span>
   }
-  @if (placementNode()) {
-    <span
-      cdkDragHandle
-      [class.locked]="placementLocked()"
-      class="element-drag-handle"
-      [title]="'containerEditor.dragElement' | translate"
-      [attr.aria-label]="'containerEditor.dragElement' | translate"
-    >
-      <app-icon key="list" size="small" />
-      <span class="element-type-label">{{ 'containerEditor.elementLabel' | translate }}</span>
-    </span>
-  }
+  <span class="container-type-label">{{
+    (container().kind === 'element' ? 'containerEditor.elementLabel' : 'containerEditor.templateLabel') | translate
+  }}</span>
   <div class="template-header-card__body" appHeaderToggle (headerToggle)="toggleSettings()">
     <div class="template-header-card__icon">
       <app-icon
@@ -30,6 +21,7 @@
       <!-- Top Row: Name, Version -->
       <div class="template-header-row">
         <div class="template-field-group flex-1">
+          <!-- eslint-disable-next-line @angular-eslint/template/label-has-associated-control -- the input names itself; a click on this label toggles the header settings -->
           <label class="template-field-label">{{ 'containerEditor.name' | translate }}</label>
           <input
             spellcheck="false"
@@ -63,20 +55,20 @@
             "
           />
           @if (service.nameError(container().id, container().name, container().kind); as error) {
-            <p class="ced-field-error" [id]="'name-error-' + container().id">{{ error }}</p>
+            <p class="ced-field-error" [id]="'name-error-' + container().id" role="alert">{{ error }}</p>
           }
         </div>
 
         <div class="template-field-group version-group w-24">
+          <!-- eslint-disable-next-line @angular-eslint/template/label-has-associated-control -- the input names itself; a click on this label toggles the header settings -->
           <label class="template-field-label">{{ 'containerEditor.version' | translate }}</label>
           <div class="version-value-row">
             <input
               spellcheck="false"
               autocomplete="off"
               type="text"
-              [ngModel]="container().version"
-              (ngModelChange)="update({ version: $event })"
-              [disabled]="definitionLocked()"
+              [value]="container().version"
+              readonly
               class="template-input template-input--fact"
               [attr.aria-label]="'containerEditor.version' | translate"
               [placeholder]="'common.notSpecified' | translate"
@@ -101,11 +93,7 @@
                 </p>
                 <form method="dialog">
                   <button autofocus>{{ 'common.cancel' | translate }}</button>
-                  <button
-                    type="button"
-                    class="primary"
-                    (click)="deleteDialog.close(); service.deleteChild(container().id)"
-                  >
+                  <button type="button" class="primary" (click)="deleteDialog.close(); deleteElement()">
                     {{ 'common.delete' | translate }}
                   </button>
                 </form>
@@ -116,7 +104,7 @@
                 [disabled]="placementLocked()"
                 [attr.aria-label]="'containerEditor.deleteNamed' | translate: { name: container().name }"
                 [title]="'containerEditor.delete' | translate"
-                (click)="container().children.length ? deleteDialog.showModal() : service.deleteChild(container().id)"
+                (click)="container().children.length ? deleteDialog.showModal() : deleteElement()"
               >
                 <app-icon key="trash" />
               </button>
@@ -128,7 +116,7 @@
             );
             as status
           ) {
-            <span class="publication-status" [attr.aria-label]="'common.publicationStatus' | translate">{{
+            <span class="publication-status" role="group" [attr.aria-label]="'common.publicationStatus' | translate">{{
               status | translate
             }}</span>
           }
@@ -137,8 +125,13 @@
 
       <!-- Bottom Row: Description -->
       <div class="template-field-group template-description">
-        <label class="template-field-label">{{ 'containerEditor.description' | translate }}</label>
+        <!-- Named through aria-labelledby rather than for, because a click on a header label toggles the settings. -->
+        <!-- eslint-disable-next-line @angular-eslint/template/label-has-associated-control -- names the box through aria-labelledby; a click on it toggles the header settings -->
+        <label class="template-field-label" [id]="'description-label-' + container().id">{{
+          'containerEditor.description' | translate
+        }}</label>
         <textarea
+          [attr.aria-labelledby]="'description-label-' + container().id"
           [appArtifactName]="container().id"
           artifactSetting="description"
           [attr.aria-invalid]="!!service.settingError(container().id, 'description')"
@@ -157,7 +150,7 @@
           "
         ></textarea>
         @if (service.settingError(container().id, 'description'); as error) {
-          <p class="ced-field-error" [id]="'description-error-' + container().id">{{ error }}</p>
+          <p class="ced-field-error" [id]="'description-error-' + container().id" role="alert">{{ error }}</p>
         }
       </div>
     </div>
@@ -167,14 +160,27 @@
         class="element-toggle"
         [attr.aria-expanded]="!collapsed()"
         [title]="(collapsed() ? 'containerEditor.expandChildren' : 'containerEditor.collapseChildren') | translate"
-        [attr.aria-label]="
-          (collapsed() ? 'common.expandNamed' : 'common.collapseNamed') | translate: { name: container().name }
-        "
+        [attr.aria-label]="toggleLabel().key | translate: toggleLabel().params"
         [attr.aria-controls]="'element-content-' + container().id"
         (click)="$event.stopPropagation(); service.toggleElement(container().id)"
       >
         <app-icon [key]="collapsed() ? 'expand-all' : 'collapse-all'" size="small" />
       </button>
+    }
+    @if (placementNode()) {
+      <!--
+        Pointer-only, so hidden from assistive technology. The Overview's handles reorder from the keyboard.
+        It takes the corner under the delete button.
+      -->
+      <span
+        cdkDragHandle
+        [class.locked]="placementLocked()"
+        class="element-drag-handle"
+        aria-hidden="true"
+        [title]="'containerEditor.dragElement' | translate"
+      >
+        <app-icon key="drag" size="small" />
+      </span>
     }
   </div>
   @if (placementNode(); as element) {
@@ -221,6 +227,7 @@
           }
         }
         <!-- Drag Container -->
+        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events -- focusing the card selects it, as this click does -->
         <div
           cdkDrag
           [cdkDragData]="node.id"
@@ -250,7 +257,7 @@
 
   <!-- Bottom insertion zone (modal style) -->
   @if ((service.preferences().fieldSelectionStyle === 'modal' || !container().children.length) && !definitionLocked()) {
-    <div class="add-field-section">
+    <div class="add-field-section" #bottomZone>
       <div class="bottom-insert-zone" [class.empty-container]="!container().children.length">
         <app-insertion-actions [targetId]="container().id" [position]="container().children.length" />
       </div>

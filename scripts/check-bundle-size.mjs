@@ -97,8 +97,30 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // The existing model entry supplies the shared policies; there is no second
 // policy bundle or new runtime dependency. Allow about 5 KB raw / 2 KB compressed
 // headroom for this validation coverage and bounded verification cache.
-const RAW_LIMIT = 1_550_000;
-const GZIP_LIMIT = 443_000;
+// 2026-10-19: keyboard and screen-reader access measures 1,552,034 raw / 443,595 gzip-9
+// bytes: one polite live region per element, focus returned after deletes, imports, default
+// terms and closed dialogs, modal settings dialogs, named preset checkboxes, and the English
+// and Hungarian announcements. That adds 9,939 raw / 3,223 compressed bytes to 1,542,095 /
+// 440,372 on the same dependencies. No dependency was added. Allow about 3 KB raw / 1.4 KB
+// compressed headroom. The standalone application's `build-app` budget in angular.json moves
+// by the same 5 KB.
+// 2026-10-20: named type and selection icons in the child picker, the grouped selection
+// radios and pressed preset buttons in Preferences, row headers and table names in Define
+// Presets, the library menu's expanded state, and field values marked with their declared
+// language measure 1,555,305 raw / 444,582 gzip-9 bytes. That adds 1,567 raw / 425
+// compressed bytes to 1,553,738 / 444,157 on the same dependencies. No dependency was
+// added. Allow about 2.7 KB raw / 1.4 KB compressed headroom. The standalone application's
+// `build-app` budget in angular.json moves by the same 3 KB.
+// 2026-10-20: the Version tab on every field, element and template, the host's optional version
+// lookup, compatibility, save and open operations, the identity rules for imports, detaching and
+// replacement, and their English and Hungarian text measure 1,588,118 raw / 453,490 gzip-9 bytes.
+// That adds 31,226 raw / 8,693 compressed bytes to 1,556,892 / 444,797 on the same dependencies.
+// The panel shares the settings tabs' list, button and error rules through a Sass partial rather
+// than a fourth copy of their stylesheet, which saved 10,085 raw bytes. No dependency was added.
+// Allow about 3.9 KB raw / 1.5 KB compressed headroom. The standalone application's `build-app`
+// budget in angular.json moves by the same 34 KB.
+const RAW_LIMIT = 1_592_000;
+const GZIP_LIMIT = 455_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
 

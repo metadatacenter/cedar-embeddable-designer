@@ -37,10 +37,12 @@ import {
   findContainer,
 } from '../model/container-draft';
 import { FieldLibraryService } from './field-library.service';
+import { forkedChild, importedChild, replacedChild } from '../model/child-identity';
+import { versionState } from '../model/version-state';
 import { deploymentKeys, keyedChild } from '../model/child-key-policy';
 import { CedLanguageService } from '../../i18n/ced-language.service';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
-import { LocalizedError, message } from '../../i18n/messages';
+import { countKey, LocalizedError, message } from '../../i18n/messages';
 import { Injectable, signal, computed, inject, effect, DestroyRef } from '@angular/core';
 import { Field, FieldDefaultValue, CustomField, ControlledTermSet, UserPreferences } from '../models/types';
 import { PreferencesService } from './preferences.service';
@@ -57,6 +59,10 @@ import {
 } from '../model/cedar-template';
 
 export { FIELD_TYPES } from '../models/types';
+
+/** A control that should take focus once it renders: a child's card, or a container's Add field. */
+export type FocusRequest =
+  { readonly kind: 'card'; readonly id: number } | { readonly kind: 'add-field'; readonly containerId: number };
 
 /** Every container and child whose name the author can see, throughout the document. */
 /**
@@ -268,9 +274,76 @@ export class TemplateService {
       )
     )
       throw new TypeError('Validation findings require a location, message and error/warning severity');
+    const previous = this.hostReport()?.findings ?? [];
     this.hostReport.set(
       findings.length ? { document: this.document(), findings: JsonSourcePolicy.clone(findings) } : null,
     );
+    // A host that reports the same set again, or keeps reporting none, says nothing new.
+    if (JSON.stringify(findings) === JSON.stringify(previous)) return;
+    if (findings.length) this.announce(this.hostFindingsMessage(findings));
+    else this.announce(this.i18n.t('announce.hostFindings.cleared'));
+  }
+  private hostFindingsMessage(findings: CedHostFinding[]): string {
+    const counted = (key: string, count: number) => ({ key: countKey(key, count), params: { count } });
+    const errors = findings.filter((finding) => finding.severity === 'error').length;
+    const warnings = findings.length - errors;
+    if (errors && warnings)
+      return this.i18n.t('announce.hostFindings.both', {
+        errors: counted('announce.hostFindings.errors', errors),
+        warnings: counted('announce.hostFindings.warnings', warnings),
+      });
+    return this.i18n.t('announce.hostFindings.one', {
+      issues: errors
+        ? counted('announce.hostFindings.errors', errors)
+        : counted('announce.hostFindings.warnings', warnings),
+    });
+  }
+
+  /**
+   * What the designer last said to assistive technology, which its one polite live region shows.
+   *
+   * The region is in the page from the first render, because a screen reader announces a change
+   * to a live region it already knows and often misses one that arrives with its text. The text
+   * is cleared first and set a moment later, so a message that repeats the last one is read again.
+   */
+  readonly announcement = signal('');
+  private pendingAnnouncement: ReturnType<typeof setTimeout> | undefined;
+  private pendingMessage: string | null = null;
+  announce(text: string): void {
+    this.pendingMessage = text;
+    this.show(text);
+  }
+  /**
+   * Say `text` after a message `announce` has not shown yet, rather than in its place. A second
+   * call replaces the first one's text and keeps the message.
+   */
+  announceAfter(text: string): void {
+    this.show(this.pendingMessage === null ? text : `${this.pendingMessage} ${text}`);
+  }
+  private show(text: string): void {
+    clearTimeout(this.pendingAnnouncement);
+    this.announcement.set('');
+    this.pendingAnnouncement = setTimeout(() => {
+      this.pendingMessage = null;
+      this.announcement.set(text);
+    }, 100);
+  }
+
+  /**
+   * A control to focus once the view has rendered, after an action removed the one that had focus.
+   *
+   * The service holds the request and the component that renders the control performs it, as with
+   * `nameFocusRequest`, because only the component can find the control inside the shadow root.
+   */
+  readonly focusRequest = signal<FocusRequest | null>(null);
+
+  /** Where focus belongs once `id` is gone: its next sibling, else its previous one, else Add field. */
+  focusAfterRemoving(id: number): FocusRequest | null {
+    const parent = parentOf(this.session.document(), id);
+    if (!parent) return null;
+    const index = parent.children.findIndex((child) => child.id === id);
+    const sibling = parent.children[index + 1] ?? parent.children[index - 1];
+    return sibling ? { kind: 'card', id: sibling.id } : { kind: 'add-field', containerId: parent.id };
   }
   private readonly defaultSemantics = new DefaultSemanticChecks();
   validate() {
@@ -428,6 +501,7 @@ export class TemplateService {
     inject(DestroyRef).onDestroy(() => {
       this.validation.dispose();
       this.defaultSemantics.dispose();
+      clearTimeout(this.pendingAnnouncement);
     });
     effect(() => {
       if (this.validation.readOnly()) {
@@ -554,13 +628,15 @@ export class TemplateService {
     this.scrollRequest.set(newField.id);
   }
 
-  deleteField(id: number) {
-    if (!this.validation.canPlace(id)) return;
+  /** Removes the field and returns whether it did; a field inside a published element stays. */
+  deleteField(id: number): boolean {
+    if (!this.validation.canPlace(id)) return false;
     this.fieldsFor(id).update((prev) => prev.filter((f) => f.id !== id));
     this.pruneCollapsed();
     if (this.selectedField() === id) {
       this.selectedField.set(null);
     }
+    return true;
   }
 
   private fieldOf(id: number): Field | undefined {
@@ -1051,42 +1127,52 @@ export class TemplateService {
     this.childPicker.set({ targetId, position, type });
   }
 
-  /** Parse the complete batch before changing the document. Source definitions keep their identity. */
-  importChildren(
-    sources: { type: 'field' | 'element'; artifact: CedJsonObject }[],
-    targetId: number,
-    position: number,
-  ): void {
-    const root = this.session.document();
-    const target = findContainer(root, targetId);
-    if (!target) throw new LocalizedError(message('errors.destinationMissing'));
-    if (this.definitionLocked(targetId)) throw new LocalizedError(message('errors.publishedReadOnly'));
-    const nodes = sources.map(({ type, artifact }): ChildNode => {
-      if (type === 'field') {
-        const field = readField(JsonSourcePolicy.stringify(artifact));
-        if (!allowedInContainer(field.type, target.kind))
-          throw new LocalizedError(message('errors.pageBreakPlacement'));
-        return fieldNode({
+  /**
+   * The child a repository artifact becomes in `target`, placed under its own name. A published
+   * artifact is linked and keeps its identifier; a draft becomes a fork with one of its own.
+   */
+  private childFromArtifact(type: 'field' | 'element', artifact: CedJsonObject, target: ContainerDraft): ChildNode {
+    if (type === 'field') {
+      const field = readField(JsonSourcePolicy.stringify(artifact));
+      if (!allowedInContainer(field.type, target.kind)) throw new LocalizedError(message('errors.pageBreakPlacement'));
+      return importedChild(
+        fieldNode({
           ...field,
           ...copiedPlacement(field.name, field.helpText ?? ''),
           deploymentName: undefined,
           id: newNodeId(),
           propertyIri: newFieldIdentity().propertyIri,
-        });
-      }
-      const definition = readContainer(artifact);
-      if (definition.kind !== 'element') throw new LocalizedError(message('errors.chooseFieldOrElement'));
-      return {
-        kind: 'element',
-        id: definition.id,
-        definition,
-        placement: {
-          ...copiedPlacement(definition.name, definition.description),
-          allowMultiple: false,
-          propertyIri: newFieldIdentity().propertyIri,
-        },
-      };
+        }),
+      );
+    }
+    const definition = readContainer(artifact);
+    if (definition.kind !== 'element') throw new LocalizedError(message('errors.chooseFieldOrElement'));
+    return importedChild({
+      kind: 'element',
+      id: definition.id,
+      definition,
+      placement: {
+        ...copiedPlacement(definition.name, definition.description),
+        allowMultiple: false,
+        propertyIri: newFieldIdentity().propertyIri,
+      },
     });
+  }
+
+  /**
+   * Parse the complete batch before changing the document, then return the inserted children's ids
+   * in order. Published sources keep their identity; drafts arrive as forks of the version loaded.
+   */
+  importChildren(
+    sources: { type: 'field' | 'element'; artifact: CedJsonObject }[],
+    targetId: number,
+    position: number,
+  ): number[] {
+    const root = this.session.document();
+    const target = findContainer(root, targetId);
+    if (!target) throw new LocalizedError(message('errors.destinationMissing'));
+    if (this.definitionLocked(targetId)) throw new LocalizedError(message('errors.publishedReadOnly'));
+    const nodes = sources.map(({ type, artifact }) => this.childFromArtifact(type, artifact, target));
     try {
       nodes.forEach((node, index) => this.insertNode(node, position + index, targetId));
       for (const node of nodes) this.takeKeyFromName(node.id, node.definition.name);
@@ -1094,6 +1180,71 @@ export class TemplateService {
       this.session.document.set(root);
       throw error;
     }
+    return nodes.map((node) => node.id);
+  }
+
+  /**
+   * Put stored versions in place of children, keeping each child's placement, in one change to the
+   * document. Every artifact is read before anything changes, so one that cannot be read, or a
+   * child that can no longer be replaced, leaves the document as it was.
+   */
+  replaceChildren(replacements: readonly { id: number; type: 'field' | 'element'; artifact: CedJsonObject }[]): void {
+    this.replaceNodes(this.replacementNodes(replacements));
+  }
+
+  /** Serialize the exact proposed replacement without changing the editing session. */
+  replacementPreview(
+    replacements: readonly { id: number; type: 'field' | 'element'; artifact: CedJsonObject }[],
+  ): CedJsonObject {
+    return templateToJson(
+      buildContainer(this.withReplacements(this.session.document(), this.replacementNodes(replacements, false))),
+    ) as CedJsonObject;
+  }
+
+  private replacementNodes(
+    replacements: readonly { id: number; type: 'field' | 'element'; artifact: CedJsonObject }[],
+    checkAccess = true,
+  ): Map<number, ChildNode> {
+    const root = this.session.document();
+    const nodes = new Map<number, ChildNode>();
+    for (const { id, type, artifact } of replacements) {
+      const parent = parentOf(root, id);
+      const existing = parent?.children.find((child) => child.id === id);
+      if (!parent || !existing || (checkAccess && this.placementLocked(id)))
+        throw new LocalizedError(message('errors.publishedReadOnly'));
+      const replaced = replacedChild(existing, this.childFromArtifact(type, artifact, parent));
+      if (!replaced) throw new LocalizedError(message('errors.chooseFieldOrElement'));
+      nodes.set(id, replaced);
+    }
+    return nodes;
+  }
+
+  /** Make a linked child an editable fork of the version it links to. Returns whether it did. */
+  detachChild(id: number): boolean {
+    const existing = parentOf(this.session.document(), id)?.children.find((child) => child.id === id);
+    if (!existing || this.placementLocked(id) || versionState(this.session.document(), id)?.kind !== 'linked')
+      return false;
+    this.replaceNodes(new Map([[id, forkedChild(existing)]]));
+    return true;
+  }
+
+  private replaceNodes(nodes: ReadonlyMap<number, ChildNode>): void {
+    if (!nodes.size) return;
+    this.loadError.set(null);
+    this.session.document.update((root) => this.withReplacements(root, nodes));
+    this.pruneCollapsed();
+  }
+
+  private withReplacements(root: ContainerDraft, nodes: ReadonlyMap<number, ChildNode>): ContainerDraft {
+    const replace = (container: ContainerDraft): ContainerDraft => ({
+      ...container,
+      children: container.children.map((node) => {
+        const replaced = nodes.get(node.id);
+        if (replaced) return replaced;
+        return node.kind === 'element' ? { ...node, definition: replace(node.definition) } : node;
+      }),
+    });
+    return replace(root);
   }
 
   /** Adds an inline element and returns its id, or -1 where the target cannot take one. */
@@ -1116,9 +1267,10 @@ export class TemplateService {
     this.nameFocusRequest.set(definition.id);
     return definition.id;
   }
-  deleteChild(id: number): void {
+  /** Removes the child and returns whether it did. */
+  deleteChild(id: number): boolean {
     const parent = parentOf(this.session.document(), id);
-    if (!parent || !this.validation.canPlace(id)) return;
+    if (!parent || !this.validation.canPlace(id)) return false;
     this.session.document.update((root) =>
       updateContainer(root, parent.id, (container) => ({
         ...container,
@@ -1127,6 +1279,7 @@ export class TemplateService {
     );
     this.pruneCollapsed();
     if (!this.containerChoices().some((choice) => choice.id === this.session.activeId())) this.openContainer(parent.id);
+    return true;
   }
   moveChild(id: number, targetId: number, index = Number.MAX_SAFE_INTEGER): void {
     // A child inside a published element stays where it is, and nothing moves into one.

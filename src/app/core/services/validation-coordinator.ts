@@ -359,6 +359,8 @@ export class ValidationCoordinator {
     this.checks.set(next);
     for (const [key, check] of Object.entries(previous)) if (next[key] !== check) check.controller.abort();
   }
+  /** Whether any asynchronous check is running, while the report shows its interim state. */
+  readonly checking = computed(() => Object.keys(this.checks()).length > 0);
   isChecking(id: number, setting: string): boolean {
     return !!this.checks()[keyOf(id, setting)];
   }

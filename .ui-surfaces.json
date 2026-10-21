@@ -623,6 +623,22 @@
         }
       ],
       "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
+      "id": "ced.replace-origin",
+      "name": "Replace copied child with origin",
+      "section": "Template Designer",
+      "contract": "dialog",
+      "scenario": "replace-origin",
+      "selector": "app-version-panel dialog[open]",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/features/version-panel/version-panel.component.html",
+          "anchor": "class=\"version-dialog\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
     }
   ]
 }

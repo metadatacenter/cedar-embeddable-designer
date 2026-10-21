@@ -120,8 +120,8 @@
   --text-xl: var(--cedar-font-size-large);
   --text-2xl: var(--cedar-font-size-large);
 
-  --font-weight-normal: var(--cedar-font-weight-regular, 400);
-  --font-weight-medium: var(--cedar-font-weight-medium, 500);
+  --font-weight-normal: var(--cedar-font-weight-regular);
+  --font-weight-medium: var(--cedar-font-weight-medium);
 
   /*
     Declared here as well as in the `@theme` block, because `@theme inline`

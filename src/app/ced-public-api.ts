@@ -224,6 +224,73 @@ export interface CedChildSource {
   }>;
   /** Fetch the complete JSON-LD artifact, using the host's authentication. */
   load(result: CedChildResult, options: { signal: AbortSignal }): Promise<CedJsonObject>;
+  /**
+   * Every version of the artifact's version line that the user can read, newest first, or null
+   * when the artifact itself cannot be read because it was deleted or the user has no access.
+   * Reject only when the lookup itself fails. Without this method the Version tab offers nothing
+   * that needs a stored origin.
+   */
+  versions?(reference: CedArtifactReference, options: { signal: AbortSignal }): Promise<CedArtifactVersion[] | null>;
+  /**
+   * Whether every instance that is valid under `current` stays valid under `candidate`. Both are
+   * complete JSON-LD artifacts of the same type. This guarantee is distinct from checking only
+   * currently stored instances. Without this method upgrades carry no verdict and the host must
+   * enforce its update policy when saving. A document edit retires the assessment.
+   */
+  compatibility?(
+    current: CedJsonObject,
+    candidate: CedJsonObject,
+    options: {
+      type: CedChildResult['type'];
+      signal: AbortSignal;
+      /** The full open document and exact proposed document, including retained placement. */
+      document: CedJsonObject;
+      replacement: CedJsonObject;
+    },
+  ): Promise<CedCompatibility>;
+  /**
+   * Store a child as a new reusable artifact, as a draft or published, and return it as stored.
+   * The stored artifact may carry an identifier, version and dates of the repository's choosing.
+   */
+  save?(
+    artifact: CedJsonObject,
+    options: { type: CedChildResult['type']; publish: boolean; signal: AbortSignal },
+  ): Promise<CedJsonObject>;
+  /** Show a stored artifact to the user, for example in another browser tab. */
+  open?(reference: CedArtifactReference): void;
+}
+
+/** A stored artifact, identified by its `@id`. */
+export interface CedArtifactReference {
+  id: string;
+  type: 'field' | 'element' | 'template';
+}
+
+/** One version of a stored artifact, as a `versions` lookup returns it. */
+export interface CedArtifactVersion {
+  id: string;
+  name: string;
+  version: string | null;
+  publicationStatus: 'bibo:draft' | 'bibo:published' | null;
+  /** Display text for the artifact's owner and folder, where the user may see them. */
+  owner?: string | null;
+  folder?: string | null;
+}
+
+/**
+ * A host's verdict on replacing one version of a child with another.
+ *
+ * `invalidatedInstances` counts the instances of the open template that the replacement would
+ * invalidate. A breaking replacement is refused while that count is above zero, because those
+ * instances belong to this version of the template. For a breaking replacement the count must be
+ * an explicit nonnegative safe integer, including zero to permit replacement. Missing, invalid or
+ * contradictory answers withhold replacement. The server must enforce the same policy at write
+ * time, including instances created after this assessment.
+ */
+export interface CedCompatibility {
+  /** null means schema compatibility is unknown; only an explicit zero impact permits replacement. */
+  compatible: boolean | null;
+  invalidatedInstances?: number;
 }
 
 /** CED field kinds, including the temporal subtypes accepted when creating a definition. */

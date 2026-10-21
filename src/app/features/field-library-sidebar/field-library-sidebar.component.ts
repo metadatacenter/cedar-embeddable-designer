@@ -2,7 +2,16 @@ import { fieldDisplayName } from '../../core/model/field-display-name';
 import { InsertionActionsComponent } from '../insertion-actions/insertion-actions.component';
 import { FieldTypePickerComponent } from '../field-type-picker/field-type-picker.component';
 import { PALETTE_FIELD_TYPES } from '../../core/models/types';
-import { Component, ElementRef, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  inject,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService } from '../../core/services/template.service';
@@ -35,7 +44,21 @@ export class FieldLibrarySidebarComponent {
     this.service.selectedField.set(id);
     this.service.scrollRequest.set(id);
   }
-  private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
+
+  /**
+   * Collapsing or expanding the sidebar replaces the button that was pressed, so the button that
+   * reverses it takes focus once it renders.
+   */
+  setCollapsed(collapsed: boolean): void {
+    this.service.sidebarCollapsed.set(collapsed);
+    afterNextRender(
+      () =>
+        this.host.nativeElement.querySelector<HTMLButtonElement>(collapsed ? '.btn-expand' : '.btn-collapse')?.focus(),
+      { injector: this.injector },
+    );
+  }
 
   fieldListHeight = 33.33; // percentage
   readonly isResizing = signal(false);

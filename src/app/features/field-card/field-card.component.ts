@@ -1,4 +1,5 @@
 import { fieldDisplayName } from '../../core/model/field-display-name';
+import { valueLanguage } from '../../core/model/value-language';
 import { ArtifactNameDirective } from '../../shared/artifact-name.directive';
 import { FieldSummaryComponent } from '../field-summary/field-summary.component';
 import { HeaderToggleDirective } from '../../shared/header-toggle.directive';
@@ -59,6 +60,9 @@ export class FieldCardComponent {
 
   readonly FIELD_TYPES_LIST = FIELD_TYPES;
 
+  /** The language the field declares for its values, which its options and rich text are written in. */
+  readonly valueLanguage = valueLanguage;
+
   /** The name the header shows: the parent's display name, or the field's own where it has no parent. */
   get shownName(): string {
     return this.service.fieldDocumentMode() ? this.field.name : fieldDisplayName(this.field);
@@ -77,6 +81,12 @@ export class FieldCardComponent {
     return this.service.fieldDocumentMode()
       ? this.service.definitionLocked(this.field.id) || !!this.field.publishedDefinition
       : this.service.placementLocked(this.field.id);
+  }
+
+  /** Deletes the field, then gives focus to the next card, else the previous one, else Add field. */
+  deleteField(): void {
+    const next = this.service.focusAfterRemoving(this.field.id);
+    if (this.service.deleteField(this.field.id) && next) this.service.focusRequest.set(next);
   }
 
   updateDisplayName(value: string): void {

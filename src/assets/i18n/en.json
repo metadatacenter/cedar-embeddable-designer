@@ -148,6 +148,11 @@
     },
     "removeRow": "Remove {{name}}",
     "selectRow": "Select {{name}}",
+    "selected": "Selected",
+    "types": {
+      "field": "Field",
+      "element": "Element"
+    },
     "unavailable": "Repository search is unavailable in this host.",
     "searchPlaceholder": "Search by name",
     "search": "Search",
@@ -165,6 +170,7 @@
     "published": "This element is published, so only its configuration can change.",
     "dragElement": "Drag element to reorder",
     "elementLabel": "Element",
+    "templateLabel": "Template",
     "name": "Name",
     "elementName": "Element name",
     "templateName": "Template name",
@@ -179,7 +185,15 @@
     "description": "Description",
     "descriptionPlaceholder": "Add description...",
     "expandChildren": "Expand children",
-    "collapseChildren": "Collapse children"
+    "collapseChildren": "Collapse children",
+    "collapseUnnamed": {
+      "template": "Collapse template",
+      "element": "Collapse element"
+    },
+    "expandUnnamed": {
+      "template": "Expand template",
+      "element": "Expand element"
+    }
   },
   "containerSettings": {
     "template": {
@@ -330,7 +344,6 @@
     "elementMissing": "The element no longer exists."
   },
   "fieldCard": {
-    "displayName": "Field display name",
     "published": "This field is published, so only its configuration can change.",
     "namePlaceholder": "Enter field name",
     "occurrenceRange": "Occurrence range",
@@ -348,7 +361,8 @@
       "markup": "Content",
       "url": "Image URL",
       "videoId": "YouTube video ID"
-    }
+    },
+    "deleteOptionNumbered": "Delete option {{number}}"
   },
   "fieldElement": {
     "label": "Field designer",
@@ -631,7 +645,8 @@
   },
   "presetDefinitions": {
     "intro": "Customize what each preset configuration includes. These settings will be applied when users select a preset in their preferences.",
-    "fieldTypes": "Available field types"
+    "fieldTypes": "Available field types",
+    "cell": "{{setting}} in the {{preset}} preset"
   },
   "settings": {
     "fieldName": "Field name",
@@ -685,7 +700,8 @@
     "annotations": "Annotations",
     "fieldMetadata": "Metadata",
     "elementMetadata": "Metadata",
-    "templateMetadata": "Metadata"
+    "templateMetadata": "Metadata",
+    "version": "Version"
   },
   "validation": {
     "inspectionSummary": "Validation issues ({{count}})",
@@ -712,5 +728,95 @@
       "element": "Unnamed element",
       "template": "Unnamed template"
     }
+  },
+  "announce": {
+    "constraints": {
+      "count": {
+        "one": "{{field}} now has {{count}} constraint.",
+        "other": "{{field}} now has {{count}} constraints."
+      },
+      "none": "{{field}} no longer has constraints.",
+      "defaultCleared": "Default cleared. {{constraints}}"
+    },
+    "defaultTerm": "Default set to {{term}}.",
+    "hostFindings": {
+      "one": "The host reported {{issues}}.",
+      "both": "The host reported {{errors}} and {{warnings}}.",
+      "errors": {
+        "one": "{{count}} error",
+        "other": "{{count}} errors"
+      },
+      "warnings": {
+        "one": "{{count}} warning",
+        "other": "{{count}} warnings"
+      },
+      "cleared": "The host's reported issues are cleared."
+    },
+    "moved": "{{name}} moved to position {{position}} of {{count}}."
+  },
+  "version": {
+    "notVersioned": "Not versioned",
+    "reuse": "Reuse",
+    "state": {
+      "local": "Made here",
+      "linked": "Linked",
+      "forked": "Copy",
+      "contained": "Part of a linked element"
+    },
+    "owner": "Owner",
+    "folder": "Folder",
+    "versions": "Versions",
+    "versionNumber": "v{{version}}",
+    "reused": "Linked and copied children",
+    "note": {
+      "local": "It is not stored as a reusable artifact.",
+      "linked": "This is {{name}} v{{version}}.",
+      "forked": "Derived from {{name}} v{{version}}.",
+      "forkedUnlisted": "Derived from {{origin}}.",
+      "contained": "Part of {{name}} v{{version}}. It changes only when that element is upgraded.",
+      "pending": "Looking for newer versions.",
+      "unreadable": "The origin cannot be read. It may have been deleted, or you may not have access to it.",
+      "failed": "The versions of the origin could not be looked up.",
+      "newest": "No newer published version is available.",
+      "originNewest": "No newer published version of the origin is available.",
+      "newer": "The newest available published version is v{{version}}.",
+      "originNewer": "The origin's newest available published version is v{{version}}.",
+      "checking": "Checking whether it is compatible.",
+      "compatible": "It is compatible: every instance that is valid now stays valid.",
+      "breaking": "It is breaking: an instance that is valid now may not stay valid.",
+      "uncheckable": "Whether it is compatible could not be checked.",
+      "blocked": {
+        "one": "Upgrading would invalidate {{count}} instance of this template. Create a new version of the template to upgrade.",
+        "other": "Upgrading would invalidate {{count}} instances of this template. Create a new version of the template to upgrade."
+      },
+      "publishedDocument": "Create a new version to upgrade.",
+      "alsoUsed": "Also used as {{names}}.",
+      "noReused": "No child is linked to a stored artifact or copied from one.",
+      "notStored": "No stored version can be read."
+    },
+    "summary": {
+      "linked": "Linked, v{{version}}.",
+      "forked": "Copy of {{name}} v{{version}}.",
+      "forkedUnlisted": "Copy of {{origin}}."
+    },
+    "action": {
+      "open": "Open original",
+      "upgrade": "Upgrade to v{{version}}",
+      "upgradeCompatible": "Upgrade to v{{version}} (compatible)",
+      "upgradeBreaking": "Upgrade to v{{version}} (breaking)",
+      "detach": "Detach to edit",
+      "replace": "Replace with origin v{{version}}",
+      "replaceCompatible": "Replace with origin v{{version}} (compatible)",
+      "replaceBreaking": "Replace with origin v{{version}} (breaking)",
+      "saveDraft": "Save as reusable draft",
+      "publish": "Publish as reusable",
+      "upgradeAll": "Upgrade all compatible"
+    },
+    "replaceDialog": {
+      "title": "Replace with origin v{{version}}?",
+      "description": "{{name}} will use the published {{origin}} v{{version}}. The changes made here will be lost.",
+      "confirm": "Replace"
+    },
+    "hostArtifact": "The host returned something other than an artifact."
   }
 }

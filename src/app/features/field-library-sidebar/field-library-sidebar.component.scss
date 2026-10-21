@@ -36,7 +36,7 @@
 
 .sidebar-title {
   font-size: var(--cedar-font-size);
-  font-weight: var(--cedar-font-weight-medium, 500);
+  font-weight: var(--cedar-font-weight-medium);
   color: var(--cedar-text-primary);
 }
 
@@ -182,7 +182,7 @@
 
 .add-fields-title {
   font-size: var(--cedar-font-size);
-  font-weight: var(--cedar-font-weight-medium, 500);
+  font-weight: var(--cedar-font-weight-medium);
   color: var(--cedar-text-primary);
   text-transform: none;
 }
@@ -211,7 +211,7 @@
 
 .library-toggle-text {
   font-size: var(--cedar-font-size);
-  font-weight: var(--cedar-font-weight-medium, 500);
+  font-weight: var(--cedar-font-weight-medium);
   color: var(--cedar-text-primary);
 }
 
@@ -285,7 +285,7 @@
 .add-item-plus {
   font-size: var(--cedar-font-size);
   color: var(--cedar-text-muted);
-  font-weight: var(--cedar-font-weight-medium, 500);
+  font-weight: var(--cedar-font-weight-medium);
   opacity: 0;
   transition-property: opacity;
   transition-duration: var(--cedar-motion-duration-fast);
@@ -345,7 +345,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: var(--cedar-font-weight-medium, 500);
+  font-weight: var(--cedar-font-weight-medium);
   --cedar-icon-color: var(--cedar-color-on-primary);
   color: var(--cedar-color-on-primary);
   font-size: var(--cedar-font-size);
@@ -353,7 +353,7 @@
 
 .plus-indicator {
   font-size: var(--cedar-font-size-large);
-  font-weight: var(--cedar-font-weight-medium, 500);
+  font-weight: var(--cedar-font-weight-medium);
   color: var(--cedar-text-muted);
 }
 

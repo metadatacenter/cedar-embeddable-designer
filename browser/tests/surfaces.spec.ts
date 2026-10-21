@@ -5,6 +5,29 @@ import { buildTemplate, templateToJson } from '../../src/app/core/model/cedar-te
 import { surfaceCases, checkSurface } from './surface-contracts.generated.mjs';
 const registry = JSON.parse(readFileSync(new URL('../../.ui-surfaces.json', import.meta.url), 'utf8'));
 const scenarios: Record<string, (page: Page) => Promise<void>> = {
+  'replace-origin': async (page) => {
+    const d = await openDesigner(page);
+    await page.evaluate(() => {
+      const host = document.querySelector('cedar-embeddable-designer') as any;
+      const doc = host.currentArtifact;
+      const field = doc.properties.Title.items ?? doc.properties.Title;
+      const origin = field['@id'];
+      field['pav:derivedFrom'] = origin;
+      field['@id'] = `${origin}-copy`;
+      field['bibo:status'] = 'bibo:draft';
+      const candidate = { ...field, '@id': origin, 'bibo:status': 'bibo:published', 'pav:version': '1.0.0' };
+      host.childSource = {
+        search: async () => ({ results: [] }),
+        load: async () => candidate,
+        versions: async () => [{ id: origin, name: 'Title', version: '1.0.0', publicationStatus: 'bibo:published' }],
+        compatibility: async () => ({ compatible: true }),
+      };
+      host.artifact = doc;
+    });
+    const panel = await openSettings(d.locator('app-field-card').first(), 'Version');
+    await panel.getByRole('button', { name: /^Replace with origin/ }).click();
+    await panel.getByRole('dialog').waitFor();
+  },
   annotations: async (page) => {
     const d = await openDesigner(page);
     await openSettings(d.locator('app-field-card').first(), 'Annotations');
@@ -155,7 +178,7 @@ scenarios['picker-unavailable'] = async (page) => {
   await d.getByRole('button', { name: /^Add field$/ }).click();
   await d.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
   const card = d.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') });
-  await card.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Controlled Terms');
+  await card.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Controlled Terms');
   await openSettings(card);
 };
 scenarios['invalid-field'] = async (page) => {
@@ -179,7 +202,7 @@ scenarios['temporal-constraints'] = async (page) => {
   await d.getByRole('button', { name: /^Add field$/ }).click();
   await d.getByRole('button', { name: 'Temporal', exact: true }).click();
   const card = d.locator('app-field-card').last();
-  await card.getByRole('textbox', { name: 'Field display name', exact: true }).fill('Temporal');
+  await card.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Temporal');
   await openSettings(card);
 };
 scenarios['element-metadata'] = async (page) => {

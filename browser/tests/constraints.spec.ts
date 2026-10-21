@@ -20,7 +20,7 @@ async function openConstraintPanel(page: import('@playwright/test').Page) {
   await designer
     .locator('app-field-card')
     .filter({ has: page.locator('app-controlled-term-config') })
-    .getByRole('textbox', { name: 'Field display name', exact: true })
+    .getByRole('textbox', { name: 'Enter field name', exact: true })
     .fill('Controlled Terms');
   await expect(designer.locator('app-controlled-term-config')).toBeAttached();
   await openSettings(designer.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') }));
@@ -41,7 +41,7 @@ test('says what is missing when the host has not loaded the picker', async ({ pa
   await designer
     .locator('app-field-card')
     .filter({ has: page.locator('app-controlled-term-config') })
-    .getByRole('textbox', { name: 'Field display name', exact: true })
+    .getByRole('textbox', { name: 'Enter field name', exact: true })
     .fill('Controlled Terms');
 
   await expect(designer.locator('app-controlled-term-config')).toBeAttached();
@@ -61,7 +61,7 @@ test('says what is missing when no terminology server is configured', async ({ p
   await designer
     .locator('app-field-card')
     .filter({ has: page.locator('app-controlled-term-config') })
-    .getByRole('textbox', { name: 'Field display name', exact: true })
+    .getByRole('textbox', { name: 'Enter field name', exact: true })
     .fill('Controlled Terms');
 
   await expect(designer.locator('app-controlled-term-config')).toContainText('terminologyBaseUrl');

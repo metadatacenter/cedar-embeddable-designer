@@ -1,3 +1,4 @@
+import { LiveRegionComponent } from '../shared/components/live-region/live-region.component';
 import { JsonSourcePolicy } from '../core/model/cedar-template';
 import type { CedHostFinding, CedLoadOptions, CedRecoveryDraft } from '../ced-public-api';
 import { ValidationSummaryComponent } from '../shared/validation-summary.component';
@@ -19,6 +20,7 @@ import {
   afterRenderEffect,
 } from '@angular/core';
 import { TemplateService } from '../core/services/template.service';
+import { ChildVersionService } from '../core/services/child-versions.service';
 import { TerminologyService } from '../core/services/terminology.service';
 import { PreferencesService } from '../core/services/preferences.service';
 import { CedConfig, CedFieldType, CedLanguage, CedValidationReport } from '../ced-public-api';
@@ -35,12 +37,20 @@ import { provideCedTranslations } from '../i18n/i18n';
 /** The same field controls CED uses, with one field document and no repository policy. */
 @Component({
   selector: 'app-cedar-embeddable-field-designer-element',
-  imports: [FieldCardComponent, FieldTypePickerComponent, FontRegistrar, ValidationSummaryComponent, TranslatePipe],
+  imports: [
+    FieldCardComponent,
+    FieldTypePickerComponent,
+    FontRegistrar,
+    LiveRegionComponent,
+    ValidationSummaryComponent,
+    TranslatePipe,
+  ],
   // Each element owns its translation service, and therefore its language.
   providers: [
     ...provideCedTranslations(),
     CedLanguageService,
     TemplateService,
+    ChildVersionService,
     TerminologyService,
     PreferencesService,
     DesignerConfigService,
@@ -73,31 +83,36 @@ import { provideCedTranslations } from '../i18n/i18n';
       }
     `,
   ],
+  // One root inside the shadow tree carries the language, because the host element and its
+  // attributes belong to the embedding page.
   template: `<ced-font-registrar />
-    <div class="field-summary"><app-validation-summary /></div>
-    <section class="field-editor" [attr.aria-label]="'fieldElement.label' | translate">
-      @if (field(); as field) {
-        <!-- The host says why the field is read only, as it does for CED. -->
-        <app-field-card [field]="field" [standalone]="true" />
-      } @else {
-        <button type="button" [disabled]="readOnly" (click)="choosingType.set(true)">
-          {{ 'fieldElement.chooseType' | translate }}
-        </button>
-        @if (choosingType() && !readOnly) {
-          <dialog
-            #typeDialog
-            [attr.aria-label]="'fieldElement.chooseType' | translate"
-            (cancel)="choosingType.set(false)"
-          >
-            <app-field-type-picker
-              [standalone]="true"
-              (fieldSelected)="newArtifact($event)"
-              (dismissed)="choosingType.set(false)"
-            />
-          </dialog>
+    <div [attr.lang]="language">
+      <app-live-region />
+      <div class="field-summary"><app-validation-summary /></div>
+      <section class="field-editor" [attr.aria-label]="'fieldElement.label' | translate">
+        @if (field(); as field) {
+          <!-- The host says why the field is read only, as it does for CED. -->
+          <app-field-card [field]="field" [standalone]="true" />
+        } @else {
+          <button type="button" [disabled]="readOnly" (click)="choosingType.set(true)">
+            {{ 'fieldElement.chooseType' | translate }}
+          </button>
+          @if (choosingType() && !readOnly) {
+            <dialog
+              #typeDialog
+              [attr.aria-label]="'fieldElement.chooseType' | translate"
+              (cancel)="choosingType.set(false)"
+            >
+              <app-field-type-picker
+                [standalone]="true"
+                (fieldSelected)="newArtifact($event)"
+                (dismissed)="choosingType.set(false)"
+              />
+            </dialog>
+          }
         }
-      }
-    </section>`,
+      </section>
+    </div>`,
 })
 export class CedarEmbeddableFieldDesignerElementComponent {
   readonly service = inject(TemplateService);

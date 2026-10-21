@@ -148,6 +148,11 @@
     },
     "removeRow": "{{name}} eltávolítása",
     "selectRow": "{{name}} kiválasztása",
+    "selected": "Kiválasztva",
+    "types": {
+      "field": "Mező",
+      "element": "Elem"
+    },
     "unavailable": "Ebben a befogadó alkalmazásban a tárban való keresés nem érhető el.",
     "searchPlaceholder": "Keresés név szerint",
     "search": "Keresés",
@@ -165,6 +170,7 @@
     "published": "Ez az elem közzétett, ezért csak a konfigurációja módosítható.",
     "dragElement": "Húzza az elemet az átrendezéshez",
     "elementLabel": "Elem",
+    "templateLabel": "Sablon",
     "name": "Név",
     "elementName": "Elem neve",
     "templateName": "Sablon neve",
@@ -179,7 +185,15 @@
     "description": "Leírás",
     "descriptionPlaceholder": "Leírás hozzáadása...",
     "expandChildren": "Gyermekelemek kinyitása",
-    "collapseChildren": "Gyermekelemek összecsukása"
+    "collapseChildren": "Gyermekelemek összecsukása",
+    "collapseUnnamed": {
+      "template": "Sablon összecsukása",
+      "element": "Elem összecsukása"
+    },
+    "expandUnnamed": {
+      "template": "Sablon kinyitása",
+      "element": "Elem kinyitása"
+    }
   },
   "containerSettings": {
     "template": {
@@ -330,7 +344,6 @@
     "elementMissing": "Az elem már nem létezik."
   },
   "fieldCard": {
-    "displayName": "Mező megjelenítési neve",
     "published": "Ez a mező közzétett, ezért csak a konfigurációja módosítható.",
     "namePlaceholder": "Adja meg a mező nevét",
     "occurrenceRange": "Előfordulási tartomány",
@@ -348,7 +361,8 @@
       "markup": "Tartalom",
       "url": "Kép webcíme",
       "videoId": "YouTube-videó azonosítója"
-    }
+    },
+    "deleteOptionNumbered": "{{number}}. lehetőség törlése"
   },
   "fieldElement": {
     "label": "Mezőtervező",
@@ -567,7 +581,7 @@
   },
   "propertyPicker": {
     "placeholder": "Válasszon tulajdonság IRI-t",
-    "replaceLabel": "Tulajdonság IRI cseréje",
+    "replaceLabel": "Tulajdonság IRI-csere",
     "chooseLabel": "Tulajdonság IRI kiválasztása",
     "replace": "Csere",
     "choose": "Kiválasztás",
@@ -631,7 +645,8 @@
   },
   "presetDefinitions": {
     "intro": "Adja meg, mit tartalmazzanak az egyes előre beállított konfigurációk. Ezek a beállítások akkor lépnek érvénybe, amikor a felhasználók a beállításaikban kiválasztanak egy előbeállítást.",
-    "fieldTypes": "Elérhető mezőtípusok"
+    "fieldTypes": "Elérhető mezőtípusok",
+    "cell": "{{setting}} ({{preset}} konfiguráció)"
   },
   "settings": {
     "fieldName": "Mező neve",
@@ -685,7 +700,8 @@
     "annotations": "Annotációk",
     "fieldMetadata": "Metaadatok",
     "elementMetadata": "Metaadatok",
-    "templateMetadata": "Metaadatok"
+    "templateMetadata": "Metaadatok",
+    "version": "Verzió"
   },
   "validation": {
     "inspectionSummary": "Ellenőrzési problémák ({{count}})",
@@ -712,5 +728,95 @@
       "element": "Névtelen elem",
       "template": "Névtelen sablon"
     }
+  },
+  "announce": {
+    "constraints": {
+      "count": {
+        "one": "{{field}}: {{count}} megkötés van érvényben.",
+        "other": "{{field}}: {{count}} megkötés van érvényben."
+      },
+      "none": "{{field}}: már nincs megkötés.",
+      "defaultCleared": "Az alapértelmezett érték törölve. {{constraints}}"
+    },
+    "defaultTerm": "Az alapértelmezett érték: {{term}}.",
+    "hostFindings": {
+      "one": "A befogadó alkalmazás {{issues}} jelzett.",
+      "both": "A befogadó alkalmazás {{errors}} és {{warnings}} jelzett.",
+      "errors": {
+        "one": "{{count}} hibát",
+        "other": "{{count}} hibát"
+      },
+      "warnings": {
+        "one": "{{count}} figyelmeztetést",
+        "other": "{{count}} figyelmeztetést"
+      },
+      "cleared": "A befogadó alkalmazás által jelzett problémák törölve."
+    },
+    "moved": "{{name}} áthelyezve: {{position}}. hely ({{count}} közül)."
+  },
+  "version": {
+    "notVersioned": "Nincs verziózva",
+    "reuse": "Újrahasznosítás",
+    "state": {
+      "local": "Itt készült",
+      "linked": "Hivatkozott",
+      "forked": "Másolat",
+      "contained": "Egy hivatkozott elem része"
+    },
+    "owner": "Tulajdonos",
+    "folder": "Mappa",
+    "versions": "Verziók",
+    "versionNumber": "v{{version}}",
+    "reused": "Hivatkozott és másolt gyermekek",
+    "note": {
+      "local": "Nincs újrahasznosítható összetevőként tárolva.",
+      "linked": "Ez a(z) {{name}} v{{version}}.",
+      "forked": "Forrása: {{name}} v{{version}}.",
+      "forkedUnlisted": "Forrása: {{origin}}.",
+      "contained": "A(z) {{name}} v{{version}} része. Csak akkor változik, ha azt az elemet frissítik.",
+      "pending": "Újabb verziók keresése.",
+      "unreadable": "A forrás nem olvasható. Lehet, hogy törölték, vagy nincs hozzá hozzáférése.",
+      "failed": "A forrás verzióit nem sikerült lekérdezni.",
+      "newest": "Nincs elérhető újabb közzétett verzió.",
+      "originNewest": "A forrásnak nincs elérhető újabb közzétett verziója.",
+      "newer": "A legújabb elérhető közzétett verzió: v{{version}}.",
+      "originNewer": "A forrás legújabb elérhető közzétett verziója: v{{version}}.",
+      "checking": "A kompatibilitás ellenőrzése folyamatban.",
+      "compatible": "Kompatibilis: minden most érvényes példány érvényes marad.",
+      "breaking": "Nem kompatibilis: egy most érvényes példány érvénytelenné válhat.",
+      "uncheckable": "A kompatibilitást nem sikerült ellenőrizni.",
+      "blocked": {
+        "one": "A frissítés a sablon {{count}} példányát érvénytelenítené. A frissítéshez hozzon létre a sablonból új verziót.",
+        "other": "A frissítés a sablon {{count}} példányát érvénytelenítené. A frissítéshez hozzon létre a sablonból új verziót."
+      },
+      "publishedDocument": "A frissítéshez hozzon létre új verziót.",
+      "alsoUsed": "Máshol is szerepel: {{names}}.",
+      "noReused": "Egyik gyermek sem hivatkozik tárolt összetevőre, és egyik sem másolat.",
+      "notStored": "Nincs olvasható tárolt verzió."
+    },
+    "summary": {
+      "linked": "Hivatkozott, v{{version}}.",
+      "forked": "Másolat, forrása: {{name}} v{{version}}.",
+      "forkedUnlisted": "Másolat, forrása: {{origin}}."
+    },
+    "action": {
+      "open": "Eredeti megnyitása",
+      "upgrade": "Frissítés erre: v{{version}}",
+      "upgradeCompatible": "Frissítés erre: v{{version}} (kompatibilis)",
+      "upgradeBreaking": "Frissítés erre: v{{version}} (nem kompatibilis)",
+      "detach": "Leválasztás szerkesztéshez",
+      "replace": "Csere a forrás v{{version}} verziójára",
+      "replaceCompatible": "Csere a forrás v{{version}} verziójára (kompatibilis)",
+      "replaceBreaking": "Csere a forrás v{{version}} verziójára (nem kompatibilis)",
+      "saveDraft": "Mentés újrahasznosítható vázlatként",
+      "publish": "Közzététel újrahasznosíthatóként",
+      "upgradeAll": "Minden kompatibilis frissítése"
+    },
+    "replaceDialog": {
+      "title": "Csere a forrás v{{version}} verziójára?",
+      "description": "A(z) {{name}} a(z) {{origin}} közzétett v{{version}} verzióját fogja használni. Az itt végzett módosítások elvesznek.",
+      "confirm": "Csere"
+    },
+    "hostArtifact": "A gazdaoldal nem összetevőt adott vissza."
   }
 }

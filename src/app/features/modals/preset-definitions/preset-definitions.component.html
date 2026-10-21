@@ -1,8 +1,15 @@
 @if (service.showPresetDefinitionsModal()) {
   <!-- Backdrop -->
+  <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- a pointer shortcut; Escape closes the dialog -->
   <div class="cedar-modal-backdrop settings-dialog-backdrop animate-backdrop-fade-in" (click)="close()"></div>
   <!-- Modal -->
   <div
+    appModalSurface
+    role="dialog"
+    aria-modal="true"
+    tabindex="-1"
+    aria-labelledby="preset-definitions-title"
+    (dismissed)="close()"
     class="cedar-modal-surface settings-dialog-panel animate-modal-fade-in"
     style="left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: 800px"
   >
@@ -12,9 +19,9 @@
         <div class="settings-dialog-badge">
           <app-icon key="settings" [style.color]="'var(--cedar-color-primary)'" size="default"></app-icon>
         </div>
-        <h2 class="preset-title">{{ 'app.userMenu.definePresets' | translate }}</h2>
+        <h2 id="preset-definitions-title" class="preset-title">{{ 'app.userMenu.definePresets' | translate }}</h2>
       </div>
-      <button (click)="close()" class="settings-dialog-close">
+      <button [attr.aria-label]="'common.close' | translate" (click)="close()" class="settings-dialog-close">
         <app-icon key="close" size="default"></app-icon>
       </button>
     </div>
@@ -27,8 +34,10 @@
         <div class="settings-dialog-stack">
           <!-- Field configuration options Section -->
           <div class="settings-dialog-group">
-            <p class="settings-dialog-group-title">{{ 'preferences.fieldOptions.heading' | translate }}</p>
-            <table class="preset-table">
+            <p id="preset-group-field-options" class="settings-dialog-group-title">
+              {{ 'preferences.fieldOptions.heading' | translate }}
+            </p>
+            <table class="preset-table" aria-labelledby="preset-group-field-options">
               <thead>
                 <tr>
                   <th class="preset-row-label"></th>
@@ -41,7 +50,7 @@
               </thead>
               <tbody>
                 <tr class="preset-row">
-                  <td class="preset-row-label">
+                  <td class="preset-row-label" role="rowheader">
                     {{ 'preferences.fieldOptions.required.label' | translate }}
                   </td>
                   @for (preset of presets; track preset) {
@@ -49,6 +58,14 @@
                       <input
                         spellcheck="false"
                         type="checkbox"
+                        [attr.aria-label]="
+                          'presetDefinitions.cell'
+                            | translate
+                              : {
+                                  setting: ('preferences.fieldOptions.required.label' | translate),
+                                  preset: ('preferences.presets.' + preset | translate),
+                                }
+                        "
                         [ngModel]="service.presetDefinitions()[preset].showRequired"
                         (ngModelChange)="updateDef(preset, 'showRequired', $event)"
                         class="settings-dialog-check"
@@ -57,7 +74,7 @@
                   }
                 </tr>
                 <tr class="preset-row">
-                  <td class="preset-row-label">
+                  <td class="preset-row-label" role="rowheader">
                     {{ 'preferences.fieldOptions.allowMultiple.label' | translate }}
                   </td>
                   @for (preset of presets; track preset) {
@@ -65,6 +82,14 @@
                       <input
                         spellcheck="false"
                         type="checkbox"
+                        [attr.aria-label]="
+                          'presetDefinitions.cell'
+                            | translate
+                              : {
+                                  setting: ('preferences.fieldOptions.allowMultiple.label' | translate),
+                                  preset: ('preferences.presets.' + preset | translate),
+                                }
+                        "
                         [ngModel]="service.presetDefinitions()[preset].showAllowMultiple"
                         (ngModelChange)="updateDef(preset, 'showAllowMultiple', $event)"
                         class="settings-dialog-check"
@@ -73,7 +98,7 @@
                   }
                 </tr>
                 <tr class="preset-row">
-                  <td class="preset-row-label">
+                  <td class="preset-row-label" role="rowheader">
                     {{ 'preferences.fieldOptions.defaultValue.label' | translate }}
                   </td>
                   @for (preset of presets; track preset) {
@@ -81,6 +106,14 @@
                       <input
                         spellcheck="false"
                         type="checkbox"
+                        [attr.aria-label]="
+                          'presetDefinitions.cell'
+                            | translate
+                              : {
+                                  setting: ('preferences.fieldOptions.defaultValue.label' | translate),
+                                  preset: ('preferences.presets.' + preset | translate),
+                                }
+                        "
                         [ngModel]="service.presetDefinitions()[preset].showDefaultValue"
                         (ngModelChange)="updateDef(preset, 'showDefaultValue', $event)"
                         class="settings-dialog-check"
@@ -93,8 +126,10 @@
           </div>
           <!-- Feature visibility Section -->
           <div class="settings-dialog-group">
-            <p class="settings-dialog-group-title">{{ 'preferences.features.heading' | translate }}</p>
-            <table class="preset-table">
+            <p id="preset-group-features" class="settings-dialog-group-title">
+              {{ 'preferences.features.heading' | translate }}
+            </p>
+            <table class="preset-table" aria-labelledby="preset-group-features">
               <thead>
                 <tr>
                   <th class="preset-row-label"></th>
@@ -107,7 +142,7 @@
               </thead>
               <tbody>
                 <tr class="preset-row">
-                  <td class="preset-row-label">
+                  <td class="preset-row-label" role="rowheader">
                     {{ 'preferences.features.elements.label' | translate }}
                   </td>
                   @for (preset of presets; track preset) {
@@ -115,6 +150,14 @@
                       <input
                         spellcheck="false"
                         type="checkbox"
+                        [attr.aria-label]="
+                          'presetDefinitions.cell'
+                            | translate
+                              : {
+                                  setting: ('preferences.features.elements.label' | translate),
+                                  preset: ('preferences.presets.' + preset | translate),
+                                }
+                        "
                         [ngModel]="service.presetDefinitions()[preset].showElements"
                         (ngModelChange)="updateDef(preset, 'showElements', $event)"
                         class="settings-dialog-check"
@@ -127,8 +170,10 @@
           </div>
           <!-- Available field types Section -->
           <div class="settings-dialog-group">
-            <p class="settings-dialog-group-title">{{ 'presetDefinitions.fieldTypes' | translate }}</p>
-            <table class="preset-table">
+            <p id="preset-group-field-types" class="settings-dialog-group-title">
+              {{ 'presetDefinitions.fieldTypes' | translate }}
+            </p>
+            <table class="preset-table" aria-labelledby="preset-group-field-types">
               <thead>
                 <tr>
                   <th class="preset-row-label"></th>
@@ -140,9 +185,9 @@
                 </tr>
               </thead>
               <tbody>
-                @for (item of fieldTypesList; track item) {
+                @for (item of fieldTypesList; track item.key) {
                   <tr class="preset-row">
-                    <td class="preset-row-label">
+                    <td class="preset-row-label" role="rowheader">
                       <div class="preset-field-label">
                         <app-icon [key]="item.key" size="default"></app-icon>
                         <span class="preset-field-text">{{ item.value.labelKey | translate }}</span>
@@ -153,6 +198,14 @@
                         <input
                           spellcheck="false"
                           type="checkbox"
+                          [attr.aria-label]="
+                            'presetDefinitions.cell'
+                              | translate
+                                : {
+                                    setting: (item.value.labelKey | translate),
+                                    preset: ('preferences.presets.' + preset | translate),
+                                  }
+                          "
                           [checked]="!service.presetDefinitions()[preset].hiddenFieldTypes.includes(item.key)"
                           (change)="toggleFieldType(preset, item.key)"
                           class="settings-dialog-check"

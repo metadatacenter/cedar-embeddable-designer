@@ -25,7 +25,7 @@ export interface ChildLocks {
 const UNLOCKED: ChildLocks = { definition: false, placement: false };
 
 /** The children from the root's own down to the one identified, or null when it is not there. */
-function pathTo(container: ContainerDraft, id: number): ChildNode[] | null {
+export function pathTo(container: ContainerDraft, id: number): ChildNode[] | null {
   for (const child of container.children) {
     if (child.id === id) return [child];
     if (child.kind === 'element') {

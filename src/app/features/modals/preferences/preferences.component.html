@@ -1,8 +1,15 @@
 @if (service.showPreferencesModal()) {
   <!-- Backdrop -->
+  <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- a pointer shortcut; Escape closes the dialog -->
   <div class="cedar-modal-backdrop settings-dialog-backdrop animate-backdrop-fade-in" (click)="close()"></div>
   <!-- Modal -->
   <div
+    appModalSurface
+    role="dialog"
+    aria-modal="true"
+    tabindex="-1"
+    aria-labelledby="preferences-title"
+    (dismissed)="close()"
     class="cedar-modal-surface settings-dialog-panel max-w-2xl animate-modal-fade-in"
     style="left: 50%; top: 50%; transform: translate(-50%, -50%)"
   >
@@ -12,7 +19,7 @@
         <div class="settings-dialog-badge">
           <app-icon key="settings" [style.color]="'var(--cedar-color-primary)'" size="default"></app-icon>
         </div>
-        <h2 class="preferences-title">{{ 'preferences.title' | translate }}</h2>
+        <h2 id="preferences-title" class="preferences-title">{{ 'preferences.title' | translate }}</h2>
       </div>
       <button [attr.aria-label]="'preferences.close' | translate" (click)="close()" class="settings-dialog-close">
         <app-icon key="close" size="default"></app-icon>
@@ -30,6 +37,7 @@
                 (click)="service.applyPreset(preset)"
                 class="preferences-preset"
                 [class.active]="service.getActivePreset() === preset"
+                [attr.aria-pressed]="service.getActivePreset() === preset"
               >
                 {{ 'preferences.presets.' + preset | translate }}
               </button>
@@ -38,8 +46,15 @@
         </div>
         <!-- Field configuration options -->
         <div>
-          <h3 class="preferences-label preferences-spaced">{{ 'preferences.fieldOptions.heading' | translate }}</h3>
-          <div class="settings-dialog-group preferences-choice-list">
+          <h3 id="preferences-field-options-heading" class="preferences-label preferences-spaced">
+            {{ 'preferences.fieldOptions.heading' | translate }}
+          </h3>
+          <!-- Each set of boxes is a group named by its heading, as the radio group below is. -->
+          <div
+            class="settings-dialog-group preferences-choice-list"
+            role="group"
+            aria-labelledby="preferences-field-options-heading"
+          >
             <label class="preferences-option">
               <input
                 spellcheck="false"
@@ -83,8 +98,14 @@
         </div>
         <!-- Feature visibility -->
         <div>
-          <h3 class="preferences-label preferences-spaced">{{ 'preferences.features.heading' | translate }}</h3>
-          <div class="settings-dialog-group preferences-choice-list">
+          <h3 id="preferences-features-heading" class="preferences-label preferences-spaced">
+            {{ 'preferences.features.heading' | translate }}
+          </h3>
+          <div
+            class="settings-dialog-group preferences-choice-list"
+            role="group"
+            aria-labelledby="preferences-features-heading"
+          >
             <label class="preferences-option">
               <input
                 spellcheck="false"
@@ -102,10 +123,20 @@
         </div>
         <!-- Field selection style -->
         <div>
-          <h3 class="preferences-label preferences-spaced">{{ 'preferences.selection.heading' | translate }}</h3>
+          <h3 id="preferences-selection-heading" class="preferences-label preferences-spaced">
+            {{ 'preferences.selection.heading' | translate }}
+          </h3>
           <div class="settings-dialog-group">
-            <p class="preferences-help preferences-spaced">{{ 'preferences.selection.help' | translate }}</p>
-            <div class="preferences-selection-list">
+            <p id="preferences-selection-help" class="preferences-help preferences-spaced">
+              {{ 'preferences.selection.help' | translate }}
+            </p>
+            <!-- A role rather than a fieldset, so the heading above stays where it is drawn. -->
+            <div
+              class="preferences-selection-list"
+              role="radiogroup"
+              aria-labelledby="preferences-selection-heading"
+              aria-describedby="preferences-selection-help"
+            >
               <label class="preferences-option preferences-choice">
                 <input
                   spellcheck="false"
@@ -140,7 +171,9 @@
         <!-- Visible field types -->
         <div>
           <div class="preferences-section-header">
-            <h3 class="preferences-label">{{ 'preferences.fieldTypes.heading' | translate }}</h3>
+            <h3 id="preferences-field-types-heading" class="preferences-label">
+              {{ 'preferences.fieldTypes.heading' | translate }}
+            </h3>
             <div class="preferences-actions">
               <button
                 (click)="service.toggleAllFieldTypes(true)"
@@ -158,11 +191,16 @@
             </div>
           </div>
           <div class="settings-dialog-group">
-            <p class="preferences-help preferences-spaced">
+            <p id="preferences-field-types-help" class="preferences-help preferences-spaced">
               {{ 'preferences.fieldTypes.help' | translate }}
             </p>
-            <div class="preferences-field-grid max-h-60 custom-scrollbar">
-              @for (item of fieldTypesList; track item) {
+            <div
+              class="preferences-field-grid max-h-60 custom-scrollbar"
+              role="group"
+              aria-labelledby="preferences-field-types-heading"
+              aria-describedby="preferences-field-types-help"
+            >
+              @for (item of fieldTypesList; track item.key) {
                 <label class="preferences-field-option">
                   <input
                     spellcheck="false"

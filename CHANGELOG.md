@@ -23,9 +23,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dates use the matching locale. English text is unchanged.
 - Tests that hold the two language maps to the same keys and that fail when a
   template or message states user-visible text outside them.
+- One polite live region in each element, present from the first render. It announces
+  an applied constraint set ("Disease now has 2 constraints."), a cleared default, a
+  chosen default term, a new or cleared set of host findings, and a move in the
+  Overview, in English or Hungarian. Errors keep their alerts.
+- Browser specs that run axe-core for WCAG 2.2 levels A and AA over every reachable
+  state, pin each surface's Tab order, check where focus lands after each action, and
+  read the live region after each announced event.
 
 ### Changed
 
+- Drag handles draw the shared `drag` grip instead of the `list` icon, in the canvas, the
+  Overview, the field library and the child picker. On a field or element card the handle
+  sits in the bottom-right corner, under the delete button and level with the settings
+  chevron. A field's type moves to the centre of its header, over the chevron, where the
+  handle was. An element keeps its centred Element label, and its children toggle moves one
+  icon left to leave the corner to the handle. The template header shows Template in the
+  same place.
 - A child's settings open on a new Configuration tab, which holds how its parent places
   it. The display name and a wider display description share its first row. The
   requirement select follows with Hidden and Continue previous line, each where the
@@ -68,15 +82,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   colour, and in the error colour once the name is reported missing. Focus and a selected
   field card still draw it in the primary colour, and a locked name keeps the rule. Each
   name's placeholder takes the regular weight rather than the name's medium weight.
+- Focus no longer drops to the top of the page after an action. A deleted field or
+  element gives focus to the next card, else the previous one, else its container's
+  Add field. An import gives focus to the first imported card, and a chosen default
+  term returns focus to Edit default term.
+- Escape closes the Add field palette, the constraint and default-term dialogs, the
+  user menu, Preferences and Define Presets, and focus returns to the control that
+  opened each. Tabbing out of the user menu closes it.
+- Preferences and Define Presets are modal dialogs. Each takes focus when it opens,
+  keeps Tab inside it, and is announced by its title. The default-term dialog takes
+  focus and keeps Tab inside it, as the constraint dialog does.
+- The template description box is at least 24px tall, WCAG 2.2's minimum target, which
+  moves everything below it down a pixel.
+- Card drag handles are hidden from assistive technology, since the Overview's handles
+  reorder from the keyboard. An unnamed template's collapse button reads "Collapse
+  template", and each choice option's delete button names its option's number.
 
 ### Fixed
 
+- A template or element with a language of its own saves. The model library wrote that language
+  where the meta-schema refuses it, so the artifact server refused the save, and the designer
+  read it back from there itself. The library now writes it in the template's own context.
 - A published field or element no longer says that only its configuration can change
   where nothing can configure it. Designed on its own, it has no parent, and a
   read-only document configures nothing.
 - A renamed template, element or field is written with the title its name gives. The
   model library reads a title that way, so the stored title used to change between a
   save and the next reopening.
+- Tabbing into Preferences' field-type checkboxes no longer loses focus. The list was
+  rebuilt on every key press, which removed the checkbox that had just taken focus.
+- Define Presets names each checkbox by its row and preset, and its close button has
+  a name.
+- An attribute-value field's stand-in input is named by its type, the annotations
+  table can be scrolled from the keyboard on a narrow host, and the template
+  description box takes its accessible name from its label.
+- Both elements mark their text with the language it is shown in, so a screen reader
+  reads Hungarian as Hungarian inside an English page. The `lang` attribute sits on
+  the root inside the shadow tree, and the host element keeps the page's.
+- A field card's name box is named Enter field name, the placeholder it shows, so
+  speech input reaches it by the only text it displays. It was named Field display
+  name, and its description now says it edits the display name. The Hungarian name of the property IRI's Replace button now holds the word
+  the button shows.
+- Name and description errors are alerts, as the designer's other errors are, so a
+  screen reader announces them without focus moving. The validation summary is
+  announced through the live region only when it lists an issue no alert and no host
+  announcement has already said, such as a defect in a document the host loaded.
+- Collapsing or expanding the library sidebar gives focus to the button that reverses
+  it, and removing a type gives focus to the next type's Remove button, else the
+  previous one's, else the control that adds a type. Focus used to fall to the page.
+  The sidebar's library toggles report whether they are expanded, and their arrow is
+  no longer read as part of their names.
+- The child picker's type icons are read as Field or Element, and a selected result's
+  check is read as Selected. Preferences groups its field selection radios, and each
+  set of its checkboxes, under the heading that names them, and reports which preset
+  button is pressed. Define Presets heads each row
+  with its setting and names each table by its group. The Add field palette's library
+  menu reports whether it is open, and its arrow is no longer read.
+- A field that declares a language marks its text default, its choice options and its
+  rich text with it, so a screen reader reads them in that language. A number default,
+  and the names and descriptions the author writes, keep the designer's language.
+- On a 320px host the annotations table no longer makes the whole canvas scroll sideways.
+  Its Actions column is named for a screen reader without visually hidden text, which had
+  reached past the table's own scroller.
 
 ## [0.1.0-dev.20260916.2593d382] - 2026-09-16 (Nexus)
 

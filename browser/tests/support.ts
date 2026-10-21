@@ -27,6 +27,55 @@ export async function openDesigner(page: Page, query = ''): Promise<Locator> {
   return designer;
 }
 
+/**
+ * The control that really has focus, by role and accessible name: `button "Delete field"`.
+ *
+ * `document.activeElement` stops at the designer's shadow host, so each shadow root is asked in
+ * turn. The name comes from Playwright's accessibility snapshot, which computes it as a screen
+ * reader does. States and values are dropped, so a sequence does not change with what a field
+ * holds. Focus on the page itself, outside every control, reads `(page)`.
+ */
+export async function focusedControl(page: Page): Promise<string> {
+  // A fresh mark each time, kept on the window, so a mark left by an earlier call is never read.
+  const mark = await page.evaluate(() => {
+    let element = document.activeElement;
+    while (element?.shadowRoot?.activeElement) element = element.shadowRoot.activeElement;
+    if (!element || element === document.body) return null;
+    const holder = window as unknown as { __focusMark?: number; __focusMarked?: Element };
+    holder.__focusMark = (holder.__focusMark ?? 0) + 1;
+    holder.__focusMarked = element;
+    element.setAttribute('data-test-focused', String(holder.__focusMark));
+    return holder.__focusMark;
+  });
+  if (mark === null) return '(page)';
+  // The focused control can leave the page before it is read: a menu item that opens a dialog is
+  // removed on the next render. A snapshot would wait for it for ever, so a short one stands in, and
+  // a control that went reads `(gone)` for a poll to ask about again.
+  let snapshot: string;
+  try {
+    snapshot = await page.locator(`[data-test-focused="${mark}"]`).ariaSnapshot({ timeout: 1000 });
+  } catch {
+    return '(gone)';
+  }
+  await page.evaluate(() =>
+    (window as unknown as { __focusMarked?: Element }).__focusMarked?.removeAttribute('data-test-focused'),
+  );
+  const line = snapshot.split('\n')[0].replace(/^- /, '');
+  const [, role, name] = line.match(/^(\w+)(?: "((?:[^"\\]|\\.)*)")?/) ?? [];
+  if (!role) return line;
+  return name === undefined ? role : `${role} "${name}"`;
+}
+
+/** Press Tab `count` times and name each control focus lands on. */
+export async function tabSequence(page: Page, count: number, key = 'Tab'): Promise<string[]> {
+  const stops: string[] = [];
+  for (let i = 0; i < count; i++) {
+    await page.keyboard.press(key);
+    stops.push(await focusedControl(page));
+  }
+  return stops;
+}
+
 /** The CEDAR template the element currently holds, read as a host would read it. */
 export async function currentTemplate(page: Page): Promise<Record<string, unknown>> {
   return page.evaluate(
@@ -136,6 +185,9 @@ export async function applyPreset(page: Page, preset: 'basic' | 'semantic' | 'mo
   await designer.getByRole('button', { name: 'Preferences' }).click();
   await designer.getByRole('button', { name: preset, exact: true }).click();
   await designer.getByRole('button', { name: 'Done' }).click();
+  // Closing gives focus back to the user menu's button on the next render. Waiting for it keeps that
+  // move from landing after whatever the test does next.
+  await expect.poll(() => focusedControl(page)).toBe('button "User Menu"');
 }
 
 /** Reveal one field's settings without changing the document. */
@@ -198,8 +250,15 @@ export async function nestFixtureFields(page: Page, path: string[], count = 1): 
   );
 }
 
-/** Supply an empty reusable element through the host contract for editing fixtures. */
-export async function addElementFixture(page: Page, scope = page.locator(DESIGNER)): Promise<void> {
+/**
+ * Supply an empty reusable element through the host contract for editing fixtures.
+ * `inspect` runs while the picker is open with the element selected, before it closes.
+ */
+export async function addElementFixture(
+  page: Page,
+  scope = page.locator(DESIGNER),
+  inspect?: () => Promise<void>,
+): Promise<void> {
   await page.evaluate((source) => {
     const element = structuredClone(source) as any;
     for (const key of element._ui.order) delete element.properties[key];
@@ -225,6 +284,9 @@ export async function addElementFixture(page: Page, scope = page.locator(DESIGNE
   await scope.getByRole('button', { name: 'Import fields and elements', exact: true }).first().click();
   await page.getByRole('button', { name: 'Search', exact: true }).click();
   await page.getByRole('row', { name: 'Select Element', exact: true }).click();
+  await inspect?.();
   await page.getByRole('button', { name: 'Done', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  // The imported card takes focus on the next render; waiting keeps that from landing after the test's next step.
+  await expect.poll(() => focusedControl(page)).toBe('group "Element"');
 }
