@@ -1,7 +1,15 @@
 import { applyPreset } from './support';
 import nestedTemplate from '../../src/app/core/model/fixtures/corpus/template-028.json' with { type: 'json' };
-import { expect, test } from '@playwright/test';
-import { openDesigner, currentTemplate, expectSharedFocusRing, fieldOrder, focusedControl } from './support';
+import { type Locator, type Page, expect, test } from '@playwright/test';
+import {
+  addElementFixture,
+  currentTemplate,
+  expectSharedFocusRing,
+  fieldOrder,
+  focusedControl,
+  nestFixtureFields,
+  openDesigner,
+} from './support';
 import type { CedarEmbeddableDesignerElement, CedJsonObject } from '../../src/app/ced-public-api';
 
 for (const width of [1280, 375])
@@ -305,6 +313,212 @@ test('focus moving to the next action between two cards shows the actions again'
   await page.keyboard.press('Tab');
   await expect(zone.getByRole('button', { name: 'Add element here', exact: true })).toBeFocused();
   await expect(zone).toHaveCSS('opacity', '1');
+});
+
+/** Whether the designer's topmost element at a point of the viewport is part of the insertion actions. */
+function actionsTakePointerAt(page: Page, x: number, y: number): Promise<boolean> {
+  return page.evaluate(
+    ([x, y]) =>
+      !!document
+        .querySelector('cedar-embeddable-designer')!
+        .shadowRoot!.elementFromPoint(x, y)
+        ?.closest('app-insertion-actions'),
+    [x, y],
+  );
+}
+
+/**
+ * The actions in the gap between Title and Category, the card each half of them lies over, and points
+ * on the actions over each card. The points are checked to lie on the cards, so that a later change
+ * to the actions' size cannot leave the test measuring something else.
+ */
+async function actionsOverCards(page: Page) {
+  const designer = page.locator('cedar-embeddable-designer');
+  const zone = designer.locator('.insert-zone').nth(1);
+  const add = zone.getByRole('button', { name: 'Add field here', exact: true });
+  const cards = designer.locator('.field-drop-item > .field-drag-container');
+  await page.mouse.move(0, 0);
+  await zone.scrollIntoViewIfNeeded();
+  const gap = (await zone.boundingBox())!;
+  const action = (await add.boundingBox())!;
+  const above = (await cards.nth(0).boundingBox())!;
+  const below = (await cards.nth(1).boundingBox())!;
+  const x = action.x + action.width / 2;
+  const inGap = gap.y + gap.height / 2;
+  const overAbove = (action.y + gap.y) / 2;
+  const overBelow = (gap.y + gap.height + action.y + action.height) / 2;
+  expect(overAbove).toBeGreaterThan(above.y);
+  expect(overAbove).toBeLessThan(above.y + above.height);
+  expect(overBelow).toBeGreaterThan(below.y);
+  expect(overBelow).toBeLessThan(below.y + below.height);
+  return {
+    zone,
+    add,
+    actions: zone.locator('app-insertion-actions'),
+    above: cards.nth(0),
+    x,
+    inGap,
+    overAbove,
+    overBelow,
+  };
+}
+
+/**
+ * WCAG 1.4.13 asks that the pointer can move onto content that hover shows without it disappearing.
+ * The actions are taller than the gap that shows them, so moving onto them means moving over the
+ * cards on either side.
+ */
+test('the actions between two cards stay shown while the pointer moves onto their parts over both cards', async ({
+  page,
+}) => {
+  await openDesigner(page);
+  const { zone, actions, above, x, inGap, overAbove, overBelow } = await actionsOverCards(page);
+  await page.mouse.move(x, inGap);
+  await expect(zone).toHaveCSS('opacity', '1');
+  for (const y of [overAbove, overBelow, overAbove]) {
+    await page.mouse.move(x, y, { steps: 4 });
+    expect(await actionsTakePointerAt(page, x, y)).toBe(true);
+    await expect(actions).toHaveCSS('pointer-events', 'auto');
+    await expect(zone).toHaveCSS('opacity', '1');
+  }
+  // Escape over the card above uncovers it, and the pointer is then on the card.
+  await page.keyboard.press('Escape');
+  await expect(zone).toHaveCSS('opacity', '0');
+  expect(await actionsTakePointerAt(page, x, overAbove)).toBe(false);
+  const onCard = await above.evaluate(
+    (card, [x, y]) => card.contains((card.getRootNode() as ShadowRoot).elementFromPoint(x, y)),
+    [x, overAbove],
+  );
+  expect(onCard).toBe(true);
+});
+
+/**
+ * Content that hover or focus shows must stay until the hover or focus ends or the author dismisses
+ * it. The page clock is faked and run half a minute ahead, so any timer that would hide the actions
+ * fires. A timer the test sets for twenty seconds shows that the clock really ran.
+ */
+test('the actions between two cards persist under hover and under focus, with no timer hiding them', async ({
+  page,
+}) => {
+  await page.clock.install();
+  await openDesigner(page);
+  const { zone, add, actions, x, inGap } = await actionsOverCards(page);
+  const runHalfAMinute = async () => {
+    await page.evaluate(() => {
+      const holder = window as unknown as { __late?: boolean };
+      holder.__late = false;
+      setTimeout(() => (holder.__late = true), 20_000);
+    });
+    await page.clock.runFor(30_000);
+    expect(await page.evaluate(() => (window as unknown as { __late?: boolean }).__late)).toBe(true);
+  };
+  // CSS runs on its own clock, so the test also checks that no transition or animation is left to run.
+  const runningAnimations = () =>
+    zone.evaluate((zone) => zone.getAnimations({ subtree: true }).map((animation) => animation.id || 'unnamed'));
+
+  await page.mouse.move(x, inGap);
+  await expect(zone).toHaveCSS('opacity', '1');
+  await runHalfAMinute();
+  await expect(actions).toHaveCSS('pointer-events', 'auto');
+  await expect(zone).toHaveCSS('opacity', '1');
+  expect(await runningAnimations()).toEqual([]);
+
+  await page.mouse.move(0, 0);
+  await expect(zone).toHaveCSS('opacity', '0');
+  await add.focus();
+  await expect(zone).toHaveCSS('opacity', '1');
+  await runHalfAMinute();
+  await expect(add).toBeFocused();
+  await expect(actions).toHaveCSS('pointer-events', 'auto');
+  await expect(zone).toHaveCSS('opacity', '1');
+  expect(await runningAnimations()).toEqual([]);
+});
+
+/**
+ * Everything drawn at points across the bottom insertion actions other than the actions, their zone
+ * and the boxes that contain the zone. An empty list means the actions cover no other content.
+ */
+function coveredByBottomActions(zone: Locator): Promise<string[]> {
+  return zone.evaluate((zone) => {
+    const root = zone.getRootNode() as ShadowRoot;
+    const containers = new Set<Node>();
+    for (let node: Node | null = zone; node; node = node instanceof ShadowRoot ? node.host : node.parentNode)
+      containers.add(node);
+    const covered = new Set<string>();
+    for (const button of zone.querySelectorAll(':scope > app-insertion-actions button')) {
+      const box = button.getBoundingClientRect();
+      const points = [
+        [box.left + 1, box.top + 1],
+        [box.right - 1, box.top + 1],
+        [box.left + 1, box.bottom - 1],
+        [box.right - 1, box.bottom - 1],
+        [(box.left + box.right) / 2, (box.top + box.bottom) / 2],
+      ];
+      for (const [x, y] of points)
+        for (const element of root.elementsFromPoint(x, y))
+          if (!zone.contains(element) && !containers.has(element))
+            covered.add(`${element.localName}.${[...element.classList].join('.')}`);
+    }
+    return [...covered];
+  });
+}
+
+/** Each bottom action's box, to show that revealing the actions draws them where they already were. */
+function bottomActionBoxes(zone: Locator): Promise<DOMRect[]> {
+  return zone.evaluate((zone) =>
+    [...zone.querySelectorAll(':scope > app-insertion-actions button')].map((button) =>
+      button.getBoundingClientRect().toJSON(),
+    ),
+  );
+}
+
+/**
+ * The bottom insertion actions also appear on hover and focus, but they are drawn in space kept for
+ * them, so they cover no other content and the dismissal clause of WCAG 1.4.13 does not apply.
+ */
+for (const preset of ['basic', 'modular'] as const)
+  for (const width of [1280, 375])
+    test(`in ${preset} at ${width}, the bottom insertion actions cover nothing when hover or focus shows them`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 900 });
+      const designer = await openDesigner(page);
+      if (preset !== 'basic') await applyPreset(page, preset);
+      const zone = designer.locator('.bottom-insert-zone').first();
+      const actions = zone.locator(':scope > app-insertion-actions');
+      await page.mouse.move(0, 0);
+      await zone.scrollIntoViewIfNeeded();
+      await expect(actions).toHaveCSS('opacity', '0');
+      const hidden = await bottomActionBoxes(zone);
+      expect(hidden).toHaveLength(preset === 'basic' ? 1 : 3);
+
+      await zone.hover();
+      await expect(actions).toHaveCSS('opacity', '1');
+      expect(await bottomActionBoxes(zone)).toEqual(hidden);
+      expect(await coveredByBottomActions(zone)).toEqual([]);
+
+      await page.mouse.move(0, 0);
+      await actions.getByRole('button').first().focus();
+      await expect(actions).toHaveCSS('opacity', '1');
+      expect(await bottomActionBoxes(zone)).toEqual(hidden);
+      expect(await coveredByBottomActions(zone)).toEqual([]);
+    });
+
+test("a nested element's bottom insertion actions cover nothing when hover shows them", async ({ page }) => {
+  const designer = await openDesigner(page);
+  await applyPreset(page, 'modular');
+  await addElementFixture(page);
+  await nestFixtureFields(page, ['Element']);
+  const zone = designer.locator('app-container-editor app-container-editor .bottom-insert-zone').first();
+  const actions = zone.locator(':scope > app-insertion-actions');
+  await page.mouse.move(0, 0);
+  await zone.scrollIntoViewIfNeeded();
+  await expect(actions).toHaveCSS('opacity', '0');
+  const hidden = await bottomActionBoxes(zone);
+  await zone.hover();
+  await expect(actions).toHaveCSS('opacity', '1');
+  expect(await bottomActionBoxes(zone)).toEqual(hidden);
+  expect(await coveredByBottomActions(zone)).toEqual([]);
 });
 
 for (const kind of ['template', 'element'] as const) {
