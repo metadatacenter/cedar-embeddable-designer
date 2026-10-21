@@ -10,6 +10,7 @@ import {
   inject,
   signal,
   computed,
+  viewChild,
   ChangeDetectionStrategy,
 } from '@angular/core';
 
@@ -60,8 +61,11 @@ export class FieldLibrarySidebarComponent {
     );
   }
 
-  fieldListHeight = 33.33; // percentage
+  /** The field list's share of the sidebar's height, in percent. The panel below it takes the rest. */
+  readonly fieldListHeight = signal(33.33);
   readonly isResizing = signal(false);
+  /** The sidebar's own container, whose height the field list and the panel below it divide. */
+  private readonly sidebar = viewChild.required<ElementRef<HTMLElement>>('sidebar');
   readonly expandedBuiltIn = signal(true);
   readonly expandedLibraries = signal<Set<number>>(new Set());
 
@@ -102,14 +106,11 @@ export class FieldLibrarySidebarComponent {
     this.isResizing.set(true);
 
     const onMouseMove = (moveEvent: MouseEvent) => {
-      const container = this.host.nativeElement.closest('.border-r');
-      if (!container) return;
-
-      const containerRect = container.getBoundingClientRect();
+      const containerRect = this.sidebar().nativeElement.getBoundingClientRect();
       const newHeight = ((moveEvent.clientY - containerRect.top) / containerRect.height) * 100;
 
       // Constrain between 10% and 75%
-      this.fieldListHeight = Math.min(Math.max(newHeight, 10), 75);
+      this.fieldListHeight.set(Math.min(Math.max(newHeight, 10), 75));
     };
 
     const onMouseUp = () => {
