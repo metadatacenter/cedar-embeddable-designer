@@ -37,6 +37,8 @@ import {
   findContainer,
 } from '../model/container-draft';
 import { FieldLibraryService } from './field-library.service';
+import { forkedChild, importedChild, replacedChild } from '../model/child-identity';
+import { versionState } from '../model/version-state';
 import { deploymentKeys, keyedChild } from '../model/child-key-policy';
 import { CedLanguageService } from '../../i18n/ced-language.service';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
@@ -1126,8 +1128,40 @@ export class TemplateService {
   }
 
   /**
+   * The child a repository artifact becomes in `target`, placed under its own name. A published
+   * artifact is linked and keeps its identifier; a draft becomes a fork with one of its own.
+   */
+  private childFromArtifact(type: 'field' | 'element', artifact: CedJsonObject, target: ContainerDraft): ChildNode {
+    if (type === 'field') {
+      const field = readField(JsonSourcePolicy.stringify(artifact));
+      if (!allowedInContainer(field.type, target.kind)) throw new LocalizedError(message('errors.pageBreakPlacement'));
+      return importedChild(
+        fieldNode({
+          ...field,
+          ...copiedPlacement(field.name, field.helpText ?? ''),
+          deploymentName: undefined,
+          id: newNodeId(),
+          propertyIri: newFieldIdentity().propertyIri,
+        }),
+      );
+    }
+    const definition = readContainer(artifact);
+    if (definition.kind !== 'element') throw new LocalizedError(message('errors.chooseFieldOrElement'));
+    return importedChild({
+      kind: 'element',
+      id: definition.id,
+      definition,
+      placement: {
+        ...copiedPlacement(definition.name, definition.description),
+        allowMultiple: false,
+        propertyIri: newFieldIdentity().propertyIri,
+      },
+    });
+  }
+
+  /**
    * Parse the complete batch before changing the document, then return the inserted children's ids
-   * in order. Source definitions keep their identity.
+   * in order. Published sources keep their identity; drafts arrive as forks of the version loaded.
    */
   importChildren(
     sources: { type: 'field' | 'element'; artifact: CedJsonObject }[],
@@ -1138,32 +1172,7 @@ export class TemplateService {
     const target = findContainer(root, targetId);
     if (!target) throw new LocalizedError(message('errors.destinationMissing'));
     if (this.definitionLocked(targetId)) throw new LocalizedError(message('errors.publishedReadOnly'));
-    const nodes = sources.map(({ type, artifact }): ChildNode => {
-      if (type === 'field') {
-        const field = readField(JsonSourcePolicy.stringify(artifact));
-        if (!allowedInContainer(field.type, target.kind))
-          throw new LocalizedError(message('errors.pageBreakPlacement'));
-        return fieldNode({
-          ...field,
-          ...copiedPlacement(field.name, field.helpText ?? ''),
-          deploymentName: undefined,
-          id: newNodeId(),
-          propertyIri: newFieldIdentity().propertyIri,
-        });
-      }
-      const definition = readContainer(artifact);
-      if (definition.kind !== 'element') throw new LocalizedError(message('errors.chooseFieldOrElement'));
-      return {
-        kind: 'element',
-        id: definition.id,
-        definition,
-        placement: {
-          ...copiedPlacement(definition.name, definition.description),
-          allowMultiple: false,
-          propertyIri: newFieldIdentity().propertyIri,
-        },
-      };
-    });
+    const nodes = sources.map(({ type, artifact }) => this.childFromArtifact(type, artifact, target));
     try {
       nodes.forEach((node, index) => this.insertNode(node, position + index, targetId));
       for (const node of nodes) this.takeKeyFromName(node.id, node.definition.name);
@@ -1172,6 +1181,50 @@ export class TemplateService {
       throw error;
     }
     return nodes.map((node) => node.id);
+  }
+
+  /**
+   * Put stored versions in place of children, keeping each child's placement, in one change to the
+   * document. Every artifact is read before anything changes, so one that cannot be read, or a
+   * child that can no longer be replaced, leaves the document as it was.
+   */
+  replaceChildren(replacements: readonly { id: number; type: 'field' | 'element'; artifact: CedJsonObject }[]): void {
+    const root = this.session.document();
+    const nodes = new Map<number, ChildNode>();
+    for (const { id, type, artifact } of replacements) {
+      const parent = parentOf(root, id);
+      const existing = parent?.children.find((child) => child.id === id);
+      if (!parent || !existing || this.placementLocked(id))
+        throw new LocalizedError(message('errors.publishedReadOnly'));
+      const replaced = replacedChild(existing, this.childFromArtifact(type, artifact, parent));
+      if (!replaced) throw new LocalizedError(message('errors.chooseFieldOrElement'));
+      nodes.set(id, replaced);
+    }
+    this.replaceNodes(nodes);
+  }
+
+  /** Make a linked child an editable fork of the version it links to. Returns whether it did. */
+  detachChild(id: number): boolean {
+    const existing = parentOf(this.session.document(), id)?.children.find((child) => child.id === id);
+    if (!existing || this.placementLocked(id) || versionState(this.session.document(), id)?.kind !== 'linked')
+      return false;
+    this.replaceNodes(new Map([[id, forkedChild(existing)]]));
+    return true;
+  }
+
+  private replaceNodes(nodes: ReadonlyMap<number, ChildNode>): void {
+    if (!nodes.size) return;
+    const replace = (container: ContainerDraft): ContainerDraft => ({
+      ...container,
+      children: container.children.map((node) => {
+        const replaced = nodes.get(node.id);
+        if (replaced) return replaced;
+        return node.kind === 'element' ? { ...node, definition: replace(node.definition) } : node;
+      }),
+    });
+    this.loadError.set(null);
+    this.session.document.update(replace);
+    this.pruneCollapsed();
   }
 
   /** Adds an inline element and returns its id, or -1 where the target cannot take one. */

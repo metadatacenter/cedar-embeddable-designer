@@ -132,28 +132,12 @@
               <dl class="identity">
                 <dt>{{ 'elementCard.elementIri' | translate }}</dt>
                 <dd>{{ node().definition.identifier || ('settings.notYetAssigned' | translate) }}</dd>
-                @if (node().definition.version) {
-                  <dt>{{ 'settings.version' | translate }}</dt>
-                  <dd>{{ node().definition.version }}</dd>
-                }
-                @if (publicationStatus()) {
-                  <dt>{{ 'common.publicationStatus' | translate }}</dt>
-                  <dd>{{ publicationStatus() | translate }}</dd>
-                }
                 <dt>{{ 'settings.modelVersion' | translate }}</dt>
                 <dd>{{ artifact().schemaVersion || ('common.notSpecified' | translate) }}</dd>
                 <dt>{{ 'settings.created' | translate }}</dt>
                 <dd>{{ artifact().createdOn || ('settings.notYetRecorded' | translate) }}</dd>
                 <dt>{{ 'settings.modified' | translate }}</dt>
                 <dd>{{ artifact().modifiedOn || ('settings.notYetRecorded' | translate) }}</dd>
-                @if (artifact().derivedFrom) {
-                  <dt>{{ 'settings.derivedFrom' | translate }}</dt>
-                  <dd>{{ artifact().derivedFrom }}</dd>
-                }
-                @if (artifact().previousVersion) {
-                  <dt>{{ 'settings.previousVersion' | translate }}</dt>
-                  <dd>{{ artifact().previousVersion }}</dd>
-                }
                 <dt class="editable">
                   <label [for]="'element-identifier-' + node().id">{{
                     'containerEditor.identifier' | translate
@@ -175,6 +159,9 @@
                 <dd><app-types-picker [container]="node().definition" /></dd>
               </dl>
             </fieldset>
+          }
+          @case ('Version') {
+            <app-version-panel [nodeId]="node().id" [active]="expanded && activeTab === 'Version'" />
           }
           @case ('Display') {
             <fieldset class="panel-scope" [disabled]="definitionLocked()">

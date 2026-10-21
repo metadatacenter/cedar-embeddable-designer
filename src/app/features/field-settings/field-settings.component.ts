@@ -2,7 +2,6 @@ import { isBlank } from '../../core/model/cedar-model/text-policy';
 import { JsonSourcePolicy } from '../../core/model/cedar-template';
 import { NumericPolicy } from '../../core/model/cedar-template';
 import { invalidSettingsInputs } from '../../shared/settings-input';
-import { publicationStatusLabel } from '../../shared/publication-status';
 import { fieldDisplayDescription, fieldDisplayName } from '../../core/model/field-display-name';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
@@ -10,6 +9,7 @@ import { AlternateQuestionsComponent } from '../alternate-questions/alternate-qu
 import { AnnotationsEditorComponent } from '../annotations-editor/annotations-editor.component';
 import { PropertyPickerComponent } from '../property-picker/property-picker.component';
 import { FieldDefaultValueComponent } from '../field-default-value/field-default-value.component';
+import { VersionPanelComponent } from '../version-panel/version-panel.component';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -50,6 +50,7 @@ import { TemplateService } from '../../core/services/template.service';
     FieldDefaultValueComponent,
     PropertyPickerComponent,
     TranslatePipe,
+    VersionPanelComponent,
   ],
   templateUrl: './field-settings.component.html',
   styleUrl: './field-settings.component.scss',
@@ -65,7 +66,6 @@ export class FieldSettingsComponent implements OnChanges {
   @Input() hasValues = false;
   private readonly i18n = inject(CedLanguageService);
   readonly tabKey = settingsTabKey;
-  readonly publicationStatusLabel = publicationStatusLabel;
   expanded = false;
   activeTab: string = SETTINGS_TABS.configuration;
   get valuesTab(): string {
@@ -91,6 +91,7 @@ export class FieldSettingsComponent implements OnChanges {
       ...(this.hasValues || this.hasConstraints ? [this.valuesTab] : []),
       SETTINGS_TABS.annotations,
       SETTINGS_TABS.fieldMetadata,
+      SETTINGS_TABS.version,
     ];
   }
   get selectedTab(): string {

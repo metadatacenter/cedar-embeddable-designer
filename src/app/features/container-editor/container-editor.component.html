@@ -67,9 +67,8 @@
               spellcheck="false"
               autocomplete="off"
               type="text"
-              [ngModel]="container().version"
-              (ngModelChange)="update({ version: $event })"
-              [disabled]="definitionLocked()"
+              [value]="container().version"
+              readonly
               class="template-input template-input--fact"
               [attr.aria-label]="'containerEditor.version' | translate"
               [placeholder]="'common.notSpecified' | translate"

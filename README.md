@@ -486,8 +486,11 @@ The selector stages one or more results in an upper table, with a bin to remove 
 selection and Done/Cancel beside the table. Search results below show name, artifact
 type, created and modified dates, version and status. Done loads the complete batch
 before inserting it at the chosen position; Cancel leaves the document unchanged.
-Source identities, versions, metadata and descendants are retained. Duplicate child
-names receive a unique placement name without renaming the reusable definition.
+A published source is linked: it keeps its identifier, version, metadata and
+descendants, and its definition stays locked. A draft source arrives as a copy with an
+identifier of its own. The copy's `pav:derivedFrom` names the version it was loaded
+from, and its own version line starts at 0.0.1. Duplicate child names receive a unique
+placement name without renaming the reusable definition.
 
 The embedding host supplies `designer.childSource`, implementing the exported
 `CedChildSource` interface. `search(query, { signal, cursor })` returns
@@ -500,6 +503,59 @@ Replacing `childSource` closes the selector and cancels pending work. Search req
 and artifact loads receive abort signals, and late replies cannot change a closed
 selector or a replacement document. Both popup and library-sidebar layouts expose
 the selector.
+
+### Versions of Reused Children
+
+Every field, element and template has a **Version** tab. It shows the version, the
+publication status, the version it was derived from and its previous version, none of
+which the Metadata tab shows any longer, and how the child relates to stored
+artifacts. The header of a template or element shows its version but never edits it. A child made in the document is local and unversioned. A linked
+child is a published artifact embedded as itself. A copy names the stored version it
+came from. A child inside a linked element belongs to that element and changes only
+when the element is upgraded. The tab offers only the actions that are possible, so it
+may offer none.
+
+The actions depend on four optional `CedChildSource` methods. A host that omits one
+loses only the actions that need it.
+
+- `versions(reference, { signal })` returns every version of the referenced artifact's
+  version line that the user can read, newest first, or `null` when the artifact
+  cannot be read. The tab asks when it opens. A linked child is offered the newest
+  published version as an upgrade, and a copy is offered its origin's newest version
+  as a replacement.
+- `compatibility(current, candidate, { type, signal })` says whether every instance
+  that is valid under `current` stays valid under `candidate`. The upgrade and
+  replacement buttons name the verdict. A breaking replacement is refused while
+  `invalidatedInstances` is above zero, because those instances belong to the current
+  version of the template.
+- `save(artifact, { type, publish, signal })` stores a child as a new reusable
+  artifact and returns it as stored. A published result is linked in the child's
+  place; a stored draft is copied, since only published artifacts are linked.
+- `open(reference)` shows a stored artifact to the user.
+
+Detaching a linked child turns it into an editable copy of the version it was. Only
+the child changes identity: its published descendants stay linked. Upgrading or
+replacing a child keeps its key, labels, requirement, multiplicity and property. The
+template's own Version tab lists every linked and copied child with what its lookup
+found, and upgrades all the compatible ones in one step. A published template offers
+no upgrades until it has a new version.
+
+```ts
+import type { CedChildSource, CedJsonObject } from 'cedar-embeddable-designer';
+
+declare function readJson(url: string, signal: AbortSignal): Promise<CedJsonObject>;
+
+export const childSource: CedChildSource = {
+  search: async () => ({ results: [] }),
+  load: (result, { signal }) => readJson(result.id, signal),
+  versions: async (reference, { signal }) => {
+    const response = await fetch(`/versions?id=${encodeURIComponent(reference.id)}`, { signal });
+    if (response.status === 403 || response.status === 404) return null;
+    if (!response.ok) throw new Error(`Version lookup failed (${response.status}).`);
+    return response.json();
+  },
+};
+```
 
 ### Local repository demo as test1
 

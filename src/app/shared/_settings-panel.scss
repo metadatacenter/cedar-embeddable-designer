@@ -1,0 +1,67 @@
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
+
+// The rules a settings panel's content shares with the settings tabs that hold it, for a component
+// rendered inside a panel, whose own encapsulated styles do not reach it.
+
+// A panel's bordered action.
+@mixin button {
+  button {
+    padding: var(--cedar-space-1) var(--cedar-space-2);
+    color: var(--cedar-color-primary);
+    border: 1px solid var(--cedar-border-rule);
+    border-radius: var(--cedar-radius);
+    background: var(--cedar-surface-raised);
+    cursor: pointer;
+  }
+}
+
+// The shared field-error role, with the host's override of its colour as the designer's other
+// errors take it.
+@mixin alert {
+  p[role='alert'] {
+    @include patterns.field-error;
+    --cedar-icon-color: var(--cedar-control-error, var(--cedar-status-error-text));
+    color: var(--cedar-control-error, var(--cedar-status-error-text));
+  }
+}
+
+// Labels in the muted text beside their values, in two columns.
+@mixin identity {
+  .identity {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: var(--cedar-space-1) var(--cedar-space-3);
+    margin: 0;
+    font-size: var(--cedar-font-size);
+  }
+  .identity dt {
+    color: var(--cedar-text-muted);
+    font-style: normal;
+  }
+  .identity dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+@mixin focus-ring {
+  button:focus-visible {
+    outline: var(--cedar-focus-ring-width) solid var(--cedar-color-primary);
+    outline-offset: var(--cedar-focus-ring-offset);
+  }
+}
+
+// A label beside a value that can grow to several lines, such as an IRI and its manual entry, sits on
+// the value's first line rather than beside its middle.
+@mixin identity-first-line {
+  .identity dt.first-line,
+  .identity dt.first-line + dd {
+    align-self: baseline;
+  }
+}
+
+@mixin identity-label-weight {
+  .identity dt {
+    font-weight: var(--cedar-font-weight-medium);
+  }
+}

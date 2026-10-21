@@ -9,7 +9,7 @@ export {
   choiceDefaultConflict,
 } from './cedar-model/field-writer';
 export type { DesignerTemplate, ContainerMetadata } from './cedar-model/types';
-export { newFieldIdentity, newTemplateIdentifier } from './cedar-model/metadata';
+export { newElementIdentifier, newFieldIdentity, newTemplateIdentifier } from './cedar-model/metadata';
 export type { FieldParameter } from './cedar-model/capabilities';
 export {
   PARAMETER_SETTERS,

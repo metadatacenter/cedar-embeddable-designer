@@ -111,8 +111,16 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // compressed bytes to 1,553,738 / 444,157 on the same dependencies. No dependency was
 // added. Allow about 2.7 KB raw / 1.4 KB compressed headroom. The standalone application's
 // `build-app` budget in angular.json moves by the same 3 KB.
-const RAW_LIMIT = 1_558_000;
-const GZIP_LIMIT = 446_000;
+// 2026-10-20: the Version tab on every field, element and template, the host's optional version
+// lookup, compatibility, save and open operations, the identity rules for imports, detaching and
+// replacement, and their English and Hungarian text measure 1,588,118 raw / 453,490 gzip-9 bytes.
+// That adds 31,226 raw / 8,693 compressed bytes to 1,556,892 / 444,797 on the same dependencies.
+// The panel shares the settings tabs' list, button and error rules through a Sass partial rather
+// than a fourth copy of their stylesheet, which saved 10,085 raw bytes. No dependency was added.
+// Allow about 3.9 KB raw / 1.5 KB compressed headroom. The standalone application's `build-app`
+// budget in angular.json moves by the same 34 KB.
+const RAW_LIMIT = 1_592_000;
+const GZIP_LIMIT = 455_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
 

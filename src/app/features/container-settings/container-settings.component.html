@@ -82,28 +82,12 @@
         {{ (container().kind === 'template' ? 'containerSettings.templateIri' : 'elementCard.elementIri') | translate }}
       </dt>
       <dd>{{ container().identifier || ('settings.notYetAssigned' | translate) }}</dd>
-      @if (container().version) {
-        <dt>{{ 'settings.version' | translate }}</dt>
-        <dd>{{ container().version }}</dd>
-      }
-      @if (status()) {
-        <dt>{{ 'common.publicationStatus' | translate }}</dt>
-        <dd>{{ status() | translate }}</dd>
-      }
       <dt>{{ 'settings.modelVersion' | translate }}</dt>
       <dd>{{ artifact().schemaVersion || ('common.notSpecified' | translate) }}</dd>
       <dt>{{ 'settings.created' | translate }}</dt>
       <dd>{{ artifact().createdOn || ('settings.notYetRecorded' | translate) }}</dd>
       <dt>{{ 'settings.modified' | translate }}</dt>
       <dd>{{ artifact().modifiedOn || ('settings.notYetRecorded' | translate) }}</dd>
-      @if (artifact().derivedFrom) {
-        <dt>{{ 'settings.derivedFrom' | translate }}</dt>
-        <dd>{{ artifact().derivedFrom }}</dd>
-      }
-      @if (artifact().previousVersion) {
-        <dt>{{ 'settings.previousVersion' | translate }}</dt>
-        <dd>{{ artifact().previousVersion }}</dd>
-      }
       <dt class="editable">
         <label [for]="'container-identifier-' + container().id">{{ 'containerEditor.identifier' | translate }}</label>
       </dt>
@@ -121,6 +105,15 @@
       <dt class="editable">{{ 'settings.types' | translate }}</dt>
       <dd><app-types-picker [container]="container()" /></dd>
     </dl>
+  </section>
+  <section
+    class="settings"
+    role="tabpanel"
+    [hidden]="selected() !== 'Version'"
+    [id]="tabId('Version') + '-panel'"
+    [attr.aria-labelledby]="tabId('Version')"
+  >
+    <app-version-panel [nodeId]="container().id" [active]="expanded && selected() === 'Version'" />
   </section>
 </div>
 <button

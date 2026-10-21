@@ -1,0 +1,58 @@
+@use '../../shared/dialog-style';
+@use '../../shared/settings-panel';
+:host {
+  display: block;
+}
+// The panel is content inside a settings tab, so it takes that tab's own rules for its list,
+// buttons and errors.
+@include settings-panel.identity;
+@include settings-panel.identity-first-line;
+@include settings-panel.identity-label-weight;
+@include settings-panel.button;
+@include settings-panel.focus-ring;
+@include settings-panel.alert;
+// A sentence of the tab, under the version and status in the panel's own text.
+.version-note {
+  margin: var(--cedar-space-1) 0 0;
+}
+// Names the summary that follows it, in the identity list's label text.
+.version-caption {
+  margin: var(--cedar-space-2) 0 var(--cedar-space-1);
+  color: var(--cedar-text-muted);
+  font-weight: var(--cedar-font-weight-medium);
+}
+.version-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.version-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cedar-space-2);
+  margin-top: var(--cedar-space-2);
+}
+// The delete confirmation's dialog, for the replacement that discards a copy's changes.
+.version-dialog {
+  @include dialog-style.surface;
+  max-width: calc(100vw - var(--cedar-space-6));
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+
+  h2 {
+    @include dialog-style.heading;
+  }
+  p {
+    margin-block: var(--cedar-space-4);
+  }
+  form {
+    @include dialog-style.actions;
+  }
+  button {
+    @include dialog-style.button;
+  }
+  .primary {
+    @include dialog-style.primary;
+  }
+}

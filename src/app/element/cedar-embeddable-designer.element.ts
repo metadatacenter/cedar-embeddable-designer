@@ -13,6 +13,7 @@ import {
   inject,
 } from '@angular/core';
 import { TemplateService } from '../core/services/template.service';
+import { ChildVersionService } from '../core/services/child-versions.service';
 import { TerminologyService } from '../core/services/terminology.service';
 import { PreferencesService } from '../core/services/preferences.service';
 import { CedChildSource, CedConfig, CedLanguage, CedValidationReport } from '../ced-public-api';
@@ -43,6 +44,7 @@ import { provideCedTranslations } from '../i18n/i18n';
     ...provideCedTranslations(),
     CedLanguageService,
     TemplateService,
+    ChildVersionService,
     TerminologyService,
     PreferencesService,
     DesignerConfigService,

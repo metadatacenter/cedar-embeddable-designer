@@ -1,0 +1,117 @@
+<!-- Rendered only while the tab shows, so a hidden tab builds no metadata and asks the host nothing. -->
+@if (active()) {
+  <dl class="identity">
+    <dt>{{ 'settings.version' | translate }}</dt>
+    <dd>
+      {{
+        state()?.kind === 'local'
+          ? ('version.notVersioned' | translate)
+          : version() || ('common.notSpecified' | translate)
+      }}
+    </dd>
+    @if (state()?.kind !== 'local' && status()) {
+      <dt>{{ 'common.publicationStatus' | translate }}</dt>
+      <dd>{{ status() | translate }}</dd>
+    }
+    @if (state(); as state) {
+      <dt>{{ 'version.reuse' | translate }}</dt>
+      <dd>{{ 'version.state.' + state.kind | translate }}</dd>
+    }
+    @if (artifact().derivedFrom; as derivedFrom) {
+      <dt>{{ 'settings.derivedFrom' | translate }}</dt>
+      <dd>{{ derivedFrom }}</dd>
+    }
+    @if (artifact().previousVersion; as previousVersion) {
+      <dt>{{ 'settings.previousVersion' | translate }}</dt>
+      <dd>{{ previousVersion }}</dd>
+    }
+    @if (linkedOrigin()?.owner; as owner) {
+      <dt>{{ 'version.owner' | translate }}</dt>
+      <dd>{{ owner }}</dd>
+    }
+    @if (linkedOrigin()?.folder; as folder) {
+      <dt>{{ 'version.folder' | translate }}</dt>
+      <dd>{{ folder }}</dd>
+    }
+    @if (history().length) {
+      <dt class="first-line">{{ 'version.versions' | translate }}</dt>
+      <dd>
+        <ul class="version-list">
+          @for (entry of history(); track entry.id) {
+            <li>
+              {{ 'version.versionNumber' | translate: { version: entry.version ?? '' } }}
+              @if (publicationStatusLabel(entry.publicationStatus); as label) {
+                ({{ label | translate }})
+              }
+            </li>
+          }
+        </ul>
+      </dd>
+    }
+  </dl>
+  @for (note of notes(); track note.key) {
+    <p class="version-note">{{ note.key | translate: note.params }}</p>
+  }
+  @for (note of ownNotes(); track note.key) {
+    <p class="version-note">{{ note.key | translate: note.params }}</p>
+  }
+  @if (summary().length) {
+    <p class="version-caption">{{ 'version.reused' | translate }}</p>
+    <dl class="identity">
+      @for (row of summary(); track row.id) {
+        <dt class="first-line">{{ row.name }}</dt>
+        <dd>
+          @for (note of row.notes; track note.key) {
+            {{ note.key | translate: note.params }}
+          }
+        </dd>
+      }
+    </dl>
+  }
+  @if (actions().length || upgradeAll()) {
+    <div class="version-actions">
+      @for (action of actions(); track action) {
+        @switch (action) {
+          @case ('upgrade') {
+            <button type="button" [disabled]="busy()" (click)="run(action)">
+              {{ upgradeLabel().key | translate: upgradeLabel().params }}
+            </button>
+          }
+          @case ('replace') {
+            <button type="button" [disabled]="busy()" (click)="run(action, replaceDialog)">
+              {{ replaceLabel().key | translate: replaceLabel().params }}
+            </button>
+          }
+          @default {
+            <button type="button" [disabled]="busy()" (click)="run(action)">
+              {{ 'version.action.' + action | translate }}
+            </button>
+          }
+        }
+      }
+      @if (upgradeAll()) {
+        <button type="button" (click)="upgradeCompatible()">{{ 'version.action.upgradeAll' | translate }}</button>
+      }
+    </div>
+  }
+  @if (failure(); as failure) {
+    <p role="alert">{{ failure }}</p>
+  }
+  <dialog
+    #replaceDialog
+    class="version-dialog"
+    [attr.aria-labelledby]="'version-replace-title-' + nodeId()"
+    [attr.aria-describedby]="'version-replace-description-' + nodeId()"
+  >
+    <h2 [id]="'version-replace-title-' + nodeId()">{{ replaceTitle().key | translate: replaceTitle().params }}</h2>
+    <p [id]="'version-replace-description-' + nodeId()">
+      {{ replaceDescription().key | translate: replaceDescription().params }}
+    </p>
+    <form method="dialog">
+      <button autofocus>{{ 'common.cancel' | translate }}</button>
+      <button type="button" class="primary" (click)="confirmReplace(replaceDialog)">
+        {{ 'version.replaceDialog.confirm' | translate }}
+      </button>
+    </form>
+  </dialog>
+}
