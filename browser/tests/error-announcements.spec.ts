@@ -40,7 +40,8 @@ test("a field's name error is an alert at its box, and the summary does not repe
   const changes = await countChanges(page);
   await name.fill('');
   await name.blur();
-  await expect(card.getByRole('alert')).toHaveText('Field name is required.');
+  // The field has a name, so its header refuses a blank display name rather than renaming it.
+  await expect(card.getByRole('alert')).toHaveText('Display name is required.');
   await expect(name).toHaveAttribute('aria-describedby', await card.getByRole('alert').getAttribute('id'));
   await expect(designer.locator('.validation-summary summary')).toHaveText('1 error — fix before saving');
   await afterAnnouncement(page);

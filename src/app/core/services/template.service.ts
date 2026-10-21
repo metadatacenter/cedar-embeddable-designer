@@ -156,6 +156,18 @@ export class TemplateService {
   private readonly automaticKeys = new Set<number>();
 
   /**
+   * The children whose display name and own name are one value: a new child, until its name first
+   * loses focus. After that a display-name edit leaves the name alone, as it does on a child brought
+   * in from elsewhere, which takes its display name from its name once.
+   */
+  private readonly linkedNames = new Set<number>();
+  /**
+   * The children whose display description and own description are one value: a new child, until
+   * its description first loses focus.
+   */
+  private readonly linkedDescriptions = new Set<number>();
+
+  /**
    * The key a child takes from its name: the name as written, which is CEDAR's convention, or none
    * while the child has no name, so an unnamed child is not reported for a blank key. A name that
    * clashes with a sibling's key, or is reserved, is kept and reported, so the author sees it.
@@ -217,7 +229,17 @@ export class TemplateService {
   touchName(id: number): void {
     this.validation.touchName(id);
     const node = parentOf(this.session.document(), id)?.children.find((child) => child.id === id);
-    if (node && !isBlank(node.definition.name)) this.automaticKeys.delete(id);
+    if (node && !isBlank(node.definition.name)) {
+      this.automaticKeys.delete(id);
+      this.linkedNames.delete(id);
+    }
+  }
+  /** Leaving a description the author has written ends its link to the other one. */
+  touchDescription(id: number): void {
+    const node = parentOf(this.session.document(), id)?.children.find((child) => child.id === id);
+    if (!node) return;
+    const description = node.kind === 'field' ? (node.definition.helpText ?? '') : node.definition.description;
+    if (!isBlank(description)) this.linkedDescriptions.delete(id);
   }
   /** Definition editability, including host access and publication ownership. */
   definitionLocked(id: number): boolean {
@@ -231,6 +253,7 @@ export class TemplateService {
     return this.access.readOnly()
       ? null
       : (this.validation.nameError(id, name, kind) ??
+          this.validation.displayNameError(id) ??
           this.displayedIssues().find(
             (issue) => issue.source === 'host' && issue.nodeId === id && issue.setting === 'name',
           )?.message ??
@@ -593,6 +616,8 @@ export class TemplateService {
     };
 
     this.automaticKeys.add(newField.id);
+    this.linkedNames.add(newField.id);
+    this.linkedDescriptions.add(newField.id);
     this.insertNode(fieldNode(newField), position, targetId);
     if (newField.options[0] === '') this.validation.startOption(newField.id);
     this.nameFocusRequest.set(newField.id);
@@ -645,15 +670,30 @@ export class TemplateService {
 
   /*
    * A child's display name and description, which its parent shows, and its own name and
-   * description, which it holds itself, are one value each while the child is a draft its parent
-   * shows as itself. An edit from either side then writes both. A published child keeps its own,
-   * and a parent that already shows a child differently keeps doing so: each side then edits its own.
+   * description, which it holds itself. A new child's display name is its name until the name first
+   * loses focus, and its display description is its description until the description first loses
+   * focus, so a display edit writes both until then. After that a display edit changes only what the
+   * parent shows. An edit from Presentation still moves both while the parent shows the child as
+   * itself: CEE and the Java library read a display label repeating the child's key as no label, and
+   * a new child's key is its name. A published child keeps its own, and a parent that already shows a
+   * child differently keeps doing so.
    */
-  private fieldNamesSynced(field: Field): boolean {
+  private fieldNamesLinked(field: Field): boolean {
+    return !this.definitionLocked(field.id) && this.linkedNames.has(field.id);
+  }
+  private fieldShownAsItself(field: Field): boolean {
     return !this.definitionLocked(field.id) && fieldDisplayName(field) === field.name;
   }
-  private fieldDescriptionsSynced(field: Field): boolean {
+  private fieldDescriptionsLinked(field: Field): boolean {
+    return !this.definitionLocked(field.id) && this.linkedDescriptions.has(field.id);
+  }
+  private fieldDescribedAsItself(field: Field): boolean {
     return !this.definitionLocked(field.id) && fieldDisplayDescription(field) === (field.helpText ?? '');
+  }
+
+  /** The display name a field's inputs show: one the author cleared, until they write another. */
+  fieldShownName(field: Field): string {
+    return this.validation.clearedDisplayName(field.id) ?? fieldDisplayName(field);
   }
 
   /**
@@ -677,16 +717,16 @@ export class TemplateService {
       this.updateFieldName(id, value);
       return null;
     }
-    if (!this.fieldNamesSynced(field)) return this.updateFieldSettings(id, { displayLabel: value });
+    if (!this.fieldNamesLinked(field)) return this.updateFieldSettings(id, { displayLabel: value });
     this.renameField(field, value);
     return null;
   }
 
-  /** Edits a field's own name, from its Display tab. */
+  /** Edits a field's own name, from its Presentation tab. */
   updateOwnFieldName(id: number, value: string): void {
     const field = this.fieldOf(id);
     if (!field) return;
-    if (this.fieldNamesSynced(field)) this.renameField(field, value);
+    if (this.fieldShownAsItself(field)) this.renameField(field, value);
     else this.updateFieldName(id, value);
   }
 
@@ -694,7 +734,7 @@ export class TemplateService {
   updateFieldDisplayDescription(id: number, value: string): string | null {
     const field = this.fieldOf(id);
     if (!field) return null;
-    if (!this.fieldDescriptionsSynced(field)) return this.updateFieldSettings(id, { displayDescription: value });
+    if (!this.fieldDescriptionsLinked(field)) return this.updateFieldSettings(id, { displayDescription: value });
     this.describeField(field, value);
     return null;
   }
@@ -707,46 +747,70 @@ export class TemplateService {
     );
   }
 
-  private elementNamesSynced(node: ElementNode): boolean {
+  private elementNamesLinked(node: ElementNode): boolean {
+    return !this.definitionLocked(node.id) && this.linkedNames.has(node.id);
+  }
+  private elementShownAsItself(node: ElementNode): boolean {
     return !this.definitionLocked(node.id) && elementDisplayName(node) === node.definition.name;
   }
-  private elementDescriptionsSynced(node: ElementNode): boolean {
+  private elementDescriptionsLinked(node: ElementNode): boolean {
+    return !this.definitionLocked(node.id) && this.linkedDescriptions.has(node.id);
+  }
+  private elementDescribedAsItself(node: ElementNode): boolean {
     return !this.definitionLocked(node.id) && elementDisplayDescription(node) === node.definition.description;
+  }
+
+  /** The display name an element's inputs show: one the author cleared, until they write another. */
+  elementShownName(node: ElementNode): string {
+    return this.validation.clearedDisplayName(node.id) ?? elementDisplayName(node);
   }
 
   /** Edits the name an element shows in its parent, from its header or its Configuration tab. */
   updateElementDisplayName(node: ElementNode, value: string): string | null {
-    if (!this.elementNamesSynced(node)) return this.updateElementPlacement(node.id, { displayLabel: value }, 'display');
+    if (!this.elementNamesLinked(node))
+      return this.updateElementPlacement(node.id, { displayLabel: value }, 'displayName');
+    return this.renameElement(node, value);
+  }
+
+  /** Renames an element and the name its parent shows it by together. */
+  private renameElement(node: ElementNode, name: string): string | null {
     // A label repeating the old name moves with it, or it would outlive the rename as an override.
+    // Cleared with the name, it goes: a blank display name is no label.
     if (node.placement.displayLabel !== undefined) {
-      const failure = this.updateElementPlacement(node.id, { displayLabel: value }, 'display');
+      const displayLabel = isBlank(name) ? undefined : name;
+      const failure = this.updateElementPlacement(node.id, { displayLabel }, 'displayName');
       if (failure) return failure;
     }
-    this.updateContainerDefinition(node.definition.id, { name: value });
+    this.updateContainerDefinition(node.definition.id, { name });
     return null;
   }
 
-  /** Edits an element's own name, from its Display tab. */
+  /** Edits an element's own name, from its Presentation tab. */
   updateOwnElementName(node: ElementNode, value: string): void {
-    if (this.elementNamesSynced(node)) this.updateElementDisplayName(node, value);
+    if (this.elementShownAsItself(node)) this.renameElement(node, value);
     else this.updateContainerDefinition(node.definition.id, { name: value });
   }
 
   /** Edits the description an element shows in its parent, from its header or its Configuration tab. */
   updateElementDisplayDescription(node: ElementNode, value: string): string | null {
-    if (!this.elementDescriptionsSynced(node))
+    if (!this.elementDescriptionsLinked(node))
       return this.updateElementPlacement(node.id, { displayDescription: value }, 'display');
+    return this.describeElement(node, value);
+  }
+
+  /** Describes an element and sets the description its parent shows it by together. */
+  private describeElement(node: ElementNode, description: string): string | null {
     if (node.placement.displayDescription !== undefined) {
-      const failure = this.updateElementPlacement(node.id, { displayDescription: value }, 'display');
+      const failure = this.updateElementPlacement(node.id, { displayDescription: description }, 'display');
       if (failure) return failure;
     }
-    this.updateContainerDefinition(node.definition.id, { description: value });
+    this.updateContainerDefinition(node.definition.id, { description });
     return null;
   }
 
-  /** Edits an element's own description, from its Display tab. */
+  /** Edits an element's own description, from its Presentation tab. */
   updateOwnElementDescription(node: ElementNode, value: string): void {
-    if (this.elementDescriptionsSynced(node)) this.updateElementDisplayDescription(node, value);
+    if (this.elementDescribedAsItself(node)) this.describeElement(node, value);
     else this.updateContainerDefinition(node.definition.id, { description: value });
   }
 
@@ -881,11 +945,11 @@ export class TemplateService {
     this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, content } : f)));
   }
 
-  /** Edits a field's own description, from its Display tab. */
+  /** Edits a field's own description, from its Presentation tab. */
   updateHelpText(id: number, helpText: string) {
     const field = this.fieldOf(id);
     if (!field || !this.validation.canEdit(id)) return;
-    if (this.fieldDescriptionsSynced(field)) this.describeField(field, helpText);
+    if (this.fieldDescribedAsItself(field)) this.describeField(field, helpText);
     else this.fieldsFor(id).update((prev) => prev.map((f) => (f.id === id ? { ...f, helpText } : f)));
   }
 
@@ -958,6 +1022,8 @@ export class TemplateService {
         baseline: this.savedState(),
         identifier: this.mintedIdentifier(),
         automaticKeys: [...this.automaticKeys].filter((id) => !!parentOf(this.document(), id)),
+        linkedNames: [...this.linkedNames].filter((id) => !!parentOf(this.document(), id)),
+        linkedDescriptions: [...this.linkedDescriptions].filter((id) => !!parentOf(this.document(), id)),
       }),
     };
   }
@@ -974,6 +1040,8 @@ export class TemplateService {
       baseline: unknown;
       identifier: unknown;
       automaticKeys: unknown;
+      linkedNames?: unknown;
+      linkedDescriptions?: unknown;
       validation: Parameters<ValidationCoordinator['restoreRecovery']>[0];
     };
     const { document, maximumId } = recoveryDocument(parsed.document);
@@ -985,13 +1053,13 @@ export class TemplateService {
         (document.children.length > 1 || document.children.some((node) => node.kind !== 'field')))
     )
       throw new Error();
-    if (
-      !Array.isArray(parsed.automaticKeys) ||
-      parsed.automaticKeys.some(
-        (id: unknown) => typeof id !== 'number' || !Number.isSafeInteger(id) || !parentOf(document, id),
-      )
-    )
-      throw new Error();
+    const childIds = (ids: unknown): ids is number[] =>
+      Array.isArray(ids) &&
+      ids.every((id: unknown) => typeof id === 'number' && Number.isSafeInteger(id) && !!parentOf(document, id));
+    // A draft written before names and descriptions were linked lists neither, and restores with none linked.
+    const linkedNames = parsed.linkedNames ?? [];
+    const linkedDescriptions = parsed.linkedDescriptions ?? [];
+    if (!childIds(parsed.automaticKeys) || !childIds(linkedNames) || !childIds(linkedDescriptions)) throw new Error();
     // Validate in a detached session. Invalid author input is allowed; malformed state is not.
     const candidate = new EditorSession(document);
     candidate.access.fieldDocument.set(this.fieldDocumentMode());
@@ -1010,6 +1078,10 @@ export class TemplateService {
     this.mintedIdentifier.set(parsed.identifier);
     this.automaticKeys.clear();
     for (const id of parsed.automaticKeys) this.automaticKeys.add(id);
+    this.linkedNames.clear();
+    for (const id of linkedNames) this.linkedNames.add(id);
+    this.linkedDescriptions.clear();
+    for (const id of linkedDescriptions) this.linkedDescriptions.add(id);
     this.loadError.set(null);
     this.hostReport.set(null);
     this.nameFocusRequest.set(null);
@@ -1252,6 +1324,8 @@ export class TemplateService {
     if (this.definitionLocked(targetId)) return -1;
     const definition = newContainer('element');
     this.automaticKeys.add(definition.id);
+    this.linkedNames.add(definition.id);
+    this.linkedDescriptions.add(definition.id);
     this.insertNode(
       {
         kind: 'element',

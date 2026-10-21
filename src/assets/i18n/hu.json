@@ -718,6 +718,7 @@
       "yamlMetadata": "Ez a kulcs a CEDAR YAML-metaadatok számára van fenntartva.",
       "duplicate": "Ebben a tárolóban egy másik gyermekelem már használja ezt a kulcsot."
     },
+    "displayNameRequired": "A megjelenített név megadása kötelező.",
     "nameRequired": {
       "field": "A mező nevének megadása kötelező.",
       "element": "Az elem nevének megadása kötelező.",

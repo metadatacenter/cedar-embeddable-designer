@@ -46,6 +46,7 @@
                 name="shownDescription"
                 [ngModel]="shownDescription"
                 (ngModelChange)="service.updateFieldDisplayDescription(field.id, $event)"
+                (blur)="service.touchDescription(field.id)"
             /></label>
           </div>
           <div class="configuration-flags" data-setting="layout">
@@ -457,6 +458,7 @@
             data-setting="description"
             [ngModel]="field.helpText || ''"
             (ngModelChange)="service.updateHelpText(field.id, $event)"
+            (blur)="service.touchDescription(field.id)"
             [placeholder]="'fieldSettings.display.descriptionPlaceholder' | translate"
         /></label>
       </fieldset>

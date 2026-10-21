@@ -53,12 +53,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   disabled until Allow multiple is on.
 - The Presentation tab, formerly Display, edits the child's own name and description,
   its `schema:name` and `schema:description`, under the labels Field name and Field
-  description or Element name and Element description. While a child is a draft its
-  parent shows as itself, its display name and description are its own as well, and an
-  edit on either side writes both. A parent that shows the child differently keeps doing
-  so. The designer no longer writes `skos:prefLabel`, except to keep one that only
-  repeated the name moving with it. Every profile shows that description, so the Show
-  Help text preference, which hid the separate help text input it replaces, is retired.
+  description or Element name and Element description. While the author first names a
+  new child, its display name and its name are one value, and an edit on either side
+  writes both. Once the name first loses focus, an edit to the display name changes only
+  the display name, and the child's name and key stay as they are. Its two descriptions
+  are one value in the same way, until the description first loses focus. An imported or
+  library child takes its display name and display description from its own once and
+  keeps each pair apart from the start. An edit from Presentation still changes what a
+  parent that shows the child as itself displays. A named child's display name cannot be
+  cleared. While its input is blank, the header reports that a display name is required,
+  and the template keeps the previous display name. A parent that shows the child
+  differently keeps doing so. The designer no longer writes `skos:prefLabel`, except to
+  keep one that only repeated the name moving with it. Every profile shows that
+  description, so the Show Help text preference, which hid the separate help text input
+  it replaces, is retired.
 - The metadata tab of a field, an element and a template is labelled Metadata.
 - A new child's key is its name as written, and follows the name until the name first
   loses focus. An imported or library child takes its name as its key. A key that

@@ -2,7 +2,7 @@ import { isBlank } from '../../core/model/cedar-model/text-policy';
 import { JsonSourcePolicy } from '../../core/model/cedar-template';
 import { NumericPolicy } from '../../core/model/cedar-template';
 import { invalidSettingsInputs } from '../../shared/settings-input';
-import { fieldDisplayDescription, fieldDisplayName } from '../../core/model/field-display-name';
+import { fieldDisplayDescription } from '../../core/model/field-display-name';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 import { AlternateQuestionsComponent } from '../alternate-questions/alternate-questions.component';
@@ -131,7 +131,7 @@ export class FieldSettingsComponent implements OnChanges {
   }
   /** The name and description the parent shows the field by, which its header shares. */
   get shownName(): string {
-    return fieldDisplayName(this.field);
+    return this.service.fieldShownName(this.field);
   }
   get shownDescription(): string {
     return fieldDisplayDescription(this.field);

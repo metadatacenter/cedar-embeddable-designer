@@ -20,7 +20,7 @@ import { CountKeyPipe } from '../../i18n/count-key.pipe';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService } from '../../core/services/template.service';
 import { fieldView, findContainer } from '../../core/model/container-draft';
-import { elementDisplayDescription, elementDisplayName } from '../../core/model/field-display-name';
+import { elementDisplayDescription } from '../../core/model/field-display-name';
 import { publishedContainer } from '../../core/model/child-locks';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { FieldCardComponent } from '../field-card/field-card.component';
@@ -135,7 +135,7 @@ export class ContainerEditorComponent {
   /** A nested element's header shows the name and description its parent shows it by. */
   readonly shownName = computed(() => {
     const node = this.placementNode();
-    return node ? elementDisplayName(node) : this.container().name;
+    return node ? this.service.elementShownName(node) : this.container().name;
   });
   readonly shownDescription = computed(() => {
     const node = this.placementNode();

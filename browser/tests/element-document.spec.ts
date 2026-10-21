@@ -101,7 +101,8 @@ for (const width of [1280, 375]) {
     await expect(directContent(parent)).toBeHidden();
     const collapsed = await currentTemplate(page);
     await directHeader(parent).getByRole('button', { name: 'Expand Samples', exact: true }).click();
-    await expect(moved.getByRole('textbox', { name: 'Enter field name', exact: true })).toHaveValue('Nested display');
+    // The header shows the display name, which a rename from Presentation leaves alone once they differ.
+    await expect(moved.getByRole('textbox', { name: 'Enter field name', exact: true })).toHaveValue('Nested title');
     expect(await currentTemplate(page)).toEqual(collapsed);
     // Root fields still respond while a different element is selected.
     await directHeader(nested).getByPlaceholder('Enter element name').click();
@@ -113,13 +114,16 @@ for (const width of [1280, 375]) {
     const properties = saved.properties as Record<string, any>;
     expect(properties.Element.properties.Element.minItems).toBe(2);
     expect(properties.Element.properties.Element.maxItems).toBe(4);
-    expect(properties.Element.properties.Element.items['schema:name']).toBe('Sample');
-    // Each is a draft its parent shows as itself, so its header and Presentation tab name the field itself.
+    // The nested element arrived named, so its header named only its place in its parent.
+    expect(properties.Element.properties.Element.items['schema:name']).toBe('Element');
+    expect(properties.Element._ui.propertyLabels.Element).toBe('Sample');
+    // The moved field's header named its place too, and its Presentation tab renamed the field itself.
     const nestedTitle = properties.Element.properties.Element.items.properties.Title;
     expect((nestedTitle.items ?? nestedTitle)['schema:name']).toBe('Nested display');
-    expect(
-      Object.values(properties).some((field: any) => (field.items ?? field)['schema:name'] === 'Root category'),
-    ).toBe(true);
+    // The root field is named, so its header wrote the name the template shows it by.
+    expect(Object.values((saved._ui as { propertyLabels: Record<string, string> }).propertyLabels)).toContain(
+      'Root category',
+    );
     expect(await root.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
     await page.screenshot({ path: test.info().outputPath(`ced-inline-elements-${width}.png`), fullPage: true });
     await page.evaluate((artifact) => {
@@ -480,9 +484,7 @@ test('confirms deletion of an element subtree, but deletes empty elements immedi
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
-test('an element shows one name in its header and its Presentation tab until its parent shows it differently', async ({
-  page,
-}) => {
+test("a named element's header edits the name its parent shows, and its Presentation tab its own", async ({ page }) => {
   const designer = await openDesigner(page);
   await applyPreset(page, 'modular');
   await addElementFixture(page, designer);
@@ -508,12 +510,19 @@ test('an element shows one name in its header and its Presentation tab until its
 
   let name = await displayName();
   await expect(name).toHaveValue('Element');
-  await header.fill('Sample');
-  await expect(name).toHaveValue('Sample');
+  // Without an authored override the parent shows the element by its own name, so a rename shows in the header.
   await name.fill('Specimen');
   await expect(header).toHaveValue('Specimen');
-  // Without an authored override, the name both places edit is the element's own.
   await expect.poll(async () => (await element()).element['schema:name']).toBe('Specimen');
+  // The element arrived named, so its header edits only the name its parent shows.
+  await header.fill('Sample');
+  await expect(name).toHaveValue('Specimen');
+  await expect
+    .poll(async () => {
+      const current = await element();
+      return [(current.template._ui as any).propertyLabels[current.key], current.element['schema:name']];
+    })
+    .toEqual(['Sample', 'Specimen']);
 
   // An override the template already carries is the parent's display name: the header shows and edits
   // it, and the Presentation tab keeps the element's own name.
