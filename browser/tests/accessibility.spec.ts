@@ -26,7 +26,7 @@ const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 /**
  * WCAG 2.1's Label in Name, criterion 2.5.3: a control's accessible name contains the text it shows,
  * so that speech input reaches it by its visible label. axe-core's rule for it is experimental, and
- * a tag selection leaves experimental rules out, so it runs by name.
+ * a tag selection leaves experimental rules out, so the scan enables it by name beside the tags.
  */
 const LABEL_IN_NAME = 'label-content-name-mismatch';
 
@@ -322,9 +322,20 @@ async function expectAccessible(page: Page, state: string): Promise<void> {
       last = now;
     }
   });
-  const { violations: tagged, incomplete } = await new AxeBuilder({ page }).withTags(WCAG).analyze();
-  const { violations: named } = await new AxeBuilder({ page }).withRules([LABEL_IN_NAME]).analyze();
-  const violations = [...tagged, ...named];
+  // axe-core lets a rule enabled by name override the tag selection, so one scan covers both. The
+  // builder's `options` replaces every option set before it, so it comes ahead of `withTags`.
+  const scan = await new AxeBuilder({ page })
+    .options({ rules: { [LABEL_IN_NAME]: { enabled: true } } })
+    .withTags(WCAG)
+    .analyze();
+  // A builder that dropped the rule option would stop checking Label in Name and fail nothing, so the
+  // scan must report the rule.
+  const evaluated = [scan.passes, scan.violations, scan.incomplete, scan.inapplicable].flat();
+  expect(
+    evaluated.some((result) => result.id === LABEL_IN_NAME),
+    `${LABEL_IN_NAME} did not run`,
+  ).toBe(true);
+  const { violations, incomplete } = scan;
   // A label on an element whose role takes none is one axe cannot always decide, and a screen
   // reader ignores it either way, so the undecided case fails too.
   const ignoredLabels = incomplete.filter((result) => result.id === 'aria-prohibited-attr');
