@@ -163,8 +163,10 @@ export class ValidationCoordinator {
       ),
       ...draftIssues,
     };
-    const modelReport = validateDocument(document, {}, this.t);
-    const report = Object.keys(pendingIssues).length ? validateDocument(document, pendingIssues, this.t) : modelReport;
+    const modelReport = validateDocument(document, {}, this.t, this.session.access.fieldDocument());
+    const report = Object.keys(pendingIssues).length
+      ? validateDocument(document, pendingIssues, this.t, this.session.access.fieldDocument())
+      : modelReport;
     pendingValidation ||= !!report.pendingValidation;
     return {
       draftIssues,

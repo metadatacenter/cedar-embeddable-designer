@@ -14,6 +14,7 @@
     "url": "https://github.com/metadatacenter/cedar-embeddable-designer/issues"
   },
   "homepage": "https://github.com/metadatacenter/cedar-embeddable-designer#readme",
+  "cedarJavaConformance": true,
   "scripts": {
     "ng": "ng",
     "demo:prepare": "npm run dist && node scripts/stage-siblings.mjs --bundle-demo",
@@ -45,7 +46,8 @@
     "test:visual": "npm run check:fresh && ./browser/run-in-container.sh",
     "test:visual:update": "npm run check:fresh && ./browser/run-in-container.sh --update-snapshots",
     "test:browser:flake-hunt": "npm run check:fresh && for i in $(seq 1 ${RUNS:-20}); do echo \"--- run $i\"; npm --prefix browser test -- --retries=0 --reporter=line || exit 1; done",
-    "demo:serve": "node scripts/serve-demo.mjs"
+    "demo:serve": "node scripts/serve-demo.mjs",
+    "test:conformance": "node scripts/test-conformance.mjs"
   },
   "private": true,
   "dependencies": {

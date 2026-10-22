@@ -21,7 +21,8 @@ const stages = [
   { name: 'types', script: 'typecheck' },
   { name: 'boundaries', script: 'test:boundaries' },
   { name: 'packaging', script: 'test:packaging' },
-  { name: 'dist', script: 'dist', weight: budget, after: ['unit', 'lint', 'types', 'boundaries', 'packaging'] },
+  { name: 'conformance', script: 'test:conformance' },
+  { name: 'dist', script: 'dist', weight: budget, after: ['unit', 'lint', 'types', 'boundaries', 'packaging', 'conformance'] },
   { name: 'browser', script: 'test:browser:prebuilt', weight: Math.max(1, budget - visualWeight), after: ['dist'] },
   { name: 'visual', script: 'test:visual', weight: visualWeight, after: ['dist'] },
 ];

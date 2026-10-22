@@ -313,7 +313,7 @@
     },
     "namedField": "{{name}}: {{message}}",
     "occurrences": {
-      "range": "Minimum and maximum must be nonnegative numbers, with minimum no greater than maximum.",
+      "range": "Minimum and maximum must be whole numbers from 0 to 2147483647, with minimum no greater than maximum.",
       "attributeValueMinimum": "An attribute-value field's minimum must be 0, because whoever fills in the form names its attributes."
     },
     "yaml": {
@@ -341,7 +341,8 @@
     "importDestinationMissing": "The import destination no longer exists.",
     "destinationMissing": "The destination no longer exists.",
     "chooseFieldOrElement": "Choose a field or element artifact.",
-    "elementMissing": "The element no longer exists."
+    "elementMissing": "The element no longer exists.",
+    "oneFieldDefinition": "Expected one field definition."
   },
   "fieldCard": {
     "published": "This field is published, so only its configuration can change.",

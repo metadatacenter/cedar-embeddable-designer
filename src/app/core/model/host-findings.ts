@@ -58,6 +58,8 @@ export function hostFindings(
     } else if (parts[0] === '_annotations') {
       setting = 'annotations';
       tab = 'Annotations';
+    } else if (key === '@context/@language') {
+      setting = 'language';
     } else if (['minItems', 'maxItems'].includes(key) && node) {
       setting = key;
       tab = 'Configuration';

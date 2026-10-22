@@ -113,7 +113,7 @@ function buildContainerArtifact(
       const min = field.minItems ?? null;
       const max = field.maxItems ?? null;
       if (
-        [min, max].some((value) => value !== null && (!Number.isInteger(value) || value < 0)) ||
+        [min, max].some((value) => value !== null && (!Number.isInteger(value) || value < 0 || value > 2147483647)) ||
         (min !== null && max !== null && min > max)
       ) {
         throw new LocalizedError(message('errors.occurrences.range'));

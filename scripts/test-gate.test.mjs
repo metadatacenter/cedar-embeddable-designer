@@ -67,7 +67,7 @@ for (const budget of [1, 2, 8])
         active += Number(event.workers);
         peak = Math.max(peak, active);
         assert.ok(active <= budget);
-        if (event.script === 'dist') assert.equal(finished.size, 5);
+        if (event.script === 'dist') assert.equal(finished.size, 6);
         if (event.script === 'test:browser:prebuilt') assert.ok(finished.has('dist'));
         if (event.script === 'test:visual') {
           assert.ok(finished.has('dist'));
@@ -79,7 +79,7 @@ for (const budget of [1, 2, 8])
       }
     }
     assert.equal(peak, budget);
-    assert.equal(finished.size, 8);
+    assert.equal(finished.size, 9);
   });
 
 test('failure fails the gate without running downstream stages', () => {
@@ -127,7 +127,7 @@ test("stages stay within the build's shared pool and return every worker", () =>
       active += (event.event === 'start' ? 1 : -1) * Number(event.workers);
       assert.ok(active <= 3, `${active} workers from a pool of 3`);
     }
-    assert.equal(new Set(events.map((event) => event.script)).size, 8);
+    assert.equal(new Set(events.map((event) => event.script)).size, 9);
     assert.deepEqual(slots(pool), []);
   } finally {
     rmSync(pool, { recursive: true, force: true });
@@ -147,7 +147,7 @@ test('a stage waits for workers held elsewhere and takes them back once their ho
     const { result, events } = gate(2, '', { CEDAR_WORKER_POOL: pool });
     assert.equal(result.status, 0, result.stderr);
     assert.ok(Date.now() - began >= 500, 'the gate did not wait for the workers held elsewhere');
-    assert.equal(new Set(events.map((event) => event.script)).size, 8);
+    assert.equal(new Set(events.map((event) => event.script)).size, 9);
     assert.deepEqual(slots(pool), []);
   } finally {
     rmSync(pool, { recursive: true, force: true });
@@ -169,7 +169,7 @@ test('a stage waits behind an older request from a process that is still running
     const { result, events } = gate(2, '', { CEDAR_WORKER_POOL: pool });
     assert.equal(result.status, 0, result.stderr);
     assert.ok(Date.now() - began >= 500, 'the gate overtook the older request');
-    assert.equal(new Set(events.map((event) => event.script)).size, 8);
+    assert.equal(new Set(events.map((event) => event.script)).size, 9);
     assert.deepEqual(readdirSync(path.join(pool, 'queue')), []);
   } finally {
     rmSync(pool, { recursive: true, force: true });
@@ -186,7 +186,7 @@ test('workers and requests left from an earlier boot are taken back though their
     writeFileSync(path.join(pool, 'queue', `${arrived}-${process.pid}-${boot() - 86400}-earlier`), '');
     const { result, events } = gate(1, '', { CEDAR_WORKER_POOL: pool });
     assert.equal(result.status, 0, result.stderr);
-    assert.equal(new Set(events.map((event) => event.script)).size, 8);
+    assert.equal(new Set(events.map((event) => event.script)).size, 9);
     assert.deepEqual(slots(pool), []);
     assert.deepEqual(readdirSync(path.join(pool, 'queue')), []);
   } finally {
@@ -203,9 +203,18 @@ test('gates in concurrent builds stay within the pool they share', () => {
       active += (event.event === 'start' ? 1 : -1) * Number(event.workers);
       assert.ok(active <= 3, `${active} workers from a pool of 3`);
     }
-    assert.equal(events.filter((event) => event.event === 'end').length, 16, 'both gates ran every stage');
+    assert.equal(events.filter((event) => event.event === 'end').length, 18, 'both gates ran every stage');
     assert.deepEqual(slots(pool), []);
   } finally {
     rmSync(pool, { recursive: true, force: true });
   }
+});
+
+
+test('a conformance refusal prevents packaging and browser acceptance', () => {
+  const {result, events} = gate(1, 'test:conformance');
+  assert.notEqual(result.status, 0);
+  const started = events.filter(event => event.event === 'start').map(event => event.script);
+  assert.ok(started.includes('test:conformance'));
+  for (const blocked of ['dist', 'test:browser:prebuilt', 'test:visual']) assert.ok(!started.includes(blocked));
 });

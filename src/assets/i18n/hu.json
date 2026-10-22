@@ -313,7 +313,7 @@
     },
     "namedField": "{{name}}: {{message}}",
     "occurrences": {
-      "range": "A minimum és a maximum nem lehet negatív, és a minimum nem lehet nagyobb a maximumnál.",
+      "range": "A minimum és maximum 0 és 2147483647 közötti egész szám legyen. A minimum nem lehet nagyobb a maximumnál.",
       "attributeValueMinimum": "Az attribútum-érték mező minimuma csak 0 lehet, mert az attribútumokat az nevezi meg, aki az űrlapot kitölti."
     },
     "yaml": {
@@ -341,7 +341,8 @@
     "importDestinationMissing": "Az importálás célja már nem létezik.",
     "destinationMissing": "A cél már nem létezik.",
     "chooseFieldOrElement": "Válasszon mező- vagy elemartefaktumot.",
-    "elementMissing": "Az elem már nem létezik."
+    "elementMissing": "Az elem már nem létezik.",
+    "oneFieldDefinition": "Pontosan egy meződefiníció szükséges."
   },
   "fieldCard": {
     "published": "Ez a mező közzétett, ezért csak a konfigurációja módosítható.",

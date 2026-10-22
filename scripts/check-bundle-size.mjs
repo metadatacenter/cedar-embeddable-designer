@@ -125,8 +125,13 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // model adds 2,621 raw / 736 compressed bytes, with no new dependency. Allow
 // about 3.7 KB raw / 1.9 KB compressed headroom. The standalone application's
 // build-app budget moves by the same 6 KB.
-const RAW_LIMIT = 1_598_000;
-const GZIP_LIMIT = 457_000;
+// 2026-10-22: the shared, ahead-of-time Java meta-schema validators add the raw-artifact
+// boundary. After sharing identical definitions and omitting non-validation annotations,
+// the shipped bundle measures 2,037,096 raw / 496,519 gzip-9 bytes. A separate model-library
+// entry keeps consumers that do not author schemas from carrying these validators.
+// Allow about 7.9 KB raw / 3.5 KB compressed headroom; Angular budgets move with this feature.
+const RAW_LIMIT = 2_045_000;
+const GZIP_LIMIT = 500_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
 
