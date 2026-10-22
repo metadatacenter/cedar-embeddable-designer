@@ -143,6 +143,7 @@
           rows="1"
           [ngModel]="shownDescription()"
           (ngModelChange)="describe($event)"
+          (blur)="service.touchDescription(container().id)"
           [disabled]="placementLocked()"
           class="template-input template-input--description"
           [placeholder]="

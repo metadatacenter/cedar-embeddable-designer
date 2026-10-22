@@ -18,9 +18,9 @@ import {
  * The same four checks run over Workspace, the term picker, CEE and this designer, by one method:
  *
  * - Reflow. At 320 CSS px wide, neither the page nor any scroll container inside the designer
- *   scrolls sideways, and every control can be scrolled to and hit. A data table that needs both
- *   directions may scroll inside its own container, and each such container is named in
- *   `TABLE_SCROLLERS`.
+ *   scrolls sideways, no text overlaps other text, and every control can be scrolled to and hit. A
+ *   data table that needs both directions may scroll inside its own container, and each such
+ *   container is named in `TABLE_SCROLLERS`.
  * - Resize. A 640 by 400 viewport is a 1280 by 800 window at 200% zoom. No text is clipped, no
  *   text overlaps other text, and every control can be scrolled to and hit.
  * - Text spacing. At 1280 px wide, with criterion 1.4.12's line, letter, word and paragraph
@@ -38,7 +38,7 @@ type Condition = 'reflow' | 'resize' | 'spacing' | 'placeholder';
 type Kind = 'page-scroll' | 'scroll' | 'unreachable' | 'clipped' | 'overlap' | 'placeholder';
 
 const CONDITIONS: Record<Condition, { width: number; height: number; kinds: Kind[] }> = {
-  reflow: { width: 320, height: 640, kinds: ['page-scroll', 'scroll', 'unreachable'] },
+  reflow: { width: 320, height: 640, kinds: ['page-scroll', 'scroll', 'unreachable', 'overlap'] },
   resize: { width: 640, height: 400, kinds: ['clipped', 'overlap', 'unreachable'] },
   spacing: { width: 1280, height: 900, kinds: ['clipped', 'overlap'] },
   placeholder: { width: 1280, height: 900, kinds: ['placeholder'] },

@@ -34,6 +34,26 @@ describe('Designer recovery draft', () => {
     expect(parentOf(service.document(), id)).toBeDefined();
   });
 
+  it("restores a new field's linked names and descriptions, and none from a draft that lists neither", () => {
+    service.addField('text', 0);
+    const id = service.selectedField()!;
+    const draft = service.captureDraft();
+    const own = () => service.fields().find((field) => field.id === id)!;
+    service.restoreDraft(draft);
+    service.updateFieldDisplayName(id, 'Linked');
+    service.updateFieldDisplayDescription(id, 'Linked help');
+    expect([own().name, own().helpText]).toEqual(['Linked', 'Linked help']);
+    const { linkedNames, linkedDescriptions, ...earlier } = JSON.parse(draft.state);
+    expect([linkedNames, linkedDescriptions]).toEqual([[id], [id]]);
+    service.restoreDraft({ ...draft, state: JSON.stringify(earlier) });
+    service.updateFieldDisplayName(id, 'Shown only');
+    service.updateFieldDisplayDescription(id, 'Shown help');
+    expect([own().name, own().helpText ?? '']).toEqual(['', '']);
+    expect(() =>
+      service.restoreDraft({ ...draft, state: JSON.stringify({ ...earlier, linkedNames: [99999999] }) }),
+    ).toThrow();
+  });
+
   it('round-trips nested schema content and its clean baseline', () => {
     service.loadTemplate(nestedTemplate);
     const artifact = service.templateJson();

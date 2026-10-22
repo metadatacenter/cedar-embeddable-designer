@@ -1,4 +1,3 @@
-import { fieldDisplayName } from '../../core/model/field-display-name';
 import { valueLanguage } from '../../core/model/value-language';
 import { ArtifactNameDirective } from '../../shared/artifact-name.directive';
 import { FieldSummaryComponent } from '../field-summary/field-summary.component';
@@ -65,7 +64,7 @@ export class FieldCardComponent {
 
   /** The name the header shows: the parent's display name, or the field's own where it has no parent. */
   get shownName(): string {
-    return this.service.fieldDocumentMode() ? this.field.name : fieldDisplayName(this.field);
+    return this.service.fieldDocumentMode() ? this.field.name : this.service.fieldShownName(this.field);
   }
 
   /**

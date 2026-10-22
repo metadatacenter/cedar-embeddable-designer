@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FieldSettingsComponent } from './field-settings.component';
 import { TemplateService } from '../../core/services/template.service';
 import { readContainer } from '../../core/model/cedar-template';
@@ -189,17 +189,15 @@ describe('the Configuration tab', () => {
   });
 });
 
-it('edits one description from Configuration and from Display while the field is a draft', async () => {
-  localStorage.clear();
-  const service = TestBed.inject(TemplateService);
-  service.templateName.set('Study');
-  const fixture = TestBed.createComponent(FieldSettingsComponent);
+describe('a field description edited from Configuration and from Presentation', () => {
+  let service: TemplateService;
+  let fixture: ComponentFixture<FieldSettingsComponent>;
+  // The field under test is the first: a new field is added in front of the starter fields.
   const render = async () => {
     fixture.componentRef.setInput('field', service.fields()[0]);
     fixture.detectChanges();
     await fixture.whenStable();
   };
-  await render();
   const input = (tab: string, name: string) =>
     fixture.nativeElement.querySelector(`[role="tabpanel"][id$="-${tab}"] input[name="${name}"]`) as HTMLInputElement;
   const type = async (control: HTMLInputElement, value: string) => {
@@ -207,11 +205,37 @@ it('edits one description from Configuration and from Display while the field is
     control.dispatchEvent(new Event('input'));
     await render();
   };
-  await type(input('Configuration', 'shownDescription'), 'Shown help');
-  expect(service.fields()[0].helpText).toBe('Shown help');
-  expect(input('Display', 'helpText').value).toBe('Shown help');
-  await type(input('Display', 'helpText'), 'Own help');
-  expect(input('Configuration', 'shownDescription').value).toBe('Own help');
-  await type(input('Display', 'name'), 'Study title');
-  expect(input('Configuration', 'shownName').value).toBe('Study title');
+  const leave = async (control: HTMLInputElement) => {
+    control.dispatchEvent(new Event('blur'));
+    await render();
+  };
+  beforeEach(() => {
+    localStorage.clear();
+    service = TestBed.inject(TemplateService);
+    service.templateName.set('Study');
+    fixture = TestBed.createComponent(FieldSettingsComponent);
+  });
+
+  it("is a new field's own description too until it is left", async () => {
+    service.addField('text', 0);
+    await render();
+    await type(input('Configuration', 'shownDescription'), 'First help');
+    expect(input('Display', 'helpText').value).toBe('First help');
+    await leave(input('Configuration', 'shownDescription'));
+    await type(input('Configuration', 'shownDescription'), 'Shown help');
+    expect(service.fields()[0].helpText).toBe('First help');
+    expect(input('Display', 'helpText').value).toBe('First help');
+  });
+
+  it("is apart from a named field's own description", async () => {
+    await render();
+    // The parent shows the field as itself, so its own description is the one shown.
+    await type(input('Display', 'helpText'), 'Own help');
+    expect(input('Configuration', 'shownDescription').value).toBe('Own help');
+    await type(input('Configuration', 'shownDescription'), 'Shown help');
+    expect(service.fields()[0].helpText).toBe('Own help');
+    expect(input('Display', 'helpText').value).toBe('Own help');
+    await type(input('Display', 'name'), 'Study title');
+    expect(input('Configuration', 'shownName').value).toBe('Study title');
+  });
 });

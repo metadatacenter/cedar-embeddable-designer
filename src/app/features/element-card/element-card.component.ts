@@ -14,7 +14,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { CedLanguageService } from '../../i18n/ced-language.service';
 import { SETTINGS_TABS, settingsTabKey } from '../../shared/settings-tabs';
 import { ElementNode, ElementPlacement } from '../../core/model/container-draft';
-import { elementDisplayDescription, elementDisplayName } from '../../core/model/field-display-name';
+import { elementDisplayDescription } from '../../core/model/field-display-name';
 import { containerArtifactMetadata } from '../../core/model/cedar-template';
 import { TemplateService } from '../../core/services/template.service';
 
@@ -131,7 +131,7 @@ export class ElementCardComponent {
     this.keyDraft.set(value);
     this.service.updateElementPlacement(this.node().id, { deploymentName: value }, 'key', SETTINGS_TABS.configuration);
   }
-  readonly displayName = computed(() => elementDisplayName(this.node()));
+  readonly displayName = computed(() => this.service.elementShownName(this.node()));
   rename(value: string): void {
     this.service.updateElementDisplayName(this.node(), value);
   }

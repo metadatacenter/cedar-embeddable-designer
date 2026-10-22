@@ -718,6 +718,7 @@
       "yamlMetadata": "This key is reserved for CEDAR YAML metadata.",
       "duplicate": "Another child in this container already uses that key."
     },
+    "displayNameRequired": "Display name is required.",
     "nameRequired": {
       "field": "Field name is required.",
       "element": "Element name is required.",

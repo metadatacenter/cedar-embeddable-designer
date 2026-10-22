@@ -98,14 +98,14 @@ test('an element Configuration sets its display name and description, its key be
   expect(minimum.y).toBeCloseTo(key.y, 0);
   expect(maximum.y).toBeCloseTo(key.y, 0);
   expect(property.y).toBeGreaterThan(key.y + key.height);
-  // A draft element's display description is its own description as well.
+  // The element arrived with a description of its own, so its display description is its parent's alone.
   await panel.getByLabel('Display description', { exact: true }).fill('Shown help');
   await card.getByRole('tab', { name: 'Presentation', exact: true }).click();
   await expect(
     card
       .getByRole('tabpanel', { name: 'Presentation', exact: true })
       .getByLabel('Element description', { exact: true }),
-  ).toHaveValue('Shown help');
+  ).toHaveValue('');
 });
 
 test('writes the display name, description and layout settings', async ({ page }) => {
@@ -117,10 +117,10 @@ test('writes the display name, description and layout settings', async ({ page }
   await configuration.getByLabel('Display description', { exact: true }).fill('Shown help');
   await configuration.getByLabel('Hidden', { exact: true }).check();
   await configuration.getByLabel('Continue previous line', { exact: true }).check();
-  // A draft's display name and description are its own as well, so both land in the field and its parent.
+  // A named field's display name and description are its parent's, so they leave its own alone.
   await expect
     .poll(async () => ((await currentTemplate(page)).properties as any).Title)
-    .toMatchObject({ 'schema:name': 'Shown title', 'schema:description': 'Shown help' });
+    .toMatchObject({ 'schema:name': 'Title', 'schema:description': '' });
   await expect
     .poll(async () => (await currentTemplate(page))._ui)
     .toMatchObject({ propertyLabels: { Title: 'Shown title' }, propertyDescriptions: { Title: 'Shown help' } });
@@ -287,8 +287,8 @@ test('metadata keys are editable and unique within their parent while names and 
   await second.getByLabel('Enter field name', { exact: true }).fill('Repeated');
   const display = await openSettings(first, 'Presentation');
   await expect(display.getByLabel('Preferred name', { exact: true })).toHaveCount(0);
-  // A draft's own name is the name its header shows, so the Presentation tab shows what the header typed.
-  await expect(display.getByLabel('Field name', { exact: true })).toHaveValue('Repeated');
+  // The fields have names, so their headers wrote only the names their parent shows.
+  await expect(display.getByLabel('Field name', { exact: true })).toHaveValue('Title');
   await display.getByLabel('Field name', { exact: true }).fill('Same label');
   const otherDisplay = await openSettings(second, 'Presentation');
   await otherDisplay.getByLabel('Field name', { exact: true }).fill('Same label');
@@ -309,22 +309,20 @@ test('metadata keys are editable and unique within their parent while names and 
   for (const key of ['subject', 'category']) {
     expect((saved.properties as any)[key]['schema:name']).toBe('Same label');
     expect((saved.properties as any)[key]['skos:prefLabel']).toBeUndefined();
-    expect((saved._ui as any).propertyLabels[key]).toBe('Same label');
+    expect((saved._ui as any).propertyLabels[key]).toBe('Repeated');
   }
 });
 
-test('the header and Configuration edit the display name and Display the own name, together until they differ', async ({
-  page,
-}) => {
+test("a named field's header and Configuration edit its display name, and Presentation its own", async ({ page }) => {
   const designer = await openDesigner(page);
   const card = () => designer.locator('app-field-card').first();
   const header = () => card().getByRole('textbox', { name: 'Enter field name', exact: true });
   let display = await openSettings(card(), 'Presentation');
   await expect(display.getByLabel('Field name', { exact: true })).toHaveValue('Title');
   await expect(display.getByLabel('Field name', { exact: true })).toHaveAttribute('placeholder', 'Field name');
-  // A draft its parent shows as itself has one name, so typing in the header shows in the Presentation tab.
-  await header().fill('Heading');
-  await expect(display.getByLabel('Field name', { exact: true })).toHaveValue('Heading');
+  // The parent shows the field by its own name, so a rename from Presentation shows in the header.
+  await display.getByLabel('Field name', { exact: true }).fill('Heading');
+  await expect(header()).toHaveValue('Heading');
 
   // A parent label repeating the name is the writer's filler, not a second name.
   const artifact = await currentTemplate(page);
@@ -344,8 +342,11 @@ test('the header and Configuration edit the display name and Display the own nam
   await expect(display.getByLabel('Field name', { exact: true })).toHaveValue('Heading');
   await display.getByLabel('Field name', { exact: true }).fill('Own heading');
   await expect(header()).toHaveValue('Study heading');
+  // The field has a name, so its header edits only the name its parent shows.
+  await header().fill('Shown heading');
+  await expect(display.getByLabel('Field name', { exact: true })).toHaveValue('Own heading');
   await expect
     .poll(async () => (await currentTemplate(page))._ui)
-    .toMatchObject({ propertyLabels: { Title: 'Study heading' } });
+    .toMatchObject({ propertyLabels: { Title: 'Shown heading' } });
   expect(((await currentTemplate(page)).properties as any).Title['schema:name']).toBe('Own heading');
 });

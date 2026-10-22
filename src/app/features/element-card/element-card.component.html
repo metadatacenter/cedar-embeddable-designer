@@ -50,6 +50,7 @@
                     name="shownDescription"
                     [ngModel]="shownDescription()"
                     (ngModelChange)="service.updateElementDisplayDescription(node(), $event)"
+                    (blur)="service.touchDescription(node().id)"
                 /></label>
               </div>
               <div class="settings-fields configuration-fields">
@@ -190,6 +191,7 @@
                     data-setting="ownDescription"
                     [ngModel]="node().definition.description"
                     (ngModelChange)="service.updateOwnElementDescription(node(), $event)"
+                    (blur)="service.touchDescription(node().id)"
                 /></label>
               </div>
               <app-language-selector [container]="node().definition" />

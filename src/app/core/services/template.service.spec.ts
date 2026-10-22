@@ -1,5 +1,10 @@
 import type { ElementNode } from '../model/container-draft';
-import { elementDisplayDescription, fieldDisplayName } from '../model/field-display-name';
+import {
+  elementDisplayDescription,
+  elementDisplayName,
+  fieldDisplayDescription,
+  fieldDisplayName,
+} from '../model/field-display-name';
 import { CedJsonObject } from '../../ced-public-api';
 import { fieldToJson, newContainer } from '../model/cedar-template';
 import { findContainer } from '../model/container-draft';
@@ -124,22 +129,58 @@ describe('TemplateService', () => {
     service.updateFieldDisplayName(id, 'Condition');
     expect(service.childKey(id)).toBe('Condition');
     expect(service.fields().find((field) => field.id === id)?.preferredLabel).toBeUndefined();
-    // Once the name has been left, the key is the author's and stays put.
+    // Once the name has been left, the display name, the name and the key are each the author's.
     service.touchName(id);
     service.updateFieldDisplayName(id, 'Diagnosis');
-    expect(service.fields().find((field) => field.id === id)?.name).toBe('Diagnosis');
-    expect(service.childKey(id)).toBe('Condition');
+    const field = () => service.fields().find((candidate) => candidate.id === id)!;
+    expect([fieldDisplayName(field()), field().name, service.childKey(id)]).toEqual([
+      'Diagnosis',
+      'Condition',
+      'Condition',
+    ]);
+    service.updateOwnFieldName(id, 'Disorder');
+    expect([fieldDisplayName(field()), field().name, service.childKey(id)]).toEqual([
+      'Diagnosis',
+      'Disorder',
+      'Condition',
+    ]);
   });
 
-  it('renames a draft field with its display name, and keeps an established key', () => {
-    const field = service.fields()[0];
-    const key = service.childKey(field.id);
-    expect(service.updateFieldDisplayName(field.id, 'Changed name')).toBeNull();
-    expect(service.fields()[0]).toMatchObject({ name: 'Changed name' });
-    expect(fieldDisplayName(service.fields()[0])).toBe('Changed name');
-    expect(service.childKey(field.id)).toBe(key);
-    service.updateOwnFieldName(field.id, 'Own name');
-    expect(fieldDisplayName(service.fields()[0])).toBe('Own name');
+  it('renames a new field with its display name until the name is left, and never after', () => {
+    service.addField('text', 0);
+    const id = service.selectedField()!;
+    const field = () => service.fields().find((candidate) => candidate.id === id)!;
+    // Leaving the name before it has one does not end the naming.
+    service.touchName(id);
+    service.updateOwnFieldName(id, 'Age');
+    expect([fieldDisplayName(field()), service.childKey(id)]).toEqual(['Age', 'Age']);
+    service.updateFieldDisplayName(id, 'Age at visit');
+    expect([field().name, service.childKey(id)]).toEqual(['Age at visit', 'Age at visit']);
+    service.touchName(id);
+    service.updateFieldDisplayName(id, 'Patient age');
+    expect([field().name, service.childKey(id)]).toEqual(['Age at visit', 'Age at visit']);
+    service.updateOwnFieldName(id, 'Age in years');
+    expect([fieldDisplayName(field()), service.childKey(id)]).toEqual(['Patient age', 'Age at visit']);
+    const template = service.templateJson() as {
+      _ui: { propertyLabels: Record<string, string> };
+      properties: Record<string, { 'schema:name': string }>;
+    };
+    expect(template._ui.propertyLabels['Age at visit']).toBe('Patient age');
+    expect(template.properties['Age at visit']['schema:name']).toBe('Age in years');
+  });
+
+  it("keeps a named field's name and key when its display name changes", () => {
+    const [title, category] = service.fields();
+    expect(service.updateFieldDisplayName(title.id, 'Shown title')).toBeNull();
+    expect(service.fields()[0]).toMatchObject({ name: 'Title', deploymentName: 'Title' });
+    expect(fieldDisplayName(service.fields()[0])).toBe('Shown title');
+    service.updateOwnFieldName(title.id, 'Own title');
+    expect(service.fields()[0]).toMatchObject({ name: 'Own title', deploymentName: 'Title' });
+    expect(fieldDisplayName(service.fields()[0])).toBe('Shown title');
+    // A field its parent shows as itself is shown by its new name, which its key does not follow.
+    service.updateOwnFieldName(category.id, 'Kind');
+    expect(service.fields()[1]).toMatchObject({ name: 'Kind', deploymentName: 'Category' });
+    expect(fieldDisplayName(service.fields()[1])).toBe('Kind');
   });
 
   it('keeps a display name and an own name apart once the parent shows the field differently', () => {
@@ -428,10 +469,35 @@ describe('TemplateService', () => {
     service.updateOwnElementDescription(node(), 'About samples');
     expect(node().definition.description).toBe('About samples');
     expect(elementDisplayDescription(node())).toBe('About samples');
-    expect(service.updateElementPlacement(id, { displayLabel: 'Shown samples' }, 'display')).toBeNull();
+    expect(service.childKey(id)).toBe('Samples');
+    // Once the name has been left, the display name, the name and the key are each the author's.
+    service.touchName(id);
+    service.updateElementDisplayName(node(), 'Shown samples');
+    expect([elementDisplayName(node()), node().definition.name, service.childKey(id)]).toEqual([
+      'Shown samples',
+      'Samples',
+      'Samples',
+    ]);
     service.updateOwnElementName(node(), 'Own samples');
-    expect(node().definition.name).toBe('Own samples');
-    expect(node().placement.displayLabel).toBe('Shown samples');
+    expect([elementDisplayName(node()), node().definition.name, service.childKey(id)]).toEqual([
+      'Shown samples',
+      'Own samples',
+      'Samples',
+    ]);
+  });
+
+  it('shows an element its parent shows as itself by its new name, and keeps its key', () => {
+    const id = service.addElement(service.session.document().id);
+    const node = () => service.session.document().children.find((child) => child.id === id) as ElementNode;
+    service.updateOwnElementName(node(), 'Section');
+    expect([elementDisplayName(node()), service.childKey(id)]).toEqual(['Section', 'Section']);
+    service.touchName(id);
+    service.updateOwnElementName(node(), 'Own section');
+    expect([elementDisplayName(node()), node().definition.name, service.childKey(id)]).toEqual([
+      'Own section',
+      'Own section',
+      'Section',
+    ]);
   });
 
   it("copies an imported child's name and description into its display name and description", () => {
@@ -445,6 +511,121 @@ describe('TemplateService', () => {
       displayLabel: 'Specimen',
       displayDescription: 'A collected specimen',
     });
+  });
+
+  it("keeps an imported child's display name, name and key apart from the start", () => {
+    const root = service.session.document().id;
+    const artifact = templateToJson(buildContainer(newContainer('element', 'Specimen'))) as CedJsonObject;
+    const [elementId, fieldId] = service.importChildren(
+      [
+        { type: 'element', artifact },
+        {
+          type: 'field',
+          artifact: { ...(fieldToJson(service.fields()[0]) as CedJsonObject), 'schema:name': 'Heading' },
+        },
+      ],
+      root,
+      0,
+    );
+    const element = () => service.session.document().children.find((child) => child.id === elementId) as ElementNode;
+    service.updateElementDisplayName(element(), 'Shown specimen');
+    expect([element().definition.name, service.childKey(elementId)]).toEqual(['Specimen', 'Specimen']);
+    service.updateOwnElementName(element(), 'Sample');
+    expect([elementDisplayName(element()), service.childKey(elementId)]).toEqual(['Shown specimen', 'Specimen']);
+    const field = () => service.fields().find((candidate) => candidate.id === fieldId)!;
+    service.updateFieldDisplayName(fieldId, 'Shown heading');
+    expect([field().name, service.childKey(fieldId)]).toEqual(['Heading', 'Heading']);
+    service.updateOwnFieldName(fieldId, 'Header');
+    expect([fieldDisplayName(field()), service.childKey(fieldId)]).toEqual(['Shown heading', 'Heading']);
+    // A field from a library takes its display name and key from its name once, too.
+    service.addCustomFieldToTemplate(
+      { id: 73, libraryId: 9, definition: { ...service.fields()[0], name: 'Notes' } },
+      0,
+    );
+    const copy = service.selectedField()!;
+    service.updateFieldDisplayName(copy, 'Shown notes');
+    expect([service.fields().find((candidate) => candidate.id === copy)!.name, service.childKey(copy)]).toEqual([
+      'Notes',
+      'Notes',
+    ]);
+    // Its descriptions are apart from the start as well.
+    service.updateElementDisplayDescription(element(), 'Shown about');
+    expect([element().definition.description, elementDisplayDescription(element())]).toEqual(['', 'Shown about']);
+  });
+
+  it("refuses a named field's cleared display name, and reports it at its name once left", () => {
+    const id = service.fields()[0].id;
+    const field = () => service.fields().find((candidate) => candidate.id === id)!;
+    const issues = () => service.visibleIssues().filter((issue) => issue.nodeId === id);
+    expect(service.updateFieldDisplayName(id, '')).toBe('Display name is required.');
+    // The document keeps the name it showed, and its inputs keep the blank the author left.
+    expect([field().name, fieldDisplayName(field()), service.fieldShownName(field())]).toEqual(['Title', 'Title', '']);
+    expect(service.validationReport().canSave).toBe(false);
+    expect([service.nameError(id, field().name, 'field'), issues()]).toEqual([null, []]);
+    service.touchName(id);
+    expect(service.nameError(id, field().name, 'field')).toBe('Display name is required.');
+    expect(issues()).toEqual([expect.objectContaining({ setting: 'name', tab: 'Configuration' })]);
+    // A description written meanwhile does not drop it.
+    expect(service.updateFieldDisplayDescription(id, 'Shown help')).toBeNull();
+    expect(service.fieldShownName(field())).toBe('');
+    expect(service.updateFieldDisplayName(id, 'Heading')).toBeNull();
+    expect([field().name, service.fieldShownName(field()), service.nameError(id, field().name, 'field')]).toEqual([
+      'Title',
+      'Heading',
+      null,
+    ]);
+    expect(issues()).toEqual([]);
+  });
+
+  it("refuses a named element's cleared display name", () => {
+    const id = service.addElement(service.session.document().id);
+    const node = () => service.session.document().children.find((child) => child.id === id) as ElementNode;
+    service.updateElementDisplayName(node(), 'Section');
+    service.touchName(id);
+    expect(service.updateElementDisplayName(node(), ' ')).toBe('Display name is required.');
+    expect([node().definition.name, elementDisplayName(node()), service.elementShownName(node())]).toEqual([
+      'Section',
+      'Section',
+      ' ',
+    ]);
+    expect(service.nameError(id, node().definition.name, 'element')).toBe('Display name is required.');
+    expect(service.updateElementDisplayName(node(), 'Samples')).toBeNull();
+    expect([node().definition.name, service.elementShownName(node())]).toEqual(['Section', 'Samples']);
+  });
+
+  it("links a new child's descriptions until the description is left, and never after", () => {
+    service.addField('text', 0);
+    const fieldId = service.selectedField()!;
+    const field = () => service.fields().find((candidate) => candidate.id === fieldId)!;
+    // Leaving the description before it has one does not end the link.
+    service.touchDescription(fieldId);
+    service.updateFieldDisplayDescription(fieldId, 'About');
+    expect(field().helpText).toBe('About');
+    service.touchDescription(fieldId);
+    service.updateFieldDisplayDescription(fieldId, 'Shown about');
+    expect([field().helpText, fieldDisplayDescription(field())]).toEqual(['About', 'Shown about']);
+    service.updateHelpText(fieldId, 'Own about');
+    expect(fieldDisplayDescription(field())).toBe('Shown about');
+
+    const id = service.addElement(service.session.document().id);
+    const node = () => service.session.document().children.find((child) => child.id === id) as ElementNode;
+    service.updateOwnElementDescription(node(), 'Samples taken');
+    expect(elementDisplayDescription(node())).toBe('Samples taken');
+    service.touchDescription(id);
+    service.updateElementDisplayDescription(node(), 'Shown samples');
+    expect([node().definition.description, elementDisplayDescription(node())]).toEqual([
+      'Samples taken',
+      'Shown samples',
+    ]);
+  });
+
+  it('describes a named child from Presentation and shows it so while its parent shows it as itself', () => {
+    const id = service.fields()[0].id;
+    const field = () => service.fields().find((candidate) => candidate.id === id)!;
+    service.updateHelpText(id, 'Own help');
+    expect(fieldDisplayDescription(field())).toBe('Own help');
+    service.updateFieldDisplayDescription(id, 'Shown help');
+    expect(field().helpText).toBe('Own help');
   });
 
   describe('the template it builds', () => {

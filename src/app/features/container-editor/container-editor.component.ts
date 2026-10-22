@@ -3,14 +3,24 @@ import { InsertionActionsComponent } from '../insertion-actions/insertion-action
 import { HeaderToggleDirective } from '../../shared/header-toggle.directive';
 import { ContainerSettingsComponent } from '../container-settings/container-settings.component';
 import { publicationStatusLabel } from '../../shared/publication-status';
-import { Component, ElementRef, afterRenderEffect, inject, input, computed, viewChild, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  afterRenderEffect,
+  inject,
+  input,
+  computed,
+  viewChild,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { CountKeyPipe } from '../../i18n/count-key.pipe';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService } from '../../core/services/template.service';
 import { fieldView, findContainer } from '../../core/model/container-draft';
-import { elementDisplayDescription, elementDisplayName } from '../../core/model/field-display-name';
+import { elementDisplayDescription } from '../../core/model/field-display-name';
 import { publishedContainer } from '../../core/model/child-locks';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { FieldCardComponent } from '../field-card/field-card.component';
@@ -87,8 +97,34 @@ export class ContainerEditorComponent {
   readonly collapsed = computed(
     () => this.container().children.length > 0 && this.service.collapsedElements().has(this.container().id),
   );
+  /**
+   * The child whose insertion actions, in the gap above it, stay hidden although the pointer or focus
+   * that showed them is still there. Using an action hides them, and so does Escape. The dismissal
+   * ends when the pointer leaves the gap or focus moves to one of the actions.
+   */
   readonly dismissedInsertion = signal<number | null>(null);
   readonly fieldView = fieldView;
+
+  /**
+   * Escape hides the insertion actions shown above a child, as WCAG 1.4.13 requires of content that
+   * covers its neighbours on hover or focus. While the pointer shows them, focus can be anywhere in
+   * the host page, so the key is taken from the window. It reaches the window after every control
+   * that uses Escape for its own purpose, such as closing the palette. An Escape one of those
+   * controls has used is left alone, and one that hides the actions is marked as used.
+   */
+  private dismissInsertion(event: KeyboardEvent): void {
+    if (event.key !== 'Escape' || event.defaultPrevented) return;
+    const shown = this.container().children.find(
+      (child) =>
+        this.dismissedInsertion() !== child.id &&
+        this.host.nativeElement
+          .querySelector(`[id="field-card-${child.id}"] > .insert-zone`)
+          ?.matches(':hover, :focus-within'),
+    );
+    if (!shown) return;
+    event.preventDefault();
+    this.dismissedInsertion.set(shown.id);
+  }
   update(
     changes: Partial<
       Pick<import('../../core/model/container-draft').ContainerDraft, 'name' | 'description' | 'version'>
@@ -99,7 +135,7 @@ export class ContainerEditorComponent {
   /** A nested element's header shows the name and description its parent shows it by. */
   readonly shownName = computed(() => {
     const node = this.placementNode();
-    return node ? elementDisplayName(node) : this.container().name;
+    return node ? this.service.elementShownName(node) : this.container().name;
   });
   readonly shownDescription = computed(() => {
     const node = this.placementNode();
@@ -158,6 +194,13 @@ export class ContainerEditorComponent {
   private readonly bottomZone = viewChild<ElementRef<HTMLElement>>('bottomZone');
 
   constructor() {
+    // This listens on the window directly. A host listener would mark this editor for checking on
+    // every key pressed anywhere.
+    const view = this.host.nativeElement.ownerDocument.defaultView;
+    const dismiss = (event: KeyboardEvent) => this.dismissInsertion(event);
+    view?.addEventListener('keydown', dismiss);
+    inject(DestroyRef).onDestroy(() => view?.removeEventListener('keydown', dismiss));
+
     // A focus request for one of this container's own cards, or for its own Add field, is this editor's to perform.
     afterRenderEffect(() => {
       const request = this.service.focusRequest();

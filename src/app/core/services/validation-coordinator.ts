@@ -1,5 +1,5 @@
 import { RegexChecks } from '../model/cedar-template';
-import { trimInputPadding } from '../model/cedar-model/text-policy';
+import { isBlank, trimInputPadding } from '../model/cedar-model/text-policy';
 import { sameRule } from '../model/validation-rule';
 import { computed, signal } from '@angular/core';
 import { CedValidationReport } from '../../ced-public-api';
@@ -59,8 +59,8 @@ export function fieldSetting(changes: Partial<Field>): { setting: string; tab: s
   if ('deploymentName' in changes) return { setting: 'key', tab: SETTINGS_TABS.configuration };
   if ('schemaIdentifier' in changes) return { setting: 'identifier', tab: SETTINGS_TABS.fieldMetadata };
   if ('propertyIri' in changes) return { setting: 'propertyIri', tab: SETTINGS_TABS.configuration };
-  if ('displayLabel' in changes || 'displayDescription' in changes)
-    return { setting: 'display', tab: SETTINGS_TABS.configuration };
+  if ('displayLabel' in changes) return { setting: 'displayName', tab: SETTINGS_TABS.configuration };
+  if ('displayDescription' in changes) return { setting: 'display', tab: SETTINGS_TABS.configuration };
   if ('controlledTermConstraints' in changes) return { setting: 'controlledTerms', tab: SETTINGS_TABS.constraints };
   if ('annotations' in changes) return { setting: 'annotations', tab: 'Annotations' };
   if ('numeric' in changes) return { setting: 'numeric', tab: 'Constraints' };
@@ -79,7 +79,15 @@ export function fieldSetting(changes: Partial<Field>): { setting: string; tab: s
 
 const keyOf = (id: number, setting: string) => `${id}:${setting}`;
 /** The settings that place a child in its parent, which a published child still lets its parent change. */
-const PLACEMENT_SETTINGS = new Set(['key', 'display', 'occurrences', 'layout', 'placement', 'propertyIri']);
+const PLACEMENT_SETTINGS = new Set([
+  'key',
+  'displayName',
+  'display',
+  'occurrences',
+  'layout',
+  'placement',
+  'propertyIri',
+]);
 /** Whether a locked part of the child would refuse these changes. */
 const refused = (document: ContainerDraft, id: number, keys: readonly string[]) => {
   const locks = childLocks(document, id);
@@ -263,6 +271,16 @@ export class ValidationCoordinator {
   nameError(id: number, name: string, kind: ContainerDraft['kind'] | 'field'): string | null {
     return this.touchedNames().has(id) ? artifactNameError(name, kind, this.t) : null;
   }
+  /** A display name the author cleared, reported as a blank name is: once they have left it. */
+  displayNameError(id: number): string | null {
+    const issue = this.draftIssues()[keyOf(id, 'displayName')];
+    return issue?.setting === 'name' && this.touchedNames().has(id) ? issue.message : null;
+  }
+  /** A display name the author cleared, which its inputs keep showing until they write another. */
+  clearedDisplayName(id: number): string | undefined {
+    const label = this.edits()[keyOf(id, 'displayName')]?.changes.displayLabel;
+    return label !== undefined && isBlank(label) ? label : undefined;
+  }
   touchOption(id: number, index: number): void {
     if (index === 0 && this.quietOptions().has(id))
       this.quietOptions.update((ids) => new Set([...ids].filter((candidate) => candidate !== id)));
@@ -431,6 +449,9 @@ export class ValidationCoordinator {
       if (error) return { error };
       changes = { ...changes, deploymentName: trimInputPadding(changes.deploymentName) };
     }
+    // A cleared display name waits for another. It is reported as a blank name is, at the header's name.
+    if (changes.displayLabel !== undefined && isBlank(changes.displayLabel))
+      return { error: this.t('validation.displayNameRequired'), setting: 'name' };
     if (node.kind === 'field') {
       const current = fieldView(node);
       changes = reducePrecision(current, changes);

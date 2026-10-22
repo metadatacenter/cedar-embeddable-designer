@@ -3,7 +3,8 @@
  *
  * A child's key is the property name its parent stores it under. A new child's key follows its name
  * as written until the name first loses focus, and stays put after that; an imported child takes
- * its name as its key; an author's key stays fixed; and a key travels with the child when it moves.
+ * its name as its key once; neither name moves a key that has stopped following; an author's key
+ * stays fixed; and a key travels with the child when it moves.
  * A name can give a key the parent refuses: one a sibling already holds, one the model reserves for
  * CEDAR's own metadata, or one an attribute-value field cannot take because its YAML form writes it
  * beside its parent's metadata. Such a key is kept and reported at once, so the author decides.
@@ -17,7 +18,7 @@
 import { TestBed } from '@angular/core/testing';
 import { buildContainer, fieldToJson, newContainer, newFieldIdentity, templateToJson } from '../model/cedar-template';
 import { childKeyError } from '../model/child-key-policy';
-import { ChildNode, ContainerDraft, fieldNode, findContainer, newNodeId } from '../model/container-draft';
+import { ChildNode, ContainerDraft, fieldNode, findContainer, newNodeId, parentOf } from '../model/container-draft';
 import { Field } from '../models/types';
 import { TemplateService } from './template.service';
 
@@ -118,6 +119,19 @@ describe('child keys', () => {
   function rename(kind: Kind, id: number, name: string): void {
     if (kind === 'an element') service.updateContainerDefinition(id, { name });
     else service.updateFieldName(id, name);
+  }
+  const nodeOf = (id: number) => parentOf(service.document(), id)!.children.find((child) => child.id === id)!;
+  /** Edits the name the child's parent shows it by, from its header or its Configuration tab. */
+  function show(id: number, name: string): void {
+    const node = nodeOf(id);
+    if (node.kind === 'element') service.updateElementDisplayName(node, name);
+    else service.updateFieldDisplayName(id, name);
+  }
+  /** Edits the child's own name, from its Presentation tab. */
+  function renameOwn(id: number, name: string): void {
+    const node = nodeOf(id);
+    if (node.kind === 'element') service.updateOwnElementName(node, name);
+    else service.updateOwnFieldName(id, name);
   }
   /** The key the author sees: a refused key is held as a pending edit, over the key the child keeps. */
   const keyOf = (id: number) => {
@@ -230,6 +244,26 @@ describe('child keys', () => {
     service.touchName(id);
     rename(kind, id, name);
     expect(service.childKey(id)).toBe('First');
+    expectSoundKeys();
+  });
+
+  it.each(cross(NAMES))('%s in %s named and left keeps its key when shown as %j', (kind, where, name) => {
+    const id = add(kind, container(CONTAINERS[where]));
+    show(id, 'First');
+    expect(service.childKey(id)).toBe('First');
+    service.touchName(id);
+    show(id, name);
+    expect(service.childKey(id)).toBe('First');
+    expectSoundKeys();
+  });
+
+  it.each(cross(NAMES))('%s imported into %s keeps its key when renamed or shown as %j', (kind, where, name) => {
+    const target = container(CONTAINERS[where]);
+    service.importChildren([artifact(kind, 'Sample')], target.id, target.children.length);
+    const id = findContainer(service.document(), target.id)!.children.at(-1)!.id;
+    show(id, name);
+    renameOwn(id, name);
+    expect(service.childKey(id)).toBe('Sample');
     expectSoundKeys();
   });
 
