@@ -119,8 +119,14 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // than a fourth copy of their stylesheet, which saved 10,085 raw bytes. No dependency was added.
 // Allow about 3.9 KB raw / 1.5 KB compressed headroom. The standalone application's `build-app`
 // budget in angular.json moves by the same 34 KB.
-const RAW_LIMIT = 1_592_000;
-const GZIP_LIMIT = 455_000;
+// 2026-10-21: the current model's strict YAML instance shapes, scalar spelling and
+// repeated-child completion measure 1,594,341 raw / 455,129 gzip-9 bytes. Holding
+// Designer and tokens fixed, the pinned model measures 1,591,720 / 454,393: the
+// model adds 2,621 raw / 736 compressed bytes, with no new dependency. Allow
+// about 3.7 KB raw / 1.9 KB compressed headroom. The standalone application's
+// build-app budget moves by the same 6 KB.
+const RAW_LIMIT = 1_598_000;
+const GZIP_LIMIT = 457_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
 
