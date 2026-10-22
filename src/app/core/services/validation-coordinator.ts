@@ -2,7 +2,7 @@ import { RegexChecks } from '../model/cedar-template';
 import { isBlank, trimInputPadding } from '../model/cedar-model/text-policy';
 import { sameRule } from '../model/validation-rule';
 import { computed, signal } from '@angular/core';
-import { CedValidationReport } from '../../ced-public-api';
+import { CedSupersededShape, CedValidationReport } from '../../ced-public-api';
 import { Translate } from '../../i18n/messages';
 import { Field, FieldDefaultValue } from '../models/types';
 import {
@@ -192,7 +192,20 @@ export class ValidationCoordinator {
   private readonly draftIssues = computed(() => this.evaluated().draftIssues);
   readonly pendingIssues = computed(() => this.evaluated().pendingIssues);
   readonly modelReport = computed(() => this.evaluated().modelReport);
-  readonly report = computed((): CedValidationReport => this.evaluated().report);
+  private readonly superseded = signal<readonly CedSupersededShape[]>([]);
+  /**
+   * The stored shapes this session's projection replaced when its artifact was loaded, which a host that
+   * retains stored branches must stop retaining. `reset` leaves them alone: a restored draft still edits
+   * the artifact that was loaded.
+   */
+  recordSuperseded(shapes: readonly CedSupersededShape[]): void {
+    this.superseded.set(shapes);
+  }
+  readonly report = computed((): CedValidationReport => {
+    const report = this.evaluated().report;
+    const superseded = this.superseded();
+    return superseded.length ? { ...report, superseded: [...superseded] } : report;
+  });
   readonly hasPendingEdits = computed(
     () =>
       Object.keys(this.edits()).length > 0 ||

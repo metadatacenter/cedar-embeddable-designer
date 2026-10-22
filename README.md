@@ -455,6 +455,17 @@ discard asynchronous findings for an obsolete submission before assigning them, 
 requests and permission checks, and should pass a new report only when its contents change.
 Messages are supplied by the host and displayed as text, without translation or HTML rendering.
 
+A stored artifact can hold a shape CED cannot represent and the CEDAR validator refuses: a
+numeric field whose datatype is missing or unsupported, a controlled-term default stored as text,
+an order on a field, or a length limit or pattern on a controlled-term field. CED's projection then
+holds something else in its place. The report lists each such shape under `superseded`, with its
+JSON Pointer `location` in the artifact as it was loaded, a `code`, and the `value` the projection
+holds, which is absent when the projection omits the key. A host that saves by merging CED's
+projection into the stored artifact, retaining what the author did not change, applies these to
+its stored copy first. Otherwise a retained branch carries the shape back to the server, which
+refuses the save, and the author has nothing in CED to repair. `superseded` is present only when it
+lists something, never affects `valid` or `canSave`, and stays the same until the next load.
+
 Set `designer.readOnly` when the user may not change the document. Nothing in it can
 then be edited and `canSave` is false. CED also marks none of the document's
 problems, since a reader can fix none of them. `validationReport` still lists them,

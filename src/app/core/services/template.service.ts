@@ -56,6 +56,7 @@ import {
   PREVIEW_ELEMENT_KEY,
   newContainer,
   templateToJson,
+  supersededShapes,
 } from '../model/cedar-template';
 
 export { FIELD_TYPES } from '../models/types';
@@ -1001,6 +1002,7 @@ export class TemplateService {
       document.children = withStarterFields ? containerFromFlat({ ...document, fields: starterFields() }).children : [];
     }
     this.validation.reset();
+    this.validation.recordSuperseded([]);
     this.nameFocusRequest.set(null);
     this.childPicker.set(null);
     this.selectedField.set(null);
@@ -1139,6 +1141,20 @@ export class TemplateService {
       this.collapsedElements.set(new Set());
     }
     this.markSaved();
+    this.recordLoaded(source, () => this.templateJson());
+  }
+  /**
+   * Record which stored shapes the projection of a just-loaded source replaced. A projection that cannot
+   * be written replaces nothing a host could merge, and its document reports why it cannot be saved.
+   */
+  recordLoaded(source: unknown, projection: () => unknown): void {
+    let shapes: ReturnType<typeof supersededShapes>;
+    try {
+      shapes = supersededShapes(source, projection());
+    } catch {
+      shapes = [];
+    }
+    this.validation.recordSuperseded(shapes);
   }
   readonly children = computed(() => this.session.active().children);
   readonly containerChoices = computed(() => containers(this.session.document()));

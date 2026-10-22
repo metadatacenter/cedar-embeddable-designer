@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `validationReport.superseded`: the stored shapes CED's projection replaced when an artifact
+  was loaded and the CEDAR validator refuses, each with its location and the value the projection
+  holds, so that a host merging the projection into the stored artifact stops retaining them.
+  Tests cover every shape in every placement, in standalone fields and across the production corpus.
 - CEFD (`cedar-embeddable-field-designer`) in the CED bundle: a standalone field
   definition editor sharing CED's controls, with JSON/YAML loading, all field
   types, validation and dirty events, isolated instances and host read-only mode,
