@@ -62,7 +62,11 @@ jobs:
       - name: Unit tests
         run: npm test
 
+      # The oracle resolves the Java validator and reader from Nexus. These settings correct the
+      # repositories its pom names; the file says why.
       - name: Java and TypeScript authoring conformance
+        env:
+          MAVEN_ARGS: --settings ${{ github.workspace }}/.github/maven-settings.xml
         run: npm run test:conformance
 
       - name: Source boundaries

@@ -1,0 +1,23 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+  <!--
+    The authoring conformance oracle's pom arrives with the model library this repository pins. Up to
+    1.0.24-dev.20261022.cd8f5e2 it names repository/maven-snapshots and repository/maven-releases,
+    which Nexus does not have, so CI could not resolve the Java validator and reader. These mirrors
+    send its two repositories to the ones the Java builds read, which answer anonymous reads. The
+    library names them correctly from 0630b16 on, and these mirrors are then redundant.
+  -->
+  <mirrors>
+    <mirror>
+      <id>cedar-snapshots-nexus</id>
+      <mirrorOf>cedar-snapshots</mirrorOf>
+      <url>https://nexus.bmir.stanford.edu/repository/snapshots/</url>
+    </mirror>
+    <mirror>
+      <id>cedar-releases-nexus</id>
+      <mirrorOf>cedar-releases</mirrorOf>
+      <url>https://nexus.bmir.stanford.edu/repository/releases/</url>
+    </mirror>
+  </mirrors>
+</settings>
