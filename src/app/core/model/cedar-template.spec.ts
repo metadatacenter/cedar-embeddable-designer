@@ -466,6 +466,31 @@ describe('controlled-term constraints', () => {
     expect(built.valueConstraints.branches[0].maxDepth).toBe(3);
   });
 
+  it('writes a branch that states no depth as reaching every level', () => {
+    const built = buildTemplate(
+      templateOf(
+        field({
+          type: 'controlledTerms',
+          name: 'F',
+          controlledTermConstraints: {
+            constraints: [
+              {
+                sourceType: 'ontology-branch',
+                sourceId: 'DOID',
+                branchRootId: 'http://purl.obolibrary.org/obo/DOID_4',
+                branchRootName: 'disease',
+              },
+            ],
+            actions: [],
+          },
+        }),
+      ),
+    ).getField('F') as ControlledTermField;
+
+    // 0 is every level, as the terminology server reads an absent depth; 1 would be direct subtypes.
+    expect(built.valueConstraints.branches[0].maxDepth).toBe(0);
+  });
+
   it('carries a single-term constraint', () => {
     const built = buildTemplate(
       templateOf(
