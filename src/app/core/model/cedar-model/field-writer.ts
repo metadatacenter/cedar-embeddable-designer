@@ -1,4 +1,4 @@
-import { isBlank } from './text-policy';
+import { builderName, isBlank } from './text-policy';
 import { ArtifactMetadata, Field, FieldDefaultValue } from '../../models/types';
 import { NUMERIC_TYPES, accepts, allowsOptions, descriptorOf, temporalGranularities } from './capabilities';
 import {
@@ -250,7 +250,7 @@ function buildField(field: Field): TemplateField {
     .withPreferredLabel(field.preferredLabel || null)
     .withAlternateLabels(field.alternateLabels?.length ? field.alternateLabels : null)
     .withSchemaIdentifier(field.schemaIdentifier || null)
-    .withSchemaName(field.name)
+    .withSchemaName(builderName(field.name))
     // Let the installed model supply its canonical default for an absent description.
     .withSchemaDescription(field.helpText || null)
     .withSchemaVersion(SchemaVersion.CURRENT)

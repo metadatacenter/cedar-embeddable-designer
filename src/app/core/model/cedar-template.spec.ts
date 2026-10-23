@@ -1254,3 +1254,11 @@ it('preserves exact numeric defaults and bounds through designer JSON and YAML i
     }
   }
 });
+
+// The model's builders refuse a name made only of whitespace. The designer reports a blank name as
+// missing, and builds the field with the empty name meanwhile.
+it('builds a field whose name is only whitespace with the empty name', () => {
+  for (const name of [' ', ' \t\n ']) {
+    expect(fieldToJson(field({ name }))['schema:name']).toBe('');
+  }
+});
