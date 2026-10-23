@@ -3,11 +3,7 @@
   <dl class="identity">
     <dt>{{ 'settings.version' | translate }}</dt>
     <dd>
-      {{
-        state()?.kind === 'local'
-          ? ('version.notVersioned' | translate)
-          : version() || ('common.notSpecified' | translate)
-      }}
+      {{ state()?.kind === 'local' ? ('version.notVersioned' | translate) : version() }}
     </dd>
     @if (state()?.kind !== 'local' && status()) {
       <dt>{{ 'common.publicationStatus' | translate }}</dt>

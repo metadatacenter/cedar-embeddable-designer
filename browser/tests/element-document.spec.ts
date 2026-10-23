@@ -238,9 +238,10 @@ test('element metadata and versions show provenance without changing the artifac
   await expect(
     designer.locator('app-container-editor').nth(1).getByRole('textbox', { name: 'Version', exact: true }),
   ).toHaveValue('');
+  // A version nobody set is an empty box, with no word standing in for it.
   await expect(
     designer.locator('app-container-editor').nth(1).getByRole('textbox', { name: 'Version', exact: true }),
-  ).toHaveAttribute('placeholder', 'Not specified');
+  ).not.toHaveAttribute('placeholder');
   await expect(empty.locator('dd').filter({ hasText: /^Draft$/ })).toHaveCount(0);
   for (const label of ['Version', 'Publication status', 'Derived from', 'Previous version']) {
     await expect(empty.locator('dt').filter({ hasText: new RegExp('^' + label + '$') })).toHaveCount(0);

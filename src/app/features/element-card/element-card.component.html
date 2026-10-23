@@ -134,7 +134,7 @@
                 <dt>{{ 'elementCard.elementIri' | translate }}</dt>
                 <dd>{{ node().definition.identifier || ('settings.notYetAssigned' | translate) }}</dd>
                 <dt>{{ 'settings.modelVersion' | translate }}</dt>
-                <dd>{{ artifact().schemaVersion || ('common.notSpecified' | translate) }}</dd>
+                <dd>{{ artifact().schemaVersion }}</dd>
                 <dt>{{ 'settings.created' | translate }}</dt>
                 <dd>{{ artifact().createdOn || ('settings.notYetRecorded' | translate) }}</dd>
                 <dt>{{ 'settings.modified' | translate }}</dt>

@@ -71,7 +71,6 @@
               readonly
               class="template-input template-input--fact"
               [attr.aria-label]="'containerEditor.version' | translate"
-              [placeholder]="'common.notSpecified' | translate"
             />
             @if (placementNode() && !placementLocked()) {
               <dialog
@@ -146,9 +145,7 @@
           (blur)="service.touchDescription(container().id)"
           [disabled]="placementLocked()"
           class="template-input template-input--description"
-          [placeholder]="
-            (placementLocked() ? 'common.notSpecified' : 'containerEditor.descriptionPlaceholder') | translate
-          "
+          [placeholder]="placementLocked() ? '' : ('containerEditor.descriptionPlaceholder' | translate)"
         ></textarea>
         @if (service.settingError(container().id, 'description'); as error) {
           <p class="ced-field-error" [id]="'description-error-' + container().id" role="alert">{{ error }}</p>
