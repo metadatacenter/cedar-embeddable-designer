@@ -17,7 +17,9 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 20
+    # With every step running, the job measures 19.7 to 19.9 minutes, 15.8 of them in the browser
+    # suite, and a slower runner went past a 20-minute limit in the visual step.
+    timeout-minutes: 30
 
     steps:
       - name: Check out CED
