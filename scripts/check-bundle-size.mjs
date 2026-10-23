@@ -130,8 +130,14 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // the shipped bundle measures 2,037,096 raw / 496,519 gzip-9 bytes. A separate model-library
 // entry keeps consumers that do not author schemas from carrying these validators.
 // Allow about 7.9 KB raw / 3.5 KB compressed headroom; Angular budgets move with this feature.
-const RAW_LIMIT = 2_045_000;
-const GZIP_LIMIT = 500_000;
+// 2026-10-22: the model library's readers and writers now refuse what the Java reader refuses, in
+// JSON schema declarations, YAML names, datatype, granularity and controlled-term spellings. With
+// it, and the designer reading a YAML document's kind from its own type, the shipped bundle measures
+// 2,046,961 raw / 500,032 gzip-9 bytes. That adds 9,842 raw / 3,509 compressed bytes to 2,037,119 /
+// 496,523 on the same dependencies. No dependency was added. Allow about 8 KB raw / 4 KB compressed
+// headroom. The standalone application's build-app budget moves by the same 10 KB.
+const RAW_LIMIT = 2_055_000;
+const GZIP_LIMIT = 504_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
 

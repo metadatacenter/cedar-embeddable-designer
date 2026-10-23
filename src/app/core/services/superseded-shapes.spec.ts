@@ -153,12 +153,6 @@ const DEFECTS: Defect[] = [
     expected: numberType,
   },
   {
-    name: 'a numeric field with an unsupported datatype',
-    field: numeric,
-    inject: (d) => (constraints(d)['numberType'] = 'xsd:integer'),
-    expected: numberType,
-  },
-  {
     name: 'a numeric field with a null datatype',
     field: numeric,
     inject: (d) => (constraints(d)['numberType'] = null),
@@ -242,6 +236,14 @@ describe('stored shapes the projection carries through', () => {
       expect(loaded(source).superseded).toBeUndefined();
     },
   );
+  // The repository refuses a datatype outside the model's, so no stored field holds one, and the model
+  // library refuses it on read rather than reading it as none. It is not a shape the projection replaces.
+  it('a numeric field with a datatype outside the model is refused, not superseded', () => {
+    const { source, pointer } = stored(numeric(), PLACEMENTS[0]);
+    constraints(at(source, pointer))['numberType'] = 'xsd:integer';
+    const service = TestBed.inject(TemplateService);
+    expect(() => service.loadTemplate(source)).toThrow(/xsd:integer/);
+  });
   it('a controlled-term default stored as a term supersedes nothing', () => {
     const { source, pointer } = stored(term(), PLACEMENTS[0]);
     constraints(at(source, pointer))['defaultValue'] = {
