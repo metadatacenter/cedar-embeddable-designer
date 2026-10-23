@@ -84,22 +84,6 @@ export class FieldDefaultValueComponent {
   readonly draft = signal('');
   private defaultKey = '';
   readonly checking = computed(() => this.service.validation.isChecking(this.field().id, 'defaultValue'));
-  readonly pickerSources = computed(() => {
-    const sources = (this.field().controlledTermConstraints?.constraints ?? []).flatMap((config) => {
-      const source = config.sourceType === 'ontology-branch' ? config.sourceId : (config.ontologyId ?? config.sourceId);
-      const acronym = source?.split('/').filter(Boolean).at(-1);
-      return acronym
-        ? [
-            {
-              sourceAcronym: acronym,
-              sourceSystem: config.sourceSystem,
-              ...(config.version ? { version: { id: config.version.id } } : {}),
-            },
-          ]
-        : [];
-    });
-    return [...new Map(sources.map((source) => [JSON.stringify(source), source])).values()];
-  });
   readonly available = signal(customElements.get(FIELD_TAG) !== undefined);
   readonly pickerAvailable = signal(customElements.get('cedar-embeddable-term-picker') !== undefined);
   readonly pickerOpen = signal(false);

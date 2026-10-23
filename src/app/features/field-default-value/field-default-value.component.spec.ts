@@ -66,20 +66,29 @@ it('keeps the current default on a rejected term or a validation outage', async 
   expect(panel.error()).toBe('Offline');
   expect(service.fields()[0].defaultValue).toEqual({ kind: 'none' });
 });
-it('deduplicates source scopes while retaining distinct release pins', () => {
+it('offers only what the field permits by handing the picker its whole constraint set', () => {
   const { panel, fixture, field } = setup();
-  const constraint = field.controlledTermConstraints!.constraints[0];
-  fixture.componentRef.setInput('field', {
-    ...field,
-    controlledTermConstraints: {
-      constraints: [constraint, constraint, { ...constraint, version: { id: 'other' } }],
-      actions: [],
-    },
-  });
-  expect(panel.pickerSources()).toEqual([
-    { sourceAcronym: 'DOID', sourceSystem: undefined, version: { id: 'pin' } },
-    { sourceAcronym: 'DOID', sourceSystem: undefined, version: { id: 'other' } },
-  ]);
+  TestBed.inject(TerminologyService).baseUrl.set('http://terminology.example/');
+  panel.pickerAvailable.set(true);
+  const constraints = {
+    constraints: [
+      ...field.controlledTermConstraints!.constraints,
+      {
+        sourceType: 'ontology-branch' as const,
+        branchRootId: 'http://purl.obolibrary.org/obo/DOID_4',
+        branchRootName: 'disease',
+        sourceId: 'DOID',
+        searchDepth: 0,
+      },
+    ],
+    actions: [],
+  };
+  fixture.componentRef.setInput('field', { ...field, controlledTermConstraints: constraints });
+  fixture.detectChanges();
+  const picker = (fixture.nativeElement as HTMLElement).querySelector('cedar-embeddable-term-picker') as
+    (HTMLElement & { fieldConstraints?: unknown; sources?: unknown }) | null;
+  expect(picker?.fieldConstraints).toEqual(constraints);
+  expect(picker?.sources, 'a list of ontologies cannot say which part of one the field allows').toBeUndefined();
 });
 
 it('blocks saving while terminology validation is pending and clears the report on cancellation', async () => {

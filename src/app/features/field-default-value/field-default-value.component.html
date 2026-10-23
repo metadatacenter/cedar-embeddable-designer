@@ -95,7 +95,7 @@
                   [terminologyBaseUrl]="terminologyBaseUrl()"
                   [language]="language()"
                   [selectionMode]="'term'"
-                  [sources]="pickerSources()"
+                  [fieldConstraints]="field().controlledTermConstraints"
                   (selected)="selectTerm($event)"
                   (cancelled)="dismissPicker()"
                 ></cedar-embeddable-term-picker>
