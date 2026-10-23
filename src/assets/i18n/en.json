@@ -767,8 +767,6 @@
     },
     "owner": "Owner",
     "folder": "Folder",
-    "versions": "Versions",
-    "versionNumber": "v{{version}}",
     "reused": "Linked and copied children",
     "note": {
       "local": "It is not stored as a reusable artifact.",

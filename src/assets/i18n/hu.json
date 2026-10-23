@@ -767,8 +767,6 @@
     },
     "owner": "Tulajdonos",
     "folder": "Mappa",
-    "versions": "Verziók",
-    "versionNumber": "v{{version}}",
     "reused": "Hivatkozott és másolt gyermekek",
     "note": {
       "local": "Nincs újrahasznosítható összetevőként tárolva.",

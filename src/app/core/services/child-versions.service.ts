@@ -41,6 +41,17 @@ interface ChildEntry extends Entry {
 
 const PENDING: OriginLookup = { status: 'pending' };
 
+/**
+ * A found lookup as it stands once the document has changed, until it is looked up again. The versions
+ * are the stored artifact's and stay true. A verdict weighed the earlier document's instances, so it
+ * is pending again. Keeping the rest stops every keystroke from emptying a Version tab.
+ */
+function carried(lookup: OriginLookup): OriginLookup {
+  return lookup.status === 'found' && lookup.verdict.status !== 'unchecked'
+    ? { ...lookup, verdict: { status: 'pending' } }
+    : lookup;
+}
+
 function isJsonObject(value: unknown): value is CedJsonObject {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -104,16 +115,16 @@ export class ChildVersionService {
     return pathTo(this.service.session.document(), id)?.at(-1) ?? null;
   }
 
-  /** A verdict includes instance impact, so any document edit retires it, including sibling edits. */
+  /**
+   * A verdict includes instance impact, so any document edit retires it, including sibling edits. The
+   * versions found stay until the next lookup replaces them. A child whose version changed is a
+   * different artifact, and nothing found for the old one holds.
+   */
   lookup(id: number): OriginLookup {
     const entry = this.entries().get(id);
     const node = this.node(id);
-    return entry &&
-      entry.document === this.service.session.document() &&
-      node &&
-      entry.signature === versionSignature(node)
-      ? entry.lookup
-      : PENDING;
+    if (!entry || !node || entry.signature !== versionSignature(node)) return PENDING;
+    return entry.document === this.service.session.document() ? entry.lookup : carried(entry.lookup);
   }
 
   /** What the host supplies beyond search and load. */
@@ -149,7 +160,13 @@ export class ChildVersionService {
     }
     const controller = new AbortController();
     this.controllers.set(id, controller);
-    this.set(id, document, signature, PENDING);
+    const previous = this.entries().get(id);
+    this.set(
+      id,
+      document,
+      signature,
+      previous?.signature === signature && previous.lookup.status === 'found' ? carried(previous.lookup) : PENDING,
+    );
     const reference: CedArtifactReference = {
       id: state.kind === 'linked' ? state.identifier : state.origin,
       type: node.kind,
@@ -171,6 +188,12 @@ export class ChildVersionService {
     const reference: CedArtifactReference = { id, type: field ? 'field' : root.kind };
     return { reference, signature: JSON.stringify([reference, field ? childVersion(field) : root.version]) };
   }
+
+  /**
+   * Which stored artifact the document is, at which version. It changes when the document becomes a
+   * different stored artifact, and not when its content is edited.
+   */
+  readonly documentSignature = computed(() => this.documentReference()?.signature ?? null);
 
   /** The versions of the document itself, while it is still the artifact they were looked up for. */
   documentLookup(): OriginLookup {
@@ -195,7 +218,11 @@ export class ChildVersionService {
     }
     const controller = new AbortController();
     this.controllers.set(0, controller);
-    this.documentEntry.set({ signature, lookup: PENDING });
+    const previous = this.documentEntry();
+    this.documentEntry.set({
+      signature,
+      lookup: previous?.signature === signature && previous.lookup.status === 'found' ? previous.lookup : PENDING,
+    });
     const done = (lookup: OriginLookup) => {
       if (!controller.signal.aborted) this.documentEntry.set({ signature, lookup });
     };

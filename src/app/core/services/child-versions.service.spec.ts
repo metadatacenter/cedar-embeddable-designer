@@ -305,7 +305,8 @@ describe('ChildVersionService', () => {
       const edited = target === 'child' ? id : service.fields().find((field) => field.id !== id)!.id;
       service.updateFieldName(edited, 'Changed definition');
       const before = service.session.document();
-      expect(versions.lookup(id)).toEqual({ status: 'pending' });
+      // The versions found stay shown; the verdict is pending until it is asked for again.
+      expect(versions.lookup(id)).toMatchObject({ status: 'found', verdict: { status: 'pending' } });
       await versions.replace([id]);
       expect(service.session.document()).toBe(before);
     },
@@ -320,7 +321,7 @@ describe('ChildVersionService', () => {
     service.updateFieldName(id, 'Local changes');
     reply.resolve({ compatible: true });
     await settle();
-    expect(versions.lookup(id)).toEqual({ status: 'pending' });
+    expect(versions.lookup(id)).toMatchObject({ status: 'found', verdict: { status: 'pending' } });
     const before = service.session.document();
     await versions.replace([id]);
     expect(service.session.document()).toBe(before);

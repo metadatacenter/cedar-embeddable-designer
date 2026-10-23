@@ -29,21 +29,6 @@
       <dt>{{ 'version.folder' | translate }}</dt>
       <dd>{{ folder }}</dd>
     }
-    @if (history().length) {
-      <dt class="first-line">{{ 'version.versions' | translate }}</dt>
-      <dd>
-        <ul class="version-list">
-          @for (entry of history(); track entry.id) {
-            <li>
-              {{ 'version.versionNumber' | translate: { version: entry.version ?? '' } }}
-              @if (publicationStatusLabel(entry.publicationStatus); as label) {
-                ({{ label | translate }})
-              }
-            </li>
-          }
-        </ul>
-      </dd>
-    }
   </dl>
   @for (note of notes(); track note.key) {
     <p class="version-note">{{ note.key | translate: note.params }}</p>

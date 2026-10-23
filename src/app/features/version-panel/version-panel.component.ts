@@ -29,6 +29,17 @@ interface Note {
   readonly params?: Readonly<Record<string, string | number>>;
 }
 
+/** What a Version tab's lookups were made for. */
+interface LookupContext {
+  readonly generation: number;
+  readonly document: ContainerDraft;
+  readonly id: number;
+  readonly ownTab: boolean;
+}
+
+/** How long an edit must rest before a child's verdict is asked for again. */
+const LOOKUP_AFTER_EDIT_MS = 400;
+
 /** One linked or copied child in the document's own summary. */
 interface SummaryRow {
   readonly id: number;
@@ -111,7 +122,6 @@ export class VersionPanelComponent {
   readonly active = input(false);
   readonly service = inject(TemplateService);
   readonly versions = inject(ChildVersionService);
-  readonly publicationStatusLabel = publicationStatusLabel;
 
   private readonly document = computed<ContainerDraft>(() => this.service.session.document());
   /** Whether this is the document's own tab. A standalone field is its own document. */
@@ -244,10 +254,6 @@ export class VersionPanelComponent {
       return [{ id: node.id, name: displayName(node), notes: [first, ...lookupNotes(state, lookup)] }];
     });
   });
-  readonly history = computed<CedArtifactVersion[]>(() => {
-    const lookup = this.lookup();
-    return this.ownTab() && lookup.status === 'found' ? [...lookup.versions] : [];
-  });
   readonly upgradeAll = computed(() => {
     if (!this.ownTab() || this.service.access.readOnly()) return false;
     const root = this.document();
@@ -276,7 +282,7 @@ export class VersionPanelComponent {
   }
 
   /** Bind assessments to the complete document, including parent placement and other children. */
-  private readonly lookupContext = computed(() => {
+  private readonly lookupContext = computed<LookupContext | null>(() => {
     if (!this.active()) return null;
     return {
       generation: this.versions.generation(),
@@ -285,18 +291,41 @@ export class VersionPanelComponent {
       ownTab: this.ownTab(),
     };
   });
+  private lookedUp: LookupContext | null = null;
 
   constructor() {
+    // The document's own versions belong to the stored artifact it is, so they are looked up when the
+    // tab opens and when the document becomes another artifact, and not on every edit.
     effect(() => {
-      if (this.lookupContext() === null) return;
-      untracked(() => {
-        if (this.ownTab()) {
-          this.versions.refreshDocument();
-          if (!this.service.fieldDocumentMode()) this.versions.refreshAll();
-        } else {
-          this.versions.refresh(this.nodeId());
-        }
-      });
+      if (!this.active() || !this.ownTab()) return;
+      this.versions.generation();
+      this.versions.documentSignature();
+      untracked(() => this.versions.refreshDocument());
+    });
+    // A child's verdict weighs the whole document, so an edit asks again. It waits until typing
+    // pauses: asking on every keystroke sent the host a request each time.
+    effect((onCleanup) => {
+      const context = this.lookupContext();
+      const previous = this.lookedUp;
+      this.lookedUp = context;
+      if (context === null) return;
+      const lookUp = () =>
+        untracked(() => {
+          if (!context.ownTab) this.versions.refresh(context.id);
+          else if (!this.service.fieldDocumentMode()) this.versions.refreshAll();
+        });
+      const edited =
+        previous !== null &&
+        previous.id === context.id &&
+        previous.ownTab === context.ownTab &&
+        previous.generation === context.generation &&
+        previous.document !== context.document;
+      if (!edited) {
+        lookUp();
+        return;
+      }
+      const timer = setTimeout(lookUp, LOOKUP_AFTER_EDIT_MS);
+      onCleanup(() => clearTimeout(timer));
     });
   }
 
