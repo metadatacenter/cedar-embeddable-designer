@@ -767,7 +767,6 @@
     },
     "owner": "Owner",
     "folder": "Folder",
-    "reused": "Linked and copied children",
     "note": {
       "local": "It is not stored as a reusable artifact.",
       "linked": "This is {{name}} v{{version}}.",
@@ -791,13 +790,7 @@
       },
       "publishedDocument": "Create a new version to upgrade.",
       "alsoUsed": "Also used as {{names}}.",
-      "noReused": "No child is linked to a stored artifact or copied from one.",
       "notStored": "No stored version can be read."
-    },
-    "summary": {
-      "linked": "Linked, v{{version}}.",
-      "forked": "Copy of {{name}} v{{version}}.",
-      "forkedUnlisted": "Copy of {{origin}}."
     },
     "action": {
       "open": "Open original",
@@ -809,8 +802,7 @@
       "replaceCompatible": "Replace with origin v{{version}} (compatible)",
       "replaceBreaking": "Replace with origin v{{version}} (breaking)",
       "saveDraft": "Save as reusable draft",
-      "publish": "Publish as reusable",
-      "upgradeAll": "Upgrade all compatible"
+      "publish": "Publish as reusable"
     },
     "replaceDialog": {
       "title": "Replace with origin v{{version}}?",

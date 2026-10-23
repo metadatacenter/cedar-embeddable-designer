@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { currentTemplate, openDesigner } from './support';
+import { currentTemplate, openDesigner, openSettings } from './support';
 
 const STORED = 'https://repo.metadatacenter.org/templates/version-tab-typing';
 const NEWER = 'https://repo.metadatacenter.org/template-fields/version-tab-typing-newer';
@@ -35,7 +35,13 @@ async function storedTemplate(page: Page, linkTitle: boolean): Promise<void> {
             ? [{ id: stored, name: 'Template', version: '0.0.1', publicationStatus: 'bibo:draft', owner: 'test1' }]
             : [
                 { id: newer, name: 'Title', version: '1.3.0', publicationStatus: 'bibo:published', owner: 'test1' },
-                { id: title['@id'], name: 'Title', version: '1.2.0', publicationStatus: 'bibo:published', owner: 'test1' },
+                {
+                  id: title['@id'],
+                  name: 'Title',
+                  version: '1.2.0',
+                  publicationStatus: 'bibo:published',
+                  owner: 'test1',
+                },
               ];
         },
         async compatibility() {
@@ -72,15 +78,16 @@ async function watchTemplateVersionTab(page: Page) {
 
 async function typeIntoSecondFieldName(page: Page): Promise<void> {
   const card = page.locator('cedar-embeddable-designer').locator('app-field-card').nth(1);
-  await card.getByRole('textbox', { name: 'Enter field name', exact: true }).pressSequentially(' renamed', { delay: 40 });
+  await card
+    .getByRole('textbox', { name: 'Enter field name', exact: true })
+    .pressSequentially(' renamed', { delay: 40 });
 }
 
 test("typing a field name leaves the template's Version tab still and asks the host nothing", async ({ page }) => {
   await openDesigner(page);
   await storedTemplate(page, false);
   await expect.poll(async () => (await currentTemplate(page))['@id']).toBe(STORED);
-  const { panel, calls } = await watchTemplateVersionTab(page);
-  await expect(panel.getByText('No child is linked to a stored artifact or copied from one.')).toBeVisible();
+  const { calls } = await watchTemplateVersionTab(page);
   const before = await calls();
 
   await typeIntoSecondFieldName(page);
@@ -90,15 +97,17 @@ test("typing a field name leaves the template's Version tab still and asks the h
   expect(await page.evaluate(() => (window as unknown as Watched).__versionTabChanges)).toBe(0);
 });
 
-test('typing a field name rechecks a linked child once, after the typing pauses, and keeps its versions shown', async ({
+test("typing a field name rechecks a linked child's verdict once, after the typing pauses, and keeps its versions shown", async ({
   page,
 }) => {
-  await openDesigner(page);
+  const designer = await openDesigner(page);
   await storedTemplate(page, true);
   await expect.poll(async () => ((await currentTemplate(page)).properties as any).Title['pav:version']).toBe('1.2.0');
-  const { panel, calls } = await watchTemplateVersionTab(page);
+  const panel = await openSettings(designer.locator('app-field-card').first(), 'Version');
   const newest = panel.getByText('The newest available published version is v1.3.0.', { exact: false });
   await expect(newest).toBeVisible();
+  await page.waitForTimeout(400);
+  const calls = () => page.evaluate(() => (window as unknown as Watched).__versionCalls);
   const before = await calls();
 
   await typeIntoSecondFieldName(page);
@@ -106,7 +115,7 @@ test('typing a field name rechecks a linked child once, after the typing pauses,
   await expect(newest).toBeVisible();
   await page.waitForTimeout(800);
 
-  // One lookup for the linked child after the pause, not one per keystroke, and none for the template.
+  // One lookup for the linked child after the pause, not one per keystroke.
   expect(await calls()).toBe(before + 1);
   await expect(newest).toBeVisible();
 });

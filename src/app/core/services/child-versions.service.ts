@@ -18,10 +18,8 @@ import {
   candidateVersion,
   childIdentifier,
   childVersion,
-  compatibleUpgrade,
   OriginLookup,
   replaceable,
-  reusedChildren,
   Verdict,
   versionSignature,
   versionState,
@@ -172,11 +170,6 @@ export class ChildVersionService {
       type: node.kind,
     };
     void this.find(id, document, node, signature, source, reference, controller.signal);
-  }
-
-  /** Look up every linked and forked child the document's own tab summarizes. */
-  refreshAll(): void {
-    for (const node of reusedChildren(this.service.session.document())) this.refresh(node.id);
   }
 
   /** The stored artifact the document is: a standalone field is its own document. */
@@ -345,19 +338,6 @@ export class ChildVersionService {
           return;
         this.service.replaceChildren(replacements);
       },
-    );
-  }
-
-  /** Upgrade every linked child whose newer version the host judged compatible. */
-  upgradeCompatible(): Promise<void> {
-    const root = this.service.session.document();
-    return this.replace(
-      reusedChildren(root)
-        .filter((node) => {
-          const state = versionState(root, node.id);
-          return !!state && compatibleUpgrade(state, this.lookup(node.id));
-        })
-        .map((node) => node.id),
     );
   }
 

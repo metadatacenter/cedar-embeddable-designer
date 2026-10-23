@@ -36,20 +36,7 @@
   @for (note of ownNotes(); track note.key) {
     <p class="version-note">{{ note.key | translate: note.params }}</p>
   }
-  @if (summary().length) {
-    <p class="version-caption">{{ 'version.reused' | translate }}</p>
-    <dl class="identity">
-      @for (row of summary(); track row.id) {
-        <dt class="first-line">{{ row.name }}</dt>
-        <dd>
-          @for (note of row.notes; track note.key) {
-            {{ note.key | translate: note.params }}
-          }
-        </dd>
-      }
-    </dl>
-  }
-  @if (actions().length || upgradeAll()) {
+  @if (actions().length) {
     <div class="version-actions">
       @for (action of actions(); track action) {
         @switch (action) {
@@ -69,9 +56,6 @@
             </button>
           }
         }
-      }
-      @if (upgradeAll()) {
-        <button type="button" (click)="upgradeCompatible()">{{ 'version.action.upgradeAll' | translate }}</button>
       }
     </div>
   }

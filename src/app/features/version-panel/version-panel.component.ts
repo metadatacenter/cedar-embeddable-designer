@@ -8,11 +8,9 @@ import { elementDisplayName, fieldDisplayName } from '../../core/model/field-dis
 import {
   blockedByInstances,
   childVersion,
-  compatibleUpgrade,
   OriginLookup,
   originVersion,
   otherPlaces,
-  reusedChildren,
   VersionAction,
   versionActions,
   VersionState,
@@ -39,13 +37,6 @@ interface LookupContext {
 
 /** How long an edit must rest before a child's verdict is asked for again. */
 const LOOKUP_AFTER_EDIT_MS = 400;
-
-/** One linked or copied child in the document's own summary. */
-interface SummaryRow {
-  readonly id: number;
-  readonly name: string;
-  readonly notes: readonly Note[];
-}
 
 function displayName(node: ChildNode): string {
   return node.kind === 'field' ? fieldDisplayName(fieldView(node)) : elementDisplayName(node);
@@ -233,53 +224,15 @@ export class VersionPanelComponent {
     };
   });
 
-  /** The document's own tab: every linked and copied child, with what its lookup found. */
-  readonly summary = computed<SummaryRow[]>(() => {
-    if (!this.ownTab()) return [];
-    const root = this.document();
-    return reusedChildren(root).flatMap((node): SummaryRow[] => {
-      const state = versionState(root, node.id);
-      if (!state) return [];
-      const lookup = this.versions.lookup(node.id);
-      const origin = originVersion(state, lookup);
-      const first: Note =
-        state.kind === 'linked'
-          ? { key: 'version.summary.linked', params: { version: childVersion(node) ?? '' } }
-          : origin
-            ? { key: 'version.summary.forked', params: { name: origin.name, version: origin.version ?? '' } }
-            : {
-                key: 'version.summary.forkedUnlisted',
-                params: { origin: state.kind === 'forked' ? state.origin : '' },
-              };
-      return [{ id: node.id, name: displayName(node), notes: [first, ...lookupNotes(state, lookup)] }];
-    });
-  });
-  readonly upgradeAll = computed(() => {
-    if (!this.ownTab() || this.service.access.readOnly()) return false;
-    const root = this.document();
-    return reusedChildren(root).some((node) => {
-      const state = versionState(root, node.id);
-      return (
-        !!state && compatibleUpgrade(state, this.versions.lookup(node.id)) && !this.service.placementLocked(node.id)
-      );
-    });
-  });
+  /** What the document's own tab says of its own versions, when they could not be read. */
   readonly ownNotes = computed<Note[]>(() => {
     if (!this.ownTab()) return [];
     const notes: Note[] = [];
     const lookup = this.lookup();
     if (lookup.status === 'unreadable') notes.push({ key: 'version.note.notStored' });
     if (lookup.status === 'failed') notes.push({ key: 'version.note.failed' });
-    if (!this.service.fieldDocumentMode() && !this.summary().length) notes.push({ key: 'version.note.noReused' });
-    if (this.documentPublished() && this.summary().some((row) => this.hasCandidate(row.id)))
-      notes.push({ key: 'version.note.publishedDocument' });
     return notes;
   });
-
-  private hasCandidate(id: number): boolean {
-    const lookup = this.versions.lookup(id);
-    return lookup.status === 'found' && !!lookup.candidate;
-  }
 
   /** Bind assessments to the complete document, including parent placement and other children. */
   private readonly lookupContext = computed<LookupContext | null>(() => {
@@ -308,12 +261,8 @@ export class VersionPanelComponent {
       const context = this.lookupContext();
       const previous = this.lookedUp;
       this.lookedUp = context;
-      if (context === null) return;
-      const lookUp = () =>
-        untracked(() => {
-          if (!context.ownTab) this.versions.refresh(context.id);
-          else if (!this.service.fieldDocumentMode()) this.versions.refreshAll();
-        });
+      if (context === null || context.ownTab) return;
+      const lookUp = () => untracked(() => this.versions.refresh(context.id));
       const edited =
         previous !== null &&
         previous.id === context.id &&
@@ -356,9 +305,5 @@ export class VersionPanelComponent {
   confirmReplace(dialog: HTMLDialogElement): void {
     dialog.close();
     void this.versions.replace([this.nodeId()]);
-  }
-
-  upgradeCompatible(): void {
-    void this.versions.upgradeCompatible();
   }
 }

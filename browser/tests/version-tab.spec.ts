@@ -126,25 +126,20 @@ test('a breaking version that would invalidate instances is not offered, and det
   await expect(presentation.getByLabel('Field name', { exact: true })).toBeEnabled();
 });
 
-test("the template's Version tab summarizes its linked children", async ({ page }) => {
+test("the template's Version tab lists no children and offers no upgrade", async ({ page }) => {
   const designer = await openDesigner(page);
   await linkTitle(page);
   await expect.poll(async () => ((await currentTemplate(page)).properties as any).Title['pav:version']).toBe('1.2.0');
   const settings = designer.locator('app-container-settings').first();
   const toggle = settings.locator('.settings-toggle');
   if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click();
-  await expect(settings.getByRole('tab')).toHaveText(['Presentation', 'Annotations', 'Metadata', 'Version']);
   await settings.getByRole('tab', { name: 'Version', exact: true }).click();
   const panel = settings.getByRole('tabpanel', { name: 'Version', exact: true });
-  await expect(panel.getByText('Linked and copied children')).toBeVisible();
-  await expect(
-    panel
-      .locator('dt')
-      .filter({ hasText: /^Title$/ })
-      .locator('+ dd'),
-  ).toContainText('Linked, v1.2.0. The newest available published version is v1.3.0.');
-  await panel.getByRole('button', { name: 'Upgrade all compatible' }).click();
-  await expect.poll(async () => ((await currentTemplate(page)).properties as any).Title['@id']).toBe(NEWER);
+  await expect(panel.locator('dt').filter({ hasText: /^Version$/ })).toBeVisible();
+  // Each linked or copied child says how it relates to stored artifacts on its own tab.
+  await expect(panel.getByText('Linked and copied children')).toHaveCount(0);
+  await expect(panel.getByText('No child is linked', { exact: false })).toHaveCount(0);
+  await expect(panel.getByRole('button')).toHaveCount(0);
 });
 
 test('the header shows the version and never edits it, in a draft as in a published artifact', async ({ page }) => {

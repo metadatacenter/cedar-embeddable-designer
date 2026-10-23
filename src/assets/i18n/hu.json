@@ -767,7 +767,6 @@
     },
     "owner": "Tulajdonos",
     "folder": "Mappa",
-    "reused": "Hivatkozott és másolt gyermekek",
     "note": {
       "local": "Nincs újrahasznosítható összetevőként tárolva.",
       "linked": "Ez a(z) {{name}} v{{version}}.",
@@ -791,13 +790,7 @@
       },
       "publishedDocument": "A frissítéshez hozzon létre új verziót.",
       "alsoUsed": "Máshol is szerepel: {{names}}.",
-      "noReused": "Egyik gyermek sem hivatkozik tárolt összetevőre, és egyik sem másolat.",
       "notStored": "Nincs olvasható tárolt verzió."
-    },
-    "summary": {
-      "linked": "Hivatkozott, v{{version}}.",
-      "forked": "Másolat, forrása: {{name}} v{{version}}.",
-      "forkedUnlisted": "Másolat, forrása: {{origin}}."
     },
     "action": {
       "open": "Eredeti megnyitása",
@@ -809,8 +802,7 @@
       "replaceCompatible": "Csere a forrás v{{version}} verziójára (kompatibilis)",
       "replaceBreaking": "Csere a forrás v{{version}} verziójára (nem kompatibilis)",
       "saveDraft": "Mentés újrahasznosítható vázlatként",
-      "publish": "Közzététel újrahasznosíthatóként",
-      "upgradeAll": "Minden kompatibilis frissítése"
+      "publish": "Közzététel újrahasznosíthatóként"
     },
     "replaceDialog": {
       "title": "Csere a forrás v{{version}} verziójára?",
