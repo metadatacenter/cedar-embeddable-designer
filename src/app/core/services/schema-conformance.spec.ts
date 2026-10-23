@@ -43,6 +43,50 @@ it.each([false, true])('reports and repairs imported malformed field language, s
   }
 });
 
+describe('a standalone field document', () => {
+  const report = (children: ReturnType<typeof document>['children']) => {
+    const root = newContainer('template', 'Field document');
+    root.children = children;
+    const session = new EditorSession(root);
+    session.access.fieldDocument.set(true);
+    const validation = new ValidationCoordinator(session, english);
+    try {
+      return validation.report();
+    } finally {
+      validation.dispose();
+    }
+  };
+  const field = () => document().children[0];
+
+  // The field designer opens on its type chooser with no field yet. There is nothing to judge, and
+  // an error there would be announced before the author has chosen anything.
+  it('reports nothing while no field has been chosen', () => {
+    expect(report([]).issues).toEqual([]);
+  });
+
+  it('reports a second definition, or an element where the field belongs', () => {
+    const second = { ...field(), id: 100001 };
+    expect(report([field(), second]).issues).toEqual([
+      expect.objectContaining({ setting: 'artifact', message: 'Expected one field definition.' }),
+    ]);
+    const element = newContainer('element', 'Group');
+    expect(
+      report([
+        {
+          kind: 'element',
+          id: element.id,
+          definition: element,
+          placement: { deploymentName: 'Group', allowMultiple: false },
+        },
+      ]).issues,
+    ).toEqual(expect.arrayContaining([expect.objectContaining({ message: 'Expected one field definition.' })]));
+  });
+
+  it('judges the one field it holds', () => {
+    expect(report([field()]).issues).toEqual([]);
+  });
+});
+
 it('rejects a new malformed language at the central command boundary', () => {
   const session = new EditorSession(document()),
     validation = new ValidationCoordinator(session, english);

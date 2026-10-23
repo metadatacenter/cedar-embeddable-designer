@@ -290,13 +290,18 @@ export function inspectDocument(
   visit(document, []);
   try {
     const node = document.children[0];
-    if (fieldDocument && (document.children.length !== 1 || node?.kind !== 'field'))
+    if (fieldDocument && (document.children.length > 1 || (node !== undefined && node.kind !== 'field')))
       throw new Error(t('errors.oneFieldDefinition'));
-    const artifact =
-      fieldDocument && node?.kind === 'field' ? fieldToJson(fieldView(node)) : templateToJson(buildContainer(document));
+    // A field document holds no field while its type is still being chosen, and has nothing to judge
+    // until it does. The field designer refuses to save without one.
+    const artifact = !fieldDocument
+      ? templateToJson(buildContainer(document))
+      : node?.kind === 'field'
+        ? fieldToJson(fieldView(node))
+        : null;
     // Construction and round-tripping can normalize an invalid source. Judge the actual emitted
     // document as well, once the settings probes have supplied their more precise diagnostics.
-    if (!modelInvalid && !pendingValidation) {
+    if (artifact !== null && !modelInvalid && !pendingValidation) {
       const findings = SchemaArtifactValidator.structure(artifact, fieldDocument ? 'field' : document.kind).findings;
       const mapped = hostFindings(
         document,
