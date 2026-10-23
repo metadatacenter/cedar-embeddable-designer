@@ -96,6 +96,7 @@
                   [language]="language()"
                   [selectionMode]="'term'"
                   [fieldConstraints]="field().controlledTermConstraints"
+                  [sources]="pickerSources()"
                   (selected)="selectTerm($event)"
                   (cancelled)="dismissPicker()"
                 ></cedar-embeddable-term-picker>

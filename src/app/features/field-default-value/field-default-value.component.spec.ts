@@ -88,7 +88,27 @@ it('offers only what the field permits by handing the picker its whole constrain
   const picker = (fixture.nativeElement as HTMLElement).querySelector('cedar-embeddable-term-picker') as
     (HTMLElement & { fieldConstraints?: unknown; sources?: unknown }) | null;
   expect(picker?.fieldConstraints).toEqual(constraints);
-  expect(picker?.sources, 'a list of ontologies cannot say which part of one the field allows').toBeUndefined();
+  // Only for a picker from before fieldConstraints, which could search no narrower than these.
+  expect(picker?.sources).toEqual([
+    { sourceAcronym: 'DOID', sourceSystem: undefined, version: { id: 'pin' } },
+    { sourceAcronym: 'DOID', sourceSystem: undefined },
+  ]);
+});
+
+it('deduplicates source scopes while retaining distinct release pins', () => {
+  const { panel, fixture, field } = setup();
+  const constraint = field.controlledTermConstraints!.constraints[0];
+  fixture.componentRef.setInput('field', {
+    ...field,
+    controlledTermConstraints: {
+      constraints: [constraint, constraint, { ...constraint, version: { id: 'other' } }],
+      actions: [],
+    },
+  });
+  expect(panel.pickerSources()).toEqual([
+    { sourceAcronym: 'DOID', sourceSystem: undefined, version: { id: 'pin' } },
+    { sourceAcronym: 'DOID', sourceSystem: undefined, version: { id: 'other' } },
+  ]);
 });
 
 it('blocks saving while terminology validation is pending and clears the report on cancellation', async () => {
