@@ -24,7 +24,10 @@ The shipped declaration describes those properties and events. The original
 plain `<script>` tag, its type declaration, and a staged npm directory.
 Development snapshots are published to CEDAR Nexus as
 `@org.metadatacenter/cedar-embeddable-designer`. The split Designer host pins an
-exact snapshot. CED is not yet released on public npmjs.
+exact snapshot for registry installs. Local `cedarcli build frontends` supplies current local
+component sources, including uncommitted edits, automatically; `cedarcli test frontends` checks
+them without deployment. No publication, pin update or follow-up approval is required for either.
+CED is not yet released on public npmjs.
 
 Serialization is the
 [CEDAR model library's](https://github.com/metadatacenter/cedar-model-typescript-library).
@@ -661,8 +664,9 @@ keys and wrong value types produce diagnostics without disabling valid siblings.
 
 The control, spacing and font exports resolve from the exact Nexus token snapshot
 in `package.json` and `package-lock.json`; a normal `npm ci` installs them. For
-unpublished token development, install a packed local tarball in both CEE and
-CED as described in the frontend runbook. Before pushing a consumer that needs
+unpublished token development, run `cedarcli test frontends` or `cedarcli build frontends`;
+the reactor automatically supplies the current local token package to both CEE and CED.
+For registry-based CI, before pushing a consumer that needs
 new exports, publish a new token snapshot, update both pins and verify a clean
 `npm ci` build. The real-CEF integration workflow must also pin a CEE revision
 that supports the adopted control profile.

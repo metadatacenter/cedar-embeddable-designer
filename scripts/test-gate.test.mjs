@@ -38,7 +38,7 @@ setTimeout(() => { emit('end'); process.exit(script === process.env.GATE_FAIL ? 
         GATE_LOG: log,
         GATE_FAIL: fail,
         // A build runs these tests inside its own pool, which no test may draw on.
-        CEDAR_WORKER_POOL: undefined,
+        CEDAR_WORKER_POOL: undefined, CEDAR_STAGE_CACHE_MODULE: undefined, CEDAR_STAGE_CACHE: undefined, CEDAR_TASK_CACHE_CONFIG: undefined,
         ...environment,
       },
     });

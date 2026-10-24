@@ -37,7 +37,11 @@ const stages = [
   },
   { name: 'visual', script: 'test:visual', weight: visualWeight, after: ['dist'] },
 ];
+const cache = process.env.CEDAR_STAGE_CACHE_MODULE
+  ? (await import(process.env.CEDAR_STAGE_CACHE_MODULE)).stageCache()
+  : { reuse: () => false, save: () => {} };
 const pending = [...stages];
+const eligible = new Map();
 const running = new Map();
 const passed = new Set();
 let used = 0;
@@ -177,7 +181,14 @@ function schedule() {
   if (!failed) {
     for (const stage of [...pending]) {
       const weight = stage.weight ?? 1;
-      if (used + weight > budget || !(stage.after ?? []).every((name) => passed.has(name))) continue;
+      if (!(stage.after ?? []).every((name) => passed.has(name))) continue;
+      if (!eligible.has(stage.name)) eligible.set(stage.name, performance.now());
+      if (used + weight > budget) continue;
+      if (cache.reuse(stage)) {
+        pending.splice(pending.indexOf(stage), 1);
+        passed.add(stage.name);
+        continue;
+      }
       const workers = take(weight);
       if (!workers) {
         // Later stages queue behind this one rather than overtake it.
@@ -190,6 +201,7 @@ function schedule() {
       pending.splice(pending.indexOf(stage), 1);
       used += weight;
       const began = performance.now();
+      console.log(`[gate] allocation ${stage.name}: ${workers.count} workers, ${((began - eligible.get(stage.name)) / 1000).toFixed(2)}s queued`);
       console.log(`[gate] start ${stage.name} (${workers.count}/${budget} workers)`);
       const child = spawn('npm', ['run', stage.script], {
         // Stay in the CLI process group so cancellation reaps test descendants.
@@ -197,6 +209,8 @@ function schedule() {
         stdio: ['ignore', 'pipe', 'pipe'],
         env: {
           ...process.env,
+          CEDAR_STAGE_CACHE_MODULE: undefined,
+          CEDAR_STAGE_CACHE: undefined, CEDAR_TASK_CACHE_CONFIG: undefined,
           ...stage.env,
           CEDAR_TEST_WORKERS: String(workers.count),
           VITEST_MAX_WORKERS: String(workers.count),
@@ -205,7 +219,7 @@ function schedule() {
       });
       running.set(stage.name, child);
       for (const stream of [child.stdout, child.stderr]) {
-        stream.on('data', (data) => process.stdout.write(`[${stage.name}] ${data}`));
+        stream.on('data', (data) => { cache.observe?.(stage, data); process.stdout.write(`[${stage.name}] ${data}`); });
       }
       child.on('error', (error) => {
         console.error(error);
@@ -218,7 +232,7 @@ function schedule() {
         used -= weight;
         const seconds = ((performance.now() - began) / 1000).toFixed(2);
         console.log(`[gate] ${stage.name}: exit ${code}, ${seconds}s`);
-        if (code === 0) passed.add(stage.name);
+        if (code === 0) { cache.save(stage); passed.add(stage.name); }
         else {
           failed = true;
           process.exitCode ||= 1;
