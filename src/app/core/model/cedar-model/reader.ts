@@ -225,7 +225,8 @@ function projectContainerFields(template: Template | TemplateElement): DesignerT
           ? {
               type: (field as TemporalField).valueConstraints.temporalType.getValue() ?? 'xsd:date',
               granularity: (field as TemporalField).temporalGranularity.getValue() ?? 'day',
-              timezoneEnabled: (field as TemporalField).timezoneEnabled,
+              // A field that states no time zone setting reads as one without a time zone, as it always has.
+              timezoneEnabled: (field as TemporalField).timezoneEnabled ?? false,
               inputTimeFormat: (field as TemporalField).inputTimeFormat.getValue(),
             }
           : undefined,

@@ -995,7 +995,8 @@ describe('complete controlled-term constraints', () => {
     customUriSource.properties.Terms._valueConstraints.ontologies[0].uri = 'https://custom.example/ontology/0';
     const customUriModel = readTemplate(JSON.stringify(customUriSource));
     expect(templateToJson(customUriModel)).toEqual(customUriSource);
-    expect(() => templateToYaml(customUriModel)).toThrow(/Export JSON/);
+    // YAML keeps an ontology address outside BioPortal as its sourceUri, so the template survives it.
+    expect(templateToJson(readTemplate(templateToYaml(customUriModel)))).toEqual(customUriSource);
     const imported = readTemplate(JSON.stringify(initial));
     for (const source of [templateToJson(imported), templateToYaml(imported)]) {
       const opened = toDesignerTemplate(readTemplate(source));
