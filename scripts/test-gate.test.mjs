@@ -14,7 +14,7 @@ function gate(workers, fail = '', environment = {}, copies = 1) {
     `#!${process.execPath}
 const fs = require('node:fs');
 const script = process.argv[3];
-const emit = event => fs.appendFileSync(process.env.GATE_LOG, JSON.stringify({event, script, workers: process.env.CEDAR_TEST_WORKERS, vitest: process.env.VITEST_MAX_WORKERS})+'\\n');
+const emit = event => fs.appendFileSync(process.env.GATE_LOG, JSON.stringify({event, script, workers: process.env.CEDAR_TEST_WORKERS, vitest: process.env.VITEST_MAX_WORKERS, webkit: process.env.CED_WEBKIT})+'\\n');
 emit('start');
 setTimeout(() => { emit('end'); process.exit(script === process.env.GATE_FAIL ? 7 : 0); }, 50);
 `,
@@ -68,7 +68,10 @@ for (const budget of [1, 2, 8])
         peak = Math.max(peak, active);
         assert.ok(active <= budget);
         if (event.script === 'dist') assert.equal(finished.size, 6);
-        if (event.script === 'test:browser:prebuilt') assert.ok(finished.has('dist'));
+        if (event.script === 'test:browser:prebuilt') {
+          assert.ok(finished.has('dist'));
+          assert.equal(event.webkit, '1', 'the complete gate must include WebKit interactions');
+        }
         if (event.script === 'test:visual') {
           assert.ok(finished.has('dist'));
           assert.equal(event.workers, budget >= 6 ? '2' : '1');
@@ -210,11 +213,10 @@ test('gates in concurrent builds stay within the pool they share', () => {
   }
 });
 
-
 test('a conformance refusal prevents packaging and browser acceptance', () => {
-  const {result, events} = gate(1, 'test:conformance');
+  const { result, events } = gate(1, 'test:conformance');
   assert.notEqual(result.status, 0);
-  const started = events.filter(event => event.event === 'start').map(event => event.script);
+  const started = events.filter((event) => event.event === 'start').map((event) => event.script);
   assert.ok(started.includes('test:conformance'));
   for (const blocked of ['dist', 'test:browser:prebuilt', 'test:visual']) assert.ok(!started.includes(blocked));
 });

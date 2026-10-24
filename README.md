@@ -309,6 +309,9 @@ share a live cache. The browser tests and the visual baselines then share the
 budget: the baselines take two workers in their container when the budget is at
 least six, one otherwise, and the browser tests the rest. A failed stage blocks the distribution, browser and visual stages; each stage
 prints its elapsed time. `test:ci` therefore needs Docker, as `test:visual` does.
+It also enables the WebKit interaction project alongside Chromium. Install both
+engines before running the complete gate:
+`./browser/node_modules/.bin/playwright install --with-deps chromium webkit`.
 
 The browser suite is the one that matters most, because it is the only one that
 can see the failures this component has actually had: an element that never

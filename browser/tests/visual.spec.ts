@@ -70,7 +70,7 @@ const GROUPS: Record<string, readonly string[]> = {
 /**
  * Screenshot options every shot shares.
  *
- * No pixel budget. CEE carries one of 120 because its baselines used to cross the
+ * No pixel budget. CEE used to carry one of 120 because its baselines crossed the
  * laptop-to-CI boundary, where glyph antialiasing alone moved 124 to 393 pixels — but
  * the container removes that boundary, and keeping the budget afterwards only buys
  * blindness. Measured here: changing the version in the header from 0.1.0 to 9.9.9
@@ -81,6 +81,8 @@ const SHOT = {
   animations: 'disabled',
   caret: 'hide',
   maxDiffPixels: 0,
+  // Match CEE: pale borders and validation fills must count as changed pixels.
+  threshold: 0.02,
 } as const;
 
 /**

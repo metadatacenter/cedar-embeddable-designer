@@ -22,8 +22,19 @@ const stages = [
   { name: 'boundaries', script: 'test:boundaries' },
   { name: 'packaging', script: 'test:packaging' },
   { name: 'conformance', script: 'test:conformance' },
-  { name: 'dist', script: 'dist', weight: budget, after: ['unit', 'lint', 'types', 'boundaries', 'packaging', 'conformance'] },
-  { name: 'browser', script: 'test:browser:prebuilt', weight: Math.max(1, budget - visualWeight), after: ['dist'] },
+  {
+    name: 'dist',
+    script: 'dist',
+    weight: budget,
+    after: ['unit', 'lint', 'types', 'boundaries', 'packaging', 'conformance'],
+  },
+  {
+    name: 'browser',
+    script: 'test:browser:prebuilt',
+    weight: Math.max(1, budget - visualWeight),
+    after: ['dist'],
+    env: { CED_WEBKIT: '1' },
+  },
   { name: 'visual', script: 'test:visual', weight: visualWeight, after: ['dist'] },
 ];
 const pending = [...stages];
@@ -186,6 +197,7 @@ function schedule() {
         stdio: ['ignore', 'pipe', 'pipe'],
         env: {
           ...process.env,
+          ...stage.env,
           CEDAR_TEST_WORKERS: String(workers.count),
           VITEST_MAX_WORKERS: String(workers.count),
           NG_BUILD_MAX_WORKERS: String(workers.count),
