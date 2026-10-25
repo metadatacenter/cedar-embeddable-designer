@@ -136,8 +136,15 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // 2,046,961 raw / 500,032 gzip-9 bytes. That adds 9,842 raw / 3,509 compressed bytes to 2,037,119 /
 // 496,523 on the same dependencies. No dependency was added. Allow about 8 KB raw / 4 KB compressed
 // headroom. The standalone application's build-app budget moves by the same 10 KB.
-const RAW_LIMIT = 2_055_000;
-const GZIP_LIMIT = 504_000;
+// 2026-10-25: the model library's instance validator now reaches the Java validator's verdict on
+// every production instance. It judges an instance against its stored template, the template's
+// `@context` included, keeps the null values and standard terms the stored document held for that
+// judgment, and checks static fields and attribute-value lists. The shipped bundle measures
+// 2,057,237 raw / 504,219 gzip-9 bytes, past the 2026-10-22 ceilings by 2,237 / 219 bytes. No
+// dependency was added. Allow about 7.8 KB raw / 3.8 KB compressed headroom. The standalone
+// application's build-app budget moves by the same 10 KB.
+const RAW_LIMIT = 2_065_000;
+const GZIP_LIMIT = 508_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
 
