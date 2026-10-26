@@ -273,6 +273,14 @@ esbuild, holds it to its size ceiling, and stages `dist-npm/cedar-embeddable-des
 from those exact bytes. The staging step builds nothing of its own: it copies the
 file the size gate measured, and verifies the result byte for byte afterwards.
 
+The package carries two bundles. `cedar-embeddable-designer.js` is self-contained and embeds
+CEDAR Roboto 400 and 500. `cedar-embeddable-designer.host-fonts.js` is the same element without
+those faces, for a host that registers them once for its whole page, as the design tokens'
+`fonts.css` does. A page that loads several CEDAR components then downloads the faces once
+rather than once per component. Without the host's faces, the host-fonts bundle draws its text in
+the rest of the shared font stack. Each bundle has its own manifest, `bundle-manifest.json` and
+`bundle-manifest.host-fonts.json`, and its own size ceiling. Load only one of them.
+
 The registry a package belongs to is derived from its version rather than passed
 at publish time. A version carrying `-dev.` is a snapshot and names the CEDAR
 Nexus under `@org.metadatacenter`; anything else is a release for public npmjs,

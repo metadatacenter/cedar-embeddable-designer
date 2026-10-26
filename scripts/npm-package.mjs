@@ -7,7 +7,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT } from './build-output.mjs';
-import { MANIFEST, OUT, sha256 } from './make-bundle.mjs';
+import { VARIANTS, sha256 } from './make-bundle.mjs';
 
 import { verifyProvenance } from './build-provenance.mjs';
 
@@ -43,8 +43,10 @@ export function packageMetadata(rootPackage = readJson(join(ROOT, 'package.json'
     types: 'cedar-embeddable-designer.d.ts',
     files: [
       'cedar-embeddable-designer.js',
+      'cedar-embeddable-designer.host-fonts.js',
       'cedar-embeddable-designer.d.ts',
       'bundle-manifest.json',
+      'bundle-manifest.host-fonts.json',
       'README.md',
       'CHANGELOG.md',
       'license.txt',
@@ -62,30 +64,36 @@ export function packageMetadata(rootPackage = readJson(join(ROOT, 'package.json'
   };
 }
 
-/** The bundle and its manifest, refused if they do not agree. */
+/** Both bundles and their manifests, each refused if the two do not agree. */
 export function assertSourceBundle() {
-  if (!existsSync(OUT) || !existsSync(MANIFEST)) {
-    throw new Error('the bundle is missing.\n  Run: npm run bundle');
-  }
-  const bundle = readFileSync(OUT);
-  const manifest = readJson(MANIFEST);
-  verifyProvenance(manifest.provenance);
-  if (sha256(bundle) !== manifest.sha256) {
-    throw new Error('the bundle does not match its manifest digest.\n  Run: npm run bundle');
-  }
+  const bundles = VARIANTS.map(({ label, dist, out, manifest: manifestFile }) => {
+    if (!existsSync(out) || !existsSync(manifestFile)) {
+      throw new Error(`the ${label} bundle is missing.\n  Run: npm run bundle`);
+    }
+    const bundle = readFileSync(out);
+    const manifest = readJson(manifestFile);
+    verifyProvenance(manifest.provenance, ROOT, dist);
+    if (sha256(bundle) !== manifest.sha256) {
+      throw new Error(`the ${label} bundle does not match its manifest digest.\n  Run: npm run bundle`);
+    }
+    return { bundle, manifest };
+  });
   if (!existsSync(TYPES)) {
     throw new Error('the published declaration is missing.\n  Run: npm run types:public');
   }
-  return { bundle, manifest };
+  const [standalone, hosted] = bundles;
+  return { ...standalone, hosted };
 }
 
 /** Every file the staged package should contain, by name. */
 export function expectedFiles() {
-  const { bundle, manifest } = assertSourceBundle();
+  const { bundle, manifest, hosted } = assertSourceBundle();
   return {
     'cedar-embeddable-designer.js': bundle,
+    'cedar-embeddable-designer.host-fonts.js': hosted.bundle,
     'cedar-embeddable-designer.d.ts': readFileSync(TYPES),
     'bundle-manifest.json': Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`),
+    'bundle-manifest.host-fonts.json': Buffer.from(`${JSON.stringify(hosted.manifest, null, 2)}\n`),
     'README.md': readFileSync(join(ROOT, 'README.md')),
     'CHANGELOG.md': readFileSync(join(ROOT, 'CHANGELOG.md')),
     'license.txt': readFileSync(join(ROOT, 'license.txt')),

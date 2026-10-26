@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `cedar-embeddable-designer.host-fonts.js`, with `bundle-manifest.host-fonts.json`: the same
+  elements without the embedded CEDAR Roboto faces, for a host that registers them for its whole
+  page. The CEDAR Template Designer page loads CEE, the term picker and CED together, and each
+  embedded the same faces. The standalone bundle is unchanged.
 - `validateArtifact(artifact, kind?)` on both elements: the CEDAR meta-schema's verdict on any
   schema artifact. A host can check the exact payload it saves with the validator CED already
   carries, rather than loading its own copy.

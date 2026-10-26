@@ -28,7 +28,7 @@
  */
 import { gzipSync } from 'node:zlib';
 import { readFileSync } from 'node:fs';
-import { OUT, readManifest } from './make-bundle.mjs';
+import { HOST_FONTS_OUT, OUT, VARIANTS, readManifest } from './make-bundle.mjs';
 
 // 2026-09-15: the feature-complete authoring surface, including annotations,
 // alternate and preferred labels, language, type/property picking and manual IRI
@@ -148,33 +148,44 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // 31 compressed bytes to 2,064,812 / 506,366 on the same dependencies, 4 bytes past the raw
 // ceiling. No dependency was added. Allow about 4 KB raw headroom and keep the gzip ceiling. The
 // build budget in angular.json moves by the same 4 KB.
-const RAW_LIMIT = 2_069_000;
-const GZIP_LIMIT = 508_000;
+//
+// The same day the package gained a second bundle, cedar-embeddable-designer.host-fonts.js, for a
+// host that registers the CEDAR fonts for its whole page. It differs from the standalone bundle
+// only by the embedded faces: 122,317 raw / 93,581 gzip-9 bytes. Its ceilings are the standalone
+// ceilings less those bytes, to the nearest hundred, so the two bundles keep the same headroom and
+// move together.
+const LIMITS = {
+  [OUT]: { raw: 2_069_000, gzip: 508_000 },
+  [HOST_FONTS_OUT]: { raw: 1_946_700, gzip: 414_400 },
+};
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
 
-const bundle = readFileSync(OUT);
-const manifest = readManifest();
-
-if (bundle.length !== manifest.bytes) {
-  console.error(`  bundle is ${format(bundle.length)} but its manifest says ${format(manifest.bytes)}.`);
-  console.error('  Run: npm run bundle');
-  process.exit(1);
-}
-
-const gzip = gzipSync(bundle, { level: 9 }).length;
 let failed = false;
+for (const { label, out, manifest: manifestFile } of VARIANTS) {
+  const bundle = readFileSync(out);
+  const manifest = readManifest(manifestFile);
 
-for (const [label, actual, limit] of [
-  ['raw', bundle.length, RAW_LIMIT],
-  ['gzip-9', gzip, GZIP_LIMIT],
-]) {
-  const headroom = limit - actual;
-  if (headroom < 0) {
-    console.error(`  ${label}: ${format(actual)} exceeds its ${format(limit)} ceiling by ${format(-headroom)}.`);
-    failed = true;
-  } else {
-    console.log(`  ${label}: ${format(actual)}, ${format(headroom)} under the ceiling.`);
+  if (bundle.length !== manifest.bytes) {
+    console.error(`  ${label}: bundle is ${format(bundle.length)} but its manifest says ${format(manifest.bytes)}.`);
+    console.error('  Run: npm run bundle');
+    process.exit(1);
+  }
+
+  const gzip = gzipSync(bundle, { level: 9 }).length;
+  for (const [measure, actual, limit] of [
+    ['raw', bundle.length, LIMITS[out].raw],
+    ['gzip-9', gzip, LIMITS[out].gzip],
+  ]) {
+    const headroom = limit - actual;
+    if (headroom < 0) {
+      console.error(
+        `  ${label} ${measure}: ${format(actual)} exceeds its ${format(limit)} ceiling by ${format(-headroom)}.`,
+      );
+      failed = true;
+    } else {
+      console.log(`  ${label} ${measure}: ${format(actual)}, ${format(headroom)} under the ceiling.`);
+    }
   }
 }
 

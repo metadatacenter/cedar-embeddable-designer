@@ -1,6 +1,8 @@
 /**
  * Build `dist-bundle/cedar-embeddable-designer.js` — the single file an embedder
- * downloads — and a manifest recording what went into it.
+ * downloads — and a manifest recording what went into it. The host-fonts build
+ * becomes `cedar-embeddable-designer.host-fonts.js` beside it, with a manifest of
+ * its own, for a host that registers the CEDAR fonts for its whole page.
  *
  * The manifest exists so the size gate and the packaging step can check the copy
  * they are looking at without re-deriving it, and so a staged package can be
@@ -12,13 +14,21 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
-import { DEFAULT_DIST, ROOT, resolveBuildOutput } from './build-output.mjs';
+import { DEFAULT_DIST, HOST_FONTS_DIST, ROOT, resolveBuildOutput } from './build-output.mjs';
 
-import { PROVENANCE, verifyProvenance } from './build-provenance.mjs';
+import { provenanceFile, verifyProvenance } from './build-provenance.mjs';
 
 export const OUT_DIR = join(ROOT, 'dist-bundle');
 export const OUT = join(OUT_DIR, 'cedar-embeddable-designer.js');
 export const MANIFEST = join(OUT_DIR, 'bundle-manifest.json');
+export const HOST_FONTS_OUT = join(OUT_DIR, 'cedar-embeddable-designer.host-fonts.js');
+export const HOST_FONTS_MANIFEST = join(OUT_DIR, 'bundle-manifest.host-fonts.json');
+
+/** Each bundle the package ships, with the build it is made from. */
+export const VARIANTS = [
+  { label: 'standalone', dist: DEFAULT_DIST, out: OUT, manifest: MANIFEST },
+  { label: 'host fonts', dist: HOST_FONTS_DIST, out: HOST_FONTS_OUT, manifest: HOST_FONTS_MANIFEST },
+];
 
 export const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
@@ -75,14 +85,18 @@ export async function produceBundle(dist = DEFAULT_DIST) {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const provenance = JSON.parse(readFileSync(PROVENANCE, 'utf8'));
-  verifyProvenance(provenance);
-  const { bundle, manifest } = await produceBundle();
-  manifest.provenance = provenance;
-  mkdirSync(dirname(OUT), { recursive: true });
-  writeFileSync(OUT, bundle);
-  writeFileSync(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
-  console.log(`  bundle: ${manifest.bytes.toLocaleString('en-US')} bytes (${manifest.sha256.slice(0, 12)}…)`);
+  for (const variant of VARIANTS) {
+    const provenance = JSON.parse(readFileSync(provenanceFile(variant.dist), 'utf8'));
+    verifyProvenance(provenance, ROOT, variant.dist);
+    const { bundle, manifest } = await produceBundle(variant.dist);
+    manifest.provenance = provenance;
+    mkdirSync(dirname(variant.out), { recursive: true });
+    writeFileSync(variant.out, bundle);
+    writeFileSync(variant.manifest, `${JSON.stringify(manifest, null, 2)}\n`);
+    console.log(
+      `  bundle: ${variant.label} ${manifest.bytes.toLocaleString('en-US')} bytes (${manifest.sha256.slice(0, 12)}…)`,
+    );
+  }
 }
 
-export const readManifest = () => JSON.parse(readFileSync(MANIFEST, 'utf8'));
+export const readManifest = (manifest = MANIFEST) => JSON.parse(readFileSync(manifest, 'utf8'));

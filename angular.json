@@ -53,6 +53,15 @@
               ],
               "outputHashing": "none"
             },
+            "host-fonts": {
+              "outputPath": "dist/cedar-embeddable-designer-host-fonts",
+              "fileReplacements": [
+                {
+                  "replace": "src/app/shared/font-registrar/font-registrar.ts",
+                  "with": "src/app/shared/font-registrar/font-registrar.host-fonts.ts"
+                }
+              ]
+            },
             "development": {
               "optimization": false,
               "extractLicenses": false,

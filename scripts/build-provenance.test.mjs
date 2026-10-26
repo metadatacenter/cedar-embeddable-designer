@@ -3,7 +3,14 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, statSync, utimesSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { sourceFingerprint, outputFingerprint, verifyProvenance } from './build-provenance.mjs';
+import {
+  PROVENANCE,
+  provenanceFile,
+  sourceFingerprint,
+  outputFingerprint,
+  verifyProvenance,
+} from './build-provenance.mjs';
+import { HOST_FONTS_DIST } from './build-output.mjs';
 
 test('source/config/dependency edits and altered outputs invalidate a build independently of timestamps', (t) => {
   const root = mkdtempSync(join(tmpdir(), 'ced-provenance-'));
@@ -35,4 +42,13 @@ test('source/config/dependency edits and altered outputs invalidate a build inde
   assert.throws(() => verifyProvenance(undefined, root, dist), /Source/);
   rmSync(dist, { recursive: true });
   assert.throws(() => verifyProvenance(record, root, dist), /Compiled/);
+});
+
+test('each build output keeps its own provenance, so one variant cannot vouch for the other', () => {
+  const standalone = provenanceFile();
+  const hosted = provenanceFile(HOST_FONTS_DIST);
+
+  assert.equal(standalone, PROVENANCE);
+  assert.notEqual(hosted, standalone);
+  assert.ok(hosted.startsWith(HOST_FONTS_DIST));
 });

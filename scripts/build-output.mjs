@@ -17,6 +17,8 @@ import { fileURLToPath } from 'node:url';
 
 export const ROOT = fileURLToPath(new URL('..', import.meta.url));
 export const DEFAULT_DIST = join(ROOT, 'dist/cedar-embeddable-designer');
+/** The `host-fonts` configuration's output: the same element without embedded text fonts. */
+export const HOST_FONTS_DIST = join(ROOT, 'dist/cedar-embeddable-designer-host-fonts');
 
 /** Load order matters: the polyfills install globals the entry expects. */
 const ROLES = [
