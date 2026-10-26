@@ -24,6 +24,15 @@ beforeEach(() => {
   TestBed.configureTestingModule({});
 });
 
+it('judges a field a host hands it as the designer element does', () => {
+  const { editor } = create('text');
+  name(editor);
+  const field = editor.currentArtifact as Record<string, unknown>;
+  expect(editor.validateArtifact(field as never, 'field').canSave).toBe(true);
+  const unnamed = { ...field, 'schema:name': '' };
+  expect(editor.validateArtifact(unnamed as never, 'field').canSave).toBe(false);
+});
+
 for (const type of Object.keys(FIELD_TYPES) as CedFieldType[]) {
   it(`creates, edits and reloads a standalone ${type} without changing its identity`, () => {
     const { editor, service } = create(type);

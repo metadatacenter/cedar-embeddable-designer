@@ -143,7 +143,12 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // 2,057,237 raw / 504,219 gzip-9 bytes, past the 2026-10-22 ceilings by 2,237 / 219 bytes. No
 // dependency was added. Allow about 7.8 KB raw / 3.8 KB compressed headroom. The standalone
 // application's build-app budget moves by the same 10 KB.
-const RAW_LIMIT = 2_065_000;
+// 2026-10-26: the elements' validateArtifact, which hands a host the meta-schema verdict the
+// designer already computes, measures 2,065,004 raw / 506,397 gzip-9 bytes. That adds 192 raw /
+// 31 compressed bytes to 2,064,812 / 506,366 on the same dependencies, 4 bytes past the raw
+// ceiling. No dependency was added. Allow about 4 KB raw headroom and keep the gzip ceiling. The
+// build budget in angular.json moves by the same 4 KB.
+const RAW_LIMIT = 2_069_000;
 const GZIP_LIMIT = 508_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;

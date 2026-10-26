@@ -128,6 +128,11 @@ export interface CedarEmbeddableDesignerElement extends HTMLElement {
   readonly validationReport: CedValidationReport;
   readonly canSave: boolean;
   validate(): CedValidationReport;
+  /**
+   * The CEDAR meta-schema's verdict on any schema artifact, not only the open one: the same check the
+   * designer applies to its own document. `kind` is read from the artifact's `@type` when omitted.
+   */
+  validateArtifact(artifact: CedJsonObject, kind?: CedArtifactKind): CedArtifactVerdict;
   addEventListener(
     type: 'validationChange',
     listener: (event: CustomEvent<CedValidationReport>) => void,
@@ -205,6 +210,29 @@ export interface CedSupersededShape {
    */
   code: 'numberType' | 'termDefault' | 'fieldOrder' | 'termTextConstraint';
   value?: CedJsonValue;
+}
+
+export type CedArtifactKind = 'template' | 'element' | 'field';
+
+/** One reason the CEDAR meta-schema gives for its verdict on an artifact. */
+export interface CedArtifactFinding {
+  code: string;
+  category: 'structural' | 'constraint' | 'completeness' | 'verification';
+  /** JSON Pointer into the artifact, including array indexes and the offending property. */
+  path: string;
+  message: string;
+  verificationStatus?: 'passed' | 'failed' | 'notChecked' | 'unavailable';
+}
+
+/**
+ * What `validateArtifact` returns. `canSave` is false exactly when a finding would make the CEDAR
+ * server refuse to store the artifact. `isValid` is false also when an applicable check could not run.
+ */
+export interface CedArtifactVerdict {
+  findings: CedArtifactFinding[];
+  structurallyValid: boolean;
+  canSave: boolean;
+  isValid: boolean;
 }
 
 export interface CedValidationReport {
@@ -375,6 +403,8 @@ export interface CedarEmbeddableFieldDesignerElement extends HTMLElement {
   revealValidationFinding(location: string): boolean;
   readonly validationReport: CedValidationReport;
   validate(): CedValidationReport;
+  /** The CEDAR meta-schema's verdict on any schema artifact; see `CedarEmbeddableDesignerElement`. */
+  validateArtifact(artifact: CedJsonObject, kind?: CedArtifactKind): CedArtifactVerdict;
   addEventListener(
     type: 'artifactChange',
     listener: (event: CustomEvent<CedJsonObject>) => void,

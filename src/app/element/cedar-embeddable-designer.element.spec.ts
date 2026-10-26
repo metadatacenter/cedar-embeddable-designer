@@ -3,7 +3,7 @@ import { CedarEmbeddableDesignerElementComponent } from './cedar-embeddable-desi
 import { TemplateService } from '../core/services/template.service';
 import { TerminologyService } from '../core/services/terminology.service';
 import { templateToJson, JsonSourcePolicy } from '../core/model/cedar-template';
-import { CedConfig } from '../ced-public-api';
+import { CedConfig, CedJsonObject } from '../ced-public-api';
 
 /**
  * The element's own contract, at unit level.
@@ -47,6 +47,21 @@ describe('CedarEmbeddableDesignerElementComponent', () => {
     expect(second.debugElement.injector.get(TerminologyService).baseUrl()).toBe('https://second.example/');
     expect(a.getActivePreset()).toBe('semantic');
     expect(b.getActivePreset()).toBe('basic');
+  });
+
+  it('judges an artifact a host hands it without loading it', () => {
+    const element = create().componentInstance;
+    element.newArtifact('template');
+    service.templateName.set('Judged');
+    const artifact = element.currentArtifact as CedJsonObject;
+    const open = JSON.stringify(artifact);
+    expect(element.validateArtifact(artifact).canSave).toBe(true);
+    // A retained `_ui.pages` is what a host's merged payload can carry and the server refuses.
+    const refused = { ...artifact, _ui: { ...(artifact['_ui'] as CedJsonObject), pages: [] } };
+    const verdict = element.validateArtifact(refused);
+    expect(verdict.canSave).toBe(false);
+    expect(verdict.findings.some((finding) => finding.path.startsWith('/_ui/pages'))).toBe(true);
+    expect(JSON.stringify(element.currentArtifact)).toBe(open);
   });
 
   it('lets a host start an element, track edits and explicitly reject an unreadable load', () => {

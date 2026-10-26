@@ -472,6 +472,13 @@ its stored copy first. Otherwise a retained branch carries the shape back to the
 refuses the save, and the author has nothing in CED to repair. `superseded` is present only when it
 lists something, never affects `valid` or `canSave`, and stays the same until the next load.
 
+`designer.validateArtifact(artifact, kind?)` (also supported by CEFD) returns the CEDAR meta-schema's
+verdict on any schema artifact, not only the open one: `{ findings, structurallyValid, canSave,
+isValid }`, each finding with a `code`, a `category`, a JSON Pointer `path` and a `message`. It is
+the check CED applies to its own document, so a host that saves a merged payload can check that
+payload with the same validator CED carries rather than loading a second copy. `kind` is read from
+the artifact's `@type` when omitted. Calling it changes nothing in the designer.
+
 Set `designer.readOnly` when the user may not change the document. Nothing in it can
 then be edited and `canSave` is false. CED also marks none of the document's
 problems, since a reader can fix none of them. `validationReport` still lists them,

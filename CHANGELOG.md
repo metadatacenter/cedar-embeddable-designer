@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `validateArtifact(artifact, kind?)` on both elements: the CEDAR meta-schema's verdict on any
+  schema artifact. A host can check the exact payload it saves with the validator CED already
+  carries, rather than loading its own copy.
 - `validationReport.superseded`: the stored shapes CED's projection replaced when an artifact
   was loaded and the CEDAR validator refuses, each with its location and the value the projection
   holds, so that a host merging the projection into the stored artifact stops retaining them.
