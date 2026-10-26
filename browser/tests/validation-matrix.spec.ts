@@ -174,7 +174,8 @@ for (const depth of [0, 3, 6])
       const artifact = source('number', depth);
       let container = artifact;
       for (let level = 1; level <= depth; level++) container = child(container, `Level ${level}`);
-      container._annotations = { source: { '@id': 'https://' } };
+      // A blank value: the model library refuses an annotation IRI CED would flag before CED can open it.
+      container._annotations = { source: { '@value': '' } };
       await load(page, artifact);
       await expect.poll(async () => (await report(page)).issues.length).toBe(2);
       await designer.locator('.validation-summary summary').click();
@@ -190,7 +191,7 @@ for (const depth of [0, 3, 6])
             .fill('50');
         else {
           const panel = designer.getByRole('tabpanel', { name: 'Annotations', exact: true });
-          await expect(panel.getByText('https://', { exact: true })).toBeVisible();
+          await expect(panel.getByText('source', { exact: true })).toBeVisible();
           await panel.getByRole('button', { name: 'Remove annotation 1', exact: true }).click();
         }
       }
