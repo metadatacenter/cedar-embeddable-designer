@@ -24,7 +24,10 @@ The shipped declaration describes those properties and events. The original
 plain `<script>` tag, its type declaration, and a staged npm directory.
 Development snapshots are published to CEDAR Nexus as
 `@org.metadatacenter/cedar-embeddable-designer`. The split Designer host pins an
-exact snapshot. CED is not yet released on public npmjs.
+exact snapshot for registry installs. Local `cedarcli build frontends` supplies current local
+component sources, including uncommitted edits, automatically; `cedarcli test frontends` checks
+them without deployment. No publication, pin update or follow-up approval is required for either.
+CED is not yet released on public npmjs.
 
 Serialization is the
 [CEDAR model library's](https://github.com/metadatacenter/cedar-model-typescript-library).
@@ -107,7 +110,7 @@ states user-visible text without going through them.
 
 ## Requirements
 
-Node 24.22.0, as named by `.nvmrc` and matching CEE and the term picker.
+Node 24.22.1, as named by `.nvmrc` and matching CEE and the term picker.
 
 ```bash
 nvm use
@@ -309,6 +312,9 @@ share a live cache. The browser tests and the visual baselines then share the
 budget: the baselines take two workers in their container when the budget is at
 least six, one otherwise, and the browser tests the rest. A failed stage blocks the distribution, browser and visual stages; each stage
 prints its elapsed time. `test:ci` therefore needs Docker, as `test:visual` does.
+It also enables the WebKit interaction project alongside Chromium. Install both
+engines before running the complete gate:
+`./browser/node_modules/.bin/playwright install --with-deps chromium webkit`.
 
 The browser suite is the one that matters most, because it is the only one that
 can see the failures this component has actually had: an element that never
@@ -454,6 +460,17 @@ Assign `[]` to clear a report without touching the document or those drafts. The
 discard asynchronous findings for an obsolete submission before assigning them, owns server
 requests and permission checks, and should pass a new report only when its contents change.
 Messages are supplied by the host and displayed as text, without translation or HTML rendering.
+
+A stored artifact can hold a shape CED cannot represent and the CEDAR validator refuses: a
+numeric field whose datatype is missing or unsupported, a controlled-term default stored as text,
+an order on a field, or a length limit or pattern on a controlled-term field. CED's projection then
+holds something else in its place. The report lists each such shape under `superseded`, with its
+JSON Pointer `location` in the artifact as it was loaded, a `code`, and the `value` the projection
+holds, which is absent when the projection omits the key. A host that saves by merging CED's
+projection into the stored artifact, retaining what the author did not change, applies these to
+its stored copy first. Otherwise a retained branch carries the shape back to the server, which
+refuses the save, and the author has nothing in CED to repair. `superseded` is present only when it
+lists something, never affects `valid` or `canSave`, and stays the same until the next load.
 
 Set `designer.readOnly` when the user may not change the document. Nothing in it can
 then be edited and `canSave` is false. CED also marks none of the document's
@@ -647,8 +664,9 @@ keys and wrong value types produce diagnostics without disabling valid siblings.
 
 The control, spacing and font exports resolve from the exact Nexus token snapshot
 in `package.json` and `package-lock.json`; a normal `npm ci` installs them. For
-unpublished token development, install a packed local tarball in both CEE and
-CED as described in the frontend runbook. Before pushing a consumer that needs
+unpublished token development, run `cedarcli test frontends` or `cedarcli build frontends`;
+the reactor automatically supplies the current local token package to both CEE and CED.
+For registry-based CI, before pushing a consumer that needs
 new exports, publish a new token snapshot, update both pins and verify a clean
 `npm ci` build. The real-CEF integration workflow must also pin a CEE revision
 that supports the adopted control profile.

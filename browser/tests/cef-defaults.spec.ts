@@ -426,44 +426,53 @@ test('a known invalid controlled default is rejected by selection and blocks an 
 test('the real picker selects a default within the field vocabulary', async ({ page }) => {
   test.skip(!process.env.PICKER_BUNDLE, 'PICKER_BUNDLE names the actual term-picker bundle.');
   const iri = 'http://purl.obolibrary.org/obo/DOID_162';
-  await page.route('**/fake-terminology/search', async (route) => {
+  // The picker searches within the field's constraints, as the metadata editor offers its values,
+  // rather than across the ontologies they name.
+  await page.route('**/fake-terminology/search', (route) => route.abort());
+  let searchedWithin = false;
+  await page.route('**/fake-terminology/bioportal/integrated-search', async (route) => {
     const request = route.request().postDataJSON();
-    expect(request.types).toEqual(['class']);
-    expect(request.sources).toEqual([{ sourceAcronym: 'DOID', version: { id: 'pinned-release' } }]);
+    expect(request.parameterObject.inputText).toBe('cancer');
+    // The field repeats one pin; it is searched once, and the second release stays a release of its own.
+    expect(request.parameterObject.valueConstraints).toEqual({
+      ontologies: [
+        {
+          acronym: 'DOID',
+          name: 'Disease Ontology',
+          uri: 'https://data.bioontology.org/ontologies/DOID',
+          version: { id: 'pinned-release' },
+        },
+        {
+          acronym: 'DOID',
+          name: 'Disease Ontology',
+          uri: 'https://data.bioontology.org/ontologies/DOID',
+          version: { id: 'another-release' },
+        },
+      ],
+      branches: [],
+      classes: [],
+      valueSets: [],
+      actions: [
+        { action: 'delete', termUri: 'urn:excluded', type: 'OntologyClass', source: 'DOID', sourceUri: 'urn:doid' },
+      ],
+    });
+    searchedWithin = true;
+    // One term in all, so a page after the first holds nothing, as the server's would.
     await route.fulfill({
       json: {
-        query: request.query,
-        sources: [
-          {
-            sourceSystem: 'bioportal',
-            sourceAcronym: 'DOID',
-            sourceName: 'Disease Ontology',
-            served: 'local',
-            pinnable: true,
-          },
-        ],
-        results: {
-          class: {
-            totalCount: 1,
-            countCapped: false,
-            page: 1,
-            pageSize: 25,
-            collection: [
-              {
-                type: 'class',
-                sourceSystem: 'bioportal',
-                sourceAcronym: 'DOID',
-                termIri: iri,
-                termType: 'class',
-                termLabel: 'cancer',
-                obsolete: false,
-                hasChildren: false,
-                descendantCount: 0,
-                matchType: 'termLabel',
-              },
-            ],
-          },
-        },
+        totalCount: 1,
+        collection:
+          (request.page ?? 1) > 1
+            ? []
+            : [
+                {
+                  '@id': iri,
+                  id: 'DOID_162',
+                  type: 'OntologyClass',
+                  prefLabel: 'cancer',
+                  source: 'https://data.bioontology.org/ontologies/DOID',
+                },
+              ],
       },
     });
   });
@@ -525,8 +534,9 @@ test('the real picker selects a default within the field vocabulary', async ({ p
   await control.getByRole('button', { name: 'Edit default term' }).click();
   const picker = control.locator('cedar-embeddable-term-picker');
   await expect(control.getByRole('dialog', { name: 'Choose default term' })).toBeVisible();
-  await expect(picker.getByLabel('Search vocabulary and release').locator('option')).toHaveCount(2);
+  await expect(picker.locator('.narrowing .chip.within')).toHaveCount(2);
   await picker.locator('input[type=search]').fill('cancer');
+  await expect.poll(() => searchedWithin).toBe(true);
   await expect(picker.locator('.tab')).toHaveCount(1);
   await picker.locator('.rowhead').first().click();
   await picker.locator('.child.pick').first().click();

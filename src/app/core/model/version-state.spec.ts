@@ -15,10 +15,8 @@ import {
   blockedByInstances,
   candidateVersion,
   compareVersions,
-  compatibleUpgrade,
   OriginLookup,
   otherPlaces,
-  reusedChildren,
   Verdict,
   VersionAction,
   versionActions,
@@ -143,25 +141,6 @@ describe('version states', () => {
     const root = template(field('Title'));
     expect(versionState(root, root.id)).toBeNull();
     expect(versionState(root, -1)).toBeNull();
-  });
-
-  it('summarizes linked and forked children, but nothing inside a linked element', () => {
-    const linked = field('Linked', true);
-    const forked = field('Forked', false, ORIGIN);
-    const local = field('Local');
-    const insideLinked = field('Inside', false, ORIGIN);
-    const linkedElement = element('Published', true, null, insideLinked);
-    const nestedFork = field('Nested fork', false, ORIGIN);
-    const forkedElement = element('Copied', false, ORIGIN, nestedFork);
-    const draftElement = element('Draft', false, null, linked);
-    const root = template(local, forked, linkedElement, forkedElement, draftElement);
-    expect(reusedChildren(root).map((node) => node.definition.name)).toEqual([
-      'Forked',
-      'Published',
-      'Copied',
-      'Nested fork',
-      'Linked',
-    ]);
   });
 
   it('finds the other copies of the same stored artifact, of the same kind only', () => {
@@ -317,11 +296,5 @@ describe('version actions', () => {
   it('marks only a breaking candidate with instances as blocked', () => {
     for (const [name, lookup] of Object.entries(LOOKUPS))
       expect(blockedByInstances(lookup)).toBe(name === 'newer, breaking, 3 instances');
-  });
-
-  it('upgrades in one step only the linked children with a compatible candidate', () => {
-    for (const [stateName, state] of Object.entries(STATES))
-      for (const [name, lookup] of Object.entries(LOOKUPS))
-        expect(compatibleUpgrade(state, lookup)).toBe(stateName === 'linked' && name === 'newer, compatible');
   });
 });

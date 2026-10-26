@@ -313,7 +313,7 @@
     },
     "namedField": "{{name}}: {{message}}",
     "occurrences": {
-      "range": "A minimum és a maximum nem lehet negatív, és a minimum nem lehet nagyobb a maximumnál.",
+      "range": "A minimum és maximum 0 és 2147483647 közötti egész szám legyen. A minimum nem lehet nagyobb a maximumnál.",
       "attributeValueMinimum": "Az attribútum-érték mező minimuma csak 0 lehet, mert az attribútumokat az nevezi meg, aki az űrlapot kitölti."
     },
     "yaml": {
@@ -341,7 +341,8 @@
     "importDestinationMissing": "Az importálás célja már nem létezik.",
     "destinationMissing": "A cél már nem létezik.",
     "chooseFieldOrElement": "Válasszon mező- vagy elemartefaktumot.",
-    "elementMissing": "Az elem már nem létezik."
+    "elementMissing": "Az elem már nem létezik.",
+    "oneFieldDefinition": "Pontosan egy meződefiníció szükséges."
   },
   "fieldCard": {
     "published": "Ez a mező közzétett, ezért csak a konfigurációja módosítható.",
@@ -766,9 +767,6 @@
     },
     "owner": "Tulajdonos",
     "folder": "Mappa",
-    "versions": "Verziók",
-    "versionNumber": "v{{version}}",
-    "reused": "Hivatkozott és másolt gyermekek",
     "note": {
       "local": "Nincs újrahasznosítható összetevőként tárolva.",
       "linked": "Ez a(z) {{name}} v{{version}}.",
@@ -792,13 +790,7 @@
       },
       "publishedDocument": "A frissítéshez hozzon létre új verziót.",
       "alsoUsed": "Máshol is szerepel: {{names}}.",
-      "noReused": "Egyik gyermek sem hivatkozik tárolt összetevőre, és egyik sem másolat.",
       "notStored": "Nincs olvasható tárolt verzió."
-    },
-    "summary": {
-      "linked": "Hivatkozott, v{{version}}.",
-      "forked": "Másolat, forrása: {{name}} v{{version}}.",
-      "forkedUnlisted": "Másolat, forrása: {{origin}}."
     },
     "action": {
       "open": "Eredeti megnyitása",
@@ -810,8 +802,7 @@
       "replaceCompatible": "Csere a forrás v{{version}} verziójára (kompatibilis)",
       "replaceBreaking": "Csere a forrás v{{version}} verziójára (nem kompatibilis)",
       "saveDraft": "Mentés újrahasznosítható vázlatként",
-      "publish": "Közzététel újrahasznosíthatóként",
-      "upgradeAll": "Minden kompatibilis frissítése"
+      "publish": "Közzététel újrahasznosíthatóként"
     },
     "replaceDialog": {
       "title": "Csere a forrás v{{version}} verziójára?",

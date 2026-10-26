@@ -252,28 +252,16 @@ describe('the Version tab', () => {
     expect(tab.notes()[0]).toBe('Part of Group v1.2.0. It changes only when that element is upgraded.');
   });
 
-  it("summarizes the document's linked and copied children and upgrades the compatible ones", async () => {
+  it("lists no children on the document's own tab and offers no upgrade there", async () => {
     service.childSource.set(host({ newer: true, verdict: { compatible: true }, open: false, save: false }));
     importInto(fieldArtifact('v120', '1.2.0', true));
     const tab = await panel(service.session.document().id);
-    expect(tab.element.querySelector('.version-caption')?.textContent?.trim()).toBe('Linked and copied children');
-    const summary = tab.element.querySelectorAll('dl.identity')[1];
-    expect(summary.querySelector('dd')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
-      'Linked, v1.2.0. The newest available published version is v1.3.0. It is compatible: every instance that is valid now stays valid.',
-    );
-    expect(tab.buttons()).toEqual(['Upgrade all compatible']);
-    (tab.element.querySelector('.version-actions button') as HTMLButtonElement).click();
-    await settle();
-    expect(service.session.document().children[0].definition).toMatchObject({ atId: iri('v130') });
-  });
-
-  it('says a document without linked or copied children has none to summarize', async () => {
-    const tab = await panel(service.session.document().id);
-    expect(tab.notes()).toEqual(['No child is linked to a stored artifact or copied from one.']);
+    expect(tab.element.querySelectorAll('dl.identity')).toHaveLength(1);
+    expect(tab.notes()).toEqual([]);
     expect(tab.buttons()).toEqual([]);
   });
 
-  it('offers nothing in a published template, and says a new version is needed to upgrade', async () => {
+  it('offers nothing in a published template, and says on the child that a new version is needed to upgrade', async () => {
     service.childSource.set(host({ newer: true, verdict: { compatible: true }, open: false, save: true }));
     importInto(fieldArtifact('v120', '1.2.0', true));
     service.loadTemplate({ ...(service.templateJson() as CedJsonObject), 'bibo:status': 'bibo:published' });
@@ -282,9 +270,10 @@ describe('the Version tab', () => {
     const child = await panel(linked.id);
     expect(child.buttons()).toEqual([]);
     expect(child.notes()).toContain('Create a new version to upgrade.');
+    // The template's own tab speaks only of the template's versions, not of its children's.
     const own = await panel(service.session.document().id);
     expect(own.buttons()).toEqual([]);
-    expect(own.notes()).toContain('Create a new version to upgrade.');
+    expect(own.notes()).toEqual([]);
   });
 });
 

@@ -95,6 +95,7 @@
                   [terminologyBaseUrl]="terminologyBaseUrl()"
                   [language]="language()"
                   [selectionMode]="'term'"
+                  [fieldConstraints]="field().controlledTermConstraints"
                   [sources]="pickerSources()"
                   (selected)="selectTerm($event)"
                   (cancelled)="dismissPicker()"

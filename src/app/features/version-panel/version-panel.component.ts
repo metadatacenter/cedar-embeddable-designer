@@ -8,11 +8,9 @@ import { elementDisplayName, fieldDisplayName } from '../../core/model/field-dis
 import {
   blockedByInstances,
   childVersion,
-  compatibleUpgrade,
   OriginLookup,
   originVersion,
   otherPlaces,
-  reusedChildren,
   VersionAction,
   versionActions,
   VersionState,
@@ -29,12 +27,16 @@ interface Note {
   readonly params?: Readonly<Record<string, string | number>>;
 }
 
-/** One linked or copied child in the document's own summary. */
-interface SummaryRow {
+/** What a Version tab's lookups were made for. */
+interface LookupContext {
+  readonly generation: number;
+  readonly document: ContainerDraft;
   readonly id: number;
-  readonly name: string;
-  readonly notes: readonly Note[];
+  readonly ownTab: boolean;
 }
+
+/** How long an edit must rest before a child's verdict is asked for again. */
+const LOOKUP_AFTER_EDIT_MS = 400;
 
 function displayName(node: ChildNode): string {
   return node.kind === 'field' ? fieldDisplayName(fieldView(node)) : elementDisplayName(node);
@@ -111,7 +113,6 @@ export class VersionPanelComponent {
   readonly active = input(false);
   readonly service = inject(TemplateService);
   readonly versions = inject(ChildVersionService);
-  readonly publicationStatusLabel = publicationStatusLabel;
 
   private readonly document = computed<ContainerDraft>(() => this.service.session.document());
   /** Whether this is the document's own tab. A standalone field is its own document. */
@@ -223,60 +224,18 @@ export class VersionPanelComponent {
     };
   });
 
-  /** The document's own tab: every linked and copied child, with what its lookup found. */
-  readonly summary = computed<SummaryRow[]>(() => {
-    if (!this.ownTab()) return [];
-    const root = this.document();
-    return reusedChildren(root).flatMap((node): SummaryRow[] => {
-      const state = versionState(root, node.id);
-      if (!state) return [];
-      const lookup = this.versions.lookup(node.id);
-      const origin = originVersion(state, lookup);
-      const first: Note =
-        state.kind === 'linked'
-          ? { key: 'version.summary.linked', params: { version: childVersion(node) ?? '' } }
-          : origin
-            ? { key: 'version.summary.forked', params: { name: origin.name, version: origin.version ?? '' } }
-            : {
-                key: 'version.summary.forkedUnlisted',
-                params: { origin: state.kind === 'forked' ? state.origin : '' },
-              };
-      return [{ id: node.id, name: displayName(node), notes: [first, ...lookupNotes(state, lookup)] }];
-    });
-  });
-  readonly history = computed<CedArtifactVersion[]>(() => {
-    const lookup = this.lookup();
-    return this.ownTab() && lookup.status === 'found' ? [...lookup.versions] : [];
-  });
-  readonly upgradeAll = computed(() => {
-    if (!this.ownTab() || this.service.access.readOnly()) return false;
-    const root = this.document();
-    return reusedChildren(root).some((node) => {
-      const state = versionState(root, node.id);
-      return (
-        !!state && compatibleUpgrade(state, this.versions.lookup(node.id)) && !this.service.placementLocked(node.id)
-      );
-    });
-  });
+  /** What the document's own tab says of its own versions, when they could not be read. */
   readonly ownNotes = computed<Note[]>(() => {
     if (!this.ownTab()) return [];
     const notes: Note[] = [];
     const lookup = this.lookup();
     if (lookup.status === 'unreadable') notes.push({ key: 'version.note.notStored' });
     if (lookup.status === 'failed') notes.push({ key: 'version.note.failed' });
-    if (!this.service.fieldDocumentMode() && !this.summary().length) notes.push({ key: 'version.note.noReused' });
-    if (this.documentPublished() && this.summary().some((row) => this.hasCandidate(row.id)))
-      notes.push({ key: 'version.note.publishedDocument' });
     return notes;
   });
 
-  private hasCandidate(id: number): boolean {
-    const lookup = this.versions.lookup(id);
-    return lookup.status === 'found' && !!lookup.candidate;
-  }
-
   /** Bind assessments to the complete document, including parent placement and other children. */
-  private readonly lookupContext = computed(() => {
+  private readonly lookupContext = computed<LookupContext | null>(() => {
     if (!this.active()) return null;
     return {
       generation: this.versions.generation(),
@@ -285,18 +244,37 @@ export class VersionPanelComponent {
       ownTab: this.ownTab(),
     };
   });
+  private lookedUp: LookupContext | null = null;
 
   constructor() {
+    // The document's own versions belong to the stored artifact it is, so they are looked up when the
+    // tab opens and when the document becomes another artifact, and not on every edit.
     effect(() => {
-      if (this.lookupContext() === null) return;
-      untracked(() => {
-        if (this.ownTab()) {
-          this.versions.refreshDocument();
-          if (!this.service.fieldDocumentMode()) this.versions.refreshAll();
-        } else {
-          this.versions.refresh(this.nodeId());
-        }
-      });
+      if (!this.active() || !this.ownTab()) return;
+      this.versions.generation();
+      this.versions.documentSignature();
+      untracked(() => this.versions.refreshDocument());
+    });
+    // A child's verdict weighs the whole document, so an edit asks again. It waits until typing
+    // pauses: asking on every keystroke sent the host a request each time.
+    effect((onCleanup) => {
+      const context = this.lookupContext();
+      const previous = this.lookedUp;
+      this.lookedUp = context;
+      if (context === null || context.ownTab) return;
+      const lookUp = () => untracked(() => this.versions.refresh(context.id));
+      const edited =
+        previous !== null &&
+        previous.id === context.id &&
+        previous.ownTab === context.ownTab &&
+        previous.generation === context.generation &&
+        previous.document !== context.document;
+      if (!edited) {
+        lookUp();
+        return;
+      }
+      const timer = setTimeout(lookUp, LOOKUP_AFTER_EDIT_MS);
+      onCleanup(() => clearTimeout(timer));
     });
   }
 
@@ -327,9 +305,5 @@ export class VersionPanelComponent {
   confirmReplace(dialog: HTMLDialogElement): void {
     dialog.close();
     void this.versions.replace([this.nodeId()]);
-  }
-
-  upgradeCompatible(): void {
-    void this.versions.upgradeCompatible();
   }
 }

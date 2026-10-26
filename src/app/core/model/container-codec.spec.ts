@@ -103,3 +103,14 @@ it('does not trim non-JSON whitespace before strict source parsing', () => {
   }
   expect(readContainer(' \t\r\n' + json).name).toBe('Whitespace');
 });
+
+// The model's builders refuse a name made only of whitespace. The designer reports a blank name as
+// missing, and builds the template, the element and the preview with the empty name meanwhile.
+it('builds a container whose name is only whitespace with the empty name', () => {
+  for (const name of [' ', ' \t\n ']) {
+    for (const kind of ['template', 'element'] as const) {
+      expect(templateToJson(buildContainer(newContainer(kind, name)))['schema:name']).toBe('');
+    }
+    expect(templateToJson(containerPreview(newContainer('element', name)))['schema:name']).toBe('');
+  }
+});

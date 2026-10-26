@@ -84,6 +84,11 @@ export class FieldDefaultValueComponent {
   readonly draft = signal('');
   private defaultKey = '';
   readonly checking = computed(() => this.service.validation.isChecking(this.field().id, 'defaultValue'));
+  /**
+   * The ontologies the field's constraints name, for a host page that still loads a picker from
+   * before `fieldConstraints`. Such a picker could search no narrower than these; a current one
+   * searches within the constraints themselves and ignores this.
+   */
   readonly pickerSources = computed(() => {
     const sources = (this.field().controlledTermConstraints?.constraints ?? []).flatMap((config) => {
       const source = config.sourceType === 'ontology-branch' ? config.sourceId : (config.ontologyId ?? config.sourceId);

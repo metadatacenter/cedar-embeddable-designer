@@ -99,7 +99,9 @@ function buildControlledTerm(builder: FieldBuilder, config: ControlledTermConfig
             .withSource(config.source ?? config.sourceId ?? '')
             .withAcronym(config.sourceId ?? '')
             .withName(config.branchRootName ?? '')
-            .withMaxDepth(config.searchDepth ?? 1)
+            // No depth means every level, as the terminology server and the legacy designer read it.
+            // Writing 1 turned a branch without one into its root's direct subtypes on the next save.
+            .withMaxDepth(config.searchDepth ?? 0)
             .build(),
         );
       }

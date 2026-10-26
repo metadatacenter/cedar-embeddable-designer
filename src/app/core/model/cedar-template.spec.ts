@@ -466,6 +466,31 @@ describe('controlled-term constraints', () => {
     expect(built.valueConstraints.branches[0].maxDepth).toBe(3);
   });
 
+  it('writes a branch that states no depth as reaching every level', () => {
+    const built = buildTemplate(
+      templateOf(
+        field({
+          type: 'controlledTerms',
+          name: 'F',
+          controlledTermConstraints: {
+            constraints: [
+              {
+                sourceType: 'ontology-branch',
+                sourceId: 'DOID',
+                branchRootId: 'http://purl.obolibrary.org/obo/DOID_4',
+                branchRootName: 'disease',
+              },
+            ],
+            actions: [],
+          },
+        }),
+      ),
+    ).getField('F') as ControlledTermField;
+
+    // 0 is every level, as the terminology server reads an absent depth; 1 would be direct subtypes.
+    expect(built.valueConstraints.branches[0].maxDepth).toBe(0);
+  });
+
   it('carries a single-term constraint', () => {
     const built = buildTemplate(
       templateOf(
@@ -970,7 +995,8 @@ describe('complete controlled-term constraints', () => {
     customUriSource.properties.Terms._valueConstraints.ontologies[0].uri = 'https://custom.example/ontology/0';
     const customUriModel = readTemplate(JSON.stringify(customUriSource));
     expect(templateToJson(customUriModel)).toEqual(customUriSource);
-    expect(() => templateToYaml(customUriModel)).toThrow(/Export JSON/);
+    // YAML keeps an ontology address outside BioPortal as its sourceUri, so the template survives it.
+    expect(templateToJson(readTemplate(templateToYaml(customUriModel)))).toEqual(customUriSource);
     const imported = readTemplate(JSON.stringify(initial));
     for (const source of [templateToJson(imported), templateToYaml(imported)]) {
       const opened = toDesignerTemplate(readTemplate(source));
@@ -1252,5 +1278,13 @@ it('preserves exact numeric defaults and bounds through designer JSON and YAML i
       expect(read.fields[0].defaultValue).toEqual({ kind: 'number', value });
       expect(JsonSourcePolicy.stringify(templateToJson(buildTemplate(read)))).toBe(json);
     }
+  }
+});
+
+// The model's builders refuse a name made only of whitespace. The designer reports a blank name as
+// missing, and builds the field with the empty name meanwhile.
+it('builds a field whose name is only whitespace with the empty name', () => {
+  for (const name of [' ', ' \t\n ']) {
+    expect(fieldToJson(field({ name }))['schema:name']).toBe('');
   }
 });

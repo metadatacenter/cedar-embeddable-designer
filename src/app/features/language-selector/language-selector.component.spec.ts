@@ -11,6 +11,10 @@ for (const kind of ['text', 'richText', 'image', 'youtube', 'sectionBreak', 'pag
     const isField = !['template', 'element'].includes(kind);
     if (isField) service.addField(kind, 0);
     if (kind === 'element') service.addElement(service.document().id);
+    // Named, since the YAML round trip below refuses a child without a name, as both readers do.
+    if (isField) service.updateFieldName(service.fields()[0].id, 'Value');
+    const added = service.document().children.find((node) => node.kind === 'element');
+    if (added?.kind === 'element') service.updateOwnElementName(added, 'Group');
     const fixture = TestBed.createComponent(LanguageSelectorComponent);
     const refresh = async () => {
       const element = service.document().children.find((node) => node.kind === 'element');

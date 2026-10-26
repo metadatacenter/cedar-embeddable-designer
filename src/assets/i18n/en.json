@@ -313,7 +313,7 @@
     },
     "namedField": "{{name}}: {{message}}",
     "occurrences": {
-      "range": "Minimum and maximum must be nonnegative numbers, with minimum no greater than maximum.",
+      "range": "Minimum and maximum must be whole numbers from 0 to 2147483647, with minimum no greater than maximum.",
       "attributeValueMinimum": "An attribute-value field's minimum must be 0, because whoever fills in the form names its attributes."
     },
     "yaml": {
@@ -341,7 +341,8 @@
     "importDestinationMissing": "The import destination no longer exists.",
     "destinationMissing": "The destination no longer exists.",
     "chooseFieldOrElement": "Choose a field or element artifact.",
-    "elementMissing": "The element no longer exists."
+    "elementMissing": "The element no longer exists.",
+    "oneFieldDefinition": "Expected one field definition."
   },
   "fieldCard": {
     "published": "This field is published, so only its configuration can change.",
@@ -766,9 +767,6 @@
     },
     "owner": "Owner",
     "folder": "Folder",
-    "versions": "Versions",
-    "versionNumber": "v{{version}}",
-    "reused": "Linked and copied children",
     "note": {
       "local": "It is not stored as a reusable artifact.",
       "linked": "This is {{name}} v{{version}}.",
@@ -792,13 +790,7 @@
       },
       "publishedDocument": "Create a new version to upgrade.",
       "alsoUsed": "Also used as {{names}}.",
-      "noReused": "No child is linked to a stored artifact or copied from one.",
       "notStored": "No stored version can be read."
-    },
-    "summary": {
-      "linked": "Linked, v{{version}}.",
-      "forked": "Copy of {{name}} v{{version}}.",
-      "forkedUnlisted": "Copy of {{origin}}."
     },
     "action": {
       "open": "Open original",
@@ -810,8 +802,7 @@
       "replaceCompatible": "Replace with origin v{{version}} (compatible)",
       "replaceBreaking": "Replace with origin v{{version}} (breaking)",
       "saveDraft": "Save as reusable draft",
-      "publish": "Publish as reusable",
-      "upgradeAll": "Upgrade all compatible"
+      "publish": "Publish as reusable"
     },
     "replaceDialog": {
       "title": "Replace with origin v{{version}}?",

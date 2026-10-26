@@ -6,3 +6,4 @@ export {
   FieldValuePolicy,
   ValidationPolicy,
 } from 'cedar-model-typescript-library';
+export { SchemaArtifactValidator } from 'cedar-model-typescript-library/schema';

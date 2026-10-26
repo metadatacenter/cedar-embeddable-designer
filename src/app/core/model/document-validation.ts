@@ -6,7 +6,16 @@ import type { CedValidationIssue, CedValidationReport } from '../../ced-public-a
 import { ChildNode, ContainerDraft, fieldView } from './container-draft';
 import { elementDisplayName, fieldDisplayName } from './field-display-name';
 import { fieldValidationIssues } from './field-validation';
-import { descriptorOf, buildContainer, buildTemplate, allowsOptions } from './cedar-template';
+import {
+  descriptorOf,
+  buildContainer,
+  buildTemplate,
+  allowsOptions,
+  templateToJson,
+  fieldToJson,
+} from './cedar-template';
+import { SchemaArtifactValidator } from './cedar-model/value-policy';
+import { hostFindings } from './host-findings';
 import { Translate, describeError, english } from '../../i18n/messages';
 import { SETTINGS_TABS } from '../../shared/settings-tabs';
 
@@ -36,12 +45,18 @@ export function validateDocument(
   document: ContainerDraft,
   drafts: DraftIssues,
   t: Translate = english,
+  fieldDocument = false,
 ): CedValidationReport {
-  const report = inspectDocument(document, drafts, t);
+  const report = inspectDocument(document, drafts, t, fieldDocument);
   return { ...report, issues: report.issues.map(({ rule: _rule, ...issue }) => issue) };
 }
 
-export function inspectDocument(document: ContainerDraft, drafts: DraftIssues, t: Translate = english) {
+export function inspectDocument(
+  document: ContainerDraft,
+  drafts: DraftIssues,
+  t: Translate = english,
+  fieldDocument = false,
+) {
   const issues: (CedValidationIssue & { rule: ValidationRule })[] = [];
   let modelInvalid = false;
   let pendingValidation = false;
@@ -274,7 +289,38 @@ export function inspectDocument(document: ContainerDraft, drafts: DraftIssues, t
   };
   visit(document, []);
   try {
-    buildContainer(document);
+    const node = document.children[0];
+    if (fieldDocument && (document.children.length > 1 || (node !== undefined && node.kind !== 'field')))
+      throw new Error(t('errors.oneFieldDefinition'));
+    // A field document holds no field while its type is still being chosen, and has nothing to judge
+    // until it does. The field designer refuses to save without one.
+    const artifact = !fieldDocument
+      ? templateToJson(buildContainer(document))
+      : node?.kind === 'field'
+        ? fieldToJson(fieldView(node))
+        : null;
+    // Construction and round-tripping can normalize an invalid source. Judge the actual emitted
+    // document as well, once the settings probes have supplied their more precise diagnostics.
+    if (artifact !== null && !modelInvalid && !pendingValidation) {
+      const findings = SchemaArtifactValidator.structure(artifact, fieldDocument ? 'field' : document.kind).findings;
+      const mapped = hostFindings(
+        document,
+        findings.map((finding) => ({
+          location: finding.path,
+          message: finding.message,
+          severity: 'error' as const,
+        })),
+        fieldDocument,
+      );
+      mapped.forEach((issue, index) =>
+        issues.push({
+          ...issue,
+          source: 'model',
+          code: findings[index].code,
+          rule: { code: findings[index].code, parameters: { path: findings[index].path } },
+        }),
+      );
+    }
   } catch (error) {
     if (!modelInvalid) {
       const root = document;

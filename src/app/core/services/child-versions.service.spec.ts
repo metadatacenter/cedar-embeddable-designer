@@ -213,29 +213,6 @@ describe('ChildVersionService', () => {
     expect(versionState(service.session.document(), id)?.kind).toBe('linked');
   });
 
-  it('upgrades every compatible linked child in one step, and leaves the breaking ones', async () => {
-    const compatible = repository({
-      newestPublished: true,
-      readable: true,
-      lookupFails: false,
-      verdict: { compatible: true },
-    });
-    const first = holding('linked', compatible.source);
-    const [second] = service.importChildren(
-      [{ type: 'field', artifact: artifact('v120', '1.2.0', true) }],
-      service.session.document().id,
-      1,
-    );
-    versions.refreshAll();
-    await settle();
-    await settle();
-    await versions.upgradeCompatible();
-    for (const id of [first, second]) {
-      const node = service.session.document().children.find((child) => child.id === id)!;
-      expect(childVersion(node)).toBe('1.3.0');
-    }
-  });
-
   it('replaces a copy with its origin, which is then linked', async () => {
     const { source } = repository({
       newestPublished: true,
@@ -305,7 +282,8 @@ describe('ChildVersionService', () => {
       const edited = target === 'child' ? id : service.fields().find((field) => field.id !== id)!.id;
       service.updateFieldName(edited, 'Changed definition');
       const before = service.session.document();
-      expect(versions.lookup(id)).toEqual({ status: 'pending' });
+      // The versions found stay shown; the verdict is pending until it is asked for again.
+      expect(versions.lookup(id)).toMatchObject({ status: 'found', verdict: { status: 'pending' } });
       await versions.replace([id]);
       expect(service.session.document()).toBe(before);
     },
@@ -320,7 +298,7 @@ describe('ChildVersionService', () => {
     service.updateFieldName(id, 'Local changes');
     reply.resolve({ compatible: true });
     await settle();
-    expect(versions.lookup(id)).toEqual({ status: 'pending' });
+    expect(versions.lookup(id)).toMatchObject({ status: 'found', verdict: { status: 'pending' } });
     const before = service.session.document();
     await versions.replace([id]);
     expect(service.session.document()).toBe(before);

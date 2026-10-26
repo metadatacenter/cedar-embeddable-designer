@@ -186,7 +186,33 @@ export interface CedValidationIssue {
    */
   shown: boolean;
 }
+/**
+ * A shape the loaded artifact stored that the designer cannot represent and the CEDAR validator refuses.
+ * The designer's projection of the artifact holds `value` in its place, or nothing when there is no
+ * `value`. A host that merges the projection into the stored artifact, retaining what the author did not
+ * change, applies each of these to its stored copy first. A retained branch then cannot carry a refused
+ * shape into a save that the server would reject and the author could not repair.
+ */
+export interface CedSupersededShape {
+  /** JSON Pointer into the artifact as it was loaded. */
+  location: string;
+  /**
+   * - `numberType`: a numeric field whose datatype is missing or unsupported, which the designer reads as `value`.
+   * - `termDefault`: a controlled-term field whose default is stored as text rather than as a term.
+   * - `fieldOrder`: an order on a field, which has no children to order.
+   * - `termTextConstraint`: a length limit or pattern on a controlled-term field, which the validator would
+   *   apply to the IRI of any term chosen as its default.
+   */
+  code: 'numberType' | 'termDefault' | 'fieldOrder' | 'termTextConstraint';
+  value?: CedJsonValue;
+}
+
 export interface CedValidationReport {
+  /**
+   * The stored shapes the designer's projection superseded when the artifact was loaded, listed only when
+   * there are any. They never affect `valid` or `canSave`, and they stay the same until the next load.
+   */
+  superseded?: CedSupersededShape[];
   /** Semantic coverage is independent of local consistency and save permission. */
   semanticChecks?: Array<{
     nodeId: number;

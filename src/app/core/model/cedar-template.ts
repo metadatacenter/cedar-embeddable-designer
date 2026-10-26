@@ -36,6 +36,7 @@ export {
   PREVIEW_ELEMENT_KEY,
 } from './cedar-model/container-writer';
 export { readTemplate, toDesignerTemplate, readField, toContainerDraft, readContainer } from './cedar-model/reader';
+export { supersededShapes } from './cedar-model/superseded-shapes';
 export { ReservedNames } from './cedar-model/reserved-names';
 export type { AttributeValueFieldParent } from './cedar-model/reserved-names';
 

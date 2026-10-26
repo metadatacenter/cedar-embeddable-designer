@@ -3,11 +3,7 @@
   <dl class="identity">
     <dt>{{ 'settings.version' | translate }}</dt>
     <dd>
-      {{
-        state()?.kind === 'local'
-          ? ('version.notVersioned' | translate)
-          : version() || ('common.notSpecified' | translate)
-      }}
+      {{ state()?.kind === 'local' ? ('version.notVersioned' | translate) : version() }}
     </dd>
     @if (state()?.kind !== 'local' && status()) {
       <dt>{{ 'common.publicationStatus' | translate }}</dt>
@@ -33,21 +29,6 @@
       <dt>{{ 'version.folder' | translate }}</dt>
       <dd>{{ folder }}</dd>
     }
-    @if (history().length) {
-      <dt class="first-line">{{ 'version.versions' | translate }}</dt>
-      <dd>
-        <ul class="version-list">
-          @for (entry of history(); track entry.id) {
-            <li>
-              {{ 'version.versionNumber' | translate: { version: entry.version ?? '' } }}
-              @if (publicationStatusLabel(entry.publicationStatus); as label) {
-                ({{ label | translate }})
-              }
-            </li>
-          }
-        </ul>
-      </dd>
-    }
   </dl>
   @for (note of notes(); track note.key) {
     <p class="version-note">{{ note.key | translate: note.params }}</p>
@@ -55,20 +36,7 @@
   @for (note of ownNotes(); track note.key) {
     <p class="version-note">{{ note.key | translate: note.params }}</p>
   }
-  @if (summary().length) {
-    <p class="version-caption">{{ 'version.reused' | translate }}</p>
-    <dl class="identity">
-      @for (row of summary(); track row.id) {
-        <dt class="first-line">{{ row.name }}</dt>
-        <dd>
-          @for (note of row.notes; track note.key) {
-            {{ note.key | translate: note.params }}
-          }
-        </dd>
-      }
-    </dl>
-  }
-  @if (actions().length || upgradeAll()) {
+  @if (actions().length) {
     <div class="version-actions">
       @for (action of actions(); track action) {
         @switch (action) {
@@ -88,9 +56,6 @@
             </button>
           }
         }
-      }
-      @if (upgradeAll()) {
-        <button type="button" (click)="upgradeCompatible()">{{ 'version.action.upgradeAll' | translate }}</button>
       }
     </div>
   }

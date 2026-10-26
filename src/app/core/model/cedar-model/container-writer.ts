@@ -1,5 +1,6 @@
 import { ExactDecimal, NumericPolicy } from 'cedar-model-typescript-library';
 import type { DesignerTemplate } from './types';
+import { builderName } from './text-policy';
 import {
   AbstractDynamicChildDeploymentInfoBuilder,
   AbstractFieldChildDeploymentInfoBuilder,
@@ -49,7 +50,7 @@ function buildContainerArtifact(
     .withAtId(state.identifier || newTemplateIdentifier())
     .withTitle(derivedTitle(state.name, kind))
     .withDescription(derivedDescription(state.name, kind))
-    .withSchemaName(state.name)
+    .withSchemaName(builderName(state.name))
     .withSchemaDescription(state.description || null)
     .withSchemaVersion(SchemaVersion.CURRENT)
     .withVersion(state.version || '0.0.1')
@@ -113,7 +114,7 @@ function buildContainerArtifact(
       const min = field.minItems ?? null;
       const max = field.maxItems ?? null;
       if (
-        [min, max].some((value) => value !== null && (!Number.isInteger(value) || value < 0)) ||
+        [min, max].some((value) => value !== null && (!Number.isInteger(value) || value < 0 || value > 2147483647)) ||
         (min !== null && max !== null && min > max)
       ) {
         throw new LocalizedError(message('errors.occurrences.range'));
@@ -281,7 +282,7 @@ export function containerPreview(draft: ContainerDraft): Template {
   if (model instanceof Template) return model;
   return CedarBuilders.templateBuilder()
     .withAtId(draft.identifier + '/preview')
-    .withSchemaName(draft.name)
+    .withSchemaName(builderName(draft.name))
     .withSchemaVersion(SchemaVersion.CURRENT)
     .withStatus(BiboStatus.DRAFT)
     .addChild(model, model.createDeploymentBuilder(PREVIEW_ELEMENT_KEY).build())

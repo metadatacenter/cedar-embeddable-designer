@@ -51,8 +51,6 @@ const IDENTICAL_BY_DESIGN = [
   'fieldTypes.pubmed.label',
   'fieldTypes.doi.label',
   'fieldTypes.youtube.label',
-  // A version number written as CEDAR writes it, which reads the same in both languages.
-  'version.versionNumber',
 ];
 
 describe('the translation files', () => {

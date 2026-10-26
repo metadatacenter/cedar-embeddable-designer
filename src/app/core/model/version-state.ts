@@ -64,18 +64,6 @@ export function versionState(root: ContainerDraft, id: number): VersionState | n
   return origin ? { kind: 'forked', origin } : { kind: 'local' };
 }
 
-/**
- * The children a document's own Version tab summarizes: every linked and forked child that is not
- * contained in a linked element, in document order.
- */
-export function reusedChildren(container: ContainerDraft): ChildNode[] {
-  return container.children.flatMap((node): ChildNode[] => {
-    if (publishedChild(node)) return [node];
-    const below = node.kind === 'element' ? reusedChildren(node.definition) : [];
-    return childDerivedFrom(node) ? [node, ...below] : below;
-  });
-}
-
 function everyChild(container: ContainerDraft): ChildNode[] {
   return container.children.flatMap((node) =>
     node.kind === 'element' ? [node, ...everyChild(node.definition)] : [node],
@@ -218,11 +206,4 @@ export function versionActions({ state, lookup, editable, host }: VersionContext
     case 'forked':
       return [...(editable && replaceable(lookup) ? (['replace'] as const) : []), ...save];
   }
-}
-
-/** Whether the document's own tab can upgrade this linked child in one step with the others. */
-export function compatibleUpgrade(state: VersionState, lookup: OriginLookup): boolean {
-  return (
-    state.kind === 'linked' && lookup.status === 'found' && !!lookup.candidate && lookup.verdict.status === 'compatible'
-  );
 }

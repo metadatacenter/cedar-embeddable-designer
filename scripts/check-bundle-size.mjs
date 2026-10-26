@@ -125,8 +125,26 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // model adds 2,621 raw / 736 compressed bytes, with no new dependency. Allow
 // about 3.7 KB raw / 1.9 KB compressed headroom. The standalone application's
 // build-app budget moves by the same 6 KB.
-const RAW_LIMIT = 1_598_000;
-const GZIP_LIMIT = 457_000;
+// 2026-10-22: the shared, ahead-of-time Java meta-schema validators add the raw-artifact
+// boundary. After sharing identical definitions and omitting non-validation annotations,
+// the shipped bundle measures 2,037,096 raw / 496,519 gzip-9 bytes. A separate model-library
+// entry keeps consumers that do not author schemas from carrying these validators.
+// Allow about 7.9 KB raw / 3.5 KB compressed headroom; Angular budgets move with this feature.
+// 2026-10-22: the model library's readers and writers now refuse what the Java reader refuses, in
+// JSON schema declarations, YAML names, datatype, granularity and controlled-term spellings. With
+// it, and the designer reading a YAML document's kind from its own type, the shipped bundle measures
+// 2,046,961 raw / 500,032 gzip-9 bytes. That adds 9,842 raw / 3,509 compressed bytes to 2,037,119 /
+// 496,523 on the same dependencies. No dependency was added. Allow about 8 KB raw / 4 KB compressed
+// headroom. The standalone application's build-app budget moves by the same 10 KB.
+// 2026-10-25: the model library's instance validator now reaches the Java validator's verdict on
+// every production instance. It judges an instance against its stored template, the template's
+// `@context` included, keeps the null values and standard terms the stored document held for that
+// judgment, and checks static fields and attribute-value lists. The shipped bundle measures
+// 2,057,237 raw / 504,219 gzip-9 bytes, past the 2026-10-22 ceilings by 2,237 / 219 bytes. No
+// dependency was added. Allow about 7.8 KB raw / 3.8 KB compressed headroom. The standalone
+// application's build-app budget moves by the same 10 KB.
+const RAW_LIMIT = 2_065_000;
+const GZIP_LIMIT = 508_000;
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
 

@@ -36,6 +36,7 @@ import {
   TemporalType,
   TextArea,
   TextField,
+  YamlSourcePolicy,
 } from 'cedar-model-typescript-library';
 import { LocalizedError, message } from '../../../i18n/messages';
 import { FIELD_DESCRIPTORS, allowsOptions, descriptorOf } from './capabilities';
@@ -224,7 +225,8 @@ function projectContainerFields(template: Template | TemplateElement): DesignerT
           ? {
               type: (field as TemporalField).valueConstraints.temporalType.getValue() ?? 'xsd:date',
               granularity: (field as TemporalField).temporalGranularity.getValue() ?? 'day',
-              timezoneEnabled: (field as TemporalField).timezoneEnabled,
+              // A field that states no time zone setting reads as one without a time zone, as it always has.
+              timezoneEnabled: (field as TemporalField).timezoneEnabled ?? false,
               inputTimeFormat: (field as TemporalField).inputTimeFormat.getValue(),
             }
           : undefined,
@@ -397,13 +399,18 @@ export function readContainer(source: string | object): ContainerDraft {
     return toContainerDraft(model);
   }
   if (isCompactYaml(text)) throw new LocalizedError(message('errors.yaml.compactReopen'));
-  const parsed = CedarReaders.yaml().getStrict().getTemplateReader().readFromString(text);
-  const kind = parsed.templateSourceObject['type'];
+  // The kind comes from the document's own type. Each reader refuses an artifact of the other kind,
+  // as Java's does, so reading the document to learn what it is would refuse every element.
+  const document = YamlSourcePolicy.parse(text);
+  const kind = document?.['type'];
   if (kind !== 'template' && kind !== 'element') throw new LocalizedError(message('errors.open.notContainer'));
   const model =
     kind === 'element'
-      ? CedarReaders.yaml().getStrict().getTemplateElementReader().readFromString(text).element
-      : parsed.template;
+      ? CedarReaders.yaml()
+          .getStrict()
+          .getTemplateElementReader()
+          .readFromObject(document, ChildDeploymentInfo.empty(), new JsonPath()).element
+      : CedarReaders.yaml().getStrict().getTemplateReader().readFromObject(document).template;
   if (!model.schema_name) throw new LocalizedError(message('errors.open.notContainer'));
   return toContainerDraft(model);
 }

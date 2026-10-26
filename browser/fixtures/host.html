@@ -72,8 +72,12 @@
                             ...(this.constraintSet?.constraints || []),
                             {
                               sourceType: 'ontology-term',
-                              sourceId: 'http://purl.obolibrary.org/obo/DOID_162',
-                              sourceName: 'cancer',
+                              // Each application adds a distinct term. Repeating the same
+                              // class violates the canonical schema's uniqueItems rule.
+                              sourceId: `http://purl.obolibrary.org/obo/DOID_${162 + (this.constraintSet?.constraints.length || 0)}`,
+                              sourceName: this.constraintSet?.constraints.length
+                                ? `test term ${this.constraintSet.constraints.length + 1}`
+                                : 'cancer',
                               ontologyId: 'DOID',
                               version: {
                                 id: 'sha256:8f0c1e',

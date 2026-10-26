@@ -155,6 +155,7 @@ export class CedarEmbeddableFieldDesignerElementComponent {
     const field = readField(typeof source === 'string' ? source : JsonSourcePolicy.stringify(source));
     const current = this.field();
     this.replace(options?.preserveView && current?.type === field.type ? { ...field, id: current.id } : field);
+    this.service.recordLoaded(source, () => this.currentArtifact);
   };
   /** No argument opens the type chooser. A type starts a new, unnamed definition. */
   @Input() readonly newArtifact = (type?: CedFieldType): void => {
