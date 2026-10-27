@@ -16,6 +16,9 @@
           (click)="activeTab = tab"
           (keydown)="onTabKeydown($event, index)"
         >
+          @if (service.tabHasErrors(node().id, tab)) {
+            <app-icon key="warning" size="small" />
+          }
           {{ tabKey(tab) | translate }}
         </button>
       }

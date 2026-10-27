@@ -39,6 +39,31 @@ it('restores incomplete numeric settings without showing the accepted bound or c
   expect(service.validationReport().canSave).toBe(true);
 });
 
+it('marks a tab that holds an error with the warning icon as well as its colour', () => {
+  const service = TestBed.inject(TemplateService);
+  service.templateName.set('Study');
+  service.addField('number', 0);
+  const id = service.fields()[0].id;
+  service.updateFieldName(id, 'Number');
+  service.updateFieldSettings(id, {
+    numeric: { type: 'xsd:decimal', min: 0, max: 100, decimalPlaces: null, unit: null },
+  });
+  const fixture = TestBed.createComponent(FieldSettingsComponent);
+  fixture.componentRef.setInput('field', service.fields()[0]);
+  fixture.detectChanges();
+  const tabs = () => [...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('[role="tab"]')];
+  expect(tabs().filter((tab) => tab.querySelector('app-icon'))).toEqual([]);
+  const input = fixture.nativeElement.querySelector('[name=numericMax]') as HTMLInputElement;
+  Object.defineProperty(input, 'validity', { value: { badInput: true } });
+  fixture.componentInstance.numeric.max = null;
+  fixture.componentInstance.saveNumeric(input.form!, 'numericMax');
+  fixture.detectChanges();
+  expect(tabs().some((tab) => tab.classList.contains('has-errors'))).toBe(true);
+  for (const tab of tabs()) {
+    expect(tab.querySelector('app-icon[key="warning"]') !== null).toBe(tab.classList.contains('has-errors'));
+  }
+});
+
 it('edits identifier and key while preserving a hidden preferred label', async () => {
   localStorage.clear();
   const service = TestBed.inject(TemplateService);

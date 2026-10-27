@@ -80,7 +80,14 @@ textarea {
 .tabs button {
   @include patterns.tab;
 }
+/*
+  Only its hue, red against the theme colour, would tell an errored tab from the selected one, so an
+  errored tab also carries the warning icon a field card shows beside its error count.
+*/
 .tabs button.has-errors {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cedar-space-1);
   --cedar-icon-color: var(--cedar-control-error, var(--cedar-status-error-text));
   color: var(--cedar-control-error, var(--cedar-status-error-text));
   border-bottom-color: var(--cedar-control-error, var(--cedar-status-error-text));
