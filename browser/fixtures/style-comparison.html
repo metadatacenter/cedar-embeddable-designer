@@ -152,6 +152,21 @@
         const response = await fetch('style-comparison.json');
         if (!response.ok) throw new Error('Missing comparison fixture');
         const template = await response.json();
+        /*
+         * A template's child states whether the template requires it, and a field written on its
+         * own states no requirement. Each element takes the child as the field on its own, and CEF
+         * takes the requirement as its `required` setting, as a host placing the field says it.
+         */
+        function standalone(child) {
+          const field = structuredClone(child.items ?? child);
+          const constraints = field._valueConstraints;
+          const required = constraints?.requiredValue === true;
+          if (constraints) {
+            constraints.requiredValue = false;
+            delete constraints.recommendedValue;
+          }
+          return { field, required };
+        }
         function render() {
           const readOnlyMode = document.getElementById('readonly').checked;
           const density = document.getElementById('density').value;
@@ -162,10 +177,11 @@
           document.getElementById('cee').replaceChildren(cee);
           document.getElementById('cef').replaceChildren(
             ...template._ui.order.map((key) => {
+              const { field: artifact, required } = standalone(template.properties[key]);
               const field = document.createElement('cedar-embeddable-field');
               field.setAttribute('density', density);
-              field.config = { readOnlyMode };
-              field.fieldObject = structuredClone(template.properties[key]);
+              field.config = { readOnlyMode, required };
+              field.fieldObject = artifact;
               return field;
             }),
           );
@@ -174,7 +190,7 @@
           ced.loadArtifact(structuredClone(template));
           const cefd = document.createElement('cedar-embeddable-field-designer');
           document.getElementById('cefd').replaceChildren(cefd);
-          cefd.loadArtifact(structuredClone(template.properties._text));
+          cefd.loadArtifact(standalone(template.properties._text).field);
           cefd.readOnly = readOnlyMode;
           status.textContent =
             'Both bundles loaded. Changes are local to this page and reset when display options change.';

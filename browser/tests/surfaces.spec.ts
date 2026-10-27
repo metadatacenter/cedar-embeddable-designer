@@ -15,7 +15,14 @@ const scenarios: Record<string, (page: Page) => Promise<void>> = {
       field['pav:derivedFrom'] = origin;
       field['@id'] = `${origin}-copy`;
       field['bibo:status'] = 'bibo:draft';
-      const candidate = { ...field, '@id': origin, 'bibo:status': 'bibo:published', 'pav:version': '1.0.0' };
+      // The origin is a stored field on its own, which states no requirement of itself.
+      const candidate = {
+        ...field,
+        '@id': origin,
+        'bibo:status': 'bibo:published',
+        'pav:version': '1.0.0',
+        _valueConstraints: { ...field._valueConstraints, requiredValue: false },
+      };
       host.childSource = {
         search: async () => ({ results: [] }),
         load: async () => candidate,

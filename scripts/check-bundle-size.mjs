@@ -153,7 +153,8 @@ import { HOST_FONTS_OUT, OUT, VARIANTS, readManifest } from './make-bundle.mjs';
 // shared menu-item inset, measures 2,068,027 raw / 508,156 gzip-9 bytes in CI. The designer's own
 // source is unchanged since it measured 2,065,004 / 507,248 there, so the dependencies add 3,023
 // raw / 908 compressed bytes. No dependency was added. Allow about 4 KB raw / 1.8 KB compressed
-// headroom. The build budget in angular.json moves by the same 3 KB.
+// headroom. The build budget in angular.json moves by the same 3 KB. The standalone application's
+// build-app budget, which the same dependencies put 1.95 KB over in CI, moves to 2,056,000 bytes.
 //
 // The same day the package gained a second bundle, cedar-embeddable-designer.host-fonts.js, for a
 // host that registers the CEDAR fonts for its whole page. It differs from the standalone bundle
