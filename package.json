@@ -59,7 +59,7 @@
     "@angular/forms": "^22.2.0",
     "@angular/platform-browser": "^22.2.0",
     "@ngx-translate/core": "^18.0.0",
-    "cedar-model-typescript-library": "npm:@org.metadatacenter/cedar-model-typescript-library@1.0.25-dev.20261026.a5c33ae",
+    "cedar-model-typescript-library": "npm:@org.metadatacenter/cedar-model-typescript-library@1.0.25-dev.20261026.5a68007",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.16.3"
@@ -69,7 +69,7 @@
     "@angular/cli": "22.2.4",
     "@angular/compiler-cli": "^22.2.0",
     "@eslint/js": "^10.0.1",
-    "@org.metadatacenter/cedar-design-tokens": "0.1.0-dev.20261026.8c05563a",
+    "@org.metadatacenter/cedar-design-tokens": "0.1.0-dev.20261026.424ec03b",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24.13.3",
     "@vitest/coverage-v8": "^4.1.11",
