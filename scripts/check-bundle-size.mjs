@@ -148,6 +148,12 @@ import { HOST_FONTS_OUT, OUT, VARIANTS, readManifest } from './make-bundle.mjs';
 // 31 compressed bytes to 2,064,812 / 506,366 on the same dependencies, 4 bytes past the raw
 // ceiling. No dependency was added. Allow about 4 KB raw headroom and keep the gzip ceiling. The
 // build budget in angular.json moves by the same 4 KB.
+// 2026-10-26: the model library built with TypeScript 6, leaving a YAML child's model version to
+// its document and giving a field written on its own no configuration, with the design tokens'
+// shared menu-item inset, measures 2,068,027 raw / 508,156 gzip-9 bytes in CI. The designer's own
+// source is unchanged since it measured 2,065,004 / 507,248 there, so the dependencies add 3,023
+// raw / 908 compressed bytes. No dependency was added. Allow about 4 KB raw / 1.8 KB compressed
+// headroom. The build budget in angular.json moves by the same 3 KB.
 //
 // The same day the package gained a second bundle, cedar-embeddable-designer.host-fonts.js, for a
 // host that registers the CEDAR fonts for its whole page. It differs from the standalone bundle
@@ -155,8 +161,8 @@ import { HOST_FONTS_OUT, OUT, VARIANTS, readManifest } from './make-bundle.mjs';
 // ceilings less those bytes, to the nearest hundred, so the two bundles keep the same headroom and
 // move together.
 const LIMITS = {
-  [OUT]: { raw: 2_069_000, gzip: 508_000 },
-  [HOST_FONTS_OUT]: { raw: 1_946_700, gzip: 414_400 },
+  [OUT]: { raw: 2_072_000, gzip: 510_000 },
+  [HOST_FONTS_OUT]: { raw: 1_949_700, gzip: 416_400 },
 };
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
