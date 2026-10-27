@@ -15,7 +15,13 @@ async function linkTitle(page: Page, compatible = true): Promise<string> {
       const template = structuredClone(host.currentTemplate);
       const title = template.properties.Title;
       Object.assign(title, { 'bibo:status': 'bibo:published', 'pav:version': '1.2.0' });
-      const upgraded = { ...structuredClone(title), '@id': newer, 'pav:version': '1.3.0' };
+      // The repository stores each version as a field on its own, which states no requirement. The
+      // template states that of its child.
+      const stored = {
+        ...structuredClone(title),
+        _valueConstraints: { ...title._valueConstraints, requiredValue: false },
+      };
+      const upgraded = { ...structuredClone(stored), '@id': newer, 'pav:version': '1.3.0' };
       const opened: string[] = [];
       (window as any).__opened = opened;
       host.childSource = {
@@ -23,7 +29,7 @@ async function linkTitle(page: Page, compatible = true): Promise<string> {
           return { results: [] };
         },
         async load(result: { id: string }) {
-          return structuredClone(result.id === newer ? upgraded : title);
+          return structuredClone(result.id === newer ? upgraded : stored);
         },
         async versions() {
           return [

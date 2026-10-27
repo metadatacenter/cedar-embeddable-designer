@@ -3,7 +3,9 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { ROOT, DEFAULT_DIST } from './build-output.mjs';
 
-export const PROVENANCE = join(DEFAULT_DIST, 'ced-build-inputs.json');
+/** Each build output records the inputs it was compiled from beside itself. */
+export const provenanceFile = (dist = DEFAULT_DIST) => join(dist, 'ced-build-inputs.json');
+export const PROVENANCE = provenanceFile();
 function fingerprint(root, paths) {
   const hash = createHash('sha256');
   const visit = (path) => {

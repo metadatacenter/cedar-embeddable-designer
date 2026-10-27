@@ -273,6 +273,14 @@ esbuild, holds it to its size ceiling, and stages `dist-npm/cedar-embeddable-des
 from those exact bytes. The staging step builds nothing of its own: it copies the
 file the size gate measured, and verifies the result byte for byte afterwards.
 
+The package carries two bundles. `cedar-embeddable-designer.js` is self-contained and embeds
+CEDAR Roboto 400 and 500. `cedar-embeddable-designer.host-fonts.js` is the same element without
+those faces, for a host that registers them once for its whole page, as the design tokens'
+`fonts.css` does. A page that loads several CEDAR components then downloads the faces once
+rather than once per component. Without the host's faces, the host-fonts bundle draws its text in
+the rest of the shared font stack. Each bundle has its own manifest, `bundle-manifest.json` and
+`bundle-manifest.host-fonts.json`, and its own size ceiling. Load only one of them.
+
 The registry a package belongs to is derived from its version rather than passed
 at publish time. A version carrying `-dev.` is a snapshot and names the CEDAR
 Nexus under `@org.metadatacenter`; anything else is a release for public npmjs,
@@ -471,6 +479,13 @@ projection into the stored artifact, retaining what the author did not change, a
 its stored copy first. Otherwise a retained branch carries the shape back to the server, which
 refuses the save, and the author has nothing in CED to repair. `superseded` is present only when it
 lists something, never affects `valid` or `canSave`, and stays the same until the next load.
+
+`designer.validateArtifact(artifact, kind?)` (also supported by CEFD) returns the CEDAR meta-schema's
+verdict on any schema artifact, not only the open one: `{ findings, structurallyValid, canSave,
+isValid }`, each finding with a `code`, a `category`, a JSON Pointer `path` and a `message`. It is
+the check CED applies to its own document, so a host that saves a merged payload can check that
+payload with the same validator CED carries rather than loading a second copy. `kind` is read from
+the artifact's `@type` when omitted. Calling it changes nothing in the designer.
 
 Set `designer.readOnly` when the user may not change the document. Nothing in it can
 then be edited and `canSave` is false. CED also marks none of the document's

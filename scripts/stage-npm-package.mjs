@@ -9,10 +9,17 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { TARGET, assertSourceBundle, expectedFiles } from './npm-package.mjs';
 
-const { manifest } = assertSourceBundle();
+const { manifest, hosted } = assertSourceBundle();
 mkdirSync(TARGET, { recursive: true });
 for (const [name, bytes] of Object.entries(expectedFiles())) {
   writeFileSync(join(TARGET, name), bytes);
 }
 
-console.log(`  staged ${manifest.bytes.toLocaleString('en-US')} bytes to dist-npm/ (${manifest.sha256.slice(0, 12)}…)`);
+for (const [label, { bytes, sha256 }] of [
+  ['standalone', manifest],
+  ['host fonts', hosted.manifest],
+]) {
+  console.log(
+    `  staged the ${label} bundle, ${bytes.toLocaleString('en-US')} bytes, to dist-npm/ (${sha256.slice(0, 12)}…)`,
+  );
+}

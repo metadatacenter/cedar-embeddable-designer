@@ -142,7 +142,9 @@ jobs:
       # 1.0.9-dev.20260911.07caa05 was still being served at 17:47 on 2026-09-15
       # and 404 by 18:23. The step that fails is the one that builds CEE, before
       # any of CED is exercised, so the job goes red for a reason that is
-      # nothing to do with the commit that triggered it.
+      # nothing to do with the commit that triggered it. Both pins therefore
+      # name revisions whose locks resolve every CEDAR package from
+      # npm-cedar-releases, which Nexus never cleans up.
       - name: Check out the supported CEE revision
         uses: actions/checkout@v4
         with:
@@ -154,7 +156,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: metadatacenter/cedar-embeddable-term-picker
-          ref: 418512df9d32ecdcd6f0f1cafcb5d33c9a6f4211
+          ref: 3d2a625616c5a8d57d1a6f08f56fc4cbc5f59cfd
           path: cedar-embeddable-term-picker
 
       - name: Use Node.js 24

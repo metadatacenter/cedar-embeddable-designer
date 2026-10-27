@@ -38,3 +38,17 @@ test('the declaration is what a host imports types from', () => {
   assert.ok(metadata.files.includes('cedar-embeddable-designer.d.ts'));
   assert.ok(metadata.files.includes('license.txt'));
 });
+
+test('both bundles ship, each beside the manifest that verifies it', () => {
+  const { files, main } = packageMetadata({ version: '0.1.0', description: 'd' });
+
+  assert.equal(main, 'cedar-embeddable-designer.js');
+  for (const name of [
+    'cedar-embeddable-designer.js',
+    'bundle-manifest.json',
+    'cedar-embeddable-designer.host-fonts.js',
+    'bundle-manifest.host-fonts.json',
+  ]) {
+    assert.ok(files.includes(name), name);
+  }
+});

@@ -23,7 +23,16 @@ import { TemplateService } from '../core/services/template.service';
 import { ChildVersionService } from '../core/services/child-versions.service';
 import { TerminologyService } from '../core/services/terminology.service';
 import { PreferencesService } from '../core/services/preferences.service';
-import { CedConfig, CedFieldType, CedLanguage, CedValidationReport } from '../ced-public-api';
+import {
+  CedArtifactKind,
+  CedArtifactVerdict,
+  CedConfig,
+  CedFieldType,
+  CedJsonObject,
+  CedLanguage,
+  CedValidationReport,
+} from '../ced-public-api';
+import { SchemaArtifactValidator } from '../core/model/cedar-model/value-policy';
 import { fieldToJson, readField, newFieldIdentity } from '../core/model/cedar-template';
 import { newNodeId } from '../core/model/container-draft';
 import { Field, FIELD_TYPES } from '../core/models/types';
@@ -222,6 +231,12 @@ export class CedarEmbeddableFieldDesignerElementComponent {
     this.service.validate();
     return this.validationReport;
   };
+  /**
+   * The CEDAR meta-schema's verdict on any schema artifact, not only the open one. A host checks with
+   * it the exact payload it is about to store, which may hold content the designer never loaded.
+   */
+  @Input() readonly validateArtifact = (artifact: CedJsonObject, kind?: CedArtifactKind): CedArtifactVerdict =>
+    JsonSourcePolicy.clone(SchemaArtifactValidator.validate(artifact, kind));
   @Output() artifactChange = new EventEmitter<object>();
   @Output() dirtyChange = new EventEmitter<boolean>();
   @Output() validationChange = new EventEmitter<CedValidationReport>();

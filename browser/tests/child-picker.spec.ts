@@ -55,7 +55,13 @@ for (const width of [1280, 375])
           };
         },
         async load(row) {
-          return structuredClone(row.type === 'field' ? field : section);
+          // The repository stores a field on its own, which states no requirement of itself.
+          if (row.type === 'field')
+            return {
+              ...structuredClone(field),
+              _valueConstraints: { ...(field['_valueConstraints'] as CedJsonObject), requiredValue: false },
+            };
+          return structuredClone(section);
         },
       };
     }, nestedTemplate.properties['Read & Understood Catalog'] as CedJsonObject);

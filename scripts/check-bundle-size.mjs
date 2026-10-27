@@ -28,7 +28,7 @@
  */
 import { gzipSync } from 'node:zlib';
 import { readFileSync } from 'node:fs';
-import { OUT, readManifest } from './make-bundle.mjs';
+import { HOST_FONTS_OUT, OUT, VARIANTS, readManifest } from './make-bundle.mjs';
 
 // 2026-09-15: the feature-complete authoring surface, including annotations,
 // alternate and preferred labels, language, type/property picking and manual IRI
@@ -143,33 +143,56 @@ import { OUT, readManifest } from './make-bundle.mjs';
 // 2,057,237 raw / 504,219 gzip-9 bytes, past the 2026-10-22 ceilings by 2,237 / 219 bytes. No
 // dependency was added. Allow about 7.8 KB raw / 3.8 KB compressed headroom. The standalone
 // application's build-app budget moves by the same 10 KB.
-const RAW_LIMIT = 2_065_000;
-const GZIP_LIMIT = 508_000;
+// 2026-10-26: the elements' validateArtifact, which hands a host the meta-schema verdict the
+// designer already computes, measures 2,065,004 raw / 506,397 gzip-9 bytes. That adds 192 raw /
+// 31 compressed bytes to 2,064,812 / 506,366 on the same dependencies, 4 bytes past the raw
+// ceiling. No dependency was added. Allow about 4 KB raw headroom and keep the gzip ceiling. The
+// build budget in angular.json moves by the same 4 KB.
+// 2026-10-26: the model library built with TypeScript 6, leaving a YAML child's model version to
+// its document and giving a field written on its own no configuration, with the design tokens'
+// shared menu-item inset, measures 2,068,027 raw / 508,156 gzip-9 bytes in CI. The designer's own
+// source is unchanged since it measured 2,065,004 / 507,248 there, so the dependencies add 3,023
+// raw / 908 compressed bytes. No dependency was added. Allow about 4 KB raw / 1.8 KB compressed
+// headroom. The build budget in angular.json moves by the same 3 KB. The standalone application's
+// build-app budget, which the same dependencies put 1.95 KB over in CI, moves to 2,056,000 bytes.
+//
+// The same day the package gained a second bundle, cedar-embeddable-designer.host-fonts.js, for a
+// host that registers the CEDAR fonts for its whole page. It differs from the standalone bundle
+// only by the embedded faces: 122,317 raw / 93,581 gzip-9 bytes. Its ceilings are the standalone
+// ceilings less those bytes, to the nearest hundred, so the two bundles keep the same headroom and
+// move together.
+const LIMITS = {
+  [OUT]: { raw: 2_072_000, gzip: 510_000 },
+  [HOST_FONTS_OUT]: { raw: 1_949_700, gzip: 416_400 },
+};
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
 
-const bundle = readFileSync(OUT);
-const manifest = readManifest();
-
-if (bundle.length !== manifest.bytes) {
-  console.error(`  bundle is ${format(bundle.length)} but its manifest says ${format(manifest.bytes)}.`);
-  console.error('  Run: npm run bundle');
-  process.exit(1);
-}
-
-const gzip = gzipSync(bundle, { level: 9 }).length;
 let failed = false;
+for (const { label, out, manifest: manifestFile } of VARIANTS) {
+  const bundle = readFileSync(out);
+  const manifest = readManifest(manifestFile);
 
-for (const [label, actual, limit] of [
-  ['raw', bundle.length, RAW_LIMIT],
-  ['gzip-9', gzip, GZIP_LIMIT],
-]) {
-  const headroom = limit - actual;
-  if (headroom < 0) {
-    console.error(`  ${label}: ${format(actual)} exceeds its ${format(limit)} ceiling by ${format(-headroom)}.`);
-    failed = true;
-  } else {
-    console.log(`  ${label}: ${format(actual)}, ${format(headroom)} under the ceiling.`);
+  if (bundle.length !== manifest.bytes) {
+    console.error(`  ${label}: bundle is ${format(bundle.length)} but its manifest says ${format(manifest.bytes)}.`);
+    console.error('  Run: npm run bundle');
+    process.exit(1);
+  }
+
+  const gzip = gzipSync(bundle, { level: 9 }).length;
+  for (const [measure, actual, limit] of [
+    ['raw', bundle.length, LIMITS[out].raw],
+    ['gzip-9', gzip, LIMITS[out].gzip],
+  ]) {
+    const headroom = limit - actual;
+    if (headroom < 0) {
+      console.error(
+        `  ${label} ${measure}: ${format(actual)} exceeds its ${format(limit)} ceiling by ${format(-headroom)}.`,
+      );
+      failed = true;
+    } else {
+      console.log(`  ${label} ${measure}: ${format(actual)}, ${format(headroom)} under the ceiling.`);
+    }
   }
 }
 

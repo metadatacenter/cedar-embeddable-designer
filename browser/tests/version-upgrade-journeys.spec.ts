@@ -29,8 +29,10 @@ async function prepare(page: Page, kind: Kind, relation: Relation, answer: unkno
       const held = template.properties[key].items ?? template.properties[key];
       const original = held['@id'];
       const newer = `${original}-release`;
+      // The repository stores the release as a field on its own, which states no requirement.
       const next = {
         ...structuredClone(held),
+        ...(held._valueConstraints ? { _valueConstraints: { ...held._valueConstraints, requiredValue: false } } : {}),
         '@id': newer,
         'bibo:status': published ? 'bibo:published' : 'bibo:draft',
         'pav:version': '1.3.0',
