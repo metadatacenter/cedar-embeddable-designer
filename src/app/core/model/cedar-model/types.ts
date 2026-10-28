@@ -1,3 +1,4 @@
+export type { ConstraintLinks } from 'cedar-model-typescript-library';
 import { BiboStatus, SchemaVersion, TemplateField } from 'cedar-model-typescript-library';
 import { ArtifactMetadata, Field } from '../../models/types';
 

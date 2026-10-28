@@ -1,3 +1,4 @@
+import type { ConstraintLinks } from '../model/cedar-model/types';
 import { english } from '../../i18n/messages';
 /** A reusable field carries the same complete specification as a template field. */
 export interface CustomField {
@@ -48,6 +49,7 @@ export interface ControlledTermVersionRef {
  * library refuses that.
  */
 interface ControlledTermCommon {
+  links?: ConstraintLinks;
   /** The source's own IRI, as distinct from the acronym an author recognises. */
   iri?: string;
   sourceSystem?: string;

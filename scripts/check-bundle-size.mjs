@@ -161,9 +161,13 @@ import { HOST_FONTS_OUT, OUT, VARIANTS, readManifest } from './make-bundle.mjs';
 // only by the embedded faces: 122,317 raw / 93,581 gzip-9 bytes. Its ceilings are the standalone
 // ceilings less those bytes, to the nearest hundred, so the two bundles keep the same headroom and
 // move together.
+// 2026-10-28: shared links validation and lossless ontology/branch/class/value-set links in the
+// model and designer measure 2,076,448 raw / 509,144 gzip-9 bytes (host fonts 1,953,798 / 415,108).
+// No dependency is added. Add 8 KB raw capacity for this shared capability; keep both compressed
+// ceilings unchanged. The Angular production and build-app raw budgets move by the same amount.
 const LIMITS = {
-  [OUT]: { raw: 2_072_000, gzip: 510_000 },
-  [HOST_FONTS_OUT]: { raw: 1_949_700, gzip: 416_400 },
+  [OUT]: { raw: 2_080_000, gzip: 510_000 },
+  [HOST_FONTS_OUT]: { raw: 1_957_700, gzip: 416_400 },
 };
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
