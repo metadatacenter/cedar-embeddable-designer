@@ -11,11 +11,11 @@ import {
 } from './support';
 
 /**
- * Whether the designer's content survives a narrow host, zoom, an author's own text spacing and a
- * faint placeholder: WCAG 1.4.10 Reflow, 1.4.4 Resize Text, 1.4.12 Text Spacing and, for
- * placeholders, 1.4.3 Contrast (Minimum).
+ * Whether the designer's content survives a narrow host, zoom, an author's own text spacing, a
+ * faint placeholder and a faint field boundary: WCAG 1.4.10 Reflow, 1.4.4 Resize Text, 1.4.12 Text
+ * Spacing, 1.4.3 Contrast (Minimum) for placeholders and 1.4.11 Non-text Contrast for boundaries.
  *
- * The same four checks run over Workspace, the term picker, CEE and this designer, by one method:
+ * The same five checks run over Workspace, the term picker, CEE and this designer, by one method:
  *
  * - Reflow. At 320 CSS px wide, neither the page nor any scroll container inside the designer
  *   scrolls sideways, no text overlaps other text, and every control can be scrolled to and hit. A
@@ -26,22 +26,26 @@ import {
  * - Text spacing. At 1280 px wide, with criterion 1.4.12's line, letter, word and paragraph
  *   spacing forced on the document and every shadow root, no text is clipped and none overlaps.
  * - Placeholders. Every placeholder's colour measures at least 4.5:1 against what it sits on.
+ * - Boundaries. Every text-entry or selection control that draws a boundary draws it at least 3:1
+ *   against what lies outside it. The token test measures the token's value; this measures what
+ *   the browser draws, so a framework default or a local override that replaces the token fails.
  *
  * A finding the designer cannot fix without a visible change is recorded in `EXCEPTIONS`, with
  * the change it needs, so that the check passes and the finding stays in view. An exception
  * that no longer finds its finding fails, so the list cannot outlive the defect.
  */
 
-type Condition = 'reflow' | 'resize' | 'spacing' | 'placeholder';
+type Condition = 'reflow' | 'resize' | 'spacing' | 'placeholder' | 'boundary';
 
 /** One kind of failure, as the audit names it. */
-type Kind = 'page-scroll' | 'scroll' | 'unreachable' | 'clipped' | 'overlap' | 'placeholder';
+type Kind = 'page-scroll' | 'scroll' | 'unreachable' | 'clipped' | 'overlap' | 'placeholder' | 'boundary';
 
 const CONDITIONS: Record<Condition, { width: number; height: number; kinds: Kind[] }> = {
   reflow: { width: 320, height: 640, kinds: ['page-scroll', 'scroll', 'unreachable', 'overlap'] },
   resize: { width: 640, height: 400, kinds: ['clipped', 'overlap', 'unreachable'] },
   spacing: { width: 1280, height: 900, kinds: ['clipped', 'overlap'] },
   placeholder: { width: 1280, height: 900, kinds: ['placeholder'] },
+  boundary: { width: 1280, height: 900, kinds: ['boundary'] },
 };
 
 /** Criterion 1.4.12's spacing, applied as an author's stylesheet would apply it. */
@@ -301,6 +305,13 @@ interface Finding {
  * - Unreachable. A control on the state's surface cannot be brought into view without scrolling a
  *   box whose overflow is hidden, or something else is what a pointer hits at every point of it.
  * - Placeholders. A disabled box is exempt, as criterion 1.4.3 exempts inactive components.
+ * - Boundaries. A control's boundary is drawn by the border of the control itself, of an ancestor
+ *   at most three levels up whose box is at most 48px larger each way, or of an element in an
+ *   absolutely positioned layer within such an ancestor, as an outlined field's outline is. The
+ *   strongest side of any of them must measure 3:1 against the colour outside the box that holds
+ *   it. A control that draws no boundary is not measured, because 1.4.11 asks for contrast in what
+ *   identifies a control rather than for a boundary; a disabled control is exempt, as 1.4.11 exempts
+ *   inactive components. `measured` counts the controls whose boundary was measured.
  */
 async function audit(
   page: Page,
@@ -308,7 +319,7 @@ async function audit(
   state: string,
   condition: Condition,
   surface: string,
-): Promise<Finding[]> {
+): Promise<{ findings: Finding[]; measured: number }> {
   return page.evaluate(
     ({ kinds, surface, tableScrollers, exceptions }) => {
       const findings: { kind: string; message: string; element: Element }[] = [];
@@ -497,42 +508,104 @@ async function audit(
         }
       }
 
+      const channel = (value: number) => {
+        const c = value / 255;
+        return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      };
+      const parse = (color: string) => (color.match(/[\d.]+/g) ?? []).map(Number);
+      const over = ([r, g, b, a = 1]: number[], [br, bg, bb]: number[]) => [
+        r * a + br * (1 - a),
+        g * a + bg * (1 - a),
+        b * a + bb * (1 - a),
+      ];
+      const luminance = ([r, g, b]: number[]) => 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+      const contrast = (a: number[], b: number[]) => {
+        const [high, low] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+        return (high + 0.05) / (low + 0.05);
+      };
+      const rgb = (colour: number[]) => `rgb(${colour.map(Math.round).join(', ')})`;
+      /** The colour behind `element`: its own and its ancestors' fills, laid over white. */
+      const behind = (element: Element): number[] => {
+        const fills: number[][] = [];
+        for (const node of [element, ...ancestors(element)]) {
+          const fill = parse(style(node).backgroundColor);
+          if ((fill[3] ?? 1) > 0) fills.push(fill);
+          if ((fill[3] ?? 1) === 1) break;
+        }
+        return fills.reduceRight((base, fill) => over(fill, base), [255, 255, 255]);
+      };
+
       if (kinds.includes('placeholder')) {
-        const channel = (value: number) => {
-          const c = value / 255;
-          return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-        };
-        const parse = (color: string) => (color.match(/[\d.]+/g) ?? []).map(Number);
-        const over = ([r, g, b, a = 1]: number[], [br, bg, bb]: number[]) => [
-          r * a + br * (1 - a),
-          g * a + bg * (1 - a),
-          b * a + bb * (1 - a),
-        ];
-        const luminance = ([r, g, b]: number[]) => 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
-        /** The colour behind `element`: its own and its ancestors' fills, laid over white. */
-        const behind = (element: Element): number[] => {
-          const fills: number[][] = [];
-          for (const node of [element, ...ancestors(element)]) {
-            const fill = parse(style(node).backgroundColor);
-            if ((fill[3] ?? 1) > 0) fills.push(fill);
-            if ((fill[3] ?? 1) === 1) break;
-          }
-          return fills.reduceRight((base, fill) => over(fill, base), [255, 255, 255]);
-        };
         for (const element of elements) {
           if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) continue;
           if (!element.placeholder.trim() || element.disabled || !shown(element) || visuallyHidden(element)) continue;
           const placeholder = getComputedStyle(element, '::placeholder');
           const [r, g, b, a = 1] = parse(placeholder.color);
           const fill = behind(element);
-          const text = luminance(over([r, g, b, a * Number(placeholder.opacity || 1)], fill));
-          const ground = luminance(fill);
-          const ratio = (Math.max(text, ground) + 0.05) / (Math.min(text, ground) + 0.05);
+          const ratio = contrast(over([r, g, b, a * Number(placeholder.opacity || 1)], fill), fill);
           if (ratio < 4.5)
             report(
               'placeholder',
               element,
-              `placeholder "${element.placeholder}" is ${placeholder.color} on rgb(${fill.map(Math.round).join(', ')}), ${ratio.toFixed(2)}:1`,
+              `placeholder "${element.placeholder}" is ${placeholder.color} on ${rgb(fill)}, ${ratio.toFixed(2)}:1`,
+            );
+        }
+      }
+
+      let measured = 0;
+      if (kinds.includes('boundary')) {
+        const FIELDS =
+          'input:not([type="hidden"], [type="checkbox"], [type="radio"], [type="range"], [type="color"], ' +
+          '[type="file"], [type="button"], [type="submit"], [type="reset"], [type="image"]), textarea, select, ' +
+          '[role="textbox"], [role="combobox"], [role="searchbox"], [role="spinbutton"]';
+        const SIDES = ['Top', 'Right', 'Bottom', 'Left'] as const;
+        /** The colours of the sides of `element` that draw a border. */
+        const borders = (element: Element) => {
+          const own = style(element);
+          return SIDES.flatMap((side) => {
+            const colour = parse(own[`border${side}Color`]);
+            const drawn =
+              parseFloat(own[`border${side}Width`]) >= 1 &&
+              !['none', 'hidden'].includes(own[`border${side}Style`]) &&
+              (colour[3] ?? 1) > 0;
+            return drawn ? [colour] : [];
+          });
+        };
+        for (const field of elements) {
+          if (!field.matches(FIELDS) || !shown(field) || visuallyHidden(field)) continue;
+          if ((field as HTMLInputElement).disabled || field.getAttribute('aria-disabled') === 'true') continue;
+          const own = field.getBoundingClientRect();
+          // Each element that may draw the boundary, with the box whose outside it is measured against.
+          const drawers: { element: Element; holder: Element }[] = [];
+          let box: Element | null = field;
+          for (let level = 0; box && level <= 3; level++, box = parent(box)) {
+            const rect = box.getBoundingClientRect();
+            if (rect.width > own.width + 48 || rect.height > own.height + 48) break;
+            drawers.push({ element: box, holder: box });
+            if (box === field) continue;
+            for (const layer of box.querySelectorAll('*')) {
+              if (contains(field, layer) || contains(layer, field) || style(layer).position !== 'absolute') continue;
+              for (const element of [layer, ...layer.querySelectorAll('*')])
+                if (shown(element)) drawers.push({ element, holder: box });
+            }
+          }
+          let strongest: { ratio: number; colour: number[]; outside: number[] } | undefined;
+          for (const { element, holder } of drawers) {
+            const container = parent(holder);
+            const outside = container ? behind(container) : [255, 255, 255];
+            for (const colour of borders(element)) {
+              const drawn = over(colour, behind(element));
+              const ratio = contrast(drawn, outside);
+              if (!strongest || ratio > strongest.ratio) strongest = { ratio, colour: drawn, outside };
+            }
+          }
+          if (!strongest) continue;
+          measured++;
+          if (strongest.ratio < 3)
+            report(
+              'boundary',
+              field,
+              `boundary is ${rgb(strongest.colour)} on ${rgb(strongest.outside)}, ${strongest.ratio.toFixed(2)}:1`,
             );
         }
       }
@@ -591,13 +664,16 @@ async function audit(
         }
       }
 
-      return findings.map(({ kind, message, element }) => ({
-        kind: kind as never,
-        message,
-        excepted: exceptions.flatMap((exception, index) =>
-          exception.applies && exception.kind === kind && element.matches(exception.target) ? [index] : [],
-        ),
-      }));
+      return {
+        measured,
+        findings: findings.map(({ kind, message, element }) => ({
+          kind: kind as never,
+          message,
+          excepted: exceptions.flatMap((exception, index) =>
+            exception.applies && exception.kind === kind && element.matches(exception.target) ? [index] : [],
+          ),
+        })),
+      };
     },
     {
       kinds,
@@ -623,7 +699,7 @@ for (const [condition, { width, height, kinds }] of Object.entries(CONDITIONS) a
         await expect(page.locator(DESIGNER)).toBeVisible();
         if (condition === 'spacing') await forceTextSpacing(page);
         await settle(page);
-        const findings = await audit(page, kinds, state, condition, surface);
+        const { findings } = await audit(page, kinds, state, condition, surface);
         expect(
           findings.filter((finding) => !finding.excepted.length).map((finding) => finding.message),
           `${condition}, ${state}`,
@@ -641,3 +717,12 @@ for (const [condition, { width, height, kinds }] of Object.entries(CONDITIONS) a
     }
   });
 }
+
+// A selector that stops matching would let the boundary check pass by measuring nothing.
+test('the boundary check measures the fields of a fresh template', async ({ page }) => {
+  await page.setViewportSize(CONDITIONS.boundary);
+  await STATES['fresh template'].reach(page);
+  await settle(page);
+  const { measured } = await audit(page, ['boundary'], 'fresh template', 'boundary', DESIGNER);
+  expect(measured).toBeGreaterThan(0);
+});
