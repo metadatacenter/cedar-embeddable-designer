@@ -82,7 +82,9 @@ textarea {
 }
 /*
   Only its hue, red against the theme colour, would tell an errored tab from the selected one, so an
-  errored tab also carries the warning icon a field card shows beside its error count.
+  errored tab also carries the warning icon a field card shows beside its error count. Only the
+  selected tab is underlined, in red when it holds an error, so an underline always marks the open
+  tab.
 */
 .tabs button.has-errors {
   display: inline-flex;
@@ -90,6 +92,8 @@ textarea {
   gap: var(--cedar-space-1);
   --cedar-icon-color: var(--cedar-control-error, var(--cedar-status-error-text));
   color: var(--cedar-control-error, var(--cedar-status-error-text));
+}
+.tabs button.has-errors[aria-selected='true'] {
   border-bottom-color: var(--cedar-control-error, var(--cedar-status-error-text));
 }
 @include settings-panel.focus-ring;
