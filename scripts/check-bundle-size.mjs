@@ -172,9 +172,15 @@ import { HOST_FONTS_OUT, OUT, VARIANTS, readManifest } from './make-bundle.mjs';
 // files 2,136,232 raw. The designer's own source adds nothing measurable, so the dependency
 // accounts for 75,957 raw / 2,372 compressed bytes. No dependency is added. Allow about 3.6 KB
 // raw / 1 KB compressed headroom. The Angular production and build-app raw budgets move by 76 KB.
+// 2026-10-29: Angular 22.2.4 measures 2,152,849 raw / 511,997 gzip-9 bytes in CI (host fonts
+// 2,030,199 / 418,986), 444 raw / 127 compressed bytes more than 22.2.3 on the same designer source
+// (151 compressed for host fonts). The 2026-10-28 headroom was measured locally, where the macOS
+// system zlib compresses these bundles about 1.3 KB smaller than the zlib in CI's Node, so it left
+// 65 compressed bytes in CI rather than 1 KB. Read compressed headroom from CI. No dependency is
+// added. Allow about 1 KB compressed headroom as CI measures it, and keep both raw ceilings.
 const LIMITS = {
-  [OUT]: { raw: 2_156_000, gzip: 512_500 },
-  [HOST_FONTS_OUT]: { raw: 2_033_700, gzip: 418_900 },
+  [OUT]: { raw: 2_156_000, gzip: 513_000 },
+  [HOST_FONTS_OUT]: { raw: 2_033_700, gzip: 420_000 },
 };
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
