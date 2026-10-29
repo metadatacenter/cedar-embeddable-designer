@@ -13,6 +13,9 @@
         (click)="selectTab(tab)"
         (keydown)="onTabKey($event, index)"
       >
+        @if (service.tabHasErrors(field.id, tab)) {
+          <app-icon key="warning" size="small" />
+        }
         {{ tabKey(tab) | translate }}
       </button>
     }

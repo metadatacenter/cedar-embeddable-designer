@@ -78,6 +78,7 @@ function buildControlledTerm(builder: FieldBuilder, config: ControlledTermConfig
         controlled.addOntology(
           new ControlledTermOntologyBuilder()
             .withVersion(version)
+            .withLinks(config.links ?? null)
             .withIri(config.iri ? new Iri(config.iri) : null)
             .withSourceSystem(config.sourceSystem ?? null)
             .withUri(new Iri(config.uri ?? ontologyUri(config.ontologyId)))
@@ -93,6 +94,7 @@ function buildControlledTerm(builder: FieldBuilder, config: ControlledTermConfig
         controlled.addBranch(
           new ControlledTermBranchBuilder()
             .withVersion(version)
+            .withLinks(config.links ?? null)
             .withIri(config.iri ? new Iri(config.iri) : null)
             .withSourceSystem(config.sourceSystem ?? null)
             .withUri(new Iri(config.branchRootId))
@@ -111,6 +113,7 @@ function buildControlledTerm(builder: FieldBuilder, config: ControlledTermConfig
         controlled.addClass(
           new ControlledTermClassBuilder()
             .withVersion(version)
+            .withLinks(config.links ?? null)
             .withIri(config.iri ? new Iri(config.iri) : null)
             .withSourceSystem(config.sourceSystem ?? null)
             .withUri(new Iri(config.sourceId))
@@ -127,6 +130,7 @@ function buildControlledTerm(builder: FieldBuilder, config: ControlledTermConfig
         controlled.addValueSet(
           new ControlledTermValueSetBuilder()
             .withVersion(version)
+            .withLinks(config.links ?? null)
             .withIri(config.iri ? new Iri(config.iri) : null)
             .withSourceSystem(config.sourceSystem ?? null)
             .withUri(new Iri(config.sourceId))
@@ -168,6 +172,7 @@ export function controlledTermConstraintsOf(field: TemplateField): ControlledTer
     iri: entry.iri?.getValue() ?? undefined,
     sourceSystem: entry.sourceSystem ?? undefined,
     version: versionRefOf(entry),
+    links: entry.links ?? undefined,
   });
   return {
     constraints: [

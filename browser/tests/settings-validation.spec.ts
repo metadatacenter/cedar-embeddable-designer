@@ -360,11 +360,19 @@ test('tabs retain their error marker when another tab is selected', async ({ pag
   await expect(tab).toHaveCSS('border-bottom-color', 'rgb(180, 35, 24)');
   await card.getByRole('tab', { name: 'Presentation', exact: true }).click();
   await expect(tab).toHaveAttribute('aria-selected', 'false');
-  await expect(tab).toHaveCSS('border-bottom-color', 'rgb(180, 35, 24)');
+  // An underline marks only the open tab, so the errored one keeps its red text and warning icon.
+  await expect(tab).toHaveCSS('color', 'rgb(180, 35, 24)');
+  await expect(tab.locator('app-icon[key="warning"]')).toHaveCount(1);
+  await expect(tab).toHaveCSS('border-bottom-color', 'rgba(0, 0, 0, 0)');
+  await expect(card.getByRole('tab', { name: 'Presentation', exact: true })).toHaveCSS(
+    'border-bottom-color',
+    'rgb(15, 118, 134)',
+  );
   await expect(card.getByRole('tab', { name: 'Presentation', exact: true })).not.toHaveAttribute('aria-description');
   await tab.click();
   await panel.getByLabel('Maximum', { exact: true }).fill('3');
   await expect(tab).not.toHaveAttribute('aria-description');
+  await expect(tab.locator('app-icon')).toHaveCount(0);
   await expect(tab).not.toHaveCSS('border-bottom-color', 'rgb(180, 35, 24)');
 });
 

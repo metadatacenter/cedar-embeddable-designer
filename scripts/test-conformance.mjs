@@ -1,10 +1,21 @@
 import assert from 'node:assert/strict';
 import { build } from 'esbuild';
+import { execFileSync } from 'node:child_process';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import { createJavaOracle } from 'cedar-model-typescript-library/conformance/java-oracle.mjs';
+
+// The oracle runs `$JAVA_HOME/bin/java`, or the first `java` on the path, and requires Java 17. CI
+// sets JAVA_HOME to JDK 17. A Mac without it takes JDK 17 from java_home rather than a newer default.
+if (!process.env.JAVA_HOME && process.platform === 'darwin') {
+  try {
+    process.env.JAVA_HOME = execFileSync('/usr/libexec/java_home', ['-v', '17'], { encoding: 'utf8' }).trim();
+  } catch {
+    // With no JDK 17 installed, the oracle's own check reports the version it found.
+  }
+}
 
 const directory = await mkdtemp(join(tmpdir(), 'ced-authoring-'));
 let oracle;

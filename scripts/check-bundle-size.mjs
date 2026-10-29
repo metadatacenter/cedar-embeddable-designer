@@ -161,9 +161,26 @@ import { HOST_FONTS_OUT, OUT, VARIANTS, readManifest } from './make-bundle.mjs';
 // only by the embedded faces: 122,317 raw / 93,581 gzip-9 bytes. Its ceilings are the standalone
 // ceilings less those bytes, to the nearest hundred, so the two bundles keep the same headroom and
 // move together.
+// 2026-10-28: shared links validation and lossless ontology/branch/class/value-set links in the
+// model and designer measure 2,076,448 raw / 509,144 gzip-9 bytes (host fonts 1,953,798 / 415,108).
+// No dependency is added. Add 8 KB raw capacity for this shared capability; keep both compressed
+// ceilings unchanged. The Angular production and build-app raw budgets move by the same amount.
+// 2026-10-28: the model library's template meta-schema now checks the declarations under @context,
+// @language and _annotations, which were empty schemas that accepted anything, and its generated
+// validators grow by 102,550 unminified bytes. With it the designer measures 2,152,405 raw /
+// 511,516 gzip-9 bytes (host fonts 2,029,755 / 417,532), and the standalone application's initial
+// files 2,136,232 raw. The designer's own source adds nothing measurable, so the dependency
+// accounts for 75,957 raw / 2,372 compressed bytes. No dependency is added. Allow about 3.6 KB
+// raw / 1 KB compressed headroom. The Angular production and build-app raw budgets move by 76 KB.
+// 2026-10-29: Angular 22.2.4 measures 2,152,849 raw / 511,997 gzip-9 bytes in CI (host fonts
+// 2,030,199 / 418,986), 444 raw / 127 compressed bytes more than 22.2.3 on the same designer source
+// (151 compressed for host fonts). The 2026-10-28 headroom was measured locally, where the macOS
+// system zlib compresses these bundles about 1.3 KB smaller than the zlib in CI's Node, so it left
+// 65 compressed bytes in CI rather than 1 KB. Read compressed headroom from CI. No dependency is
+// added. Allow about 1 KB compressed headroom as CI measures it, and keep both raw ceilings.
 const LIMITS = {
-  [OUT]: { raw: 2_072_000, gzip: 510_000 },
-  [HOST_FONTS_OUT]: { raw: 1_949_700, gzip: 416_400 },
+  [OUT]: { raw: 2_156_000, gzip: 513_000 },
+  [HOST_FONTS_OUT]: { raw: 2_033_700, gzip: 420_000 },
 };
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;

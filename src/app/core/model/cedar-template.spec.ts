@@ -952,7 +952,12 @@ describe('complete controlled-term constraints', () => {
       ),
     ) as unknown as { properties: { Terms: { _valueConstraints: unknown } } };
     const pin = { id: 'sha256:original', effectiveDate: '2026-01-01', declaredVersion: 'v1' };
-    const common = { iri: 'https://canonical.example/source', sourceSystem: 'agroportal', version: pin };
+    const common = {
+      iri: 'https://canonical.example/source',
+      sourceSystem: 'agroportal',
+      version: pin,
+      links: { landingPage: 'https://example.org/source', icon: 'https://example.org/icon.svg' },
+    };
     const constraints = {
       requiredValue: false,
       ontologies: [0, 1].map((i) => ({
