@@ -346,9 +346,10 @@
     border-color: var(--cedar-border-rule);
   }
 
+  // The primary border is the selection's line, so the card keeps no outline of its own: an
+  // outline here would cover the same pixels and hide the focus ring.
   &.selected {
     border-color: var(--cedar-color-primary);
-    @include patterns.selected-outline;
   }
 }
 
