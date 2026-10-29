@@ -165,9 +165,16 @@ import { HOST_FONTS_OUT, OUT, VARIANTS, readManifest } from './make-bundle.mjs';
 // model and designer measure 2,076,448 raw / 509,144 gzip-9 bytes (host fonts 1,953,798 / 415,108).
 // No dependency is added. Add 8 KB raw capacity for this shared capability; keep both compressed
 // ceilings unchanged. The Angular production and build-app raw budgets move by the same amount.
+// 2026-10-28: the model library's template meta-schema now checks the declarations under @context,
+// @language and _annotations, which were empty schemas that accepted anything, and its generated
+// validators grow by 102,550 unminified bytes. With it the designer measures 2,152,405 raw /
+// 511,516 gzip-9 bytes (host fonts 2,029,755 / 417,532), and the standalone application's initial
+// files 2,136,232 raw. The designer's own source adds nothing measurable, so the dependency
+// accounts for 75,957 raw / 2,372 compressed bytes. No dependency is added. Allow about 3.6 KB
+// raw / 1 KB compressed headroom. The Angular production and build-app raw budgets move by 76 KB.
 const LIMITS = {
-  [OUT]: { raw: 2_080_000, gzip: 510_000 },
-  [HOST_FONTS_OUT]: { raw: 1_957_700, gzip: 416_400 },
+  [OUT]: { raw: 2_156_000, gzip: 512_500 },
+  [HOST_FONTS_OUT]: { raw: 2_033_700, gzip: 418_900 },
 };
 
 const format = (bytes) => `${bytes.toLocaleString('en-US')} bytes`;
