@@ -72,6 +72,21 @@
               "optimization": false,
               "extractLicenses": false,
               "polyfills": ["zone.js", "zone.js/testing"]
+            },
+            "integration": {
+              "outputPath": "dist/integration",
+              "externalDependencies": [
+                "@angular/*",
+                "@ngx-translate/core",
+                "rxjs",
+                "tslib",
+                "zone.js",
+                "cedar-model-typescript-library"
+              ],
+              "polyfills": [],
+              "index": false,
+              "styles": [],
+              "assets": []
             }
           },
           "defaultConfiguration": "production"

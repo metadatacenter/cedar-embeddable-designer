@@ -1,3 +1,4 @@
+import { integrationFiles } from './build-integration.mjs';
 /**
  * What the published package contains, and which registry it belongs to.
  *
@@ -42,6 +43,9 @@ export function packageMetadata(rootPackage = readJson(join(ROOT, 'package.json'
     main: 'cedar-embeddable-designer.js',
     types: 'cedar-embeddable-designer.d.ts',
     files: [
+      'integration.mjs',
+      'integration-manifest.json',
+      'integration-licenses.txt',
       'cedar-embeddable-designer.js',
       'cedar-embeddable-designer.host-fonts.js',
       'cedar-embeddable-designer.d.ts',
@@ -89,6 +93,7 @@ export function assertSourceBundle() {
 export function expectedFiles() {
   const { bundle, manifest, hosted } = assertSourceBundle();
   return {
+    ...integrationFiles(),
     'cedar-embeddable-designer.js': bundle,
     'cedar-embeddable-designer.host-fonts.js': hosted.bundle,
     'cedar-embeddable-designer.d.ts': readFileSync(TYPES),

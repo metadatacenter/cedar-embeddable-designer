@@ -3,6 +3,7 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DEFAULT_DIST, HOST_FONTS_DIST, ROOT } from './build-output.mjs';
 import { provenanceFile, sourceFingerprint, outputFingerprint } from './build-provenance.mjs';
+import { buildIntegration } from './build-integration.mjs';
 
 // With no arguments both production bundles are built: the self-contained one, and the one for a
 // host that registers the fonts itself. Arguments select a single build into the default output.
@@ -26,3 +27,5 @@ for (const { args, dist } of builds) {
     throw new Error('Build inputs changed while Angular was building. Rebuild before bundling.');
   writeFileSync(provenanceFile(dist), JSON.stringify({ source, output: outputFingerprint(dist) }, null, 2) + '\n');
 }
+// Preserve explicit Angular CLI arguments for development and diagnostic builds.
+if (process.argv.length === 2) await buildIntegration();
