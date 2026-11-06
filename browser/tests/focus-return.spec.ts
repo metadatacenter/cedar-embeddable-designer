@@ -120,6 +120,8 @@ test.describe('adding', () => {
     await open.focus();
     await page.keyboard.press('Enter');
     await expect(page.getByRole('dialog')).toBeVisible();
+    // Rendering precedes afterNextRender's showModal(). Escape only closes a modal dialog.
+    await expect(page.getByRole('dialog')).toHaveJSProperty('open', true);
     await page.keyboard.press('Escape');
     await expect(open).toBeFocused();
   });
