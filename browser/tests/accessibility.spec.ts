@@ -587,7 +587,9 @@ async function controlledTermsCard(page: Page) {
   await designer.getByRole('textbox', { name: 'Template name', exact: true }).fill('Study');
   await designer.getByRole('button', { name: /^Add field$/ }).click();
   await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
-  const card = designer.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') });
+  const card = designer
+    .locator('app-field-card')
+    .filter({ has: page.locator('.field-type-label', { hasText: 'Controlled Terms' }) });
   await card.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Disease');
   return { designer, card };
 }

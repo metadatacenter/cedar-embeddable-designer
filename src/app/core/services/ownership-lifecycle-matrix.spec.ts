@@ -178,6 +178,8 @@ for (const row of settings)
           fixture.componentRef.setInput('field', field);
           fixture.componentRef.setInput('hasValues', true);
           fixture.detectChanges();
+          fixture.componentInstance.toggleExpanded();
+          fixture.detectChanges();
           return fixture;
         };
         const first = create();

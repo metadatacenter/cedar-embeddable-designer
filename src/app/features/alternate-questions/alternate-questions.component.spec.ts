@@ -65,6 +65,8 @@ for (const type of ['text', 'richText', 'image', 'youtube', 'sectionBreak', 'pag
     const fixture = TestBed.createComponent(FieldSettingsComponent);
     fixture.componentRef.setInput('field', { ...service.fields()[0], type });
     fixture.detectChanges();
+    fixture.componentInstance.toggleExpanded();
+    fixture.detectChanges();
     await fixture.whenStable();
     expect(!!fixture.nativeElement.querySelector('app-alternate-questions')).toBe(type === 'text');
   });

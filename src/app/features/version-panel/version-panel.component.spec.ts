@@ -292,6 +292,8 @@ describe('the settings panels', () => {
     const fixture = TestBed.createComponent(FieldSettingsComponent);
     fixture.componentRef.setInput('field', service.fields()[0]);
     fixture.detectChanges();
+    fixture.componentInstance.toggleExpanded();
+    fixture.detectChanges();
     expect(fixture.componentInstance.tabs.at(-1)).toBe('Version');
     const element = fixture.nativeElement as HTMLElement;
     expect(element.querySelector('[role="tab"][id$="-Version"]')?.textContent?.trim()).toBe('Version');

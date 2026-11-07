@@ -184,7 +184,9 @@ scenarios['picker-unavailable'] = async (page) => {
   await applyPreset(page, 'semantic');
   await d.getByRole('button', { name: /^Add field$/ }).click();
   await d.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
-  const card = d.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') });
+  const card = d
+    .locator('app-field-card')
+    .filter({ has: page.locator('.field-type-label', { hasText: 'Controlled Terms' }) });
   await card.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Controlled Terms');
   await openSettings(card);
 };

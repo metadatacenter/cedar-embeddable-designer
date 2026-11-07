@@ -1,521 +1,523 @@
 <div [hidden]="!expanded" [id]="'field-settings-' + field.id">
-  <div class="tabs" role="tablist" [attr.aria-label]="'fieldSettings.label' | translate">
-    @for (tab of tabs; track tab; let index = $index) {
-      <button
-        type="button"
-        role="tab"
-        [class.has-errors]="service.tabHasErrors(field.id, tab)"
-        [attr.aria-description]="service.tabHasErrors(field.id, tab) ? ('settings.containsErrors' | translate) : null"
-        [id]="'field-tab-' + field.id + '-' + tab.replaceAll(' ', '-')"
-        [attr.aria-controls]="'field-panel-' + field.id + '-' + tab.replaceAll(' ', '-')"
-        [attr.aria-selected]="selectedTab === tab"
-        [tabIndex]="selectedTab === tab ? 0 : -1"
-        (click)="selectTab(tab)"
-        (keydown)="onTabKey($event, index)"
+  @if (settingsCreated) {
+    <div class="tabs" role="tablist" [attr.aria-label]="'fieldSettings.label' | translate">
+      @for (tab of tabs; track tab; let index = $index) {
+        <button
+          type="button"
+          role="tab"
+          [class.has-errors]="service.tabHasErrors(field.id, tab)"
+          [attr.aria-description]="service.tabHasErrors(field.id, tab) ? ('settings.containsErrors' | translate) : null"
+          [id]="'field-tab-' + field.id + '-' + tab.replaceAll(' ', '-')"
+          [attr.aria-controls]="'field-panel-' + field.id + '-' + tab.replaceAll(' ', '-')"
+          [attr.aria-selected]="selectedTab === tab"
+          [tabIndex]="selectedTab === tab ? 0 : -1"
+          (click)="selectTab(tab)"
+          (keydown)="onTabKey($event, index)"
+        >
+          @if (service.tabHasErrors(field.id, tab)) {
+            <app-icon key="warning" size="small" />
+          }
+          {{ tabKey(tab) | translate }}
+        </button>
+      }
+    </div>
+    @if (!service.fieldDocumentMode()) {
+      <section
+        class="settings"
+        role="tabpanel"
+        [hidden]="selectedTab !== 'Configuration'"
+        [id]="'field-panel-' + field.id + '-Configuration'"
+        [attr.aria-labelledby]="'field-tab-' + field.id + '-Configuration'"
       >
-        @if (service.tabHasErrors(field.id, tab)) {
-          <app-icon key="warning" size="small" />
-        }
-        {{ tabKey(tab) | translate }}
-      </button>
-    }
-  </div>
-  @if (!service.fieldDocumentMode()) {
-    <section
-      class="settings"
-      role="tabpanel"
-      [hidden]="selectedTab !== 'Configuration'"
-      [id]="'field-panel-' + field.id + '-Configuration'"
-      [attr.aria-labelledby]="'field-tab-' + field.id + '-Configuration'"
-    >
-      <form #configurationForm (ngSubmit)="saveBounds(configurationForm)" class="configuration">
-        <fieldset [disabled]="placementLocked" class="configuration-scope">
-          <div class="settings-fields configuration-fields">
-            <label data-setting="display"
-              >{{ 'settings.shownName' | translate
-              }}<input
-                spellcheck="false"
-                autocomplete="off"
-                name="shownName"
-                [ngModel]="shownName"
-                (ngModelChange)="rename($event)"
-                (blur)="service.touchName(field.id)"
-            /></label>
-            <label class="configuration-wide"
-              >{{ 'settings.shownDescription' | translate
-              }}<input
-                spellcheck="false"
-                autocomplete="off"
-                name="shownDescription"
-                [ngModel]="shownDescription"
-                (ngModelChange)="service.updateFieldDisplayDescription(field.id, $event)"
-                (blur)="service.touchDescription(field.id)"
-            /></label>
-          </div>
-          <div class="configuration-flags" data-setting="layout">
-            @if (offersRequirement) {
-              <select
-                name="requirement"
-                class="configuration-requirement"
-                [attr.aria-label]="'fieldCard.requirement' | translate"
-                [ngModel]="field.status"
-                (ngModelChange)="service.updateFieldStatus(field.id, $event)"
-              >
-                <option value="optional">{{ 'fieldCard.optional' | translate }}</option>
-                <option value="recommended">{{ 'fieldCard.recommended' | translate }}</option>
-                <option value="required">{{ 'fieldCard.required' | translate }}</option>
-              </select>
-            }
-            <label class="check"
-              ><input
-                spellcheck="false"
-                type="checkbox"
-                name="hidden"
-                [(ngModel)]="hidden"
-                (ngModelChange)="saveLayout()"
-              />{{ 'fieldSettings.display.hidden' | translate }}</label
-            >
-            @if (dynamic) {
+        <form #configurationForm (ngSubmit)="saveBounds(configurationForm)" class="configuration">
+          <fieldset [disabled]="placementLocked" class="configuration-scope">
+            <div class="settings-fields configuration-fields">
+              <label data-setting="display"
+                >{{ 'settings.shownName' | translate
+                }}<input
+                  spellcheck="false"
+                  autocomplete="off"
+                  name="shownName"
+                  [ngModel]="shownName"
+                  (ngModelChange)="rename($event)"
+                  (blur)="service.touchName(field.id)"
+              /></label>
+              <label class="configuration-wide"
+                >{{ 'settings.shownDescription' | translate
+                }}<input
+                  spellcheck="false"
+                  autocomplete="off"
+                  name="shownDescription"
+                  [ngModel]="shownDescription"
+                  (ngModelChange)="service.updateFieldDisplayDescription(field.id, $event)"
+                  (blur)="service.touchDescription(field.id)"
+              /></label>
+            </div>
+            <div class="configuration-flags" data-setting="layout">
+              @if (offersRequirement) {
+                <select
+                  name="requirement"
+                  class="configuration-requirement"
+                  [attr.aria-label]="'fieldCard.requirement' | translate"
+                  [ngModel]="field.status"
+                  (ngModelChange)="service.updateFieldStatus(field.id, $event)"
+                >
+                  <option value="optional">{{ 'fieldCard.optional' | translate }}</option>
+                  <option value="recommended">{{ 'fieldCard.recommended' | translate }}</option>
+                  <option value="required">{{ 'fieldCard.required' | translate }}</option>
+                </select>
+              }
               <label class="check"
                 ><input
                   spellcheck="false"
                   type="checkbox"
-                  name="continue"
-                  [(ngModel)]="continuePreviousLine"
+                  name="hidden"
+                  [(ngModel)]="hidden"
                   (ngModelChange)="saveLayout()"
-                />{{ 'fieldSettings.display.continueLine' | translate }}</label
+                />{{ 'fieldSettings.display.hidden' | translate }}</label
               >
-            }
-          </div>
-          @if (offersAllowMultiple) {
-            <div class="settings-fields configuration-fields">
-              <label class="check configuration-multiple"
-                ><input
-                  spellcheck="false"
-                  type="checkbox"
-                  name="allowMultiple"
-                  [checked]="field.allowMultiple"
-                  (change)="service.toggleAllowMultiple(field.id)"
-                />{{ 'settings.allowMultiple' | translate }}</label
-              >
+              @if (dynamic) {
+                <label class="check"
+                  ><input
+                    spellcheck="false"
+                    type="checkbox"
+                    name="continue"
+                    [(ngModel)]="continuePreviousLine"
+                    (ngModelChange)="saveLayout()"
+                  />{{ 'fieldSettings.display.continueLine' | translate }}</label
+                >
+              }
             </div>
-          }
-          <fieldset [attr.aria-invalid]="boundsInvalid" class="settings-fields configuration-fields">
-            <label data-setting="key"
-              >{{ 'settings.key' | translate
-              }}<input
-                spellcheck="false"
-                autocomplete="off"
-                [attr.aria-invalid]="!!keyError"
-                [attr.aria-describedby]="keyError ? 'field-key-error-' + field.id : null"
-                name="deploymentName"
-                [(ngModel)]="deploymentName"
-                (ngModelChange)="saveKey()"
-            /></label>
-            @if (offersBounds) {
-              <div class="configuration-bounds" data-setting="occurrences">
-                <label
-                  >{{ 'fieldSettings.occurrences.min' | translate
-                  }}<input
+            @if (offersAllowMultiple) {
+              <div class="settings-fields configuration-fields">
+                <label class="check configuration-multiple"
+                  ><input
                     spellcheck="false"
-                    autocomplete="off"
-                    type="number"
-                    name="min"
-                    data-setting="minItems"
-                    min="0"
-                    step="1"
-                    [disabled]="!multiple || minimumHeld"
-                    [(ngModel)]="min"
-                    (ngModelChange)="saveBounds(configurationForm, 'min')"
-                    [placeholder]="'settings.minOccurrencesPlaceholder' | translate"
-                /></label>
-                <label
-                  >{{ 'fieldSettings.occurrences.max' | translate
-                  }}<input
-                    spellcheck="false"
-                    autocomplete="off"
-                    type="number"
-                    name="max"
-                    data-setting="maxItems"
-                    min="0"
-                    step="1"
-                    [disabled]="!multiple"
-                    [(ngModel)]="max"
-                    (ngModelChange)="saveBounds(configurationForm, 'max')"
-                    [placeholder]="'settings.unlimited' | translate"
-                /></label>
+                    type="checkbox"
+                    name="allowMultiple"
+                    [checked]="field.allowMultiple"
+                    (change)="service.toggleAllowMultiple(field.id)"
+                  />{{ 'settings.allowMultiple' | translate }}</label
+                >
+              </div>
+            }
+            <fieldset [attr.aria-invalid]="boundsInvalid" class="settings-fields configuration-fields">
+              <label data-setting="key"
+                >{{ 'settings.key' | translate
+                }}<input
+                  spellcheck="false"
+                  autocomplete="off"
+                  [attr.aria-invalid]="!!keyError"
+                  [attr.aria-describedby]="keyError ? 'field-key-error-' + field.id : null"
+                  name="deploymentName"
+                  [(ngModel)]="deploymentName"
+                  (ngModelChange)="saveKey()"
+              /></label>
+              @if (offersBounds) {
+                <div class="configuration-bounds" data-setting="occurrences">
+                  <label
+                    >{{ 'fieldSettings.occurrences.min' | translate
+                    }}<input
+                      spellcheck="false"
+                      autocomplete="off"
+                      type="number"
+                      name="min"
+                      data-setting="minItems"
+                      min="0"
+                      step="1"
+                      [disabled]="!multiple || minimumHeld"
+                      [(ngModel)]="min"
+                      (ngModelChange)="saveBounds(configurationForm, 'min')"
+                      [placeholder]="'settings.minOccurrencesPlaceholder' | translate"
+                  /></label>
+                  <label
+                    >{{ 'fieldSettings.occurrences.max' | translate
+                    }}<input
+                      spellcheck="false"
+                      autocomplete="off"
+                      type="number"
+                      name="max"
+                      data-setting="maxItems"
+                      min="0"
+                      step="1"
+                      [disabled]="!multiple"
+                      [(ngModel)]="max"
+                      (ngModelChange)="saveBounds(configurationForm, 'max')"
+                      [placeholder]="'settings.unlimited' | translate"
+                  /></label>
+                </div>
+              }
+            </fieldset>
+            @if (keyError) {
+              <p role="alert" class="ced-field-error" [id]="'field-key-error-' + field.id">{{ keyError }}</p>
+            }
+            @if (dynamic) {
+              <div class="configuration-property" data-setting="propertyIri">
+                <span class="default-label">{{ 'settings.propertyIri' | translate }}</span>
+                <app-property-picker
+                  [iri]="field.propertyIri"
+                  [disabled]="placementLocked"
+                  (propertySelected)="saveProperty($event)"
+                />
               </div>
             }
           </fieldset>
-          @if (keyError) {
-            <p role="alert" class="ced-field-error" [id]="'field-key-error-' + field.id">{{ keyError }}</p>
-          }
-          @if (dynamic) {
-            <div class="configuration-property" data-setting="propertyIri">
-              <span class="default-label">{{ 'settings.propertyIri' | translate }}</span>
-              <app-property-picker
-                [iri]="field.propertyIri"
-                [disabled]="placementLocked"
-                (propertySelected)="saveProperty($event)"
-              />
-            </div>
-          }
+        </form>
+        @if (error) {
+          <p role="alert">{{ error }}</p>
+        }
+      </section>
+    }
+    <section
+      role="tabpanel"
+      [hidden]="selectedTab !== 'Annotations'"
+      [id]="'field-panel-' + field.id + '-Annotations'"
+      [attr.aria-labelledby]="'field-tab-' + field.id + '-Annotations'"
+      class="settings"
+    >
+      <app-annotations-editor [field]="field" />
+    </section>
+    @if (hasValues || hasConstraints) {
+      <section
+        role="tabpanel"
+        [hidden]="selectedTab !== valuesTab"
+        [id]="'field-panel-' + field.id + '-' + valuesTab"
+        [attr.aria-labelledby]="'field-tab-' + field.id + '-' + valuesTab"
+      >
+        <ng-content select="[field-values]" />
+        @if (accepts('textLength')) {
+          <div class="settings">
+            <form #textForm (ngSubmit)="saveText(textForm)" class="row">
+              <fieldset
+                [attr.aria-invalid]="!!error"
+                [disabled]="definitionLocked"
+                class="settings-fields constraint-fields"
+              >
+                <label
+                  >{{ 'fieldSettings.text.minLength' | translate
+                  }}<input
+                    spellcheck="false"
+                    autocomplete="off"
+                    name="minLength"
+                    data-setting="minLength"
+                    type="number"
+                    min="0"
+                    step="1"
+                    [(ngModel)]="text.minLength"
+                    (ngModelChange)="saveText(textForm, 'minLength')"
+                /></label>
+                <label
+                  >{{ 'fieldSettings.text.maxLength' | translate
+                  }}<input
+                    spellcheck="false"
+                    autocomplete="off"
+                    name="maxLength"
+                    data-setting="maxLength"
+                    type="number"
+                    min="0"
+                    step="1"
+                    [(ngModel)]="text.maxLength"
+                    (ngModelChange)="saveText(textForm, 'maxLength')"
+                /></label>
+                @if (accepts('textPattern')) {
+                  <label
+                    >{{ 'fieldSettings.text.regex' | translate
+                    }}<input
+                      spellcheck="false"
+                      autocomplete="off"
+                      class="wide"
+                      name="regex"
+                      data-setting="regex"
+                      [(ngModel)]="text.regex"
+                      (ngModelChange)="saveText(textForm, 'regex')"
+                      [placeholder]="'fieldSettings.text.regexPlaceholder' | translate"
+                  /></label>
+                }
+              </fieldset>
+            </form>
+            @if (error) {
+              <p role="alert">{{ error }}</p>
+            }
+          </div>
+        }
+        @if (accepts('numericBounds')) {
+          <div class="settings">
+            <form #numericForm (ngSubmit)="saveNumeric(numericForm)" class="row">
+              <fieldset
+                [attr.aria-invalid]="!!error"
+                [disabled]="definitionLocked"
+                class="settings-fields numeric-constraint-fields"
+              >
+                <label
+                  >{{ 'fieldSettings.numeric.datatype' | translate
+                  }}<select
+                    name="numericType"
+                    data-setting="numberType"
+                    [attr.aria-label]="'fieldSettings.numeric.datatype' | translate"
+                    [(ngModel)]="numeric.type"
+                    (ngModelChange)="saveNumeric(numericForm, 'numericType')"
+                  >
+                    @for (type of numericTypes; track type) {
+                      <option [value]="type">{{ type }}</option>
+                    }
+                  </select></label
+                >
+                <label
+                  >{{ 'fieldSettings.numeric.min' | translate
+                  }}<input
+                    spellcheck="false"
+                    autocomplete="off"
+                    name="numericMin"
+                    data-setting="minValue"
+                    type="number"
+                    step="any"
+                    [value]="numeric.min ?? ''"
+                    (input)="editNumericBound('min', $any($event.target).value, numericForm, 'numericMin')"
+                /></label>
+                <label
+                  >{{ 'fieldSettings.numeric.max' | translate
+                  }}<input
+                    spellcheck="false"
+                    autocomplete="off"
+                    name="numericMax"
+                    data-setting="maxValue"
+                    type="number"
+                    step="any"
+                    [value]="numeric.max ?? ''"
+                    (input)="editNumericBound('max', $any($event.target).value, numericForm, 'numericMax')"
+                /></label>
+                <div class="numeric-default" role="group" [attr.aria-labelledby]="'numeric-default-label-' + field.id">
+                  <span class="default-label" [id]="'numeric-default-label-' + field.id">{{
+                    'defaultValue.label' | translate
+                  }}</span>
+                  <app-field-default-value [field]="field" />
+                </div>
+                <label
+                  >{{ 'fieldSettings.numeric.decimalPlaces' | translate
+                  }}<input
+                    spellcheck="false"
+                    autocomplete="off"
+                    name="decimalPlaces"
+                    data-setting="decimalPlace"
+                    type="number"
+                    min="0"
+                    step="1"
+                    [(ngModel)]="numeric.decimalPlaces"
+                    (ngModelChange)="saveNumeric(numericForm, 'decimalPlaces')"
+                /></label>
+                <label
+                  >{{ 'fieldSettings.numeric.unit' | translate
+                  }}<input
+                    spellcheck="false"
+                    autocomplete="off"
+                    name="unit"
+                    data-setting="unitOfMeasure"
+                    [(ngModel)]="numeric.unit"
+                    (ngModelChange)="saveNumeric(numericForm, 'unit')"
+                    [placeholder]="'fieldSettings.numeric.unitPlaceholder' | translate"
+                /></label>
+              </fieldset>
+            </form>
+            @if (error) {
+              <p role="alert">{{ error }}</p>
+            }
+          </div>
+        }
+        @if (accepts('temporalPrecision')) {
+          <div class="settings">
+            <form (ngSubmit)="saveTemporal()" class="row">
+              <fieldset [attr.aria-invalid]="!!error" [disabled]="definitionLocked" class="settings-fields">
+                <label
+                  >{{ 'fieldSettings.temporal.type' | translate
+                  }}<select
+                    name="temporalType"
+                    [attr.aria-label]="'fieldSettings.temporal.type' | translate"
+                    [ngModel]="temporal.type"
+                    (ngModelChange)="changeTemporalType($event); saveTemporal()"
+                  >
+                    <option value="xsd:date">{{ 'fieldTypes.date.label' | translate }}</option>
+                    <option value="xsd:time">{{ 'fieldTypes.time.label' | translate }}</option>
+                    <option value="xsd:dateTime">{{ 'fieldTypes.dateTime.label' | translate }}</option>
+                  </select></label
+                >
+                <label
+                  >{{ 'fieldSettings.temporal.precision' | translate
+                  }}<select
+                    name="granularity"
+                    [attr.aria-label]="'fieldSettings.temporal.precision' | translate"
+                    [(ngModel)]="temporal.granularity"
+                    (ngModelChange)="saveTemporal()"
+                  >
+                    @for (value of granularities; track value) {
+                      <option [value]="value">{{ 'fieldSettings.temporal.granularity.' + value | translate }}</option>
+                    }
+                  </select></label
+                >
+                @if (temporal.type !== 'xsd:date') {
+                  <label
+                    >{{ 'fieldSettings.temporal.timeFormat' | translate
+                    }}<select
+                      name="timeFormat"
+                      [attr.aria-label]="'fieldSettings.temporal.timeFormat' | translate"
+                      [(ngModel)]="temporal.inputTimeFormat"
+                      (ngModelChange)="saveTemporal()"
+                    >
+                      <option [ngValue]="null">{{ 'fieldSettings.temporal.defaultFormat' | translate }}</option>
+                      <option value="12h">{{ 'fieldSettings.temporal.twelveHour' | translate }}</option>
+                      <option value="24h">{{ 'fieldSettings.temporal.twentyFourHour' | translate }}</option>
+                    </select></label
+                  >
+                  <label class="check"
+                    ><input
+                      spellcheck="false"
+                      type="checkbox"
+                      name="timezone"
+                      [(ngModel)]="temporal.timezoneEnabled"
+                      (ngModelChange)="saveTemporal()"
+                    />{{ 'fieldSettings.temporal.showTimezone' | translate }}</label
+                  >
+                }
+              </fieldset>
+            </form>
+            @if (error) {
+              <p role="alert">{{ error }}</p>
+            }
+          </div>
+        }
+        @if (allowsDefault(field.type) && !accepts('numericBounds')) {
+          <div class="settings" role="group" [attr.aria-labelledby]="'field-default-label-' + field.id">
+            <span class="default-label" [id]="'field-default-label-' + field.id">{{
+              'defaultValue.label' | translate
+            }}</span>
+            <app-field-default-value [field]="field" />
+          </div>
+        }
+
+        @if (accepts('mediaDimensions')) {
+          <div class="settings">
+            <form #mediaForm (ngSubmit)="saveMedia(mediaForm)" class="row">
+              <fieldset [attr.aria-invalid]="!!error" [disabled]="definitionLocked" class="settings-fields">
+                <label
+                  >{{ 'fieldSettings.media.width' | translate
+                  }}<input
+                    spellcheck="false"
+                    autocomplete="off"
+                    type="number"
+                    name="width"
+                    min="1"
+                    step="1"
+                    [(ngModel)]="width"
+                    (ngModelChange)="saveMedia(mediaForm, 'width')"
+                    [placeholder]="'fieldSettings.media.automatic' | translate"
+                /></label>
+                <label
+                  >{{ 'fieldSettings.media.height' | translate
+                  }}<input
+                    spellcheck="false"
+                    autocomplete="off"
+                    type="number"
+                    name="height"
+                    min="1"
+                    step="1"
+                    [(ngModel)]="height"
+                    (ngModelChange)="saveMedia(mediaForm, 'height')"
+                    [placeholder]="'fieldSettings.media.automatic' | translate"
+                /></label>
+              </fieldset>
+            </form>
+            @if (error) {
+              <p role="alert">{{ error }}</p>
+            }
+          </div>
+        }
+      </section>
+    }
+    <section
+      class="settings"
+      role="tabpanel"
+      [hidden]="selectedTab !== 'Display'"
+      [id]="'field-panel-' + field.id + '-Display'"
+      [attr.aria-labelledby]="'field-tab-' + field.id + '-Display'"
+    >
+      <form class="row">
+        <fieldset [disabled]="definitionLocked" class="settings-fields display-fields">
+          <label
+            >{{ 'settings.fieldName' | translate
+            }}<input
+              spellcheck="false"
+              autocomplete="off"
+              name="name"
+              data-setting="ownName"
+              [ngModel]="field.name"
+              (ngModelChange)="service.updateOwnFieldName(field.id, $event)"
+              (blur)="service.touchName(field.id)"
+              [placeholder]="'fieldSettings.display.labelPlaceholder' | translate"
+          /></label>
+          <label
+            >{{ 'settings.fieldDescription' | translate
+            }}<input
+              spellcheck="false"
+              autocomplete="off"
+              name="helpText"
+              data-setting="description"
+              [ngModel]="field.helpText || ''"
+              (ngModelChange)="service.updateHelpText(field.id, $event)"
+              (blur)="service.touchDescription(field.id)"
+              [placeholder]="'fieldSettings.display.descriptionPlaceholder' | translate"
+          /></label>
         </fieldset>
       </form>
       @if (error) {
         <p role="alert">{{ error }}</p>
       }
+      <app-language-selector [field]="field" />
+      @if (dynamic) {
+        <app-alternate-questions [field]="field" />
+      }
     </section>
-  }
-  <section
-    role="tabpanel"
-    [hidden]="selectedTab !== 'Annotations'"
-    [id]="'field-panel-' + field.id + '-Annotations'"
-    [attr.aria-labelledby]="'field-tab-' + field.id + '-Annotations'"
-    class="settings"
-  >
-    <app-annotations-editor [field]="field" />
-  </section>
-  @if (hasValues || hasConstraints) {
+
     <section
+      class="settings"
       role="tabpanel"
-      [hidden]="selectedTab !== valuesTab"
-      [id]="'field-panel-' + field.id + '-' + valuesTab"
-      [attr.aria-labelledby]="'field-tab-' + field.id + '-' + valuesTab"
+      [hidden]="selectedTab !== 'Field metadata'"
+      [id]="'field-panel-' + field.id + '-Field-metadata'"
+      [attr.aria-labelledby]="'field-tab-' + field.id + '-Field-metadata'"
     >
-      <ng-content select="[field-values]" />
-      @if (accepts('textLength')) {
-        <div class="settings">
-          <form #textForm (ngSubmit)="saveText(textForm)" class="row">
-            <fieldset
-              [attr.aria-invalid]="!!error"
-              [disabled]="definitionLocked"
-              class="settings-fields constraint-fields"
-            >
-              <label
-                >{{ 'fieldSettings.text.minLength' | translate
-                }}<input
-                  spellcheck="false"
-                  autocomplete="off"
-                  name="minLength"
-                  data-setting="minLength"
-                  type="number"
-                  min="0"
-                  step="1"
-                  [(ngModel)]="text.minLength"
-                  (ngModelChange)="saveText(textForm, 'minLength')"
-              /></label>
-              <label
-                >{{ 'fieldSettings.text.maxLength' | translate
-                }}<input
-                  spellcheck="false"
-                  autocomplete="off"
-                  name="maxLength"
-                  data-setting="maxLength"
-                  type="number"
-                  min="0"
-                  step="1"
-                  [(ngModel)]="text.maxLength"
-                  (ngModelChange)="saveText(textForm, 'maxLength')"
-              /></label>
-              @if (accepts('textPattern')) {
-                <label
-                  >{{ 'fieldSettings.text.regex' | translate
-                  }}<input
-                    spellcheck="false"
-                    autocomplete="off"
-                    class="wide"
-                    name="regex"
-                    data-setting="regex"
-                    [(ngModel)]="text.regex"
-                    (ngModelChange)="saveText(textForm, 'regex')"
-                    [placeholder]="'fieldSettings.text.regexPlaceholder' | translate"
-                /></label>
-              }
-            </fieldset>
-          </form>
-          @if (error) {
-            <p role="alert">{{ error }}</p>
-          }
-        </div>
-      }
-      @if (accepts('numericBounds')) {
-        <div class="settings">
-          <form #numericForm (ngSubmit)="saveNumeric(numericForm)" class="row">
-            <fieldset
-              [attr.aria-invalid]="!!error"
-              [disabled]="definitionLocked"
-              class="settings-fields numeric-constraint-fields"
-            >
-              <label
-                >{{ 'fieldSettings.numeric.datatype' | translate
-                }}<select
-                  name="numericType"
-                  data-setting="numberType"
-                  [attr.aria-label]="'fieldSettings.numeric.datatype' | translate"
-                  [(ngModel)]="numeric.type"
-                  (ngModelChange)="saveNumeric(numericForm, 'numericType')"
-                >
-                  @for (type of numericTypes; track type) {
-                    <option [value]="type">{{ type }}</option>
-                  }
-                </select></label
-              >
-              <label
-                >{{ 'fieldSettings.numeric.min' | translate
-                }}<input
-                  spellcheck="false"
-                  autocomplete="off"
-                  name="numericMin"
-                  data-setting="minValue"
-                  type="number"
-                  step="any"
-                  [value]="numeric.min ?? ''"
-                  (input)="editNumericBound('min', $any($event.target).value, numericForm, 'numericMin')"
-              /></label>
-              <label
-                >{{ 'fieldSettings.numeric.max' | translate
-                }}<input
-                  spellcheck="false"
-                  autocomplete="off"
-                  name="numericMax"
-                  data-setting="maxValue"
-                  type="number"
-                  step="any"
-                  [value]="numeric.max ?? ''"
-                  (input)="editNumericBound('max', $any($event.target).value, numericForm, 'numericMax')"
-              /></label>
-              <div class="numeric-default" role="group" [attr.aria-labelledby]="'numeric-default-label-' + field.id">
-                <span class="default-label" [id]="'numeric-default-label-' + field.id">{{
-                  'defaultValue.label' | translate
-                }}</span>
-                <app-field-default-value [field]="field" />
-              </div>
-              <label
-                >{{ 'fieldSettings.numeric.decimalPlaces' | translate
-                }}<input
-                  spellcheck="false"
-                  autocomplete="off"
-                  name="decimalPlaces"
-                  data-setting="decimalPlace"
-                  type="number"
-                  min="0"
-                  step="1"
-                  [(ngModel)]="numeric.decimalPlaces"
-                  (ngModelChange)="saveNumeric(numericForm, 'decimalPlaces')"
-              /></label>
-              <label
-                >{{ 'fieldSettings.numeric.unit' | translate
-                }}<input
-                  spellcheck="false"
-                  autocomplete="off"
-                  name="unit"
-                  data-setting="unitOfMeasure"
-                  [(ngModel)]="numeric.unit"
-                  (ngModelChange)="saveNumeric(numericForm, 'unit')"
-                  [placeholder]="'fieldSettings.numeric.unitPlaceholder' | translate"
-              /></label>
-            </fieldset>
-          </form>
-          @if (error) {
-            <p role="alert">{{ error }}</p>
-          }
-        </div>
-      }
-      @if (accepts('temporalPrecision')) {
-        <div class="settings">
-          <form (ngSubmit)="saveTemporal()" class="row">
-            <fieldset [attr.aria-invalid]="!!error" [disabled]="definitionLocked" class="settings-fields">
-              <label
-                >{{ 'fieldSettings.temporal.type' | translate
-                }}<select
-                  name="temporalType"
-                  [attr.aria-label]="'fieldSettings.temporal.type' | translate"
-                  [ngModel]="temporal.type"
-                  (ngModelChange)="changeTemporalType($event); saveTemporal()"
-                >
-                  <option value="xsd:date">{{ 'fieldTypes.date.label' | translate }}</option>
-                  <option value="xsd:time">{{ 'fieldTypes.time.label' | translate }}</option>
-                  <option value="xsd:dateTime">{{ 'fieldTypes.dateTime.label' | translate }}</option>
-                </select></label
-              >
-              <label
-                >{{ 'fieldSettings.temporal.precision' | translate
-                }}<select
-                  name="granularity"
-                  [attr.aria-label]="'fieldSettings.temporal.precision' | translate"
-                  [(ngModel)]="temporal.granularity"
-                  (ngModelChange)="saveTemporal()"
-                >
-                  @for (value of granularities; track value) {
-                    <option [value]="value">{{ 'fieldSettings.temporal.granularity.' + value | translate }}</option>
-                  }
-                </select></label
-              >
-              @if (temporal.type !== 'xsd:date') {
-                <label
-                  >{{ 'fieldSettings.temporal.timeFormat' | translate
-                  }}<select
-                    name="timeFormat"
-                    [attr.aria-label]="'fieldSettings.temporal.timeFormat' | translate"
-                    [(ngModel)]="temporal.inputTimeFormat"
-                    (ngModelChange)="saveTemporal()"
-                  >
-                    <option [ngValue]="null">{{ 'fieldSettings.temporal.defaultFormat' | translate }}</option>
-                    <option value="12h">{{ 'fieldSettings.temporal.twelveHour' | translate }}</option>
-                    <option value="24h">{{ 'fieldSettings.temporal.twentyFourHour' | translate }}</option>
-                  </select></label
-                >
-                <label class="check"
-                  ><input
-                    spellcheck="false"
-                    type="checkbox"
-                    name="timezone"
-                    [(ngModel)]="temporal.timezoneEnabled"
-                    (ngModelChange)="saveTemporal()"
-                  />{{ 'fieldSettings.temporal.showTimezone' | translate }}</label
-                >
-              }
-            </fieldset>
-          </form>
-          @if (error) {
-            <p role="alert">{{ error }}</p>
-          }
-        </div>
-      }
-      @if (allowsDefault(field.type) && !accepts('numericBounds')) {
-        <div class="settings" role="group" [attr.aria-labelledby]="'field-default-label-' + field.id">
-          <span class="default-label" [id]="'field-default-label-' + field.id">{{
-            'defaultValue.label' | translate
-          }}</span>
-          <app-field-default-value [field]="field" />
-        </div>
-      }
-
-      @if (accepts('mediaDimensions')) {
-        <div class="settings">
-          <form #mediaForm (ngSubmit)="saveMedia(mediaForm)" class="row">
-            <fieldset [attr.aria-invalid]="!!error" [disabled]="definitionLocked" class="settings-fields">
-              <label
-                >{{ 'fieldSettings.media.width' | translate
-                }}<input
-                  spellcheck="false"
-                  autocomplete="off"
-                  type="number"
-                  name="width"
-                  min="1"
-                  step="1"
-                  [(ngModel)]="width"
-                  (ngModelChange)="saveMedia(mediaForm, 'width')"
-                  [placeholder]="'fieldSettings.media.automatic' | translate"
-              /></label>
-              <label
-                >{{ 'fieldSettings.media.height' | translate
-                }}<input
-                  spellcheck="false"
-                  autocomplete="off"
-                  type="number"
-                  name="height"
-                  min="1"
-                  step="1"
-                  [(ngModel)]="height"
-                  (ngModelChange)="saveMedia(mediaForm, 'height')"
-                  [placeholder]="'fieldSettings.media.automatic' | translate"
-              /></label>
-            </fieldset>
-          </form>
-          @if (error) {
-            <p role="alert">{{ error }}</p>
-          }
-        </div>
-      }
+      <dl class="identity">
+        <dt>{{ 'fieldSettings.metadata.fieldIri' | translate }}</dt>
+        <dd>{{ field.atId || ('settings.notYetAssigned' | translate) }}</dd>
+        <dt>{{ 'settings.modelVersion' | translate }}</dt>
+        <dd>{{ artifact.schemaVersion }}</dd>
+        <dt>{{ 'settings.created' | translate }}</dt>
+        <dd>{{ artifact.createdOn || ('settings.notYetRecorded' | translate) }}</dd>
+        <dt>{{ 'settings.modified' | translate }}</dt>
+        <dd>{{ artifact.modifiedOn || ('settings.notYetRecorded' | translate) }}</dd>
+        <dt class="editable">
+          <label [for]="'field-identifier-' + field.id">{{ 'containerEditor.identifier' | translate }}</label>
+        </dt>
+        <dd>
+          <input
+            spellcheck="false"
+            autocomplete="off"
+            [id]="'field-identifier-' + field.id"
+            name="schemaIdentifier"
+            [(ngModel)]="schemaIdentifier"
+            (ngModelChange)="saveIdentifier()"
+            [disabled]="definitionLocked"
+          />
+        </dd>
+      </dl>
+    </section>
+    <section
+      class="settings"
+      role="tabpanel"
+      [hidden]="selectedTab !== 'Version'"
+      [id]="'field-panel-' + field.id + '-Version'"
+      [attr.aria-labelledby]="'field-tab-' + field.id + '-Version'"
+    >
+      <app-version-panel [nodeId]="field.id" [active]="expanded && selectedTab === 'Version'" />
     </section>
   }
-  <section
-    class="settings"
-    role="tabpanel"
-    [hidden]="selectedTab !== 'Display'"
-    [id]="'field-panel-' + field.id + '-Display'"
-    [attr.aria-labelledby]="'field-tab-' + field.id + '-Display'"
-  >
-    <form class="row">
-      <fieldset [disabled]="definitionLocked" class="settings-fields display-fields">
-        <label
-          >{{ 'settings.fieldName' | translate
-          }}<input
-            spellcheck="false"
-            autocomplete="off"
-            name="name"
-            data-setting="ownName"
-            [ngModel]="field.name"
-            (ngModelChange)="service.updateOwnFieldName(field.id, $event)"
-            (blur)="service.touchName(field.id)"
-            [placeholder]="'fieldSettings.display.labelPlaceholder' | translate"
-        /></label>
-        <label
-          >{{ 'settings.fieldDescription' | translate
-          }}<input
-            spellcheck="false"
-            autocomplete="off"
-            name="helpText"
-            data-setting="description"
-            [ngModel]="field.helpText || ''"
-            (ngModelChange)="service.updateHelpText(field.id, $event)"
-            (blur)="service.touchDescription(field.id)"
-            [placeholder]="'fieldSettings.display.descriptionPlaceholder' | translate"
-        /></label>
-      </fieldset>
-    </form>
-    @if (error) {
-      <p role="alert">{{ error }}</p>
-    }
-    <app-language-selector [field]="field" />
-    @if (dynamic) {
-      <app-alternate-questions [field]="field" />
-    }
-  </section>
-
-  <section
-    class="settings"
-    role="tabpanel"
-    [hidden]="selectedTab !== 'Field metadata'"
-    [id]="'field-panel-' + field.id + '-Field-metadata'"
-    [attr.aria-labelledby]="'field-tab-' + field.id + '-Field-metadata'"
-  >
-    <dl class="identity">
-      <dt>{{ 'fieldSettings.metadata.fieldIri' | translate }}</dt>
-      <dd>{{ field.atId || ('settings.notYetAssigned' | translate) }}</dd>
-      <dt>{{ 'settings.modelVersion' | translate }}</dt>
-      <dd>{{ artifact.schemaVersion }}</dd>
-      <dt>{{ 'settings.created' | translate }}</dt>
-      <dd>{{ artifact.createdOn || ('settings.notYetRecorded' | translate) }}</dd>
-      <dt>{{ 'settings.modified' | translate }}</dt>
-      <dd>{{ artifact.modifiedOn || ('settings.notYetRecorded' | translate) }}</dd>
-      <dt class="editable">
-        <label [for]="'field-identifier-' + field.id">{{ 'containerEditor.identifier' | translate }}</label>
-      </dt>
-      <dd>
-        <input
-          spellcheck="false"
-          autocomplete="off"
-          [id]="'field-identifier-' + field.id"
-          name="schemaIdentifier"
-          [(ngModel)]="schemaIdentifier"
-          (ngModelChange)="saveIdentifier()"
-          [disabled]="definitionLocked"
-        />
-      </dd>
-    </dl>
-  </section>
-  <section
-    class="settings"
-    role="tabpanel"
-    [hidden]="selectedTab !== 'Version'"
-    [id]="'field-panel-' + field.id + '-Version'"
-    [attr.aria-labelledby]="'field-tab-' + field.id + '-Version'"
-  >
-    <app-version-panel [nodeId]="field.id" [active]="expanded && selectedTab === 'Version'" />
-  </section>
 </div>
 <div class="settings-toggle-row">
   <button
