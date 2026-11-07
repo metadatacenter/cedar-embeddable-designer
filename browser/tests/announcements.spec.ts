@@ -44,7 +44,9 @@ async function controlledTermsField(page: Page): Promise<Locator> {
   await applyPreset(page, 'semantic');
   await designer.getByRole('button', { name: /^Add field$/ }).click();
   await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
-  const field = designer.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') });
+  const field = designer
+    .locator('app-field-card')
+    .filter({ has: page.locator('.field-type-label', { hasText: 'Controlled Terms' }) });
   await field.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Disease');
   await openSettings(field);
   return field;
@@ -98,7 +100,9 @@ test('Clear default and apply says the default went, and what the constraints no
     definition._valueConstraints['defaultValue'] = { termUri: 'urn:cancer', 'rdfs:label': 'Cancer' };
     d.template = template;
   });
-  const reloaded = designer.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') });
+  const reloaded = designer
+    .locator('app-field-card')
+    .filter({ has: page.locator('.field-type-label', { hasText: 'Controlled Terms' }) });
   await pickConstraint(page, reloaded);
   await designer.getByRole('button', { name: 'Clear default and apply constraints' }).click();
   await expect(region(designer)).toHaveText('Default cleared. Disease now has 2 constraints.');

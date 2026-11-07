@@ -14,6 +14,8 @@ const budget = Number(
 if (!Number.isInteger(budget) || budget < 1 || budget > 16) {
   throw new Error('CEDAR_TEST_WORKERS must be an integer between 1 and 16');
 }
+const mode = process.argv[2] ?? 'full';
+if (!['full', 'prepare'].includes(mode)) throw new Error(`Unknown gate: ${mode}`);
 const visualWeight = budget >= 6 ? 2 : 1;
 const stages = [
   { name: 'unit', script: 'test', weight: Math.max(1, budget - 3) },
@@ -40,7 +42,9 @@ const stages = [
 const cache = process.env.CEDAR_STAGE_CACHE_MODULE
   ? (await import(process.env.CEDAR_STAGE_CACHE_MODULE)).stageCache()
   : { reuse: () => false, save: () => {} };
-const pending = [...stages];
+// Train preparation retains every non-browser check; browser and visual jobs consume
+// these built bytes separately and must all pass before the train publishes them.
+const pending = stages.filter((stage) => mode === 'full' || !['browser', 'visual'].includes(stage.name));
 const eligible = new Map();
 const running = new Map();
 const passed = new Set();
@@ -201,7 +205,9 @@ function schedule() {
       pending.splice(pending.indexOf(stage), 1);
       used += weight;
       const began = performance.now();
-      console.log(`[gate] allocation ${stage.name}: ${workers.count} workers, ${((began - eligible.get(stage.name)) / 1000).toFixed(2)}s queued`);
+      console.log(
+        `[gate] allocation ${stage.name}: ${workers.count} workers, ${((began - eligible.get(stage.name)) / 1000).toFixed(2)}s queued`,
+      );
       console.log(`[gate] start ${stage.name} (${workers.count}/${budget} workers)`);
       const child = spawn('npm', ['run', stage.script], {
         // Stay in the CLI process group so cancellation reaps test descendants.
@@ -210,7 +216,8 @@ function schedule() {
         env: {
           ...process.env,
           CEDAR_STAGE_CACHE_MODULE: undefined,
-          CEDAR_STAGE_CACHE: undefined, CEDAR_TASK_CACHE_CONFIG: undefined,
+          CEDAR_STAGE_CACHE: undefined,
+          CEDAR_TASK_CACHE_CONFIG: undefined,
           ...stage.env,
           CEDAR_TEST_WORKERS: String(workers.count),
           VITEST_MAX_WORKERS: String(workers.count),
@@ -219,7 +226,10 @@ function schedule() {
       });
       running.set(stage.name, child);
       for (const stream of [child.stdout, child.stderr]) {
-        stream.on('data', (data) => { cache.observe?.(stage, data); process.stdout.write(`[${stage.name}] ${data}`); });
+        stream.on('data', (data) => {
+          cache.observe?.(stage, data);
+          process.stdout.write(`[${stage.name}] ${data}`);
+        });
       }
       child.on('error', (error) => {
         console.error(error);
@@ -232,8 +242,10 @@ function schedule() {
         used -= weight;
         const seconds = ((performance.now() - began) / 1000).toFixed(2);
         console.log(`[gate] ${stage.name}: exit ${code}, ${seconds}s`);
-        if (code === 0) { cache.save(stage); passed.add(stage.name); }
-        else {
+        if (code === 0) {
+          cache.save(stage);
+          passed.add(stage.name);
+        } else {
           failed = true;
           process.exitCode ||= 1;
         }

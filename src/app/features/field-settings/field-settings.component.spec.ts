@@ -3,6 +3,13 @@ import { FieldSettingsComponent } from './field-settings.component';
 import { TemplateService } from '../../core/services/template.service';
 import { readContainer } from '../../core/model/cedar-template';
 
+// These cases exercise controls inside the panel, as an author sees them after opening it.
+function openSettings(fixture: ComponentFixture<FieldSettingsComponent>): void {
+  fixture.detectChanges();
+  if (!fixture.componentInstance.expanded) fixture.componentInstance.toggleExpanded();
+  fixture.detectChanges();
+}
+
 it('restores incomplete numeric settings without showing the accepted bound or clearing it on another edit', () => {
   const service = TestBed.inject(TemplateService);
   service.templateName.set('Study');
@@ -15,7 +22,7 @@ it('restores incomplete numeric settings without showing the accepted bound or c
   const create = () => {
     const fixture = TestBed.createComponent(FieldSettingsComponent);
     fixture.componentRef.setInput('field', service.fields()[0]);
-    fixture.detectChanges();
+    openSettings(fixture);
     return fixture;
   };
   const first = create();
@@ -50,14 +57,14 @@ it('marks a tab that holds an error with the warning icon as well as its colour'
   });
   const fixture = TestBed.createComponent(FieldSettingsComponent);
   fixture.componentRef.setInput('field', service.fields()[0]);
-  fixture.detectChanges();
+  openSettings(fixture);
   const tabs = () => [...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('[role="tab"]')];
   expect(tabs().filter((tab) => tab.querySelector('app-icon'))).toEqual([]);
   const input = fixture.nativeElement.querySelector('[name=numericMax]') as HTMLInputElement;
   Object.defineProperty(input, 'validity', { value: { badInput: true } });
   fixture.componentInstance.numeric.max = null;
   fixture.componentInstance.saveNumeric(input.form!, 'numericMax');
-  fixture.detectChanges();
+  openSettings(fixture);
   expect(tabs().some((tab) => tab.classList.contains('has-errors'))).toBe(true);
   for (const tab of tabs()) {
     expect(tab.querySelector('app-icon[key="warning"]') !== null).toBe(tab.classList.contains('has-errors'));
@@ -71,13 +78,13 @@ it('edits identifier and key while preserving a hidden preferred label', async (
   service.updateFieldSettings(service.fields()[0].id, { preferredLabel: 'Study subject' });
   const fixture = TestBed.createComponent(FieldSettingsComponent);
   fixture.componentRef.setInput('field', service.fields()[0]);
-  fixture.detectChanges();
+  openSettings(fixture);
   await fixture.whenStable();
   const edit = async (name: string, value: string) => {
     const input = fixture.nativeElement.querySelector(`input[name="${name}"]`) as HTMLInputElement;
     input.value = value;
     input.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
+    openSettings(fixture);
     await fixture.whenStable();
   };
   await edit('schemaIdentifier', 'local field 42');
@@ -111,20 +118,20 @@ describe('the Configuration tab', () => {
     service.addField(type, 0);
     const fixture = TestBed.createComponent(FieldSettingsComponent);
     fixture.componentRef.setInput('field', service.fields()[0]);
-    fixture.detectChanges();
+    openSettings(fixture);
     return { service, fixture };
   };
   const refresh = async (service: TemplateService, fixture: ReturnType<typeof create>['fixture']): Promise<void> => {
     fixture.componentRef.setInput('field', service.fields()[0]);
-    fixture.detectChanges();
+    openSettings(fixture);
     await fixture.whenStable();
-    fixture.detectChanges();
+    openSettings(fixture);
   };
 
   it('comes first and holds the requirement, key, description, multiplicity, bounds and line placement', async () => {
     const { service, fixture } = create('text');
     await fixture.whenStable();
-    fixture.detectChanges();
+    openSettings(fixture);
     expect(fixture.componentInstance.tabs[0]).toBe('Configuration');
     expect(fixture.componentInstance.selectedTab).toBe('Configuration');
     const names = [
@@ -207,7 +214,7 @@ describe('the Configuration tab', () => {
     service.fieldDocumentMode.set(true);
     const fixture = TestBed.createComponent(FieldSettingsComponent);
     fixture.componentRef.setInput('field', service.fields()[0]);
-    fixture.detectChanges();
+    openSettings(fixture);
     expect(fixture.componentInstance.tabs).not.toContain('Configuration');
     expect(fixture.componentInstance.selectedTab).toBe('Display');
     expect(panel(fixture)).toBeNull();
@@ -220,7 +227,7 @@ describe('a field description edited from Configuration and from Presentation', 
   // The field under test is the first: a new field is added in front of the starter fields.
   const render = async () => {
     fixture.componentRef.setInput('field', service.fields()[0]);
-    fixture.detectChanges();
+    openSettings(fixture);
     await fixture.whenStable();
   };
   const input = (tab: string, name: string) =>
@@ -263,4 +270,53 @@ describe('a field description edited from Configuration and from Presentation', 
     await type(input('Display', 'name'), 'Study title');
     expect(input('Configuration', 'shownName').value).toBe('Study title');
   });
+});
+
+it('creates settings on first opening and retains an unfinished input across collapse', async () => {
+  const service = TestBed.inject(TemplateService);
+  const fixture = TestBed.createComponent(FieldSettingsComponent);
+  fixture.componentRef.setInput('field', service.fields()[0]);
+  fixture.detectChanges();
+  expect(fixture.nativeElement.querySelector('form')).toBeNull();
+  const button = fixture.nativeElement.querySelector('.settings-toggle') as HTMLButtonElement;
+  expect(fixture.nativeElement.querySelector('#' + button.getAttribute('aria-controls'))).not.toBeNull();
+  button.click();
+  fixture.detectChanges();
+  await fixture.whenStable();
+  const input = fixture.nativeElement.querySelector('[name="shownDescription"]') as HTMLInputElement;
+  input.value = 'An unfinished description';
+  input.dispatchEvent(new Event('input'));
+  fixture.detectChanges();
+  await fixture.whenStable();
+  button.click();
+  fixture.detectChanges();
+  expect(button.getAttribute('aria-expanded')).toBe('false');
+  button.click();
+  fixture.detectChanges();
+  expect(fixture.nativeElement.querySelector('[name="shownDescription"]')).toBe(input);
+  expect(input.value).toBe('An unfinished description');
+});
+
+it('opens an unmounted panel when revealing an invalid numeric constraint', async () => {
+  const service = TestBed.inject(TemplateService);
+  service.templateName.set('Study');
+  service.addField('number', 0);
+  const id = service.fields()[0].id;
+  service.updateFieldName(id, 'Number');
+  const fixture = TestBed.createComponent(FieldSettingsComponent);
+  fixture.componentRef.setInput('field', service.fields()[0]);
+  fixture.detectChanges();
+  expect(fixture.nativeElement.querySelector('form')).toBeNull();
+  service.updateFieldSettings(id, {
+    numeric: { type: 'xsd:decimal', min: 10, max: 1, decimalPlaces: null, unit: null },
+  });
+  const issue = service.validationReport().issues.find((issue) => issue.nodeId === id && issue.setting !== 'name');
+  expect(issue).toBeDefined();
+  service.revealIssue(issue!);
+  fixture.detectChanges();
+  await fixture.whenStable();
+  fixture.detectChanges();
+  expect(fixture.componentInstance.expanded).toBe(true);
+  expect(fixture.componentInstance.selectedTab).toBe(issue!.tab);
+  expect(fixture.nativeElement.querySelector('[name="numericMin"]')).not.toBeNull();
 });

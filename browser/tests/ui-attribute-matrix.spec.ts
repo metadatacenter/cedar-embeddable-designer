@@ -255,6 +255,9 @@ for (const width of WIDTHS) {
       for (const paletteType of paletteTypes) {
         test(`match what a ${paletteType} accepts`, async ({ page }) => {
           await oneCardOf(page, paletteType);
+          await expectLaidOut(page, `${paletteType} collapsed`);
+          await settings(page).getByRole('button', { name: 'Expand field settings' }).click();
+          await expect(settings(page).getByRole('tab').first()).toBeVisible();
 
           const wrong: string[] = [];
           for (const control of CONTROLS) {
@@ -268,9 +271,6 @@ for (const width of WIDTHS) {
           }
           expect.soft(wrong, `${paletteType}: the card and the descriptor disagree`).toEqual([]);
 
-          await expectLaidOut(page, `${paletteType} collapsed`);
-
-          await settings(page).getByRole('button', { name: 'Expand field settings' }).click();
           const tabs = settings(page).getByRole('tab');
           // count() does not wait: without this, the loop can silently check zero tabs.
           await expect(tabs.first()).toBeVisible();
@@ -354,6 +354,7 @@ const constraints = (template: Record<string, unknown>, key: string): Record<str
 const open = async (page: Page, heading: string) => {
   const expand = settings(page).getByRole('button', { name: 'Expand field settings' });
   if (await expand.count()) await expand.click();
+  await expect(settings(page).getByRole('tab').first()).toBeVisible();
   if (
     heading === 'Constraints' &&
     (await settings(page).getByRole('tab', { name: 'Content', exact: true, includeHidden: true }).count())
@@ -804,9 +805,10 @@ test.describe('what a sibling component contributes', () => {
         .first()
         .click();
       await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
-      await expect(designer.locator('app-controlled-term-config')).toBeAttached();
       await openSettings(
-        designer.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') }),
+        designer
+          .locator('app-field-card')
+          .filter({ has: page.locator('.field-type-label', { hasText: 'Controlled Terms' }) }),
       );
       const panel = designer.locator('[id^=field-card-]').last().locator('app-controlled-term-config');
       await clickCentred(panel.getByRole('button', { name: /Edit controlled-term constraints/ }));

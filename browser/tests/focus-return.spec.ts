@@ -120,6 +120,8 @@ test.describe('adding', () => {
     await open.focus();
     await page.keyboard.press('Enter');
     await expect(page.getByRole('dialog')).toBeVisible();
+    // Rendering precedes afterNextRender's showModal(). Escape only closes a modal dialog.
+    await expect(page.getByRole('dialog')).toHaveJSProperty('open', true);
     await page.keyboard.press('Escape');
     await expect(open).toBeFocused();
   });
@@ -150,7 +152,9 @@ async function controlledTermsField(page: Page): Promise<Locator> {
   await applyPreset(page, 'semantic');
   await designer.getByRole('button', { name: /^Add field$/ }).click();
   await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
-  const field = designer.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') });
+  const field = designer
+    .locator('app-field-card')
+    .filter({ has: page.locator('.field-type-label', { hasText: 'Controlled Terms' }) });
   await field.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Disease');
   await openSettings(field);
   return field;
@@ -207,7 +211,9 @@ test.describe('the constraint dialog', () => {
     await designer.locator('#stub-pick').click();
     await rejectEveryTerm(page);
     await giveDefault(page);
-    const reopened = designer.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') });
+    const reopened = designer
+      .locator('app-field-card')
+      .filter({ has: page.locator('.field-type-label', { hasText: 'Controlled Terms' }) });
     await openSettings(reopened);
     const edit = reopened.getByRole('button', { name: 'Edit controlled-term constraints' });
     await edit.focus();

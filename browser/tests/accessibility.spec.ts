@@ -387,40 +387,63 @@ test('a fresh template at the default and Basic presets', async ({ page }) => {
   await expectAccessible(page, 'Basic preset');
 });
 
-test('the template settings, user menu, Preferences and Add field palette', async ({ page }) => {
-  const designer = await openDesigner(page);
-  await designer.getByRole('button', { name: 'Expand template settings', exact: true }).click();
-  await expectAccessible(page, 'template settings');
-  await designer.locator('.user-menu-container button').first().click();
-  await expectAccessible(page, 'user menu');
-  await designer.getByRole('button', { name: 'Preferences' }).click();
-  await expectAccessible(page, 'Preferences');
-  await designer.getByRole('button', { name: 'Done' }).click();
-  await designer.locator('.user-menu-container button').first().click();
-  await designer.getByRole('button', { name: 'Define Presets' }).click();
-  await expectAccessible(page, 'Define Presets');
-  await designer.getByRole('button', { name: 'Done' }).click();
-  await designer.getByRole('button', { name: /^Add field$/ }).click();
-  await expectAccessible(page, 'Add field palette');
-  // A new field's name box is empty, so its placeholder is the only text it shows.
-  await designer.getByRole('button', { name: 'Text', exact: true }).click();
-  await expect(designer.getByPlaceholder('Enter field name').last()).toHaveValue('');
-  await expectAccessible(page, 'a new, unnamed field');
-});
+// Each page state gets its own deadline. Several full-page scans in one test exhaust the
+// 30-second budget when the train also runs another application's browser suite.
+for (const state of [
+  'template settings',
+  'user menu',
+  'Preferences',
+  'Define Presets',
+  'Add field palette',
+  'a new, unnamed field',
+])
+  test(`the template authoring surface: ${state}`, async ({ page }) => {
+    const designer = await openDesigner(page);
+    await designer.getByRole('button', { name: 'Expand template settings', exact: true }).click();
+    if (['user menu', 'Preferences', 'Define Presets'].includes(state)) {
+      await designer.locator('.user-menu-container button').first().click();
+      if (state !== 'user menu') await designer.getByRole('button', { name: state, exact: true }).click();
+    }
+    if (['Add field palette', 'a new, unnamed field'].includes(state)) {
+      await designer.getByRole('button', { name: /^Add field$/ }).click();
+      if (state === 'a new, unnamed field') {
+        // The empty name's placeholder is the only text the new field shows.
+        await designer.getByRole('button', { name: 'Text', exact: true }).click();
+        await expect(designer.getByPlaceholder('Enter field name').last()).toHaveValue('');
+      }
+    }
+    await expectAccessible(page, state);
+  });
 
 /**
- * The sample template's fields. Each gets a test of its own, because every tab of every field in
- * one test outlasted the timeout on the build train's slower runner.
+ * The sample template's fields and their complete tab inventory. Each tab gets a separate scan
+ * and deadline; checking the inventory prevents a newly added tab from silently losing coverage.
  */
 const SAMPLE_FIELDS = 3;
+const SAMPLE_FIELD_TABS = ['Configuration', 'Display', 'Constraints', 'Annotations', 'Field metadata', 'Version'];
+
+async function expectSampleTabAccessible(page: Page, card: Locator, tab: string, state: string): Promise<void> {
+  const toggle = card.locator('.settings-toggle').first();
+  if ((await toggle.getAttribute('aria-expanded')) === 'false') await clickCentred(toggle);
+  const tabs = card.getByRole('tab');
+  await expect(tabs).toHaveCount(SAMPLE_FIELD_TABS.length);
+  // IDs carry stable tab names even when the visible labels are Hungarian.
+  for (const [index, name] of SAMPLE_FIELD_TABS.entries())
+    await expect(tabs.nth(index)).toHaveAttribute('id', new RegExp(`-${name.replaceAll(' ', '-')}$`));
+  const selected = tabs.nth(SAMPLE_FIELD_TABS.indexOf(tab));
+  await clickCentred(selected);
+  await expect(selected).toHaveAttribute('aria-selected', 'true');
+  await expectAccessible(page, `${state}, ${(await selected.innerText()).trim()} tab`);
+}
 
 for (let index = 0; index < SAMPLE_FIELDS; index++)
-  test(`every settings tab of field ${index + 1} in the template`, async ({ page }) => {
-    const designer = await openDesigner(page);
-    const cards = designer.locator('[id^=field-card-]');
-    await expect(cards).toHaveCount(SAMPLE_FIELDS);
-    await expectTabsAccessible(page, cards.nth(index), `field ${index + 1}`);
-  });
+  for (const tab of SAMPLE_FIELD_TABS)
+    test(`the ${tab} tab of field ${index + 1} in the template`, async ({ page }) => {
+      const designer = await openDesigner(page);
+      const cards = designer.locator('[id^=field-card-]');
+      await expect(cards).toHaveCount(SAMPLE_FIELDS);
+      await expectSampleTabAccessible(page, cards.nth(index), tab, `field ${index + 1}`);
+    });
 
 /** Show the designer in Hungarian. The stub picker brings the property IRI's Choose and Replace buttons, whose Hungarian names must hold their visible words. */
 async function openHungarian(page: Page): Promise<Locator> {
@@ -438,25 +461,46 @@ test('the Hungarian text on a template', async ({ page }) => {
 });
 
 for (let index = 0; index < SAMPLE_FIELDS; index++)
-  test(`the Hungarian text on every settings tab of field ${index + 1}`, async ({ page }) => {
-    const designer = await openHungarian(page);
-    const cards = designer.locator('[id^=field-card-]');
-    await expect(cards).toHaveCount(SAMPLE_FIELDS);
-    await expectTabsAccessible(page, cards.nth(index), `Hungarian field ${index + 1}`);
-  });
+  for (const tab of SAMPLE_FIELD_TABS)
+    test(`the Hungarian text on the ${tab} tab of field ${index + 1}`, async ({ page }) => {
+      const designer = await openHungarian(page);
+      const cards = designer.locator('[id^=field-card-]');
+      await expect(cards).toHaveCount(SAMPLE_FIELDS);
+      await expectSampleTabAccessible(page, cards.nth(index), tab, `Hungarian field ${index + 1}`);
+    });
 
-test('the child picker, a nested element and a collapsed element', async ({ page }) => {
+test('the child picker', async ({ page }) => {
   const designer = await openDesigner(page);
   await applyPreset(page, 'modular');
-  await addElementFixture(page, undefined, () => expectAccessible(page, 'child picker'));
+  await addElementFixture(page, designer, () => expectAccessible(page, 'child picker'));
+});
+
+async function openNestedElement(page: Page): Promise<Locator> {
+  const designer = await openDesigner(page);
+  await applyPreset(page, 'modular');
+  await addElementFixture(page);
   await nestFixtureFields(page, ['Element']);
   const element = designer
     .locator('.field-drag-container')
     .filter({ has: page.locator(':scope > app-container-editor') })
     .first();
   await expect(element.locator('.field-drag-container').first()).toBeVisible();
+  return element;
+}
+
+test('a nested element', async ({ page }) => {
+  await openNestedElement(page);
   await expectAccessible(page, 'nested element');
-  await expectTabsAccessible(page, element.locator('.field-drag-container').first(), 'nested field');
+});
+
+for (const tab of SAMPLE_FIELD_TABS)
+  test(`the ${tab} tab of a nested field`, async ({ page }) => {
+    const element = await openNestedElement(page);
+    await expectSampleTabAccessible(page, element.locator('.field-drag-container').first(), tab, 'nested field');
+  });
+
+test('a collapsed element', async ({ page }) => {
+  const element = await openNestedElement(page);
   await element.getByRole('button', { name: 'Collapse Element', exact: true }).click();
   await expectAccessible(page, 'collapsed element');
 });
@@ -543,7 +587,9 @@ async function controlledTermsCard(page: Page) {
   await designer.getByRole('textbox', { name: 'Template name', exact: true }).fill('Study');
   await designer.getByRole('button', { name: /^Add field$/ }).click();
   await designer.getByRole('button', { name: 'Controlled Terms', exact: true }).click();
-  const card = designer.locator('app-field-card').filter({ has: page.locator('app-controlled-term-config') });
+  const card = designer
+    .locator('app-field-card')
+    .filter({ has: page.locator('.field-type-label', { hasText: 'Controlled Terms' }) });
   await card.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Disease');
   return { designer, card };
 }

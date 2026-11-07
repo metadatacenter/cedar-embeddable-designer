@@ -66,7 +66,16 @@ export class FieldSettingsComponent implements OnChanges {
   @Input() hasValues = false;
   private readonly i18n = inject(CedLanguageService);
   readonly tabKey = settingsTabKey;
-  expanded = false;
+  private isExpanded = false;
+  // Mount controls on first use, then retain their DOM and uncommitted input when collapsed.
+  settingsCreated = false;
+  get expanded(): boolean {
+    return this.isExpanded;
+  }
+  set expanded(value: boolean) {
+    this.isExpanded = value;
+    if (value) this.settingsCreated = true;
+  }
   activeTab: string = SETTINGS_TABS.configuration;
   get valuesTab(): string {
     return ['richText', 'image', 'youtube'].includes(this.field.type) ? 'Content' : 'Constraints';

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { test } from 'node:test';
 
-function gate(workers, fail = '', environment = {}, copies = 1) {
+function gate(workers, fail = '', environment = {}, copies = 1, mode = 'full') {
   const directory = mkdtempSync(path.join(tmpdir(), 'ced-gate-'));
   const log = path.join(directory, 'events');
   writeFileSync(
@@ -25,7 +25,7 @@ setTimeout(() => { emit('end'); process.exit(script === process.env.GATE_FAIL ? 
     // Several copies run at once, as gates in concurrent builds do.
     const command =
       copies === 1
-        ? [process.execPath, [script]]
+        ? [process.execPath, [script, mode]]
         : ['sh', ['-c', `for i in $(seq ${copies}); do "$GATE_NODE" "$GATE_SCRIPT" & done; wait`]];
     const result = spawnSync(...command, {
       encoding: 'utf8',
@@ -38,7 +38,10 @@ setTimeout(() => { emit('end'); process.exit(script === process.env.GATE_FAIL ? 
         GATE_LOG: log,
         GATE_FAIL: fail,
         // A build runs these tests inside its own pool, which no test may draw on.
-        CEDAR_WORKER_POOL: undefined, CEDAR_STAGE_CACHE_MODULE: undefined, CEDAR_STAGE_CACHE: undefined, CEDAR_TASK_CACHE_CONFIG: undefined,
+        CEDAR_WORKER_POOL: undefined,
+        CEDAR_STAGE_CACHE_MODULE: undefined,
+        CEDAR_STAGE_CACHE: undefined,
+        CEDAR_TASK_CACHE_CONFIG: undefined,
         ...environment,
       },
     });
@@ -219,4 +222,16 @@ test('a conformance refusal prevents packaging and browser acceptance', () => {
   const started = events.filter((event) => event.event === 'start').map((event) => event.script);
   assert.ok(started.includes('test:conformance'));
   for (const blocked of ['dist', 'test:browser:prebuilt', 'test:visual']) assert.ok(!started.includes(blocked));
+});
+
+test('train preparation runs every non-browser check and builds without publishing', () => {
+  const { result, events } = gate(4, '', {}, 1, 'prepare');
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(
+    events
+      .filter((e) => e.event === 'end')
+      .map((e) => e.script)
+      .sort(),
+    ['test', 'lint', 'typecheck', 'test:boundaries', 'test:packaging', 'test:conformance', 'dist'].sort(),
+  );
 });
