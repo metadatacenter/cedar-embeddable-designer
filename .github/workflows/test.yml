@@ -95,6 +95,24 @@ jobs:
           npm run check:size
           npm run package:npm
 
+      - name: Save the tested bundle for paired performance measurements
+        uses: actions/upload-artifact@v7
+        with:
+          name: ced-performance-bundle
+          path: dist-bundle/cedar-embeddable-designer.js
+          if-no-files-found: error
+          retention-days: 2
+
+      - name: Save the production build for WebKit
+        uses: actions/upload-artifact@v7
+        with:
+          name: ced-browser-build
+          path: |
+            dist
+            dist-bundle
+          if-no-files-found: error
+          retention-days: 2
+
       # Against the file an embedder downloads, in a host page that is not the
       # development server. Everything this suite covers was found by hand in a
       # browser and by nothing else: an element that never registered, a lookup
@@ -124,6 +142,16 @@ jobs:
       # that a failure means something.
       - name: Audit what ships
         run: npm run audit:prod
+
+  performance:
+    name: Standalone performance
+    needs: test
+    uses: metadatacenter/cedar-development/.github/workflows/frontend-performance-paired.yml@da481d46035a8d8cfac0a088d4ed860da2498073
+    with:
+      component: ced
+      baseline-ref: ${{ github.event.pull_request.base.sha || github.event.before }}
+      candidate-artifact: ced-performance-bundle
+      harness-ref: da481d46035a8d8cfac0a088d4ed860da2498073
 
   cef-integration:
     name: CED with real CEE, CEF and CETP
@@ -228,6 +256,7 @@ jobs:
 
   webkit-interactions:
     name: WebKit focus and pointer interactions
+    needs: test
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 15
     env:
@@ -238,11 +267,16 @@ jobs:
         with:
           node-version: 24.22.1
           cache: npm
+      # Reuse the production build whose freshness and Chromium checks passed above.
+      # A redundant Angular build previously hung after emitting its host-fonts output.
+      - uses: actions/download-artifact@v8
+        with:
+          name: ced-browser-build
+          path: .
       - run: |
           npm ci
           npm --prefix browser ci
           ./browser/node_modules/.bin/playwright install --with-deps webkit
-          npm run dist
           npm run test:browser:prebuilt -- --project=webkit
       - uses: actions/upload-artifact@v4
         if: failure()
