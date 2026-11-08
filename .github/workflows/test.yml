@@ -95,6 +95,14 @@ jobs:
           npm run check:size
           npm run package:npm
 
+      - name: Save the tested bundle for paired performance measurements
+        uses: actions/upload-artifact@v7
+        with:
+          name: ced-performance-bundle
+          path: dist-bundle/cedar-embeddable-designer.js
+          if-no-files-found: error
+          retention-days: 2
+
       # Against the file an embedder downloads, in a host page that is not the
       # development server. Everything this suite covers was found by hand in a
       # browser and by nothing else: an element that never registered, a lookup
@@ -124,6 +132,16 @@ jobs:
       # that a failure means something.
       - name: Audit what ships
         run: npm run audit:prod
+
+  performance:
+    name: Standalone performance
+    needs: test
+    uses: metadatacenter/cedar-development/.github/workflows/frontend-performance-paired.yml@eb563739104eaa28956be9f4f6e8c864f96f5b4c
+    with:
+      component: ced
+      baseline-ref: ${{ github.event.pull_request.base.sha || github.event.before }}
+      candidate-artifact: ced-performance-bundle
+      harness-ref: eb563739104eaa28956be9f4f6e8c864f96f5b4c
 
   cef-integration:
     name: CED with real CEE, CEF and CETP
