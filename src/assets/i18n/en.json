@@ -683,7 +683,9 @@
     "noFields": "No fields yet",
     "librariesAndFields": "Libraries & Fields",
     "builtIn": "Built-in Fields",
-    "libraryEmpty": "No fields in this library"
+    "libraryEmpty": "No fields in this library",
+    "resize": "Resize field list",
+    "heightValue": "{{percent}} percent of the sidebar"
   },
   "fieldTypePicker": {
     "title": "Choose field",

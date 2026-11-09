@@ -119,6 +119,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The divider between the library sidebar's field list and the panel below it can be moved from
+  the keyboard. It is a separator named "Resize field list" that takes a Tab stop. The arrow keys
+  move it by 5 points of the sidebar's height, or 10 with Shift, and Home and End set the 10% and
+  75% limits a drag keeps. Before, only a pointer could move it.
 - A template or element with a language of its own saves. The model library wrote that language
   where the meta-schema refuses it, so the artifact server refused the save, and the designer
   read it back from there itself. The library now writes it in the template's own context.

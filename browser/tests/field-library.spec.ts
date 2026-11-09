@@ -69,3 +69,39 @@ test('dragging the divider below the sidebar field list resizes the list within 
   await drag(0);
   expect(await share()).toBe(10);
 });
+
+test('the divider below the sidebar field list resizes the list from the keyboard within the same bounds', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const designer = await openDesigner(page);
+  await designer.getByRole('button', { name: 'User Menu' }).click();
+  await designer.getByRole('button', { name: 'Preferences', exact: true }).click();
+  await designer.getByRole('radio', { name: /Library Sidebar/ }).check();
+  await designer.getByRole('button', { name: 'Done', exact: true }).click();
+  const before = await currentTemplate(page);
+  const list = designer.locator('.sidebar-section').first();
+  const divider = designer.getByRole('separator', { name: 'Resize field list' });
+  const share = () => list.evaluate((section) => parseFloat(section.style.height));
+  await expect(divider).toHaveAttribute('aria-orientation', 'horizontal');
+  await expect(divider).toHaveAttribute('aria-valuenow', '33');
+  await expect(divider).toHaveAttribute('aria-valuetext', '33 percent of the sidebar');
+
+  // The arrow keys move the divider by 5 points, 10 with Shift, and the list follows it.
+  await divider.press('ArrowDown');
+  await expect(divider).toHaveAttribute('aria-valuenow', '38');
+  expect(await share()).toBe(38);
+  await divider.press('Shift+ArrowUp');
+  await expect(divider).toHaveAttribute('aria-valuenow', '28');
+
+  // Home and End set the limits a drag keeps, and the arrow keys cannot pass them.
+  await divider.press('End');
+  await divider.press('ArrowDown');
+  await expect(divider).toHaveAttribute('aria-valuenow', '75');
+  expect(await share()).toBe(75);
+  await divider.press('Home');
+  await divider.press('ArrowUp');
+  await expect(divider).toHaveAttribute('aria-valuenow', '10');
+  expect(await share()).toBe(10);
+  expect(await currentTemplate(page)).toEqual(before);
+});

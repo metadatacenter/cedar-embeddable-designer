@@ -11,7 +11,7 @@
     }
 
     <!-- Field List Section -->
-    <div class="sidebar-section" [style.height.%]="fieldListHeight()">
+    <div class="sidebar-section" id="ced-sidebar-fields" [style.height.%]="fieldListHeight()">
       <!-- Field List Header -->
       <div class="sidebar-header">
         <div class="sidebar-header-left">
@@ -56,7 +56,21 @@
       </div>
     </div>
     <!-- Draggable Divider -->
-    <div (mousedown)="onResizeStart($event)" class="resizable-divider" [class.resizing]="isResizing()">
+    <div
+      class="resizable-divider"
+      role="separator"
+      tabindex="0"
+      [attr.aria-label]="'sidebar.resize' | translate"
+      aria-orientation="horizontal"
+      aria-controls="ced-sidebar-fields"
+      [attr.aria-valuemin]="fieldListMinHeight"
+      [attr.aria-valuemax]="fieldListMaxHeight"
+      [attr.aria-valuenow]="fieldListHeightValue()"
+      [attr.aria-valuetext]="'sidebar.heightValue' | translate: { percent: fieldListHeightValue() }"
+      [class.resizing]="isResizing()"
+      (mousedown)="onResizeStart($event)"
+      (keydown)="resizeWithKeyboard($event)"
+    >
       <div class="divider-handle"></div>
     </div>
     <!-- Add Fields Section -->

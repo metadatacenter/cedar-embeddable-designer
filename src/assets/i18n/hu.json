@@ -683,7 +683,9 @@
     "noFields": "Még nincsenek mezők",
     "librariesAndFields": "Könyvtárak és mezők",
     "builtIn": "Beépített mezők",
-    "libraryEmpty": "Ebben a könyvtárban nincsenek mezők"
+    "libraryEmpty": "Ebben a könyvtárban nincsenek mezők",
+    "resize": "Mezőlista átméretezése",
+    "heightValue": "az oldalsáv {{percent}} százaléka"
   },
   "fieldTypePicker": {
     "title": "Mező kiválasztása",
