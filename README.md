@@ -27,7 +27,7 @@ Development snapshots are published to CEDAR Nexus as
 exact snapshot for registry installs. Local `cedarcli build frontends` supplies current local
 component sources, including uncommitted edits, automatically; `cedarcli test frontends` checks
 them without deployment. No publication, pin update or follow-up approval is required for either.
-CED is not yet released on public npmjs.
+Releases are published to public npmjs as `cedar-embeddable-designer`.
 
 Serialization is the
 [CEDAR model library's](https://github.com/metadatacenter/cedar-model-typescript-library).
