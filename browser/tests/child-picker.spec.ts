@@ -269,17 +269,16 @@ test('Escape dismisses the actions between two cards until the pointer or focus 
   await expect(zone).toHaveCSS('opacity', '1');
   await expect(actions).toHaveCSS('pointer-events', 'auto');
 
-  // Keyboard focus shows them too. Escape hides them and leaves focus where it was.
+  // Keyboard focus shows them too. Escape hides them and moves focus to the card below, since a
+  // hidden action that kept focus would show it to nobody.
   await page.mouse.move(0, 0);
   await add.focus();
   await expect(zone).toHaveCSS('opacity', '1');
   await page.keyboard.press('Escape');
   await expect(zone).toHaveCSS('opacity', '0');
-  await expect(add).toBeFocused();
-  await expect(actions).toHaveCSS('pointer-events', 'none');
-  // Focus moving away and back shows them again.
-  await page.keyboard.press('Tab');
   await expect(designer.getByRole('group', { name: 'Category' })).toBeFocused();
+  await expect(actions).toHaveCSS('pointer-events', 'none');
+  // Focus moving back shows them again.
   await page.keyboard.press('Shift+Tab');
   await expect(add).toBeFocused();
   await expect(zone).toHaveCSS('opacity', '1');
@@ -305,20 +304,42 @@ test('an Escape the palette uses leaves the actions between two cards shown', as
   await expect(zone).toHaveCSS('opacity', '0');
 });
 
-test('focus moving to the next action between two cards shows the actions again', async ({ page }) => {
+test('focus moving to an action the pointer dismissed shows the actions again', async ({ page }) => {
   const designer = await openDesigner(page);
   await applyPreset(page, 'modular');
-  await page.mouse.move(0, 0);
   const zone = designer.locator('.insert-zone').nth(1);
-  await zone.getByRole('button', { name: 'Add field here', exact: true }).focus();
+  await zone.scrollIntoViewIfNeeded();
+  const gap = (await zone.boundingBox())!;
+  await page.mouse.move(gap.x + 24, gap.y + gap.height / 2);
   await expect(zone).toHaveCSS('opacity', '1');
   await page.keyboard.press('Escape');
   await expect(zone).toHaveCSS('opacity', '0');
   await expect(zone.locator('app-insertion-actions')).toHaveCSS('pointer-events', 'none');
-  // A control that takes focus has to be seen to have it, so each newly focused action shows them.
-  await page.keyboard.press('Tab');
-  await expect(zone.getByRole('button', { name: 'Add element here', exact: true })).toBeFocused();
+  // A control that takes focus has to be seen to have it, so an action taking focus shows them.
+  await zone.getByRole('button', { name: 'Add element here', exact: true }).focus();
   await expect(zone).toHaveCSS('opacity', '1');
+});
+
+test('an action used from the keyboard keeps the actions between two cards shown', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await page.mouse.move(0, 0);
+  const zone = designer.locator('.insert-zone').nth(1);
+  const add = zone.getByRole('button', { name: 'Add field here', exact: true });
+  const palette = designer.locator('app-field-type-picker');
+  await add.focus();
+  await page.keyboard.press('Enter');
+  await expect(palette).toBeVisible();
+  // The action that opened the palette keeps focus, so it stays in sight.
+  await expect(add).toBeFocused();
+  await expect(zone).toHaveCSS('opacity', '1');
+  await page.keyboard.press('Escape');
+  await expect(palette).toHaveCount(0);
+  await expect(add).toBeFocused();
+  await expect(zone).toHaveCSS('opacity', '1');
+  // A second Escape hides the actions and gives focus to the card below them.
+  await page.keyboard.press('Escape');
+  await expect(zone).toHaveCSS('opacity', '0');
+  await expect(designer.getByRole('group', { name: 'Category' })).toBeFocused();
 });
 
 /** Whether the designer's topmost element at a point of the viewport is part of the insertion actions. */

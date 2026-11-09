@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Escape no longer leaves keyboard focus on the insertion actions it hides between two cards.
+  Focus moves to the card below them, the one they insert before. An action used from the
+  keyboard keeps the actions shown, so closing the palette it opens returns focus to a control
+  that can be seen. A pointer click still hides them.
+
 ## [0.1.0] - 2026-11-09
 
 Aligns with `cedar-model-typescript-library@1.0.27`.
