@@ -157,6 +157,7 @@ test('sidebar mode runs from the toolbar through the library to the Overview and
     'button "Open Preview"',
     'button "Add field"',
     'button "Collapse sidebar"',
+    'separator "Resize field list"',
     'button "Built-in Fields"',
     ...BASIC_TYPES.map((type) => `button "${type}"`),
     ...OVERVIEW_AND_HEADER,

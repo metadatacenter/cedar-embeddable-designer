@@ -5,7 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.0] - 2026-11-09
+
+Aligns with `cedar-model-typescript-library@1.0.27`.
+
+- First public release of `<cedar-embeddable-designer>`, a Web Component for authoring CEDAR templates and elements. It takes a document as `artifact` and endpoints as `config`, and reports each edit as `artifactChange`.
+- Includes `<cedar-embeddable-field-designer>` (CEFD), a standalone field definition editor that shares CED's controls, for a host that edits one field at a time.
+- `validateArtifact` gives the CEDAR meta-schema's verdict on any schema artifact, and `validationReport.superseded` lists the stored shapes a loaded artifact's projection replaced.
+- Offers English and Hungarian through a `language` property, a host-fonts bundle for pages that register CEDAR Roboto themselves, and keyboard, focus and screen-reader behaviour checked with axe-core against WCAG 2.2 A and AA.
 
 ### Added
 
@@ -119,6 +126,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The divider between the library sidebar's field list and the panel below it can be moved from
+  the keyboard. It is a separator named "Resize field list" that takes a Tab stop. The arrow keys
+  move it by 5 points of the sidebar's height, or 10 with Shift, and Home and End set the 10% and
+  75% limits a drag keeps. Before, only a pointer could move it.
 - A template or element with a language of its own saves. The model library wrote that language
   where the meta-schema refuses it, so the artifact server refused the save, and the designer
   read it back from there itself. The library now writes it in the template's own context.

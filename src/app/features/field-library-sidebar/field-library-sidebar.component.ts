@@ -63,6 +63,10 @@ export class FieldLibrarySidebarComponent {
 
   /** The field list's share of the sidebar's height, in percent. The panel below it takes the rest. */
   readonly fieldListHeight = signal(33.33);
+  readonly fieldListMinHeight = 10;
+  readonly fieldListMaxHeight = 75;
+  /** The share as the divider reports it: a whole percentage. */
+  readonly fieldListHeightValue = computed(() => Math.round(this.fieldListHeight()));
   readonly isResizing = signal(false);
   /** The sidebar's own container, whose height the field list and the panel below it divide. */
   private readonly sidebar = viewChild.required<ElementRef<HTMLElement>>('sidebar');
@@ -107,10 +111,7 @@ export class FieldLibrarySidebarComponent {
 
     const onMouseMove = (moveEvent: MouseEvent) => {
       const containerRect = this.sidebar().nativeElement.getBoundingClientRect();
-      const newHeight = ((moveEvent.clientY - containerRect.top) / containerRect.height) * 100;
-
-      // Constrain between 10% and 75%
-      this.fieldListHeight.set(Math.min(Math.max(newHeight, 10), 75));
+      this.setFieldListHeight(((moveEvent.clientY - containerRect.top) / containerRect.height) * 100);
     };
 
     const onMouseUp = () => {
@@ -121,5 +122,23 @@ export class FieldLibrarySidebarComponent {
 
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
+  }
+
+  /** The arrow keys move the divider by 5 points of the sidebar's height, 10 with Shift; Home and End set the limits. */
+  resizeWithKeyboard(event: KeyboardEvent): void {
+    const step = event.shiftKey ? 10 : 5;
+    const heights: Record<string, number> = {
+      ArrowUp: this.fieldListHeightValue() - step,
+      ArrowDown: this.fieldListHeightValue() + step,
+      Home: this.fieldListMinHeight,
+      End: this.fieldListMaxHeight,
+    };
+    if (!(event.key in heights)) return;
+    event.preventDefault();
+    this.setFieldListHeight(heights[event.key]);
+  }
+
+  private setFieldListHeight(height: number): void {
+    this.fieldListHeight.set(Math.min(Math.max(height, this.fieldListMinHeight), this.fieldListMaxHeight));
   }
 }
