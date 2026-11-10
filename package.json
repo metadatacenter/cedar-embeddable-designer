@@ -69,7 +69,7 @@
     "@angular/cli": "22.2.6",
     "@angular/compiler-cli": "^22.2.0",
     "@eslint/js": "^10.0.1",
-    "@org.metadatacenter/cedar-design-tokens": "0.1.0-dev.20261110.c8930a66",
+    "@org.metadatacenter/cedar-design-tokens": "0.1.0-dev.20261110.9e8d8c2e",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24.13.3",
     "@vitest/coverage-v8": "^5.0.5",
