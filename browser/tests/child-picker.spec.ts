@@ -24,6 +24,8 @@ for (const width of [1280, 375])
     await expect(designer.getByRole('button', { name: 'Import field' })).toHaveCount(0);
     await applyPreset(page, 'modular');
     await expect(designer.locator('app-insertion-actions').first().getByRole('button')).toHaveCount(3);
+    // Children come from a repository; the designer has no file input to import them from.
+    await expect(designer.locator('input[type="file"]')).toHaveCount(0);
     const before = await currentTemplate(page);
     await page.evaluate((section) => {
       section['schema:name'] = 'Section';

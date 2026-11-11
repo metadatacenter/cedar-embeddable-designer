@@ -213,11 +213,10 @@ artifact reads are exposed; adding children changes the designer document locall
 The fixed test account and endpoints belong to this development server, not the
 published CED component. The component's `childSource` input still belongs to its host.
 
-The browser suite keeps its existing fixtures in Basic explicitly. To exercise the
-real local integration, with the demo server running, use
-`CED_LOCAL_REPOSITORY=1 npm --prefix browser test -- --grep 'local test1'`.
-The local test reads the existing published `Principal Investigator` element and
-inserts it in the browser without saving to the repository.
+The browser suite keeps its existing fixtures in Basic explicitly, and stubs the
+repository wherever it searches for children. The real integration is tested in the
+whole-stack smoke, whose Template Designer journey searches for an element it created and
+imports it through CED.
 
 ### Shared defaults during development
 

@@ -25,6 +25,7 @@
  * edge of every card out of reach.
  */
 import { expect, test, type Page } from '@playwright/test';
+import { NEEDS_CEF, NEEDS_PICKER } from './bundle-tags';
 import { openSettings, applyPreset, clickCentred, currentTemplate, openDesigner } from './support';
 import { expectLaidOut, DESIGNER } from './support-layout';
 import {
@@ -702,12 +703,8 @@ for (const width of WIDTHS) {
     });
 
     for (const lifecycle of LIFECYCLES) {
-      test(`${lifecycle.control} on a ${lifecycle.paletteType} field`, async ({ page }) => {
+      test(`${lifecycle.control} on a ${lifecycle.paletteType} field`, { tag: lifecycle.requires ? NEEDS_CEF : [] }, async ({ page }) => {
         const bundle = lifecycle.requires ? process.env[lifecycle.requires] : undefined;
-        test.skip(
-          lifecycle.requires !== undefined && !bundle,
-          `${lifecycle.requires} names the sibling bundle this control comes from.`,
-        );
         await oneCardOf(page, lifecycle.paletteType, { query: lifecycle.query, bundle });
         await open(page, 'Constraints');
         await lifecycle.prepare?.(page);
@@ -792,8 +789,7 @@ test.describe('what a sibling component contributes', () => {
       await expectLaidOut(page, `a constraint at ${width}`);
     });
 
-    test(`the picker overlay keeps the keyboard at ${width}`, async ({ page }) => {
-      test.skip(!process.env.PICKER_BUNDLE, 'PICKER_BUNDLE names the picker whose controls are trapped.');
+    test(`the picker overlay keeps the keyboard at ${width}`, { tag: NEEDS_PICKER }, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await openDesigner(page);
       await page.addScriptTag({ path: process.env.PICKER_BUNDLE! });
@@ -849,8 +845,7 @@ test.describe('what a sibling component contributes', () => {
       await expect(panel.getByRole('button', { name: /Edit controlled-term constraints/ })).toBeFocused();
     });
 
-    test(`the card holds its shape with CEF inside it at ${width}`, async ({ page }) => {
-      test.skip(!process.env.CEF_BUNDLE, 'CEF_BUNDLE names the bundle that provides the control.');
+    test(`the card holds its shape with CEF inside it at ${width}`, { tag: NEEDS_CEF }, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await oneCardOf(page, 'email', { bundle: process.env.CEF_BUNDLE });
 

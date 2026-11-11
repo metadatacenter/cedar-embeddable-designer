@@ -1,5 +1,6 @@
 import { addElementFixture } from './support';
 import { expect, test } from '@playwright/test';
+import { NEEDS_PICKER } from './bundle-tags';
 import { openDesigner, openSettings, currentTemplate, applyPreset } from './support';
 
 test('field and element property choices update only their parent context and cancel preserves it', async ({
@@ -60,8 +61,7 @@ test('field and element property choices update only their parent context and ca
   expect(await currentTemplate(page)).toEqual(saved);
 });
 
-test('real CETP selects a property for field metadata', async ({ page }) => {
-  test.skip(!process.env.PICKER_BUNDLE, 'Requires the real CETP bundle.');
+test('real CETP selects a property for field metadata', { tag: NEEDS_PICKER }, async ({ page }) => {
   const designer = await openDesigner(page);
   await page.addScriptTag({ path: process.env.PICKER_BUNDLE! });
   // Recreate the cards after the host registers the sibling.
