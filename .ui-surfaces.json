@@ -2,6 +2,7 @@
   "schema": 1,
   "repo": "cedar-embeddable-designer",
   "browserHelper": "browser/tests/surface-contracts.generated.mjs",
+  "layoutHelper": "browser/tests/layout-resilience.generated.mjs",
   "surfaces": [
     {
       "id": "ced.user-preferences-ced",
