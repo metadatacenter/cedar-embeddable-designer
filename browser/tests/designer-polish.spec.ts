@@ -43,3 +43,27 @@ test('element overview chevron follows its name and insertion actions have balan
   });
   expect(Math.abs(spacing.above - spacing.below)).toBeLessThanOrEqual(1);
 });
+
+test('an Overview name breaks only between words, and an error count that does not fit moves under it', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 829 });
+  const designer = await openDesigner(page);
+  await applyPreset(page, 'modular');
+  for (const label of ['Checkboxes', 'List']) {
+    await designer
+      .getByRole('button', { name: /^Add field$/ })
+      .first()
+      .click();
+    await designer.getByRole('button', { name: label, exact: true }).click();
+    await designer.locator('input[aria-label="Enter field name"]:focus').fill(label);
+  }
+  const row = designer.locator('.outline-row').filter({ hasText: 'Checkboxes' });
+  const badge = row.locator('.validation-badge');
+  await expect(badge).toBeVisible();
+  // The name keeps its one word whole, on one line.
+  expect(await row.locator('.node-name').evaluate((name) => name.getClientRects().length)).toBe(1);
+  // The count sits within the row, clear of the Move buttons beside it.
+  const [count, up] = [(await badge.boundingBox())!, (await row.locator('.outline-move').first().boundingBox())!];
+  expect(count.x + count.width).toBeLessThanOrEqual(up.x);
+});

@@ -21,21 +21,25 @@ import { CountKeyPipe } from '../../i18n/count-key.pipe';
         >
           <button type="button" class="select-node" (click)="select(node)">
             <app-icon [key]="node.kind === 'field' ? node.definition.type : 'folder'" size="small" />
-            <span class="node-name">{{
-              displayName(node) ||
-                ((node.kind === 'field' ? 'validation.unnamed.field' : 'validation.unnamed.element') | translate)
-            }}</span>
-            @if (service.visibleIssuesFor(node.id).length; as count) {
-              <span
-                class="validation-badge"
-                [attr.aria-label]="'outline.errors' | countKey: count | translate: { count: count }"
-                [title]="'outline.errors' | countKey: count | translate: { count: count }"
-                ><app-icon key="warning" size="small" /> {{ count }}</span
-              >
-            }
-            @if (node.kind === 'field' && node.placement.status === 'required') {
-              <span [attr.aria-label]="'common.required' | translate">*</span>
-            }
+            <!-- The name, its error count and its required mark flow as one text, so a count that
+                 does not fit beside the name moves under it rather than breaking the name's words. -->
+            <span class="node-label"
+              ><span class="node-name">{{
+                displayName(node) ||
+                  ((node.kind === 'field' ? 'validation.unnamed.field' : 'validation.unnamed.element') | translate)
+              }}</span>
+              @if (service.visibleIssuesFor(node.id).length; as count) {
+                <span
+                  class="validation-badge"
+                  [attr.aria-label]="'outline.errors' | countKey: count | translate: { count: count }"
+                  [title]="'outline.errors' | countKey: count | translate: { count: count }"
+                  ><app-icon key="warning" size="small" /> {{ count }}</span
+                >
+              }
+              @if (node.kind === 'field' && node.placement.status === 'required') {
+                <span class="required-mark" [attr.aria-label]="'common.required' | translate">*</span>
+              }
+            </span>
           </button>
           @if (node.kind === 'element') {
             <button

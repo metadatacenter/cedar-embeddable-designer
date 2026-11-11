@@ -43,6 +43,8 @@ li {
 .validation-badge {
   display: inline-flex;
   align-items: center;
+  vertical-align: top;
+  white-space: nowrap;
   gap: var(--cedar-space-1);
   color: var(--cedar-status-error-text);
   font-size: var(--cedar-font-size);
@@ -74,9 +76,19 @@ button {
   flex: none;
   color: var(--cedar-text-muted);
 }
-.node-name {
+/* A name breaks between its words. Only a word too long for the whole column breaks within itself. */
+.node-label {
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+}
+.node-label > .validation-badge,
+.node-label > .required-mark {
+  margin-inline-start: var(--cedar-space-2);
+}
+/* Not inline, so the button's accessible name keeps a space before "Required", as it did when the
+   mark was a flex item of its own. */
+.required-mark {
+  display: inline-block;
 }
 /* Move up and Move down sit before the handle, which stays at the row's end. */
 .outline-move {
