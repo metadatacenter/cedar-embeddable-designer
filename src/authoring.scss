@@ -40,6 +40,25 @@ app-annotations-editor table caption {
 
 :is(app-preferences-modal, app-preset-definitions-modal) {
   @include authoring.settings-dialog;
+
+  /*
+    The panel stacks its header, content and footer, and the content takes what they leave. The
+    content's height is then the panel's less the header and footer as drawn, padding and borders
+    included, so nothing overhangs the panel and the footer is never clipped.
+  */
+  .settings-dialog-panel {
+    display: flex;
+    flex-direction: column;
+  }
+  .settings-dialog-header,
+  .settings-dialog-footer {
+    flex: none;
+  }
+  .settings-dialog-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
 }
 
 // Framework-neutral surface; each picker owns its content, bounds and scrolling.

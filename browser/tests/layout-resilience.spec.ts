@@ -268,3 +268,24 @@ test.describe('indicators', () => {
       }
     });
 });
+
+test.describe('settings dialogs fit their panel', () => {
+  for (const state of ['Preferences', 'Define Presets'])
+    for (const width of [1280, 375])
+      test(`${state} content height equals its panel's at ${width}`, async ({ page }) => {
+        await page.setViewportSize({ width, height: width === 1280 ? 800 : 700 });
+        await STATES[state].reach(page);
+        const panel = page.locator(DESIGNER).getByRole('dialog', { name: state });
+        const heights = await panel.evaluate((element) => ({
+          panel: element.clientHeight,
+          content: element.scrollHeight,
+          stacked: [...element.children].reduce((sum, child) => sum + (child as HTMLElement).offsetHeight, 0),
+        }));
+        // Layout heights, which the opening animation's scale does not change. An overhang was 15.
+        expect(heights.content, 'content height against the panel').toBe(heights.panel);
+        expect(
+          Math.abs(heights.stacked - heights.panel),
+          'header, body and footer against the panel',
+        ).toBeLessThanOrEqual(2);
+      });
+});
