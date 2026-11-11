@@ -10,7 +10,7 @@ test('local test1 can search and insert a reusable element in the default Modula
   await designer.getByRole('button', { name: 'Import fields and elements', exact: true }).click();
   await designer.getByRole('searchbox').fill('Study');
   await designer.getByRole('button', { name: 'Search', exact: true }).click();
-  await expect(designer.getByRole('table', { name: 'Search results' })).toContainText('No elements found.');
+  await expect(designer.getByRole('grid', { name: 'Search results' })).toContainText('No elements found.');
   await expect(designer.getByRole('alert')).toHaveCount(0);
   for (const query of ['Princ', 'princ', 'Princ Inv', 'Principal Investigator']) {
     await designer.getByRole('searchbox').fill(query);

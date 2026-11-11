@@ -1,3 +1,4 @@
+@use '@org.metadatacenter/cedar-design-tokens/controls';
 @use '@org.metadatacenter/cedar-design-tokens/spacing';
 @use '@org.metadatacenter/cedar-design-tokens/patterns';
 :host {
@@ -90,12 +91,38 @@
   border-bottom: 1px solid var(--cedar-border-rule);
 }
 
-.dropdown-search-input {
-  width: 100%;
-  @include spacing.apply(padding, field-control);
-  font-size: var(--cedar-font-size);
+/*
+  One outline holds the magnifier and the input, so the icon sits inside the search box. The box
+  draws the focus ring around both, as Workspace's search does, and the input draws none of its own.
+*/
+.dropdown-search-field {
+  display: flex;
+  align-items: center;
+  gap: var(--cedar-space-1);
+  padding-inline-start: var(--cedar-space-2);
   border: 1px solid var(--cedar-control-border-default);
   border-radius: var(--cedar-radius);
+}
+.dropdown-search-field:focus-within {
+  @include controls.focus-ring;
+}
+.dropdown-search-input:focus-visible {
+  outline: none;
+}
+
+/*
+  The input fills the row without asking for width of its own. Its default width beside the icon
+  would widen the panel, which the libraries' names and its minimum width size.
+*/
+.dropdown-search-input {
+  flex: 1 1 auto;
+  width: 0;
+  min-width: 0;
+  @include spacing.apply(padding, field-control);
+  font-size: var(--cedar-font-size);
+  border: 0;
+  border-radius: var(--cedar-radius);
+  background: transparent;
 }
 
 .dropdown-options-list {

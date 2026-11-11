@@ -78,8 +78,24 @@ button {
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.outline-drag-handle {
+/* Move up and Move down sit before the handle, which stays at the row's end. */
+.outline-move {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-width: spacing.$target-size-minimum;
+  min-height: spacing.$target-size-minimum;
+  padding: 0;
+}
+.outline-move--up {
   margin-left: auto;
+}
+.outline-move:disabled,
+.outline-move[aria-disabled='true'] {
+  cursor: default;
+}
+.outline-drag-handle {
   display: inline-flex;
   align-items: center;
   justify-content: center;

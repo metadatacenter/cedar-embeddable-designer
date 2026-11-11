@@ -31,12 +31,12 @@ test("the child picker names each row's type and says which results are selected
   await designer.getByRole('button', { name: 'Import fields and elements', exact: true }).first().click();
   const dialog = designer.getByRole('dialog', { name: 'Import Fields and Elements' });
   await dialog.getByRole('button', { name: 'Search', exact: true }).click();
-  const results = dialog.getByRole('table', { name: 'Search results' });
+  const results = dialog.getByRole('grid', { name: 'Search results' });
   const title = results.getByRole('row', { name: 'Select Title', exact: true });
   const section = results.getByRole('row', { name: 'Select Section', exact: true });
   // The Type column draws an icon alone, and the icon is named by the type it shows.
-  await expect(title.getByRole('cell').first().getByRole('img')).toHaveAccessibleName('Field');
-  await expect(section.getByRole('cell').first().getByRole('img')).toHaveAccessibleName('Element');
+  await expect(title.getByRole('gridcell').first().getByRole('img')).toHaveAccessibleName('Field');
+  await expect(section.getByRole('gridcell').first().getByRole('img')).toHaveAccessibleName('Element');
   await expect(results.getByRole('img', { name: 'Selected' })).toHaveCount(0);
   await expect(title).toHaveAttribute('aria-selected', 'false');
 
@@ -47,8 +47,8 @@ test("the child picker names each row's type and says which results are selected
   await expect(title).toHaveAttribute('aria-selected', 'true');
   await expect(section.getByRole('img', { name: 'Selected' })).toHaveCount(0);
   await expect(section).toHaveAttribute('aria-selected', 'false');
-  // The row stays the control: it keeps its Tab stop and its name until it is selected.
-  await section.focus();
+  // The row stays the control and keeps its name. The arrow keys reach it within the grid.
+  await page.keyboard.press('ArrowDown');
   expect(await focusedControl(page)).toBe('row "Select Section"');
 
   const selected = dialog.getByRole('table', { name: 'Selected items' });

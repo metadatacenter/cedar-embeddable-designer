@@ -21,6 +21,13 @@
 .preset-title {
   @include patterns.artifact-title;
 }
+/*
+  A table too wide for a narrow host scrolls sideways in a box of its own, so the introduction and
+  group titles stay in place. A table that fits shows no scrollbar.
+*/
+.preset-table-scroll {
+  overflow-x: auto;
+}
 .preset-table {
   width: 100%;
   text-align: left;

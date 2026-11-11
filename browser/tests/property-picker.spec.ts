@@ -102,7 +102,8 @@ test('real CETP selects a property for field metadata', async ({ page }) => {
   await metadata.getByRole('button', { name: 'Replace property IRI', exact: true }).click();
   await picker.locator('input[type=search]').fill('part');
   await picker.getByRole('button', { name: /part of.*in 1 ontology/ }).click();
-  await picker.getByRole('option', { name: 'part of in RO' }).click();
+  // A result row's name is the button that opens its detail.
+  await picker.getByRole('button', { name: 'part of in RO' }).click();
   await picker.getByRole('button', { name: 'Select', exact: true }).click();
   await picker.getByRole('button', { name: 'Done', exact: true }).click();
   await expect(metadata).toContainText('urn:part');

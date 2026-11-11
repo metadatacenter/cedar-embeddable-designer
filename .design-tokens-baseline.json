@@ -6,7 +6,7 @@
       "rule": "dynamic-style",
       "property": "height",
       "value": "uninspectable-binding",
-      "count": 2
+      "count": 1
     }
   },
   "exceptions": {},

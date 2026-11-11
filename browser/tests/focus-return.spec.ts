@@ -355,6 +355,33 @@ test.describe('controls that stay', () => {
   });
 });
 
+test.describe('Move up and Move down', () => {
+  test('keep focus on the button that moved the child, also once it reaches an end', async ({ page }) => {
+    const designer = await openDesigner(page);
+    const up = designer.getByRole('button', { name: 'Move Publication Date up', exact: true });
+    await up.focus();
+    await page.keyboard.press('Enter');
+    await expect(designer.locator('app-container-outline .node-name')).toHaveText([
+      'Title',
+      'Publication Date',
+      'Category',
+    ]);
+    await expect(up).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(designer.locator('app-container-outline .node-name').first()).toHaveText('Publication Date');
+    await expect(up).toHaveAttribute('aria-disabled', 'true');
+    await expect(up).toBeFocused();
+    const down = designer.getByRole('button', { name: 'Move Title down', exact: true });
+    await down.click();
+    await expect(designer.locator('app-container-outline .node-name')).toHaveText([
+      'Publication Date',
+      'Category',
+      'Title',
+    ]);
+    await expect(down).toBeFocused();
+  });
+});
+
 test.describe('the library sidebar', () => {
   test('collapsing it gives focus to Expand sidebar, and expanding it gives focus back to Collapse sidebar', async ({
     page,
@@ -369,6 +396,54 @@ test.describe('the library sidebar', () => {
     await expect(designer.getByRole('button', { name: 'Expand sidebar' })).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(designer.getByRole('button', { name: 'Collapse sidebar' })).toBeFocused();
+  });
+
+  test("choosing a field in its list with Enter selects the field and gives focus to the field's card", async ({
+    page,
+  }) => {
+    const designer = await openDesigner(page);
+    await designer.getByRole('button', { name: 'User Menu' }).click();
+    await designer.getByRole('button', { name: 'Preferences', exact: true }).click();
+    await designer.getByRole('radio', { name: /Library Sidebar/ }).check();
+    await designer.getByRole('button', { name: 'Done', exact: true }).click();
+    await designer.getByRole('button', { name: 'Collapse sidebar' }).focus();
+    await page.keyboard.press('Tab');
+    await expect(designer.getByRole('option', { name: 'Title', exact: true })).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
+    await expect(designer.getByRole('option', { name: 'Publication Date', exact: true })).toBeFocused();
+    // Moving through the list selects nothing.
+    await expect(designer.locator('.field-drag-container.selected')).toHaveCount(0);
+    await page.keyboard.press('Enter');
+    await expect(card(designer, 'Publication Date')).toBeFocused();
+    await expect(card(designer, 'Publication Date')).toHaveClass(/\bselected\b/);
+    await expect(designer.getByRole('option', { name: 'Publication Date', exact: true })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+  });
+
+  test('choosing a field inside a collapsed element opens the element and gives focus to the card', async ({
+    page,
+  }) => {
+    const designer = await openDesigner(page);
+    await applyPreset(page, 'modular');
+    await addElementFixture(page);
+    await nestFixtureFields(page, ['Element']);
+    await designer.getByRole('button', { name: 'User Menu' }).click();
+    await designer.getByRole('button', { name: 'Preferences', exact: true }).click();
+    await designer.getByRole('radio', { name: /Library Sidebar/ }).check();
+    await designer.getByRole('button', { name: 'Done', exact: true }).click();
+    // The sidebar lists the fields of the container that is open, so open the element, then collapse it.
+    const overview = designer.locator('.overview-panel');
+    await overview.getByRole('button', { name: 'Element', exact: true }).click();
+    const entry = designer.getByRole('option', { name: 'Title', exact: true });
+    await expect(entry).toBeVisible();
+    await overview.getByRole('button', { name: 'Collapse Element', exact: true }).click();
+    await expect(card(designer, 'Title')).toBeHidden();
+    await entry.focus();
+    await page.keyboard.press('Enter');
+    await expect(card(designer, 'Title')).toBeFocused();
   });
 });
 

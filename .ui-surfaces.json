@@ -348,6 +348,22 @@
       "test": "browser/tests/surfaces.spec.ts"
     },
     {
+      "id": "ced.overview",
+      "name": "Overview",
+      "section": "Template Designer",
+      "contract": "page",
+      "scenario": "overview",
+      "selector": "cedar-embeddable-designer .overview-panel",
+      "states": ["open"],
+      "source": [
+        {
+          "file": "src/app/app.component.html",
+          "anchor": "class=\"overview-panel\""
+        }
+      ],
+      "test": "browser/tests/surfaces.spec.ts"
+    },
+    {
       "id": "ced.field-designer",
       "name": "Field Designer (CEFD)",
       "section": "Template Designer"

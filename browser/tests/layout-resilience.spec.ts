@@ -63,6 +63,10 @@ const TABLE_SCROLLERS: { target: string; holds: string }[] = [
     target: 'app-annotations-editor .table-scroll',
     holds: "A field's annotations: each row's name, value type, value and Remove button.",
   },
+  {
+    target: 'app-preset-definitions-modal .preset-table-scroll',
+    holds: "Each Define Presets table: each row's setting or field type and its checkbox in each preset.",
+  },
 ];
 
 /** A finding that waits on a visible change. */
@@ -78,39 +82,7 @@ interface Exception {
   needs: string;
 }
 
-const EXCEPTIONS: Exception[] = [
-  {
-    kind: 'scroll',
-    conditions: ['reflow'],
-    states: ['Preferences'],
-    target: 'app-preferences-modal .preferences-field-grid',
-    measured:
-      'The field type list sets two 109px columns at 320px. Checkboxes, Paragraph and Controlled Terms each ' +
-      'need 114 to 125px for the checkbox, icon and longest word, so the list scrolls sideways by 8px.',
-    needs: 'One column of field types on a narrow host, or field type names that may break within a word.',
-  },
-  {
-    kind: 'scroll',
-    conditions: ['reflow'],
-    states: ['Define Presets'],
-    target: 'app-preset-definitions-modal .overflow-y-auto',
-    measured:
-      'The Available field types table is 337px wide in the 318px dialog body at 320px, so the whole body ' +
-      'scrolls sideways, its introduction and group titles with it, rather than the table alone.',
-    needs: 'Each preset table in a container of its own that scrolls sideways, or tables narrow enough for 320px.',
-  },
-  {
-    kind: 'unreachable',
-    conditions: ['reflow'],
-    states: ['template settings, Metadata tab'],
-    target: 'app-types-picker .property > button',
-    measured:
-      'The Types row needs 198px in 129px at 320px. Its two buttons keep their full width, so Enter IRI ' +
-      'manually ends at 356px, past the edge of the card, which hides it. The list beside them shrinks ' +
-      'to nothing, and No types selected. stands one letter to a line, as it already does at 375px.',
-    needs: 'The Types row puts its buttons beneath the list when they do not fit beside it.',
-  },
-];
+const EXCEPTIONS: Exception[] = [];
 
 /**
  * How to reach each state the checks run in, from a host already sized for the condition, and the
@@ -137,6 +109,16 @@ const STATES: Record<string, { surface?: string; reach: (page: Page) => Promise<
       },
     ]),
   ),
+  // A column beside the canvas on a wide host, and over the canvas on a narrow one.
+  'Overview open': {
+    surface: '.overview-panel',
+    reach: async (page) => {
+      const designer = await openDesigner(page);
+      const open = designer.getByRole('button', { name: 'Open Overview', exact: true });
+      if (await open.count()) await open.click();
+      await expect(designer.locator('.overview-panel')).toBeVisible();
+    },
+  },
   'template settings, Metadata tab': {
     reach: async (page) => {
       const designer = await openDesigner(page, '?picker=stub');

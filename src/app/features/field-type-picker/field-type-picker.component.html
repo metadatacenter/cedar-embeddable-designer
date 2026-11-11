@@ -19,15 +19,20 @@
             <div class="dropdown-panel animate-fade-in">
               <!-- Search Input -->
               <div class="dropdown-search-box">
-                <input
-                  spellcheck="false"
-                  autocomplete="off"
-                  type="text"
-                  [(ngModel)]="searchText"
-                  [placeholder]="'fieldTypePicker.searchLibraries' | translate"
-                  class="dropdown-search-input"
-                  autoFocus
-                />
+                <!-- The magnifier marks the box as a search once it holds text, when the placeholder is gone. -->
+                <div class="dropdown-search-field">
+                  <app-icon key="search" size="small" />
+                  <input
+                    spellcheck="false"
+                    autocomplete="off"
+                    type="text"
+                    [(ngModel)]="searchText"
+                    [placeholder]="'fieldTypePicker.searchLibraries' | translate"
+                    [attr.aria-label]="'fieldTypePicker.searchLibraries' | translate"
+                    class="dropdown-search-input"
+                    autoFocus
+                  />
+                </div>
               </div>
               <!-- Options list -->
               <div class="dropdown-options-list custom-scrollbar">

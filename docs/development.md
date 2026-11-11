@@ -192,9 +192,13 @@ when switching tabs or collapsing the panel. Published fields allow
 inspection but keep editing controls disabled. Reusable field work remains in
 Field Designer; cards no longer offer a Save field to library action.
 
-The Overview shows each field's type icon and a right-aligned reorder handle.
-Dragging reorders siblings within the Overview; the document and main editor update
-only when the field is dropped. Focused handles also support Arrow Up/Down.
+The Overview shows each field's type icon, Move up and Move down buttons and a
+right-aligned reorder handle. Dragging reorders siblings within the Overview; the
+document and main editor update only when the field is dropped. Focused handles also
+support Arrow Up/Down, and Move up and Move down move a child one place with a click.
+A click on the Overview's divider, or on the library sidebar's, steps it through its
+smallest, default and largest sizes. Below 768px the Overview takes no column. Its
+header toggle opens it over the canvas, closed by default, and Escape closes it again.
 
 ### Local repository demo as test1
 

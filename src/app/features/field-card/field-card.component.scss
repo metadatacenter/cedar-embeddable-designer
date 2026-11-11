@@ -52,6 +52,12 @@ app-icon {
   align-items: center;
   column-gap: var(--cedar-space-2);
   row-gap: var(--cedar-space-1);
+  /*
+    A click on the header opens the settings, as the toggle under the card does. The toggle is
+    smaller than a pointer target may be, so the header is its equivalent target and takes the
+    minimum size. One line of the name comes to 23px.
+  */
+  min-height: spacing.$target-size-minimum;
 }
 .field-heading {
   display: flex;
@@ -97,6 +103,26 @@ app-icon {
 
 .validation-badge > app-icon {
   align-self: center;
+}
+
+/*
+  The name box's caption and an option box's number stay when the box holds text, which its
+  placeholder does not. Each takes the line of the box it labels, so no row grows.
+*/
+.field-name-caption,
+.choice-option-number {
+  @include patterns.field-label($size: small);
+  flex: 0 0 auto;
+  margin: 0;
+  line-height: var(--cedar-control-line-height-default);
+}
+.field-name-caption {
+  align-self: baseline;
+}
+/* Two digits wide, so the option boxes stay in one column up to the ninety-ninth. */
+.choice-option-number {
+  min-width: 2ch;
+  text-align: end;
 }
 
 /* Leave header space after the editable name available for toggling settings. */
@@ -171,6 +197,9 @@ app-icon {
   border: none;
   @include spacing.apply(padding-bottom, compact);
   min-width: 0;
+  // One line and its padding come to 23px. On a narrow host the insertion button hidden above the
+  // card overlaps the name's line, so spacing cannot excuse the missing pixel.
+  min-height: spacing.$target-size-minimum;
   background: transparent;
   // An unnamed field shows a line beneath its name to write on: in the warning colour, as a name
   // still to be written, in primary while the card is selected, and in the error colour once the

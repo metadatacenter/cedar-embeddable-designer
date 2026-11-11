@@ -168,6 +168,19 @@ test('moving a child in the Overview says where it went', async ({ page }) => {
   await expect(region(designer)).toHaveText('Title moved to position 3 of 3.');
 });
 
+test('Move up and Move down in the Overview say where the child went', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await designer.getByRole('button', { name: 'Move Title down', exact: true }).click();
+  await expect(region(designer)).toHaveText('Title moved to position 2 of 3.');
+  await designer.getByRole('button', { name: 'Move Publication Date up', exact: true }).click();
+  await expect(region(designer)).toHaveText('Publication Date moved to position 2 of 3.');
+  // A click at an end moves nothing and says nothing.
+  const changes = await countChanges(page);
+  await designer.getByRole('button', { name: 'Move Category up', exact: true }).click({ force: true });
+  await page.waitForTimeout(400);
+  expect(await changes()).toBe(0);
+});
+
 test('announcements follow the designer language', async ({ page }) => {
   const designer = await openDesigner(page);
   await page.evaluate(() => {

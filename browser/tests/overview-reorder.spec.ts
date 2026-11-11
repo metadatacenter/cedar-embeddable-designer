@@ -90,3 +90,90 @@ test('Overview elements collapse individually and together without changing the 
   await expect(content).toBeVisible();
   expect(await currentTemplate(page)).toEqual(before);
 });
+
+test('Move up and Move down reorder a child by single clicks and do nothing at either end', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const designer = await openDesigner(page);
+  const rows = designer.locator('app-container-outline').first().locator(':scope > ul > li');
+  const names = () => rows.locator('.node-name').allTextContents();
+  const cards = () =>
+    designer
+      .locator('app-field-card input[aria-label="Enter field name"]')
+      .evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value));
+  const button = (name: string) => designer.getByRole('button', { name, exact: true });
+
+  // Each row has both, named after its child, beside the handle and at least the minimum target size.
+  for (const name of ['Title', 'Category', 'Publication Date']) {
+    const row = rows.filter({ has: page.getByRole('button', { name: `Reorder ${name}`, exact: true }) });
+    const boxes = await row
+      .locator('.outline-move, .outline-drag-handle')
+      .evaluateAll((controls) =>
+        controls.map((control) => [control.getAttribute('aria-label'), control.getBoundingClientRect().toJSON()]),
+      );
+    expect(boxes.map(([label]) => label)).toEqual([`Move ${name} up`, `Move ${name} down`, `Reorder ${name}`]);
+    for (const [, box] of boxes.slice(0, 2)) {
+      expect(box.width).toBeGreaterThanOrEqual(24);
+      expect(box.height).toBeGreaterThanOrEqual(24);
+    }
+  }
+  // At either end the button is marked disabled but stays focusable.
+  await expect(button('Move Title up')).toHaveAttribute('aria-disabled', 'true');
+  await button('Move Title up').focus();
+  await expect(button('Move Title up')).toBeFocused();
+  await expect(button('Move Publication Date down')).toHaveAttribute('aria-disabled', 'true');
+  for (const name of ['Move Title down', 'Move Category up', 'Move Category down', 'Move Publication Date up'])
+    await expect(button(name)).not.toHaveAttribute('aria-disabled');
+
+  await button('Move Category up').click();
+  await expect.poll(names).toEqual(['Category', 'Title', 'Publication Date']);
+  await expect
+    .poll(async () => fieldOrder(await currentTemplate(page)))
+    .toEqual(['Category', 'Title', 'Publication Date']);
+  await expect.poll(cards).toEqual(['Category', 'Title', 'Publication Date']);
+  await expect(button('Move Category up')).toHaveAttribute('aria-disabled', 'true');
+  await expect(button('Move Title up')).not.toHaveAttribute('aria-disabled');
+
+  // A click at the end changes nothing. Playwright treats aria-disabled as disabled, so it is forced.
+  const before = await currentTemplate(page);
+  await button('Move Category up').click({ force: true });
+  await button('Move Category down').click();
+  await button('Move Category down').click();
+  await expect.poll(names).toEqual(['Title', 'Publication Date', 'Category']);
+  await button('Move Category down').click({ force: true });
+  await page.waitForTimeout(200);
+  expect(await names()).toEqual(['Title', 'Publication Date', 'Category']);
+  expect(fieldOrder(await currentTemplate(page))).toEqual(['Title', 'Publication Date', 'Category']);
+  expect(fieldOrder(before)).toEqual(['Category', 'Title', 'Publication Date']);
+});
+
+test('Move up and Move down move a child within its own element only', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const designer = await openDesigner(page);
+  await applyPreset(page, 'modular');
+  await addElementFixture(page, designer);
+  await nestFixtureFields(page, ['Element'], 2);
+  const overview = designer.locator('.overview-panel');
+  const nested = overview.locator('app-container-outline app-container-outline').first();
+  await expect(nested.locator('.node-name')).toHaveText(['Title', 'Category']);
+  // The nested list is a container of its own: its first child cannot move up into the template.
+  await expect(nested.getByRole('button', { name: 'Move Title up', exact: true })).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
+  await nested.getByRole('button', { name: 'Move Title down', exact: true }).click();
+  await expect(nested.locator('.node-name')).toHaveText(['Category', 'Title']);
+  await expect
+    .poll(async () => fieldOrder(child(await currentTemplate(page), 'Element')))
+    .toEqual(['Category', 'Title']);
+});
+
+test('Move up and Move down are disabled in a read-only designer, as the handle is', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await page.evaluate(() => {
+    (document.querySelector('cedar-embeddable-designer') as unknown as { readOnly: boolean }).readOnly = true;
+  });
+  const row = designer.locator('app-container-outline li').nth(1);
+  await expect(row.getByRole('button', { name: 'Reorder Category', exact: true })).toBeDisabled();
+  await expect(row.getByRole('button', { name: 'Move Category up', exact: true })).toBeDisabled();
+  await expect(row.getByRole('button', { name: 'Move Category down', exact: true })).toBeDisabled();
+});

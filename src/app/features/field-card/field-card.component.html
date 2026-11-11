@@ -21,9 +21,11 @@
           />
 
           <!--
-            Field Title Name editing. The placeholder is the box's only visible label, so the box is named by it,
-            and its description says which of the field's two names it edits.
+            Field Title Name editing. The caption labels the box once it holds a name, when the placeholder is gone.
+            It is not tied to the box with `for`, because a click on header chrome toggles the settings. The box
+            keeps the placeholder's text as its name, and its description says which of the field's two names it edits.
           -->
+          <span class="field-name-caption">{{ 'fieldCard.name' | translate }}</span>
           <input
             spellcheck="false"
             autocomplete="off"
@@ -107,6 +109,8 @@
                   size="default"
                   class="choice-option-icon"
                 ></app-icon>
+                <!-- The number labels the box once it holds text, when the placeholder that numbers it is gone. -->
+                <span class="choice-option-number">{{ optIdx + 1 }}</span>
                 <!-- An option is a value, so it carries the language the field declares for its values. -->
                 <input
                   spellcheck="false"

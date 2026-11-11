@@ -57,6 +57,12 @@ const scenarios: Record<string, (page: Page) => Promise<void>> = {
   'designer-page': async (page) => {
     await openDesigner(page);
   },
+  // A column beside the canvas at 1440px. On a narrow host its toggle opens it over the canvas.
+  overview: async (page) => {
+    const d = await openDesigner(page);
+    const open = d.getByRole('button', { name: 'Open Overview', exact: true });
+    if (await open.count()) await open.click();
+  },
   'library-menu': async (page) => {
     await page.addInitScript(() =>
       localStorage.setItem(

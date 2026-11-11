@@ -48,14 +48,23 @@ const HEADER = [
   'button "Expand template settings"',
 ];
 
-/** The Overview of the three fields the fixture holds, then the template's header. */
+/**
+ * The Overview of the three fields the fixture holds, then the template's header. Move up and Move
+ * down at an end are marked disabled rather than disabled, so they keep their stops.
+ */
 const OVERVIEW_AND_HEADER = [
   'separator "Resize Overview"',
   'button "Title Required"',
+  'button "Move Title up"',
+  'button "Move Title down"',
   'button "Reorder Title"',
   'button "Category"',
+  'button "Move Category up"',
+  'button "Move Category down"',
   'button "Reorder Category"',
   'button "Publication Date"',
+  'button "Move Publication Date up"',
+  'button "Move Publication Date down"',
   'button "Reorder Publication Date"',
   ...HEADER,
 ];
@@ -121,15 +130,29 @@ test('the open preview follows the cards, and its mode select comes last', async
   ]);
 });
 
-test('a 375px host runs from the toolbar through the header to each card, with no Overview', async ({ page }) => {
+test('a 375px host runs from the toolbar through the header to each card, with the Overview closed', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 375, height: 812 });
-  await openDesigner(page);
+  const designer = await openDesigner(page);
   // A click on the host's heading puts the start of the Tab sequence before the designer.
   await page.locator('#host-heading').click();
   expect(await tabUntil(page, '(page)')).toEqual([
+    'button "Open Overview"',
     'button "User Menu"',
     'button "Open Preview"',
     ...HEADER,
+    ...CARDS,
+    '(page)',
+  ]);
+
+  // Opened over the canvas, the Overview comes where its column comes on a wider host.
+  await designer.getByRole('button', { name: 'Open Overview', exact: true }).click();
+  await designer.getByRole('button', { name: 'Close Overview', exact: true }).focus();
+  expect(await tabUntil(page, '(page)')).toEqual([
+    'button "User Menu"',
+    'button "Open Preview"',
+    ...OVERVIEW_AND_HEADER,
     ...CARDS,
     '(page)',
   ]);
@@ -157,6 +180,8 @@ test('sidebar mode runs from the toolbar through the library to the Overview and
     'button "Open Preview"',
     'button "Add field"',
     'button "Collapse sidebar"',
+    // The field list is one stop: its first entry, while no field is selected.
+    'option "Title"',
     'separator "Resize field list"',
     'button "Built-in Fields"',
     ...BASIC_TYPES.map((type) => `button "${type}"`),

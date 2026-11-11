@@ -15,7 +15,8 @@ test('the field picker searches libraries in a field that draws the shared focus
   await designer.getByRole('button', { name: /^Add field$/ }).click();
   await expect(designer.getByRole('heading', { name: 'Choose field' })).toBeVisible();
   await designer.locator('.btn-library-dropdown').click();
-  await expectSharedFocusRing(designer.getByPlaceholder('Search libraries...'));
+  // The magnifier sits inside the search box, so the box draws the ring around both.
+  await expectSharedFocusRing(designer.getByPlaceholder('Search libraries...'), '.dropdown-search-field');
 });
 
 test("a field card's name, option labels and content draw the shared focus ring", async ({ page }) => {

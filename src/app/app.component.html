@@ -9,13 +9,14 @@
     <div class="app-header__inner">
       <div class="app-header__brand">
         <button
+          #overviewToggle
           type="button"
           class="panel-toggle overview-toggle"
-          (click)="showFieldsOverview.set(!showFieldsOverview())"
-          [attr.aria-expanded]="showFieldsOverview()"
+          (click)="toggleOverview()"
+          [attr.aria-expanded]="overviewShown()"
           aria-controls="ced-overview"
-          [attr.aria-label]="(showFieldsOverview() ? 'app.overview.close' : 'app.overview.open') | translate"
-          [title]="(showFieldsOverview() ? 'app.overview.close' : 'app.overview.open') | translate"
+          [attr.aria-label]="(overviewShown() ? 'app.overview.close' : 'app.overview.open') | translate"
+          [title]="(overviewShown() ? 'app.overview.close' : 'app.overview.open') | translate"
         >
           <app-icon key="panelLeft" size="default" />
         </button>
@@ -126,8 +127,8 @@
     <div class="designer-scroll" [ngClass]="getDesignerClasses()">
       <div class="designer-grid" [style.--designer-columns]="getGridTemplateColumns()">
         <!-- Fields Overview Panel -->
-        @if (service.session.document().children.length > 0 && showFieldsOverview()) {
-          <div class="overview-panel" id="ced-overview">
+        @if (service.session.document().children.length > 0 && overviewShown()) {
+          <div class="overview-panel" id="ced-overview" [class.overview-panel--overlay]="narrow()">
             <div
               class="overview-panel__resize"
               role="separator"
@@ -143,10 +144,10 @@
               (pointerdown)="startOverviewResize($event)"
               (pointermove)="resizeOverview($event)"
               (pointerup)="endOverviewResize()"
-              (pointercancel)="endOverviewResize()"
+              (pointercancel)="cancelOverviewResize()"
               (lostpointercapture)="endOverviewResize()"
               (keydown)="resizeOverviewWithKeyboard($event)"
-              (dblclick)="resetOverviewWidth()"
+              (click)="stepOverviewWidth($event)"
             ></div>
             <div class="overview-panel__card">
               <div class="overview-panel__header">
