@@ -463,6 +463,10 @@ for (const kind of ['template', 'element'] as const) {
         (document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement).newArtifact(kind);
       }, kind);
     await start();
+    // The designer renders the new artifact after newArtifact returns, and the starter template's
+    // name is empty too, so an empty name box proves nothing. Until the starter's field cards go,
+    // the box still belongs to the starter, and a blur there touches the starter's name.
+    await expect(designer.locator('[id^=field-card-]')).toHaveCount(0);
     const name = designer.getByRole('textbox', {
       name: kind === 'template' ? 'Template name' : 'Element name',
       exact: true,
