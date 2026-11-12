@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-11-12
+
+Aligns with `cedar-model-typescript-library@1.0.28`.
+
+- Adds Move up and Move down buttons for reordering, keyboard routes through the field list and the child picker, and captions that stay once a box holds text.
+- Opens the Overview over the canvas below 768px, fits the Preferences and Define Presets dialogs to a narrow host, and closes the designer's recorded WCAG 2.2 failures.
+
+### Added
+
+- A Name caption before a field's name box, a number before each option box and a magnifier in
+  the field picker's library search, which also gains an accessible name. Each stays once its box
+  holds text, as a placeholder does not. No card grows taller.
+- Move up and Move down buttons on each Overview row and each chosen row in the child picker,
+  beside the Reorder handle, so reordering needs single clicks alone. Each says where the item went.
+- A click on the Overview's divider or the library sidebar's divider steps it through its smallest,
+  default and largest sizes. It replaces the Overview divider's double-click reset.
+- Keyboard routes through two lists. The library sidebar's field list is a listbox and one Tab stop:
+  the arrow keys, Home and End move within it, and Enter chooses a field as a click does and gives
+  focus to its card. The child picker's results are a grid and one Tab stop, and Enter or Space
+  chooses a row.
+- Below 768px the Overview's toggle stays in the header and opens the Overview over the canvas,
+  closed by default. Escape closes it and returns focus to the toggle.
+
+### Changed
+
+- A field's header is at least 24px tall, the minimum target size, so it serves as the settings
+  toggle's equivalent target. Every field card is 1px taller.
+
+### Fixed
+
+- The library sidebar's libraries section takes the space left under the field list, so it ends at
+  the sidebar's edge and its last button can be reached with a pointer.
+- On a narrow host the Preferences field types take one column, each Define Presets table scrolls
+  sideways in a box of its own, and a Types row puts its buttons beneath the list, each only where
+  its row would otherwise overflow.
+- Escape no longer leaves keyboard focus on the insertion actions it hides between two cards.
+  Focus moves to the card below them, the one they insert before. An action used from the
+  keyboard keeps the actions shown, so closing the palette it opens returns focus to a control
+  that can be seen. A pointer click still hides them.
+
 ## [0.1.0] - 2026-11-09
 
 Aligns with `cedar-model-typescript-library@1.0.27`.
