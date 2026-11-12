@@ -1,5 +1,6 @@
 import { fieldNode, newNodeId } from '../../src/app/core/model/container-draft';
 import { expect, test, Page } from '@playwright/test';
+import { NEEDS_PICKER } from './bundle-tags';
 import { buildTemplate, templateToJson, newContainer, buildContainer } from '../../src/app/core/model/cedar-template';
 import { Field } from '../../src/app/core/models/types';
 import type { CedarEmbeddableDesignerElement, CedJsonObject } from '../../src/app/ced-public-api';
@@ -423,8 +424,7 @@ test('a known invalid controlled default is rejected by selection and blocks an 
     });
 });
 
-test('the real picker selects a default within the field vocabulary', async ({ page }) => {
-  test.skip(!process.env.PICKER_BUNDLE, 'PICKER_BUNDLE names the actual term-picker bundle.');
+test('the real picker selects a default within the field vocabulary', { tag: NEEDS_PICKER }, async ({ page }) => {
   const iri = 'http://purl.obolibrary.org/obo/DOID_162';
   // The picker searches within the field's constraints, as the metadata editor offers its values,
   // rather than across the ontologies they name.

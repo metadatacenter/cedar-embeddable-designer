@@ -31,7 +31,7 @@
       "close": "Áttekintés bezárása",
       "resize": "Áttekintés átméretezése",
       "widthValue": "{{width}} képpont",
-      "resizeHint": "Húzza az Áttekintés átméretezéséhez. A nyílbillentyűk átméretezik, a Home és az End a határértékekre állítja. Dupla kattintással visszaállítja.",
+      "resizeHint": "Húzza az Áttekintés átméretezéséhez, vagy kattintson a legkisebb, az alapértelmezett és a legnagyobb szélesség közötti lépéshez. A nyílbillentyűk átméretezik, a Home és az End a határértékekre állítja.",
       "heading": "Áttekintés ({{count}})",
       "expandAll": "Minden elem kinyitása",
       "collapseAll": "Minden elem összecsukása"
@@ -163,7 +163,9 @@
     "searchFailed": "A keresés nem sikerült. Kérjük, próbálja újra.",
     "loadFailed": "A kijelölést nem sikerült betölteni. Kérjük, próbálja újra.",
     "documentChanged": "A dokumentum megváltozott. Nyissa meg újra a választót az új dokumentumban.",
-    "reorderRow": "{{name}} átrendezése"
+    "reorderRow": "{{name}} átrendezése",
+    "moveUpRow": "{{name}} mozgatása feljebb",
+    "moveDownRow": "{{name}} mozgatása lejjebb"
   },
   "containerEditor": {
     "elementDisplayName": "Elem megjelenített neve",
@@ -346,6 +348,7 @@
   },
   "fieldCard": {
     "published": "Ez a mező közzétett, ezért csak a konfigurációja módosítható.",
+    "name": "Név",
     "namePlaceholder": "Adja meg a mező nevét",
     "occurrenceRange": "Előfordulási tartomány",
     "dragToReorder": "Húzza az átrendezéshez",
@@ -560,7 +563,9 @@
     "expand": "Elem kinyitása",
     "collapse": "Elem összecsukása",
     "reorder": "{{name}} áthelyezése",
-    "reorderHint": "Húzza az átrendezéshez, vagy a nyílbillentyűkkel mozgassa fel és le"
+    "reorderHint": "Húzza az átrendezéshez, vagy a nyílbillentyűkkel mozgassa fel és le",
+    "moveUp": "{{name}} mozgatása feljebb",
+    "moveDown": "{{name}} mozgatása lejjebb"
   },
   "insertion": {
     "addField": "Mező hozzáadása",

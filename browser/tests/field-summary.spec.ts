@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { NEEDS_CEF } from './bundle-tags';
 import { buildTemplate, fieldToJson, templateToJson } from '../../src/app/core/model/cedar-template';
 import { Field } from '../../src/app/core/models/types';
 import { currentTemplate, openDesigner, openSettings } from './support';
@@ -37,10 +38,9 @@ const fields: Field[] = [
 ];
 
 for (const width of [1280, 375]) {
-  test(`field summaries reuse the CEE renderer and update without changing defaults at ${width}`, async ({
+  test(`field summaries reuse the CEE renderer and update without changing defaults at ${width}`, { tag: NEEDS_CEF }, async ({
     page,
   }, testInfo) => {
-    test.skip(!process.env.CEF_BUNDLE, 'Requires the real CEE/CEF distribution');
     await page.setViewportSize({ width, height: 1000 });
     const designer = await openDesigner(page);
     const artifact = templateToJson(
@@ -113,8 +113,7 @@ for (const width of [1280, 375]) {
 }
 
 for (const type of ['singleChoiceList', 'multipleChoiceList', 'multipleChoice', 'checkboxes']) {
-  test(`${type} shows its options in a summary box and follows edits`, async ({ page }) => {
-    test.skip(!process.env.CEF_BUNDLE, 'Requires the real CEE/CEF distribution');
+  test(`${type} shows its options in a summary box and follows edits`, { tag: NEEDS_CEF }, async ({ page }) => {
     const designer = await openDesigner(page);
     await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
     const artifact = templateToJson(
@@ -161,8 +160,7 @@ for (const type of ['singleChoiceList', 'multipleChoiceList', 'multipleChoice', 
   });
 }
 
-test('field summaries draw the control without the help text', async ({ page }) => {
-  test.skip(!process.env.CEF_BUNDLE, 'Requires the real CEE/CEF distribution');
+test('field summaries draw the control without the help text', { tag: NEEDS_CEF }, async ({ page }) => {
   const designer = await openDesigner(page);
   await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
   const artifact = templateToJson(
@@ -236,8 +234,7 @@ test('occurrence ranges follow limits and repetition beside the field name', asy
   await expect(range).toHaveCount(0);
 });
 
-test('toggling repetition keeps the field header and preview stationary', async ({ page }) => {
-  test.skip(!process.env.CEF_BUNDLE, 'Requires the real CEE/CEF distribution');
+test('toggling repetition keeps the field header and preview stationary', { tag: NEEDS_CEF }, async ({ page }) => {
   const designer = await openDesigner(page);
   await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
   await page.evaluate(

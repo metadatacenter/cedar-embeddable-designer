@@ -18,6 +18,14 @@
   flex-direction: column;
   border-bottom: 1px solid var(--cedar-border-rule);
 }
+/*
+  The field list takes its share of the sidebar's height, and the libraries the rest, so the two end
+  at the sidebar's edge whatever the insertion actions above them take.
+*/
+.sidebar-section--rest {
+  flex: 1 1 0;
+  min-height: 0;
+}
 
 .sidebar-header {
   padding: var(--cedar-space-3) var(--cedar-space-4);
@@ -100,6 +108,11 @@
   &.active {
     background-color: var(--cedar-surface-subtle);
     border-left-color: var(--cedar-color-primary);
+  }
+
+  // The shared focus ring, drawn inside the entry, where the list's scrolling box cannot clip it.
+  &:focus-visible {
+    outline-offset: calc(-1 * var(--cedar-focus-ring-width));
   }
 }
 

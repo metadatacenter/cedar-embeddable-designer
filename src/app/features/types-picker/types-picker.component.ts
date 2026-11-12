@@ -51,20 +51,23 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
           <span class="placeholder">{{ 'typesPicker.none' | translate }}</span>
         }
       </div>
-      @if (available && baseUrl()) {
-        <button
-          #trigger
-          type="button"
-          [disabled]="locked()"
-          (click)="open()"
-          [attr.aria-label]="'typesPicker.add' | translate"
-        >
-          {{ 'typesPicker.add' | translate }}
+      <!-- The buttons move together, beneath the list, when they do not fit beside it. -->
+      <div class="type-actions">
+        @if (available && baseUrl()) {
+          <button
+            #trigger
+            type="button"
+            [disabled]="locked()"
+            (click)="open()"
+            [attr.aria-label]="'typesPicker.add' | translate"
+          >
+            {{ 'typesPicker.add' | translate }}
+          </button>
+        }
+        <button #manualTrigger type="button" [disabled]="locked()" (click)="manualOpened.set(!manualOpened())">
+          {{ 'manualIri.open' | translate }}
         </button>
-      }
-      <button #manualTrigger type="button" [disabled]="locked()" (click)="manualOpened.set(!manualOpened())">
-        {{ 'manualIri.open' | translate }}
-      </button>
+      </div>
     </div>
     @if (manualOpened()) {
       <app-manual-iri
@@ -108,11 +111,22 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
   `,
   styles: `
     @use '@org.metadatacenter/cedar-design-tokens/patterns';
+    /*
+      The list keeps at least its longest word beside the buttons. Where that leaves too little room,
+      the buttons wrap beneath it rather than squeezing it to a letter a line or running past the card.
+    */
     .property {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: var(--cedar-space-3);
       font-size: var(--cedar-font-size);
+    }
+    .type-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--cedar-space-3);
     }
     .unavailable {
       margin: var(--cedar-space-1) 0 0;
@@ -141,7 +155,6 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
     }
     .type-list {
       flex: 1;
-      min-width: 0;
     }
     .type-row {
       display: flex;
@@ -156,8 +169,10 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       color: var(--cedar-color-primary);
       text-decoration: none;
     }
+    /* Whole words, so the list's narrowest is its longest word, which the buttons then wrap beneath. */
     .placeholder {
       color: var(--cedar-text-muted);
+      overflow-wrap: normal;
     }
     .overlay {
       position: fixed;

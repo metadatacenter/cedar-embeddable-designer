@@ -59,6 +59,20 @@
   padding-right: var(--cedar-space-2);
   padding-bottom: var(--cedar-space-2);
 }
+/* The group's width, which the grid fills, decides how many columns the field types take. */
+.preferences-field-types {
+  container: preferences-field-types / inline-size;
+}
+/*
+  Two equal columns need twice the widest type, Checkboxes with its box and icon, and the gap and
+  padding: 278px on Linux and 277px on macOS at the body size, measured on 2026-11-11. Below that a
+  type would run past its column, so the types take one.
+*/
+@container preferences-field-types (max-width: 20em) {
+  .preferences-field-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 .preferences-choice-list > :not(:last-child) {
   margin-bottom: var(--cedar-space-3);
 }

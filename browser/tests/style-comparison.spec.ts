@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
 
 test('comparison page renders the four real components and applies host profiles', async ({ page }, testInfo) => {
-  test.skip(!process.env.CEF_BUNDLE, 'Needs the real CEE/CEF distribution');
   await page.route('**/cedar-embeddable-editor.js', (route) =>
     route.fulfill({ path: process.env.CEF_BUNDLE!, contentType: 'text/javascript' }),
   );
@@ -34,7 +33,6 @@ test('comparison page renders the four real components and applies host profiles
 
 for (const readOnly of [false, true]) {
   test(`CED follows the CEE visual reference with read-only=${readOnly}`, async ({ page }, testInfo) => {
-    test.skip(!process.env.CEF_BUNDLE, 'Needs the approved CEE/CEF distribution');
     await page.route('**/cedar-embeddable-editor.js', (route) =>
       route.fulfill({ path: process.env.CEF_BUNDLE!, contentType: 'text/javascript' }),
     );

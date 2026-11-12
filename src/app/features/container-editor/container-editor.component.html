@@ -215,7 +215,7 @@
               [targetId]="container().id"
               [position]="idx"
               [here]="true"
-              (used)="dismissedInsertion.set(node.id)"
+              (used)="insertionUsed(node.id)"
             />
           </div>
           @if (pickerAt(idx)) {

@@ -46,7 +46,7 @@ interface Settled {
   target: string;
   /** A selector for what covers part of the element, when the entry settles content partly out of view. */
   coveredBy?: string;
-  /** The value measured on 2026-10-20. */
+  /** The value measured on 2026-10-20, or on the date the entry gives. */
   measured: string;
   /** Why the measured value passes. */
   passes: string;
@@ -98,6 +98,25 @@ const SETTLED: Settled[] = [
     check: { contrast: 4.5 },
   },
   {
+    rule: 'color-contrast',
+    target: '*',
+    coveredBy: '.overview-panel--overlay',
+    measured: "a field's type label beneath the open Overview, rgb(85, 85, 85) on white, 7.5:1, on 2026-11-11",
+    passes:
+      'On a narrow host the open Overview lies over the canvas, so axe-core cannot tell what is behind a ' +
+      'control it covers in part. The part still visible sits on its own fill.',
+    check: { contrast: 4.5 },
+  },
+  {
+    rule: 'color-contrast',
+    target: '.overview-panel--overlay *',
+    measured: "the Overview's row names, rgba(0, 0, 0, 0.87) on white, 16.1:1, on 2026-11-11",
+    passes:
+      'On a narrow host the open Overview lies over the canvas, which axe-core cannot see past. Its text ' +
+      'sits on its own opaque fill.',
+    check: { contrast: 4.5 },
+  },
+  {
     rule: 'target-size',
     target: '.template-header-card .settings-toggle',
     measured: 'a template or element settings toggle of 36 by 14; the header beside it, 870 by 103 for a template',
@@ -105,6 +124,16 @@ const SETTLED: Settled[] = [
       'Under the 24px minimum, but the header beside each toggle opens the same settings, and criterion ' +
       '2.5.8 accepts an equivalent target that meets it.',
     check: { equivalent: { target: '[appheadertoggle]', within: '.template-header-card' } },
+  },
+  {
+    rule: 'target-size',
+    target: 'app-field-settings .settings-toggle',
+    measured: "a field's settings toggle of 36 by 14; the field header above it, 838 by 24, on 2026-11-10",
+    passes:
+      "Under the 24px minimum, and a Constraints or Content panel's last control can end within 12px of " +
+      'its centre. The field header opens the same settings and takes the minimum target size, so it is ' +
+      'the equivalent target criterion 2.5.8 accepts.',
+    check: { equivalent: { target: '[appheadertoggle]', within: 'app-field-card' } },
   },
 ];
 
@@ -123,18 +152,7 @@ interface Exception {
   needs: string;
 }
 
-const EXCEPTIONS: Exception[] = [
-  {
-    rule: 'target-size',
-    target: 'app-field-settings .settings-toggle',
-    size: [36, 14],
-    measured:
-      "A field's settings toggle is 36 by 14. With a Constraints or Content panel open, the panel's last " +
-      "control, such as Default value, ends within 12px of the toggle's centre, so the spacing exception " +
-      'fails. The field header beside it opens the same settings but is 23px tall, so it is no equivalent.',
-    needs: 'A toggle at least 24px tall with room below the panel, or a field header at least 24px tall.',
-  },
-];
+const EXCEPTIONS: Exception[] = [];
 
 /** Each undecided contrast or target-size result that `SETTLED` does not settle, with what was measured. */
 async function unsettled(page: Page, results: Result[]): Promise<string[]> {
@@ -387,6 +405,37 @@ test('a fresh template at the default and Basic presets', async ({ page }) => {
   await expectAccessible(page, 'Basic preset');
 });
 
+// The settled result for a field's settings toggle rests on the header as its equivalent target, so
+// the header must meet the minimum size and must open the same settings.
+for (const width of [1280, 375])
+  test(`a field header is its settings toggle's equivalent target at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 812 });
+    const designer = await openDesigner(page);
+    const cards = designer.locator('app-field-card');
+    await expect(cards).toHaveCount(SAMPLE_FIELDS);
+    for (const card of await cards.all()) {
+      const header = card.locator('[appheadertoggle]');
+      const toggle = card.locator('app-field-settings .settings-toggle');
+      const settings = card.locator(`[id="${await toggle.getAttribute('aria-controls')}"]`);
+      await header.scrollIntoViewIfNeeded();
+      const box = (await header.boundingBox())!;
+      expect(box.width).toBeGreaterThanOrEqual(24);
+      expect(box.height).toBeGreaterThanOrEqual(24);
+      // The toggle keeps its size, which is why it needs an equivalent.
+      expect(await toggle.evaluate((element) => [element.offsetWidth, element.offsetHeight])).toEqual([36, 14]);
+      await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      await expect(settings).toBeHidden();
+      // The header's own surface, between the field's type and its delete button.
+      const chrome = { x: box.width * 0.75, y: box.height - 12 };
+      await header.click({ position: chrome });
+      await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+      await expect(settings).toBeVisible();
+      await header.click({ position: chrome });
+      await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      await expect(settings).toBeHidden();
+    }
+  });
+
 // Each page state gets its own deadline. Several full-page scans in one test exhaust the
 // 30-second budget when the train also runs another application's browser suite.
 for (const state of [
@@ -561,6 +610,14 @@ test('a 375px host', async ({ page }) => {
   const designer = await openDesigner(page);
   await expectAccessible(page, 'narrow template');
   await expectTabsAccessible(page, designer.locator('[id^=field-card-]').first(), 'narrow field');
+});
+
+test('a 375px host with the Overview open over the canvas', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  const designer = await openDesigner(page);
+  await designer.getByRole('button', { name: 'Open Overview', exact: true }).click();
+  await expect(designer.locator('.overview-panel')).toBeVisible();
+  await expectAccessible(page, 'narrow, Overview open');
 });
 
 test('the library sidebar, expanded and collapsed', async ({ page }) => {

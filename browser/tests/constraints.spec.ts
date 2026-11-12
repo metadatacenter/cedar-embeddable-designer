@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { NEEDS_PICKER } from './bundle-tags';
 import { openSettings, applyPreset, child, clickCentred, currentTemplate, openDesigner } from './support';
 
 /**
@@ -144,8 +145,7 @@ test('reopening passes the existing set and additions preserve it', async ({ pag
   expect(constraints.classes).toHaveLength(2);
 });
 
-test('the real picker preserves saved actions and explicitly clears an invalid default', async ({ page }) => {
-  test.skip(!process.env.PICKER_BUNDLE, 'PICKER_BUNDLE names the actual picker bundle.');
+test('the real picker preserves saved actions and explicitly clears an invalid default', { tag: NEEDS_PICKER }, async ({ page }) => {
   const designer = await openDesigner(page);
   await page.addScriptTag({ path: process.env.PICKER_BUNDLE! });
   if (process.env.CEF_BUNDLE) await page.addScriptTag({ path: process.env.CEF_BUNDLE });

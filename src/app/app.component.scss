@@ -138,15 +138,17 @@
 }
 
 @media (max-width: 767px) {
-  // The overview is hidden at this width; it must not keep an empty grid column.
+  // The overview takes no column at this width; it must not keep an empty grid column.
   .designer-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .overview-panel:not(.overview-panel--overlay) {
+    display: none;
   }
 }
 
 /* ─── Fields Overview Sidebar ─────────────────────────────────────────────── */
 .overview-panel {
-  @apply hidden md:block;
   padding: var(--cedar-space-3);
   position: relative;
 }
@@ -211,11 +213,6 @@
 .panel-toggle:focus-visible {
   outline: var(--cedar-focus-ring-width) solid var(--cedar-color-primary);
   outline-offset: var(--cedar-focus-ring-offset);
-}
-@media (max-width: 767px) {
-  .overview-toggle {
-    display: none;
-  }
 }
 
 /* ─── Designer Workspace ──────────────────────────────────────────────────── */
@@ -412,17 +409,41 @@
   color: var(--cedar-text-muted);
 }
 
-/* Embedders decide the available width, independently of the browser viewport. */
+/*
+  Embedders decide the available width, independently of the browser viewport. Below 768px the
+  Overview takes no column. Its toggle stays in the header and opens it over the canvas instead.
+*/
 @container (max-width: 767px) {
   .main-content.has-overview {
     --overview-width: 0px;
   }
-  .overview-panel,
-  .overview-toggle {
+  .overview-panel:not(.overview-panel--overlay) {
     display: none;
   }
   .designer-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+  // The open Overview takes the content area as its box, so it stays in place while the canvas scrolls.
+  .designer-scroll {
+    position: static;
+  }
+  /*
+    Beside the library, when there is one, and over the canvas, which its divider's line still marks
+    off. It shares the library's layer, which keeps the canvas, its settings toggles included, beneath
+    a designer panel and menus above it.
+  */
+  .overview-panel--overlay {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: var(--library-width);
+    width: var(--preferred-overview-width);
+    max-width: 100%;
+    z-index: spacing.$designer-library-layer;
+    background: var(--cedar-surface-raised);
+  }
+  .overview-panel--overlay .overview-panel__card {
+    position: static;
+    max-height: 100%;
   }
 }
 

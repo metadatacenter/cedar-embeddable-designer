@@ -1,5 +1,6 @@
 import { addElementFixture } from './support';
 import { expect, test } from '@playwright/test';
+import { NEEDS_PICKER } from './bundle-tags';
 import { openDesigner, openSettings, currentTemplate, applyPreset } from './support';
 
 test('field and element property choices update only their parent context and cancel preserves it', async ({
@@ -60,8 +61,7 @@ test('field and element property choices update only their parent context and ca
   expect(await currentTemplate(page)).toEqual(saved);
 });
 
-test('real CETP selects a property for field metadata', async ({ page }) => {
-  test.skip(!process.env.PICKER_BUNDLE, 'Requires the real CETP bundle.');
+test('real CETP selects a property for field metadata', { tag: NEEDS_PICKER }, async ({ page }) => {
   const designer = await openDesigner(page);
   await page.addScriptTag({ path: process.env.PICKER_BUNDLE! });
   // Recreate the cards after the host registers the sibling.
@@ -102,7 +102,12 @@ test('real CETP selects a property for field metadata', async ({ page }) => {
   await metadata.getByRole('button', { name: 'Replace property IRI', exact: true }).click();
   await picker.locator('input[type=search]').fill('part');
   await picker.getByRole('button', { name: /part of.*in 1 ontology/ }).click();
-  await picker.getByRole('option', { name: 'part of in RO' }).click();
+  // A result row's name is the button that opens its detail. The picker revision the CI integration
+  // job pins, which resolves from npm-cedar-releases, still draws the row as an option.
+  await picker
+    .getByRole('button', { name: 'part of in RO' })
+    .or(picker.getByRole('option', { name: 'part of in RO' }))
+    .click();
   await picker.getByRole('button', { name: 'Select', exact: true }).click();
   await picker.getByRole('button', { name: 'Done', exact: true }).click();
   await expect(metadata).toContainText('urn:part');

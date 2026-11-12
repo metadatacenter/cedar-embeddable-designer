@@ -31,7 +31,7 @@
       "close": "Close Overview",
       "resize": "Resize Overview",
       "widthValue": "{{width}} pixels",
-      "resizeHint": "Drag to resize Overview. Arrow keys resize; Home and End set limits. Double-click to reset.",
+      "resizeHint": "Drag to resize Overview, or click to step through its smallest, default and largest widths. Arrow keys resize; Home and End set limits.",
       "heading": "Overview ({{count}})",
       "expandAll": "Expand all elements",
       "collapseAll": "Collapse all elements"
@@ -163,7 +163,9 @@
     "searchFailed": "Search failed. Please try again.",
     "loadFailed": "Unable to load the selection. Please try again.",
     "documentChanged": "The document changed. Reopen the selector in the new document.",
-    "reorderRow": "Reorder {{name}}"
+    "reorderRow": "Reorder {{name}}",
+    "moveUpRow": "Move {{name}} up",
+    "moveDownRow": "Move {{name}} down"
   },
   "containerEditor": {
     "elementDisplayName": "Element display name",
@@ -346,6 +348,7 @@
   },
   "fieldCard": {
     "published": "This field is published, so only its configuration can change.",
+    "name": "Name",
     "namePlaceholder": "Enter field name",
     "occurrenceRange": "Occurrence range",
     "dragToReorder": "Drag to reorder",
@@ -560,7 +563,9 @@
     "expand": "Expand element",
     "collapse": "Collapse element",
     "reorder": "Reorder {{name}}",
-    "reorderHint": "Drag to reorder; use arrow keys to move up or down"
+    "reorderHint": "Drag to reorder; use arrow keys to move up or down",
+    "moveUp": "Move {{name}} up",
+    "moveDown": "Move {{name}} down"
   },
   "insertion": {
     "addField": "Add field",

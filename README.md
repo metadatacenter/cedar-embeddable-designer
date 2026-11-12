@@ -1,745 +1,233 @@
 # CEDAR Embeddable Designer (CED)
 
-The CEDAR Embeddable Designer is a Web Component for authoring CEDAR metadata
-templates and elements. An author assembles a document from fields and nested elements, constrains fields to
-ontologies, branches, terms and value sets, and the component produces a CEDAR
-template that any CEDAR service can store, validate and render.
+[![Test](https://github.com/metadatacenter/cedar-embeddable-designer/actions/workflows/test.yml/badge.svg?branch=develop)](https://github.com/metadatacenter/cedar-embeddable-designer/actions/workflows/test.yml)
 
-CED is the authoring half of a pair. The [CEDAR Embeddable Editor
-(CEE)](https://github.com/metadatacenter/cedar-embeddable-editor) renders a
-template as a form and produces metadata instances from it; CED produces the
-templates CEE renders.
+The CEDAR Embeddable Designer (CED) puts metadata template authoring inside a web
+application. Authors assemble fields and reusable groups, define their allowed
+values and defaults, and preview the form that will collect the metadata. The
+host application receives a CEDAR template that it can store and use in its own
+workflow.
 
-## Status
+A template describes what metadata to collect: field names, value types,
+requirements, repeated groups, and controlled vocabularies. CED lets the people
+responsible for those requirements maintain them through a visual interface,
+without writing schemas by hand or building a template authoring tool.
 
-Early, and under active reconstruction on `develop`.
+The same CED bundle also includes the CEDAR Embeddable Field Designer (CEFD),
+for creating or editing an individual field definition.
 
-`<cedar-embeddable-designer>` registers itself without bootstrapping anything
-onto the page and renders in shadow DOM. It accepts a template or element through
-`artifact`, endpoint configuration through `config`, and publishes `artifactChange`.
-The shipped declaration describes those properties and events. The original
-`template`, `currentTemplate` and `templateChange` names remain compatible aliases.
+CED ships as a standard Web Component. It can be embedded in plain HTML or an
+Angular, React, or other web application without requiring the host to install
+Angular. Basic template authoring needs neither a CEDAR account nor a running
+CEDAR installation. Lookup and repository features use services supplied by
+the host.
 
-`npm run dist` produces the distribution: one script an embedder loads with a
-plain `<script>` tag, its type declaration, and a staged npm directory.
-Development snapshots are published to CEDAR Nexus as
-`@org.metadatacenter/cedar-embeddable-designer`. The split Designer host pins an
-exact snapshot for registry installs. Local `cedarcli build frontends` supplies current local
-component sources, including uncommitted edits, automatically; `cedarcli test frontends` checks
-them without deployment. No publication, pin update or follow-up approval is required for either.
-Releases are published to public npmjs as `cedar-embeddable-designer`.
+## How the Components Fit Together
 
-Serialization is the
-[CEDAR model library's](https://github.com/metadatacenter/cedar-model-typescript-library).
-The designer builds a `Template` or `TemplateElement` and the library writes it as CEDAR JSON-LD or
-CEDAR YAML and reads either back, so a template written in one form and reopened
-from the other is the same artifact.
+CEDAR provides three components for designing templates, choosing vocabularies,
+and collecting metadata:
 
-Controlled-term search asks the CEDAR terminology server a host names through
-`terminologyBaseUrl`, and reports a failure as a failure. There is no default
-endpoint: unset, search is off and the panel says so.
+| Component | Role |
+|---|---|
+| [CEDAR Embeddable Designer (CED)](https://metadatacenter.readthedocs.io/en/latest/cedar-embeddable-designer/) | Authors templates and reusable elements, including their fields, structure, constraints, and defaults. The included Field Designer authors standalone fields. |
+| [CEDAR Embeddable Term Picker (CETP)](https://metadatacenter.readthedocs.io/en/latest/cedar-embeddable-term-picker/) | Searches vocabularies and selects field constraints and default terms during authoring. It also supports ontology-property selection. |
+| [CEDAR Embeddable Editor (CEE)](https://metadatacenter.readthedocs.io/en/latest/cedar-embeddable-editor/) | Renders a template for metadata entry or read-only display and returns the resulting metadata instance. |
 
-## Templates and elements
+An author designs a template in CED and uses its embedded Term Picker to define
+the vocabularies a field draws from. The host stores the template and supplies
+a selected version to CEE. A researcher completes the form, and the host stores
+the resulting metadata instance.
 
-The embedding host supplies the template or standalone element to author. The **Modular**
-profile exposes the reusable-child selector within any container.
-Existing nested content stays visible in every profile. Elements render inline with
-the same header and field layout as templates, expanded by default. The header
-chevron collapses their contents without losing edits; the Overview expands and
-scrolls to the selected field or element.
+CEE also supplies CED's form preview, and the CEF widget included in CEE's
+bundle supplies individual field controls. Each component is a separate package:
+the host loads the sibling bundles and configures their services, then CED
+manages its embedded preview and pickers. Authentication, template version
+choices, and saving remain the host's responsibility.
 
-An element's **Element settings** panel controls its property name, display overrides,
-property IRI, requirement, cardinality and layout. Its move control transfers
-whole element subtrees between containers. Cycles and conflicting property
-names are refused; page breaks are offered only in templates.
+Applications can use CETP independently for vocabulary selection. A host filling
+an existing template needs only CEE, whose controlled-term fields perform their
+own lookup through the configured terminology service. See
+[Your First Embedded Term Picker](https://metadatacenter.readthedocs.io/en/latest/cedar-embeddable-term-picker/first-picker/)
+for standalone vocabulary selection and
+[Your First Embedded Editor](https://metadatacenter.readthedocs.io/en/latest/cedar-embeddable-editor/first-editor/)
+for collecting metadata from a finished template.
 
-The public `currentArtifact` and change events always contain the complete root
-document, including while a nested element is selected. CEE preview wraps a root
-element in a temporary template; host-facing documents retain their element type.
-The public artifact input accepts JSON and full YAML. Numeric constraints and defaults
-are compared without binary floating-point rounding, including the full signed 64-bit
-long range. Artifact getters and events may contain `CedExactNumber` atoms where a
-JavaScript number would lose precision; `String(value)` reads every digit. The shared
-model library's `JsonSourcePolicy.stringify` serializes those atoms as numeric tokens.
-Getters, change events, recovery snapshots and host reassignment preserve them.
+## Documentation
 
-## Language
+The [CEDAR Embeddable Designer documentation](https://metadatacenter.readthedocs.io/en/latest/cedar-embeddable-designer/)
+covers installation, templates and elements, validation, reusable content,
+standalone fields, service configuration, and appearance.
 
-The designer's own text is available in English and Hungarian, and the host chooses
-between them. Both elements take a `language` property and a matching `language`
-attribute, whose value is `'en'` or `'hu'`. Any other value selects English, which
-is also the default.
+[Your First Embedded Designer](https://metadatacenter.readthedocs.io/en/latest/cedar-embeddable-designer/first-designer/)
+builds a working page from the published packages.
+[Artifacts and Validation](https://metadatacenter.readthedocs.io/en/latest/cedar-embeddable-designer/artifacts-and-validation/)
+explains what a host supplies, what it reads back, and how to save safely.
+
+## Installing
+
+Stable releases are published on npm as
+[`cedar-embeddable-designer`](https://www.npmjs.com/package/cedar-embeddable-designer):
+
+```shell
+npm install cedar-embeddable-designer
+```
+
+To check the current stable release:
+
+```shell
+npm view cedar-embeddable-designer version
+```
+
+The package contains `cedar-embeddable-designer.js`, the self-contained bundle,
+and `cedar-embeddable-designer.d.ts`, declarations for both designer elements
+and their public APIs. Copy the bundle to the application's static assets and
+load it with a regular `<script>` tag. It is a classic script, not an ES module.
+
+### Preview, Field Controls, and Terminology
+
+Install the sibling components for form preview, default-value controls, and
+vocabulary selection:
+
+```shell
+npm install cedar-embeddable-editor cedar-embeddable-term-picker
+```
+
+Copy their `cedar-embeddable-editor.js` and `cedar-embeddable-term-picker.js`
+bundles to the same asset directory. CEE also registers CEF, which supplies
+individual field controls. These components are loaded separately and are not
+included in the CED bundle.
+
+### Hosts That Already Supply CEDAR Fonts
+
+The default bundle includes CEDAR Roboto 400 and 500. Hosts that register those
+fonts in a global stylesheet can instead load
+`cedar-embeddable-designer.host-fonts.js`. Both variants register CED and CEFD
+with the same API; load only one. Without the host's font faces, the host-font
+variant uses the shared system fallback stack.
+
+## Embedding
+
+Load the bundles, wait for registration, and start a template:
 
 ```html
-<cedar-embeddable-designer language="hu"></cedar-embeddable-designer>
+<cedar-embeddable-designer></cedar-embeddable-designer>
+
+<script src="/assets/cedar-embeddable-term-picker.js"></script>
+<script src="/assets/cedar-embeddable-editor.js"></script>
+<script src="/assets/cedar-embeddable-designer.js"></script>
+<script type="module">
+  await customElements.whenDefined('cedar-embeddable-designer');
+  const designer = document.querySelector('cedar-embeddable-designer');
+
+  designer.config = {};
+  designer.addEventListener('artifactChange', (event) => {
+    console.log('Current template:', event.detail);
+  });
+  designer.addEventListener('validationChange', (event) => {
+    console.log('Ready to save:', event.detail.canSave);
+  });
+  designer.newArtifact('template');
+</script>
 ```
 
-```ts
-import type { CedarEmbeddableDesignerElement } from 'cedar-embeddable-designer';
-
-await customElements.whenDefined('cedar-embeddable-designer');
-const designer = document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement;
-designer.language = 'hu';
-console.log(designer.language); // 'hu'
-```
-
-The language may change at any time, and the designer's text is rendered again in
-the new one. Each element keeps its own language, so two designers on one page can
-differ. What the author wrote is never translated: names, descriptions, options and
-other template content appear as they were entered.
-
-The designer passes its language on to the components it embeds. It sets
-`language` on every `<cedar-embeddable-term-picker>` it creates, and it configures
-the CEE preview and the embedded CEE field controls with the same `defaultLanguage`
-and a `fallbackLanguage` of `'en'`. CEE applies its configuration once, so a change
-of language replaces those controls rather than reconfiguring them. Dates are
-formatted in the active language's locale: `en-US` for English, as before, and
-`hu-HU` for Hungarian.
-
-Validation messages follow the language too. `validationReport` and
-`validationChange` carry each message in the active language, while an issue's
-`tab` keeps its English identifier. An identifier is the tab's original English name,
-so `Display` identifies the tab labelled Presentation, and `Field metadata`,
-`Element metadata` and `Template Metadata` identify the tabs labelled Metadata. A message already shown for a failed edit keeps
-the language it was produced in until the next edit.
-
-Both language maps are bundled into the script, so choosing a language never makes
-a request. They are `src/assets/i18n/en.json` and `src/assets/i18n/hu.json`. A unit
-test holds the two to the same keys, and another fails when a template or message
-states user-visible text without going through them.
-
-## Requirements
-
-Node 24.22.1, as named by `.nvmrc` and matching CEE and the term picker.
-
-```bash
-nvm use
-npm install
-```
-
-## Running
-
-Start the development server and open `http://localhost:4200/`. The page it
-serves is a host page: it embeds `<cedar-embeddable-designer>` rather than
-rendering the designer directly, so development exercises the same contract an
-embedder uses.
-
-```bash
-npm start
-```
-
-## Building
-
-There are two builds, because there are two things to produce.
-
-```bash
-npm run build       # the element
-npm run build:app   # the standalone application
-```
-
-`npm run build` compiles `src/main.ts`, which registers the custom element and
-bootstraps nothing. It emits no `index.html` and no global stylesheet: the
-element carries its own styles into its shadow root, which is why they are listed
-on the element component rather than in `angular.json`. The output is
-`main.js` and `polyfills.js` under `dist/cedar-embeddable-designer/`, unhashed.
-Flattening those into the one script an embedder loads follows CEE's approach and
-is not in place yet.
-
-`npm run build:app` compiles `src/main.dev.ts` and the host page around it, which
-is what `npm start` serves.
-
-## Authoring Style Ownership
-
-Native authoring controls and compact tables import the design-token package's
-`authoring` Sass module directly. `src/authoring.scss` is the selector adapter for
-both designer elements: it chooses where central density, select-arrow and entry-row
-recipes apply. Keep shared geometry and typography in the central recipes, not in
-copies under `src/app/shared` or corrective declarations in `src/styles.css`.
-Component styles still own their layout and content-specific widths.
-
-The surface registry checks representative authoring surfaces against central
-contracts at desktop and narrow widths. They cover labels and controls in the
-annotation entry row, a field's and an element's metadata and a nested field's
-constraints, a field's constraint select, a default-value label beside real CEF,
-and a field's metadata under a host override of the shared type size. The
-field-type and label-weight browser suites cover the broader authoring matrix,
-every field type in every settings tab. A central contract compares each property
-with a single token, so CED's own browser tests check select-arrow clearance and
-controlled-term default-row alignment. Preserve these rendered expectations when
-consolidating styles; do not update visual baselines to accept an unintended change.
-
-## The Sibling Components It Works With
-
-The designer uses sibling web components the embedding page loads,
-and this bundle carries none of them. They are siblings rather than dependencies, so a
-host loads three scripts and each component stays its own size:
-
-```html
-<script src="cedar-embeddable-term-picker.js"></script>
-<script src="cedar-embeddable-editor.js"></script>
-<script src="cedar-embeddable-designer.js"></script>
-```
-
-A field's complete controlled-term constraint set is assembled with
-[`<cedar-embeddable-term-picker>`](https://github.com/metadatacenter/cedar-embeddable-term-picker) in its
-`constraints` mode. Load a bundle supporting `constraintSet` and
-`constraintsSelected`. Authors can add, inspect, replace and remove constraints,
-set branch depth, and author term exclusions and result positions. JSON and YAML
-are read and written by the TypeScript model library. Without the picker the
-panel reports editing as unavailable and retains saved constraints.
-
-Constraint changes are checked against an existing default using the complete
-set, including actions. A permitted default survives; an invalid one requires
-**Clear default and apply constraints**, while cancellation and lookup failure
-preserve the saved field.
-
-The picker reads the terminology server's version-aware `/search`, which
-**production does not serve yet**: `POST https://terminology.metadatacenter.org/search`
-answers 404. Point `terminologyBaseUrl` at a local terminology server to use it.
-
-Preview renders the template with
-[`<cedar-embeddable-editor>`](https://github.com/metadatacenter/cedar-embeddable-editor),
-the renderer that will show the form to whoever fills it in, rather than with a
-drawing of a form of the designer's own. It is asked for a read-only form with no
-instance behind it, which is how CEE reads a template as a statement of what each
-field will accept. Without it the preview panel says so.
-
-Field cards also reuse CEF's read-only specification box for numeric, text,
-temporal and terminology constraints. Summaries update as constraints change and
-use CEE's own wording and styles; declared defaults remain separate. Choice lists
-and attribute-value placeholders retain their authoring presentation. If the CEE
-script is not loaded, cards keep their existing placeholders; loading it later
-activates the summaries without reloading the document.
-
-All default-capable fields use `<cedar-embeddable-field>` (CEF), registered by
-that same CEE script. Choose the **semantic** preset in Preferences to show Default
-Value. Defaults are written through the TypeScript model library and restored on
-open; clearing the control removes them. Numeric bounds and temporal precision
-from imported fields are preserved. Choice defaults use `selectedByDefault` on
-the field's options.
-
-Controlled-term defaults use `<cedar-embeddable-term-picker>` in `selectionMode="term"` and
-are checked against the field's vocabulary constraints before saving. The host
-sets `terminologyBaseUrl` for that check and `bridgeBaseUrl` for external authority
-lookups. Load current sibling bundles: without CEF or the required term picker,
-the control reports that it is unavailable and preserves saved defaults.
-
-To run the browser integration tests against real sibling bundles after building:
-
-```bash
-CEF_BUNDLE="$PWD/../cedar-embeddable-editor/visual/public/cedar-embeddable-editor.js" \
-PICKER_BUNDLE="$PWD/../cedar-embeddable-term-picker/dist-bundle/cedar-embeddable-term-picker.js" \
-npm run test:browser:prebuilt
-```
-
-`npm run build` records content fingerprints for the source, build configuration,
-lockfile, installed CEDAR token/model packages and compiled output. `npm run bundle`
-and `npm run check:fresh` reject any mismatch, including edits with unchanged file
-timestamps. Rebuild with `npm run dist`; an old bundle without provenance is rejected.
-Browser tests start their own server. Use `PORT=4600` if the default port is occupied.
-
-CI builds pinned real CEE/CEF and CETP sources for the integration suite. A separate
-WebKit job exercises header focus, blank-name validation, card navigation, Overview
-resizing and native defaults. Run it locally after installing WebKit:
-
-```bash
-./browser/node_modules/.bin/playwright install webkit
-CED_WEBKIT=1 npm run test:browser:prebuilt -- --project=webkit
-```
-
-To try all three scripts together from source:
-
-```bash
-npm --prefix ../cedar-embeddable-term-picker run dist
-npm --prefix ../cedar-embeddable-editor run build:production
-npm --prefix ../cedar-embeddable-editor/visual run bundle
-npm run dist
-cp ../cedar-embeddable-term-picker/dist-bundle/cedar-embeddable-term-picker.js dist-bundle/
-cp ../cedar-embeddable-editor/visual/public/cedar-embeddable-editor.js dist-bundle/
-```
-
-Then serve `dist-bundle/` and load a page that pulls in all three scripts.
-`npm start` does the staging itself for the development host, so working on the
-designer needs none of the above.
-
-## Packaging
-
-```bash
-npm run dist
-```
-
-Builds the element, flattens Angular's module output into one classic script with
-esbuild, holds it to its size ceiling, and stages `dist-npm/cedar-embeddable-designer/`
-from those exact bytes. The staging step builds nothing of its own: it copies the
-file the size gate measured, and verifies the result byte for byte afterwards.
-
-The package carries two bundles. `cedar-embeddable-designer.js` is self-contained and embeds
-CEDAR Roboto 400 and 500. `cedar-embeddable-designer.host-fonts.js` is the same element without
-those faces, for a host that registers them once for its whole page, as the design tokens'
-`fonts.css` does. A page that loads several CEDAR components then downloads the faces once
-rather than once per component. Without the host's faces, the host-fonts bundle draws its text in
-the rest of the shared font stack. Each bundle has its own manifest, `bundle-manifest.json` and
-`bundle-manifest.host-fonts.json`, and its own size ceiling. Load only one of them.
-
-The registry a package belongs to is derived from its version rather than passed
-at publish time. A version carrying `-dev.` is a snapshot and names the CEDAR
-Nexus under `@org.metadatacenter`; anything else is a release for public npmjs,
-unscoped. That way a snapshot cannot reach npmjs by forgetting a flag.
-
-The published declaration is emitted from `src/app/ced-public-api.ts` alone, which
-is written without imports so its declarations stand alone. Adding an import to
-that file breaks the declaration build rather than shipping a `.d.ts` that names
-paths only this repository has.
-
-`browser/fixtures/host.html` is the embedding fixture, and the browser suite
-serves it: a host page whose own styles are chosen to be as intrusive as
-possible, loading the distribution and nothing else.
-
-## Testing
-
-The model adapter's public facade is `src/app/core/model/cedar-template.ts`.
-Its implementations under `core/model/cedar-model/` separate capabilities,
-metadata, terminology conversion, field writing, container writing and reading.
-Only that module imports the CEDAR model library. Implementations use each other
-directly rather than importing their facade; the key policy uses a leaf adapter
-for reserved names. `test:boundaries` enforces the library boundary and rejects
-dependency cycles reachable from the adapter.
-
-| Command                  | What it does                                                                |
-| ------------------------ | --------------------------------------------------------------------------- |
-| `npm test`               | unit tests, through the Angular CLI's Vitest builder                        |
-| `npm run test:packaging` | the publish-channel rule, under `node --test`                               |
-| `npm run test:browser`   | builds the distribution, then drives it in a real browser                   |
-| `npm run test:visual`    | the screenshot baselines, in the container they are taken in                |
-| `npm run test:ci`        | bounded parallel checks, then distribution, browser and visual verification |
-
-`test:ci` overlaps unit, lint, type, boundary and packaging checks within
-`CEDAR_TEST_WORKERS` (1–16; by default half the available CPUs, capped at 8).
-The distribution waits for every check, so Angular builds and unit tests never
-share a live cache. The browser tests and the visual baselines then share the
-budget: the baselines take two workers in their container when the budget is at
-least six, one otherwise, and the browser tests the rest. A failed stage blocks the distribution, browser and visual stages; each stage
-prints its elapsed time. `test:ci` therefore needs Docker, as `test:visual` does.
-It also enables the WebKit interaction project alongside Chromium. Install both
-engines before running the complete gate:
-`./browser/node_modules/.bin/playwright install --with-deps chromium webkit`.
-
-The browser suite is the one that matters most, because it is the only one that
-can see the failures this component has actually had: an element that never
-registered on a page without `<app-root>`, a lookup that searched the document
-instead of the shadow tree, menus that closed on their own opening click, a view
-that silently stopped updating under OnPush, an image the package does not carry.
-None of those are visible to a unit test.
-
-It drives the built single-file bundle in a host page whose own CSS is chosen to
-be as intrusive as possible, and it is hermetic: no test reaches a terminology
-server, and the one covering `<cedar-embeddable-term-picker>` registers a stub in the page,
-so what is under test is this component's half of that contract.
-
-## Related Repositories
-
-- [cedar-embeddable-editor](https://github.com/metadatacenter/cedar-embeddable-editor) — renders a template as a form and produces instances
-- [cedar-embeddable-term-picker](https://github.com/metadatacenter/cedar-embeddable-term-picker) — chooses the ontology, branch, term or value set that constrains a field
-- [cedar-model-typescript-library](https://github.com/metadatacenter/cedar-model-typescript-library) — the CEDAR model, and the readers and writers for its serializations
-
-## Licence
-
-BSD 2-Clause. See [license.txt](license.txt).
-
-## Local debugging example
-
-With `npm start`, open `http://localhost:4200/?example=all-fields` (or the port
-passed to `npm start`). This loads `public/examples/all-fields-nested.json`, a
-snapshot of the local all-fields template, including NIH Grant ID and DOI in its
-single, repeated and nested collections. Edits in CED remain local;
-the example page does not write back to the stack. Choose Modular to expose all
-authoring features.
-
-Field cards start compact. The grey bottom chevron reveals underline tabs for
-values, presentation, placement, type-specific constraints, metadata and identity.
-Settings update immediately as valid values are entered. Incomplete input stays editable
-when switching tabs or collapsing the panel. Published fields allow
-inspection but keep editing controls disabled. Reusable field work remains in
-Field Designer; cards no longer offer a Save field to library action.
-
-The Overview shows each field's type icon and a right-aligned reorder handle.
-Dragging reorders siblings within the Overview; the document and main editor update
-only when the field is dropped. Focused handles also support Arrow Up/Down.
-
-### Empty containers and save continuity
-
-Empty editable templates and elements keep their insertion pills visible, including
-loaded empty documents and containers whose last child was deleted. Populated
-containers retain hover/focus disclosure on desktop. Nested insertion rows reserve
-one row of pills plus eight pixels of padding on each side vertically; wrapped pills
-grow naturally on narrow screens.
-
-After a successful save, hosts may call `loadArtifact(savedArtifact, { preserveView: true })`
-to adopt server-assigned identifiers and metadata while keeping open tabs, expansion
-and selection. CED matches child occurrences by their deployment path and kind/type,
-not by reusable artifact IRIs. Ordinary loads still reset the document view. The host
-must verify that the saved response still belongs to the currently submitted document
-before adopting it, so a late save cannot replace newer edits.
-
-### Read-only access
-
-`readOnly = true` permits inspection without permitting document edits. Tabs,
-expand/collapse, outline selection, card keyboard navigation, preview and display
-preferences remain available. Preview itself stays read-only. Text stays legible;
-editing controls are disabled, insertion palettes are absent, and drag handles
-cannot reorder content. Read-only is separate from the host's temporary `inert`
-state while loading or saving.
-
-One session-owned `EditorAccess` policy governs commands and controls:
-
-| Open document / node                  | Definition edits                          | Parent placement edits | Inspection |
-| ------------------------------------- | ----------------------------------------- | ---------------------- | ---------- |
-| Editable draft                        | Allowed                                   | Allowed for children   | Allowed    |
-| Published child in an editable parent | Blocked                                   | Allowed                | Allowed    |
-| Descendant of a published element     | Blocked                                   | Blocked                | Allowed    |
-| Published root or host read-only      | Blocked                                   | Blocked                | Allowed    |
-| Standalone field                      | Allowed only when draft and host-writable | No parent placement    | Allowed    |
-
-The public `readOnly` getter reports effective access: clearing the host flag
-cannot unlock a published root. Save is unavailable in read-only mode. Entering
-read-only cancels pending terminology checks, closes editing dialogs and preserves
-existing unsaved input. Restoring access does not revive old asynchronous replies
-or reopen those dialogs. Unknown node identities cannot be edited. Validation
-still reports stored defects. A subdued “Validation issues (N)” disclosure lists
-every finding and navigates to its field and settings tab, without repair controls
-or inline error styling. Header icons toggle Overview and Preview; the panels
-have no duplicate close buttons.
-
-`loadArtifact`, `artifact`/`template`, and `newArtifact` are explicit host document
-replacement APIs, so they continue to work while read-only without temporarily
-granting editing permission. A successful replacement resets the edit baseline;
-view navigation never changes artifact content or dirty state.
-
-The access matrix and command matrix cover host access, publication, both container
-kinds, standalone fields and nested ownership. Browser tests inspect every field
-type, all settings tabs, keyboard access and wide/narrow layouts. Existing seeded
-terminology histories cover delayed responses across read-only transitions.
-
-### Settings validation and saving
-
-Use `designer.validate()` (or the read-only `validationReport` property) before
-saving. `report.canSave` and `designer.canSave` are false while settings are invalid,
-including pending edits that have not replaced the last valid model value and
-in-progress default terminology checks. `currentArtifact` and artifact change
-events alone are therefore not a save-readiness check.
-
-Listen for `validationChange` to update the wrapper's Save button and error list.
-Its detail is the same report: `{ valid, canSave, issues }`. Each issue includes a
-session `nodeId`, an ancestor-ID `path`, a display `label`, `setting`, settings `tab`,
-stable category `code`, user-facing `message`, `severity` (`error` or `warning`), `source`
-(`model`, `draft` or `host`), and `shown`. An error that is not `shown` still blocks saving,
-but CED's error summary holds it back until the author reaches it: a name nobody has
-touched yet, or a new choice field's blank starter option while its name is still
-being entered. Leaving the name reveals any unfinished option. A host that explains a
-disabled Save by pointing at errors should count only the shown ones. Do not parse
-messages or persist session IDs across documents.
-Validation checks the settings CED supports; it does not replace server validation,
-permission checks, or save/publish lifecycle rules.
-
-Assign `designer.validationFindings` (also supported by CEFD) to replace the host's report:
-
-```javascript
-designer.validationFindings = [
-  {
-    location: '/properties/Visits/items/properties/Code/_valueConstraints/regex',
-    message: 'Review the pattern accepted by the server.',
-    severity: 'error',
-  },
-];
-```
-
-Locations are JSON Pointers into the schema artifact, including `properties`, `items`
-and escaped placement keys. Recognized paths join the navigable validation summary and
-error markers beside their controls. `revealValidationFinding(location)` opens the mapped
-setting and returns `true`; unsupported or stale paths return `false`. Unsupported findings
-remain visible with their original path (`unmapped: true`) rather than pointing at a different
-control. Host issues retain `source: 'host'` and `location` in the public report. Warnings
-appear in the summary and do not block saving or mark controls as erroneous.
-
-Findings belong to the accepted document at assignment. Any accepted artifact edit or
-document replacement retires them; reverting that edit does not revive them. Incomplete
-setting drafts remain intact and keep their own local errors until corrected or discarded.
-Assign `[]` to clear a report without touching the document or those drafts. The host must
-discard asynchronous findings for an obsolete submission before assigning them, owns server
-requests and permission checks, and should pass a new report only when its contents change.
-Messages are supplied by the host and displayed as text, without translation or HTML rendering.
-
-A stored artifact can hold a shape CED cannot represent and the CEDAR validator refuses: a
-numeric field whose datatype is missing or unsupported, a controlled-term default stored as text,
-an order on a field, or a length limit or pattern on a controlled-term field. CED's projection then
-holds something else in its place. The report lists each such shape under `superseded`, with its
-JSON Pointer `location` in the artifact as it was loaded, a `code`, and the `value` the projection
-holds, which is absent when the projection omits the key. A host that saves by merging CED's
-projection into the stored artifact, retaining what the author did not change, applies these to
-its stored copy first. Otherwise a retained branch carries the shape back to the server, which
-refuses the save, and the author has nothing in CED to repair. `superseded` is present only when it
-lists something, never affects `valid` or `canSave`, and stays the same until the next load.
-
-`designer.validateArtifact(artifact, kind?)` (also supported by CEFD) returns the CEDAR meta-schema's
-verdict on any schema artifact, not only the open one: `{ findings, structurallyValid, canSave,
-isValid }`, each finding with a `code`, a `category`, a JSON Pointer `path` and a `message`. It is
-the check CED applies to its own document, so a host that saves a merged payload can check that
-payload with the same validator CED carries rather than loading a second copy. `kind` is read from
-the artifact's `@type` when omitted. Calling it changes nothing in the designer.
-
-Set `designer.readOnly` when the user may not change the document. Nothing in it can
-then be edited and `canSave` is false. CED also marks none of the document's
-problems, since a reader can fix none of them. `validationReport` still lists them,
-so a host can tell why the document would not save.
-
-CED marks affected cards and Overview entries, including ancestor elements, and
-provides a summary linking to the relevant settings. One coordinator retains rejected
-settings, retries them when related values change, and supplies the report to every
-panel. Correcting or clearing an edit removes its issue; deleting an item, hiding an
-inapplicable setting, or loading another document removes its pending issues.
-Schema-valid input can still contain authoring errors. Imported JSON preserves
-numeric and temporal defaults that conflict with their constraints so they can be
-repaired; invalid IRI defaults are reported before any settings panel opens.
-Independent errors are reported together, including children nested several levels
-deep. The summary opens collapsed ancestors and the affected setting. Invalid
-supplied defaults remain visible and can be cleared even without the optional CEF
-control. Pending-only edits count as dirty. Terminology replies are ignored after
-an intervening edit, replacement, cancellation, or destruction of their control.
-Invalid imported children can be repaired independently. If the document cannot be
-serialized, the preview explains why it is unavailable and resumes after repair;
-artifact change events wait until serialization succeeds.
-The wrapper remains responsible for saving and can display
-the report when a save is attempted.
-
-## Adding existing fields and elements
-
-**Add Child** retains the field-type popup and offers **Select existing fields and elements**.
-The selector stages one or more results in an upper table, with a bin to remove each
-selection and Done/Cancel beside the table. Search results below show name, artifact
-type, created and modified dates, version and status. Done loads the complete batch
-before inserting it at the chosen position; Cancel leaves the document unchanged.
-A published source is linked: it keeps its identifier, version, metadata and
-descendants, and its definition stays locked. A draft source arrives as a copy with an
-identifier of its own. The copy's `pav:derivedFrom` names the version it was loaded
-from, and its own version line starts at 0.0.1. Duplicate child names receive a unique
-placement name without renaming the reusable definition.
-
-The embedding host supplies `designer.childSource`, implementing the exported
-`CedChildSource` interface. `search(query, { signal, cursor })` returns
-`{ results, nextCursor? }`; each result has `id`, `name`, `type` (`field` or `element`)
-and optional `createdOn`, `modifiedOn` (ISO dates), `version`, and `status` (display
-label). `load(result, { signal })` returns that artifact's full CEDAR JSON-LD.
-The host owns authentication, permission filtering and repository URL selection.
-An omitted source shows an unavailable message; CED has no default repository.
-Replacing `childSource` closes the selector and cancels pending work. Search requests
-and artifact loads receive abort signals, and late replies cannot change a closed
-selector or a replacement document. Both popup and library-sidebar layouts expose
-the selector.
-
-### Versions of Reused Children
-
-Every field, element and template has a **Version** tab. It shows the version, the
-publication status, the version it was derived from and its previous version, none of
-which the Metadata tab shows any longer, and how the child relates to stored
-artifacts. The header of a template or element shows its version but never edits it. A child made in the document is local and unversioned. A linked
-child is a published artifact embedded as itself. A copy names the stored version it
-came from. A child inside a linked element belongs to that element and changes only
-when the element is upgraded. The tab offers only the actions that are possible, so it
-may offer none.
-
-The actions depend on four optional `CedChildSource` methods. A host that omits one
-loses only the actions that need it.
-
-- `versions(reference, { signal })` returns every version of the referenced artifact's
-  version line that the user can read, newest first, or `null` when the artifact
-  cannot be read. The tab asks when it opens. A linked child is offered the newest
-  published version as an upgrade, and a copy is offered its origin's newest published
-  version as a replacement. Neither can be replaced with a draft; when no published
-  version is available, no replacement is offered. Importing a draft still makes an
-  editable copy.
-- `compatibility(current, candidate, { type, signal, document, replacement })` says whether every instance
-  that is valid under `current` stays valid under `candidate`. The upgrade and
-  replacement buttons name the verdict. The options include the full before/after parent,
-  with the exact occurrence and its preserved placement. Schema compatibility is distinct from checking
-  only currently stored instances. A breaking replacement requires an explicit
-  `invalidatedInstances: 0`; a missing, invalid or positive count does not permit it.
-  `compatible: null` explicitly means unknown. With an explicit zero it permits a manual
-  replacement without a compatibility label, and never enters Upgrade all compatible.
-  Contradictory answers, such as `compatible: true` with a positive count, also withhold
-  replacement. A document edit retires the assessment, including edits to siblings or
-  placement, and an active Version tab checks again. Each refresh reloads its candidate;
-  replacement uses the exact snapshot that was assessed. Without this method, manual
-  replacements carry no verdict and are excluded from Upgrade all compatible. The host
-  must enforce its update policy at save time, including concurrent instance creation.
-- `save(artifact, { type, publish, signal })` stores a child as a new reusable
-  artifact and returns it as stored. A published result is linked in the child's
-  place; a stored draft is copied, since only published artifacts are linked.
-- `open(reference)` shows a stored artifact to the user.
-
-Detaching a linked child turns it into an editable copy of the version it was. Only
-the child changes identity: its published descendants stay linked. Upgrading or
-replacing a child keeps its key, labels, requirement, multiplicity and property. The
-template's own Version tab lists every linked and copied child with what its lookup
-found, and upgrades all the compatible ones in one step. A published template offers
-no upgrades until it has a new version.
-
-```ts
-import type { CedChildSource, CedJsonObject } from 'cedar-embeddable-designer';
-
-declare function readJson(url: string, signal: AbortSignal): Promise<CedJsonObject>;
-
-export const childSource: CedChildSource = {
-  search: async () => ({ results: [] }),
-  load: (result, { signal }) => readJson(result.id, signal),
-  versions: async (reference, { signal }) => {
-    const response = await fetch(`/versions?id=${encodeURIComponent(reference.id)}`, { signal });
-    if (response.status === 403 || response.status === 404) return null;
-    if (!response.ok) throw new Error(`Version lookup failed (${response.status}).`);
-    return response.json();
-  },
-};
-```
-
-### Local repository demo as test1
-
-CED starts in **Modular**. For authenticated local search, run `npm run demo:prepare`
-then `npm run demo:serve` and open `http://localhost:4599/`.
-The picker automatically matches word prefixes: `Princ` and `Princ Inv` both
-match `Principal Investigator`. Every entered word must match; no wildcard is needed.
-This translation belongs to the demo host adapter and leaves the REST API unchanged.
-The loopback-only demo server signs in to local Keycloak on port 8080 as
-`test1@test.com` and reads fields and elements through the resource server on port 9007. It caches and renews the short-lived token in server memory. Only search and
-artifact reads are exposed; adding children changes the designer document locally.
-The fixed test account and endpoints belong to this development server, not the
-published CED component. The component's `childSource` input still belongs to its host.
-
-The browser suite keeps its existing fixtures in Basic explicitly. To exercise the
-real local integration, with the demo server running, use
-`CED_LOCAL_REPOSITORY=1 npm --prefix browser test -- --grep 'local test1'`.
-The local test reads the existing published `Principal Investigator` element and
-inserts it in the browser without saving to the repository.
-
-CED has no file import, export or download controls. Embedding hosts supply artifacts through the public inputs and receive edits through the change events.
-
-## CEFD: design a standalone field
-
-The same bundle also registers `<cedar-embeddable-field-designer>`. CEFD edits one
-field definition using CED's field cards, settings and model conversion. It has
-its own state and shadow root, and multiple CEFD and CED instances can coexist.
-It does not authenticate, fetch artifacts, save, publish, or choose a version.
-
-```ts
+Set configuration before opening or creating a document. The empty configuration
+supports basic authoring. Supply `terminologyBaseUrl` for vocabulary constraints
+and controlled-term defaults, and `bridgeBaseUrl` for external-authority defaults.
+Use your deployment's service bases; neither endpoint has a default. The
+terminology service must support the Term Picker's version-aware search API.
+
+Call `loadArtifact(source)` to open an existing template or element. It accepts
+a JSON object, JSON text, or CEDAR YAML text and throws on invalid input without
+replacing the current document. The `artifact` property accepts the same inputs
+but reports unreadable input to the console. Use JavaScript properties for
+objects, rather than HTML attributes.
+
+`currentArtifact` and `artifactChange` contain the complete root artifact,
+including edits to nested elements. The output is CEDAR JSON Schema with JSON-LD
+annotations. CED does not submit or store it; the host controls persistence.
+
+## Validation and Saving
+
+Check `designer.validate().canSave` immediately before reading `currentArtifact`
+for a save. An unfinished setting may be invalid while the last accepted
+artifact is still valid, so the last change event is not a save-readiness check.
+Listen for `validationChange` to update a host Save button and for `dirtyChange`
+to track unsaved work, including incomplete edits.
+
+Numeric constraints and defaults can contain exact values beyond JavaScript's
+number precision. Use the model library's `JsonSourcePolicy.stringify` for a
+JSON request body; ordinary `JSON.stringify` is not the exact-number serializer.
+[Artifacts and Validation](https://metadatacenter.readthedocs.io/en/latest/cedar-embeddable-designer/artifacts-and-validation/)
+includes a serialization example, server findings, merged-payload validation,
+save-response handling, and recovery through `captureDraft()` and `restoreDraft()`.
+
+Set `readOnly = true` for inspection without edits. Published definitions remain
+locked independently of the host flag. Local validation complements server
+validation, permissions, and publication rules.
+
+## Reusable Elements and Standalone Fields
+
+Use `newArtifact('element')` to author a standalone element. Supply a
+`childSource` adapter to search and load existing fields and elements from a
+repository. The host controls authentication and permissions; CED has no default
+repository. See [Reusable Fields and Elements](https://metadatacenter.readthedocs.io/en/latest/cedar-embeddable-designer/reusable-content/).
+
+The same bundle registers `<cedar-embeddable-field-designer>` for a field-only
+workflow:
+
+```typescript
 import type { CedarEmbeddableFieldDesignerElement } from 'cedar-embeddable-designer';
 
 await customElements.whenDefined('cedar-embeddable-field-designer');
-const field = document.createElement('cedar-embeddable-field-designer') as CedarEmbeddableFieldDesignerElement;
-document.body.append(field);
-field.config = { terminologyBaseUrl: 'https://terminology.example.org' };
-field.newArtifact('number'); // Omit the argument to show the field-type chooser.
-field.addEventListener('artifactChange', (event) => {
-  console.log('Current valid field definition', event.detail);
-});
-field.addEventListener('validationChange', (event) => {
-  console.log('Host Save enabled:', event.detail.canSave);
-});
+const fieldDesigner = document.createElement('cedar-embeddable-field-designer') as CedarEmbeddableFieldDesignerElement;
+document.body.append(fieldDesigner);
+fieldDesigner.config = {};
+fieldDesigner.newArtifact('text');
 ```
 
-Use `loadArtifact(jsonOrYaml)` to open a field. Loading is synchronous and throws
-on invalid input while preserving the current edits. Successful loads and
-`newArtifact()` reset `isDirty`; invalid settings drafts count as dirty too.
-`validate()`, `validationReport`, `canSave` and `dirtyChange` let a host manage Save
-and navigation. `currentArtifact` is null before type selection and can throw
-while the draft is invalid; check `canSave` before reading it to save. Only valid
-artifacts produce `artifactChange` events, so hosts must not treat the last event
-as a substitute for checking the current validation state.
+Omit the type to show the field-type chooser. CEFD shares the loading, validation,
+change, recovery, and read-only APIs. It edits the field definition; its placement
+inside a parent, including requirement and repetition, is configured in CED.
+[Designing a Single Field](https://metadatacenter.readthedocs.io/en/latest/cedar-embeddable-designer/field-designer/)
+covers the complete workflow.
 
-`readOnly` is host-controlled; published definitions remain read only even if the
-host clears it. Configuration is accepted once per instance. Field artifacts
-retain identity, metadata, constraints and provenance on round-trip. Placement
-controls (property IRI, requiredness, repetition and container display overrides)
-belong to CED and are absent from CEFD. Defaults, terminology, field labels,
-language and annotations use the same controls as CED. All 26 field types are
-supported; the chooser groups date/time under Temporal. CEFD takes the same
-`language` property and attribute as CED.
+## Appearance and Language
 
-The split Designer host uses CEFD for `/fields/create` and `/fields/edit/...`,
-with the host's normal permissions, ETag saves and Workspace return navigation.
-When developing against a newer CEFD than the pinned Nexus snapshot, explicitly
-stage the local bundle using `CEDAR_CED_BUNDLE` in that host; a missing CEFD
-registration reports an upgrade error rather than waiting indefinitely.
+Both elements support English (`en`) and Hungarian (`hu`) through the `language`
+property or attribute. English is the default. Language can change at runtime
+and applies independently to each instance. Author-written content is never
+translated.
 
-### Shared defaults during development
+The components use Shadow DOM and CEDAR's shared design tokens. See
+[Configuration and Appearance](https://metadatacenter.readthedocs.io/en/latest/cedar-embeddable-designer/configuration/)
+for framework integration, service requirements, fonts, and host security, and
+the [shared styling guide](https://github.com/metadatacenter/cedar-embeddable-editor/blob/develop/STYLING.md)
+for the common CEDAR control contract.
 
-CED/CEFD use the shared 14px body type and standard 36px CEE control profile.
-Control labels use regular weight; section headings and tabs use medium weight.
-CED has no separate small-text exception. Native controls and
-embedded CEF both honor inherited `--cedar-control-*` overrides. Service bases
-are normalized once and forwarded identically to terminology and CEF; unknown
-keys and wrong value types produce diagnostics without disabling valid siblings.
+## Developing the Component
 
-The control, spacing and font exports resolve from the exact Nexus token snapshot
-in `package.json` and `package-lock.json`; a normal `npm ci` installs them. For
-unpublished token development, run `cedarcli test frontends` or `cedarcli build frontends`;
-the reactor automatically supplies the current local token package to both CEE and CED.
-For registry-based CI, before pushing a consumer that needs
-new exports, publish a new token snapshot, update both pins and verify a clean
-`npm ci` build. The real-CEF integration workflow must also pin a CEE revision
-that supports the adopted control profile.
+For source builds, use the Node version in `.nvmrc`:
 
-### Styling ownership and remaining debt
+```shell
+nvm use
+npm ci
+npm run dist
+```
 
-Central `authoring` recipes own labels, controls, tables, settings-dialog structure
-and density. Central `patterns` recipes own dialog surfaces; property, type and
-default-term pickers share the same corners, border and shadow. `src/authoring.scss`
-selects these surfaces without implementing another set of values.
+`npm start` runs the development host. `npm run test:ci` runs the complete gate,
+including browser and visual checks. These are contributor commands; embedding
+the published package requires no component build.
 
-Local rules are appropriate for card composition, nested-element indentation,
-sidebar resizing, drag handles, picker bounds and responsive placement. Syntax
-highlighting owns a content palette, and the demo host deliberately uses different
-styles to test embedding. Those are not reasons to duplicate control typography,
-theme colors, focus rings or dialog geometry.
+[Development notes](https://github.com/metadatacenter/cedar-embeddable-designer/blob/develop/docs/development.md)
+cover sibling integration, demos, testing, packaging, and styling ownership.
+Within a CEDAR checkout, use `cedarcli build frontends` for a local source build
+and deployment, or `cedarcli test frontends` for the source build and checks.
+The reactor supplies current local dependencies automatically.
 
-The adoption baseline still contains migration debt: outline, toolbar, glyph and
-badge measurements, sidebar resizing geometry, two stacking indices and one hover
-treatment. The token gate admits no exceptions, so a finding leaves the baseline
-only when a shared role, a recipe or a designer size in the tokens package's
-`spacing` export replaces it. Keep resolved entries pruned, document any necessary
-local rule at its owner, and retain desktop/narrow-width, host-override and real-CEF
-checks. Do not substitute an unrelated token merely because its current numeric
-value happens to match.
+The package also includes `integration.mjs` for coordinated Angular host builds.
+Its manifest records exact runtime requirements; ordinary embeds use the
+self-contained script above.
 
-### Recovering unfinished work
+## License
 
-`captureDraft()` returns a JSON-serializable `CedRecoveryDraft` for either Designer
-or Field Designer. It includes unfinished control input, pending validation gates,
-the document and its clean baseline. It is a recovery file, not a CEDAR artifact:
-use `currentArtifact` only after validation permits saving to the server.
-
-`restoreDraft(draft)` validates the complete snapshot before replacing the current
-session and throws on malformed or incompatible input. The host's current read-only
-policy remains in force. Restored asynchronous checks must be retried at their
-controls. A host owns storage, account/deployment isolation, download/import UI and
-fresh permission/revision checks; restoring a snapshot never authorizes a write or
-proves whether an interrupted save committed.
-
-### Pattern validation and source preservation
-
-Regular expressions use the shared ECMAScript policy: a full-string match with no flags,
-evaluated in a bounded worker. Hosts must permit `worker-src blob:` or the existing validation
-report explains that evaluation is unavailable. `validationReport.pendingValidation` is present
-while checks run; `valid` and `canSave` remain false, and `validationChange` reports completion.
-A pending or rejected edit retains the author's input and accepted document. Changing or opening
-a document cancels obsolete checks. Serialization itself preserves stored patterns and defaults;
-validate before saving. JSON input is passed unchanged to the strict source parser, so Unicode
-whitespace is never silently removed from imported source or stored identity.
-
-### Coordinated host build
-
-The package also includes `integration.mjs`, an AOT-compiled ES module with host fonts and external
-Angular, RxJS, translation and model dependencies. It is an input to a coordinated Angular application
-build, not a script to load directly in a browser. `integration-manifest.json` records its digest and
-exact runtime versions (including the model content digest); the host must verify those identities
-before combining components. The Template Designer demonstrates this build.
-
-The default package entry, standalone script, host-fonts script and public element APIs are unchanged.
-Standalone consumers do not need to install Angular or change their embedding code.
+[BSD 2-Clause](https://github.com/metadatacenter/cedar-embeddable-designer/blob/develop/license.txt).

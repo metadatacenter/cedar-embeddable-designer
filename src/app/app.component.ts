@@ -11,12 +11,14 @@ import {
   effect,
   inject,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TemplateService } from './core/services/template.service';
 import { CED_VERSION } from './version';
+import { CLICK_SLOP, nextPresetSize } from './shared/preset-sizes';
 
 // Custom components
 import { IconComponent } from './shared/components/icon/icon.component';
@@ -57,9 +59,18 @@ export class AppComponent {
 
   // Layout & UI states
   readonly showFieldsOverview = signal(true);
+  private readonly availableWidth = signal(1280);
+  /**
+   * Below 768px the Overview takes no column beside the canvas. Its toggle opens it over the canvas
+   * instead, closed until asked for, as the container query in the stylesheet lays it out.
+   */
+  readonly narrow = computed(() => this.availableWidth() < 768);
+  readonly overviewOverlayOpen = signal(false);
+  /** Whether the Overview is shown: in its column on a wide host, over the canvas on a narrow one. */
+  readonly overviewShown = computed(() => (this.narrow() ? this.overviewOverlayOpen() : this.showFieldsOverview()));
+  private readonly overviewToggle = viewChild<ElementRef<HTMLButtonElement>>('overviewToggle');
   readonly overviewMinWidth = 224;
   private readonly overviewRequestedWidth = signal<number | null>(null);
-  private readonly availableWidth = signal(1280);
   readonly overviewMaxWidth = computed(() => {
     const library =
       this.service.preferences().fieldSelectionStyle === 'sidebar' && !this.service.access.readOnly()
@@ -69,13 +80,17 @@ export class AppComponent {
         : 0;
     return Math.max(this.overviewMinWidth, Math.min(480, Math.floor((this.availableWidth() - library) * 0.4)));
   });
+  /** The width the Overview takes until the author resizes it, and again after a reset. */
+  private readonly preferredOverviewWidth = computed(() => (this.service.showPreview() ? 224 : 256));
   readonly overviewWidth = computed(() =>
     Math.min(
       this.overviewMaxWidth(),
-      Math.max(this.overviewMinWidth, this.overviewRequestedWidth() ?? (this.service.showPreview() ? 224 : 256)),
+      Math.max(this.overviewMinWidth, this.overviewRequestedWidth() ?? this.preferredOverviewWidth()),
     ),
   );
   private overviewDrag: { x: number; width: number } | null = null;
+  /** The last press on the divider: the width it began at, and whether it moved far enough to be a drag. */
+  private overviewPress: { width: number; moved: boolean } | null = null;
 
   startOverviewResize(event: PointerEvent): void {
     if (event.button !== 0) return;
@@ -83,15 +98,43 @@ export class AppComponent {
     const handle = event.currentTarget as HTMLElement;
     handle.setPointerCapture(event.pointerId);
     this.overviewDrag = { x: event.clientX, width: this.overviewWidth() };
+    this.overviewPress = { width: this.overviewWidth(), moved: false };
   }
 
   resizeOverview(event: PointerEvent): void {
     if (!this.overviewDrag) return;
+    if (this.overviewPress && Math.abs(event.clientX - this.overviewDrag.x) > CLICK_SLOP)
+      this.overviewPress.moved = true;
     this.setOverviewWidth(this.overviewDrag.width + event.clientX - this.overviewDrag.x);
   }
 
   endOverviewResize(): void {
     this.overviewDrag = null;
+  }
+
+  /** A cancelled press is no click. */
+  cancelOverviewResize(): void {
+    if (this.overviewPress) this.overviewPress.moved = true;
+    this.endOverviewResize();
+  }
+
+  /**
+   * A click that is no drag steps the divider through the Overview's smallest, default and largest
+   * widths, the ones Home, End and a reset give. The step starts from the width the press began at,
+   * so a slight movement during the click does not change where it goes.
+   */
+  stepOverviewWidth(event: MouseEvent): void {
+    const press = this.overviewPress;
+    this.overviewPress = null;
+    if (event.button !== 0 || press?.moved) return;
+    const preferred = this.preferredOverviewWidth();
+    const next = nextPresetSize(press?.width ?? this.overviewWidth(), [
+      this.overviewMinWidth,
+      preferred,
+      this.overviewMaxWidth(),
+    ]);
+    if (next === preferred) this.resetOverviewWidth();
+    else this.setOverviewWidth(next);
   }
 
   resizeOverviewWithKeyboard(event: KeyboardEvent): void {
@@ -107,12 +150,30 @@ export class AppComponent {
     this.setOverviewWidth(widths[event.key]);
   }
 
-  resetOverviewWidth(): void {
+  private resetOverviewWidth(): void {
     this.overviewRequestedWidth.set(null);
   }
 
   private setOverviewWidth(width: number): void {
     this.overviewRequestedWidth.set(Math.max(this.overviewMinWidth, Math.min(this.overviewMaxWidth(), width)));
+  }
+
+  toggleOverview(): void {
+    if (this.narrow()) this.overviewOverlayOpen.update((open) => !open);
+    else this.showFieldsOverview.update((shown) => !shown);
+  }
+
+  /** Escape in the Overview over the canvas, or on its toggle, closes it and gives focus to the toggle. */
+  closeOverviewOverlay(event: KeyboardEvent): void {
+    if (event.key !== 'Escape' || event.defaultPrevented || !this.narrow() || !this.overviewOverlayOpen()) return;
+    const inside = event
+      .composedPath()
+      .some((node) => node instanceof Element && node.matches('.overview-panel--overlay, .overview-toggle'));
+    if (!inside) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.overviewOverlayOpen.set(false);
+    this.overviewToggle()?.nativeElement.focus();
   }
 
   private scrollAnchor: number | null = null;
@@ -146,6 +207,11 @@ export class AppComponent {
 
   constructor() {
     const destroyRef = inject(DestroyRef);
+    // A host that becomes narrow starts with the Overview closed over the canvas.
+    effect(() => {
+      this.narrow();
+      untracked(() => this.overviewOverlayOpen.set(false));
+    });
     afterNextRender(() => {
       const observer = new ResizeObserver(([entry]) => this.availableWidth.set(entry.contentRect.width));
       observer.observe(this.host.nativeElement);
@@ -246,8 +312,14 @@ export class AppComponent {
     return 'minmax(0, 1fr)';
   }
 
-  /** Arrow navigation belongs to cards, never to controls editing their contents. */
+  /** One listener per event on a host: Angular binds only one of two that name the same event. */
   @HostListener('keydown', ['$event'])
+  onKeydown(event: KeyboardEvent): void {
+    this.closeOverviewOverlay(event);
+    this.navigateCards(event);
+  }
+
+  /** Arrow navigation belongs to cards, never to controls editing their contents. */
   navigateCards(event: KeyboardEvent): void {
     if (event.defaultPrevented || event.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey)
       return;

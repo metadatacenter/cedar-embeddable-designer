@@ -16,22 +16,39 @@
       <div class="sidebar-header">
         <div class="sidebar-header-left">
           <app-icon key="list" size="small"></app-icon>
-          <h3 class="sidebar-title">{{ 'sidebar.fields' | translate: { count: service.children().length } }}</h3>
+          <h3 class="sidebar-title" id="ced-sidebar-fields-title">
+            {{ 'sidebar.fields' | translate: { count: service.children().length } }}
+          </h3>
         </div>
         <button (click)="setCollapsed(true)" class="btn-collapse" [title]="'sidebar.collapse' | translate">
           <app-icon key="chevron-left" size="small" />
         </button>
       </div>
-      <!-- Field List - Drag & Drop Scrollable -->
-      <div class="sidebar-scrollable custom-scrollbar" cdkDropList (cdkDropListDropped)="onFieldDrop($event)">
+      <!--
+        Field List - Drag & Drop Scrollable. With fields in it the list is a listbox and one Tab stop: the
+        arrow keys, Home and End move among its entries, and Enter chooses one. An empty list has no role,
+        because a listbox must hold options.
+      -->
+      <div
+        class="sidebar-scrollable custom-scrollbar"
+        cdkDropList
+        (cdkDropListDropped)="onFieldDrop($event)"
+        [attr.role]="service.fields().length ? 'listbox' : null"
+        [attr.aria-labelledby]="service.fields().length ? 'ced-sidebar-fields-title' : null"
+        (focusout)="onFieldListFocusout($event)"
+      >
         @if (service.children().length === 0) {
           <div class="field-empty-state">{{ 'sidebar.noFields' | translate }}</div>
         }
         @for (field of service.fields(); track field.id; let idx = $index) {
-          <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- no keyboard route selects a library field yet; tracked on the frontend roadmap -->
           <div
             cdkDrag
+            role="option"
+            [attr.aria-selected]="service.selectedField() === field.id"
+            [attr.tabindex]="fieldListTabStop() === field.id ? 0 : -1"
             (click)="select(field.id)"
+            (focus)="focusedEntry.set(field.id)"
+            (keydown)="onEntryKeydown($event, field.id)"
             class="draggable-field-item"
             [class.active]="service.selectedField() === field.id"
             [class.invalid]="service.visibleIssuesFor(field.id).length > 0"
@@ -69,12 +86,13 @@
       [attr.aria-valuetext]="'sidebar.heightValue' | translate: { percent: fieldListHeightValue() }"
       [class.resizing]="isResizing()"
       (mousedown)="onResizeStart($event)"
+      (click)="stepFieldListHeight($event)"
       (keydown)="resizeWithKeyboard($event)"
     >
       <div class="divider-handle"></div>
     </div>
-    <!-- Add Fields Section -->
-    <div class="sidebar-section" [style.height.%]="100 - fieldListHeight()">
+    <!-- Add Fields Section: the space left under the insertion actions, the field list and the divider. -->
+    <div class="sidebar-section sidebar-section--rest">
       <!-- Add Fields Header -->
       <div class="add-fields-header">
         <h3 class="add-fields-title">{{ 'sidebar.librariesAndFields' | translate }}</h3>

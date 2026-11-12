@@ -98,9 +98,9 @@ export class ContainerEditorComponent {
     () => this.container().children.length > 0 && this.service.collapsedElements().has(this.container().id),
   );
   /**
-   * The child whose insertion actions, in the gap above it, stay hidden although the pointer or focus
-   * that showed them is still there. Using an action hides them, and so does Escape. The dismissal
-   * ends when the pointer leaves the gap or focus moves to one of the actions.
+   * The child whose insertion actions, in the gap above it, stay hidden although the pointer that
+   * showed them is still there. Escape hides them, and so does using an action with the pointer.
+   * The dismissal ends when the pointer leaves the gap or focus moves to one of the actions.
    */
   readonly dismissedInsertion = signal<number | null>(null);
   readonly fieldView = fieldView;
@@ -111,19 +111,39 @@ export class ContainerEditorComponent {
    * the host page, so the key is taken from the window. It reaches the window after every control
    * that uses Escape for its own purpose, such as closing the palette. An Escape one of those
    * controls has used is left alone, and one that hides the actions is marked as used.
+   *
+   * A hidden action must not keep focus, which nobody could then see, so focus inside the actions
+   * moves to the card below them, the one they insert before.
    */
   private dismissInsertion(event: KeyboardEvent): void {
     if (event.key !== 'Escape' || event.defaultPrevented) return;
     const shown = this.container().children.find(
-      (child) =>
-        this.dismissedInsertion() !== child.id &&
-        this.host.nativeElement
-          .querySelector(`[id="field-card-${child.id}"] > .insert-zone`)
-          ?.matches(':hover, :focus-within'),
+      (child) => this.dismissedInsertion() !== child.id && this.insertZone(child.id)?.matches(':hover, :focus-within'),
     );
     if (!shown) return;
     event.preventDefault();
+    const focused = this.insertZone(shown.id)?.matches(':focus-within');
     this.dismissedInsertion.set(shown.id);
+    if (focused) {
+      this.host.nativeElement
+        .querySelector<HTMLElement>(`[id="field-card-${shown.id}"] > .field-drag-container`)
+        ?.focus();
+    }
+  }
+
+  /**
+   * Using an action with the pointer hides the actions, so they no longer cover the cards beside
+   * them. An action used from the keyboard keeps focus, so the actions stay shown, and closing the
+   * palette it opens returns focus to a control that can be seen.
+   */
+  insertionUsed(id: number): void {
+    if (this.insertZone(id)?.querySelector(':focus-visible')) return;
+    this.dismissedInsertion.set(id);
+  }
+
+  private insertZone(id: number): HTMLElement | null {
+    const selector = `[id="field-card-${id}"] > .insert-zone`;
+    return this.host.nativeElement.querySelector<HTMLElement>(selector);
   }
   update(
     changes: Partial<

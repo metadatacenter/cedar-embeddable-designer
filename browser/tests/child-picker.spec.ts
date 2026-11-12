@@ -9,6 +9,7 @@ import {
   focusedControl,
   nestFixtureFields,
   openDesigner,
+  tabSequence,
 } from './support';
 import type { CedarEmbeddableDesignerElement, CedJsonObject } from '../../src/app/ced-public-api';
 
@@ -23,6 +24,8 @@ for (const width of [1280, 375])
     await expect(designer.getByRole('button', { name: 'Import field' })).toHaveCount(0);
     await applyPreset(page, 'modular');
     await expect(designer.locator('app-insertion-actions').first().getByRole('button')).toHaveCount(3);
+    // Children come from a repository; the designer has no file input to import them from.
+    await expect(designer.locator('input[type="file"]')).toHaveCount(0);
     const before = await currentTemplate(page);
     await page.evaluate((section) => {
       section['schema:name'] = 'Section';
@@ -124,7 +127,7 @@ for (const width of [1280, 375])
     await designer.getByRole('row', { name: 'Select Section', exact: true }).click();
     const selected = dialog.getByRole('table', { name: 'Selected items' });
     await expect(selected.locator('.version-cell')).toHaveText(['0.0.1 · draft', '0.0.1 · published']);
-    await expect(dialog.getByRole('table', { name: 'Search results' }).locator('.version-cell')).toHaveText([
+    await expect(dialog.getByRole('grid', { name: 'Search results' }).locator('.version-cell')).toHaveText([
       '0.0.1 · draft',
       '0.0.1 · published',
     ]);
@@ -132,7 +135,7 @@ for (const width of [1280, 375])
 
     await selected.getByRole('button', { name: 'Reorder Section', exact: true }).press('ArrowUp');
     await expect(selected.locator('tbody .name-cell')).toHaveText(['Section', 'Title']);
-    await expect(dialog.getByRole('table', { name: 'Search results' }).getByRole('columnheader')).toHaveText([
+    await expect(dialog.getByRole('grid', { name: 'Search results' }).getByRole('columnheader')).toHaveText([
       'Type',
       'Name',
       'Last modified',
@@ -269,17 +272,16 @@ test('Escape dismisses the actions between two cards until the pointer or focus 
   await expect(zone).toHaveCSS('opacity', '1');
   await expect(actions).toHaveCSS('pointer-events', 'auto');
 
-  // Keyboard focus shows them too. Escape hides them and leaves focus where it was.
+  // Keyboard focus shows them too. Escape hides them and moves focus to the card below, since a
+  // hidden action that kept focus would show it to nobody.
   await page.mouse.move(0, 0);
   await add.focus();
   await expect(zone).toHaveCSS('opacity', '1');
   await page.keyboard.press('Escape');
   await expect(zone).toHaveCSS('opacity', '0');
-  await expect(add).toBeFocused();
-  await expect(actions).toHaveCSS('pointer-events', 'none');
-  // Focus moving away and back shows them again.
-  await page.keyboard.press('Tab');
   await expect(designer.getByRole('group', { name: 'Category' })).toBeFocused();
+  await expect(actions).toHaveCSS('pointer-events', 'none');
+  // Focus moving back shows them again.
   await page.keyboard.press('Shift+Tab');
   await expect(add).toBeFocused();
   await expect(zone).toHaveCSS('opacity', '1');
@@ -305,20 +307,42 @@ test('an Escape the palette uses leaves the actions between two cards shown', as
   await expect(zone).toHaveCSS('opacity', '0');
 });
 
-test('focus moving to the next action between two cards shows the actions again', async ({ page }) => {
+test('focus moving to an action the pointer dismissed shows the actions again', async ({ page }) => {
   const designer = await openDesigner(page);
   await applyPreset(page, 'modular');
-  await page.mouse.move(0, 0);
   const zone = designer.locator('.insert-zone').nth(1);
-  await zone.getByRole('button', { name: 'Add field here', exact: true }).focus();
+  await zone.scrollIntoViewIfNeeded();
+  const gap = (await zone.boundingBox())!;
+  await page.mouse.move(gap.x + 24, gap.y + gap.height / 2);
   await expect(zone).toHaveCSS('opacity', '1');
   await page.keyboard.press('Escape');
   await expect(zone).toHaveCSS('opacity', '0');
   await expect(zone.locator('app-insertion-actions')).toHaveCSS('pointer-events', 'none');
-  // A control that takes focus has to be seen to have it, so each newly focused action shows them.
-  await page.keyboard.press('Tab');
-  await expect(zone.getByRole('button', { name: 'Add element here', exact: true })).toBeFocused();
+  // A control that takes focus has to be seen to have it, so an action taking focus shows them.
+  await zone.getByRole('button', { name: 'Add element here', exact: true }).focus();
   await expect(zone).toHaveCSS('opacity', '1');
+});
+
+test('an action used from the keyboard keeps the actions between two cards shown', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await page.mouse.move(0, 0);
+  const zone = designer.locator('.insert-zone').nth(1);
+  const add = zone.getByRole('button', { name: 'Add field here', exact: true });
+  const palette = designer.locator('app-field-type-picker');
+  await add.focus();
+  await page.keyboard.press('Enter');
+  await expect(palette).toBeVisible();
+  // The action that opened the palette keeps focus, so it stays in sight.
+  await expect(add).toBeFocused();
+  await expect(zone).toHaveCSS('opacity', '1');
+  await page.keyboard.press('Escape');
+  await expect(palette).toHaveCount(0);
+  await expect(add).toBeFocused();
+  await expect(zone).toHaveCSS('opacity', '1');
+  // A second Escape hides the actions and gives focus to the card below them.
+  await page.keyboard.press('Escape');
+  await expect(zone).toHaveCSS('opacity', '0');
+  await expect(designer.getByRole('group', { name: 'Category' })).toBeFocused();
 });
 
 /** Whether the designer's topmost element at a point of the viewport is part of the insertion actions. */
@@ -583,4 +607,174 @@ test('bottom insertion actions remain visible on touch devices', async ({ browse
   } finally {
     await context.close();
   }
+});
+
+/**
+ * Open the child picker on a repository that offers the template's three fields, found under names
+ * of their own, and search it. Returns the dialog.
+ */
+async function openPickerWithThreeResults(page: Page): Promise<Locator> {
+  const designer = await openDesigner(page);
+  await applyPreset(page, 'modular');
+  await page.evaluate(() => {
+    const element = document.querySelector('cedar-embeddable-designer') as CedarEmbeddableDesignerElement;
+    const properties = element.currentArtifact['properties'] as CedJsonObject;
+    const fields = ['Title', 'Category', 'Publication Date'].map((key) => properties[key] as CedJsonObject);
+    const names = ['Alpha', 'Beta', 'Gamma'];
+    element.childSource = {
+      async search() {
+        return {
+          results: fields.map((field, index) => ({ id: String(field['@id']), name: names[index], type: 'field' })),
+        };
+      },
+      async load(row) {
+        const field = structuredClone(fields[names.indexOf(row.name ?? '')]);
+        field['schema:name'] = row.name ?? '';
+        return {
+          ...field,
+          _valueConstraints: { ...(field['_valueConstraints'] as CedJsonObject), requiredValue: false },
+        };
+      },
+    };
+  });
+  await designer.getByRole('button', { name: 'Import fields and elements', exact: true }).last().click();
+  const dialog = designer.getByRole('dialog', { name: 'Import Fields and Elements' });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Search', exact: true }).click();
+  await expect(dialog.getByRole('grid', { name: 'Search results' }).getByRole('row', { name: /^Select / })).toHaveCount(
+    3,
+  );
+  return dialog;
+}
+
+test('Move up and Move down reorder the chosen rows by single clicks, keep focus and say where a row went', async ({
+  page,
+}) => {
+  const dialog = await openPickerWithThreeResults(page);
+  for (const name of ['Alpha', 'Beta', 'Gamma'])
+    await dialog.getByRole('row', { name: `Select ${name}`, exact: true }).click();
+  const selected = dialog.getByRole('table', { name: 'Selected items' });
+  const names = selected.locator('tbody .name-cell');
+  await expect(names).toHaveText(['Alpha', 'Beta', 'Gamma']);
+  const button = (name: string) => selected.getByRole('button', { name, exact: true });
+  const status = dialog.locator('p[role="status"]');
+
+  // Each chosen row has both beside its handle, named after the row, at least the minimum target size.
+  for (const name of ['Alpha', 'Beta', 'Gamma']) {
+    const labels = await selected
+      .getByRole('row')
+      .filter({ hasText: name })
+      .locator('td:last-child button')
+      .evaluateAll((buttons) => buttons.map((item) => item.getAttribute('aria-label')));
+    expect(labels).toEqual([`Move ${name} up`, `Move ${name} down`, `Reorder ${name}`]);
+    for (const direction of ['up', 'down']) {
+      const box = (await button(`Move ${name} ${direction}`).boundingBox())!;
+      expect(box.width).toBeGreaterThanOrEqual(24);
+      expect(box.height).toBeGreaterThanOrEqual(24);
+    }
+  }
+  await expect(button('Move Alpha up')).toHaveAttribute('aria-disabled', 'true');
+  await expect(button('Move Gamma down')).toHaveAttribute('aria-disabled', 'true');
+  await expect(button('Move Beta up')).not.toHaveAttribute('aria-disabled');
+
+  await button('Move Gamma up').click();
+  await expect(names).toHaveText(['Alpha', 'Gamma', 'Beta']);
+  await expect(button('Move Gamma up')).toBeFocused();
+  // The designer's own region is inert behind the modal dialog, so the picker says it inside the dialog.
+  await expect(status).toHaveText('Gamma moved to position 2 of 3.');
+  await expect(status.locator('.sr-only')).toHaveCSS('position', 'absolute');
+  await button('Move Gamma up').click();
+  await expect(names).toHaveText(['Gamma', 'Alpha', 'Beta']);
+  await expect(button('Move Gamma up')).toHaveAttribute('aria-disabled', 'true');
+  await expect(button('Move Gamma up')).toBeFocused();
+  await expect(status).toHaveText('Gamma moved to position 1 of 3.');
+  // At an end a click changes nothing.
+  await button('Move Gamma up').click({ force: true });
+  await button('Move Beta down').click({ force: true });
+  await page.waitForTimeout(200);
+  await expect(names).toHaveText(['Gamma', 'Alpha', 'Beta']);
+  await expect(status).toHaveText('Gamma moved to position 1 of 3.');
+  await button('Move Alpha down').click();
+  await expect(names).toHaveText(['Gamma', 'Beta', 'Alpha']);
+  await expect(button('Move Alpha down')).toBeFocused();
+
+  // Done imports the rows in their new order.
+  await dialog.getByRole('button', { name: 'Done', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(fieldOrder(await currentTemplate(page)).slice(-3)).toEqual(['Gamma', 'Beta', 'Alpha']);
+});
+
+test('the search results are a grid and one Tab stop, which the arrow keys, Home and End move within', async ({
+  page,
+}) => {
+  const dialog = await openPickerWithThreeResults(page);
+  const grid = dialog.getByRole('grid', { name: 'Search results' });
+  await expect(grid).toHaveAttribute('aria-multiselectable', 'true');
+  const rows = grid.getByRole('row', { name: /^Select / });
+  await expect(rows).toHaveText([/Alpha/, /Beta/, /Gamma/]);
+  for (const row of await rows.all()) await expect(row).toHaveAttribute('aria-selected', 'false');
+  await expect(grid.getByRole('gridcell').first()).toBeVisible();
+
+  // Tab reaches the grid once, at its first row, and leaves it for the next control.
+  await dialog.getByRole('button', { name: 'Search', exact: true }).focus();
+  expect(await tabSequence(page, 2)).toEqual(['row "Select Alpha"', 'button "Cancel"']);
+  await page.keyboard.press('Shift+Tab');
+  expect(await focusedControl(page)).toBe('row "Select Alpha"');
+
+  // The arrow keys, Home and End move focus between rows and stop at the ends, choosing nothing.
+  for (const [key, stop] of [
+    ['ArrowDown', 'Beta'],
+    ['ArrowDown', 'Gamma'],
+    ['ArrowDown', 'Gamma'],
+    ['Home', 'Alpha'],
+    ['ArrowUp', 'Alpha'],
+    ['End', 'Gamma'],
+    ['ArrowUp', 'Beta'],
+  ]) {
+    await page.keyboard.press(key);
+    expect(await focusedControl(page), key).toBe(`row "Select ${stop}"`);
+  }
+  const selected = dialog.getByRole('table', { name: 'Selected items' }).locator('tbody .name-cell');
+  await expect(selected).toHaveCount(0);
+
+  // Enter or Space chooses the focused row, which then says so. Choosing it again changes nothing.
+  await page.keyboard.press('Enter');
+  await expect(selected).toHaveText(['Beta']);
+  await expect(rows.nth(1)).toHaveAttribute('aria-selected', 'true');
+  await expect(rows.nth(1)).toHaveAttribute('aria-disabled', 'true');
+  await page.keyboard.press(' ');
+  await expect(selected).toHaveText(['Beta']);
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press(' ');
+  await expect(selected).toHaveText(['Beta', 'Gamma']);
+  expect(await focusedControl(page)).toBe('row "Select Gamma"');
+
+  // The Tab stop stays on the row focus last rested on.
+  await page.keyboard.press('Tab');
+  expect(await focusedControl(page)).toBe('button "Cancel"');
+  await expect(rows.nth(2)).toHaveAttribute('tabindex', '0');
+  await page.keyboard.press('Shift+Tab');
+  expect(await focusedControl(page)).toBe('row "Select Gamma"');
+});
+
+test('the search results look as they did before they became a grid', async ({ page }) => {
+  const dialog = await openPickerWithThreeResults(page);
+  const grid = dialog.getByRole('grid', { name: 'Search results' });
+  // Nothing on screen depends on the role: the rows keep the table's layout, cursor and fills.
+  const styles = await grid.evaluate((table) => ({
+    display: getComputedStyle(table).display,
+    rows: [...table.querySelectorAll('tbody tr')].map((row) => [
+      getComputedStyle(row).display,
+      getComputedStyle(row).cursor,
+      getComputedStyle(row).backgroundColor,
+    ]),
+  }));
+  expect(styles).toEqual({
+    display: 'table',
+    rows: [
+      ['table-row', 'pointer', 'rgba(0, 0, 0, 0)'],
+      ['table-row', 'pointer', 'rgba(0, 0, 0, 0)'],
+      ['table-row', 'pointer', 'rgba(0, 0, 0, 0)'],
+    ],
+  });
 });

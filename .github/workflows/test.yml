@@ -238,13 +238,14 @@ jobs:
 
       # The test job already runs the whole browser suite against the same build, and nothing but a
       # spec's own reading of CEF_BUNDLE or PICKER_BUNDLE differs here. So this job runs only the
-      # files that read them, each in full, rather than every test a second time.
+      # files that read them, each in full, rather than every test a second time. The list is read
+      # from the specs, so a new one that reads either variable cannot be left out.
       - name: Test CED with the real CEE and CEF bundle
         working-directory: cedar-embeddable-designer
-        run: >
-          npm run test:browser:prebuilt --
-          cef-defaults cef-parity constraints field-summary multiple-stability property-picker
-          style-comparison surfaces ui-attribute-matrix
+        run: |
+          specs=$(grep -l -E 'CEF_BUNDLE|PICKER_BUNDLE' browser/tests/*.spec.ts | xargs -n 1 basename | sed 's/\.spec\.ts$//')
+          echo "Specs that read a bundle variable:" $specs
+          npm run test:browser:prebuilt -- $specs
 
       - name: Keep failure traces
         if: failure()

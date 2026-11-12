@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { test, expect, type Page } from '@playwright/test';
+import { NEEDS_CEF } from './bundle-tags';
 import { openDesigner, openSettings, openPreview, applyPreset, addElementFixture } from './support';
 import { buildTemplate, templateToJson } from '../../src/app/core/model/cedar-template';
 import { surfaceCases, checkSurface } from './surface-contracts.generated.mjs';
@@ -56,6 +57,12 @@ const scenarios: Record<string, (page: Page) => Promise<void>> = {
   },
   'designer-page': async (page) => {
     await openDesigner(page);
+  },
+  // A column beside the canvas at 1440px. On a narrow host its toggle opens it over the canvas.
+  overview: async (page) => {
+    const d = await openDesigner(page);
+    const open = d.getByRole('button', { name: 'Open Overview', exact: true });
+    if (await open.count()) await open.click();
   },
   'library-menu': async (page) => {
     await page.addInitScript(() =>
@@ -239,9 +246,9 @@ scenarios['nested-field'] = async (page) => {
   await nested.getByRole('button', { name: 'Text', exact: true }).click();
   await openSettings(nested.locator('app-field-card').first());
 };
-// CI supplies the real sibling bundle; local runs opt in by setting CEF_BUNDLE.
+// CI supplies the real sibling bundle; local runs opt in by setting CEF_BUNDLE. Its cases carry the
+// NEEDS_CEF tag, below.
 scenarios['cef-default'] = async (page) => {
-  test.skip(!process.env.CEF_BUNDLE, 'CEF_BUNDLE names the real CEF bundle.');
   const d = await openDesigner(page);
   await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
   await page.waitForFunction(() => !!customElements.get('cedar-embeddable-field'));
@@ -279,7 +286,7 @@ scenarios['host-override'] = async (page) => {
   await expect(panel.locator('label[for^="field-identifier-"]')).toHaveCSS('font-size', '16px');
 };
 for (const { surface, state, width, title } of surfaceCases(registry, scenarios))
-  test(title, async ({ page }, testInfo) => {
+  test(title, { tag: surface.scenario === 'cef-default' ? NEEDS_CEF : [] }, async ({ page }, testInfo) => {
     await page.setViewportSize({ width, height: 1000 });
     await scenarios[surface.scenario](page);
     await checkSurface(page, surface, state, expect, testInfo);

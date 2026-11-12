@@ -27,7 +27,7 @@
         </tr>
       </thead>
       <tbody cdkDropList [cdkDropListData]="selected()" (cdkDropListDropped)="reorder($event)">
-        @for (row of selected(); track key(row); let index = $index) {
+        @for (row of selected(); track key(row); let index = $index, first = $first, last = $last) {
           <tr cdkDrag [cdkDragDisabled]="saving()">
             <td class="icon-cell">
               <app-icon
@@ -52,7 +52,28 @@
                 <app-icon key="trash" />
               </button>
             </td>
+            <!-- Move up and Move down reorder by clicks alone, beside the handle a drag or the arrow keys use. -->
             <td class="icon-cell">
+              <button
+                type="button"
+                class="icon-button"
+                [disabled]="saving()"
+                [attr.aria-disabled]="first || null"
+                [attr.aria-label]="'childPicker.moveUpRow' | translate: { name: row.name }"
+                (click)="moveByClick($event, index, -1)"
+              >
+                <app-icon key="chevron-up" />
+              </button>
+              <button
+                type="button"
+                class="icon-button"
+                [disabled]="saving()"
+                [attr.aria-disabled]="last || null"
+                [attr.aria-label]="'childPicker.moveDownRow' | translate: { name: row.name }"
+                (click)="moveByClick($event, index, 1)"
+              >
+                <app-icon key="chevron-down" />
+              </button>
               <button
                 type="button"
                 class="icon-button drag-handle"
@@ -91,8 +112,12 @@
         /><button type="submit" [disabled]="saving()">{{ 'childPicker.search' | translate }}</button>
       </div>
     </form>
+    <!--
+      The results are a grid and one Tab stop: Up, Down, Home and End move between rows, and Enter or
+      Space chooses one, as a click does.
+    -->
     <div class="table-scroll" [attr.aria-busy]="searching()">
-      <table [attr.aria-label]="'childPicker.resultsTable' | translate">
+      <table role="grid" aria-multiselectable="true" [attr.aria-label]="'childPicker.resultsTable' | translate">
         <thead>
           <tr>
             <th class="icon-cell">
@@ -104,17 +129,17 @@
           </tr>
         </thead>
         <tbody>
-          @for (row of results(); track key(row)) {
+          @for (row of results(); track key(row); let index = $index) {
             <tr
               class="result-row"
               [class.selected]="isSelected(row)"
-              [attr.tabindex]="isSelected(row) || saving() ? -1 : 0"
+              [attr.tabindex]="resultTabStop() === key(row) ? 0 : -1"
               [attr.aria-label]="'childPicker.selectRow' | translate: { name: row.name }"
               [attr.aria-selected]="isSelected(row)"
               [attr.aria-disabled]="isSelected(row) || saving()"
               (click)="select(row)"
-              (keydown.enter)="select(row)"
-              (keydown.space)="$event.preventDefault(); select(row)"
+              (focus)="focusedResult.set(key(row))"
+              (keydown)="onResultKeydown($event, row, index)"
             >
               <td class="icon-cell">
                 <app-icon
@@ -164,7 +189,9 @@
       </button>
     }
   }
-  <p role="status" aria-live="polite">{{ searching() ? ('childPicker.searching' | translate) : '' }}</p>
+  <p role="status" aria-live="polite">
+    {{ searching() ? ('childPicker.searching' | translate) : '' }}<span class="sr-only">{{ moveAnnouncement() }}</span>
+  </p>
   @if (error()) {
     <p role="alert" class="error">{{ error() }}</p>
   }

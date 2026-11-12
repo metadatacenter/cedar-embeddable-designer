@@ -86,19 +86,22 @@ export async function currentTemplate(page: Page): Promise<Record<string, unknow
 
 /**
  * Focus a control and expect the shared focus ring on it: a solid outline in the focus colour,
- * resolved where the control sits, not the browser's own ring.
+ * resolved where the control sits, not the browser's own ring. A control drawn inside a box with
+ * an icon of its own leaves the ring to that box, which `drawnBy` selects among its ancestors.
  */
-export async function expectSharedFocusRing(control: Locator): Promise<void> {
+export async function expectSharedFocusRing(control: Locator, drawnBy?: string): Promise<void> {
   await control.focus();
-  const ring = await control.evaluate((element) => {
+  const ring = await control.evaluate((element, selector) => {
+    const outlined = selector ? element.closest(selector) : element;
+    if (!outlined) throw new Error(`no ${selector} holds the focused control`);
     const probe = document.createElement('span');
     probe.style.color = 'var(--cedar-control-focus, var(--cedar-color-primary))';
-    element.after(probe);
+    outlined.after(probe);
     const expected = getComputedStyle(probe).color;
     probe.remove();
-    const style = getComputedStyle(element);
+    const style = getComputedStyle(outlined);
     return { style: style.outlineStyle, color: style.outlineColor, expected };
-  });
+  }, drawnBy);
   expect(ring.style).toBe('solid');
   expect(ring.color).toBe(ring.expected);
 }

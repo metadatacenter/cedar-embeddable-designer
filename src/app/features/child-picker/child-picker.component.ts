@@ -1,5 +1,17 @@
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
-import { Component, ElementRef, OnDestroy, afterNextRender, inject, input, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  Injector,
+  OnDestroy,
+  computed,
+  afterNextRender,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CedChildResult } from '../../ced-public-api';
@@ -18,12 +30,22 @@ import { LocalizedError, message } from '../../i18n/messages';
 export class ChildPickerComponent implements OnDestroy {
   readonly service = inject(TemplateService);
   private readonly language = inject(CedLanguageService);
+  private readonly injector = inject(Injector);
+  private readonly changeDetector = inject(ChangeDetectorRef);
   /** The locale the picker formats dates in. */
   readonly locale = this.language.locale;
   readonly target = input.required<{ targetId: number; position: number; type?: 'field' | 'element' }>();
   readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
   readonly selected = signal<CedChildResult[]>([]);
   readonly results = signal<CedChildResult[]>([]);
+  /** The result row focus last rested on, whose row keeps the grid's one Tab stop. */
+  readonly focusedResult = signal<string | null>(null);
+  /** The grid's one Tab stop: the row focus last rested on while it is still a result, else the first. */
+  readonly resultTabStop = computed(() => {
+    const keys = this.results().map((row) => this.key(row));
+    const focused = this.focusedResult();
+    return focused !== null && keys.includes(focused) ? focused : (keys[0] ?? null);
+  });
   readonly searching = signal(false);
   readonly saving = signal(false);
   readonly error = signal('');
@@ -53,6 +75,7 @@ export class ChildPickerComponent implements OnDestroy {
   ngOnDestroy(): void {
     this.request?.abort();
     this.loading?.abort();
+    clearTimeout(this.announcementTimer);
   }
   statusLabel(status: string | null | undefined): string {
     const value = status?.trim().toLowerCase().split(/[:/#]/).pop();
@@ -69,6 +92,37 @@ export class ChildPickerComponent implements OnDestroy {
   select(row: CedChildResult): void {
     if (!this.saving() && !this.isSelected(row)) this.selected.update((items) => [...items, row]);
   }
+  /**
+   * Up, Down, Home and End move focus between result rows and stop at the ends. Enter and Space choose
+   * the focused row, as a click does; a row already chosen, or a picker that is adding, ignores them.
+   */
+  onResultKeydown(event: KeyboardEvent, row: CedChildResult, index: number): void {
+    const element = event.currentTarget;
+    if (!(element instanceof HTMLElement) || event.target !== element) return;
+    if (event.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      this.select(row);
+      return;
+    }
+    const last = this.results().length - 1;
+    const target =
+      event.key === 'ArrowUp'
+        ? index - 1
+        : event.key === 'ArrowDown'
+          ? index + 1
+          : event.key === 'Home'
+            ? 0
+            : event.key === 'End'
+              ? last
+              : null;
+    if (target === null) return;
+    event.preventDefault();
+    // Past either end there is no row, so focus stays where it is.
+    element.parentElement?.querySelectorAll<HTMLElement>(':scope > tr.result-row')[target]?.focus();
+    // The Tab stop follows focus at once, so a Tab pressed before the next render leaves from here.
+    this.changeDetector.detectChanges();
+  }
   remove(row: CedChildResult): void {
     if (this.saving()) return;
     this.selected.update((items) => items.filter((item) => this.key(item) !== this.key(row)));
@@ -83,6 +137,38 @@ export class ChildPickerComponent implements OnDestroy {
       moveItemInArray(next, from, to);
       return next;
     });
+  }
+  /**
+   * What the picker last said about a move. While this modal dialog is open the designer's own live
+   * region is inert, so the picker speaks through the status region inside it.
+   */
+  readonly moveAnnouncement = signal('');
+  private announcementTimer: ReturnType<typeof setTimeout> | undefined;
+  /**
+   * Move up and Move down move a chosen row one place and say where it went. At either end the button
+   * is only marked disabled, so it keeps focus, and a click on it does nothing.
+   */
+  moveByClick(event: MouseEvent, index: number, offset: -1 | 1): void {
+    const button = event.currentTarget;
+    if (!(button instanceof HTMLButtonElement) || button.getAttribute('aria-disabled') === 'true') return;
+    const row = this.selected()[index];
+    const to = index + offset;
+    if (!row || this.saving() || to < 0 || to >= this.selected().length) return;
+    const focused = button.matches(':focus');
+    this.move(index, to);
+    // The text is cleared first and set a moment later, so a message that repeats the last one is read again.
+    clearTimeout(this.announcementTimer);
+    this.moveAnnouncement.set('');
+    const text = this.language.t('announce.moved', { name: row.name, position: to + 1, count: this.selected().length });
+    this.announcementTimer = setTimeout(() => this.moveAnnouncement.set(text), 100);
+    // Moving the row's view can take the button out of the page for an instant, which drops its focus.
+    if (focused)
+      afterNextRender(
+        () => {
+          if (button.isConnected && !button.matches(':focus')) button.focus();
+        },
+        { injector: this.injector },
+      );
   }
   moveWithKeyboard(event: KeyboardEvent, index: number): void {
     if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
