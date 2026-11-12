@@ -117,6 +117,9 @@ export class ContainerEditorComponent {
    */
   private dismissInsertion(event: KeyboardEvent): void {
     if (event.key !== 'Escape' || event.defaultPrevented) return;
+    // Native dialog cancellation is the key's default action, after it bubbles. A hovered
+    // insertion zone behind the modal must not consume Escape before the browser can close it.
+    if (event.composedPath().some((node) => node instanceof HTMLDialogElement && node.matches(':modal'))) return;
     const shown = this.container().children.find(
       (child) => this.dismissedInsertion() !== child.id && this.insertZone(child.id)?.matches(':hover, :focus-within'),
     );

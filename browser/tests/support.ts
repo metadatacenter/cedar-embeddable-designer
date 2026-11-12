@@ -40,7 +40,14 @@ export async function focusedControl(page: Page): Promise<string> {
   const mark = await page.evaluate(() => {
     let element = document.activeElement;
     while (element?.shadowRoot?.activeElement) element = element.shadowRoot.activeElement;
-    if (!element || element === document.body) return null;
+    if (!element || element === document.body || element.hasAttribute('data-test-tab-boundary')) return null;
+    if (
+      element instanceof HTMLElement &&
+      element.tabIndex < 0 &&
+      /auto|scroll/.test(getComputedStyle(element).overflowY) &&
+      element.scrollHeight > element.clientHeight
+    )
+      return 'scroll-area';
     const holder = window as unknown as { __focusMark?: number; __focusMarked?: Element };
     holder.__focusMark = (holder.__focusMark ?? 0) + 1;
     holder.__focusMarked = element;
@@ -48,6 +55,7 @@ export async function focusedControl(page: Page): Promise<string> {
     return holder.__focusMark;
   });
   if (mark === null) return '(page)';
+  if (mark === 'scroll-area') return '(scroll area)';
   // The focused control can leave the page before it is read: a menu item that opens a dialog is
   // removed on the next render. A snapshot would wait for it for ever, so a short one stands in, and
   // a control that went reads `(gone)` for a poll to ask about again.
@@ -70,7 +78,7 @@ export async function focusedControl(page: Page): Promise<string> {
 export async function tabSequence(page: Page, count: number, key = 'Tab'): Promise<string[]> {
   const stops: string[] = [];
   for (let i = 0; i < count; i++) {
-    await page.keyboard.press(key);
+    await page.keyboard.press(tabKey(page, key));
     stops.push(await focusedControl(page));
   }
   return stops;
@@ -292,4 +300,11 @@ export async function addElementFixture(
   await expect(page.getByRole('dialog')).toHaveCount(0);
   // The imported card takes focus on the next render; waiting keeps that from landing after the test's next step.
   await expect.poll(() => focusedControl(page)).toBe('group "Element"');
+}
+
+/** Safari on macOS uses Option-Tab to include every control with its default keyboard settings. */
+export function tabKey(page: Page, key = 'Tab'): string {
+  return process.platform === 'darwin' && page.context().browser()?.browserType().name() === 'webkit'
+    ? `Alt+${key}`
+    : key;
 }

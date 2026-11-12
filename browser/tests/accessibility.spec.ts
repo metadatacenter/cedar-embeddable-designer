@@ -11,6 +11,7 @@ import {
   openDesigner,
   openPreview,
   openSettings,
+  tabKey,
 } from './support';
 
 /**
@@ -60,6 +61,15 @@ interface Settled {
 }
 
 const SETTLED: Settled[] = [
+  {
+    rule: 'color-contrast',
+    target: '#host-heading',
+    measured: 'the fixture heading, #831843 on #fdf2f8, 8.84:1, on 2026-11-12',
+    passes:
+      'WebKit leaves the fixture heading undecided after the host scrolls. The visible text sits on ' +
+      'the opaque pink host page, outside the designer; every scan measures that contrast again.',
+    check: { contrast: 4.5 },
+  },
   {
     rule: 'color-contrast',
     target: 'select',
@@ -376,8 +386,8 @@ async function hover(control: Locator): Promise<void> {
 /** Focus `control` as the keyboard does, so that it shows the ring a keyboard author sees. */
 async function focusFromKeyboard(page: Page, control: Locator): Promise<void> {
   await control.focus();
-  await page.keyboard.press('Shift+Tab');
-  await page.keyboard.press('Tab');
+  await page.keyboard.press(tabKey(page, 'Shift+Tab'));
+  await page.keyboard.press(tabKey(page, 'Tab'));
   await expect(control).toBeFocused();
   expect(await control.evaluate((element) => element.matches(':focus-visible'))).toBe(true);
 }

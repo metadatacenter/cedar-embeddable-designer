@@ -110,6 +110,13 @@ export function trapTab(root: Element, event: KeyboardEvent): boolean {
   const index = active instanceof HTMLElement ? stops.indexOf(active) : -1;
 
   if (index === -1) {
+    // Firefox tabs to scroll containers even without tabindex. Let the next native Tab enter
+    // their controls rather than treating that valid interior stop as focus outside the modal.
+    let ancestor: Node | null = active;
+    while (ancestor && ancestor !== root) {
+      ancestor = ancestor.parentNode ?? (ancestor instanceof ShadowRoot ? ancestor.host : null);
+    }
+    if (ancestor === root && active !== root) return false;
     event.preventDefault();
     (event.shiftKey ? last : first).focus();
     return true;

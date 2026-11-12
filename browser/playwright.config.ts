@@ -52,6 +52,12 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    ...(['firefox', 'webkit'] as const).map((browserName) => ({
+      name: `${browserName}-accessibility`,
+      testMatch:
+        /(?:accessibility|layout-resilience|keyboard-order|focus-return|focus-rings|announcements|error-announcements)\.spec\.ts/,
+      use: { browserName, viewport: { width: 1280, height: 720 } },
+    })),
     ...(process.env.CED_WEBKIT
       ? [
           {
