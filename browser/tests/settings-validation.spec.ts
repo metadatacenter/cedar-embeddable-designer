@@ -425,10 +425,12 @@ for (const inputType of ['radio', 'checkbox', 'list']) {
     await card.getByLabel('Option 2', { exact: true }).fill('Second');
     await expect.poll(async () => (await report(page)).canSave).toBe(true);
     await clickCentred(card.getByRole('button', { name: 'Add option', exact: true }));
-    await card
-      .getByRole('button', { name: /^Delete option \d+$/ })
-      .last()
-      .click();
+    // Adding updates the model before Angular renders the new row. A `.last()` locator can
+    // still resolve to the named second option and delete that instead of the new blank one.
+    await expect(card.getByLabel('Option 3', { exact: true })).toHaveValue('');
+    await card.getByRole('button', { name: 'Delete option 3', exact: true }).click();
+    await expect(card.getByLabel('Option 3', { exact: true })).toHaveCount(0);
+    await expect(card.getByLabel('Option 2', { exact: true })).toHaveValue('Second');
     await expect.poll(async () => (await report(page)).canSave).toBe(true);
   });
 }

@@ -350,6 +350,31 @@ async function expectAccessible(page: Page, state: string): Promise<void> {
       last = now;
     }
   });
+  // Scrolling beneath a stationary pointer can start an insertion-zone hover transition after
+  // the first animation wait. Judge its final visible/hidden state, including WebKit frames in
+  // which getAnimations() is empty while computed opacity is still between the endpoints.
+  await page.waitForFunction(
+    () => {
+      const roots: DocumentOrShadowRoot[] = [document];
+      for (const element of document.querySelectorAll('*')) if (element.shadowRoot) roots.push(element.shadowRoot);
+      return roots.every(
+        (root) =>
+          root
+            .getAnimations()
+            .every(
+              (animation) =>
+                animation.effect?.getTiming().iterations === Infinity ||
+                ['finished', 'idle'].includes(animation.playState),
+            ) &&
+          [...root.querySelectorAll('.insert-zone')].every((zone) => {
+            const opacity = Number(getComputedStyle(zone).opacity);
+            return opacity === 0 || opacity === 1;
+          }),
+      );
+    },
+    undefined,
+    { timeout: 5_000 },
+  );
   // axe-core lets a rule enabled by name override the tag selection, so one scan covers both. The
   // builder's `options` replaces every option set before it, so it comes ahead of `withTags`.
   const scan = await new AxeBuilder({ page })
@@ -369,7 +394,7 @@ async function expectAccessible(page: Page, state: string): Promise<void> {
   const ignoredLabels = incomplete.filter((result) => result.id === 'aria-prohibited-attr');
   const failures = [
     ...[...violations, ...ignoredLabels].flatMap((violation) =>
-      violation.nodes.map((node) => `${violation.id}: ${JSON.stringify(node.target)}`),
+      violation.nodes.map((node) => `${violation.id}: ${JSON.stringify(node.target)} — ${node.failureSummary ?? ''}`),
     ),
     ...(await unsettled(page, incomplete)),
     ...(await placeholdersOutsideNames(page)),
