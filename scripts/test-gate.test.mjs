@@ -73,6 +73,8 @@ for (const budget of [1, 2, 8])
         if (event.script === 'dist') assert.equal(finished.size, 6);
         if (event.script === 'test:browser:prebuilt') {
           assert.ok(finished.has('dist'));
+          assert.ok(finished.has('test:visual'));
+          assert.equal(Number(event.workers), budget);
         }
         if (event.script === 'test:visual') {
           assert.ok(finished.has('dist'));
@@ -233,4 +235,33 @@ test('train preparation runs every non-browser check and builds without publishi
       .sort(),
     ['test', 'lint', 'typecheck', 'test:boundaries', 'test:packaging', 'test:conformance', 'dist'].sort(),
   );
+});
+
+test('a pixel failure blocks the long browser stage and returns every worker', () => {
+  const pool = sharedPool(4);
+  try {
+    const { result, events } = gate(8, 'test:visual', { CEDAR_WORKER_POOL: pool });
+    assert.notEqual(result.status, 0);
+    const starts = events.filter((event) => event.event === 'start').map((event) => event.script);
+    assert.ok(starts.includes('test:visual'));
+    assert.ok(!starts.includes('test:browser:prebuilt'));
+    assert.deepEqual(slots(pool), []);
+  } finally {
+    rmSync(pool, { recursive: true, force: true });
+  }
+});
+
+test('a reused pixel result still releases the browser stage with the full budget', () => {
+  const directory = mkdtempSync(path.join(tmpdir(), 'ced-gate-cache-'));
+  try {
+    const module = path.join(directory, 'cache.mjs');
+    writeFileSync(module, "export const stageCache = () => ({ reuse: stage => stage.name === 'visual', save() {} });");
+    const { result, events } = gate(8, '', { CEDAR_STAGE_CACHE_MODULE: module });
+    assert.equal(result.status, 0, result.stderr);
+    const starts = events.filter((event) => event.event === 'start');
+    assert.ok(!starts.some((event) => event.script === 'test:visual'));
+    assert.equal(starts.find((event) => event.script === 'test:browser:prebuilt').workers, '8');
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 });
