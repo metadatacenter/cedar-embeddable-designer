@@ -33,7 +33,7 @@ import { nestFixtureFields } from './support';
  * generated property IRI while retaining the layout an author sees.
  */
 import { expect, test, type Page } from '@playwright/test';
-import { openSettings, applyPreset, openDesigner } from './support';
+import { openSettings, applyPreset, openDesigner, clickCentred } from './support';
 
 const DESIGNER = 'cedar-embeddable-designer';
 
@@ -101,20 +101,19 @@ async function designerShowing(
   await applyPreset(page, preset);
   const designer = page.locator(DESIGNER);
 
+  // Construct the visual fixture through the existing handlers. Pointer hit testing during
+  // smooth insertion scrolling adds unrelated work before the pixels can be compared.
   // The delete control carries a title and no text, which is what names it here.
   const starting = designer.locator('[id^=field-card-]');
   for (let remaining = await starting.count(); remaining > 0; remaining--) {
-    await designer.locator('[id^=field-card-]').first().getByTitle('Delete field').first().click();
+    await clickCentred(designer.locator('[id^=field-card-]').first().getByTitle('Delete field').first());
   }
   await expect.poll(async () => starting.count(), { timeout: 10_000 }).toBe(0);
 
   for (const label of labels) {
-    await designer
-      .getByRole('button', { name: /^Add field$/ })
-      .first()
-      .click();
+    await clickCentred(designer.getByRole('button', { name: /^Add field$/ }).first());
     await page.evaluate(() => (window as unknown as { __nextFieldIdentity?: () => void }).__nextFieldIdentity?.());
-    await designer.getByRole('button', { name: label, exact: true }).click();
+    await clickCentred(designer.getByRole('button', { name: label, exact: true }));
     await designer.locator('input[aria-label="Enter field name"]:focus').fill(label);
   }
   await expect.poll(async () => starting.count(), { timeout: 15_000 }).toBe(labels.length);
@@ -161,10 +160,7 @@ test.describe('the designer', () => {
 
   test('shows the field type palette', async ({ page }) => {
     const designer = await designerShowing(page, ['Text']);
-    await designer
-      .getByRole('button', { name: /^Add field$/ })
-      .first()
-      .click();
+    await clickCentred(designer.getByRole('button', { name: /^Add field$/ }).first());
     const picker = designer.locator('app-field-type-picker');
     await picker.locator('.btn-field-item').first().waitFor({ state: 'visible' });
 
