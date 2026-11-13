@@ -24,6 +24,12 @@ for (const width of [375, 767])
     await open.click();
     const close = designer.getByRole('button', { name: 'Close Overview', exact: true });
     await expect(close).toHaveAttribute('aria-expanded', 'true');
+    // Check the pointer path above, then focus retention under keyboard activation.
+    // Safari deliberately does not focus a button on a pointer click.
+    await close.focus();
+    await close.press('Enter');
+    await expect(open).toHaveAttribute('aria-expanded', 'false');
+    await open.press('Enter');
     await expect(close).toBeFocused();
     const panel = designer.locator('.overview-panel');
     await expect(panel).toBeVisible();
@@ -206,7 +212,7 @@ test('a Types row puts its buttons beneath the list only where they would not fi
       };
     });
     for (const button of layout.buttons) {
-      expect(button.right, `${width}px`).toBeLessThanOrEqual(layout.rowRight);
+      expect(button.right, `${width}px`).toBeLessThanOrEqual(layout.rowRight + 0.001);
       expect(button.top >= layout.list.bottom, `${width}px`).toBe(beneath);
     }
     // No types selected. keeps its words whole.

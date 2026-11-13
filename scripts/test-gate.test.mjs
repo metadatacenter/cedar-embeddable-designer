@@ -14,7 +14,7 @@ function gate(workers, fail = '', environment = {}, copies = 1, mode = 'full') {
     `#!${process.execPath}
 const fs = require('node:fs');
 const script = process.argv[3];
-const emit = event => fs.appendFileSync(process.env.GATE_LOG, JSON.stringify({event, script, workers: process.env.CEDAR_TEST_WORKERS, vitest: process.env.VITEST_MAX_WORKERS, webkit: process.env.CED_WEBKIT})+'\\n');
+const emit = event => fs.appendFileSync(process.env.GATE_LOG, JSON.stringify({event, script, workers: process.env.CEDAR_TEST_WORKERS, vitest: process.env.VITEST_MAX_WORKERS})+'\\n');
 emit('start');
 setTimeout(() => { emit('end'); process.exit(script === process.env.GATE_FAIL ? 7 : 0); }, 50);
 `,
@@ -73,7 +73,6 @@ for (const budget of [1, 2, 8])
         if (event.script === 'dist') assert.equal(finished.size, 6);
         if (event.script === 'test:browser:prebuilt') {
           assert.ok(finished.has('dist'));
-          assert.equal(event.webkit, '1', 'the complete gate must include WebKit interactions');
         }
         if (event.script === 'test:visual') {
           assert.ok(finished.has('dist'));

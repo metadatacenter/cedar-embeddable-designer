@@ -535,15 +535,35 @@ test('the real picker selects a default within the field vocabulary', { tag: NEE
   await page.addScriptTag({ path: process.env.PICKER_BUNDLE! });
   await control.getByRole('button', { name: 'Edit default term' }).click();
   const picker = control.locator('cedar-embeddable-term-picker');
-  await expect(control.getByRole('dialog', { name: 'Choose default term' })).toBeVisible();
+  const dialog = control.getByRole('dialog', { name: 'Choose default term' });
+  await expect(dialog).toBeVisible();
   await expect(picker.locator('.narrowing .chip.within')).toHaveCount(2);
+  const opening = (await dialog.boundingBox())!;
+  const openingTop = opening.y;
+  // The picker applies its inputs after bootstrapping. Preserve the original centered
+  // appearance before anchoring, rather than freezing the transient initialization height.
+  expect(opening.y + opening.height / 2).toBeCloseTo(page.viewportSize()!.height / 2, 1);
   await picker.locator('input[type=search]').fill('cancer');
   await expect.poll(() => searchedWithin).toBe(true);
   await expect(picker.locator('.tab')).toHaveCount(1);
   await picker.locator('.rowhead').first().click();
   await picker.locator('.child.pick').first().click();
   await expect.poll(() => browsedPinnedRelease).toBe(true);
-  await page.screenshot({ path: '/tmp/ced-controlled-default-dialog.png' });
+  // A request starting does not mean its pinned-release validation has finished.
+  await expect(picker.getByRole('button', { name: 'Use this term', exact: true })).toBeEnabled();
+  expect((await dialog.boundingBox())!.y).toBeCloseTo(openingTop, 1);
+  const viewport = page.viewportSize()!;
+  await page.setViewportSize({ width: 375, height: 500 });
+  const small = (await dialog.boundingBox())!;
+  expect(small.x).toBeGreaterThanOrEqual(0);
+  expect(small.y).toBeGreaterThanOrEqual(0);
+  expect(small.x + small.width).toBeLessThanOrEqual(375);
+  expect(small.y + small.height).toBeLessThanOrEqual(500);
+  await dialog.evaluate((element) => element.scrollTo({ top: element.scrollHeight, behavior: 'instant' }));
+  await expect(picker.getByRole('button', { name: 'Use this term', exact: true })).toBeInViewport();
+  await page.setViewportSize(viewport);
+  await dialog.evaluate((element) => element.scrollTo({ top: 0, behavior: 'instant' }));
+  expect((await dialog.boundingBox())!.y).toBeCloseTo(openingTop, 1);
   await picker.locator('.child.pick').first().dblclick();
   await expect
     .poll(async () => (await constraints(page))['defaultValue'])
@@ -671,10 +691,11 @@ for (const type of ['number', 'date']) {
     const defaultBox =
       type === 'number' ? control.locator('input').first() : control.locator('.mat-mdc-text-field-wrapper').first();
     await expect(defaultBox).toBeVisible();
-    await expect.poll(async () => (await defaultBox.boundingBox())!.height).toBe(36);
+    // Firefox can report 36.0000305px for the same 36px box.
+    await expect.poll(async () => (await defaultBox.boundingBox())!.height).toBeCloseTo(36, 3);
     await expect
       .poll(async () => (await defaultBox.boundingBox())!.height)
-      .toBe((await neighbor.boundingBox())!.height);
+      .toBeCloseTo((await neighbor.boundingBox())!.height, 3);
     const input = control.locator('input').first();
     await expect(input).toHaveCSS('font-size', await neighbor.evaluate((el) => getComputedStyle(el).fontSize));
     await expect(input).toHaveCSS('font-weight', await neighbor.evaluate((el) => getComputedStyle(el).fontWeight));
@@ -713,7 +734,7 @@ for (const host of ['CED', 'CEFD']) {
     const native = page.getByRole('combobox', { name: 'Temporal type', exact: true });
     const cef = page.locator('app-field-default-value cedar-embeddable-field');
     const cefBox = cef.locator('.mat-mdc-text-field-wrapper').first();
-    await expect.poll(async () => (await cefBox.boundingBox())!.height).toBe(36);
+    await expect.poll(async () => (await cefBox.boundingBox())!.height).toBeCloseTo(36, 3);
     await page.evaluate(() => {
       document.body.style.setProperty('--cedar-control-height', '44px');
       document.body.style.setProperty('--cedar-control-font-size', '16px');
@@ -731,14 +752,14 @@ for (const host of ['CED', 'CEFD']) {
     await expect(native).toHaveCSS('outline-color', 'rgb(102, 51, 153)');
     await expect(native).toHaveCSS('outline-width', '2px');
     await expect(native).toHaveCSS('outline-offset', '2px');
-    await expect.poll(async () => (await cefBox.boundingBox())!.height).toBe(44);
+    await expect.poll(async () => (await cefBox.boundingBox())!.height).toBeCloseTo(44, 3);
     await expect(cef.locator('input').first()).toHaveCSS('font-size', '16px');
     await page.setViewportSize({ width: 375, height: 800 });
     await expect(native).toBeVisible();
     await expect(cefBox).toBeVisible();
     await page.evaluate(() => document.body.removeAttribute('style'));
     await expect(native).toHaveCSS('height', '36px');
-    await expect.poll(async () => (await cefBox.boundingBox())!.height).toBe(36);
+    await expect.poll(async () => (await cefBox.boundingBox())!.height).toBeCloseTo(36, 3);
   });
 }
 

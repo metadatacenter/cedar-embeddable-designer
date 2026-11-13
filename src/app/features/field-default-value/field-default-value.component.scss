@@ -18,6 +18,15 @@
   max-width: 896px;
   max-height: 90vh;
   overflow: auto;
+  &[data-position-stable] {
+    // Opening height keeps the original centering. A smaller viewport brings the dialog back
+    // within its padding, while growing content scrolls below the stable top edge.
+    --_dialog-top: max(var(--cedar-space-6), calc((100dvh - var(--ced-default-dialog-opening-height)) / 2));
+    align-self: flex-start;
+    position: relative;
+    top: calc(var(--_dialog-top) - var(--cedar-space-6));
+    max-height: min(90vh, calc(100dvh - var(--_dialog-top) - var(--cedar-space-6)));
+  }
   p {
     @include spacing.apply(margin, control-row);
     font-size: var(--cedar-font-size);

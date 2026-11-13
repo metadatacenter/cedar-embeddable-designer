@@ -22,8 +22,7 @@ env:
 jobs:
   test:
     runs-on: ubuntu-24.04-arm
-    # With every step running, the job measures 19.7 to 19.9 minutes, 15.8 of them in the browser
-    # suite, and a slower runner went past a 20-minute limit in the visual step.
+    # Source/build/pixel gates produce one artifact for the parallel browser jobs below.
     timeout-minutes: 30
 
     steps:
@@ -58,7 +57,6 @@ jobs:
       - name: Install the browser test dependencies
         run: |
           npm --prefix browser ci
-          ./browser/node_modules/.bin/playwright install --with-deps chromium firefox webkit
 
       - name: Lint
         run: npm run lint
@@ -103,7 +101,7 @@ jobs:
           if-no-files-found: error
           retention-days: 2
 
-      - name: Save the production build for WebKit
+      - name: Save the production build for all browser engines
         uses: actions/upload-artifact@v7
         with:
           name: ced-browser-build
@@ -112,14 +110,6 @@ jobs:
             dist-bundle
           if-no-files-found: error
           retention-days: 2
-
-      # Against the file an embedder downloads, in a host page that is not the
-      # development server. Everything this suite covers was found by hand in a
-      # browser and by nothing else: an element that never registered, a lookup
-      # that searched the wrong tree, a menu that closed on its own opening click,
-      # an asset the package does not carry.
-      - name: Browser tests, against the distribution
-        run: npm run test:browser:prebuilt
 
       # The screenshot baselines, inside Playwright's own image rather than on the
       # runner. A baseline records a machine's glyph rasterisation as much as the
@@ -218,7 +208,7 @@ jobs:
           npm ci
           npm run dist
 
-      - name: Build CED and install Chromium
+      - name: Build CED and install all three engines
         working-directory: cedar-embeddable-designer
         run: |
           npm ci
@@ -236,7 +226,7 @@ jobs:
           test -s "$CEF_BUNDLE"
           sha256sum "$CEF_BUNDLE" cedar-embeddable-designer/dist-bundle/cedar-embeddable-designer.js
 
-      # The test job already runs the whole browser suite against the same build, and nothing but a
+      # The browser jobs run the whole suite against the shared build, and nothing but a
       # spec's own reading of CEF_BUNDLE or PICKER_BUNDLE differs here. So this job runs only the
       # files that read them, each in full, rather than every test a second time. The list is read
       # from the specs, so a new one that reads either variable cannot be left out.
@@ -255,21 +245,29 @@ jobs:
           path: cedar-embeddable-designer/browser/test-results
           if-no-files-found: ignore
 
-  webkit-interactions:
-    name: WebKit focus and pointer interactions
+  browser:
+    name: Browser contracts (${{ matrix.browser }})
+    env:
+      # Match the existing hosted allocation even when local CI sees more CPU cores.
+      CEDAR_TEST_WORKERS: '2'
     needs: test
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 15
-    env:
-      CED_WEBKIT: '1'
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24.22.1
           cache: npm
-      # Reuse the production build whose freshness and Chromium checks passed above.
-      # A redundant Angular build previously hung after emitting its host-fonts output.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      # All engines exercise the same verified production bytes; no redundant Angular builds.
       - uses: actions/download-artifact@v8
         with:
           name: ced-browser-build
@@ -277,10 +275,10 @@ jobs:
       - run: |
           npm ci
           npm --prefix browser ci
-          ./browser/node_modules/.bin/playwright install --with-deps webkit
-          npm run test:browser:prebuilt -- --project=webkit
+          ./browser/node_modules/.bin/playwright install --with-deps ${{ matrix.browser }}
+          npm run test:browser:prebuilt -- --project=${{ matrix.browser }} --retries=0
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: webkit-interaction-traces
+          name: browser-${{ matrix.browser }}-failures
           path: browser/test-results

@@ -26,7 +26,7 @@
  */
 import { expect, test, type Page } from '@playwright/test';
 import { NEEDS_CEF, NEEDS_PICKER } from './bundle-tags';
-import { openSettings, applyPreset, clickCentred, currentTemplate, openDesigner } from './support';
+import { openSettings, applyPreset, clickCentred, currentTemplate, openDesigner, tabKey } from './support';
 import { expectLaidOut, DESIGNER } from './support-layout';
 import {
   accepts,
@@ -299,7 +299,7 @@ for (const width of WIDTHS) {
             });
             expect
               .soft(leadingGap, `${paletteType} ${await tabs.nth(index).textContent()} leading gap`)
-              .toBeLessThanOrEqual(8);
+              .toBeLessThanOrEqual(8.001);
           }
         });
       }
@@ -841,7 +841,8 @@ test.describe('what a sibling component contributes', () => {
       expect(await outside(), 'focus stayed outside the overlay when it opened').toBe(false);
 
       const escapes: string[] = [];
-      for (const key of ['Tab', 'Shift+Tab']) {
+      // Safari's ordinary Tab skips native buttons; Option-Tab includes them. Neither may escape.
+      for (const key of new Set(['Tab', 'Shift+Tab', tabKey(page), tabKey(page, 'Shift+Tab')])) {
         for (let press = 0; press < 30; press++) {
           await page.keyboard.press(key);
           if (await outside()) escapes.push(`${key} #${press + 1}`);

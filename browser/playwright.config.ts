@@ -21,20 +21,12 @@ const missingBundles = [
   ...(process.env.PICKER_BUNDLE ? [] : [NEEDS_PICKER]),
 ];
 
-// Functional browser contracts share the existing worker budget; pixel baselines keep their own projects.
-const functionalSpecs = [
-  'editing.spec.ts',
-  'embedding.spec.ts',
-  'multiple-stability.spec.ts',
-  'state-reconciliation.spec.ts',
-  'instance-isolation.spec.ts',
-  'read-only.spec.ts',
-  'settings-validation.spec.ts',
-  'numeric-validation.spec.ts',
-  'overview-reorder.spec.ts',
-  'cef-parity.spec.ts',
-  'import-preservation.spec.ts',
-  'version-upgrade-journeys.spec.ts',
+// Pure pixel baselines use Chromium in the pinned Linux image. All other specs enter every engine.
+const ignoredSpecs = [
+  ...(process.env.CEF_BUNDLE
+    ? []
+    : ['**/cef-defaults.spec.ts', '**/cef-parity.spec.ts', '**/style-comparison.spec.ts']),
+  ...(process.env.CED_VISUAL ? [] : ['**/visual.spec.ts']),
 ];
 
 export default defineConfig({
@@ -48,46 +40,27 @@ export default defineConfig({
    * developer running the behaviour suite never meets a pixel failure they have no
    * way to act on.
    */
-  testIgnore: [
-    ...(process.env.CEF_BUNDLE
-      ? []
-      : ['**/cef-defaults.spec.ts', '**/cef-parity.spec.ts', '**/style-comparison.spec.ts']),
-    ...(process.env.CED_VISUAL ? [] : ['**/visual.spec.ts']),
-  ],
+  testIgnore: ignoredSpecs,
   grepInvert: missingBundles.length ? new RegExp(missingBundles.join('|')) : undefined,
   fullyParallel: true,
   workers: process.env.CEDAR_TEST_WORKERS ? Number(process.env.CEDAR_TEST_WORKERS) : undefined,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
-  // Stop after a test exhausts its retry; a known-red train must not run the remaining suite.
+  retries: 0,
+  // A retry must not hide an unreliable case.
   maxFailures: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'line' : 'list',
   use: {
     baseURL: `http://localhost:${port}`,
-    trace: 'on-first-retry',
+    trace: process.env.CEDAR_TEST_TRACE === 'on' ? 'retain-on-failure' : 'off',
+    screenshot: process.env.CI ? 'only-on-failure' : 'off',
   },
   projects: [
-    ...(['firefox', 'webkit'] as const).map((browserName) => ({
-      name: `${browserName}-functional`,
-      testMatch: functionalSpecs,
-      use: { browserName },
-    })),
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     ...(['firefox', 'webkit'] as const).map((browserName) => ({
-      name: `${browserName}-accessibility`,
-      testMatch:
-        /(?:accessibility|layout-resilience|keyboard-order|focus-return|focus-rings|announcements|error-announcements)\.spec\.ts/,
+      name: browserName,
+      testIgnore: [...ignoredSpecs, '**/visual.spec.ts'],
       use: { browserName, viewport: { width: 1280, height: 720 } },
     })),
-    ...(process.env.CED_WEBKIT
-      ? [
-          {
-            name: 'webkit',
-            use: { ...devices['Desktop Safari'] },
-            testMatch: /(?:header-toggle|overview-resize|card-navigation|text-default|field-designer)\.spec\.ts/,
-          },
-        ]
-      : []),
   ],
   webServer: {
     command: 'node serve.mjs',

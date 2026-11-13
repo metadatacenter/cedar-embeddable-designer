@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { canonicalStyleValue } from './surface-contracts.generated.mjs';
 
 test('comparison page renders the four real components and applies host profiles', async ({ page }, testInfo) => {
   await page.route('**/cedar-embeddable-editor.js', (route) =>
@@ -44,10 +45,15 @@ for (const readOnly of [false, true]) {
     const title = designer.getByPlaceholder('Template name');
     await expect(title).toHaveValue('Style comparison');
     for (const property of ['font-family', 'color']) {
-      await expect(title).toHaveCSS(
-        property,
-        await reference.evaluate((el, prop) => getComputedStyle(el).getPropertyValue(prop), property),
-      );
+      const expected = await reference.evaluate((el, prop) => getComputedStyle(el).getPropertyValue(prop), property);
+      await expect
+        .poll(async () =>
+          canonicalStyleValue(
+            property,
+            await title.evaluate((el, prop) => getComputedStyle(el).getPropertyValue(prop), property),
+          ),
+        )
+        .toBe(canonicalStyleValue(property, expected));
     }
     await expect(title).toHaveCSS('font-size', '14px');
     await expect(title).toHaveCSS('font-weight', '500');

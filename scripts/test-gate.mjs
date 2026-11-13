@@ -35,7 +35,6 @@ const stages = [
     script: 'test:browser:prebuilt',
     weight: Math.max(1, budget - visualWeight),
     after: ['dist'],
-    env: { CED_WEBKIT: '1' },
   },
   { name: 'visual', script: 'test:visual', weight: visualWeight, after: ['dist'] },
 ];

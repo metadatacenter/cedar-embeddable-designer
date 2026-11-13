@@ -78,13 +78,15 @@ and `npm run check:fresh` reject any mismatch, including edits with unchanged fi
 timestamps. Rebuild with `npm run dist`; an old bundle without provenance is rejected.
 Browser tests start their own server. Use `PORT=4600` if the default port is occupied.
 
-CI builds pinned real CEE/CEF and CETP sources for the integration suite. A separate
-WebKit job exercises header focus, blank-name validation, card navigation, Overview
-resizing and native defaults. Run it locally after installing WebKit:
+All functional and accessibility specs run in Chromium, Firefox and WebKit by default,
+with zero retries. Pure pixel baselines retain their separate Chromium container gate.
+CI shares one production build across three parallel engine jobs, each using two workers,
+and builds pinned real CEE/CEF and CETP sources for the three-engine integration suite.
+Run one engine locally after installing it:
 
 ```bash
 ./browser/node_modules/.bin/playwright install webkit
-CED_WEBKIT=1 npm run test:browser:prebuilt -- --project=webkit
+npm run test:browser:prebuilt -- --project=webkit
 ```
 
 To try all three scripts together from source:
