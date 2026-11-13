@@ -9,6 +9,7 @@ import {
   openDesigner,
   openSettings,
   tabSequence,
+  tabKey,
 } from './support';
 
 /**
@@ -16,17 +17,30 @@ import {
  *
  * Each stop names a control by its role and accessible name, as a screen reader reads it. A
  * change to a sequence changes what a keyboard author meets, so it is made here on purpose
- * rather than found later. `(page)` is focus leaving the designer for the host page, or, inside
- * a native modal dialog, for the browser's own controls before it wraps.
+ * rather than found later. `(page)` is a test-host stop after the component. Browser-toolbar
+ * traversal is outside this test: Playwright Firefox cannot reliably leave the document
+ * (microsoft/playwright#39268, also reproduced on plain HTML).
  */
 
 /** Tab until focus reaches `last` again after its first stop, naming every stop on the way. */
 async function tabUntil(page: Page, last: string, limit = 120): Promise<string[]> {
+  if (last === '(page)') {
+    await page.evaluate(() => {
+      if (document.querySelector('[data-test-tab-boundary]')) return;
+      const marker = document.createElement('span');
+      marker.dataset.testTabBoundary = 'end';
+      marker.tabIndex = 0;
+      marker.setAttribute('aria-label', 'Test host boundary');
+      marker.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;';
+      document.body.append(marker);
+    });
+  }
   const stops: string[] = [];
   while (stops.length < limit) {
     const [stop] = await tabSequence(page, 1);
     stops.push(stop);
-    if (stop === last && stops.length > 1) return stops;
+    // Native scroll-container stops differ by engine; keep the order of application controls.
+    if (stop === last && stops.length > 1) return stops.filter((entry) => entry !== '(scroll area)');
   }
   return stops;
 }
@@ -340,7 +354,7 @@ test('Preferences opens on itself and keeps Tab inside it', async ({ page }) => 
   await designer.getByRole('button', { name: 'User Menu' }).focus();
   await page.keyboard.press('Enter');
   await expect(designer.getByRole('button', { name: 'Preferences' })).toBeVisible();
-  await page.keyboard.press('Tab');
+  await page.keyboard.press(tabKey(page, 'Tab'));
   await page.keyboard.press('Enter');
   await expect.poll(() => focusedControl(page)).toBe('dialog "User Preferences"');
   const types = [
@@ -371,7 +385,9 @@ test('Preferences opens on itself and keeps Tab inside it', async ({ page }) => 
     'Page Break',
   ];
   const stops = await tabUntil(page, 'button "Close"', 60);
-  expect(stops.slice(0, 5)).toEqual([
+  // Firefox exposes the scrollable body itself before its controls.
+  const controls = stops.filter((stop) => stop !== '(scroll area)');
+  expect(controls.slice(0, 5)).toEqual([
     'button "Close"',
     'button "basic"',
     'button "semantic"',
@@ -379,7 +395,7 @@ test('Preferences opens on itself and keeps Tab inside it', async ({ page }) => 
     'checkbox "Show \\"Required\\" checkbox Display required/optional toggle for fields"',
   ]);
   // The rest of the panel, then Done, then back round to Close without leaving the dialog.
-  expect(stops.slice(1).slice(-28)).toEqual([
+  expect(controls.slice(1).slice(-28)).toEqual([
     'button "Deselect All"',
     ...types.map((type) => `checkbox "${type}"`),
     'button "Done"',
@@ -394,7 +410,7 @@ test('Define Presets names every checkbox by its row and its preset', async ({ p
   await designer.getByRole('button', { name: 'User Menu' }).click();
   await designer.getByRole('button', { name: 'Define Presets' }).click();
   await expect.poll(() => focusedControl(page)).toBe('dialog "Define Presets"');
-  const stops = await tabUntil(page, 'button "Close"', 150);
+  const stops = (await tabUntil(page, 'button "Close"', 150)).filter((stop) => stop !== '(scroll area)');
   expect(stops[0]).toBe('button "Close"');
   expect(stops.slice(1, 4)).toEqual([
     'checkbox "Show \\"Required\\" checkbox in the basic preset"',
@@ -417,12 +433,12 @@ test('the child picker opens on its search box', async ({ page }) => {
   await page.keyboard.press('Enter');
   await expect(page.getByRole('dialog')).toBeVisible();
   await expect.poll(() => focusedControl(page)).toBe('searchbox "Search fields and elements"');
-  expect(await tabSequence(page, 5)).toEqual([
+  expect(await tabSequence(page, 2)).toEqual(['button "Search"', 'button "Cancel"']);
+  // Check the native dialog in reverse without crossing into the browser toolbar.
+  expect(await tabSequence(page, 3, 'Shift+Tab')).toEqual([
     'button "Search"',
-    'button "Cancel"',
-    '(page)',
-    'button "Close"',
     'searchbox "Search fields and elements"',
+    'button "Close"',
   ]);
 });
 

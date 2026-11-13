@@ -22,8 +22,7 @@ env:
 jobs:
   test:
     runs-on: ubuntu-24.04-arm
-    # With every step running, the job measures 19.7 to 19.9 minutes, 15.8 of them in the browser
-    # suite, and a slower runner went past a 20-minute limit in the visual step.
+    # Source/build/pixel gates produce one artifact for the parallel browser jobs below.
     timeout-minutes: 30
 
     steps:
@@ -58,7 +57,6 @@ jobs:
       - name: Install the browser test dependencies
         run: |
           npm --prefix browser ci
-          ./browser/node_modules/.bin/playwright install --with-deps chromium
 
       - name: Lint
         run: npm run lint
@@ -103,7 +101,7 @@ jobs:
           if-no-files-found: error
           retention-days: 2
 
-      - name: Save the production build for WebKit
+      - name: Save the production build for all browser engines
         uses: actions/upload-artifact@v7
         with:
           name: ced-browser-build
@@ -112,14 +110,6 @@ jobs:
             dist-bundle
           if-no-files-found: error
           retention-days: 2
-
-      # Against the file an embedder downloads, in a host page that is not the
-      # development server. Everything this suite covers was found by hand in a
-      # browser and by nothing else: an element that never registered, a lookup
-      # that searched the wrong tree, a menu that closed on its own opening click,
-      # an asset the package does not carry.
-      - name: Browser tests, against the distribution
-        run: npm run test:browser:prebuilt
 
       # The screenshot baselines, inside Playwright's own image rather than on the
       # runner. A baseline records a machine's glyph rasterisation as much as the
@@ -153,57 +143,31 @@ jobs:
       candidate-artifact: ced-performance-bundle
       harness-ref: da481d46035a8d8cfac0a088d4ed860da2498073
 
-  cef-integration:
-    name: CED with real CEE, CEF and CETP
+  cef-bundles:
+    name: Build real CEE, CEF and CETP integration bundles
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 20
-    env:
-      PICKER_BUNDLE: ${{ github.workspace }}/cedar-embeddable-term-picker/dist-bundle/cedar-embeddable-term-picker.js
-      CEF_BUNDLE: ${{ github.workspace }}/cedar-embeddable-editor/visual/public/cedar-embeddable-editor.js
+    timeout-minutes: 15
     steps:
-      - name: Check out CED
-        uses: actions/checkout@v4
-        with:
-          path: cedar-embeddable-designer
-
-      # Update this pin deliberately when adopting CEE/CEF changes. A moving
-      # branch would make a CED revision's integration result irreproducible.
-      #
-      # It also has to be updated when the pin stops building, which is not the
-      # same thing and gives no warning. A CEE revision names an exact model
-      # library dev snapshot, Nexus keeps only so many of those, and 6af8718d's
-      # 1.0.9-dev.20260911.07caa05 was still being served at 17:47 on 2026-09-15
-      # and 404 by 18:23. The step that fails is the one that builds CEE, before
-      # any of CED is exercised, so the job goes red for a reason that is
-      # nothing to do with the commit that triggered it. Both pins therefore
-      # name revisions whose locks resolve every CEDAR package from
-      # npm-cedar-releases, which Nexus never cleans up.
-      - name: Check out the supported CEE revision
-        uses: actions/checkout@v4
+      # Supported release revisions keep dependency downloads reproducible.
+      - uses: actions/checkout@v4
         with:
           repository: metadatacenter/cedar-embeddable-editor
           ref: 9675de238db84f23fdf92e2a6e319c398450063d
           path: cedar-embeddable-editor
-
-      - name: Check out the supported term picker revision
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           repository: metadatacenter/cedar-embeddable-term-picker
           ref: 3d2a625616c5a8d57d1a6f08f56fc4cbc5f59cfd
           path: cedar-embeddable-term-picker
-
-      - name: Use Node.js 24
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 24.22.1
           cache: npm
           cache-dependency-path: |
-            cedar-embeddable-designer/package-lock.json
-            cedar-embeddable-designer/browser/package-lock.json
             cedar-embeddable-editor/package-lock.json
             cedar-embeddable-editor/visual/package-lock.json
-
-      - name: Build CEE and CEF from the pinned source
+            cedar-embeddable-term-picker/package-lock.json
+      - name: Build CEE and CEF from the supported source
         working-directory: cedar-embeddable-editor
         run: |
           npm ci
@@ -211,65 +175,103 @@ jobs:
           npm run build:production
           npm --prefix visual run bundle
           npm --prefix visual run check:fresh
-
       - name: Build the real term picker
         working-directory: cedar-embeddable-term-picker
         run: |
           npm ci
           npm run dist
-
-      - name: Build CED and install Chromium
-        working-directory: cedar-embeddable-designer
-        run: |
-          npm ci
-          npm --prefix browser ci
-          ./browser/node_modules/.bin/playwright install --with-deps chromium
-          npm run dist
-
       - name: Record the exact integration inputs
         run: |
-          git -C cedar-embeddable-designer rev-parse HEAD
           git -C cedar-embeddable-editor rev-parse HEAD
           git -C cedar-embeddable-term-picker rev-parse HEAD
-          test -s "$PICKER_BUNDLE"
-          sha256sum "$PICKER_BUNDLE"
-          test -s "$CEF_BUNDLE"
-          sha256sum "$CEF_BUNDLE" cedar-embeddable-designer/dist-bundle/cedar-embeddable-designer.js
-
-      # The test job already runs the whole browser suite against the same build, and nothing but a
-      # spec's own reading of CEF_BUNDLE or PICKER_BUNDLE differs here. So this job runs only the
-      # files that read them, each in full, rather than every test a second time. The list is read
-      # from the specs, so a new one that reads either variable cannot be left out.
-      - name: Test CED with the real CEE and CEF bundle
-        working-directory: cedar-embeddable-designer
-        run: |
-          specs=$(grep -l -E 'CEF_BUNDLE|PICKER_BUNDLE' browser/tests/*.spec.ts | xargs -n 1 basename | sed 's/\.spec\.ts$//')
-          echo "Specs that read a bundle variable:" $specs
-          npm run test:browser:prebuilt -- $specs
-
-      - name: Keep failure traces
-        if: failure()
-        uses: actions/upload-artifact@v4
+          sha256sum cedar-embeddable-editor/visual/public/cedar-embeddable-editor.js
+          sha256sum cedar-embeddable-term-picker/dist-bundle/cedar-embeddable-term-picker.js
+      - uses: actions/upload-artifact@v7
         with:
-          name: cef-integration-traces
-          path: cedar-embeddable-designer/browser/test-results
-          if-no-files-found: ignore
+          name: ced-real-component-bundles
+          path: |
+            cedar-embeddable-editor/visual/public/cedar-embeddable-editor.js
+            cedar-embeddable-term-picker/dist-bundle/cedar-embeddable-term-picker.js
+          if-no-files-found: error
+          retention-days: 2
 
-  webkit-interactions:
-    name: WebKit focus and pointer interactions
-    needs: test
+  cef-integration:
+    name: Real component contracts (${{ matrix.browser }})
+    needs: [test, cef-bundles]
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 15
     env:
-      CED_WEBKIT: '1'
+      CEDAR_TEST_WORKERS: '2'
+      PICKER_BUNDLE: ${{ github.workspace }}/cedar-embeddable-term-picker/dist-bundle/cedar-embeddable-term-picker.js
+      CEF_BUNDLE: ${{ github.workspace }}/cedar-embeddable-editor/visual/public/cedar-embeddable-editor.js
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24.22.1
           cache: npm
-      # Reuse the production build whose freshness and Chromium checks passed above.
-      # A redundant Angular build previously hung after emitting its host-fonts output.
+          cache-dependency-path: |
+            package-lock.json
+            browser/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: actions/download-artifact@v8
+        with:
+          name: ced-browser-build
+          path: .
+      - uses: actions/download-artifact@v8
+        with:
+          name: ced-real-component-bundles
+          path: .
+      - name: Install test dependencies and the selected engine
+        run: |
+          npm ci
+          npm --prefix browser ci
+          ./browser/node_modules/.bin/playwright install --with-deps ${{ matrix.browser }}
+      # Keep every existing integration file, including its non-bundle assertions. Discover
+      # files from their bundle references so a new dependent spec cannot be silently omitted.
+      - name: Test the shared CED build with the real components
+        run: |
+          sha256sum "$CEF_BUNDLE" "$PICKER_BUNDLE" dist-bundle/cedar-embeddable-designer.js
+          specs=$(grep -l -E 'CEF_BUNDLE|PICKER_BUNDLE' browser/tests/*.spec.ts | xargs -n 1 basename | sed 's/\.spec\.ts$//')
+          npm run test:browser:prebuilt -- $specs --project=${{ matrix.browser }} --retries=0
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cef-integration-${{ matrix.browser }}-failures
+          path: browser/test-results
+          if-no-files-found: ignore
+
+  browser:
+    name: Browser contracts (${{ matrix.browser }}, ${{ matrix.shard }}/2)
+    env:
+      # Match the existing hosted allocation even when local CI sees more CPU cores.
+      CEDAR_TEST_WORKERS: '2'
+    needs: test
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.1
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      # All engines exercise the same verified production bytes; no redundant Angular builds.
       - uses: actions/download-artifact@v8
         with:
           name: ced-browser-build
@@ -277,10 +279,10 @@ jobs:
       - run: |
           npm ci
           npm --prefix browser ci
-          ./browser/node_modules/.bin/playwright install --with-deps webkit
-          npm run test:browser:prebuilt -- --project=webkit
+          ./browser/node_modules/.bin/playwright install --with-deps ${{ matrix.browser }}
+          npm run test:browser:prebuilt -- --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/2 --retries=0
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: webkit-interaction-traces
+          name: browser-${{ matrix.browser }}-${{ matrix.shard }}-failures
           path: browser/test-results

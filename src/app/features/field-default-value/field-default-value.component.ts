@@ -7,6 +7,7 @@ import {
   DestroyRef,
   ElementRef,
   computed,
+  afterRenderEffect,
   effect,
   inject,
   input,
@@ -153,7 +154,23 @@ export class FieldDefaultValueComponent {
 
   constructor() {
     const destroyRef = this.destroyRef;
-    effect(() => this.termDialog()?.nativeElement.focus());
+    afterRenderEffect((onCleanup) => {
+      const dialog = this.termDialog()?.nativeElement;
+      if (!dialog) return;
+      // The separately bootstrapped picker first renders its default mode, then applies its
+      // inputs. Let that initialization keep the existing centering. Anchor before the first
+      // interaction changes content, so opening details cannot move the next click's target.
+      const events = ['pointerdown', 'keydown', 'beforeinput', 'input'];
+      const remove = () => events.forEach((event) => dialog.removeEventListener(event, anchor, true));
+      const anchor = () => {
+        dialog.style.setProperty('--ced-default-dialog-opening-height', `${dialog.getBoundingClientRect().height}px`);
+        dialog.dataset['positionStable'] = '';
+        remove();
+      };
+      events.forEach((event) => dialog.addEventListener(event, anchor, true));
+      onCleanup(remove);
+      dialog.focus();
+    });
     effect(() => {
       if (this.locked()) {
         this.pending?.cancel();

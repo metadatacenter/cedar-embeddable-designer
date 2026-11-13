@@ -1,7 +1,7 @@
 // Read-only checks overlap unit tests within the worker budget. Angular unit
 // tests and dist share a cache, so dist waits; browsers inspect only verified bytes.
-// The visual baselines run in their container beside the browser suite. One worker takes them
-// about two minutes, longer than the browser suite, so a budget that can spare two gives two.
+// Finish the short pixel gate first, then give the expanded three-engine browser suite the full
+// worker budget. Playwright fixes its worker count at startup and cannot reclaim an earlier split.
 import { spawn } from 'node:child_process';
 import { mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -30,14 +30,13 @@ const stages = [
     weight: budget,
     after: ['unit', 'lint', 'types', 'boundaries', 'packaging', 'conformance'],
   },
+  { name: 'visual', script: 'test:visual', weight: visualWeight, after: ['dist'] },
   {
     name: 'browser',
     script: 'test:browser:prebuilt',
-    weight: Math.max(1, budget - visualWeight),
-    after: ['dist'],
-    env: { CED_WEBKIT: '1' },
+    weight: budget,
+    after: ['dist', 'visual'],
   },
-  { name: 'visual', script: 'test:visual', weight: visualWeight, after: ['dist'] },
 ];
 const cache = process.env.CEDAR_STAGE_CACHE_MODULE
   ? (await import(process.env.CEDAR_STAGE_CACHE_MODULE)).stageCache()

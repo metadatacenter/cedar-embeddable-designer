@@ -71,7 +71,9 @@ function fieldOf(type: string): Field {
 async function designerWithCef(page: Page, type: string): Promise<void> {
   await openDesigner(page);
   await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
-  await page.waitForFunction(() => !!customElements.get('cedar-embeddable-field'));
+  await expect
+    .poll(() => page.evaluate(() => !!customElements.get('cedar-embeddable-field')), { timeout: 30_000 })
+    .toBeTruthy();
 
   const template = templateToJson(
     buildTemplate({

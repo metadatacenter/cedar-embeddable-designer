@@ -10,9 +10,17 @@ declare global {
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/field-host.html');
-  await page.waitForFunction(
-    () => typeof (document.getElementById('field') as CedarEmbeddableFieldDesignerElement)?.newArtifact === 'function',
-  );
+  await expect
+    .poll(
+      () =>
+        page.evaluate(
+          () =>
+            typeof (document.getElementById('field') as CedarEmbeddableFieldDesignerElement)?.newArtifact ===
+            'function',
+        ),
+      { timeout: 30_000 },
+    )
+    .toBeTruthy();
 });
 
 test('opens the shared field picker in a dialog, supports cancel and keeps invalid saves blocked', async ({ page }) => {

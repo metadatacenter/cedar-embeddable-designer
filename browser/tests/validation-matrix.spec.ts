@@ -256,7 +256,11 @@ for (const kind of ['template', 'element'] as const)
 
 test('read-only standalone report includes untouched names without revealing editable errors', async ({ page }) => {
   await page.goto('/field-host.html');
-  await page.waitForFunction(() => typeof (document.getElementById('field') as any)?.newArtifact === 'function');
+  await expect
+    .poll(() => page.evaluate(() => typeof (document.getElementById('field') as any)?.newArtifact === 'function'), {
+      timeout: 30_000,
+    })
+    .toBeTruthy();
   const field = page.locator('#field');
   await field.evaluate((el: any) => {
     el.newArtifact('text');

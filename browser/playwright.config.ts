@@ -21,6 +21,14 @@ const missingBundles = [
   ...(process.env.PICKER_BUNDLE ? [] : [NEEDS_PICKER]),
 ];
 
+// Pure pixel baselines use Chromium in the pinned Linux image. All other specs enter every engine.
+const ignoredSpecs = [
+  ...(process.env.CEF_BUNDLE
+    ? []
+    : ['**/cef-defaults.spec.ts', '**/cef-parity.spec.ts', '**/style-comparison.spec.ts']),
+  ...(process.env.CED_VISUAL ? [] : ['**/visual.spec.ts']),
+];
+
 export default defineConfig({
   testDir: './tests',
   /**
@@ -32,35 +40,27 @@ export default defineConfig({
    * developer running the behaviour suite never meets a pixel failure they have no
    * way to act on.
    */
-  testIgnore: [
-    ...(process.env.CEF_BUNDLE
-      ? []
-      : ['**/cef-defaults.spec.ts', '**/cef-parity.spec.ts', '**/style-comparison.spec.ts']),
-    ...(process.env.CED_VISUAL ? [] : ['**/visual.spec.ts']),
-  ],
+  testIgnore: ignoredSpecs,
   grepInvert: missingBundles.length ? new RegExp(missingBundles.join('|')) : undefined,
   fullyParallel: true,
   workers: process.env.CEDAR_TEST_WORKERS ? Number(process.env.CEDAR_TEST_WORKERS) : undefined,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
-  // Stop after a test exhausts its retry; a known-red train must not run the remaining suite.
+  retries: 0,
+  // A retry must not hide an unreliable case.
   maxFailures: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'line' : 'list',
   use: {
     baseURL: `http://localhost:${port}`,
-    trace: 'on-first-retry',
+    trace: process.env.CEDAR_TEST_TRACE === 'on' ? 'retain-on-failure' : 'off',
+    screenshot: process.env.CI ? 'only-on-failure' : 'off',
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    ...(process.env.CED_WEBKIT
-      ? [
-          {
-            name: 'webkit',
-            use: { ...devices['Desktop Safari'] },
-            testMatch: /(?:header-toggle|overview-resize|card-navigation|text-default|field-designer)\.spec\.ts/,
-          },
-        ]
-      : []),
+    ...(['firefox', 'webkit'] as const).map((browserName) => ({
+      name: browserName,
+      testIgnore: [...ignoredSpecs, '**/visual.spec.ts'],
+      use: { browserName, viewport: { width: 1280, height: 720 } },
+    })),
   ],
   webServer: {
     command: 'node serve.mjs',

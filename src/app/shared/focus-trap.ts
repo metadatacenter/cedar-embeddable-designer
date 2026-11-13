@@ -42,8 +42,9 @@ const FOCUSABLE = [
 
 /** Whether the element can actually be reached, as against merely matching. */
 function reachable(element: HTMLElement): boolean {
-  if (element.hasAttribute('inert') || element.closest('[inert]')) return false;
-  if (element.getAttribute('aria-hidden') === 'true') return false;
+  if (element.matches(':disabled')) return false;
+  if (element.hasAttribute('tabindex') && element.tabIndex < 0) return false;
+  if (getComputedStyle(element).visibility !== 'visible') return false;
   // A box with no geometry is not on the page, whether it is `display: none`, inside a
   // closed `details`, or clipped to nothing.
   return element.getClientRects().length > 0;
@@ -62,6 +63,8 @@ export function focusablesWithin(root: Element): HTMLElement[] {
 
   const walk = (node: Element): void => {
     for (const child of Array.from(node.children)) {
+      // Prune before crossing a shadow boundary: closest() inside it cannot see an inert host.
+      if (child.hasAttribute('inert') || child.getAttribute('aria-hidden') === 'true') continue;
       if (child instanceof HTMLElement && child.matches(FOCUSABLE) && reachable(child)) {
         found.push(child);
       }
@@ -72,7 +75,19 @@ export function focusablesWithin(root: Element): HTMLElement[] {
   };
 
   walk(root);
-  return found;
+  // A native radio group contributes one Tab stop. Arrow keys still choose within the group.
+  const radios = found.filter(
+    (element): element is HTMLInputElement =>
+      element instanceof HTMLInputElement && element.type === 'radio' && !!element.name,
+  );
+  return found.filter((element) => {
+    if (!radios.includes(element as HTMLInputElement)) return true;
+    const radio = element as HTMLInputElement;
+    const group = radios.filter(
+      (other) => other.name === radio.name && other.form === radio.form && other.getRootNode() === radio.getRootNode(),
+    );
+    return radio === (group.find((other) => other.checked) ?? group[0]);
+  });
 }
 
 /**
@@ -87,42 +102,40 @@ export function deepestActiveElement(): Element | null {
   return element;
 }
 
+/** Whether a focused scroll container contains a control across nested shadow roots. */
+function containsAcrossRoots(root: Element, element: Element): boolean {
+  let node: Node | null = element;
+  while (node && node !== root) node = node.parentNode ?? (node instanceof ShadowRoot ? node.host : null);
+  return node === root;
+}
+
 /**
- * Handle a Tab so that it cannot leave `root`.
- *
- * Three cases, and the third is the one that was actually broken. Tab from the last
- * control wraps to the first, Shift+Tab from the first wraps to the last, and a Tab
- * pressed while focus is somewhere else entirely brings it in — which is what a
- * keyboard author meets on the first press after the overlay opens, if anything has
- * gone wrong with moving focus in.
- *
- * Returns whether it acted, so a caller can leave every other key alone.
+ * Move Tab explicitly, including through nested shadow roots. Wrapping only at the first and last
+ * buttons lets Safari's default Tab setting skip those buttons and escape onto the covered page.
+ * An inner widget that has already handled the key keeps its own navigation.
  */
 export function trapTab(root: Element, event: KeyboardEvent): boolean {
-  if (event.key !== 'Tab') return false;
+  if (event.key !== 'Tab' || event.defaultPrevented || event.ctrlKey || event.metaKey || event.isComposing)
+    return false;
 
   const stops = focusablesWithin(root);
-  if (stops.length === 0) return false;
+  event.preventDefault();
+  if (stops.length === 0) {
+    // An empty/loading modal still keeps focus until Escape closes it.
+    if (root instanceof HTMLElement) root.focus();
+    return true;
+  }
 
-  const first = stops[0];
-  const last = stops[stops.length - 1];
   const active = deepestActiveElement();
   const index = active instanceof HTMLElement ? stops.indexOf(active) : -1;
-
-  if (index === -1) {
-    event.preventDefault();
-    (event.shiftKey ? last : first).focus();
-    return true;
+  let next: number;
+  if (index >= 0) next = index + (event.shiftKey ? -1 : 1);
+  else {
+    // Firefox can focus a scroll container without tabindex. Continue into its controls, or
+    // back to the control before them, instead of restarting at the top of the modal.
+    const child = active && active !== root ? stops.findIndex((stop) => containsAcrossRoots(active, stop)) : -1;
+    next = child >= 0 ? child - Number(event.shiftKey) : event.shiftKey ? stops.length - 1 : 0;
   }
-  if (!event.shiftKey && active === last) {
-    event.preventDefault();
-    first.focus();
-    return true;
-  }
-  if (event.shiftKey && active === first) {
-    event.preventDefault();
-    last.focus();
-    return true;
-  }
-  return false;
+  stops[(next + stops.length) % stops.length].focus();
+  return true;
 }

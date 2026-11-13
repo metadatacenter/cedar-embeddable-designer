@@ -461,7 +461,9 @@ test('confirms deletion of an element subtree, but deletes empty elements immedi
   await addElementFixture(page, directContent(parent));
   const bin = directHeader(parent).getByRole('button', { name: 'Delete element Element', exact: true });
   const before = await currentTemplate(page);
-  await bin.click();
+  // A keyboard opener must regain focus when its dialog closes on every engine.
+  await bin.focus();
+  await bin.press('Enter');
   const dialog = page.getByRole('dialog', { name: 'Delete element?' });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();

@@ -18,7 +18,9 @@ export const DESIGNER = 'cedar-embeddable-designer';
 /** Load a host page and wait until the element has registered and been configured. */
 export async function openDesigner(page: Page, query = ''): Promise<Locator> {
   await page.goto(`/host.html${query}`);
-  await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true);
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { __ready?: boolean }).__ready === true), { timeout: 30_000 })
+    .toBeTruthy();
   const designer = page.locator(DESIGNER);
   // The first field card is the earliest sign the designer inside has rendered.
   await expect(designer.locator('[id^=field-card-]').first()).toBeVisible();
@@ -40,7 +42,14 @@ export async function focusedControl(page: Page): Promise<string> {
   const mark = await page.evaluate(() => {
     let element = document.activeElement;
     while (element?.shadowRoot?.activeElement) element = element.shadowRoot.activeElement;
-    if (!element || element === document.body) return null;
+    if (!element || element === document.body || element.hasAttribute('data-test-tab-boundary')) return null;
+    if (
+      element instanceof HTMLElement &&
+      element.tabIndex < 0 &&
+      /auto|scroll/.test(getComputedStyle(element).overflowY) &&
+      element.scrollHeight > element.clientHeight
+    )
+      return 'scroll-area';
     const holder = window as unknown as { __focusMark?: number; __focusMarked?: Element };
     holder.__focusMark = (holder.__focusMark ?? 0) + 1;
     holder.__focusMarked = element;
@@ -48,6 +57,7 @@ export async function focusedControl(page: Page): Promise<string> {
     return holder.__focusMark;
   });
   if (mark === null) return '(page)';
+  if (mark === 'scroll-area') return '(scroll area)';
   // The focused control can leave the page before it is read: a menu item that opens a dialog is
   // removed on the next render. A snapshot would wait for it for ever, so a short one stands in, and
   // a control that went reads `(gone)` for a poll to ask about again.
@@ -70,7 +80,7 @@ export async function focusedControl(page: Page): Promise<string> {
 export async function tabSequence(page: Page, count: number, key = 'Tab'): Promise<string[]> {
   const stops: string[] = [];
   for (let i = 0; i < count; i++) {
-    await page.keyboard.press(key);
+    await page.keyboard.press(tabKey(page, key));
     stops.push(await focusedControl(page));
   }
   return stops;
@@ -134,11 +144,17 @@ export async function waitForPublished(
   page: Page,
   predicate: (template: Record<string, unknown>) => boolean,
 ): Promise<void> {
-  await page.waitForFunction((source) => {
-    const test = new Function(`return (${source})`)() as (t: Record<string, unknown>) => boolean;
-    const events = (window as unknown as { __events: Array<Record<string, unknown>> }).__events;
-    return events.some(test);
-  }, predicate.toString());
+  await expect
+    .poll(
+      () =>
+        page.evaluate((source) => {
+          const test = new Function(`return (${source})`)() as (t: Record<string, unknown>) => boolean;
+          const events = (window as unknown as { __events: Array<Record<string, unknown>> }).__events;
+          return events.some(test);
+        }, predicate.toString()),
+      { timeout: 30_000 },
+    )
+    .toBeTruthy();
 }
 
 /** The template's name box, which Angular fills as a property rather than an attribute. */
@@ -198,7 +214,8 @@ export async function openSettings(card: Locator, tab = 'Constraints'): Promise<
   // Public artifact inputs update the model before Angular paints the replacement card.
   // Click only after that render, otherwise the click targets the outgoing field.
   await card.evaluate(
-    () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))),
+    async () =>
+      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))),
   );
   const settings = card.locator('app-field-settings');
   const toggle = settings.locator('.settings-toggle');
@@ -292,4 +309,11 @@ export async function addElementFixture(
   await expect(page.getByRole('dialog')).toHaveCount(0);
   // The imported card takes focus on the next render; waiting keeps that from landing after the test's next step.
   await expect.poll(() => focusedControl(page)).toBe('group "Element"');
+}
+
+/** Safari on macOS uses Option-Tab to include every control with its default keyboard settings. */
+export function tabKey(page: Page, key = 'Tab'): string {
+  return process.platform === 'darwin' && page.context().browser()?.browserType().name() === 'webkit'
+    ? `Alt+${key}`
+    : key;
 }

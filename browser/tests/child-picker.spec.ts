@@ -10,6 +10,7 @@ import {
   nestFixtureFields,
   openDesigner,
   tabSequence,
+  tabKey,
 } from './support';
 import type { CedarEmbeddableDesignerElement, CedJsonObject } from '../../src/app/ced-public-api';
 
@@ -282,7 +283,7 @@ test('Escape dismisses the actions between two cards until the pointer or focus 
   await expect(designer.getByRole('group', { name: 'Category' })).toBeFocused();
   await expect(actions).toHaveCSS('pointer-events', 'none');
   // Focus moving back shows them again.
-  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press(tabKey(page, 'Shift+Tab'));
   await expect(add).toBeFocused();
   await expect(zone).toHaveCSS('opacity', '1');
 });
@@ -294,7 +295,12 @@ test('an Escape the palette uses leaves the actions between two cards shown', as
   await zone.scrollIntoViewIfNeeded();
   const gap = (await zone.boundingBox())!;
   await page.mouse.move(gap.x + 24, gap.y + gap.height / 2);
-  await zone.getByRole('button', { name: 'Add field here', exact: true }).click();
+  const add = zone.getByRole('button', { name: 'Add field here', exact: true });
+  await add.focus();
+  // Establish keyboard focus; Safari deliberately blurs buttons on pointer clicks.
+  await page.keyboard.press(tabKey(page, 'Shift+Tab'));
+  await page.keyboard.press(tabKey(page));
+  await add.press('Enter');
   await expect(palette).toBeVisible();
   // Once the pointer leaves, the actions show again because the button that opened the palette
   // keeps focus.
@@ -330,6 +336,9 @@ test('an action used from the keyboard keeps the actions between two cards shown
   const add = zone.getByRole('button', { name: 'Add field here', exact: true });
   const palette = designer.locator('app-field-type-picker');
   await add.focus();
+  await page.keyboard.press(tabKey(page, 'Shift+Tab'));
+  await page.keyboard.press(tabKey(page));
+  await expect(add).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(palette).toBeVisible();
   // The action that opened the palette keeps focus, so it stays in sight.
@@ -593,11 +602,12 @@ for (const kind of ['template', 'element'] as const) {
   });
 }
 
-test('bottom insertion actions remain visible on touch devices', async ({ browser, baseURL }) => {
+test('bottom insertion actions remain visible on touch devices', async ({ browser, browserName, baseURL }) => {
   const context = await browser.newContext({
     baseURL,
     hasTouch: true,
-    isMobile: true,
+    // Firefox supports touch input but not Playwright's mobile viewport emulation.
+    isMobile: browserName !== 'firefox',
     viewport: { width: 375, height: 800 },
   });
   try {
@@ -649,59 +659,74 @@ async function openPickerWithThreeResults(page: Page): Promise<Locator> {
 
 test('Move up and Move down reorder the chosen rows by single clicks, keep focus and say where a row went', async ({
   page,
+  browserName,
 }) => {
-  const dialog = await openPickerWithThreeResults(page);
-  for (const name of ['Alpha', 'Beta', 'Gamma'])
-    await dialog.getByRole('row', { name: `Select ${name}`, exact: true }).click();
-  const selected = dialog.getByRole('table', { name: 'Selected items' });
-  const names = selected.locator('tbody .name-cell');
-  await expect(names).toHaveText(['Alpha', 'Beta', 'Gamma']);
-  const button = (name: string) => selected.getByRole('button', { name, exact: true });
-  const status = dialog.locator('p[role="status"]');
+  for (const activation of ['pointer', 'keyboard'] as const) {
+    const activate = async (control: Locator) => {
+      if (activation === 'pointer') await control.click();
+      else {
+        await control.focus();
+        await control.press('Enter');
+      }
+    };
+    // Pointer clicks do not focus Safari buttons; keyboard activation must retain focus everywhere.
+    const expectFocus = (control: Locator) =>
+      activation === 'pointer' && process.platform === 'darwin' && browserName === 'webkit'
+        ? expect(control).not.toBeFocused()
+        : expect(control).toBeFocused();
+    const dialog = await openPickerWithThreeResults(page);
+    for (const name of ['Alpha', 'Beta', 'Gamma'])
+      await dialog.getByRole('row', { name: `Select ${name}`, exact: true }).click();
+    const selected = dialog.getByRole('table', { name: 'Selected items' });
+    const names = selected.locator('tbody .name-cell');
+    await expect(names).toHaveText(['Alpha', 'Beta', 'Gamma']);
+    const button = (name: string) => selected.getByRole('button', { name, exact: true });
+    const status = dialog.locator('p[role="status"]');
 
-  // Each chosen row has both beside its handle, named after the row, at least the minimum target size.
-  for (const name of ['Alpha', 'Beta', 'Gamma']) {
-    const labels = await selected
-      .getByRole('row')
-      .filter({ hasText: name })
-      .locator('td:last-child button')
-      .evaluateAll((buttons) => buttons.map((item) => item.getAttribute('aria-label')));
-    expect(labels).toEqual([`Move ${name} up`, `Move ${name} down`, `Reorder ${name}`]);
-    for (const direction of ['up', 'down']) {
-      const box = (await button(`Move ${name} ${direction}`).boundingBox())!;
-      expect(box.width).toBeGreaterThanOrEqual(24);
-      expect(box.height).toBeGreaterThanOrEqual(24);
+    // Each chosen row has both beside its handle, named after the row, at least the minimum target size.
+    for (const name of ['Alpha', 'Beta', 'Gamma']) {
+      const labels = await selected
+        .getByRole('row')
+        .filter({ hasText: name })
+        .locator('td:last-child button')
+        .evaluateAll((buttons) => buttons.map((item) => item.getAttribute('aria-label')));
+      expect(labels).toEqual([`Move ${name} up`, `Move ${name} down`, `Reorder ${name}`]);
+      for (const direction of ['up', 'down']) {
+        const box = (await button(`Move ${name} ${direction}`).boundingBox())!;
+        expect(box.width).toBeGreaterThanOrEqual(24);
+        expect(box.height).toBeGreaterThanOrEqual(24);
+      }
     }
+    await expect(button('Move Alpha up')).toHaveAttribute('aria-disabled', 'true');
+    await expect(button('Move Gamma down')).toHaveAttribute('aria-disabled', 'true');
+    await expect(button('Move Beta up')).not.toHaveAttribute('aria-disabled');
+
+    await activate(button('Move Gamma up'));
+    await expect(names).toHaveText(['Alpha', 'Gamma', 'Beta']);
+    await expectFocus(button('Move Gamma up'));
+    // The designer's own region is inert behind the modal dialog, so the picker says it inside the dialog.
+    await expect(status).toHaveText('Gamma moved to position 2 of 3.');
+    await expect(status.locator('.sr-only')).toHaveCSS('position', 'absolute');
+    await activate(button('Move Gamma up'));
+    await expect(names).toHaveText(['Gamma', 'Alpha', 'Beta']);
+    await expect(button('Move Gamma up')).toHaveAttribute('aria-disabled', 'true');
+    await expectFocus(button('Move Gamma up'));
+    await expect(status).toHaveText('Gamma moved to position 1 of 3.');
+    // At an end a click changes nothing.
+    await button('Move Gamma up').click({ force: true });
+    await button('Move Beta down').click({ force: true });
+    await page.waitForTimeout(200);
+    await expect(names).toHaveText(['Gamma', 'Alpha', 'Beta']);
+    await expect(status).toHaveText('Gamma moved to position 1 of 3.');
+    await activate(button('Move Alpha down'));
+    await expect(names).toHaveText(['Gamma', 'Beta', 'Alpha']);
+    await expectFocus(button('Move Alpha down'));
+
+    // Done imports the rows in their new order.
+    await dialog.getByRole('button', { name: 'Done', exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    expect(fieldOrder(await currentTemplate(page)).slice(-3)).toEqual(['Gamma', 'Beta', 'Alpha']);
   }
-  await expect(button('Move Alpha up')).toHaveAttribute('aria-disabled', 'true');
-  await expect(button('Move Gamma down')).toHaveAttribute('aria-disabled', 'true');
-  await expect(button('Move Beta up')).not.toHaveAttribute('aria-disabled');
-
-  await button('Move Gamma up').click();
-  await expect(names).toHaveText(['Alpha', 'Gamma', 'Beta']);
-  await expect(button('Move Gamma up')).toBeFocused();
-  // The designer's own region is inert behind the modal dialog, so the picker says it inside the dialog.
-  await expect(status).toHaveText('Gamma moved to position 2 of 3.');
-  await expect(status.locator('.sr-only')).toHaveCSS('position', 'absolute');
-  await button('Move Gamma up').click();
-  await expect(names).toHaveText(['Gamma', 'Alpha', 'Beta']);
-  await expect(button('Move Gamma up')).toHaveAttribute('aria-disabled', 'true');
-  await expect(button('Move Gamma up')).toBeFocused();
-  await expect(status).toHaveText('Gamma moved to position 1 of 3.');
-  // At an end a click changes nothing.
-  await button('Move Gamma up').click({ force: true });
-  await button('Move Beta down').click({ force: true });
-  await page.waitForTimeout(200);
-  await expect(names).toHaveText(['Gamma', 'Alpha', 'Beta']);
-  await expect(status).toHaveText('Gamma moved to position 1 of 3.');
-  await button('Move Alpha down').click();
-  await expect(names).toHaveText(['Gamma', 'Beta', 'Alpha']);
-  await expect(button('Move Alpha down')).toBeFocused();
-
-  // Done imports the rows in their new order.
-  await dialog.getByRole('button', { name: 'Done', exact: true }).click();
-  await expect(dialog).toHaveCount(0);
-  expect(fieldOrder(await currentTemplate(page)).slice(-3)).toEqual(['Gamma', 'Beta', 'Alpha']);
 });
 
 test('the search results are a grid and one Tab stop, which the arrow keys, Home and End move within', async ({
@@ -718,7 +743,7 @@ test('the search results are a grid and one Tab stop, which the arrow keys, Home
   // Tab reaches the grid once, at its first row, and leaves it for the next control.
   await dialog.getByRole('button', { name: 'Search', exact: true }).focus();
   expect(await tabSequence(page, 2)).toEqual(['row "Select Alpha"', 'button "Cancel"']);
-  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press(tabKey(page, 'Shift+Tab'));
   expect(await focusedControl(page)).toBe('row "Select Alpha"');
 
   // The arrow keys, Home and End move focus between rows and stop at the ends, choosing nothing.
@@ -750,10 +775,10 @@ test('the search results are a grid and one Tab stop, which the arrow keys, Home
   expect(await focusedControl(page)).toBe('row "Select Gamma"');
 
   // The Tab stop stays on the row focus last rested on.
-  await page.keyboard.press('Tab');
+  await page.keyboard.press(tabKey(page));
   expect(await focusedControl(page)).toBe('button "Cancel"');
   await expect(rows.nth(2)).toHaveAttribute('tabindex', '0');
-  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press(tabKey(page, 'Shift+Tab'));
   expect(await focusedControl(page)).toBe('row "Select Gamma"');
 });
 

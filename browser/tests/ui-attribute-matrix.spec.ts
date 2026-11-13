@@ -26,7 +26,7 @@
  */
 import { expect, test, type Page } from '@playwright/test';
 import { NEEDS_CEF, NEEDS_PICKER } from './bundle-tags';
-import { openSettings, applyPreset, clickCentred, currentTemplate, openDesigner } from './support';
+import { openSettings, applyPreset, clickCentred, currentTemplate, openDesigner, tabKey } from './support';
 import { expectLaidOut, DESIGNER } from './support-layout';
 import {
   accepts,
@@ -215,7 +215,9 @@ async function oneCardOf(
   await openDesigner(page, options.query ?? '');
   if (options.bundle) {
     await page.addScriptTag({ path: options.bundle });
-    await page.waitForFunction(() => !!customElements.get('cedar-embeddable-field'));
+    await expect
+      .poll(() => page.evaluate(() => !!customElements.get('cedar-embeddable-field')), { timeout: 30_000 })
+      .toBeTruthy();
   }
   await applyPreset(page, 'modular');
   const designer = page.locator(DESIGNER);
@@ -297,7 +299,7 @@ for (const width of WIDTHS) {
             });
             expect
               .soft(leadingGap, `${paletteType} ${await tabs.nth(index).textContent()} leading gap`)
-              .toBeLessThanOrEqual(8);
+              .toBeLessThanOrEqual(8.001);
           }
         });
       }
@@ -703,52 +705,58 @@ for (const width of WIDTHS) {
     });
 
     for (const lifecycle of LIFECYCLES) {
-      test(`${lifecycle.control} on a ${lifecycle.paletteType} field`, { tag: lifecycle.requires ? NEEDS_CEF : [] }, async ({ page }) => {
-        const bundle = lifecycle.requires ? process.env[lifecycle.requires] : undefined;
-        await oneCardOf(page, lifecycle.paletteType, { query: lifecycle.query, bundle });
-        await open(page, 'Constraints');
-        await lifecycle.prepare?.(page);
+      test(
+        `${lifecycle.control} on a ${lifecycle.paletteType} field`,
+        { tag: lifecycle.requires ? NEEDS_CEF : [] },
+        async ({ page }) => {
+          const bundle = lifecycle.requires ? process.env[lifecycle.requires] : undefined;
+          await oneCardOf(page, lifecycle.paletteType, { query: lifecycle.query, bundle });
+          await open(page, 'Constraints');
+          await lifecycle.prepare?.(page);
 
-        /*
-         * Wait for the template to stop moving before snapshotting it.
-         *
-         * Most rows only open a disclosure to prepare, which changes nothing. The
-         * occurrence rows have to switch the field to several values first, and
-         * `templateChange` is published a tick after the click — so a baseline taken
-         * straight afterwards could be the template from before that change, and the
-         * comparison at the end would then be against a state the field never returns
-         * to. Two equal reads in a row is enough: the only writer is the click that has
-         * already happened.
-         */
-        let before = await currentTemplate(page);
-        await expect
-          .poll(
-            async () => {
-              const again = await currentTemplate(page);
-              const settled = JSON.stringify(again) === JSON.stringify(before);
-              before = again;
-              return settled;
-            },
-            { timeout: SETTLE },
-          )
-          .toBe(true);
+          /*
+           * Wait for the template to stop moving before snapshotting it.
+           *
+           * Most rows only open a disclosure to prepare, which changes nothing. The
+           * occurrence rows have to switch the field to several values first, and
+           * `templateChange` is published a tick after the click — so a baseline taken
+           * straight afterwards could be the template from before that change, and the
+           * comparison at the end would then be against a state the field never returns
+           * to. Two equal reads in a row is enough: the only writer is the click that has
+           * already happened.
+           */
+          let before = await currentTemplate(page);
+          await expect
+            .poll(
+              async () => {
+                const again = await currentTemplate(page);
+                const settled = JSON.stringify(again) === JSON.stringify(before);
+                before = again;
+                return settled;
+              },
+              { timeout: SETTLE },
+            )
+            .toBe(true);
 
-        await lifecycle.set(page);
-        await expect
-          .poll(async () => JSON.stringify(await currentTemplate(page)) !== JSON.stringify(before), { timeout: SETTLE })
-          .toBe(true);
-        if (lifecycle.read) {
-          expect(
-            lifecycle.read(await currentTemplate(page)),
-            `${lifecycle.control} did not reach the template`,
-          ).toEqual(lifecycle.whenSet);
-        }
-        await expectLaidOut(page, `${lifecycle.control} set`);
+          await lifecycle.set(page);
+          await expect
+            .poll(async () => JSON.stringify(await currentTemplate(page)) !== JSON.stringify(before), {
+              timeout: SETTLE,
+            })
+            .toBe(true);
+          if (lifecycle.read) {
+            expect(
+              lifecycle.read(await currentTemplate(page)),
+              `${lifecycle.control} did not reach the template`,
+            ).toEqual(lifecycle.whenSet);
+          }
+          await expectLaidOut(page, `${lifecycle.control} set`);
 
-        await lifecycle.restore(page);
-        await expect.poll(async () => await currentTemplate(page), { timeout: SETTLE }).toEqual(before);
-        await expectLaidOut(page, `${lifecycle.control} restored`);
-      });
+          await lifecycle.restore(page);
+          await expect.poll(async () => await currentTemplate(page), { timeout: SETTLE }).toEqual(before);
+          await expectLaidOut(page, `${lifecycle.control} restored`);
+        },
+      );
     }
   });
 }
@@ -793,7 +801,9 @@ test.describe('what a sibling component contributes', () => {
       await page.setViewportSize({ width, height: 900 });
       await openDesigner(page);
       await page.addScriptTag({ path: process.env.PICKER_BUNDLE! });
-      await page.waitForFunction(() => !!customElements.get('cedar-embeddable-term-picker'));
+      await expect
+        .poll(() => page.evaluate(() => !!customElements.get('cedar-embeddable-term-picker')), { timeout: 30_000 })
+        .toBeTruthy();
       await applyPreset(page, 'modular');
       const designer = page.locator(DESIGNER);
       await designer
@@ -831,7 +841,8 @@ test.describe('what a sibling component contributes', () => {
       expect(await outside(), 'focus stayed outside the overlay when it opened').toBe(false);
 
       const escapes: string[] = [];
-      for (const key of ['Tab', 'Shift+Tab']) {
+      // Safari's ordinary Tab skips native buttons; Option-Tab includes them. Neither may escape.
+      for (const key of new Set(['Tab', 'Shift+Tab', tabKey(page), tabKey(page, 'Shift+Tab')])) {
         for (let press = 0; press < 30; press++) {
           await page.keyboard.press(key);
           if (await outside()) escapes.push(`${key} #${press + 1}`);

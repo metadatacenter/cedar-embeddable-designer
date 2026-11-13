@@ -391,7 +391,8 @@
 .designer-identity__name,
 .designer-identity__version {
   min-width: 0;
-  line-height: var(--cedar-line-height-tight);
+  // Keep both labels inside the mark while giving Firefox a full glyph-height line box.
+  line-height: spacing.$designer-identity-line-height;
 }
 .designer-identity__name {
   align-self: end;

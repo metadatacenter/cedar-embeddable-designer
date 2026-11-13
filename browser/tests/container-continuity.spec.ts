@@ -118,7 +118,11 @@ test('empty containers also offer pills with the library sidebar selected', asyn
 
 test('standalone field save adoption preserves the selected settings tab', async ({ page }) => {
   await page.goto('/field-host.html');
-  await page.waitForFunction(() => typeof (document.getElementById('field') as any)?.newArtifact === 'function');
+  await expect
+    .poll(() => page.evaluate(() => typeof (document.getElementById('field') as any)?.newArtifact === 'function'), {
+      timeout: 30_000,
+    })
+    .toBeTruthy();
   const designer = page.locator('#field');
   await designer.evaluate((el: any) => el.newArtifact('text'));
   await designer.getByRole('textbox', { name: 'Enter field name', exact: true }).fill('Value');

@@ -251,7 +251,9 @@ scenarios['nested-field'] = async (page) => {
 scenarios['cef-default'] = async (page) => {
   const d = await openDesigner(page);
   await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
-  await page.waitForFunction(() => !!customElements.get('cedar-embeddable-field'));
+  await expect
+    .poll(() => page.evaluate(() => !!customElements.get('cedar-embeddable-field')), { timeout: 30_000 })
+    .toBeTruthy();
   const artifact = templateToJson(
     buildTemplate({
       name: 'Defaults',

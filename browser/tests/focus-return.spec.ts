@@ -8,6 +8,7 @@ import {
   nestFixtureFields,
   openDesigner,
   openSettings,
+  tabKey,
 } from './support';
 
 /**
@@ -91,6 +92,9 @@ test.describe('deleting', () => {
     const remove = designer.getByRole('button', { name: 'Delete element Element', exact: true });
     await remove.focus();
     await page.keyboard.press('Enter');
+    await expect(
+      designer.getByRole('dialog', { name: 'Delete element?' }).getByRole('button', { name: 'Cancel', exact: true }),
+    ).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(remove).toBeFocused();
   });
@@ -139,7 +143,7 @@ test.describe('adding', () => {
       await add.focus();
       await page.keyboard.press('Enter');
       await expect(designer.locator('app-field-type-picker')).toBeVisible();
-      await page.keyboard.press('Tab');
+      await page.keyboard.press(tabKey(page, 'Tab'));
       await close(page);
       await expect(designer.locator('app-field-type-picker')).toHaveCount(0);
       await expect(add).toBeFocused();
@@ -286,7 +290,7 @@ test.describe('the user menu and its dialogs', () => {
     await menu.focus();
     await page.keyboard.press('Enter');
     await expect(designer.getByRole('button', { name: 'Preferences' })).toBeVisible();
-    await page.keyboard.press('Tab');
+    await page.keyboard.press(tabKey(page, 'Tab'));
     await page.keyboard.press('Escape');
     await expect(designer.getByRole('button', { name: 'Preferences' })).toHaveCount(0);
     await expect(menu).toBeFocused();
@@ -372,7 +376,8 @@ test.describe('Move up and Move down', () => {
     await expect(up).toHaveAttribute('aria-disabled', 'true');
     await expect(up).toBeFocused();
     const down = designer.getByRole('button', { name: 'Move Title down', exact: true });
-    await down.click();
+    await down.focus();
+    await page.keyboard.press('Enter');
     await expect(designer.locator('app-container-outline .node-name')).toHaveText([
       'Publication Date',
       'Category',
@@ -407,7 +412,7 @@ test.describe('the library sidebar', () => {
     await designer.getByRole('radio', { name: /Library Sidebar/ }).check();
     await designer.getByRole('button', { name: 'Done', exact: true }).click();
     await designer.getByRole('button', { name: 'Collapse sidebar' }).focus();
-    await page.keyboard.press('Tab');
+    await page.keyboard.press(tabKey(page, 'Tab'));
     await expect(designer.getByRole('option', { name: 'Title', exact: true })).toBeFocused();
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('ArrowDown');
