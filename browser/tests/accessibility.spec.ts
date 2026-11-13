@@ -408,7 +408,9 @@ async function expectTabsAccessible(page: Page, scope: Locator, state: string): 
 
 test('a fresh template at the default and Basic presets', async ({ page }) => {
   await page.goto('/host.html');
-  await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true);
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { __ready?: boolean }).__ready === true), { timeout: 30_000 })
+    .toBeTruthy();
   await expect(page.locator(DESIGNER).locator('[id^=field-card-]').first()).toBeVisible();
   await expectAccessible(page, 'default preset');
   await applyPreset(page, 'basic');
@@ -645,8 +647,8 @@ test('the library sidebar, expanded and collapsed', async ({ page }) => {
 
 /**
  * A Controlled Terms field on a fresh template, under the semantic preset, with the stub picker. The
- * dialogs and the settings they change are checked in three tests, each from here, because one
- * test of all of them outlasted the timeout on the build train's slower runner.
+ * dialogs and the settings they change each get an independent scan. Keeping six or seven scans
+ * in one test outlasted its timeout under parallel load; independent states share the worker pool.
  */
 async function controlledTermsCard(page: Page) {
   const designer = await openDesigner(page, '?picker=stub');
@@ -674,27 +676,33 @@ async function addConstraint(
   await designer.locator('#stub-pick').click();
 }
 
-test('a controlled-terms field without constraints', async ({ page }) => {
-  const { card } = await controlledTermsCard(page);
-  await expectTabsAccessible(page, card, 'controlled terms without constraints');
-});
-
-test('the constraint dialog, and the settings a constraint changes', async ({ page }) => {
-  const field = await controlledTermsCard(page);
-  await addConstraint(page, field, true);
-  await expectTabsAccessible(page, field.card, 'controlled terms with a constraint');
-});
-
-test('the default-term dialog, and the settings a default changes', async ({ page }) => {
-  const field = await controlledTermsCard(page);
+async function addDefault(page: Page, field: Awaited<ReturnType<typeof controlledTermsCard>>, scan: boolean) {
   await addConstraint(page, field, false);
   const { designer, card } = field;
   await clickCentred(card.getByRole('tab', { name: 'Constraints', exact: true }));
   await clickCentred(card.getByRole('button', { name: 'Edit default term' }));
   await expect(designer.getByRole('dialog', { name: 'Choose default term' })).toBeVisible();
-  await expectAccessible(page, 'default-term dialog');
+  if (scan) await expectAccessible(page, 'default-term dialog');
   await designer.locator('#stub-pick').click();
-  await expectTabsAccessible(page, card, 'controlled terms with a default');
+}
+
+// Preserve all twenty scans: six tabs in each of three states, plus both dialogs. The tab helper
+// also asserts the complete tab inventory, so a new tab cannot silently escape this matrix.
+for (const state of ['without constraints', 'with a constraint', 'with a default'])
+  for (const tab of SAMPLE_FIELD_TABS)
+    test(`the ${tab} tab of a controlled-terms field ${state}`, async ({ page }) => {
+      const field = await controlledTermsCard(page);
+      if (state === 'with a constraint') await addConstraint(page, field, false);
+      if (state === 'with a default') await addDefault(page, field, false);
+      await expectSampleTabAccessible(page, field.card, tab, `controlled terms ${state}`);
+    });
+
+test('the controlled-term constraint dialog', async ({ page }) => {
+  await addConstraint(page, await controlledTermsCard(page), true);
+});
+
+test('the controlled-term default dialog', async ({ page }) => {
+  await addDefault(page, await controlledTermsCard(page), true);
 });
 
 /** Answer the open picker as the term picker would, with `constraints`. */
@@ -801,10 +809,17 @@ test('a menu item, hovered and focused', async ({ page }) => {
 for (const type of Object.keys(FIELD_TYPES))
   test(`the standalone ${type} designer and each of its settings tabs`, async ({ page }) => {
     await page.goto('/field-host.html');
-    await page.waitForFunction(
-      () =>
-        typeof (document.getElementById('field') as unknown as { newArtifact?: unknown })?.newArtifact === 'function',
-    );
+    await expect
+      .poll(
+        () =>
+          page.evaluate(
+            () =>
+              typeof (document.getElementById('field') as unknown as { newArtifact?: unknown })?.newArtifact ===
+              'function',
+          ),
+        { timeout: 30_000 },
+      )
+      .toBeTruthy();
     await page.evaluate(
       (type) => (document.getElementById('field') as unknown as { newArtifact(type: string): void }).newArtifact(type),
       type,

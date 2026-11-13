@@ -33,10 +33,17 @@ for (const type of Object.keys(FIELD_TYPES))
   for (const mode of ['host', 'published'] as const) {
     test(`standalone ${type} supports inspection only (${mode})`, async ({ page }) => {
       await page.goto('/field-host.html');
-      await page.waitForFunction(
-        () =>
-          typeof (document.getElementById('field') as CedarEmbeddableFieldDesignerElement)?.newArtifact === 'function',
-      );
+      await expect
+        .poll(
+          () =>
+            page.evaluate(
+              () =>
+                typeof (document.getElementById('field') as CedarEmbeddableFieldDesignerElement)?.newArtifact ===
+                'function',
+            ),
+          { timeout: 30_000 },
+        )
+        .toBeTruthy();
       await page.evaluate((type) => (document.getElementById('field') as any).newArtifact(type), type);
       const field = page.locator('#field');
       await field.getByRole('textbox', { name: 'Enter field name', exact: true }).fill(`Read-only ${type}`);
@@ -168,7 +175,11 @@ test('entering read-only replaces an editable preview and keeps navigation quiet
 
 test('host document replacement works while read-only without granting editing access', async ({ page }) => {
   await page.goto('/field-host.html');
-  await page.waitForFunction(() => typeof (document.getElementById('field') as any)?.newArtifact === 'function');
+  await expect
+    .poll(() => page.evaluate(() => typeof (document.getElementById('field') as any)?.newArtifact === 'function'), {
+      timeout: 30_000,
+    })
+    .toBeTruthy();
   const field = page.locator('#field');
   await field.evaluate((el: any) => {
     el.readOnly = true;

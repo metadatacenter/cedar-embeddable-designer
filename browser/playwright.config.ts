@@ -21,6 +21,22 @@ const missingBundles = [
   ...(process.env.PICKER_BUNDLE ? [] : [NEEDS_PICKER]),
 ];
 
+// Functional browser contracts share the existing worker budget; pixel baselines keep their own projects.
+const functionalSpecs = [
+  'editing.spec.ts',
+  'embedding.spec.ts',
+  'multiple-stability.spec.ts',
+  'state-reconciliation.spec.ts',
+  'instance-isolation.spec.ts',
+  'read-only.spec.ts',
+  'settings-validation.spec.ts',
+  'numeric-validation.spec.ts',
+  'overview-reorder.spec.ts',
+  'cef-parity.spec.ts',
+  'import-preservation.spec.ts',
+  'version-upgrade-journeys.spec.ts',
+];
+
 export default defineConfig({
   testDir: './tests',
   /**
@@ -51,6 +67,11 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   projects: [
+    ...(['firefox', 'webkit'] as const).map((browserName) => ({
+      name: `${browserName}-functional`,
+      testMatch: functionalSpecs,
+      use: { browserName },
+    })),
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     ...(['firefox', 'webkit'] as const).map((browserName) => ({
       name: `${browserName}-accessibility`,

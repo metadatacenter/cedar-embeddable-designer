@@ -18,7 +18,9 @@ export const DESIGNER = 'cedar-embeddable-designer';
 /** Load a host page and wait until the element has registered and been configured. */
 export async function openDesigner(page: Page, query = ''): Promise<Locator> {
   await page.goto(`/host.html${query}`);
-  await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true);
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { __ready?: boolean }).__ready === true), { timeout: 30_000 })
+    .toBeTruthy();
   const designer = page.locator(DESIGNER);
   // The first field card is the earliest sign the designer inside has rendered.
   await expect(designer.locator('[id^=field-card-]').first()).toBeVisible();
@@ -142,11 +144,17 @@ export async function waitForPublished(
   page: Page,
   predicate: (template: Record<string, unknown>) => boolean,
 ): Promise<void> {
-  await page.waitForFunction((source) => {
-    const test = new Function(`return (${source})`)() as (t: Record<string, unknown>) => boolean;
-    const events = (window as unknown as { __events: Array<Record<string, unknown>> }).__events;
-    return events.some(test);
-  }, predicate.toString());
+  await expect
+    .poll(
+      () =>
+        page.evaluate((source) => {
+          const test = new Function(`return (${source})`)() as (t: Record<string, unknown>) => boolean;
+          const events = (window as unknown as { __events: Array<Record<string, unknown>> }).__events;
+          return events.some(test);
+        }, predicate.toString()),
+      { timeout: 30_000 },
+    )
+    .toBeTruthy();
 }
 
 /** The template's name box, which Angular fills as a property rather than an attribute. */
@@ -206,7 +214,8 @@ export async function openSettings(card: Locator, tab = 'Constraints'): Promise<
   // Public artifact inputs update the model before Angular paints the replacement card.
   // Click only after that render, otherwise the click targets the outgoing field.
   await card.evaluate(
-    () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))),
+    async () =>
+      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))),
   );
   const settings = card.locator('app-field-settings');
   const toggle = settings.locator('.settings-toggle');

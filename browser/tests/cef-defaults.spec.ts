@@ -11,7 +11,9 @@ async function openField(page: Page, type: string, extra: Partial<Field> = {}, q
   await openDesigner(page, query);
   if (loadBundle) {
     await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
-    await page.waitForFunction(() => !!customElements.get('cedar-embeddable-field'));
+    await expect
+      .poll(() => page.evaluate(() => !!customElements.get('cedar-embeddable-field')), { timeout: 30_000 })
+      .toBeTruthy();
   }
   const template = templateToJson(
     buildTemplate({
@@ -580,7 +582,9 @@ test('loads CEF after opening a document without losing its saved default', asyn
 test('previews an element document through CEE while publishing element artifacts', async ({ page }) => {
   await openDesigner(page);
   await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
-  await page.waitForFunction(() => !!customElements.get('cedar-embeddable-editor'));
+  await expect
+    .poll(() => page.evaluate(() => !!customElements.get('cedar-embeddable-editor')), { timeout: 30_000 })
+    .toBeTruthy();
   const element = newContainer('element', 'Study element');
   element.children.push(
     fieldNode({
@@ -608,7 +612,9 @@ test('previews an element document through CEE while publishing element artifact
 test('the CEE preview follows the selected field onto the page that holds it', async ({ page }) => {
   const designer = await openDesigner(page);
   await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
-  await page.waitForFunction(() => !!customElements.get('cedar-embeddable-editor'));
+  await expect
+    .poll(() => page.evaluate(() => !!customElements.get('cedar-embeddable-editor')), { timeout: 30_000 })
+    .toBeTruthy();
   const template = newContainer('template', 'Paged study');
   for (const [name, type] of [
     ['First question', 'text'],

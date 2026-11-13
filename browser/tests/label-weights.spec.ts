@@ -60,10 +60,17 @@ async function checkLabels(scope: Locator) {
 for (const type of Object.keys(FIELD_TYPES)) {
   test(`${type} settings use muted medium labels and regular values in every tab`, async ({ page }) => {
     await page.goto('/field-host.html');
-    await page.waitForFunction(
-      () =>
-        typeof (document.getElementById('field') as CedarEmbeddableFieldDesignerElement)?.newArtifact === 'function',
-    );
+    await expect
+      .poll(
+        () =>
+          page.evaluate(
+            () =>
+              typeof (document.getElementById('field') as CedarEmbeddableFieldDesignerElement)?.newArtifact ===
+              'function',
+          ),
+        { timeout: 30_000 },
+      )
+      .toBeTruthy();
     await page.evaluate(
       (type) => (document.getElementById('field') as CedarEmbeddableFieldDesignerElement).newArtifact(type as never),
       type,
