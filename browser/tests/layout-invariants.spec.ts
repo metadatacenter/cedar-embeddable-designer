@@ -82,6 +82,9 @@ async function paletteLabels(page: Page): Promise<string[]> {
  * out and a measurement taken straight afterwards reads a card that is still moving.
  */
 async function everyTypeOnPage(page: Page): Promise<string[]> {
+  // Placing every type through the palette takes Firefox 24 to 28 seconds on a workstation and
+  // longer on a CI runner, against a default limit of 30.
+  test.slow();
   await openDesigner(page);
   await applyPreset(page, 'modular');
   const designer = page.locator(DESIGNER);

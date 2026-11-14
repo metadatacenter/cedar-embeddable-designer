@@ -223,6 +223,9 @@ for (const width of [1440, 768, 375]) {
     await openSettings(card, 'Constraints');
     const fields = card.locator('.constraint-fields');
     const inputs = fields.locator('input');
+    // The boxes below are read directly, with no waiting, so the inputs must be laid out first.
+    await expect(inputs).toHaveCount(3);
+    await expect(inputs.last()).toBeVisible();
     const boxes = await inputs.evaluateAll((nodes) =>
       nodes.map((node) => {
         const r = node.getBoundingClientRect();

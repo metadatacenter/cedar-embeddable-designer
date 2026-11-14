@@ -221,13 +221,20 @@ export async function openSettings(card: Locator, tab = 'Constraints'): Promise<
   const toggle = settings.locator('.settings-toggle');
   await expect(toggle).toBeVisible();
   if ((await toggle.getAttribute('aria-expanded')) === 'false') await clickCentred(toggle);
+  // The tabs are drawn on the pass after the toggle is pressed. Counted sooner, a Content tab is
+  // not there yet, and the wait below is then for a Constraints tab the field does not have.
+  await expect(settings.getByRole('tab').first()).toBeVisible();
   if (
     tab === 'Constraints' &&
     (await settings.getByRole('tab', { name: 'Content', exact: true, includeHidden: true }).count())
   )
     tab = 'Content';
   await clickCentred(settings.getByRole('tab', { name: tab, exact: true }));
-  return settings.getByRole('tabpanel', { name: tab, exact: true });
+  const panel = settings.getByRole('tabpanel', { name: tab, exact: true });
+  // The panel is drawn on the pass after the tab is pressed. A caller that measures its controls
+  // at once would otherwise read boxes that are not laid out.
+  await expect(panel).toBeVisible();
+  return panel;
 }
 
 /** Build a nested test fixture through the public artifact input. */

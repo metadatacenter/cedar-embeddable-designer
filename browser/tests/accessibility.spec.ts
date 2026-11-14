@@ -332,6 +332,13 @@ async function expectAccessible(page: Page, state: string): Promise<void> {
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     const roots: DocumentOrShadowRoot[] = [document];
     for (const element of document.querySelectorAll('*')) if (element.shadowRoot) roots.push(element.shadowRoot);
+    // An earlier click leaves the pointer over the canvas. When the layout later moves an insertion
+    // zone beneath it, WebKit starts the zone's fade only some frames afterwards, once every wait
+    // here has passed, and the scan read a zone at 91% opacity as a contrast failure. The scan
+    // judges the fade's two end states, so the zones reach them without it.
+    for (const root of roots)
+      for (const zone of (root as ParentNode).querySelectorAll<HTMLElement>('.insert-zone'))
+        zone.style.transition = 'none';
     await Promise.all(
       roots
         .flatMap((root) => root.getAnimations())
