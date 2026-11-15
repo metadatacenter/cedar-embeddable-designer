@@ -42,6 +42,8 @@ describe('the editor the preview builds', () => {
 
     expect(editor.config.readOnlyMode).toBe(true);
     expect(editor.getAttribute('density')).toBe('compact');
+    expect(editor.config.wrapFieldNames).toBe(true);
+    expect(editor.config).not.toHaveProperty('previewMode');
   });
 
   it('can create an editable preview without changing the read-only default', () => {

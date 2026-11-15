@@ -36,6 +36,7 @@ export interface CeeTemplateObject {
  */
 export interface CeePreviewConfig {
   readonly readOnlyMode: boolean;
+  readonly wrapFieldNames: true;
   readonly suppressEmptyFieldErrors: true;
   readonly showTemplateDescription: true;
   readonly showExpandCollapseAll: false;
@@ -47,6 +48,7 @@ export interface CeePreviewConfig {
 
 export const CEE_PREVIEW_CONFIG: CeePreviewConfig = {
   readOnlyMode: true,
+  wrapFieldNames: true,
   suppressEmptyFieldErrors: true,
   showTemplateDescription: true,
   showExpandCollapseAll: false,
