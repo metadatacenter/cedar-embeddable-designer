@@ -5,6 +5,7 @@ import {
   child,
   clickCentred,
   currentTemplate,
+  expectOutlineNames,
   fieldName,
   fieldOrder,
   openSettings,
@@ -36,7 +37,9 @@ test('an edit reaches the overview sidebar', async ({ page }) => {
 
   // The sidebar is a sibling view of the same signal. Under OnPush it is the
   // first thing to stop updating when a component is not marked dirty.
-  await expect(designer.getByText('Study title', { exact: true }).first()).toBeVisible();
+  const name = designer.locator('app-container-outline .node-name').first();
+  await expectOutlineNames(name, 'Study title');
+  await expect(name).toBeVisible();
 });
 
 test('field type icons have no conversion menu', async ({ page }) => {
