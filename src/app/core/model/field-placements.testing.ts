@@ -22,11 +22,16 @@ import {
 import { ChildNode, ContainerDraft, ElementPlacement, fieldNode, fieldView } from './container-draft';
 
 export type Form = 'json' | 'yaml';
+type JsonNode = ReturnType<typeof templateToJson>;
 export interface FieldPlacement {
   readonly name: string;
   /** The container directly holding the field, or none for a standalone field. */
   readonly parent: ContainerDraft['kind'] | null;
+  /** The kind of artifact the designer saves for this placement: the outermost container, or the field. */
+  readonly saved: ContainerDraft['kind'] | 'field';
   readonly forms: readonly Form[];
+  /** Write the field at this placement as the JSON the designer saves. */
+  readonly write: (field: Field) => JsonNode;
   /** Write the field at this placement, read it back, and return the field as the designer holds it. */
   readonly roundTrip: (field: Field, form: Form) => Field;
 }
@@ -51,35 +56,47 @@ function onlyField(container: ContainerDraft): Field {
 }
 
 /** A container of the given kind holding the field inside the given elements, outermost first. */
-function within(kind: ContainerDraft['kind'], ...elements: ((child: ChildNode) => ChildNode)[]) {
-  return (field: Field, form: Form): Field => {
+function within(
+  kind: ContainerDraft['kind'],
+  ...elements: ((child: ChildNode) => ChildNode)[]
+): Pick<FieldPlacement, 'saved' | 'write' | 'roundTrip'> {
+  const build = (field: Field) => {
     const root = newContainer(kind, 'Study');
     root.children.push(elements.reduceRight<ChildNode>((child, wrap) => wrap(child), fieldNode(field)));
-    const model = buildContainer(root);
-    return onlyField(readContainer(form === 'json' ? templateToJson(model) : templateToYaml(model)));
+    return buildContainer(root);
+  };
+  return {
+    saved: kind,
+    write: (field) => templateToJson(build(field)),
+    roundTrip: (field, form) => {
+      const model = build(field);
+      return onlyField(readContainer(form === 'json' ? templateToJson(model) : templateToYaml(model)));
+    },
   };
 }
 
 export const PLACEMENTS: readonly FieldPlacement[] = [
-  { name: 'the template root', parent: 'template', forms: ['json', 'yaml'], roundTrip: within('template') },
-  { name: 'an element', parent: 'element', forms: ['json', 'yaml'], roundTrip: within('template', element('Sample')) },
+  { name: 'the template root', parent: 'template', forms: ['json', 'yaml'], ...within('template') },
+  { name: 'an element', parent: 'element', forms: ['json', 'yaml'], ...within('template', element('Sample')) },
   {
     name: 'a nested element',
     parent: 'element',
     forms: ['json', 'yaml'],
-    roundTrip: within('template', element('Sample'), element('Aliquot')),
+    ...within('template', element('Sample'), element('Aliquot')),
   },
   {
     name: 'a repeating element',
     parent: 'element',
     forms: ['json', 'yaml'],
-    roundTrip: within('template', element('Sample', { allowMultiple: true, minItems: 1, maxItems: 3 })),
+    ...within('template', element('Sample', { allowMultiple: true, minItems: 1, maxItems: 3 })),
   },
-  { name: 'a standalone element', parent: 'element', forms: ['json', 'yaml'], roundTrip: within('element') },
+  { name: 'a standalone element', parent: 'element', forms: ['json', 'yaml'], ...within('element') },
   {
     name: 'a standalone field',
     parent: null,
+    saved: 'field',
     forms: ['json'],
+    write: (field) => fieldToJson(field),
     roundTrip: (field) => readField(JSON.stringify(fieldToJson(field))),
   },
 ];
