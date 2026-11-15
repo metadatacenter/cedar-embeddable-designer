@@ -83,6 +83,35 @@ describe('CedarEmbeddableDesignerElementComponent', () => {
     expect(element.currentArtifact).toEqual(saved);
   });
 
+  /**
+   * The event a host's unsaved-changes guard listens to.
+   *
+   * Reading `isDirty` is not the same check: the event comes from an effect, and an effect scheduled
+   * with this component's view ran once and never again, so a host would have heard "clean" and
+   * nothing after it. Each transition is driven the way a host drives it, and each must be heard.
+   */
+  it('announces each change of unsaved state across an edit, a saved adoption and a second edit', async () => {
+    const fixture = create();
+    const element = fixture.componentInstance;
+    const heard: boolean[] = [];
+    element.dirtyChange.subscribe((dirty) => heard.push(dirty));
+    expect(element.isDirty).toBe(false);
+
+    service.templateName.set('Edited');
+    await fixture.whenStable();
+    expect(heard.at(-1)).toBe(true);
+
+    element.loadArtifact(element.currentArtifact, { preserveView: true });
+    await fixture.whenStable();
+    expect(heard.at(-1)).toBe(false);
+
+    service.templateName.set('Edited again');
+    await fixture.whenStable();
+    expect(heard.at(-1)).toBe(true);
+    // Repeated values are harmless; a missing transition is what a host cannot recover from.
+    expect(heard.filter((dirty, index) => index === 0 || dirty !== heard[index - 1])).toEqual([true, false, true]);
+  });
+
   describe('config', () => {
     it('is off until a host names a terminology server', () => {
       create();
