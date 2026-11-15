@@ -161,17 +161,26 @@ test('adding a field scrolls to it without reaching for the document', async ({ 
 test('dragging a field leaves nothing behind in the host document', async ({ page }) => {
   const designer = await openDesigner(page);
   const cards = designer.locator('[id^=field-card-]');
-  const source = cards.nth(1);
-  const target = cards.nth(0);
+  const before = fieldOrder(await currentTemplate(page));
+  // A card drags by its handle only; pressing anywhere else starts no drag at all.
+  const from = (await cards.nth(1).locator('.field-drag-handle').boundingBox())!;
+  const to = (await cards.nth(0).boundingBox())!;
+  const bodyPreviews = () => page.evaluate(() => document.body.querySelectorAll('.cdk-drag-preview').length);
 
-  await source.hover();
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
   await page.mouse.down();
-  await target.hover();
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2 - 10, { steps: 3 });
+  await page.mouse.move(from.x + from.width / 2, to.y + 2, { steps: 12 });
+  // The CDK appends a drag preview to the body by default, where the designer's styles cannot
+  // reach it. While the pointer is down, the preview is inside the designer and the body holds none.
+  await expect(designer.locator('.cdk-drag-preview')).toBeVisible();
+  expect(await bodyPreviews()).toBe(0);
   await page.mouse.up();
 
-  // The CDK appends a drag preview to the body by default, where the designer's
-  // styles cannot reach it.
-  expect(await page.evaluate(() => document.body.querySelectorAll('.cdk-drag-preview').length)).toBe(0);
+  await expect
+    .poll(async () => fieldOrder(await currentTemplate(page)))
+    .toEqual([before[1], before[0], ...before.slice(2)]);
+  expect(await bodyPreviews()).toBe(0);
 });
 
 test('the element publishes each edit once', async ({ page }) => {
