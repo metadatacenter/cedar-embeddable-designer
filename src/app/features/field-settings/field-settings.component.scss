@@ -242,14 +242,31 @@ textarea {
 .configuration-wide {
   grid-column: span 2;
 }
-// Allow multiple stands over the bounds it enables, leaving the key their row's first column.
+// Keep the key beside, and before, the complete occurrence group at every width.
+.configuration-identity-occurrences {
+  align-items: end;
+}
+.configuration-key {
+  min-width: 0;
+}
+.configuration-occurrences {
+  grid-column: span 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--cedar-space-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
 .settings-fields .configuration-multiple {
-  grid-column: 2 / -1;
   align-self: start;
   min-height: 0;
 }
 .configuration-bounds {
-  display: contents;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 110px), 1fr));
+  gap: var(--cedar-space-2);
 }
 .configuration-flags {
   display: flex;
@@ -262,7 +279,7 @@ textarea {
     grid-template-columns: minmax(0, 1fr);
   }
   .configuration-wide,
-  .settings-fields .configuration-multiple {
+  .configuration-occurrences {
     grid-column: 1 / -1;
   }
 }

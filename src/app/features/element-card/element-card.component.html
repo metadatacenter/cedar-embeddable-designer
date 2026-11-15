@@ -56,66 +56,68 @@
                     (blur)="service.touchDescription(node().id)"
                 /></label>
               </div>
-              <div class="settings-fields configuration-fields">
-                <label class="check configuration-multiple"
-                  ><input
-                    spellcheck="false"
-                    type="checkbox"
-                    name="allowMultiple"
-                    [(ngModel)]="draft().allowMultiple"
-                    (ngModelChange)="applyPlacement()"
-                  />
-                  {{ 'settings.allowMultiple' | translate }}</label
-                >
-              </div>
-              <div class="settings-fields configuration-fields">
-                <label data-setting="key"
-                  >{{ 'settings.key' | translate }}
-                  <input
-                    spellcheck="false"
-                    autocomplete="off"
-                    name="deploymentName"
-                    [ngModel]="keyDraft() ?? service.childKey(node().id)"
-                    (ngModelChange)="saveKey($event)"
-                    [attr.aria-invalid]="!!keyError()"
-                    [attr.aria-describedby]="keyError() ? 'element-key-error-' + node().id : null"
-                /></label>
-                <div class="configuration-bounds">
-                  <label
-                    >{{ 'fieldSettings.occurrences.min' | translate }}
+              <div class="settings-fields configuration-fields configuration-identity-occurrences">
+                <div class="configuration-key">
+                  <label data-setting="key"
+                    >{{ 'settings.key' | translate }}
                     <input
                       spellcheck="false"
                       autocomplete="off"
-                      type="number"
-                      min="0"
-                      step="1"
-                      [placeholder]="'settings.minOccurrencesPlaceholder' | translate"
-                      [disabled]="!draft().allowMultiple"
-                      [(ngModel)]="draft().minItems"
-                      name="minItems"
-                      data-setting="minItems"
-                      (ngModelChange)="applyPlacement('minItems')"
+                      name="deploymentName"
+                      [ngModel]="keyDraft() ?? service.childKey(node().id)"
+                      (ngModelChange)="saveKey($event)"
+                      [attr.aria-invalid]="!!keyError()"
+                      [attr.aria-describedby]="keyError() ? 'element-key-error-' + node().id : null"
                   /></label>
-                  <label
-                    >{{ 'fieldSettings.occurrences.max' | translate }}
-                    <input
+                  @if (keyError()) {
+                    <p role="alert" class="ced-field-error" [id]="'element-key-error-' + node().id">{{ keyError() }}</p>
+                  }
+                </div>
+                <div class="configuration-occurrences">
+                  <label class="check configuration-multiple"
+                    ><input
                       spellcheck="false"
-                      autocomplete="off"
-                      type="number"
-                      min="0"
-                      step="1"
-                      [placeholder]="'settings.unlimited' | translate"
-                      [disabled]="!draft().allowMultiple"
-                      [(ngModel)]="draft().maxItems"
-                      name="maxItems"
-                      data-setting="maxItems"
-                      (ngModelChange)="applyPlacement('maxItems')"
-                  /></label>
+                      type="checkbox"
+                      name="allowMultiple"
+                      [(ngModel)]="draft().allowMultiple"
+                      (ngModelChange)="applyPlacement()"
+                    />
+                    {{ 'settings.allowMultiple' | translate }}</label
+                  >
+                  <div class="configuration-bounds">
+                    <label
+                      >{{ 'fieldSettings.occurrences.min' | translate }}
+                      <input
+                        spellcheck="false"
+                        autocomplete="off"
+                        type="number"
+                        min="0"
+                        step="1"
+                        [placeholder]="'settings.minOccurrencesPlaceholder' | translate"
+                        [disabled]="!draft().allowMultiple"
+                        [(ngModel)]="draft().minItems"
+                        name="minItems"
+                        data-setting="minItems"
+                        (ngModelChange)="applyPlacement('minItems')"
+                    /></label>
+                    <label
+                      >{{ 'fieldSettings.occurrences.max' | translate }}
+                      <input
+                        spellcheck="false"
+                        autocomplete="off"
+                        type="number"
+                        min="0"
+                        step="1"
+                        [placeholder]="'settings.unlimited' | translate"
+                        [disabled]="!draft().allowMultiple"
+                        [(ngModel)]="draft().maxItems"
+                        name="maxItems"
+                        data-setting="maxItems"
+                        (ngModelChange)="applyPlacement('maxItems')"
+                    /></label>
+                  </div>
                 </div>
               </div>
-              @if (keyError()) {
-                <p role="alert" class="ced-field-error" [id]="'element-key-error-' + node().id">{{ keyError() }}</p>
-              }
               <div class="configuration-property" data-setting="propertyIri">
                 <span class="default-label">{{ 'settings.propertyIri' | translate }}</span>
                 <app-property-picker

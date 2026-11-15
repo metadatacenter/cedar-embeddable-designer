@@ -20,7 +20,7 @@ import { CountKeyPipe } from '../../i18n/count-key.pipe';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService } from '../../core/services/template.service';
 import { fieldView, findContainer } from '../../core/model/container-draft';
-import { elementDisplayDescription } from '../../core/model/field-display-name';
+import { elementDisplayDescription, elementDisplayName, fieldDisplayName } from '../../core/model/field-display-name';
 import { publishedContainer } from '../../core/model/child-locks';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { FieldCardComponent } from '../field-card/field-card.component';
@@ -104,6 +104,8 @@ export class ContainerEditorComponent {
    */
   readonly dismissedInsertion = signal<number | null>(null);
   readonly fieldView = fieldView;
+  readonly fieldDisplayName = fieldDisplayName;
+  readonly elementDisplayName = elementDisplayName;
 
   /**
    * Escape hides the insertion actions shown above a child, as WCAG 1.4.13 requires of content that

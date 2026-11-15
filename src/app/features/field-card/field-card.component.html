@@ -45,11 +45,16 @@
           @if (field.status === 'required' && allowsStatus(field.type)) {
             <sup class="required-mark" role="img" [attr.aria-label]="'common.required' | translate">*</sup>
           }
-          @if (occurrenceRange; as range) {
-            <span class="occurrence-range" role="group" [attr.aria-label]="'fieldCard.occurrenceRange' | translate">{{
-              range
-            }}</span>
-          }
+        </div>
+        <div class="field-header-details">
+          <div class="field-summary">
+            <div class="field-type-label">{{ getFieldTypeName(field) | translate }}</div>
+            @if (occurrenceRange; as range) {
+              <span class="occurrence-range" role="group" [attr.aria-label]="'fieldCard.occurrenceRange' | translate">{{
+                range
+              }}</span>
+            }
+          </div>
           @if (service.visibleIssuesFor(field.id).length; as count) {
             <button
               type="button"
@@ -60,24 +65,18 @@
               <span>{{ 'common.errorCount' | countKey: count | translate: { count: count } }}</span>
             </button>
           }
-        </div>
-        <div class="field-summary">
-          <!-- Label Badge details -->
-          <div class="field-type-label">
-            {{ getFieldTypeName(field) | translate }}
+          <div class="field-actions">
+            @if (!standalone) {
+              <button
+                (click)="deleteField()"
+                class="field-icon-action shrink-0"
+                [title]="'fieldCard.delete' | translate"
+                [attr.aria-label]="'fieldCard.delete' | translate"
+              >
+                <app-icon key="trash" size="small"></app-icon>
+              </button>
+            }
           </div>
-        </div>
-        <div class="field-actions">
-          @if (!standalone) {
-            <button
-              (click)="deleteField()"
-              class="field-icon-action shrink-0"
-              [title]="'fieldCard.delete' | translate"
-              [attr.aria-label]="'fieldCard.delete' | translate"
-            >
-              <app-icon key="trash" size="small"></app-icon>
-            </button>
-          }
         </div>
       </div>
     </fieldset>

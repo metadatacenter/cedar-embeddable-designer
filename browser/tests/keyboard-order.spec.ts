@@ -230,8 +230,8 @@ const SETTINGS: Record<string, string[]> = {
     'combobox "Requirement"',
     'checkbox "Hidden"',
     'checkbox "Continue previous line"',
-    'checkbox "Allow multiple"',
     'textbox "Key"',
+    'checkbox "Allow multiple"',
     'button "Enter IRI manually"',
   ],
   Presentation: [

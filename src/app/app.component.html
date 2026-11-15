@@ -114,7 +114,7 @@
   <div
     class="main-content"
     [style.--preferred-overview-width]="overviewWidth() + 'px'"
-    [class.has-overview]="service.session.document().children.length > 0 && showFieldsOverview()"
+    [class.has-overview]="showFieldsOverview()"
     [class.has-library]="service.preferences().fieldSelectionStyle === 'sidebar' && !service.access.readOnly()"
     [class.library-collapsed]="service.sidebarCollapsed()"
   >
@@ -127,7 +127,7 @@
     <div class="designer-scroll" [ngClass]="getDesignerClasses()">
       <div class="designer-grid" [style.--designer-columns]="getGridTemplateColumns()">
         <!-- Fields Overview Panel -->
-        @if (service.session.document().children.length > 0 && overviewShown()) {
+        @if (overviewShown()) {
           <div class="overview-panel" id="ced-overview" [class.overview-panel--overlay]="narrow()">
             <div
               class="overview-panel__resize"

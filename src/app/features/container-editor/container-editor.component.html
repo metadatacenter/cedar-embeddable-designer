@@ -6,7 +6,7 @@
   @if (placementNode() && service.visibleIssuesFor(container().id).length; as count) {
     <span class="validation-badge">{{ 'common.errorBadge' | countKey: count | translate: { count: count } }}</span>
   }
-  <span class="container-type-label">{{
+  <span class="container-type-label" appHeaderToggle (headerToggle)="toggleSettings()">{{
     (container().kind === 'element' ? 'containerEditor.elementLabel' : 'containerEditor.templateLabel') | translate
   }}</span>
   <div class="template-header-card__body" appHeaderToggle (headerToggle)="toggleSettings()">
@@ -234,7 +234,7 @@
           (focus)="activate(); service.selectedField.set(node.id)"
           tabindex="0"
           role="group"
-          [attr.aria-label]="node.kind === 'field' ? fieldView(node).name : node.definition.name"
+          [attr.aria-label]="node.kind === 'field' ? fieldDisplayName(fieldView(node)) : elementDisplayName(node)"
           aria-keyshortcuts="ArrowUp ArrowDown"
           class="field-drag-container"
           [class.selected]="service.selectedField() === node.id"

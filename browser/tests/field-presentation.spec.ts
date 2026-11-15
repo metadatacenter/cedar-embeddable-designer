@@ -49,15 +49,16 @@ for (const width of [1440, 768, 375]) {
       return {
         center: Math.abs((arrow.left + arrow.right) / 2 - (rect.left + rect.right) / 2),
         typeBesideName: Math.abs((type.top + type.bottom) / 2 - (name.top + name.bottom) / 2) < 4,
-        typeCenter: Math.abs((type.left + type.right) / 2 - (arrow.left + arrow.right) / 2),
+        typeGap: type.left - name.right,
         dragUnderBin: Math.abs((drag.left + drag.right) / 2 - (bin.left + bin.right) / 2),
         dragBesideArrow: Math.abs((drag.top + drag.bottom) / 2 - (arrow.top + arrow.bottom) / 2),
         overflow: el.scrollWidth - el.clientWidth,
       };
     });
-    // A wide header centres the type over the chevron; a narrow one moves it to a second row with the delete button.
-    expect(measurements.typeBesideName).toBe(width === 1440);
-    if (width === 1440) expect(measurements.typeCenter).toBeLessThanOrEqual(1);
+    // This short identity fits at every tested width: keep its type beside its name and required mark.
+    expect(measurements.typeBesideName).toBe(true);
+    expect(measurements.typeGap).toBeGreaterThanOrEqual(0);
+    expect(measurements.typeGap).toBeLessThan(32);
     expect(measurements.dragUnderBin).toBeLessThanOrEqual(1);
     expect(measurements.dragBesideArrow).toBeLessThanOrEqual(1);
     expect(measurements.center).toBeLessThanOrEqual(1);

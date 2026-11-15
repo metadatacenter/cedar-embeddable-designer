@@ -86,6 +86,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
     @use '@org.metadatacenter/cedar-design-tokens/patterns';
     .property {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: var(--cedar-space-3);
       font-size: var(--cedar-font-size);
@@ -96,7 +97,7 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       overflow-wrap: anywhere;
     }
     .iri {
-      flex: 1;
+      flex: 1 1 24ch;
       min-width: 0;
       overflow-wrap: anywhere;
       padding: var(--cedar-space-1) var(--cedar-space-1);
@@ -106,6 +107,9 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
     }
     button {
       flex: 0 0 auto;
+      max-width: 100%;
+      text-align: start;
+      overflow-wrap: anywhere;
       padding: 0;
       border: 0;
       background: none;

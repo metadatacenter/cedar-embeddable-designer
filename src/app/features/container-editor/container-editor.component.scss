@@ -169,6 +169,19 @@
   line-height: var(--cedar-control-line-height-default);
 }
 
+// The centred overlay no longer fits beside Name and Version in a split narrow pane.
+// Give the type its own line, preserving every identity/version control below it.
+@container (max-width: 320px) {
+  .container-type-label {
+    position: static;
+    pointer-events: auto;
+    transform: none;
+    display: flex;
+    justify-content: center;
+    margin-top: var(--cedar-space-3);
+  }
+}
+
 /* The card's outline, border and selection bar keep the error colour over the selected and focused
    states. Like the badge, they follow a host's --cedar-control-error before the shared error role. */
 .field-drag-container.invalid {

@@ -304,9 +304,8 @@ export class AppComponent {
   }
 
   getGridTemplateColumns(): string {
-    const fieldsCount = this.service.session.document().children.length;
     const overview = this.showFieldsOverview();
-    if (fieldsCount > 0 && overview) {
+    if (overview) {
       return `${this.overviewWidth()}px minmax(0, 1fr)`;
     }
     return 'minmax(0, 1fr)';
