@@ -269,6 +269,39 @@ describe('TemplateService', () => {
     ]);
   });
 
+  it('leaves the document as it was when a batch fails partway through insertion', () => {
+    const field = fieldToJson(service.fields()[0]) as CedJsonObject;
+    const root = service.session.document();
+    const before = service.templateJson();
+    // Every source is read before anything changes, so a failure here comes from placing a child.
+    const internals = service as unknown as { insertNode(...args: unknown[]): void };
+    const insert = internals.insertNode.bind(service);
+    let insertions = 0;
+    const placing = vi.spyOn(internals, 'insertNode').mockImplementation((...args: unknown[]) => {
+      if (++insertions === 2) throw new Error('The second child could not be placed');
+      insert(...args);
+    });
+    try {
+      expect(() =>
+        service.importChildren(
+          [
+            { type: 'field', artifact: field },
+            { type: 'field', artifact: field },
+          ],
+          root.id,
+          0,
+        ),
+      ).toThrow('The second child could not be placed');
+    } finally {
+      placing.mockRestore();
+    }
+
+    expect(insertions).toBe(2);
+    expect(service.session.document()).toBe(root);
+    expect(service.templateJson()).toEqual(before);
+    expect(service.isDirty()).toBe(false);
+  });
+
   // An imported child's key is its name. A name the key policy refuses is reported at once, and the
   // child waits under a key the policy accepts until the author chooses one.
   it.each(['Prototype', 'Constructor', 'Schema:Name', 'Notes\u0007', '__proto__', '@type', '@Type', 'schema:name'])(
