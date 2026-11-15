@@ -1,6 +1,8 @@
 // The gate drives the actual editor session, coordinator and serialization adapter.
 import '@angular/compiler';
 import assert from 'node:assert/strict';
+import { resolveObjectURL } from 'node:buffer';
+import { Worker as Thread } from 'node:worker_threads';
 import {
   buildContainer,
   newContainer,
@@ -11,12 +13,53 @@ import {
   allowsOptions,
 } from '../src/app/core/model/cedar-template';
 import { FIELD_DESCRIPTORS } from '../src/app/core/model/cedar-model/capabilities';
-import { fieldNode, fieldView, ContainerDraft } from '../src/app/core/model/container-draft';
+import { allowedInContainer, fieldNode, fieldView, ContainerDraft } from '../src/app/core/model/container-draft';
+import { SHARED_CELLS, TYPE_CELLS, sharedField, typeField } from '../src/app/core/model/field-parameter-cases.testing';
 import type { Field } from '../src/app/core/models/types';
 import { EditorSession } from '../src/app/core/services/editor-session';
 import { ValidationCoordinator } from '../src/app/core/services/validation-coordinator';
 import { english } from '../src/app/i18n/messages';
 export { CedarReaders, TemplateValueValidator, JsonSourcePolicy } from 'cedar-model-typescript-library';
+
+/**
+ * The designer checks a pattern in a browser worker, and Node has none, so every pattern would stay
+ * unchecked and Save shut. This runs the same worker source, from the same object URL, on a thread.
+ */
+class ThreadWorker {
+  onmessage: ((event: { data: unknown }) => void) | null = null;
+  onerror: ((event: unknown) => void) | null = null;
+  private thread?: Thread;
+  private readonly waiting: unknown[] = [];
+  private terminated = false;
+  constructor(url: string) {
+    void resolveObjectURL(url)!
+      .text()
+      .then((source) => {
+        if (this.terminated) return;
+        const thread = new Thread(
+          `const { parentPort } = require('node:worker_threads');
+          globalThis.postMessage = (data) => parentPort.postMessage(data);
+          parentPort.on('message', (data) => globalThis.onmessage({ data }));
+          ${source}`,
+          { eval: true },
+        );
+        thread.unref();
+        thread.on('message', (data) => this.onmessage?.({ data }));
+        thread.on('error', (error) => this.onerror?.(error));
+        this.thread = thread;
+        for (const data of this.waiting.splice(0)) thread.postMessage(data);
+      });
+  }
+  postMessage(data: unknown): void {
+    if (this.thread) this.thread.postMessage(data);
+    else this.waiting.push(data);
+  }
+  terminate(): void {
+    this.terminated = true;
+    void this.thread?.terminate();
+  }
+}
+(globalThis as { Worker?: unknown }).Worker ??= ThreadWorker;
 
 type Case = { name: string; kind: 'template' | 'element' | 'field'; artifact: unknown; saveable: boolean };
 const field = (type: string): Field => ({
@@ -29,7 +72,8 @@ const field = (type: string): Field => ({
   defaultValue: { kind: 'none' },
   ...newFieldIdentity(),
 });
-function document(type: string, kind: 'template' | 'element', depth: number, multiple: boolean) {
+/** A container holding one field inside the given depth of nested elements. */
+function holding(definition: Field, kind: 'template' | 'element', depth: number, multiple = false) {
   const root = newContainer(kind, 'Study');
   let parent = root;
   for (let level = 0; level < depth; level++) {
@@ -37,10 +81,16 @@ function document(type: string, kind: 'template' | 'element', depth: number, mul
     parent.children = [{ id: child.id, kind: 'element', definition: child, placement: { allowMultiple: multiple } }];
     parent = child;
   }
-  parent.children = [
-    fieldNode({ ...field(type), allowMultiple: multiple && FIELD_DESCRIPTORS[type].deployment === 'plain' }),
-  ];
+  parent.children = [fieldNode(definition)];
   return root;
+}
+function document(type: string, kind: 'template' | 'element', depth: number, multiple: boolean) {
+  return holding(
+    { ...field(type), allowMultiple: multiple && FIELD_DESCRIPTORS[type].deployment === 'plain' },
+    kind,
+    depth,
+    multiple,
+  );
 }
 export async function cases(): Promise<Case[]> {
   const rows: Case[] = [];
@@ -72,6 +122,29 @@ export async function cases(): Promise<Case[]> {
       for (const depth of [0, 2, 5])
         for (const multiple of [false, true])
           await inspect(`${kind}:${type}:depth=${depth}:multiple=${multiple}`, document(type, kind, depth, multiple));
+  }
+  // A bare field proves its type is accepted, and a parameter can still be written in a shape Java
+  // refuses. Each parameter the field matrices set, one at a time, goes to Java in a template, deep in
+  // an element, and as a standalone field where it is not recorded by a parent.
+  const parameterised = [
+    ...SHARED_CELLS.map(({ paletteType, parameter }) => ({
+      type: paletteType,
+      name: parameter.name,
+      definition: sharedField(paletteType, parameter),
+      placement: !!parameter.placement,
+    })),
+    ...TYPE_CELLS.map(({ paletteType, parameter }) => ({
+      type: paletteType,
+      name: parameter,
+      definition: typeField(paletteType, parameter),
+      placement: false,
+    })),
+  ];
+  for (const { type, name, definition, placement } of parameterised) {
+    await inspect(`parameter:template:${type}:${name}`, holding(definition, 'template', 0));
+    if (allowedInContainer(type, 'element'))
+      await inspect(`parameter:element:${type}:${name}:depth=2`, holding(definition, 'element', 2));
+    if (!placement) await inspect(`parameter:standalone:${type}:${name}`, holding(definition, 'template', 0), true);
   }
   // A picker must add distinct constraints. Duplicate classes were once accepted by
   // browser fixtures even though Java has always required uniqueItems here.
