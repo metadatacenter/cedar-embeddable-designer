@@ -1,3 +1,4 @@
+import { expectOutlineNames } from './support';
 import { fieldNode, newNodeId } from '../../src/app/core/model/container-draft';
 import { expect, test, Page } from '@playwright/test';
 import { NEEDS_PICKER } from './bundle-tags';
@@ -952,7 +953,8 @@ for (const [labels, wanted] of [
 ] as const) {
   test(`Overview uses the effective field label: ${wanted}`, async ({ page }) => {
     await openField(page, 'shortText', labels);
-    await expect(page.locator('app-container-outline .node-name')).toHaveText(wanted);
+    await expectOutlineNames(page.locator('app-container-outline .node-name'), wanted);
+    await expect(page.locator('app-container-outline .required-mark')).toBeVisible();
     await expect(
       page.locator('app-container-outline').getByRole('button', { name: `Reorder ${wanted}`, exact: true }),
     ).toBeVisible();
@@ -965,10 +967,10 @@ test('editing a display name updates Overview without renaming the field key', a
   await openField(page, 'shortText', { preferredLabel: 'Lab ID', displayLabel: 'Value' });
   const heading = page.getByRole('textbox', { name: 'Enter field name', exact: true });
   await expect(heading).toHaveValue('Lab ID');
-  await expect(page.locator('app-container-outline .node-name')).toHaveText('Lab ID');
+  await expectOutlineNames(page.locator('app-container-outline .node-name'), 'Lab ID');
   await heading.fill('Laboratory identifier');
   await heading.blur();
-  await expect(page.locator('app-container-outline .node-name')).toHaveText('Laboratory identifier');
+  await expectOutlineNames(page.locator('app-container-outline .node-name'), 'Laboratory identifier');
   // The parent already shows the field by another name, so the header edits the parent's display name
   // and leaves the field's own name and preferred label as they were.
   const template = await currentTemplate(page);

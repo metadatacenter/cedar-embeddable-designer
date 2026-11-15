@@ -1,3 +1,4 @@
+import { expectOutlineNames } from './support';
 import { expect, Page, test } from '@playwright/test';
 import type { CedarEmbeddableDesignerElement, CedJsonObject } from '../../src/app/ced-public-api';
 import { buildContainer, newContainer, templateToJson } from '../../src/app/core/model/cedar-template';
@@ -105,7 +106,7 @@ for (const type of ['link', 'controlledTerms', 'orcid', 'ror', 'pfas', 'rrid', '
       const card = designer.locator('app-field-card');
       await expect(card.getByRole('tabpanel', { name: 'Constraints', exact: true })).toBeVisible();
       await expect(card).toContainText('Default value: relative/path');
-      await expect(designer.locator('.outline-row.active .node-name')).toHaveText('Value');
+      await expectOutlineNames(designer.locator('.outline-row.active .node-name'), 'Value');
       await card.getByLabel('Enter field name', { exact: true }).fill('Renamed value');
       await openSettings(card, 'Metadata');
       await card.locator('input[name=schemaIdentifier]').fill('Identifier');
@@ -149,7 +150,7 @@ for (const kind of ['template', 'element'] as const)
           const value = card.getByRole('textbox', { name: 'Default value', exact: true });
           await expect(value).toHaveValue('1000');
           await expect(value).toHaveAttribute('aria-invalid', 'true');
-          await expect(designer.locator('.outline-row.active .node-name')).toHaveText('Value');
+          await expectOutlineNames(designer.locator('.outline-row.active .node-name'), 'Value');
           await card.getByLabel('Enter field name', { exact: true }).fill('Renamed number');
           await openSettings(card, 'Presentation');
           await openSettings(card);

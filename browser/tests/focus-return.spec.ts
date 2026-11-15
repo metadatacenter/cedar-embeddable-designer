@@ -1,3 +1,4 @@
+import { expectOutlineNames } from './support';
 import { Locator, Page, expect, test } from '@playwright/test';
 import {
   DESIGNER,
@@ -365,20 +366,20 @@ test.describe('Move up and Move down', () => {
     const up = designer.getByRole('button', { name: 'Move Publication Date up', exact: true });
     await up.focus();
     await page.keyboard.press('Enter');
-    await expect(designer.locator('app-container-outline .node-name')).toHaveText([
+    await expectOutlineNames(designer.locator('app-container-outline .node-name'), [
       'Title',
       'Publication Date',
       'Category',
     ]);
     await expect(up).toBeFocused();
     await page.keyboard.press('Enter');
-    await expect(designer.locator('app-container-outline .node-name').first()).toHaveText('Publication Date');
+    await expectOutlineNames(designer.locator('app-container-outline .node-name').first(), 'Publication Date');
     await expect(up).toHaveAttribute('aria-disabled', 'true');
     await expect(up).toBeFocused();
     const down = designer.getByRole('button', { name: 'Move Title down', exact: true });
     await down.focus();
     await page.keyboard.press('Enter');
-    await expect(designer.locator('app-container-outline .node-name')).toHaveText([
+    await expectOutlineNames(designer.locator('app-container-outline .node-name'), [
       'Publication Date',
       'Category',
       'Title',

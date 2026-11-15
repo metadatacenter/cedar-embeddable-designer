@@ -324,3 +324,17 @@ export function tabKey(page: Page, key = 'Tab'): string {
     ? `Alt+${key}`
     : key;
 }
+
+/** Field names exclude the requiredness glyph even when the glyph shares their wrapping box. */
+export const outlineNames = (names: Locator): Promise<string[]> =>
+  names.evaluateAll((nodes) =>
+    nodes.map((node) => {
+      const copy = node.cloneNode(true) as Element;
+      copy.querySelectorAll('.required-mark').forEach((mark) => mark.remove());
+      return (copy.textContent ?? '').replace(/\s+/g, ' ').trim();
+    }),
+  );
+
+export async function expectOutlineNames(names: Locator, expected: string | string[]): Promise<void> {
+  await expect.poll(() => outlineNames(names)).toEqual(Array.isArray(expected) ? expected : [expected]);
+}

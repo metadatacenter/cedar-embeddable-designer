@@ -1,3 +1,4 @@
+import { expectOutlineNames } from './support';
 import { expect, Page, test } from '@playwright/test';
 import type { CedarEmbeddableDesignerElement } from '../../src/app/ced-public-api';
 import {
@@ -155,7 +156,7 @@ test('element selection agrees between outline, card and preview', async ({ page
   await expect(preview.locator('cedar-embeddable-editor')).toBeVisible();
   await designer.locator('.select-node').filter({ hasText: 'Title' }).first().click();
   await designer.locator('.select-node').filter({ hasText: 'Element' }).last().click();
-  await expect(designer.locator('.outline-row.active .node-name')).toHaveText('Element');
+  await expectOutlineNames(designer.locator('.outline-row.active .node-name'), 'Element');
   await expect(designer.locator('.field-drag-container.selected')).toHaveAttribute('aria-label', 'Element');
   await expect
     .poll(() =>

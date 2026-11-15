@@ -1,3 +1,4 @@
+import { expectOutlineNames } from './support';
 import { expect, test } from '@playwright/test';
 import { clickCentred, currentTemplate, focusedControl, openDesigner } from './support';
 
@@ -67,14 +68,14 @@ for (const width of [375, 767])
 
     // Its own controls work as in the column.
     await designer.getByRole('button', { name: 'Move Category up', exact: true }).click();
-    await expect(panel.locator('.node-name')).toHaveText(['Category', 'Title', 'Publication Date']);
+    await expectOutlineNames(panel.locator('.node-name'), ['Category', 'Title', 'Publication Date']);
 
     await close.click();
     await expect(open).toHaveAttribute('aria-expanded', 'false');
     await expect(panel).toHaveCount(0);
     await designer.getByRole('button', { name: 'Open Overview', exact: true }).click();
     await designer.getByRole('button', { name: 'Move Category down', exact: true }).click();
-    await expect(panel.locator('.node-name')).toHaveText(['Title', 'Category', 'Publication Date']);
+    await expectOutlineNames(panel.locator('.node-name'), ['Title', 'Category', 'Publication Date']);
     expect(await currentTemplate(page)).toEqual(before);
   });
 
