@@ -173,6 +173,7 @@ for (const kind of ['field', 'element'] as const) {
         await applyPreset(page, 'modular');
         await addElementFixture(page, designer);
       }
+      await openPreview(page);
       const card = designer.locator(kind === 'field' ? 'app-field-card' : 'app-element-card').first();
       const panel =
         kind === 'field'
@@ -194,7 +195,18 @@ for (const kind of ['field', 'element'] as const) {
         const bounds = el.querySelector('.configuration-bounds')!.getBoundingClientRect();
         return { available: bounds.width, minY: min.y, maxY: max.y, right: max.right, edge: bounds.right };
       });
-      if (geometry.available >= 228) expect(Math.abs(geometry.minY - geometry.maxY)).toBeLessThan(1);
+      if (width === 768) {
+        expect(geometry.available).toBeGreaterThanOrEqual(208);
+        expect(Math.abs(geometry.minY - geometry.maxY)).toBeLessThan(1);
+      } else {
+        expect(geometry.available).toBeLessThan(208);
+        expect(geometry.maxY - geometry.minY).toBeGreaterThan(36);
+      }
+      for (const label of ['Minimum', 'Maximum']) {
+        const input = panel.getByLabel(label, { exact: true });
+        await input.fill(label === 'Minimum' ? '1' : '3');
+        await expect(input).toHaveValue(label === 'Minimum' ? '1' : '3');
+      }
       expect(geometry.right).toBeLessThanOrEqual(geometry.edge + 1);
       await expect(group.getByLabel('Key', { exact: true })).toHaveCount(0);
       if (kind === 'element') {

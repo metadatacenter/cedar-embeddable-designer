@@ -263,9 +263,10 @@ textarea {
   align-self: start;
   min-height: 0;
 }
+// Two 100px controls fit a 210px pane with the existing 8px gap; narrower panes stack.
 .configuration-bounds {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 110px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 100px), 1fr));
   gap: var(--cedar-space-2);
 }
 .configuration-flags {
