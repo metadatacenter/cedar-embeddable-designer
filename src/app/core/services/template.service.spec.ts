@@ -6,7 +6,7 @@ import {
   fieldDisplayName,
 } from '../model/field-display-name';
 import { CedJsonObject } from '../../ced-public-api';
-import { fieldToJson, newContainer } from '../model/cedar-template';
+import { fieldToJson, newContainer, readContainer } from '../model/cedar-template';
 import { findContainer } from '../model/container-draft';
 import { childKeyError } from '../model/child-key-policy';
 import { buildContainer, PREVIEW_ELEMENT_KEY } from '../model/cedar-template';
@@ -664,8 +664,14 @@ describe('TemplateService', () => {
       expect(new Set(identifiers).size).toBe(identifiers.length);
     });
 
-    it('writes the same template the JSON writer would', () => {
-      expect(service.templateJson()).toEqual(templateToJson(service.template()));
+    it('writes the document the session holds, as one artifact per state', () => {
+      const written = service.templateJson();
+
+      // What the element publishes and what the panels display are the same artifact, not two builds
+      // that could each mint an identifier of their own.
+      expect(service.templateJson()).toBe(written);
+      expect(written['@id']).toBe(service.document().identifier);
+      expect(templateToJson(buildContainer(readContainer(written)))).toEqual(written);
     });
   });
 
