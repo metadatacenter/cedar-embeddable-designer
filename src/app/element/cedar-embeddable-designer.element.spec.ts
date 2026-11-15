@@ -275,6 +275,42 @@ describe('CedarEmbeddableDesignerElementComponent', () => {
       expect(element.currentArtifact).toMatchObject({ 'schema:name': 'Next' });
     });
 
+    /**
+     * A loaded document can be editable before it can be written. While it cannot, a host must hear
+     * nothing rather than the last artifact that could, which it would otherwise save as current.
+     */
+    it('publishes nothing while the document cannot be written, and the repaired artifact after', async () => {
+      const fixture = create();
+      const element = fixture.componentInstance;
+      const templates: Record<string, unknown>[] = [];
+      const artifacts: object[] = [];
+      element.templateChange.subscribe((artifact) => templates.push(artifact as Record<string, unknown>));
+      element.artifactChange.subscribe((artifact) => artifacts.push(artifact));
+      service.templateName.set('Writable');
+      await fixture.whenStable();
+      const heard = [templates.length, artifacts.length];
+      const title = service.fields()[0].id;
+      const lengths = (minLength: number, maxLength: number) =>
+        service.fields.update((fields) =>
+          fields.map((field) =>
+            field.id === title ? { ...field, textConstraints: { minLength, maxLength, regex: null } } : field,
+          ),
+        );
+
+      lengths(3, 1);
+      await fixture.whenStable();
+      expect(() => service.templateJson()).toThrow();
+      expect(element.canSave).toBe(false);
+      expect([templates.length, artifacts.length]).toEqual(heard);
+
+      lengths(1, 3);
+      await fixture.whenStable();
+      expect(templates.length).toBe(heard[0] + 1);
+      expect(artifacts.length).toBe(heard[1] + 1);
+      const properties = templates.at(-1)!['properties'] as Record<string, Record<string, unknown>>;
+      expect(properties['Title']['_valueConstraints']).toMatchObject({ minLength: 1, maxLength: 3 });
+    });
+
     it('offers the current template as a property', () => {
       const fixture = create();
 
