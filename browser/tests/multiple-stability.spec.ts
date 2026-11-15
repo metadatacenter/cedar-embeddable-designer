@@ -11,11 +11,16 @@ for (const width of [1280, 375]) {
       await page.evaluate(() => document.fonts.ready);
     }
     const cards = designer.locator('app-field-card');
-    for (let i = 0; i < (await cards.count()); i++) {
+    const count = await cards.count();
+    let measured = 0;
+    for (let i = 0; i < count; i++) {
       const card = cards.nth(i);
-      const checkbox = card.getByLabel('Allow multiple', { exact: true });
-      if (!(await checkbox.count())) continue;
+      // A card mounts its settings the first time they open, so whether it offers the checkbox is
+      // known only once its Configuration tab is shown.
       const configuration = await openSettings(card, 'Configuration');
+      const checkbox = configuration.getByLabel('Allow multiple', { exact: true });
+      if (!(await checkbox.count())) continue;
+      measured++;
       await checkbox.scrollIntoViewIfNeeded();
       await configuration.getByRole('combobox', { name: 'Requirement', exact: true }).selectOption('optional');
       await expect(card.getByLabel('Required', { exact: true })).toHaveCount(0);
@@ -50,5 +55,8 @@ for (const width of [1280, 375]) {
       await expect(card.getByLabel('Occurrence range')).toHaveCount(0);
       expect(await measure()).toEqual(before);
     }
+    // The starter template offers the checkbox on its text and date fields. A loop that measured
+    // nothing would pass whatever the header did.
+    expect(measured).toBeGreaterThan(0);
   });
 }
