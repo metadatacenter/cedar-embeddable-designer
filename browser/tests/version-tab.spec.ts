@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
+import { expectAccessible } from './accessibility-gate';
 import { currentTemplate, openDesigner, openSettings } from './support';
 
 const NEWER = 'https://repo.metadatacenter.org/template-fields/version-tab-newer';
@@ -81,12 +81,8 @@ test('a linked field shows its version and status on the Version tab and upgrade
     'Detach to edit',
   ]);
   // The accessibility suite audits every tab of a field made here; this audits a linked one, whose
-  // tab has buttons. Two frames let the tab's render settle first.
-  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-  const { violations } = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-    .analyze();
-  expect(violations.map((violation) => violation.id)).toEqual([]);
+  // tab has buttons, through the same gate.
+  await expectAccessible(page, 'linked field, Version tab');
 
   await version.getByRole('button', { name: 'Open original' }).click();
   expect(await page.evaluate(() => (window as any).__opened)).toEqual([original]);
