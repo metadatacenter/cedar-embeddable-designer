@@ -309,7 +309,6 @@ test('the real picker preserves saved actions and explicitly clears an invalid d
   await picker.locator('.constraint-set').evaluate((node) => {
     node.scrollTop = 0;
   });
-  await page.screenshot({ path: '/tmp/ced-real-constraints.png', fullPage: true });
   await panel.getByRole('button', { name: 'Clear default and apply constraints' }).click();
   await expect(picker).toHaveCount(0);
   const saved = child(await currentTemplate(page), 'Disease')['_valueConstraints'] as Record<string, unknown>;

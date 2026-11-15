@@ -242,8 +242,6 @@ for (const kind of ['template', 'element'] as const)
           await summary.locator('summary').click();
           await expect(summary).not.toHaveAttribute('open');
           await summary.locator('summary').click();
-          if (kind === 'template' && mode === 'host' && depth === 0)
-            await page.screenshot({ path: `/tmp/ced-inspection-report-${width}.png` });
           // A replacement with no findings removes the disclosure.
           const valid = structuredClone(artifact) as any;
           let parent = valid;

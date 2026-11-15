@@ -62,7 +62,6 @@ for (const width of [1440, 768, 375]) {
     expect(measurements.dragBesideArrow).toBeLessThanOrEqual(1);
     expect(measurements.center).toBeLessThanOrEqual(1);
     expect(measurements.overflow).toBeLessThanOrEqual(1);
-    await page.screenshot({ path: `/tmp/ced-tabs-${width}.png` });
   });
 }
 

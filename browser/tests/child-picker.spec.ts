@@ -156,7 +156,6 @@ for (const width of [1280, 375])
       await handle.press('ArrowDown');
       await expect(selected.locator('tbody .name-cell')).toHaveText(['Section', 'Title']);
     }
-    await page.screenshot({ path: `/tmp/ced-child-dialog-${width}.png` });
     await designer.getByRole('button', { name: 'Done', exact: true }).click();
     await expect(designer.getByRole('dialog')).toHaveCount(0);
     // Each takes its name as its key. A Title is there already, so that key is reported at once and the

@@ -25,8 +25,6 @@ test('authors occurrence limits and rejects an inverted range', async ({ page })
   await settings.getByLabel('Maximum', { exact: true }).fill('10');
   await expect(settings.getByRole('alert')).toHaveCount(0);
   await expect.poll(async () => ((await currentTemplate(page)).properties as any).Title.minItems).toBe(8);
-
-  await page.screenshot({ path: '/tmp/ced-occurrences.png' });
 });
 
 test('Configuration sets the display name and a wider description, the requirement with the line settings, the key beside the bounds below Allow multiple, and the property IRI last', async ({
@@ -189,7 +187,6 @@ test('authors datetime precision timezone and time format', async ({ page }) => 
     .poll(async () => ((await currentTemplate(page)).properties as any)['Publication Date']._ui)
     .toMatchObject({ temporalGranularity: 'second', timezoneEnabled: true, inputTimeFormat: '12h' });
   await expect(card.locator('.field-type-label').filter({ hasText: 'Date and time' })).toBeVisible();
-  await page.screenshot({ path: '/tmp/ced-temporal-settings.png' });
   await section.getByLabel('Temporal type').selectOption('xsd:time');
   await expect(section.getByLabel('Precision').locator('option')).toHaveText([
     'hour',
