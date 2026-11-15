@@ -1,5 +1,5 @@
 import { applyPreset } from './support';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator } from '@playwright/test';
 import {
   DESIGNER,
   child,
@@ -145,16 +145,31 @@ test.describe('identity', () => {
 });
 
 test('adding a field scrolls to it without reaching for the document', async ({ page }) => {
+  // A short page, so the list scrolls and a card added at its end starts outside the scrolled box.
+  await page.setViewportSize({ width: 1280, height: 420 });
   const designer = await openDesigner(page);
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
+  const scroller = designer.locator('.designer-scroll');
+  const within = async (card: Locator) => {
+    const [box, frame] = await Promise.all([card.boundingBox(), scroller.boundingBox()]);
+    return !!box && !!frame && box.y >= frame.y && box.y + box.height <= frame.y + frame.height;
+  };
 
   await designer.getByRole('button', { name: /^Add field$/ }).click();
-  await designer.getByRole('button', { name: 'Text', exact: true }).first().click();
+  const text = designer.getByRole('button', { name: 'Text', exact: true }).first();
+  await expect(text).toBeVisible();
+  // Opening the picker scrolled the list to it. Back at the top, the type is chosen without the
+  // pointer, which would scroll again, so only the designer's own scroll can reach the new card.
+  await scroller.evaluate((element) => element.scrollTo({ top: 0, behavior: 'instant' }));
+  expect(await within(designer.locator('[id^=field-card-]').last())).toBe(false);
+  await text.dispatchEvent('click');
 
-  await expect(designer.locator('[id^=field-card-]')).toHaveCount(4);
-  // The scroll used to be `document.getElementById`, which finds nothing in a
-  // shadow tree; the component resolves the card from its own root now.
+  const cards = designer.locator('[id^=field-card-]');
+  await expect(cards).toHaveCount(4);
+  // The scroll used to be `document.getElementById`, which finds nothing in a shadow tree; the
+  // component resolves the card from its own root now.
+  await expect.poll(() => within(cards.last())).toBe(true);
   expect(errors).toEqual([]);
 });
 
