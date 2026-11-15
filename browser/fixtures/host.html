@@ -173,9 +173,10 @@
       customElements.whenDefined('cedar-embeddable-designer').then(() => {
         const params = new URLSearchParams(location.search);
         if (params.get('terminology') !== 'none') {
+          // The page's own origin, so the services sit on whatever port the test server was given.
           document.getElementById('designer').config = {
-            terminologyBaseUrl: 'http://localhost:4598/fake-terminology/',
-            bridgeBaseUrl: 'http://localhost:4598/fake-bridge/',
+            terminologyBaseUrl: new URL('/fake-terminology/', location.href).href,
+            bridgeBaseUrl: new URL('/fake-bridge/', location.href).href,
           };
         }
         window.__ready = true;

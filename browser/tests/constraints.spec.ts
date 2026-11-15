@@ -129,7 +129,7 @@ test('the picker is told which field it is choosing for, and which server to ask
   const picker = page.locator('cedar-embeddable-term-picker');
   expect(await picker.evaluate((node) => (node as unknown as { query: string }).query)).toBe('Controlled Terms');
   expect(await picker.evaluate((node) => (node as unknown as { terminologyBaseUrl: string }).terminologyBaseUrl)).toBe(
-    'http://localhost:4598/fake-terminology/',
+    new URL('/fake-terminology/', page.url()).href,
   );
 });
 
