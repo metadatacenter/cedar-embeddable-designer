@@ -90,11 +90,11 @@ for (const budget of [1, 2, 8])
   });
 
 test('failure fails the gate without running downstream stages', () => {
-  const { result, events } = gate(1, 'test');
+  const { result, events } = gate(1, 'test:unit:ci');
   assert.notEqual(result.status, 0);
   assert.deepEqual(
     events.filter((e) => e.event === 'start').map((e) => e.script),
-    ['test'],
+    ['test:unit:ci'],
   );
 });
 
@@ -233,7 +233,7 @@ test('train preparation runs every non-browser check and builds without publishi
       .filter((e) => e.event === 'end')
       .map((e) => e.script)
       .sort(),
-    ['test', 'lint', 'typecheck', 'test:boundaries', 'test:packaging', 'test:conformance', 'dist'].sort(),
+    ['test:unit:ci', 'lint', 'typecheck', 'test:boundaries', 'test:packaging', 'test:conformance', 'dist'].sort(),
   );
 });
 

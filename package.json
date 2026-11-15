@@ -26,6 +26,7 @@
     "typecheck": "tsc -p tsconfig.eslint.json --noEmit",
     "test:watch": "ng test --watch",
     "test:unit:coverage": "ng test --coverage",
+    "test:unit:ci": "ng test --coverage --coverage-reporters=text-summary",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "audit:prod": "npm audit --omit=dev --audit-level=high",

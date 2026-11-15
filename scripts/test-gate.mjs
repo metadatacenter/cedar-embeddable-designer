@@ -18,7 +18,8 @@ const mode = process.argv[2] ?? 'full';
 if (!['full', 'prepare'].includes(mode)) throw new Error(`Unknown gate: ${mode}`);
 const visualWeight = budget >= 6 ? 2 : 1;
 const stages = [
-  { name: 'unit', script: 'test', weight: Math.max(1, budget - 3) },
+  // Unit tests run with coverage, and angular.json holds the floor they must clear.
+  { name: 'unit', script: 'test:unit:ci', weight: Math.max(1, budget - 3) },
   { name: 'lint', script: 'lint' },
   { name: 'types', script: 'typecheck' },
   { name: 'boundaries', script: 'test:boundaries' },

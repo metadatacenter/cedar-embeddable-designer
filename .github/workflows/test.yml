@@ -65,7 +65,7 @@ jobs:
         run: npm run typecheck
 
       - name: Unit tests
-        run: npm test
+        run: npm run test:unit:ci
 
       - name: Java and TypeScript authoring conformance
         run: npm run test:conformance
