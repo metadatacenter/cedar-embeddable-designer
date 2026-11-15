@@ -99,10 +99,12 @@ import { provideCedTranslations } from '../i18n/i18n';
       <app-live-region />
       <div class="field-summary"><app-validation-summary /></div>
       <section class="field-editor" [attr.aria-label]="'fieldElement.label' | translate">
-        @if (field(); as field) {
+        <!-- Keyed by the field's session id: a load mints a new one and opens a fresh card, and
+          preserveView keeps the id, and with it the card's tabs and expansion. -->
+        @for (field of card(); track field.id) {
           <!-- The host says why the field is read only, as it does for CED. -->
           <app-field-card [field]="field" [standalone]="true" />
-        } @else {
+        } @empty {
           <button type="button" [disabled]="readOnly" (click)="choosingType.set(true)">
             {{ 'fieldElement.chooseType' | translate }}
           </button>
@@ -129,6 +131,7 @@ export class CedarEmbeddableFieldDesignerElementComponent {
   private readonly i18n = inject(CedLanguageService);
   private readonly baseline = signal('');
   readonly field = computed(() => this.service.fields()[0] as Field | undefined);
+  readonly card = computed(() => this.service.fields().slice(0, 1));
   readonly choosingType = signal(true);
   private readonly typeDialog = viewChild<ElementRef<HTMLDialogElement>>('typeDialog');
 
