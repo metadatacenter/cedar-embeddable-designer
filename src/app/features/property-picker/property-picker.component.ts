@@ -27,20 +27,22 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
   template: `
     <div class="property">
       <span class="iri" [class.placeholder]="!iri()">{{ iri() || ('propertyPicker.placeholder' | translate) }}</span>
-      @if (available && baseUrl()) {
-        <button
-          #trigger
-          type="button"
-          [disabled]="disabled()"
-          (click)="open()"
-          [attr.aria-label]="(iri() ? 'propertyPicker.replaceLabel' : 'propertyPicker.chooseLabel') | translate"
-        >
-          {{ (iri() ? 'propertyPicker.replace' : 'propertyPicker.choose') | translate }}
+      <div class="property-actions">
+        @if (available && baseUrl()) {
+          <button
+            #trigger
+            type="button"
+            [disabled]="disabled()"
+            (click)="open()"
+            [attr.aria-label]="(iri() ? 'propertyPicker.replaceLabel' : 'propertyPicker.chooseLabel') | translate"
+          >
+            {{ (iri() ? 'propertyPicker.replace' : 'propertyPicker.choose') | translate }}
+          </button>
+        }
+        <button #manualTrigger type="button" [disabled]="disabled()" (click)="manualOpened.set(!manualOpened())">
+          {{ 'manualIri.open' | translate }}
         </button>
-      }
-      <button #manualTrigger type="button" [disabled]="disabled()" (click)="manualOpened.set(!manualOpened())">
-        {{ 'manualIri.open' | translate }}
-      </button>
+      </div>
     </div>
     @if (manualOpened()) {
       <app-manual-iri
@@ -104,6 +106,13 @@ import { CedLanguageService } from '../../i18n/ced-language.service';
       border: 1px solid var(--cedar-control-border-default);
       border-radius: var(--cedar-radius);
       color: var(--cedar-text-muted);
+    }
+    .property-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--cedar-space-3);
+      min-width: 0;
+      max-width: 100%;
     }
     button {
       flex: 0 0 auto;

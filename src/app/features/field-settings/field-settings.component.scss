@@ -75,6 +75,7 @@ textarea {
 }
 .tabs {
   @include patterns.tabs;
+  row-gap: var(--cedar-space-1);
   margin-top: var(--cedar-space-1);
 }
 .tabs button {
