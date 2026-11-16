@@ -251,6 +251,21 @@
   border-left: 1px solid var(--cedar-border-rule);
 }
 
+// Keep the editor mounted at full width and retain its scroll position behind phone Preview.
+// The header's existing Preview toggle remains visible; inert removes covered controls from focus.
+.preview-only .designer-scroll,
+.preview-only > app-field-library-sidebar {
+  visibility: hidden;
+  // A visibility transition keeps editor controls painted over Preview until its final frame.
+  transition: none;
+}
+.preview-only .preview-panel {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border-left: 0;
+}
+
 .designer-mark {
   border-radius: var(--cedar-radius-pill);
 }

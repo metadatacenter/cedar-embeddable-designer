@@ -96,9 +96,10 @@
           }
         </div>
         <button
+          #previewToggle
           type="button"
-          class="panel-toggle"
-          (click)="service.showPreview.set(!service.showPreview())"
+          class="panel-toggle preview-toggle"
+          (click)="togglePreview()"
           [attr.aria-expanded]="service.showPreview()"
           aria-controls="ced-preview"
           [attr.aria-label]="(service.showPreview() ? 'app.preview.close' : 'app.preview.open') | translate"
@@ -113,6 +114,7 @@
   <!-- Main Content Area -->
   <div
     class="main-content"
+    [class.preview-only]="phonePreview()"
     [style.--preferred-overview-width]="overviewWidth() + 'px'"
     [class.has-overview]="showFieldsOverview()"
     [class.has-library]="service.preferences().fieldSelectionStyle === 'sidebar' && !service.access.readOnly()"
@@ -120,11 +122,11 @@
   >
     <!-- Field Library Sidebar -->
     @if (service.preferences().fieldSelectionStyle === 'sidebar' && !service.access.readOnly()) {
-      <app-field-library-sidebar></app-field-library-sidebar>
+      <app-field-library-sidebar [attr.inert]="phonePreview() ? '' : null"></app-field-library-sidebar>
     }
 
     <!-- Designer Side -->
-    <div class="designer-scroll" [ngClass]="getDesignerClasses()">
+    <div class="designer-scroll" [ngClass]="getDesignerClasses()" [attr.inert]="phonePreview() ? '' : null">
       <div class="designer-grid" [style.--designer-columns]="getGridTemplateColumns()">
         <!-- Fields Overview Panel -->
         @if (overviewShown()) {

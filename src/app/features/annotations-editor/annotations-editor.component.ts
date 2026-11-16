@@ -78,6 +78,12 @@ export class AnnotationsEditorComponent {
     this.rows.update((rows) => rows.filter((_, i) => i !== index));
     this.save();
   }
+  /** Native focus scrolling can leave a partly visible action and its focus ring clipped. */
+  revealKeyboardAction(event: FocusEvent): void {
+    const button = event.target;
+    if (button instanceof HTMLElement && button.matches(':focus-visible'))
+      button.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
   private validate(rows: Annotation[]): string | null {
     const error = annotationError(rows);
     return error ? this.i18n.t(error.key, error.params) : null;

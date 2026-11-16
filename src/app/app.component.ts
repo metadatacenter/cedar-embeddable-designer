@@ -65,10 +65,14 @@ export class AppComponent {
    * instead, closed until asked for, as the container query in the stylesheet lays it out.
    */
   readonly narrow = computed(() => this.availableWidth() < 768);
+  /** Phone-sized hosts show one full-width editing or Preview pane at a time. */
+  readonly phone = computed(() => this.availableWidth() < 600);
+  readonly phonePreview = computed(() => this.phone() && this.service.showPreview());
   readonly overviewOverlayOpen = signal(false);
   /** Whether the Overview is shown: in its column on a wide host, over the canvas on a narrow one. */
   readonly overviewShown = computed(() => (this.narrow() ? this.overviewOverlayOpen() : this.showFieldsOverview()));
   private readonly overviewToggle = viewChild<ElementRef<HTMLButtonElement>>('overviewToggle');
+  private readonly previewToggle = viewChild<ElementRef<HTMLButtonElement>>('previewToggle');
   readonly overviewMinWidth = 224;
   private readonly overviewRequestedWidth = signal<number | null>(null);
   readonly overviewMaxWidth = computed(() => {
@@ -159,8 +163,32 @@ export class AppComponent {
   }
 
   toggleOverview(): void {
-    if (this.narrow()) this.overviewOverlayOpen.update((open) => !open);
-    else this.showFieldsOverview.update((shown) => !shown);
+    if (this.phonePreview()) this.service.showPreview.set(false);
+    if (this.narrow()) {
+      this.overviewOverlayOpen.update((open) => !open);
+      this.overviewToggle()?.nativeElement.focus();
+    } else this.showFieldsOverview.update((shown) => !shown);
+  }
+
+  togglePreview(): void {
+    this.service.showPreview.update((shown) => !shown);
+    if (this.phone()) {
+      this.overviewOverlayOpen.set(false);
+      this.previewToggle()?.nativeElement.focus();
+    }
+  }
+
+  /** The existing Preview control also returns to authoring on a phone. */
+  closePhonePreview(event: KeyboardEvent): void {
+    if (event.key !== 'Escape' || event.defaultPrevented || !this.phonePreview()) return;
+    if (
+      !event.composedPath().some((node) => node instanceof Element && node.matches('.preview-panel, .preview-toggle'))
+    )
+      return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.service.showPreview.set(false);
+    this.previewToggle()?.nativeElement.focus();
   }
 
   /** Escape in the Overview over the canvas, or on its toggle, closes it and gives focus to the toggle. */
@@ -211,6 +239,18 @@ export class AppComponent {
     effect(() => {
       this.narrow();
       untracked(() => this.overviewOverlayOpen.set(false));
+    });
+    effect(() => {
+      if (!this.phonePreview()) return;
+      // Resizing an embed can hide a focused authoring control. Keep focus on a visible way back.
+      const focused = (this.host.nativeElement.getRootNode() as Document | ShadowRoot).activeElement;
+      if (
+        focused &&
+        [...this.host.nativeElement.querySelectorAll('.designer-scroll, app-field-library-sidebar')].some((region) =>
+          region.contains(focused),
+        )
+      )
+        this.previewToggle()?.nativeElement.focus();
     });
     afterNextRender(() => {
       const observer = new ResizeObserver(([entry]) => this.availableWidth.set(entry.contentRect.width));
@@ -314,6 +354,7 @@ export class AppComponent {
   /** One listener per event on a host: Angular binds only one of two that name the same event. */
   @HostListener('keydown', ['$event'])
   onKeydown(event: KeyboardEvent): void {
+    this.closePhonePreview(event);
     this.closeOverviewOverlay(event);
     this.navigateCards(event);
   }

@@ -9,6 +9,7 @@ for (const width of [1280, 375]) {
       await openPreview(page);
       await expect(designer.locator('cedar-embeddable-editor')).toBeVisible();
       await page.evaluate(() => document.fonts.ready);
+      if (width === 375) await designer.getByRole('button', { name: 'Close Preview', exact: true }).click();
     }
     const cards = designer.locator('app-field-card');
     const count = await cards.count();

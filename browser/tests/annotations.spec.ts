@@ -1,7 +1,7 @@
 import { applyPreset } from './support';
 import { addElementFixture } from './support';
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { openDesigner, openSettings, currentTemplate, child } from './support';
+import { openDesigner, openSettings, currentTemplate, child, tabKey } from './support';
 import type { CedarEmbeddableDesignerElement } from '../../src/app/ced-public-api';
 
 async function expectValueTypeFits(editor: Locator) {
@@ -103,6 +103,35 @@ async function reloadArtifact(page: Page, artifact: object) {
 const annotations = { note: { '@value': 'Reviewed' }, source: { '@id': 'urn:source' } };
 
 for (const width of [1280, 375]) {
+  test(`keyboard focus reveals the whole annotation removal control at ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 667 });
+    const designer = await openDesigner(page);
+    const card = designer.locator('app-field-card').first();
+    await openSettings(card, 'Annotations');
+    const editor = card.locator('app-annotations-editor');
+    await editor.getByRole('textbox', { name: 'New annotation name', exact: true }).fill('note');
+    await editor.getByRole('textbox', { name: 'New annotation value', exact: true }).fill('Reviewed');
+    await editor.getByRole('button', { name: 'Add annotation', exact: true }).click();
+    const region = editor.getByRole('region', { name: 'Annotations', exact: true });
+    await region.scrollIntoViewIfNeeded();
+    await region.focus();
+    expect(await region.evaluate((el) => el.scrollLeft)).toBe(0);
+    await page.keyboard.press(tabKey(page));
+    const remove = editor.getByRole('button', { name: 'Remove annotation 1', exact: true });
+    await expect(remove).toBeFocused();
+    const geometry = await remove.evaluate((el) => {
+      const button = el.getBoundingClientRect();
+      const region = el.closest('.table-scroll')!.getBoundingClientRect();
+      const css = getComputedStyle(el);
+      const ring = parseFloat(css.outlineWidth) + parseFloat(css.outlineOffset);
+      return { left: button.left - ring, right: button.right + ring, start: region.left, end: region.right };
+    });
+    expect(geometry.left).toBeGreaterThanOrEqual(geometry.start);
+    expect(geometry.right).toBeLessThanOrEqual(geometry.end);
+    await page.keyboard.press('Enter');
+    await expect(remove).toHaveCount(0);
+  });
+
   test(`authors template, field and nested element annotations and reopens them at ${width}`, async ({
     page,
   }, testInfo) => {

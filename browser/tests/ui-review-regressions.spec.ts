@@ -78,24 +78,44 @@ for (const width of [1100, 768]) {
   });
 }
 
-test('template type stays distinct from identity and version in a narrow split pane', async ({ page }) => {
+test('template type stays distinct from identity and version after returning from phone Preview', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 1000 });
   const designer = await fixture(page);
   await openPreview(page);
+  await designer.getByRole('button', { name: 'Close Preview', exact: true }).click();
   const card = designer.locator('.template-header-card').first();
   await expect
     .poll(async () => {
       const type = (await card.locator('.container-type-label').boundingBox())!;
-      const name = (await card.locator('.template-header-row .template-field-label').first().boundingBox())!;
-      const version = (await card.locator('.version-group .template-field-label').boundingBox())!;
-      return type.y + type.height - Math.min(name.y, version.y);
+      // Labels fill their grid cells; measure the visible text rather than those empty cell areas.
+      const textBox = (el: Element) => {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const { x, y, width, height } = range.getBoundingClientRect();
+        return { x, y, width, height };
+      };
+      const name = await card.locator('.template-header-row .template-field-label').first().evaluate(textBox);
+      const version = await card.locator('.version-group .template-field-label').evaluate(textBox);
+      const overlaps = (box: typeof name) =>
+        type.x < box.x + box.width &&
+        type.x + type.width > box.x &&
+        type.y < box.y + box.height &&
+        type.y + type.height > box.y;
+      return overlaps(name) || overlaps(version);
     })
-    .toBeLessThanOrEqual(0);
+    .toBe(false);
   await expect(card.getByRole('textbox', { name: 'Version', exact: true })).toHaveValue('0.0.1');
   await expect(card.getByRole('group', { name: 'Publication status', exact: true })).toHaveText('Draft');
-  await card.locator('.container-type-label').click();
+  // The wide type caption deliberately passes pointer events through to its toggling header.
+  const clickType = async () => {
+    const label = card.locator('.container-type-label');
+    await label.scrollIntoViewIfNeeded();
+    const box = (await label.boundingBox())!;
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  };
+  await clickType();
   await expect(card.getByRole('button', { name: 'Collapse template settings', exact: true })).toBeVisible();
-  await card.locator('.container-type-label').click();
+  await clickType();
   await expect(card.getByRole('button', { name: 'Expand template settings', exact: true })).toBeVisible();
 });
 
@@ -104,6 +124,7 @@ for (const width of [768, 375]) {
     const designer = await fixture(page);
     await openPreview(page);
     await page.setViewportSize({ width, height: 1000 });
+    if (width === 375) await designer.getByRole('button', { name: 'Close Preview', exact: true }).click();
     const card = designer.locator('app-field-card');
     await openSettings(card, 'Configuration');
     const iri = card.locator('app-property-picker .iri');
@@ -174,6 +195,7 @@ for (const kind of ['field', 'element'] as const) {
         await addElementFixture(page, designer);
       }
       await openPreview(page);
+      if (width === 375) await designer.getByRole('button', { name: 'Close Preview', exact: true }).click();
       const card = designer.locator(kind === 'field' ? 'app-field-card' : 'app-element-card').first();
       const panel =
         kind === 'field'
@@ -195,13 +217,9 @@ for (const kind of ['field', 'element'] as const) {
         const bounds = el.querySelector('.configuration-bounds')!.getBoundingClientRect();
         return { available: bounds.width, minY: min.y, maxY: max.y, right: max.right, edge: bounds.right };
       });
-      if (width === 768) {
-        expect(geometry.available).toBeGreaterThanOrEqual(208);
-        expect(Math.abs(geometry.minY - geometry.maxY)).toBeLessThan(1);
-      } else {
-        expect(geometry.available).toBeLessThan(208);
-        expect(geometry.maxY - geometry.minY).toBeGreaterThan(36);
-      }
+      // Phone authoring now has the whole component width; both layouts can keep the bounds together.
+      expect(geometry.available).toBeGreaterThanOrEqual(208);
+      expect(Math.abs(geometry.minY - geometry.maxY)).toBeLessThan(1);
       for (const label of ['Minimum', 'Maximum']) {
         const input = panel.getByLabel(label, { exact: true });
         await input.fill(label === 'Minimum' ? '1' : '3');
