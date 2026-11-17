@@ -91,13 +91,20 @@ async function everyTypeOnPage(page: Page): Promise<string[]> {
   const cardsBefore = await designer.locator('[id^=field-card-]').count();
   const labels = await paletteLabels(page);
 
-  for (const label of labels) {
+  for (const [index, label] of labels.entries()) {
     await designer
       .getByRole('button', { name: /^Add field$/ })
       .first()
       .click();
-    await designer.getByRole('button', { name: label, exact: true }).click();
-    await designer.locator('input[aria-label="Enter field name"]:focus').fill(label);
+    // This fixture measures every card, not pointer targeting during the previous
+    // card's smooth scroll. Keyboard activation keeps setup independent of that motion.
+    await designer.locator('app-field-type-picker').getByRole('button', { name: label, exact: true }).press('Enter');
+    const name = designer.locator('input[aria-label="Enter field name"]:focus');
+    await name.fill(label);
+    // Finish name validation before opening the next palette. Otherwise its deferred
+    // blur update can move the next palette button during a pointer activation.
+    await name.press('Tab');
+    await expect(designer.locator('[id^=field-card-]')).toHaveCount(cardsBefore + index + 1);
   }
   await expect
     .poll(async () => designer.locator('[id^=field-card-]').count(), { timeout: 15_000 })

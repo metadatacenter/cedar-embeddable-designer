@@ -175,8 +175,10 @@ scenarios['import-error'] = async (page) => {
       },
     };
   });
-  await d.getByRole('button', { name: 'Add field', exact: true }).first().click();
+  // Import is its own insertion action; opening the field palette first scrolls
+  // this row while the next pointer activation is being prepared.
   await d.getByRole('button', { name: 'Import fields and elements', exact: true }).first().click();
+  await expect(page.getByRole('dialog')).toBeVisible();
   await page.getByRole('button', { name: 'Search', exact: true }).click();
 };
 // The test host loads no CEE, so the preview reports the component it needs.
