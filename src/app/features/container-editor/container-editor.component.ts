@@ -110,9 +110,10 @@ export class ContainerEditorComponent {
    * instead. The component's stylesheet reveals them under the same query.
    */
   private get cannotHover(): boolean {
+    const view = this.host.nativeElement.ownerDocument.defaultView;
     return (
-      this.host.nativeElement.ownerDocument.defaultView?.matchMedia('(hover: none), (pointer: coarse), (pointer: none)')
-        .matches === true
+      typeof view?.matchMedia === 'function' &&
+      view.matchMedia('(hover: none), (pointer: coarse), (pointer: none)').matches
     );
   }
   readonly fieldView = fieldView;
