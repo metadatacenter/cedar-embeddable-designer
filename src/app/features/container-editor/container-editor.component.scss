@@ -232,6 +232,18 @@ textarea.template-input {
   cursor: pointer;
 }
 
+// A device that cannot hover cannot reveal the actions between two cards, so they show above the
+// selected card: tapping a card selects it, and the author can add beside it. Escape still dismisses
+// them. A mouse, or keyboard focus, reveals them as before.
+@media (hover: none), (pointer: coarse), (pointer: none) {
+  .field-drop-item:has(> .field-drag-container.selected) > .insert-zone:not(.dismissed) {
+    opacity: 1;
+  }
+  .field-drop-item:has(> .field-drag-container.selected) > .insert-zone:not(.dismissed) app-insertion-actions {
+    --ced-insertion-pointer-events: auto;
+  }
+}
+
 .bottom-insert-zone {
   width: 100%;
 }

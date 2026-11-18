@@ -13,6 +13,8 @@ import {
   computed,
   viewChild,
   signal,
+  effect,
+  untracked,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -103,6 +105,16 @@ export class ContainerEditorComponent {
    * The dismissal ends when the pointer leaves the gap or focus moves to one of the actions.
    */
   readonly dismissedInsertion = signal<number | null>(null);
+  /**
+   * Whether this is a device that cannot hover, where the actions show above the selected card
+   * instead. The component's stylesheet reveals them under the same query.
+   */
+  private get cannotHover(): boolean {
+    return (
+      this.host.nativeElement.ownerDocument.defaultView?.matchMedia('(hover: none), (pointer: coarse), (pointer: none)')
+        .matches === true
+    );
+  }
   readonly fieldView = fieldView;
   readonly fieldDisplayName = fieldDisplayName;
   readonly elementDisplayName = elementDisplayName;
@@ -123,7 +135,10 @@ export class ContainerEditorComponent {
     // insertion zone behind the modal must not consume Escape before the browser can close it.
     if (event.composedPath().some((node) => node instanceof HTMLDialogElement && node.matches(':modal'))) return;
     const shown = this.container().children.find(
-      (child) => this.dismissedInsertion() !== child.id && this.insertZone(child.id)?.matches(':hover, :focus-within'),
+      (child) =>
+        this.dismissedInsertion() !== child.id &&
+        (this.insertZone(child.id)?.matches(':hover, :focus-within') ||
+          (this.cannotHover && this.service.selectedField() === child.id)),
     );
     if (!shown) return;
     event.preventDefault();
@@ -225,6 +240,12 @@ export class ContainerEditorComponent {
     const dismiss = (event: KeyboardEvent) => this.dismissInsertion(event);
     view?.addEventListener('keydown', dismiss);
     inject(DestroyRef).onDestroy(() => view?.removeEventListener('keydown', dismiss));
+    // Where the selected card shows the actions, a dismissal ends when another card is selected, as one
+    // ends elsewhere when the pointer leaves the gap.
+    effect(() => {
+      this.service.selectedField();
+      untracked(() => this.dismissedInsertion.set(null));
+    });
 
     // A focus request for one of this container's own cards, or for its own Add field, is this editor's to perform.
     afterRenderEffect(() => {

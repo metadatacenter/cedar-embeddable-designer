@@ -801,3 +801,42 @@ test('the search results look as they did before they became a grid', async ({ p
     ],
   });
 });
+
+/**
+ * A device that cannot hover has no way to reveal the actions between two cards, so they show above the
+ * selected card, and nowhere else. Tapping a card selects it.
+ */
+test.describe('on a device that cannot hover', () => {
+  test.use({ hasTouch: true });
+
+  test('tapping a card shows the actions above it, Escape dismisses them, and an action opens the picker', async ({
+    page,
+  }) => {
+    const designer = await openDesigner(page);
+    const zones = designer.locator('.insert-zone');
+    const category = designer.getByRole('group', { name: 'Category', exact: true });
+    // The gap above Category is the second; the first lies above Title.
+    const aboveCategory = zones.nth(1);
+    const add = aboveCategory.getByRole('button', { name: 'Add field here', exact: true });
+    await category.scrollIntoViewIfNeeded();
+    await category.tap({ position: { x: 4, y: 4 } });
+    await expect(category).toHaveClass(/\bselected\b/);
+    await expect(aboveCategory).toHaveCSS('opacity', '1');
+    await expect(add).toHaveCSS('pointer-events', 'auto');
+    await expect(zones.nth(0)).toHaveCSS('opacity', '0');
+    await expect(zones.nth(0).getByRole('button', { name: 'Add field here', exact: true })).toHaveCSS(
+      'pointer-events',
+      'none',
+    );
+
+    await page.keyboard.press('Escape');
+    await expect(aboveCategory).toHaveCSS('opacity', '0');
+    await expect(add).toHaveCSS('pointer-events', 'none');
+
+    await designer.getByRole('group', { name: 'Title', exact: true }).tap({ position: { x: 4, y: 4 } });
+    await category.tap({ position: { x: 4, y: 4 } });
+    await expect(aboveCategory).toHaveCSS('opacity', '1');
+    await add.tap();
+    await expect(designer.getByRole('heading', { name: 'Choose field' })).toBeVisible();
+  });
+});
