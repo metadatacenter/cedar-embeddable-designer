@@ -56,7 +56,6 @@ test('a published field keeps its definition while its parent configures, rename
         _valueConstraints: expect.objectContaining({ requiredValue: false }),
       }),
     ]);
-  await page.screenshot({ path: '/tmp/ced-published-field.png' });
   await card.getByTitle('Delete field', { exact: true }).click();
   await expect.poll(async () => Object.keys((await currentTemplate(page)).properties as object)).not.toContain('Title');
 });

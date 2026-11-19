@@ -34,6 +34,29 @@ function treeShape(node: Record<string, unknown>): object {
     }),
   };
 }
+/**
+ * A written template in the form both writers agree on.
+ *
+ * Two differences between the designer's write and the model library's own round trip are
+ * deliberate. A literal the author has not selected is written with `selectedByDefault: false` or
+ * without the flag, depending on the field type, and both mean the same. A template stored with no
+ * identifier is given one when the designer reads it, so the root `@id` is compared only where the
+ * source has one. Everything else must match, at every depth.
+ */
+function comparable(document: Record<string, unknown>, mintedIdentifier: boolean): unknown {
+  const strip = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(strip);
+    if (value === null || typeof value !== 'object') return value;
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([key, entry]) => !(key === 'selectedByDefault' && entry === false))
+        .map(([key, entry]) => [key, strip(entry)]),
+    );
+  };
+  const { '@id': identifier, ...rest } = strip(document) as Record<string, unknown>;
+  return mintedIdentifier ? rest : { '@id': identifier, ...rest };
+}
+
 describe('recursive container codec', () => {
   for (const [path, module] of Object.entries(corpus)) {
     const source = module.default;
@@ -42,9 +65,12 @@ describe('recursive container codec', () => {
       const draft = readContainer(source as object);
       // Serialization retains imported defaults; asynchronous validation owns save eligibility.
       const first = templateToJson(buildContainer(draft));
+      const minted = typeof source['@id'] !== 'string';
       expect(treeShape(first)).toEqual(treeShape(before));
-      expect(first['_ui']).toEqual(before['_ui']);
-      expect(Object.keys(first['properties'] as object)).toEqual(Object.keys(before['properties'] as object));
+      // Every field-level setting the library keeps, the designer keeps: `_ui`, constraints, labels and
+      // provenance of every nested field and element, not only the tree they form.
+      expect(comparable(first, minted)).toEqual(comparable(before, minted));
+      if (minted) expect(first['@id']).toMatch(/^https:\/\/repo\.metadatacenter\.org\/templates\//);
       expect(templateToJson(buildContainer(readContainer(first)))).toEqual(first);
     });
   }

@@ -48,5 +48,10 @@
     "file": "src/app/core/services/template.service.ts",
     "text": "Validation findings require a location, message and error/warning severity",
     "reason": "Developer-facing TypeError for malformed embedding API input; never presented as an authoring validation message."
+  },
+  {
+    "file": "src/app/features/container-editor/container-editor.component.ts",
+    "text": "(hover: none), (pointer: coarse), (pointer: none)",
+    "reason": "A CSS media query for devices that cannot hover, matched in code as the stylesheet matches it."
   }
 ]

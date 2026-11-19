@@ -2,6 +2,23 @@ import { expect, test } from '@playwright/test';
 import nestedTemplate from '../../src/app/core/model/fixtures/corpus/template-028.json' with { type: 'json' };
 import { currentTemplate, openDesigner, templateName } from './support';
 
+/**
+ * A stored definition in the form the designer writes it back.
+ *
+ * A schema title is derived from the artifact's name, and a literal the author has not selected may
+ * be written with `selectedByDefault: false` or without the flag. Neither is content an import may
+ * change, so both are left out of the comparison; everything else must come back as stored.
+ */
+function comparable(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(comparable);
+  if (value === null || typeof value !== 'object') return value;
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([key, entry]) => key !== 'title' && !(key === 'selectedByDefault' && entry === false))
+      .map(([key, entry]) => [key, comparable(entry)]),
+  );
+}
+
 test('opens an element-containing template without dropping nested content', async ({ page }) => {
   await openDesigner(page);
   await page.evaluate((template) => {
@@ -10,6 +27,11 @@ test('opens an element-containing template without dropping nested content', asy
   await expect(page.locator('app-element-card').first()).toBeVisible();
   const saved = await currentTemplate(page);
   expect(saved['_ui']).toEqual(nestedTemplate['_ui']);
+  // The top-level `_ui` names only the element. Its own `properties`, `_ui` and `required`, and the
+  // definition of every field inside it, are what an import can lose.
+  const nested = (document: Record<string, unknown>) =>
+    (document['properties'] as Record<string, unknown>)['Read & Understood Catalog'];
+  expect(comparable(nested(saved))).toEqual(comparable(nested(nestedTemplate)));
   const element = page.locator('app-container-editor').nth(1);
   const toggle = element.locator(':scope > .template-header-card .element-toggle');
   await expect(toggle).toHaveAttribute('aria-expanded', 'true');

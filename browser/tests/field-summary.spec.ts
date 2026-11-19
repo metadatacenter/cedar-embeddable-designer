@@ -38,78 +38,80 @@ const fields: Field[] = [
 ];
 
 for (const width of [1280, 375]) {
-  test(`field summaries reuse the CEE renderer and update without changing defaults at ${width}`, { tag: NEEDS_CEF }, async ({
-    page,
-  }, testInfo) => {
-    await page.setViewportSize({ width, height: 1000 });
-    const designer = await openDesigner(page);
-    const artifact = templateToJson(
-      buildTemplate({ name: 'Summaries', description: '', identifier: '', version: '0.0.1', fields }),
-    );
-    await page.evaluate((template) => {
-      (document.querySelector('cedar-embeddable-designer') as any).template = template;
-    }, artifact);
-    await expect(designer.locator('app-field-summary')).toHaveCount(3);
-    // The optional sibling can register after CED and its artifact are already mounted.
-    await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
-    const boxes = designer.locator('app-field-summary .cee-spec-box');
-    await expect(boxes).toHaveCount(3);
-    await expect(boxes.nth(0)).toContainText('integer');
-    await expect(boxes.nth(0)).toContainText('min 0');
-    await expect(boxes.nth(0)).toContainText('max 100');
-    await expect(boxes.nth(0)).toContainText('unit units');
-    await expect(boxes.nth(1)).toContainText('20');
-    await expect(boxes.nth(1)).toContainText('^ABC');
-    await expect(boxes.nth(2)).toContainText('HH:MM:SS');
-    // The shared summary must not acquire a second horizontal inset inside the card.
-    for (let index = 0; index < (await boxes.count()); index++) {
-      const box = boxes.nth(index);
-      const card = designer.locator('app-field-card').nth(index);
-      const body = card.locator('.field-card-body');
-      const expectedLeft = await body.evaluate(
-        (el) => el.getBoundingClientRect().left + parseFloat(getComputedStyle(el).paddingLeft),
+  test(
+    `field summaries reuse the CEE renderer and update without changing defaults at ${width}`,
+    { tag: NEEDS_CEF },
+    async ({ page }, testInfo) => {
+      await page.setViewportSize({ width, height: 1000 });
+      const designer = await openDesigner(page);
+      const artifact = templateToJson(
+        buildTemplate({ name: 'Summaries', description: '', identifier: '', version: '0.0.1', fields }),
       );
-      expect(Math.abs((await box.boundingBox())!.x - expectedLeft)).toBeLessThanOrEqual(1);
-    }
-    await designer.screenshot({ path: testInfo.outputPath(`constraint-summary-${width}.png`) });
-    const saved = await currentTemplate(page);
-    expect(saved).toEqual(artifact);
-    // Compare against CEF outside CED: inheritance must not change the presentation.
-    await page.evaluate(
-      (definition) => {
-        const reference = document.createElement('cedar-embeddable-field') as any;
-        reference.id = 'summary-reference';
-        reference.config = { readOnlyMode: true };
-        reference.fieldObject = definition;
-        document.body.append(reference);
-      },
-      fieldToJson({ ...fields[0], defaultValue: { kind: 'none' } }),
-    );
-    const reference = page.locator('#summary-reference .cee-spec-box');
-    await expect(reference).toBeVisible();
-    for (const property of [
-      'font-family',
-      'font-size',
-      'color',
-      'border-color',
-      'border-radius',
-      'min-height',
-      'padding',
-    ]) {
-      await expect(boxes.first()).toHaveCSS(
-        property,
-        await reference.evaluate((el, key) => getComputedStyle(el).getPropertyValue(key), property),
+      await page.evaluate((template) => {
+        (document.querySelector('cedar-embeddable-designer') as any).template = template;
+      }, artifact);
+      await expect(designer.locator('app-field-summary')).toHaveCount(3);
+      // The optional sibling can register after CED and its artifact are already mounted.
+      await page.addScriptTag({ path: process.env.CEF_BUNDLE! });
+      const boxes = designer.locator('app-field-summary .cee-spec-box');
+      await expect(boxes).toHaveCount(3);
+      await expect(boxes.nth(0)).toContainText('integer');
+      await expect(boxes.nth(0)).toContainText('min 0');
+      await expect(boxes.nth(0)).toContainText('max 100');
+      await expect(boxes.nth(0)).toContainText('unit units');
+      await expect(boxes.nth(1)).toContainText('20');
+      await expect(boxes.nth(1)).toContainText('^ABC');
+      await expect(boxes.nth(2)).toContainText('HH:MM:SS');
+      // The shared summary must not acquire a second horizontal inset inside the card.
+      for (let index = 0; index < (await boxes.count()); index++) {
+        const box = boxes.nth(index);
+        const card = designer.locator('app-field-card').nth(index);
+        const body = card.locator('.field-card-body');
+        const expectedLeft = await body.evaluate(
+          (el) => el.getBoundingClientRect().left + parseFloat(getComputedStyle(el).paddingLeft),
+        );
+        expect(Math.abs((await box.boundingBox())!.x - expectedLeft)).toBeLessThanOrEqual(1);
+      }
+      await designer.screenshot({ path: testInfo.outputPath(`constraint-summary-${width}.png`) });
+      const saved = await currentTemplate(page);
+      expect(saved).toEqual(artifact);
+      // Compare against CEF outside CED: inheritance must not change the presentation.
+      await page.evaluate(
+        (definition) => {
+          const reference = document.createElement('cedar-embeddable-field') as any;
+          reference.id = 'summary-reference';
+          reference.config = { readOnlyMode: true };
+          reference.fieldObject = definition;
+          document.body.append(reference);
+        },
+        fieldToJson({ ...fields[0], defaultValue: { kind: 'none' } }),
       );
-    }
-    const constraints = await openSettings(designer.locator('app-field-card').first());
-    await constraints.getByLabel('Maximum value', { exact: true }).fill('200');
-    await constraints.getByLabel('Maximum value', { exact: true }).press('Tab');
-    await expect(boxes.first()).toContainText('max 200');
-    expect((await currentTemplate(page)).properties.Count._valueConstraints.defaultValue).toBe(
-      artifact.properties.Count._valueConstraints.defaultValue,
-    );
-    expect(await boxes.first().evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
-  });
+      const reference = page.locator('#summary-reference .cee-spec-box');
+      await expect(reference).toBeVisible();
+      for (const property of [
+        'font-family',
+        'font-size',
+        'color',
+        'border-color',
+        'border-radius',
+        'min-height',
+        'padding',
+      ]) {
+        await expect(boxes.first()).toHaveCSS(
+          property,
+          await reference.evaluate((el, key) => getComputedStyle(el).getPropertyValue(key), property),
+        );
+      }
+      const constraints = await openSettings(designer.locator('app-field-card').first());
+      await constraints.getByLabel('Maximum value', { exact: true }).fill('200');
+      await constraints.getByLabel('Maximum value', { exact: true }).press('Tab');
+      await expect(boxes.first()).toContainText('max 200');
+      expect((await currentTemplate(page)).properties.Count._valueConstraints.defaultValue).toBe(
+        artifact.properties.Count._valueConstraints.defaultValue,
+      );
+      expect(await boxes.first().evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    },
+  );
 }
 
 for (const type of ['singleChoiceList', 'multipleChoiceList', 'multipleChoice', 'checkboxes']) {
@@ -216,7 +218,8 @@ test('occurrence ranges follow limits and repetition beside the field name', asy
   const requirement = configuration.getByLabel('Requirement', { exact: true });
   await requirement.selectOption('required');
   await expect(required).toHaveText('*');
-  await expect(card.locator('.field-heading > input + .required-mark + .occurrence-range')).toHaveText('(3 .. 4)');
+  await expect(card.locator('.field-heading > input + .required-mark')).toHaveText('*');
+  await expect(card.locator('.field-summary .occurrence-range')).toHaveText('(3 .. 4)');
   await requirement.selectOption('recommended');
   await expect(required).toHaveCount(0);
   await requirement.selectOption('optional');

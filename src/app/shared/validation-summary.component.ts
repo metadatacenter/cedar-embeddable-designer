@@ -51,9 +51,14 @@ export class ValidationSummaryComponent {
     afterRenderEffect(() => {
       const issues = this.issues();
       if (this.service.validation.checking() || this.service.validationReport().pendingValidation) return;
+      const next = new Set(issues.map(identity));
       const added = issues.filter((issue) => !listed.has(identity(issue)));
-      listed = new Set(issues.map(identity));
-      if (added.length) untracked(() => this.announceUnsaid(added, issues.length));
+      const changed = added.length || [...listed].some((key) => !next.has(key));
+      listed = next;
+      untracked(() => {
+        if (changed) this.service.updateAnnouncementAfter(issues.length ? this.summary(issues.length) : null);
+        if (added.length) this.announceUnsaid(added, issues.length);
+      });
     });
   }
 
@@ -66,10 +71,12 @@ export class ValidationSummaryComponent {
     );
     if (added.every((issue) => issue.source === 'host' || alerts.has(issue.message.trim()))) return;
     // An action can have announced its result in the same moment, and that message keeps its place.
-    this.service.announceAfter(
-      this.service.access.readOnly() || this.advisory()
-        ? this.i18n.t('validation.inspectionSummary', { count })
-        : this.i18n.t(countKey('validation.summary', count), { count }),
-    );
+    this.service.announceAfter(this.summary(count));
+  }
+
+  private summary(count: number): string {
+    return this.service.access.readOnly() || this.advisory()
+      ? this.i18n.t('validation.inspectionSummary', { count })
+      : this.i18n.t(countKey('validation.summary', count), { count });
   }
 }

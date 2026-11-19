@@ -75,7 +75,7 @@ export class ArtifactNameDirective {
     let focused: unknown;
     afterRenderEffect(() => {
       if (this.artifactSetting() === 'name' && this.service.nameFocusRequest() === this.appArtifactName()) {
-        this.element.nativeElement.focus({ preventScroll: true });
+        this.focusWithoutScrolling();
         this.service.nameFocusRequest.set(null);
       }
       const issue = this.service.validationTarget();
@@ -91,9 +91,24 @@ export class ArtifactNameDirective {
           card?.setAttribute('tabindex', '-1');
           card?.focus();
         } else {
-          this.element.nativeElement.focus({ preventScroll: true });
+          this.focusWithoutScrolling();
         }
       }
     });
+  }
+
+  /**
+   * Focus that leaves the scroll position to the designer.
+   *
+   * WebKit ignores `preventScroll` for a text input focused before it is laid out: once the input
+   * gets its box, WebKit scrolls it into view. A newly added card's name is focused in the render
+   * that creates it, and that late jump stops the smooth scroll that centres the card, leaving it at
+   * the bottom edge with only its name showing. Reading the input's box first lays it out, so the
+   * focus finds it laid out and moves nothing.
+   */
+  private focusWithoutScrolling(): void {
+    const element = this.element.nativeElement;
+    element.getBoundingClientRect();
+    element.focus({ preventScroll: true });
   }
 }

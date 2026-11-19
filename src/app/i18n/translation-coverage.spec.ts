@@ -35,8 +35,9 @@ interface AllowListEntry {
 const html = import.meta.glob<string>('/src/app/**/*.html', { eager: true, query: '?raw', import: 'default' });
 const typescript = import.meta.glob<string>('/src/app/**/*.ts', { eager: true, query: '?raw', import: 'default' });
 
-/** Test code and fixtures are not rendered to authors. */
-const inScope = (file: string): boolean => !file.endsWith('.spec.ts') && !file.includes('/fixtures/');
+/** Test code, its shared `.testing.ts` helpers and fixtures are not rendered to authors. */
+const inScope = (file: string): boolean =>
+  !file.endsWith('.spec.ts') && !file.endsWith('.testing.ts') && !file.includes('/fixtures/');
 
 const relative = (file: string): string => file.replace(/^\//, '');
 

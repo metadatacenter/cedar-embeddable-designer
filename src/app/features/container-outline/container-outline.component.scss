@@ -81,14 +81,19 @@ button {
   min-width: 0;
   overflow-wrap: break-word;
 }
-.node-label > .validation-badge,
-.node-label > .required-mark {
+.node-label > .validation-badge {
   margin-inline-start: var(--cedar-space-2);
 }
-/* Not inline, so the button's accessible name keeps a space before "Required", as it did when the
-   mark was a flex item of its own. */
-.required-mark {
+/* A normal final word travels with its marker. An exceptionally long word may still break
+   inside this box rather than overflow the pane. */
+.required-name-tail {
   display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+.required-mark {
+  display: inline;
 }
 /* Move up and Move down sit before the handle, which stays at the row's end. */
 .outline-move {

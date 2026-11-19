@@ -88,69 +88,73 @@
                 >
               }
             </div>
-            @if (offersAllowMultiple) {
-              <div class="settings-fields configuration-fields">
-                <label class="check configuration-multiple"
-                  ><input
+            <div class="settings-fields configuration-fields configuration-identity-occurrences">
+              <div class="configuration-key">
+                <label data-setting="key"
+                  >{{ 'settings.key' | translate
+                  }}<input
                     spellcheck="false"
-                    type="checkbox"
-                    name="allowMultiple"
-                    [checked]="field.allowMultiple"
-                    (change)="service.toggleAllowMultiple(field.id)"
-                  />{{ 'settings.allowMultiple' | translate }}</label
-                >
+                    autocomplete="off"
+                    [attr.aria-invalid]="!!keyError"
+                    [attr.aria-describedby]="keyError ? 'field-key-error-' + field.id : null"
+                    name="deploymentName"
+                    [(ngModel)]="deploymentName"
+                    (ngModelChange)="saveKey()"
+                /></label>
+                @if (keyError) {
+                  <p role="alert" class="ced-field-error" [id]="'field-key-error-' + field.id">{{ keyError }}</p>
+                }
               </div>
-            }
-            <fieldset [attr.aria-invalid]="boundsInvalid" class="settings-fields configuration-fields">
-              <label data-setting="key"
-                >{{ 'settings.key' | translate
-                }}<input
-                  spellcheck="false"
-                  autocomplete="off"
-                  [attr.aria-invalid]="!!keyError"
-                  [attr.aria-describedby]="keyError ? 'field-key-error-' + field.id : null"
-                  name="deploymentName"
-                  [(ngModel)]="deploymentName"
-                  (ngModelChange)="saveKey()"
-              /></label>
-              @if (offersBounds) {
-                <div class="configuration-bounds" data-setting="occurrences">
-                  <label
-                    >{{ 'fieldSettings.occurrences.min' | translate
-                    }}<input
-                      spellcheck="false"
-                      autocomplete="off"
-                      type="number"
-                      name="min"
-                      data-setting="minItems"
-                      min="0"
-                      step="1"
-                      [disabled]="!multiple || minimumHeld"
-                      [(ngModel)]="min"
-                      (ngModelChange)="saveBounds(configurationForm, 'min')"
-                      [placeholder]="'settings.minOccurrencesPlaceholder' | translate"
-                  /></label>
-                  <label
-                    >{{ 'fieldSettings.occurrences.max' | translate
-                    }}<input
-                      spellcheck="false"
-                      autocomplete="off"
-                      type="number"
-                      name="max"
-                      data-setting="maxItems"
-                      min="0"
-                      step="1"
-                      [disabled]="!multiple"
-                      [(ngModel)]="max"
-                      (ngModelChange)="saveBounds(configurationForm, 'max')"
-                      [placeholder]="'settings.unlimited' | translate"
-                  /></label>
-                </div>
+              @if (offersAllowMultiple || offersBounds) {
+                <fieldset [attr.aria-invalid]="boundsInvalid" class="configuration-occurrences">
+                  @if (offersAllowMultiple) {
+                    <label class="check configuration-multiple"
+                      ><input
+                        spellcheck="false"
+                        type="checkbox"
+                        name="allowMultiple"
+                        [checked]="field.allowMultiple"
+                        (change)="service.toggleAllowMultiple(field.id)"
+                      />{{ 'settings.allowMultiple' | translate }}</label
+                    >
+                  }
+                  @if (offersBounds) {
+                    <div class="configuration-bounds" data-setting="occurrences">
+                      <label
+                        >{{ 'fieldSettings.occurrences.min' | translate
+                        }}<input
+                          spellcheck="false"
+                          autocomplete="off"
+                          type="number"
+                          name="min"
+                          data-setting="minItems"
+                          min="0"
+                          step="1"
+                          [disabled]="!multiple || minimumHeld"
+                          [(ngModel)]="min"
+                          (ngModelChange)="saveBounds(configurationForm, 'min')"
+                          [placeholder]="'settings.minOccurrencesPlaceholder' | translate"
+                      /></label>
+                      <label
+                        >{{ 'fieldSettings.occurrences.max' | translate
+                        }}<input
+                          spellcheck="false"
+                          autocomplete="off"
+                          type="number"
+                          name="max"
+                          data-setting="maxItems"
+                          min="0"
+                          step="1"
+                          [disabled]="!multiple"
+                          [(ngModel)]="max"
+                          (ngModelChange)="saveBounds(configurationForm, 'max')"
+                          [placeholder]="'settings.unlimited' | translate"
+                      /></label>
+                    </div>
+                  }
+                </fieldset>
               }
-            </fieldset>
-            @if (keyError) {
-              <p role="alert" class="ced-field-error" [id]="'field-key-error-' + field.id">{{ keyError }}</p>
-            }
+            </div>
             @if (dynamic) {
               <div class="configuration-property" data-setting="propertyIri">
                 <span class="default-label">{{ 'settings.propertyIri' | translate }}</span>

@@ -71,6 +71,7 @@
                 class="remove"
                 [title]="'annotations.remove' | translate"
                 [attr.aria-label]="'annotations.removeNumbered' | translate: { number: i + 1 }"
+                (focus)="revealKeyboardAction($event)"
                 (click)="remove(i)"
               >
                 <app-icon key="trash" size="small" />

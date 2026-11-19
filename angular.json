@@ -113,7 +113,10 @@
             "buildTarget": ":build:testing",
             "runner": "vitest",
             "setupFiles": ["src/test-setup.ts"],
-            "providersFile": "src/test-providers.ts"
+            "providersFile": "src/test-providers.ts",
+            "coverageInclude": ["src/app/**/*.ts"],
+            "coverageExclude": ["src/**/*.spec.ts", "src/**/*.testing.ts", "src/app/**/*.dev.ts"],
+            "coverageThresholds": { "statements": 82, "branches": 76, "functions": 83, "lines": 84 }
           }
         },
         "lint": {

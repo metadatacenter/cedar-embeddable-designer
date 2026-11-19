@@ -113,6 +113,7 @@ p[role='alert'] {
 }
 .remove {
   @include patterns.icon-button;
+  scroll-margin: var(--cedar-space-1);
   border: 0;
   background: transparent;
   color: var(--cedar-color-primary);

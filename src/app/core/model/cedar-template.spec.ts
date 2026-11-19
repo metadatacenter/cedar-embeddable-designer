@@ -1155,6 +1155,36 @@ it('checks decimal precision for bounds and defaults without rounding exponent n
   expect(() => buildTemplate(numericField({ min: 1, max: 3 }, 4))).toThrow(/default.*outside/);
 });
 
+/**
+ * The refusals the detailed numeric checks leave to the shared policy.
+ *
+ * A double has no integer range and no float limits for the detailed checks to apply, so a bound or
+ * a default beyond its range reaches the model's own verdict, and the writer refuses with that
+ * verdict's general message. A default of the wrong kind for its field is refused before any of it.
+ */
+it('refuses a double bound or default beyond the double range, and a default of the wrong kind', () => {
+  for (const bound of [{ min: '1e400' }, { max: '-1e400' }])
+    expect(() => buildTemplate(numericField({ type: 'xsd:double', ...bound }))).toThrow(
+      'Title: The numeric settings are inconsistent.',
+    );
+  for (const value of ['1e400', '-1e400', '1e-400'])
+    expect(() => buildTemplate(numericField({ type: 'xsd:double' }, value))).toThrow(
+      'Title: Enter a valid default value.',
+    );
+  expect(() => buildTemplate(numericField({ type: 'xsd:double', min: '1e300' }, '1e308'))).not.toThrow();
+  expect(() =>
+    buildTemplate(
+      templateOf(
+        field({
+          type: 'number',
+          numeric: { type: 'xsd:decimal', min: null, max: null, decimalPlaces: null, unit: null },
+          defaultValue: { kind: 'literal', value: '5' },
+        }),
+      ),
+    ),
+  ).toThrow('Title: A number field cannot hold a literal default.');
+});
+
 describe('paragraph length constraints', () => {
   it.each([
     [null, null],

@@ -129,6 +129,21 @@ test('a document loaded with a defect no control shows is announced by its summa
   await expect(designer.locator('.validation-summary summary')).toHaveText('Validation issues (1)');
   await afterAnnouncement(page);
   expect(await changes()).toBe(0);
+  // A corrected replacement removes the old count, including after the earlier mode change.
+  (child(artifact, 'Dose')._valueConstraints as Record<string, unknown>).defaultValue = '50';
+  await designer.evaluate(
+    (element, value) => (element as unknown as CedarEmbeddableDesignerElement).loadArtifact(value as CedJsonObject),
+    artifact,
+  );
+  await expect
+    .poll(() =>
+      designer.evaluate(
+        (element) => (element as unknown as CedarEmbeddableDesignerElement).validationReport.issues.length,
+      ),
+    )
+    .toBe(0);
+  await afterAnnouncement(page);
+  await expect(region(designer)).not.toContainText(/Validation issues|error.*before saving/);
 });
 
 test('a warning that arrives with an announced action is said after it', async ({ page }) => {
@@ -151,4 +166,21 @@ test('a warning that arrives with an announced action is said after it', async (
   await designer.locator('#stub-pick').click();
   await expect(designer.locator('.validation-summary summary')).toHaveText('Validation issues (1)');
   await expect(region(designer)).toHaveText('Default set to cancer. Validation issues (1)');
+});
+
+test('a resolved template name never leaves an obsolete validation count', async ({ page }) => {
+  const designer = await openDesigner(page);
+  await designer.evaluate((element) => (element as unknown as CedarEmbeddableDesignerElement).newArtifact('template'));
+  await designer.getByRole('textbox', { name: 'Template name', exact: true }).fill('Valid study');
+  await designer.getByRole('textbox', { name: 'Template name', exact: true }).blur();
+  await expect
+    .poll(() =>
+      designer.evaluate((element) => {
+        const report = (element as unknown as CedarEmbeddableDesignerElement).validationReport;
+        return { canSave: report.canSave, issues: report.issues.length };
+      }),
+    )
+    .toEqual({ canSave: true, issues: 0 });
+  await afterAnnouncement(page);
+  await expect(region(designer)).not.toContainText(/Validation issues|error.*before saving/);
 });

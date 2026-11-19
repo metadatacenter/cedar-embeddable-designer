@@ -1,10 +1,11 @@
 import { applyPreset } from './support';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator } from '@playwright/test';
 import {
   DESIGNER,
   child,
   clickCentred,
   currentTemplate,
+  expectOutlineNames,
   fieldName,
   fieldOrder,
   openSettings,
@@ -36,7 +37,9 @@ test('an edit reaches the overview sidebar', async ({ page }) => {
 
   // The sidebar is a sibling view of the same signal. Under OnPush it is the
   // first thing to stop updating when a component is not marked dirty.
-  await expect(designer.getByText('Study title', { exact: true }).first()).toBeVisible();
+  const name = designer.locator('app-container-outline .node-name').first();
+  await expectOutlineNames(name, 'Study title');
+  await expect(name).toBeVisible();
 });
 
 test('field type icons have no conversion menu', async ({ page }) => {
@@ -145,33 +148,57 @@ test.describe('identity', () => {
 });
 
 test('adding a field scrolls to it without reaching for the document', async ({ page }) => {
+  // A short page, so the list scrolls and a card added at its end starts outside the scrolled box.
+  await page.setViewportSize({ width: 1280, height: 420 });
   const designer = await openDesigner(page);
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
+  const scroller = designer.locator('.designer-scroll');
+  const within = async (card: Locator) => {
+    const [box, frame] = await Promise.all([card.boundingBox(), scroller.boundingBox()]);
+    return !!box && !!frame && box.y >= frame.y && box.y + box.height <= frame.y + frame.height;
+  };
 
   await designer.getByRole('button', { name: /^Add field$/ }).click();
-  await designer.getByRole('button', { name: 'Text', exact: true }).first().click();
+  const text = designer.getByRole('button', { name: 'Text', exact: true }).first();
+  await expect(text).toBeVisible();
+  // Opening the picker scrolled the list to it. Back at the top, the type is chosen without the
+  // pointer, which would scroll again, so only the designer's own scroll can reach the new card.
+  await scroller.evaluate((element) => element.scrollTo({ top: 0, behavior: 'instant' }));
+  expect(await within(designer.locator('[id^=field-card-]').last())).toBe(false);
+  await text.dispatchEvent('click');
 
-  await expect(designer.locator('[id^=field-card-]')).toHaveCount(4);
-  // The scroll used to be `document.getElementById`, which finds nothing in a
-  // shadow tree; the component resolves the card from its own root now.
+  const cards = designer.locator('[id^=field-card-]');
+  await expect(cards).toHaveCount(4);
+  // The scroll used to be `document.getElementById`, which finds nothing in a shadow tree; the
+  // component resolves the card from its own root now.
+  await expect.poll(() => within(cards.last())).toBe(true);
   expect(errors).toEqual([]);
 });
 
 test('dragging a field leaves nothing behind in the host document', async ({ page }) => {
   const designer = await openDesigner(page);
   const cards = designer.locator('[id^=field-card-]');
-  const source = cards.nth(1);
-  const target = cards.nth(0);
+  const before = fieldOrder(await currentTemplate(page));
+  // A card drags by its handle only; pressing anywhere else starts no drag at all.
+  const from = (await cards.nth(1).locator('.field-drag-handle').boundingBox())!;
+  const to = (await cards.nth(0).boundingBox())!;
+  const bodyPreviews = () => page.evaluate(() => document.body.querySelectorAll('.cdk-drag-preview').length);
 
-  await source.hover();
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
   await page.mouse.down();
-  await target.hover();
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2 - 10, { steps: 3 });
+  await page.mouse.move(from.x + from.width / 2, to.y + 2, { steps: 12 });
+  // The CDK appends a drag preview to the body by default, where the designer's styles cannot
+  // reach it. While the pointer is down, the preview is inside the designer and the body holds none.
+  await expect(designer.locator('.cdk-drag-preview')).toBeVisible();
+  expect(await bodyPreviews()).toBe(0);
   await page.mouse.up();
 
-  // The CDK appends a drag preview to the body by default, where the designer's
-  // styles cannot reach it.
-  expect(await page.evaluate(() => document.body.querySelectorAll('.cdk-drag-preview').length)).toBe(0);
+  await expect
+    .poll(async () => fieldOrder(await currentTemplate(page)))
+    .toEqual([before[1], before[0], ...before.slice(2)]);
+  expect(await bodyPreviews()).toBe(0);
 });
 
 test('the element publishes each edit once', async ({ page }) => {

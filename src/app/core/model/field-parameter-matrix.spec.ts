@@ -20,42 +20,35 @@
  * preserved without settling (normalised on a later pass), so neither claim implies
  * the other.
  *
+ * Both claims are about documents the designer would save. Each cell's JSON is also
+ * held to the model's validator, the verdict a save meets, because a value preserved
+ * in a document the server refuses has not been preserved for anyone.
+ *
  * The parameters here are the ones every field carries, so the cross is dense by
  * construction and any hole in it is deliberate. Per-type parameters — numeric
  * bounds, text length, temporal precision, media dimensions — are the descriptor's
  * `parameters` axis and belong to their own matrix.
  */
 import { describe, expect, it } from 'vitest';
-import { ArtifactMetadata, FIELD_TYPES, Field } from '../models/types';
+import { FIELD_TYPES, Field } from '../models/types';
 import {
   DesignerTemplate,
-  allowsMultiple,
-  allowsStatus,
   buildTemplate,
-  newFieldIdentity,
   readTemplate,
   templateToJson,
   templateToYaml,
   toDesignerTemplate,
 } from './cedar-template';
+import { SchemaArtifactValidator } from './cedar-model/value-policy';
 import { allowedInContainer } from './container-draft';
+import {
+  SHARED_CELLS as cells,
+  SHARED_PARAMETERS as PARAMETERS,
+  sharedField as fieldFor,
+} from './field-parameter-cases.testing';
 import { PLACEMENTS } from './field-placements.testing';
 
 const paletteTypes = Object.keys(FIELD_TYPES);
-
-function field(overrides: Partial<Field> = {}): Field {
-  return {
-    id: 1,
-    type: 'text',
-    name: 'F',
-    status: 'optional',
-    options: [],
-    defaultValue: { kind: 'none' },
-    allowMultiple: false,
-    ...newFieldIdentity(),
-    ...overrides,
-  };
-}
 
 function templateOf(...fields: Field[]): DesignerTemplate {
   return {
@@ -67,204 +60,11 @@ function templateOf(...fields: Field[]): DesignerTemplate {
   };
 }
 
-/**
- * A controlled-term field with no vocabulary cannot be written as itself, so the
- * matrix gives every cell of that type one. Without it the field goes out IRI-shaped
- * with empty constraints and comes back a text field, and every cell would fail for
- * that one reason rather than for the parameter under test.
- */
-function withTypeEssentials(paletteType: string): Partial<Field> {
-  if (paletteType !== 'controlledTerms') return {};
-  return {
-    controlledTermConstraints: {
-      constraints: [
-        {
-          sourceType: 'ontology' as const,
-          sourceId: 'DOID',
-          ontologyId: 'DOID',
-          ontologyName: 'Human Disease Ontology',
-        },
-      ],
-      actions: [],
-    },
-  };
+/** The model's verdict on a written artifact, with its findings so a refusal says why. */
+function verdict(written: ReturnType<typeof templateToJson>, kind: 'template' | 'element' | 'field') {
+  const { canSave, findings } = SchemaArtifactValidator.validate(written, kind);
+  return { canSave, findings: findings.map((finding) => `${finding.path}: ${finding.message}`) };
 }
-
-const metadata = (overrides: Partial<ArtifactMetadata>): ArtifactMetadata => ({
-  title: null,
-  description: null,
-  schemaVersion: '1.6.0',
-  version: '0.0.1',
-  publicationStatus: 'bibo:draft',
-  createdOn: null,
-  createdBy: null,
-  modifiedOn: null,
-  modifiedBy: null,
-  derivedFrom: null,
-  previousVersion: null,
-  ...overrides,
-});
-
-/**
- * One column of the matrix: a parameter, how an author sets it, and what must come
- * back.
- *
- * `read` takes the value off the designer's own state rather than out of the JSON,
- * because the designer's state is what an author sees when they reopen a template.
- * A value that reaches the artifact but not back into the card is still lost.
- */
-interface SharedParameter {
-  readonly name: string;
-  readonly set: (paletteType: string) => Partial<Field>;
-  readonly read: (field: Field) => unknown;
-  /** Types that carry it, where it is not every type. */
-  readonly appliesTo?: (paletteType: string) => boolean;
-  /** What a YAML export does with it. Lossless unless stated. */
-  readonly yaml?: YamlOutcome;
-  /** Recorded by the field's parent rather than the field, so a standalone field has none. */
-  readonly placement?: true;
-}
-
-/**
- * What YAML does with a parameter.
- *
- * `templateToYaml` writes the YAML, reads it back and compares the two as JSON,
- * refusing to return a string that would lose anything. So a parameter YAML cannot
- * carry does not come back wrong: the export fails, and says why. Those are the only
- * two outcomes a cell may have, and the matrix records which — a parameter moving
- * between them is a change worth being told about, in either direction.
- *
- * `refused` is not a statement about the YAML format. The Java matrix in
- * `cedar-artifact-library` asserts that a child field's version, provenance,
- * `pav:derivedFrom` and `pav:previousVersion` all survive non-compact YAML, so what
- * is refused here is what the TypeScript writer and reader lose between them. The
- * guard is CED's; the gap is the model library's.
- */
-type YamlOutcome = 'lossless' | 'refused';
-
-const PARAMETERS: readonly SharedParameter[] = [
-  {
-    name: 'baseline',
-    set: () => ({}),
-    read: (field) => field.name,
-  },
-  {
-    name: 'identifier',
-    set: () => ({ schemaIdentifier: 'ID-42' }),
-    read: (field) => field.schemaIdentifier,
-  },
-  {
-    name: 'language',
-    set: () => ({ language: 'fr' }),
-    read: (field) => field.language,
-  },
-  {
-    name: 'labels',
-    set: () => ({ preferredLabel: 'Preferred', alternateLabels: ['Alternate', 'Autre'] }),
-    read: (field) => [field.preferredLabel, field.alternateLabels],
-  },
-  {
-    name: 'annotations',
-    set: () => ({
-      annotations: [
-        { name: 'note', kind: 'literal' as const, value: 'Résumé – preserved' },
-        { name: 'reference', kind: 'iri' as const, value: 'https://example.org/reference' },
-      ],
-    }),
-    read: (field) => field.annotations,
-  },
-  {
-    name: 'helpText',
-    set: () => ({ helpText: 'Field help' }),
-    read: (field) => field.helpText,
-  },
-  {
-    name: 'display',
-    placement: true,
-    set: () => ({ displayLabel: 'Shown', displayDescription: 'Shown help' }),
-    read: (field) => [field.displayLabel, field.displayDescription],
-  },
-  {
-    name: 'version',
-    yaml: 'refused',
-    set: () => ({ artifact: metadata({ version: '2.3.4' }) }),
-    read: (field) => field.artifact?.version,
-  },
-  {
-    name: 'published',
-    yaml: 'refused',
-    set: () => ({ artifact: metadata({ version: '2.3.4', publicationStatus: 'bibo:published' }) }),
-    read: (field) => [field.artifact?.version, field.artifact?.publicationStatus],
-  },
-  {
-    name: 'derivedFrom',
-    yaml: 'refused',
-    set: () => ({ artifact: metadata({ derivedFrom: 'https://example.org/fields/source' }) }),
-    read: (field) => field.artifact?.derivedFrom,
-  },
-  {
-    name: 'previousVersion',
-    yaml: 'refused',
-    set: () => ({ artifact: metadata({ previousVersion: 'https://example.org/fields/previous' }) }),
-    read: (field) => field.artifact?.previousVersion,
-  },
-  {
-    name: 'provenance',
-    yaml: 'refused',
-    set: () => ({
-      artifact: metadata({
-        createdBy: 'https://example.org/users/creator',
-        modifiedBy: 'https://example.org/users/editor',
-        createdOn: '2026-01-01T01:02:03Z',
-        modifiedOn: '2026-02-01T04:05:06Z',
-      }),
-    }),
-    read: (field) => [
-      field.artifact?.createdBy,
-      field.artifact?.modifiedBy,
-      field.artifact?.createdOn,
-      field.artifact?.modifiedOn,
-    ],
-  },
-  {
-    name: 'schemaText',
-    yaml: 'refused',
-    set: () => ({ artifact: metadata({ title: 'Custom schema title', description: 'Custom schema description' }) }),
-    read: (field) => [field.artifact?.title, field.artifact?.description],
-  },
-  {
-    name: 'required',
-    placement: true,
-    set: () => ({ status: 'required' }),
-    read: (field) => field.status,
-    appliesTo: allowsStatus,
-  },
-  {
-    name: 'recommended',
-    placement: true,
-    set: () => ({ status: 'recommended' }),
-    read: (field) => field.status,
-    appliesTo: allowsStatus,
-  },
-  {
-    name: 'cardinality',
-    placement: true,
-    set: () => ({ allowMultiple: true, minItems: 1, maxItems: 4 }),
-    read: (field) => [field.allowMultiple, field.minItems, field.maxItems],
-    appliesTo: allowsMultiple,
-  },
-];
-
-/** Every cell the rules above admit, as one flat list so each is its own test. */
-const cells = paletteTypes.flatMap((paletteType) =>
-  PARAMETERS.filter((parameter) => parameter.appliesTo?.(paletteType) ?? true).map((parameter) => ({
-    paletteType,
-    parameter,
-  })),
-);
-
-const fieldFor = (paletteType: string, parameter: SharedParameter): Field =>
-  field({ type: paletteType, ...withTypeEssentials(paletteType), ...parameter.set(paletteType) });
 
 /** The designer's state after writing the template and reading it back. */
 function afterRoundTrip(state: DesignerTemplate, form: 'json' | 'yaml'): DesignerTemplate {
@@ -289,6 +89,12 @@ const lossless = cells.filter((cell) => (cell.parameter.yaml ?? 'lossless') === 
 const refused = cells.filter((cell) => cell.parameter.yaml === 'refused');
 
 describe('through json', () => {
+  it.each(named(cells))('%s with its %s writes a template the designer can save', (_paletteType, _name, cell) => {
+    const written = templateToJson(buildTemplate(templateOf(fieldFor(cell.paletteType, cell.parameter))));
+
+    expect(verdict(written, 'template')).toEqual({ canSave: true, findings: [] });
+  });
+
   it.each(named(cells.filter((cell) => cell.parameter.name !== 'schemaText')))(
     '%s keeps its %s',
     (_paletteType, _name, cell) => {
@@ -384,6 +190,15 @@ const keeps = placedCells.filter(
 );
 
 describe('at each placement', () => {
+  it.each(placed(placedCells.filter((cell) => cell.form === 'json')))(
+    'at %s through %s, %s with its %s writes an artifact the designer can save',
+    (_placement, _form, _paletteType, _name, cell) => {
+      const written = cell.placement.write(fieldFor(cell.paletteType, cell.parameter));
+
+      expect(verdict(written, cell.placement.saved)).toEqual({ canSave: true, findings: [] });
+    },
+  );
+
   it.each(placed(keeps))('at %s through %s, %s keeps its %s', (_placement, _form, _paletteType, _name, cell) => {
     const original = fieldFor(cell.paletteType, cell.parameter);
     const readBack = cell.placement.roundTrip(original, cell.form);

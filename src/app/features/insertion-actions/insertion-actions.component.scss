@@ -5,6 +5,7 @@
   gap: var(--cedar-space-2);
 }
 button {
+  pointer-events: var(--ced-insertion-pointer-events, auto);
   display: inline-flex;
   align-items: center;
   gap: var(--cedar-space-1);

@@ -333,7 +333,9 @@ export class TemplateService {
   readonly announcement = signal('');
   private pendingAnnouncement: ReturnType<typeof setTimeout> | undefined;
   private pendingMessage: string | null = null;
+  private trailingAnnouncement: { prefix: string; text: string } | null = null;
   announce(text: string): void {
+    this.trailingAnnouncement = null;
     this.pendingMessage = text;
     this.show(text);
   }
@@ -342,12 +344,26 @@ export class TemplateService {
    * call replaces the first one's text and keeps the message.
    */
   announceAfter(text: string): void {
-    this.show(this.pendingMessage === null ? text : `${this.pendingMessage} ${text}`);
+    const prefix = this.pendingMessage ?? '';
+    this.trailingAnnouncement = { prefix, text };
+    this.show([prefix, text].filter(Boolean).join(' '));
+  }
+  /** Update only the supplemental message we still own, preserving its action prefix. */
+  updateAnnouncementAfter(text: string | null): void {
+    const previous = this.trailingAnnouncement;
+    if (!previous || previous.text === text) return;
+    this.trailingAnnouncement = text === null ? null : { prefix: previous.prefix, text };
+    const message = [previous.prefix, text].filter(Boolean).join(' ');
+    // A queued action must still arrive. A displayed count can change directly, without
+    // re-queuing a historical action or leaving an obsolete count in the live region.
+    if (this.pendingAnnouncement !== undefined) this.show(message);
+    else this.announcement.set(message);
   }
   private show(text: string): void {
     clearTimeout(this.pendingAnnouncement);
     this.announcement.set('');
     this.pendingAnnouncement = setTimeout(() => {
+      this.pendingAnnouncement = undefined;
       this.pendingMessage = null;
       this.announcement.set(text);
     }, 100);

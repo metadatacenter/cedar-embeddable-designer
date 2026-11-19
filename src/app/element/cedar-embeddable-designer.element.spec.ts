@@ -83,6 +83,35 @@ describe('CedarEmbeddableDesignerElementComponent', () => {
     expect(element.currentArtifact).toEqual(saved);
   });
 
+  /**
+   * The event a host's unsaved-changes guard listens to.
+   *
+   * Reading `isDirty` is not the same check: the event comes from an effect, and an effect scheduled
+   * with this component's view ran once and never again, so a host would have heard "clean" and
+   * nothing after it. Each transition is driven the way a host drives it, and each must be heard.
+   */
+  it('announces each change of unsaved state across an edit, a saved adoption and a second edit', async () => {
+    const fixture = create();
+    const element = fixture.componentInstance;
+    const heard: boolean[] = [];
+    element.dirtyChange.subscribe((dirty) => heard.push(dirty));
+    expect(element.isDirty).toBe(false);
+
+    service.templateName.set('Edited');
+    await fixture.whenStable();
+    expect(heard.at(-1)).toBe(true);
+
+    element.loadArtifact(element.currentArtifact, { preserveView: true });
+    await fixture.whenStable();
+    expect(heard.at(-1)).toBe(false);
+
+    service.templateName.set('Edited again');
+    await fixture.whenStable();
+    expect(heard.at(-1)).toBe(true);
+    // Repeated values are harmless; a missing transition is what a host cannot recover from.
+    expect(heard.filter((dirty, index) => index === 0 || dirty !== heard[index - 1])).toEqual([true, false, true]);
+  });
+
   describe('config', () => {
     it('is off until a host names a terminology server', () => {
       create();
@@ -244,6 +273,42 @@ describe('CedarEmbeddableDesignerElementComponent', () => {
       expect(received.at(-1)).toMatchObject({ 'schema:name': 'Next' });
       (received.at(-1) as Record<string, unknown>)['schema:name'] = 'Later edit';
       expect(element.currentArtifact).toMatchObject({ 'schema:name': 'Next' });
+    });
+
+    /**
+     * A loaded document can be editable before it can be written. While it cannot, a host must hear
+     * nothing rather than the last artifact that could, which it would otherwise save as current.
+     */
+    it('publishes nothing while the document cannot be written, and the repaired artifact after', async () => {
+      const fixture = create();
+      const element = fixture.componentInstance;
+      const templates: Record<string, unknown>[] = [];
+      const artifacts: object[] = [];
+      element.templateChange.subscribe((artifact) => templates.push(artifact as Record<string, unknown>));
+      element.artifactChange.subscribe((artifact) => artifacts.push(artifact));
+      service.templateName.set('Writable');
+      await fixture.whenStable();
+      const heard = [templates.length, artifacts.length];
+      const title = service.fields()[0].id;
+      const lengths = (minLength: number, maxLength: number) =>
+        service.fields.update((fields) =>
+          fields.map((field) =>
+            field.id === title ? { ...field, textConstraints: { minLength, maxLength, regex: null } } : field,
+          ),
+        );
+
+      lengths(3, 1);
+      await fixture.whenStable();
+      expect(() => service.templateJson()).toThrow();
+      expect(element.canSave).toBe(false);
+      expect([templates.length, artifacts.length]).toEqual(heard);
+
+      lengths(1, 3);
+      await fixture.whenStable();
+      expect(templates.length).toBe(heard[0] + 1);
+      expect(artifacts.length).toBe(heard[1] + 1);
+      const properties = templates.at(-1)!['properties'] as Record<string, Record<string, unknown>>;
+      expect(properties['Title']['_valueConstraints']).toMatchObject({ minLength: 1, maxLength: 3 });
     });
 
     it('offers the current template as a property', () => {

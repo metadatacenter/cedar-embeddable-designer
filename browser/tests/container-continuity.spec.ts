@@ -116,7 +116,9 @@ test('empty containers also offer pills with the library sidebar selected', asyn
   await designer.locator('.add-field-section').getByRole('heading', { name: 'Choose field', exact: true }).waitFor();
 });
 
-test('standalone field save adoption preserves the selected settings tab', async ({ page }) => {
+test('standalone field save adoption preserves the selected settings tab, and a plain load resets it', async ({
+  page,
+}) => {
   await page.goto('/field-host.html');
   await expect
     .poll(() => page.evaluate(() => typeof (document.getElementById('field') as any)?.newArtifact === 'function'), {
@@ -134,4 +136,8 @@ test('standalone field save adoption preserves the selected settings tab', async
   });
   await expect(designer.getByRole('tab', { name: 'Metadata', exact: true })).toHaveAttribute('aria-selected', 'true');
   expect(await designer.evaluate((el: any) => el.isDirty)).toBe(false);
+  // Without the option, loading even the same field opens it afresh, as the template designer does.
+  await designer.evaluate((el: any) => el.loadArtifact(el.currentArtifact));
+  await expect(designer.getByRole('tab', { name: 'Metadata', exact: true })).toHaveAttribute('aria-selected', 'false');
+  await expect(designer.getByRole('tab', { selected: true })).toHaveCount(1);
 });

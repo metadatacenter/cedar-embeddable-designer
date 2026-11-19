@@ -130,7 +130,6 @@ for (const mode of ['host', 'published'] as const)
         expect(await currentTemplate(page)).toEqual(before);
         expect(await designer.evaluate((el: any) => el.isDirty)).toBe(false);
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-        await page.screenshot({ path: `/tmp/ced-read-only-${kind}-${width}.png` });
       });
     }
 

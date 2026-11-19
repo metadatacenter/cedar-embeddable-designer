@@ -16,7 +16,13 @@ const fs = require('node:fs');
 const script = process.argv[3];
 const emit = event => fs.appendFileSync(process.env.GATE_LOG, JSON.stringify({event, script, workers: process.env.CEDAR_TEST_WORKERS, vitest: process.env.VITEST_MAX_WORKERS})+'\\n');
 emit('start');
-setTimeout(() => { emit('end'); process.exit(script === process.env.GATE_FAIL ? 7 : 0); }, 50);
+// A failing stage ends first, so it fails while the stages beside it are still running.
+const failing = [process.env.GATE_FAIL, process.env.GATE_SIGNAL].includes(script);
+setTimeout(() => {
+  emit('end');
+  if (script === process.env.GATE_SIGNAL) process.kill(process.pid, 'SIGKILL');
+  process.exit(script === process.env.GATE_FAIL ? 7 : 0);
+}, failing ? 10 : 50);
 `,
     { mode: 0o755 },
   );
@@ -90,11 +96,11 @@ for (const budget of [1, 2, 8])
   });
 
 test('failure fails the gate without running downstream stages', () => {
-  const { result, events } = gate(1, 'test');
+  const { result, events } = gate(1, 'test:unit:ci');
   assert.notEqual(result.status, 0);
   assert.deepEqual(
     events.filter((e) => e.event === 'start').map((e) => e.script),
-    ['test'],
+    ['test:unit:ci'],
   );
 });
 
@@ -114,6 +120,26 @@ test('parallel failure drains active checks and blocks dist and browsers', () =>
   assert.ok(!starts.includes('dist'));
   assert.ok(!starts.includes('test:browser:prebuilt'));
   assert.ok(!starts.includes('test:visual'));
+  assert.match(result.stdout, /\[gate\] lint: exit 7/);
+  assert.match(result.stdout, /\[gate\] FAILED/);
+});
+
+test('a stage killed by a signal fails the gate without running downstream stages', () => {
+  const { result, events } = gate(8, '', { GATE_SIGNAL: 'typecheck' });
+  assert.notEqual(result.status, 0);
+  const starts = events.filter((e) => e.event === 'start').map((e) => e.script);
+  assert.ok(starts.includes('typecheck'));
+  // The checks beside it still finish, and nothing that waits on them starts.
+  assert.deepEqual(
+    starts.filter((script) => script !== 'typecheck').sort(),
+    events
+      .filter((e) => e.event === 'end' && e.script !== 'typecheck')
+      .map((e) => e.script)
+      .sort(),
+  );
+  for (const downstream of ['dist', 'test:visual', 'test:browser:prebuilt']) assert.ok(!starts.includes(downstream));
+  assert.match(result.stdout, /\[gate\] types: exit null/);
+  assert.match(result.stdout, /\[gate\] FAILED/);
 });
 
 function sharedPool(size) {
@@ -233,7 +259,7 @@ test('train preparation runs every non-browser check and builds without publishi
       .filter((e) => e.event === 'end')
       .map((e) => e.script)
       .sort(),
-    ['test', 'lint', 'typecheck', 'test:boundaries', 'test:packaging', 'test:conformance', 'dist'].sort(),
+    ['test:unit:ci', 'lint', 'typecheck', 'test:boundaries', 'test:packaging', 'test:conformance', 'dist'].sort(),
   );
 });
 

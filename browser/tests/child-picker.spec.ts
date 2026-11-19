@@ -156,7 +156,6 @@ for (const width of [1280, 375])
       await handle.press('ArrowDown');
       await expect(selected.locator('tbody .name-cell')).toHaveText(['Section', 'Title']);
     }
-    await page.screenshot({ path: `/tmp/ced-child-dialog-${width}.png` });
     await designer.getByRole('button', { name: 'Done', exact: true }).click();
     await expect(designer.getByRole('dialog')).toHaveCount(0);
     // Each takes its name as its key. A Title is there already, so that key is reported at once and the
@@ -243,7 +242,6 @@ test('Escape dismisses the actions between two cards until the pointer or focus 
   const designer = await openDesigner(page);
   // The gap between Title and Category.
   const zone = designer.locator('.insert-zone').nth(1);
-  const actions = zone.locator('app-insertion-actions');
   const add = zone.getByRole('button', { name: 'Add field here', exact: true });
   await page.mouse.move(0, 0);
   await zone.scrollIntoViewIfNeeded();
@@ -261,17 +259,17 @@ test('Escape dismisses the actions between two cards until the pointer or focus 
   expect(await focusedControl(page)).toBe('(page)');
   await intoGap();
   await expect(zone).toHaveCSS('opacity', '1');
-  await expect(actions).toHaveCSS('pointer-events', 'auto');
+  await expect(add).toHaveCSS('pointer-events', 'auto');
   await page.keyboard.press('Escape');
   await expect(zone).toHaveCSS('opacity', '0');
   await intoGap(40);
-  await expect(actions).toHaveCSS('pointer-events', 'none');
+  await expect(add).toHaveCSS('pointer-events', 'none');
   await expect(zone).toHaveCSS('opacity', '0');
   // Leaving the gap and coming back shows them again.
   await page.mouse.move(0, 0);
   await intoGap();
   await expect(zone).toHaveCSS('opacity', '1');
-  await expect(actions).toHaveCSS('pointer-events', 'auto');
+  await expect(add).toHaveCSS('pointer-events', 'auto');
 
   // Keyboard focus shows them too. Escape hides them and moves focus to the card below, since a
   // hidden action that kept focus would show it to nobody.
@@ -281,7 +279,7 @@ test('Escape dismisses the actions between two cards until the pointer or focus 
   await page.keyboard.press('Escape');
   await expect(zone).toHaveCSS('opacity', '0');
   await expect(designer.getByRole('group', { name: 'Category' })).toBeFocused();
-  await expect(actions).toHaveCSS('pointer-events', 'none');
+  await expect(add).toHaveCSS('pointer-events', 'none');
   // Focus moving back shows them again.
   await page.keyboard.press(tabKey(page, 'Shift+Tab'));
   await expect(add).toBeFocused();
@@ -411,13 +409,13 @@ test('the actions between two cards stay shown while the pointer moves onto thei
   page,
 }) => {
   await openDesigner(page);
-  const { zone, actions, above, x, inGap, overAbove, overBelow } = await actionsOverCards(page);
+  const { zone, add, above, x, inGap, overAbove, overBelow } = await actionsOverCards(page);
   await page.mouse.move(x, inGap);
   await expect(zone).toHaveCSS('opacity', '1');
   for (const y of [overAbove, overBelow, overAbove]) {
     await page.mouse.move(x, y, { steps: 4 });
     expect(await actionsTakePointerAt(page, x, y)).toBe(true);
-    await expect(actions).toHaveCSS('pointer-events', 'auto');
+    await expect(add).toHaveCSS('pointer-events', 'auto');
     await expect(zone).toHaveCSS('opacity', '1');
   }
   // Escape over the card above uncovers it, and the pointer is then on the card.
@@ -441,7 +439,7 @@ test('the actions between two cards persist under hover and under focus, with no
 }) => {
   await page.clock.install();
   await openDesigner(page);
-  const { zone, add, actions, x, inGap } = await actionsOverCards(page);
+  const { zone, add, x, inGap } = await actionsOverCards(page);
   const runHalfAMinute = async () => {
     await page.evaluate(() => {
       const holder = window as unknown as { __late?: boolean };
@@ -451,16 +449,16 @@ test('the actions between two cards persist under hover and under focus, with no
     await page.clock.runFor(30_000);
     expect(await page.evaluate(() => (window as unknown as { __late?: boolean }).__late)).toBe(true);
   };
-  // CSS runs on its own clock, so the test also checks that no transition or animation is left to run.
+  // CSS runs on its own clock. Wait for its finite transition to settle independently of the fake timer.
   const runningAnimations = () =>
     zone.evaluate((zone) => zone.getAnimations({ subtree: true }).map((animation) => animation.id || 'unnamed'));
 
   await page.mouse.move(x, inGap);
   await expect(zone).toHaveCSS('opacity', '1');
   await runHalfAMinute();
-  await expect(actions).toHaveCSS('pointer-events', 'auto');
+  await expect(add).toHaveCSS('pointer-events', 'auto');
   await expect(zone).toHaveCSS('opacity', '1');
-  expect(await runningAnimations()).toEqual([]);
+  await expect.poll(runningAnimations).toEqual([]);
 
   await page.mouse.move(0, 0);
   await expect(zone).toHaveCSS('opacity', '0');
@@ -468,9 +466,9 @@ test('the actions between two cards persist under hover and under focus, with no
   await expect(zone).toHaveCSS('opacity', '1');
   await runHalfAMinute();
   await expect(add).toBeFocused();
-  await expect(actions).toHaveCSS('pointer-events', 'auto');
+  await expect(add).toHaveCSS('pointer-events', 'auto');
   await expect(zone).toHaveCSS('opacity', '1');
-  expect(await runningAnimations()).toEqual([]);
+  await expect.poll(runningAnimations).toEqual([]);
 });
 
 /**
@@ -801,5 +799,44 @@ test('the search results look as they did before they became a grid', async ({ p
       ['table-row', 'pointer', 'rgba(0, 0, 0, 0)'],
       ['table-row', 'pointer', 'rgba(0, 0, 0, 0)'],
     ],
+  });
+});
+
+/**
+ * A device that cannot hover has no way to reveal the actions between two cards, so they show above the
+ * selected card, and nowhere else. Tapping a card selects it.
+ */
+test.describe('on a device that cannot hover', () => {
+  test.use({ hasTouch: true });
+
+  test('tapping a card shows the actions above it, Escape dismisses them, and an action opens the picker', async ({
+    page,
+  }) => {
+    const designer = await openDesigner(page);
+    const zones = designer.locator('.insert-zone');
+    const category = designer.getByRole('group', { name: 'Category', exact: true });
+    // The gap above Category is the second; the first lies above Title.
+    const aboveCategory = zones.nth(1);
+    const add = aboveCategory.getByRole('button', { name: 'Add field here', exact: true });
+    await category.scrollIntoViewIfNeeded();
+    await category.tap({ position: { x: 4, y: 4 } });
+    await expect(category).toHaveClass(/\bselected\b/);
+    await expect(aboveCategory).toHaveCSS('opacity', '1');
+    await expect(add).toHaveCSS('pointer-events', 'auto');
+    await expect(zones.nth(0)).toHaveCSS('opacity', '0');
+    await expect(zones.nth(0).getByRole('button', { name: 'Add field here', exact: true })).toHaveCSS(
+      'pointer-events',
+      'none',
+    );
+
+    await page.keyboard.press('Escape');
+    await expect(aboveCategory).toHaveCSS('opacity', '0');
+    await expect(add).toHaveCSS('pointer-events', 'none');
+
+    await designer.getByRole('group', { name: 'Title', exact: true }).tap({ position: { x: 4, y: 4 } });
+    await category.tap({ position: { x: 4, y: 4 } });
+    await expect(aboveCategory).toHaveCSS('opacity', '1');
+    await add.tap();
+    await expect(designer.getByRole('heading', { name: 'Choose field' })).toBeVisible();
   });
 });

@@ -23,7 +23,6 @@ test('preserves an imported invalid default and lets the author resolve it', asy
   await expect
     .poll(async () => ((await currentTemplate(page)).properties as any).Category._valueConstraints.defaultValue)
     .toBe('Yellow');
-  await page.screenshot({ path: '/tmp/ced-choice-error.png' });
   await card.getByRole('button', { name: 'Clear conflicting default' }).click();
   await expect(error).toHaveCount(0);
   await expect

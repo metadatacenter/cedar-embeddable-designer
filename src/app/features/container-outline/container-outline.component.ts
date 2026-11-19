@@ -23,11 +23,24 @@ import { CountKeyPipe } from '../../i18n/count-key.pipe';
             <app-icon [key]="node.kind === 'field' ? node.definition.type : 'folder'" size="small" />
             <!-- The name, its error count and its required mark flow as one text, so a count that
                  does not fit beside the name moves under it rather than breaking the name's words. -->
+            @let name =
+              displayName(node) ||
+              ((node.kind === 'field' ? 'validation.unnamed.field' : 'validation.unnamed.element') | translate);
             <span class="node-label"
-              ><span class="node-name">{{
-                displayName(node) ||
-                  ((node.kind === 'field' ? 'validation.unnamed.field' : 'validation.unnamed.element') | translate)
-              }}</span>
+              ><span class="node-name">
+                @if (node.kind === 'field' && node.placement.status === 'required') {
+                  {{ namePrefix(name)
+                  }}<span class="required-name-tail"
+                    >{{ nameTail(name) }}&nbsp;<span
+                      class="required-mark"
+                      [attr.aria-label]="'common.required' | translate"
+                      >*</span
+                    ></span
+                  >
+                } @else {
+                  {{ name }}
+                }
+              </span>
               @if (service.visibleIssuesFor(node.id).length; as count) {
                 <span
                   class="validation-badge"
@@ -35,9 +48,6 @@ import { CountKeyPipe } from '../../i18n/count-key.pipe';
                   [title]="'outline.errors' | countKey: count | translate: { count: count }"
                   ><app-icon key="warning" size="small" /> {{ count }}</span
                 >
-              }
-              @if (node.kind === 'field' && node.placement.status === 'required') {
-                <span class="required-mark" [attr.aria-label]="'common.required' | translate">*</span>
               }
             </span>
           </button>
@@ -111,6 +121,13 @@ export class ContainerOutlineComponent {
   private readonly injector = inject(Injector);
   displayName(node: ChildNode): string {
     return node.kind === 'field' ? fieldDisplayName(fieldView(node)) : elementDisplayName(node);
+  }
+  // Give only the last word and mark one inline box; earlier words retain ordinary wrapping.
+  namePrefix(name: string): string {
+    return name.replace(/\S+\s*$/u, '');
+  }
+  nameTail(name: string): string {
+    return name.match(/\S+\s*$/u)?.[0] ?? name;
   }
   /** A child inside a published element keeps its place. */
   locked(node: ChildNode): boolean {

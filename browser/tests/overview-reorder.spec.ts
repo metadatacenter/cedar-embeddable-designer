@@ -1,3 +1,4 @@
+import { expectOutlineNames, outlineNames } from './support';
 import { addElementFixture } from './support';
 import { expect, test } from '@playwright/test';
 import { applyPreset, child, currentTemplate, fieldOrder, openDesigner, nestFixtureFields } from './support';
@@ -95,7 +96,7 @@ test('Move up and Move down reorder a child by single clicks and do nothing at e
   await page.setViewportSize({ width: 1440, height: 1000 });
   const designer = await openDesigner(page);
   const rows = designer.locator('app-container-outline').first().locator(':scope > ul > li');
-  const names = () => rows.locator('.node-name').allTextContents();
+  const names = () => outlineNames(rows.locator('.node-name'));
   const cards = () =>
     designer
       .locator('app-field-card input[aria-label="Enter field name"]')
@@ -154,14 +155,14 @@ test('Move up and Move down move a child within its own element only', async ({ 
   await nestFixtureFields(page, ['Element'], 2);
   const overview = designer.locator('.overview-panel');
   const nested = overview.locator('app-container-outline app-container-outline').first();
-  await expect(nested.locator('.node-name')).toHaveText(['Title', 'Category']);
+  await expectOutlineNames(nested.locator('.node-name'), ['Title', 'Category']);
   // The nested list is a container of its own: its first child cannot move up into the template.
   await expect(nested.getByRole('button', { name: 'Move Title up', exact: true })).toHaveAttribute(
     'aria-disabled',
     'true',
   );
   await nested.getByRole('button', { name: 'Move Title down', exact: true }).click();
-  await expect(nested.locator('.node-name')).toHaveText(['Category', 'Title']);
+  await expectOutlineNames(nested.locator('.node-name'), ['Category', 'Title']);
   await expect
     .poll(async () => fieldOrder(child(await currentTemplate(page), 'Element')))
     .toEqual(['Category', 'Title']);

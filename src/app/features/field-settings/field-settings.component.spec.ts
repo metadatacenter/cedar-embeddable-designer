@@ -140,12 +140,12 @@ describe('the Configuration tab', () => {
       'requirement',
       'hidden',
       'continue',
-      'allowMultiple',
       'deploymentName',
+      'allowMultiple',
       'min',
       'max',
     ];
-    // In the order the panel sets them out.
+    // The key precedes the complete occurrence group, including when the form stacks.
     expect(
       [...panel(fixture)!.querySelectorAll<HTMLInputElement>('[name]')]
         .map((node) => node.name)

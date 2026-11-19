@@ -13,6 +13,8 @@ import {
   computed,
   viewChild,
   signal,
+  effect,
+  untracked,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -20,7 +22,7 @@ import { CountKeyPipe } from '../../i18n/count-key.pipe';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { TemplateService } from '../../core/services/template.service';
 import { fieldView, findContainer } from '../../core/model/container-draft';
-import { elementDisplayDescription } from '../../core/model/field-display-name';
+import { elementDisplayDescription, elementDisplayName, fieldDisplayName } from '../../core/model/field-display-name';
 import { publishedContainer } from '../../core/model/child-locks';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { FieldCardComponent } from '../field-card/field-card.component';
@@ -103,7 +105,20 @@ export class ContainerEditorComponent {
    * The dismissal ends when the pointer leaves the gap or focus moves to one of the actions.
    */
   readonly dismissedInsertion = signal<number | null>(null);
+  /**
+   * Whether this is a device that cannot hover, where the actions show above the selected card
+   * instead. The component's stylesheet reveals them under the same query.
+   */
+  private get cannotHover(): boolean {
+    const view = this.host.nativeElement.ownerDocument.defaultView;
+    return (
+      typeof view?.matchMedia === 'function' &&
+      view.matchMedia('(hover: none), (pointer: coarse), (pointer: none)').matches
+    );
+  }
   readonly fieldView = fieldView;
+  readonly fieldDisplayName = fieldDisplayName;
+  readonly elementDisplayName = elementDisplayName;
 
   /**
    * Escape hides the insertion actions shown above a child, as WCAG 1.4.13 requires of content that
@@ -121,7 +136,10 @@ export class ContainerEditorComponent {
     // insertion zone behind the modal must not consume Escape before the browser can close it.
     if (event.composedPath().some((node) => node instanceof HTMLDialogElement && node.matches(':modal'))) return;
     const shown = this.container().children.find(
-      (child) => this.dismissedInsertion() !== child.id && this.insertZone(child.id)?.matches(':hover, :focus-within'),
+      (child) =>
+        this.dismissedInsertion() !== child.id &&
+        (this.insertZone(child.id)?.matches(':hover, :focus-within') ||
+          (this.cannotHover && this.service.selectedField() === child.id)),
     );
     if (!shown) return;
     event.preventDefault();
@@ -223,6 +241,12 @@ export class ContainerEditorComponent {
     const dismiss = (event: KeyboardEvent) => this.dismissInsertion(event);
     view?.addEventListener('keydown', dismiss);
     inject(DestroyRef).onDestroy(() => view?.removeEventListener('keydown', dismiss));
+    // Where the selected card shows the actions, a dismissal ends when another card is selected, as one
+    // ends elsewhere when the pointer leaves the gap.
+    effect(() => {
+      this.service.selectedField();
+      untracked(() => this.dismissedInsertion.set(null));
+    });
 
     // A focus request for one of this container's own cards, or for its own Add field, is this editor's to perform.
     afterRenderEffect(() => {

@@ -1,3 +1,4 @@
+import { expectOutlineNames } from './support';
 import { fieldNode, newNodeId } from '../../src/app/core/model/container-draft';
 import { expect, test, Page } from '@playwright/test';
 import { NEEDS_PICKER } from './bundle-tags';
@@ -952,7 +953,8 @@ for (const [labels, wanted] of [
 ] as const) {
   test(`Overview uses the effective field label: ${wanted}`, async ({ page }) => {
     await openField(page, 'shortText', labels);
-    await expect(page.locator('app-container-outline .node-name')).toHaveText(wanted);
+    await expectOutlineNames(page.locator('app-container-outline .node-name'), wanted);
+    await expect(page.locator('app-container-outline .required-mark')).toBeVisible();
     await expect(
       page.locator('app-container-outline').getByRole('button', { name: `Reorder ${wanted}`, exact: true }),
     ).toBeVisible();
@@ -965,10 +967,10 @@ test('editing a display name updates Overview without renaming the field key', a
   await openField(page, 'shortText', { preferredLabel: 'Lab ID', displayLabel: 'Value' });
   const heading = page.getByRole('textbox', { name: 'Enter field name', exact: true });
   await expect(heading).toHaveValue('Lab ID');
-  await expect(page.locator('app-container-outline .node-name')).toHaveText('Lab ID');
+  await expectOutlineNames(page.locator('app-container-outline .node-name'), 'Lab ID');
   await heading.fill('Laboratory identifier');
   await heading.blur();
-  await expect(page.locator('app-container-outline .node-name')).toHaveText('Laboratory identifier');
+  await expectOutlineNames(page.locator('app-container-outline .node-name'), 'Laboratory identifier');
   // The parent already shows the field by another name, so the header edits the parent's display name
   // and leaves the field's own name and preferred label as they were.
   const template = await currentTemplate(page);
@@ -1014,4 +1016,42 @@ for (const type of ['email', 'phone', 'link']) {
       await expect.poll(canSave).toBe(true);
     });
   }
+}
+
+for (const width of [768, 375]) {
+  test(`real Designer Preview wraps the complete name and keeps its identity header at ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await openField(page, 'shortText', {
+      displayLabel: 'Participant identifier',
+      allowMultiple: true,
+      minItems: 1,
+      maxItems: 3,
+    });
+    const preview = await openPreview(page);
+    await expect(preview.locator('.logo-block')).toBeVisible();
+    const header = preview.locator('app-cedar-component-header').filter({ hasText: 'Participant identifier' }).first();
+    await expect(header.locator('.title-label')).toHaveText('Participant identifier');
+    await expect(header.locator('.required-mark')).toBeVisible();
+    await expect(header.locator('.multi-instance-range')).toHaveText('(1 .. 3)');
+    const geometry = await header.evaluate((el) => {
+      const label = el.querySelector('.title-label')!;
+      const range = document.createRange();
+      range.selectNodeContents(label);
+      const lines = [...range.getClientRects()].filter((r) => r.width > 0);
+      const box = el.getBoundingClientRect();
+      const mark = el.querySelector('.required-mark')!.getBoundingClientRect();
+      const last = lines.at(-1)!;
+      return {
+        lines: lines.length,
+        outside: lines.some((r) => r.left < box.left - 1 || r.right > box.right + 1),
+        markerSameLine: mark.top < last.bottom && mark.bottom > last.top,
+        overflow: el.scrollWidth > el.clientWidth + 1,
+      };
+    });
+    expect(geometry.outside).toBe(false);
+    expect(geometry.overflow).toBe(false);
+    expect(geometry.markerSameLine).toBe(true);
+    // Full-width phone Preview may fit this name on one line; containment and the marker remain required.
+    expect(geometry.lines).toBeGreaterThan(0);
+  });
 }

@@ -6,7 +6,7 @@ import {
   fieldDisplayName,
 } from '../model/field-display-name';
 import { CedJsonObject } from '../../ced-public-api';
-import { fieldToJson, newContainer } from '../model/cedar-template';
+import { fieldToJson, newContainer, readContainer } from '../model/cedar-template';
 import { findContainer } from '../model/container-draft';
 import { childKeyError } from '../model/child-key-policy';
 import { buildContainer, PREVIEW_ELEMENT_KEY } from '../model/cedar-template';
@@ -267,6 +267,39 @@ describe('TemplateService', () => {
       'Category',
       'Publication Date',
     ]);
+  });
+
+  it('leaves the document as it was when a batch fails partway through insertion', () => {
+    const field = fieldToJson(service.fields()[0]) as CedJsonObject;
+    const root = service.session.document();
+    const before = service.templateJson();
+    // Every source is read before anything changes, so a failure here comes from placing a child.
+    const internals = service as unknown as { insertNode(...args: unknown[]): void };
+    const insert = internals.insertNode.bind(service);
+    let insertions = 0;
+    const placing = vi.spyOn(internals, 'insertNode').mockImplementation((...args: unknown[]) => {
+      if (++insertions === 2) throw new Error('The second child could not be placed');
+      insert(...args);
+    });
+    try {
+      expect(() =>
+        service.importChildren(
+          [
+            { type: 'field', artifact: field },
+            { type: 'field', artifact: field },
+          ],
+          root.id,
+          0,
+        ),
+      ).toThrow('The second child could not be placed');
+    } finally {
+      placing.mockRestore();
+    }
+
+    expect(insertions).toBe(2);
+    expect(service.session.document()).toBe(root);
+    expect(service.templateJson()).toEqual(before);
+    expect(service.isDirty()).toBe(false);
   });
 
   // An imported child's key is its name. A name the key policy refuses is reported at once, and the
@@ -664,8 +697,14 @@ describe('TemplateService', () => {
       expect(new Set(identifiers).size).toBe(identifiers.length);
     });
 
-    it('writes the same template the JSON writer would', () => {
-      expect(service.templateJson()).toEqual(templateToJson(service.template()));
+    it('writes the document the session holds, as one artifact per state', () => {
+      const written = service.templateJson();
+
+      // What the element publishes and what the panels display are the same artifact, not two builds
+      // that could each mint an identifier of their own.
+      expect(service.templateJson()).toBe(written);
+      expect(written['@id']).toBe(service.document().identifier);
+      expect(templateToJson(buildContainer(readContainer(written)))).toEqual(written);
     });
   });
 

@@ -28,38 +28,24 @@ import {
   DesignerTemplate,
   FieldParameter,
   PARAMETER_SETTERS,
-  allowsOptions,
   buildTemplate,
-  contentKindOf,
   descriptorOf,
-  newFieldIdentity,
   readTemplate,
   templateToJson,
   templateToYaml,
   toDesignerTemplate,
 } from './cedar-template';
 import { allowedInContainer } from './container-draft';
+import {
+  TYPE_CELLS as cells,
+  TYPE_PARAMETER_CASES as CASES,
+  type TypeParameter as Parameter,
+  typeField as fieldFor,
+  typeParametersOf as parametersFor,
+} from './field-parameter-cases.testing';
 import { PLACEMENTS } from './field-placements.testing';
 
 const paletteTypes = Object.keys(FIELD_TYPES);
-
-/** The two parameters the descriptor records outside its `parameters` list. */
-type ExtraParameter = 'options' | 'content';
-type Parameter = FieldParameter | ExtraParameter;
-
-function field(overrides: Partial<Field> = {}): Field {
-  return {
-    id: 1,
-    type: 'text',
-    name: 'F',
-    status: 'optional',
-    options: [],
-    defaultValue: { kind: 'none' },
-    allowMultiple: false,
-    ...newFieldIdentity(),
-    ...overrides,
-  };
-}
 
 function templateOf(one: Field): DesignerTemplate {
   return {
@@ -70,181 +56,6 @@ function templateOf(one: Field): DesignerTemplate {
     fields: [one],
   };
 }
-
-/** A numeric field's parameters share one object, so varying one means writing them all. */
-const numeric = (overrides: Partial<NonNullable<Field['numeric']>>): NonNullable<Field['numeric']> => ({
-  type: 'xsd:decimal',
-  min: null,
-  max: null,
-  decimalPlaces: null,
-  unit: null,
-  ...overrides,
-});
-
-/**
- * A temporal base the palette type admits.
- *
- * A granularity is only legal for some datatypes, and the writer refuses the pairs
- * that are not — so Time starts from `xsd:time` at minute precision and Date from
- * `xsd:date` at day precision, which is what each type means.
- */
-const temporal = (
-  paletteType: string,
-  overrides: Partial<NonNullable<Field['temporal']>> = {},
-): NonNullable<Field['temporal']> =>
-  paletteType === 'time'
-    ? { type: 'xsd:time', granularity: 'minute', timezoneEnabled: false, inputTimeFormat: null, ...overrides }
-    : { type: 'xsd:date', granularity: 'day', timezoneEnabled: false, inputTimeFormat: null, ...overrides };
-
-/** What a static block's one value is, which differs by what the block shows. */
-const contentFor = (paletteType: string): string => {
-  switch (contentKindOf(paletteType)) {
-    case 'markup':
-      return '<p>Some <b>markup</b></p>';
-    case 'url':
-      return 'https://example.org/picture.png';
-    default:
-      return 'dQw4w9WgXcQ';
-  }
-};
-
-interface ParameterCase {
-  readonly set: (paletteType: string) => Partial<Field>;
-  readonly read: (field: Field) => unknown;
-}
-
-const CASES: Record<Parameter, ParameterCase> = {
-  textLength: {
-    set: () => ({ textConstraints: { minLength: 2, maxLength: 40, regex: null } }),
-    read: (field) => [field.textConstraints?.minLength, field.textConstraints?.maxLength],
-  },
-  textPattern: {
-    set: () => ({ textConstraints: { minLength: null, maxLength: null, regex: '^[A-Z]+$' } }),
-    read: (field) => field.textConstraints?.regex,
-  },
-  numericBounds: {
-    set: () => ({ numeric: numeric({ min: 1, max: 10 }) }),
-    read: (field) => [field.numeric?.min, field.numeric?.max],
-  },
-  numericPrecision: {
-    set: () => ({ numeric: numeric({ decimalPlaces: 2 }) }),
-    read: (field) => field.numeric?.decimalPlaces,
-  },
-  numericType: {
-    set: () => ({ numeric: numeric({ type: 'xsd:int' }) }),
-    read: (field) => field.numeric?.type,
-  },
-  numericUnit: {
-    set: () => ({ numeric: numeric({ unit: 'mg' }) }),
-    read: (field) => field.numeric?.unit,
-  },
-  temporalPrecision: {
-    set: (paletteType) =>
-      paletteType === 'time'
-        ? { temporal: temporal(paletteType, { granularity: 'second' }) }
-        : { temporal: temporal(paletteType, { granularity: 'month' }) },
-    read: (field) => [field.temporal?.type, field.temporal?.granularity],
-  },
-  temporalTimezone: {
-    /*
-     * A zone places a time of day, and a bare `xsd:date` has none — so the model drops
-     * a timezone set on one, and the settings panel does not offer the control for that
-     * datatype either. Date is therefore exercised as `xsd:dateTime`, which is the
-     * shape of a date field an author has asked to carry a time.
-     */
-    set: (paletteType) =>
-      paletteType === 'time'
-        ? { temporal: temporal(paletteType, { timezoneEnabled: true }) }
-        : { temporal: temporal(paletteType, { type: 'xsd:dateTime', granularity: 'minute', timezoneEnabled: true }) },
-    read: (field) => field.temporal?.timezoneEnabled,
-  },
-  temporalTimeFormat: {
-    // A time format is only meaningful where the value carries a time of day.
-    set: (paletteType) =>
-      paletteType === 'time'
-        ? { temporal: temporal(paletteType, { inputTimeFormat: '24h' }) }
-        : { temporal: temporal(paletteType, { type: 'xsd:dateTime', granularity: 'minute', inputTimeFormat: '24h' }) },
-    read: (field) => field.temporal?.inputTimeFormat,
-  },
-  mediaDimensions: {
-    set: () => ({ width: 320, height: 180 }),
-    read: (field) => [field.width, field.height],
-  },
-  controlledTermConstraints: {
-    set: () => ({
-      controlledTermConstraints: {
-        constraints: [
-          {
-            // `sourceId` names the ontology a branch is drawn from; the branch itself is
-            // `branchRootId`. Putting the branch IRI in both is the mistake this fixture
-            // made first, and the round trip reported it as a loss of the ontology.
-            sourceType: 'ontology-branch' as const,
-            sourceId: 'DOID',
-            ontologyName: 'Human Disease Ontology',
-            branchRootId: 'http://purl.obolibrary.org/obo/DOID_4',
-            branchRootName: 'disease',
-            searchDepth: 3,
-          },
-        ],
-        actions: [],
-      },
-    }),
-    /*
-     * What identifies the constraint, rather than the whole config object.
-     *
-     * `ControlledTermConfig` is one loose shape covering all four constraint kinds, and
-     * a round trip returns the canonical subset CEDAR can store for a branch: the
-     * ontology it is drawn from, the branch root, and the depth. The ontology's display
-     * name does not come back, and cannot — `_valueConstraints.branches[]` has a slot
-     * for the source's identifier and none for its label, so a reopened template has to
-     * resolve the name again from the terminology server. Asserting the identity is
-     * therefore the real contract; asserting the whole object would assert the shape
-     * rather than the meaning.
-     *
-     * Narrowed on `sourceType` rather than reaching for the fields, which the union now
-     * requires: a branch's root and depth do not exist on the other three kinds, and
-     * before the union that was a thing the compiler let this file pretend.
-     */
-    read: (field) =>
-      (field.controlledTermConstraints?.constraints ?? []).flatMap((constraint) =>
-        constraint.sourceType === 'ontology-branch'
-          ? [
-              {
-                sourceType: constraint.sourceType,
-                sourceId: constraint.sourceId,
-                branchRootId: constraint.branchRootId,
-                branchRootName: constraint.branchRootName,
-                searchDepth: constraint.searchDepth,
-              },
-            ]
-          : [],
-      ),
-  },
-  options: {
-    set: () => ({ options: ['Alpha', 'Beta', 'Gamma'] }),
-    read: (field) => field.options,
-  },
-  content: {
-    set: (paletteType) => ({ content: contentFor(paletteType) }),
-    read: (field) => field.content,
-  },
-};
-
-/** Every parameter a type accepts, however the descriptor records it. */
-function parametersFor(paletteType: string): Parameter[] {
-  return [
-    ...(descriptorOf(paletteType).parameters ?? []),
-    ...(allowsOptions(paletteType) ? (['options'] as const) : []),
-    ...(contentKindOf(paletteType) ? (['content'] as const) : []),
-  ];
-}
-
-const cells = paletteTypes.flatMap((paletteType) =>
-  parametersFor(paletteType).map((parameter) => ({ paletteType, parameter })),
-);
-
-const fieldFor = (paletteType: string, parameter: Parameter): Field =>
-  field({ type: paletteType, ...CASES[parameter].set(paletteType) });
 
 function afterRoundTrip(state: DesignerTemplate, form: 'json' | 'yaml'): Field {
   const template = buildTemplate(state);

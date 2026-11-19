@@ -65,7 +65,7 @@ jobs:
         run: npm run typecheck
 
       - name: Unit tests
-        run: npm test
+        run: npm run test:unit:ci
 
       - name: Java and TypeScript authoring conformance
         run: npm run test:conformance
@@ -152,7 +152,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: metadatacenter/cedar-embeddable-editor
-          ref: 9675de238db84f23fdf92e2a6e319c398450063d
+          ref: d7ffb1760e4fda33b246d1df04bb556cd1c33409
           path: cedar-embeddable-editor
       - uses: actions/checkout@v4
         with:
