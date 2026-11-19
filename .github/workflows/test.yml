@@ -152,7 +152,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: metadatacenter/cedar-embeddable-editor
-          ref: d7ffb1760e4fda33b246d1df04bb556cd1c33409
+          ref: f9a5869b89776526212763584d6dcd7bed944f72
           path: cedar-embeddable-editor
       - uses: actions/checkout@v4
         with:
