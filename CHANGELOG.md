@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-11-19
+
+Aligns with `cedar-model-typescript-library@1.0.29`.
+
+### Changed
+
+- Shows the insertion actions above the selected card on devices that cannot hover, and selects a card on tap, so a touch user can insert a field anywhere in a template.
+- Keeps the designer's panes usable on a phone and its keyboard focus visible.
+- Wraps field headers by their content, keeps required marks with their names, and groups occurrence bounds and property IRI actions together; settings tabs take less room when they wrap.
+- Shows complete field names in Preview.
+- Removes validation announcements once their problem is resolved.
+
+### Fixed
+
+- Opens a fresh field card on its default tab when the field designer loads without `preserveView`, which kept the previous card's tab.
+- Keeps the scroll that centres a newly added field in WebKit, where the field's name took focus too early and the card came to rest at the bottom edge.
+
 ## [0.1.2] - 2026-11-13
 
 Aligns with `cedar-model-typescript-library@1.0.28`.
