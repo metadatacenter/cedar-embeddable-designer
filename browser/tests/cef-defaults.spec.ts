@@ -464,8 +464,10 @@ test('the real picker selects a default within the field vocabulary', { tag: NEE
     await route.fulfill({
       json: {
         totalCount: 1,
+        request: { limit: request.limit, offset: request.offset },
+        currentOffset: request.offset,
         collection:
-          (request.page ?? 1) > 1
+          request.offset > 0
             ? []
             : [
                 {
