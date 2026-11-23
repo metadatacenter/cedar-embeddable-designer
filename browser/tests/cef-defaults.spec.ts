@@ -460,14 +460,16 @@ test('the real picker selects a default within the field vocabulary', { tag: NEE
       ],
     });
     searchedWithin = true;
-    // One term in all, so a page after the first holds nothing, as the server's would.
+    // One term in all, so a page after the first holds nothing, as the server's would. The pinned
+    // picker CI builds asks by page number, and a current one by offset; either names the page.
+    const offset = request.offset ?? ((request.page ?? 1) - 1) * (request.pageSize ?? 1);
     await route.fulfill({
       json: {
         totalCount: 1,
-        request: { limit: request.limit, offset: request.offset },
-        currentOffset: request.offset,
+        request: { limit: request.limit ?? request.pageSize, offset },
+        currentOffset: offset,
         collection:
-          request.offset > 0
+          offset > 0
             ? []
             : [
                 {
