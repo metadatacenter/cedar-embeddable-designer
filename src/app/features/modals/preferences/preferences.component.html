@@ -81,19 +81,6 @@
                 <p class="preferences-help">{{ 'preferences.fieldOptions.allowMultiple.help' | translate }}</p>
               </div>
             </label>
-            <label class="preferences-option">
-              <input
-                spellcheck="false"
-                type="checkbox"
-                [ngModel]="service.preferences().showDefaultValue"
-                (ngModelChange)="updatePref('showDefaultValue', $event)"
-                class="settings-dialog-check"
-              />
-              <div class="flex-1">
-                <span class="preferences-label">{{ 'preferences.fieldOptions.defaultValue.label' | translate }}</span>
-                <p class="preferences-help">{{ 'preferences.fieldOptions.defaultValue.help' | translate }}</p>
-              </div>
-            </label>
           </div>
         </div>
         <!-- Feature visibility -->

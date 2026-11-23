@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   can store an author's preferences and preset definitions and supply them to a later element.
   They previously lasted only as long as the element that held them.
 
+### Removed
+
+- The "Show Default Value field" preference, from Preferences and from Define Presets. No control
+  has depended on it since default values joined a field's constraints, so every preset already
+  showed them.
+
 ## [0.1.3] - 2026-11-19
 
 Aligns with `cedar-model-typescript-library@1.0.29`.

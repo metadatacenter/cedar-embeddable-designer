@@ -66,8 +66,6 @@ export interface CedPresetDefinition {
   showRequired: boolean;
   /** Whether a field's settings offer the Allow multiple control. */
   showAllowMultiple: boolean;
-  /** The "Default Value" setting of the Preferences dialog. */
-  showDefaultValue: boolean;
   /** Whether the designer offers to add an element. */
   showElements: boolean;
   /** The field types the type pickers leave out, in the order `CedFieldType` lists them. */

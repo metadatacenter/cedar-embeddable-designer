@@ -98,30 +98,6 @@
                       </td>
                     }
                   </tr>
-                  <tr class="preset-row">
-                    <td class="preset-row-label" role="rowheader">
-                      {{ 'preferences.fieldOptions.defaultValue.label' | translate }}
-                    </td>
-                    @for (preset of presets; track preset) {
-                      <td class="preset-column">
-                        <input
-                          spellcheck="false"
-                          type="checkbox"
-                          [attr.aria-label]="
-                            'presetDefinitions.cell'
-                              | translate
-                                : {
-                                    setting: ('preferences.fieldOptions.defaultValue.label' | translate),
-                                    preset: ('preferences.presets.' + preset | translate),
-                                  }
-                          "
-                          [ngModel]="service.presetDefinitions()[preset].showDefaultValue"
-                          (ngModelChange)="updateDef(preset, 'showDefaultValue', $event)"
-                          class="settings-dialog-check"
-                        />
-                      </td>
-                    }
-                  </tr>
                 </tbody>
               </table>
             </div>

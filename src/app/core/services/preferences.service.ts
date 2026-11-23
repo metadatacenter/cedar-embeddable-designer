@@ -133,7 +133,6 @@ export class PreferencesService {
       ...prev,
       showRequired: definition.showRequired,
       showAllowMultiple: definition.showAllowMultiple,
-      showDefaultValue: definition.showDefaultValue,
       showElements: definition.showElements,
       visibleFieldTypes,
     }));
@@ -149,7 +148,6 @@ export class PreferencesService {
       const matchConfig =
         current.showRequired === def.showRequired &&
         current.showAllowMultiple === def.showAllowMultiple &&
-        current.showDefaultValue === def.showDefaultValue &&
         current.showElements === def.showElements;
 
       if (!matchConfig) continue;

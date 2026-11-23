@@ -617,10 +617,6 @@
       "allowMultiple": {
         "label": "Show \"Allow multiple\" checkbox",
         "help": "Display multiple values toggle for fields"
-      },
-      "defaultValue": {
-        "label": "Show \"Default Value\" field",
-        "help": "Display default value input for fields"
       }
     },
     "features": {

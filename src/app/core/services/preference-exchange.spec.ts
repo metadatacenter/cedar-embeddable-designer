@@ -13,7 +13,6 @@ import { defaultPreferenceState, readPreferences, writePreferences } from './pre
 const DEFAULTS: CedPreferences = {
   showRequired: true,
   showAllowMultiple: true,
-  showDefaultValue: true,
   showElements: true,
   hiddenFieldTypes: [],
   fieldSelectionStyle: 'inline',
@@ -21,21 +20,18 @@ const DEFAULTS: CedPreferences = {
     basic: {
       showRequired: true,
       showAllowMultiple: true,
-      showDefaultValue: false,
       showElements: false,
       hiddenFieldTypes: ['controlledTerms'],
     },
     semantic: {
       showRequired: true,
       showAllowMultiple: true,
-      showDefaultValue: true,
       showElements: false,
       hiddenFieldTypes: [],
     },
     modular: {
       showRequired: true,
       showAllowMultiple: true,
-      showDefaultValue: true,
       showElements: true,
       hiddenFieldTypes: [],
     },
@@ -46,7 +42,6 @@ const DEFAULTS: CedPreferences = {
 const CHANGED: CedPreferences = {
   showRequired: false,
   showAllowMultiple: false,
-  showDefaultValue: false,
   showElements: false,
   hiddenFieldTypes: ['email', 'youtube'],
   fieldSelectionStyle: 'sidebar',
@@ -54,21 +49,18 @@ const CHANGED: CedPreferences = {
     basic: {
       showRequired: false,
       showAllowMultiple: false,
-      showDefaultValue: true,
       showElements: true,
       hiddenFieldTypes: ['text'],
     },
     semantic: {
       showRequired: false,
       showAllowMultiple: false,
-      showDefaultValue: false,
       showElements: true,
       hiddenFieldTypes: ['number'],
     },
     modular: {
       showRequired: false,
       showAllowMultiple: false,
-      showDefaultValue: false,
       showElements: false,
       hiddenFieldTypes: ['doi'],
     },
@@ -198,6 +190,8 @@ describe('reading', () => {
     [{ hiddenFieldTypes: ['hologram'] }, '"hologram"'],
     [{ hiddenFieldTypes: [7] }, 'Unknown field type 7'],
     [{ theme: 'dark' }, '"theme"'],
+    // The first development package wrote this key, and no control ever read it.
+    [{ showDefaultValue: false }, '"showDefaultValue"'],
     [{ presets: [] }, '"presets"'],
     [{ presets: { expert: {} } }, '"presets.expert"'],
     [{ presets: { basic: 3 } }, '"presets.basic"'],

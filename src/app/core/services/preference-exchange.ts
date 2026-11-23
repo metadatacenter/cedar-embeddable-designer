@@ -23,7 +23,7 @@ export interface PreferenceState {
 
 export const PRESETS: readonly CedPreset[] = ['basic', 'semantic', 'modular'];
 
-const SWITCHES = ['showRequired', 'showAllowMultiple', 'showDefaultValue', 'showElements'] as const;
+const SWITCHES = ['showRequired', 'showAllowMultiple', 'showElements'] as const;
 const DEFINITION_KEYS: readonly string[] = [...SWITCHES, 'hiddenFieldTypes'];
 const PREFERENCE_KEYS: readonly string[] = [...DEFINITION_KEYS, 'fieldSelectionStyle', 'presets'];
 
@@ -43,21 +43,18 @@ export function defaultPresetDefinitions(): PresetDefinitions {
     basic: {
       showRequired: true,
       showAllowMultiple: true,
-      showDefaultValue: false,
       showElements: false,
       hiddenFieldTypes: ['controlledTerms'],
     },
     semantic: {
       showRequired: true,
       showAllowMultiple: true,
-      showDefaultValue: true,
       showElements: false,
       hiddenFieldTypes: [],
     },
     modular: {
       showRequired: true,
       showAllowMultiple: true,
-      showDefaultValue: true,
       showElements: true,
       hiddenFieldTypes: [],
     },
@@ -87,7 +84,6 @@ function writeDefinition(definition: PresetDefinition): CedPresetDefinition {
   return {
     showRequired: definition.showRequired,
     showAllowMultiple: definition.showAllowMultiple,
-    showDefaultValue: definition.showDefaultValue,
     showElements: definition.showElements,
     hiddenFieldTypes: hiddenTypes((type) => definition.hiddenFieldTypes.includes(type)),
   };
@@ -98,7 +94,6 @@ export function writePreferences({ preferences, presets }: PreferenceState): Ced
   return {
     showRequired: preferences.showRequired,
     showAllowMultiple: preferences.showAllowMultiple,
-    showDefaultValue: preferences.showDefaultValue,
     showElements: preferences.showElements,
     hiddenFieldTypes: hiddenTypes((type) => preferences.visibleFieldTypes[type] === false),
     fieldSelectionStyle: preferences.fieldSelectionStyle === 'sidebar' ? 'sidebar' : 'inline',
