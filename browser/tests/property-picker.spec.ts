@@ -76,6 +76,11 @@ test('real CETP selects a property for field metadata', { tag: NEEDS_PICKER }, a
         totalCount: 1,
         request: { limit: 25, offset: 0 },
         currentOffset: 0,
+        // The picker release CI pins reads these, which the server no longer answers. They leave
+        // once the pin moves to a release that reads the envelope.
+        total: 1,
+        page: 1,
+        pageSize: 25,
         items:
           (route.request().postDataJSON().offset ?? 0) > 0
             ? []
