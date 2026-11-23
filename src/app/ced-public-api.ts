@@ -57,6 +57,50 @@ export interface CedConfig {
   bridgeBaseUrl?: string;
 }
 
+/** A preset the Preferences dialog offers. Choosing one sets every preference its definition holds. */
+export type CedPreset = 'basic' | 'semantic' | 'modular';
+
+/** The preferences one preset sets. */
+export interface CedPresetDefinition {
+  /** Whether a field's settings offer the Required control. */
+  showRequired: boolean;
+  /** Whether a field's settings offer the Allow multiple control. */
+  showAllowMultiple: boolean;
+  /** The "Default Value" setting of the Preferences dialog. */
+  showDefaultValue: boolean;
+  /** Whether the designer offers to add an element. */
+  showElements: boolean;
+  /** The field types the type pickers leave out, in the order `CedFieldType` lists them. */
+  hiddenFieldTypes: CedFieldType[];
+}
+
+/**
+ * An author's preferences, as the designer reports them and as a host stores them.
+ *
+ * The designer keeps preferences in memory, for one element. A host that wants them to outlast
+ * the element stores the value `preferencesChange` carries and assigns it to `preferences` on a
+ * later element. The value is plain JSON, so `JSON.stringify` and `JSON.parse` carry it.
+ *
+ * A preference changes which controls the designer offers and never changes the document. A field
+ * of a hidden type or an element that an artifact already holds stays in it.
+ */
+export interface CedPreferences extends CedPresetDefinition {
+  /** Where the author picks a field type: beside the insertion point, or in the library sidebar. */
+  fieldSelectionStyle: 'inline' | 'sidebar';
+  /** What each preset sets. The author can redefine a preset, so the definitions travel with the preferences. */
+  presets: Record<CedPreset, CedPresetDefinition>;
+}
+
+/**
+ * The preferences a host assigns.
+ *
+ * Every key is optional, and an omitted key takes the designer's default. A state stored by an
+ * earlier version therefore remains assignable after a later version adds a preference.
+ */
+export interface CedPreferencesInput extends Partial<Omit<CedPreferences, 'presets'>> {
+  presets?: Partial<Record<CedPreset, Partial<CedPresetDefinition>>>;
+}
+
 /** A JSON-serialisable value, as it appears in a CEDAR artifact. */
 /** Exact numeric artifact atom; use String(value) to inspect it without rounding. */
 export interface CedExactNumber {
@@ -102,6 +146,24 @@ export interface CedarEmbeddableDesignerElement extends HTMLElement {
    * editing, saving and inline authoring error markers are disabled.
    */
   readOnly: boolean;
+  /**
+   * The author's preferences. Reading the property returns the complete current state.
+   *
+   * An assignment replaces the state and may come at any time. An omitted key takes its default,
+   * and `null` restores every default. A value the designer cannot use is reported to the console
+   * and leaves the affected preference as it was or at its default; an assignment never throws.
+   */
+  get preferences(): CedPreferences;
+  set preferences(value: CedPreferencesInput | null);
+  /**
+   * The complete preferences after the author changes one of them or redefines a preset. An
+   * assignment to `preferences` is not reported back, and nothing is reported at startup.
+   */
+  addEventListener(
+    type: 'preferencesChange',
+    listener: (event: CustomEvent<CedPreferences>) => void,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
   /** Host-owned repository search and artifact retrieval. Replaceable between documents. */
   childSource: CedChildSource | null;
   /** A template or element document. The legacy property name remains supported. */

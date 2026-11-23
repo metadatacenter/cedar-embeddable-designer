@@ -49,6 +49,12 @@
       window.__events = [];
       const designer = document.getElementById('designer');
       designer.addEventListener('templateChange', (event) => window.__events.push(event.detail));
+      /*
+        Every preference state the element announces, recorded from before the bundle
+        loads, so a test can assert that it announces none at startup.
+      */
+      window.__preferences = [];
+      designer.addEventListener('preferencesChange', (event) => window.__preferences.push(event.detail));
 
       const params = new URLSearchParams(location.search);
       if (params.get('picker') === 'stub') {

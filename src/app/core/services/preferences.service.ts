@@ -1,5 +1,7 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
+import type { CedPreferences } from '../../ced-public-api';
 import { UserPreferences, PresetDefinitions, FIELD_TYPES } from '../models/types';
+import { defaultPreferenceState, readPreferences, writePreferences } from './preference-exchange';
 
 @Injectable({
   providedIn: 'root',
@@ -11,43 +13,21 @@ export class PreferencesService {
   readonly showUserMenu = signal<boolean>(false);
 
   // Preset Definitions
-  readonly presetDefinitions = signal<PresetDefinitions>({
-    basic: {
-      showRequired: true,
-      showAllowMultiple: true,
-      showDefaultValue: false,
-      showElements: false,
-      hiddenFieldTypes: ['controlledTerms'],
-    },
-    semantic: {
-      showRequired: true,
-      showAllowMultiple: true,
-      showDefaultValue: true,
-      showElements: false,
-      hiddenFieldTypes: [],
-    },
-    modular: {
-      showRequired: true,
-      showAllowMultiple: true,
-      showDefaultValue: true,
-      showElements: true,
-      hiddenFieldTypes: [],
-    },
-  });
+  readonly presetDefinitions = signal<PresetDefinitions>(defaultPreferenceState().presets);
 
   // Start from the same Modular definition used by the profile selector.
-  readonly preferences = signal<UserPreferences>(
-    (() => {
-      const { hiddenFieldTypes, ...settings } = this.presetDefinitions().modular;
-      return {
-        ...settings,
-        fieldSelectionStyle: 'modal',
-        visibleFieldTypes: Object.fromEntries(
-          Object.keys(FIELD_TYPES).map((key) => [key, !hiddenFieldTypes.includes(key)]),
-        ),
-      };
-    })(),
+  readonly preferences = signal<UserPreferences>(defaultPreferenceState().preferences);
+
+  /** Every preference and preset definition, in the shape a host stores. */
+  readonly exchanged = computed<CedPreferences>(() =>
+    writePreferences({ preferences: this.preferences(), presets: this.presetDefinitions() }),
   );
+
+  /**
+   * The state the host already holds, serialized: the defaults, then its latest assignment or the
+   * latest change it was told of. A state that differs from it is a change the author made.
+   */
+  private held = '';
 
   constructor() {
     // Sync all field types into preferences to ensure nothing is missing
@@ -71,6 +51,36 @@ export class PreferencesService {
       }
       return prev;
     });
+    this.held = JSON.stringify(this.exchanged());
+  }
+
+  /**
+   * Replace the state with the one a host assigns.
+   *
+   * The assignment is not a change to report, so the state it leaves becomes the state the host
+   * holds. A value that is not preferences at all leaves everything as it was.
+   */
+  supply(value: unknown): void {
+    const state = readPreferences(value, (message) => console.warn(message));
+    if (!state) return;
+    this.preferences.set(state.preferences);
+    this.presetDefinitions.set(state.presets);
+    this.held = JSON.stringify(this.exchanged());
+  }
+
+  /**
+   * The state once it differs from what the host holds, and `null` until it differs again.
+   *
+   * Comparing states rather than recording each command covers every route to a change, including
+   * the preset dialog, which writes the definitions directly. A preference switched on and back off
+   * before anyone asks is no change.
+   */
+  takeChange(): CedPreferences | null {
+    const state = this.exchanged();
+    const serialized = JSON.stringify(state);
+    if (serialized === this.held) return null;
+    this.held = serialized;
+    return state;
   }
 
   /**
