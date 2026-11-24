@@ -86,6 +86,22 @@ const SHOT = {
 } as const;
 
 /**
+ * The designer, showing one fixed build version.
+ *
+ * The header shows the whole version, so its length sets the identity's width and, at a narrow
+ * width, how many lines the header takes. The version is masked, but the layout around it is
+ * not. A development build and a release build must match the same baselines, so the version
+ * text is replaced, inside the designer's shadow root, before anything is photographed.
+ */
+async function openStableDesigner(page: Page) {
+  const designer = await openDesigner(page);
+  await designer.locator('.designer-identity__version').evaluate((node) => {
+    node.textContent = '0.0.0-dev.00000000.0000000';
+  });
+  return designer;
+}
+
+/**
  * A designer holding one card of each named type, and nothing else.
  *
  * The three starting fields are removed first, so each group's photograph is of that
@@ -97,7 +113,7 @@ async function designerShowing(
   labels: readonly string[],
   preset: 'basic' | 'semantic' | 'modular' = 'modular',
 ) {
-  await openDesigner(page);
+  await openStableDesigner(page);
   await applyPreset(page, preset);
   const designer = page.locator(DESIGNER);
 
@@ -105,10 +121,16 @@ async function designerShowing(
   // smooth insertion scrolling adds unrelated work before the pixels can be compared.
   // The delete control carries a title and no text, which is what names it here.
   const starting = designer.locator('[id^=field-card-]');
-  for (let remaining = await starting.count(); remaining > 0; remaining--) {
-    await clickCentred(designer.locator('[id^=field-card-]').first().getByTitle('Delete field').first());
+  // Each deletion is confirmed before the next. Under load, a click dispatched while the previous
+  // card is still leaving can reach that card rather than the next one, so a click that removed
+  // nothing is sent again.
+  for (let remaining = await starting.count(); remaining > 0; remaining = await starting.count()) {
+    const before = remaining;
+    await expect(async () => {
+      await clickCentred(starting.first().getByTitle('Delete field').first());
+      await expect.poll(async () => starting.count(), { timeout: 2_000 }).toBeLessThan(before);
+    }).toPass({ timeout: 10_000 });
   }
-  await expect.poll(async () => starting.count(), { timeout: 10_000 }).toBe(0);
 
   for (const label of labels) {
     await clickCentred(designer.getByRole('button', { name: /^Add field$/ }).first());
@@ -217,7 +239,7 @@ test.describe('the designer', () => {
     test(`shows inline elements expanded and collapsed at ${width}`, async ({ page }) => {
       await sequentialIdentifiers(page);
       await page.setViewportSize({ width, height: 1000 });
-      const designer = await openDesigner(page);
+      const designer = await openStableDesigner(page);
       await applyPreset(page, 'modular');
       await addElementFixture(page, designer);
       const element = designer.locator('app-container-editor').nth(1);
@@ -239,7 +261,7 @@ test.describe('the designer', () => {
 });
 
 test('an unnamed field is quiet until the author leaves its name empty', async ({ page }) => {
-  const designer = await openDesigner(page);
+  const designer = await openStableDesigner(page);
   await designer.getByRole('textbox', { name: 'Template name', exact: true }).fill('Study');
   await designer.getByRole('button', { name: 'Add field', exact: true }).first().click();
   await designer.getByRole('button', { name: 'Text', exact: true }).click();
@@ -257,7 +279,7 @@ test('an unnamed field is quiet until the author leaves its name empty', async (
 });
 
 test('an inactive settings tab still shows its error', async ({ page }) => {
-  const designer = await openDesigner(page);
+  const designer = await openStableDesigner(page);
   await designer.getByLabel('Template name', { exact: true }).fill('Study');
   const card = designer.locator('app-field-card').first();
   const panel = await openSettings(card, 'Configuration');
@@ -270,7 +292,7 @@ test('an inactive settings tab still shows its error', async ({ page }) => {
 });
 
 test('element deletion confirmation uses the shared dialog actions', async ({ page }) => {
-  const designer = await openDesigner(page);
+  const designer = await openStableDesigner(page);
   await applyPreset(page, 'modular');
   await addElementFixture(page);
   await nestFixtureFields(page, ['Element']);
@@ -283,7 +305,7 @@ test('element deletion confirmation uses the shared dialog actions', async ({ pa
 for (const name of ['Preferences', 'Define Presets']) {
   test(`settings dialog: ${name}`, async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 1000 });
-    const designer = await openDesigner(page);
+    const designer = await openStableDesigner(page);
     await designer.getByRole('button', { name: 'User Menu', exact: true }).click();
     await designer.locator('.user-menu-dropdown').getByRole('button', { name, exact: true }).click();
     const dialog = designer.locator('.cedar-modal-surface');
@@ -312,7 +334,7 @@ for (const kind of ['template', 'element'] as const)
   for (const width of [1280, 375]) {
     test(`empty ${kind} insertion at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
-      const designer = await openDesigner(page);
+      const designer = await openStableDesigner(page);
       await applyPreset(page, 'modular');
       await designer.evaluate((el: any, kind) => el.newArtifact(kind), kind);
       await designer
