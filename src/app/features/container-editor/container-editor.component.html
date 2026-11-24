@@ -23,10 +23,11 @@
         <div class="template-field-group flex-1">
           <!-- eslint-disable-next-line @angular-eslint/template/label-has-associated-control -- the input names itself; a click on this label toggles the header settings -->
           <label class="template-field-label">{{ 'containerEditor.name' | translate }}</label>
-          <input
+          <textarea
+            appWrappingName
+            rows="1"
             spellcheck="false"
             autocomplete="off"
-            type="text"
             [appArtifactName]="container().id"
             [attr.aria-label]="
               (placementNode()
@@ -53,7 +54,7 @@
                 : 'containerEditor.templateName'
               ) | translate
             "
-          />
+          ></textarea>
           @if (service.nameError(container().id, container().name, container().kind); as error) {
             <p class="ced-field-error" [id]="'name-error-' + container().id" role="alert">{{ error }}</p>
           }
@@ -208,7 +209,7 @@
           <div
             class="insert-zone"
             [class.dismissed]="dismissedInsertion() === node.id"
-            (mouseleave)="dismissedInsertion.set(null)"
+            (mouseleave)="insertionPointerLeft(node.id)"
             (focusin)="dismissedInsertion.set(null)"
           >
             <app-insertion-actions

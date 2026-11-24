@@ -190,7 +190,9 @@ test('creates an editable element at the insertion position and adds a nested fi
         .evaluateAll((zones) => zones.every((zone) => getComputedStyle(zone).opacity === '0')),
     )
     .toBe(true);
-  await expect(designer.locator('app-container-editor app-container-editor input').first()).toBeFocused();
+  await expect(
+    designer.locator('app-container-editor app-container-editor .template-input--name').first(),
+  ).toBeFocused();
   const nested = designer.locator('app-container-editor app-container-editor').first();
   await expect(nested.locator('.element-toggle')).toHaveCount(0);
   await nested.getByRole('button', { name: 'Add field', exact: true }).click();

@@ -111,6 +111,9 @@ test('an unnamed field keeps its expanded tabs while its name is edited', async 
   const name = card.getByRole('textbox', { name: 'Enter field name', exact: true });
   const toggle = card.getByRole('button', { name: /field settings/ });
   await expect(name).toBeFocused();
+  // Finish the new-card reveal before testing name editing, as the physical-expand
+  // cases below do. A pointer press during its smooth scroll can miss on release.
+  await card.evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-expanded', 'true');
   await name.click();
@@ -203,9 +206,11 @@ test.describe('touch expansion', () => {
     await insert.click();
     await designer.locator('app-field-type-picker').getByRole('button', { name: 'Text', exact: true }).click();
     const card = designer.locator('app-field-card').first();
+    await expect(card.getByRole('textbox', { name: 'Enter field name', exact: true })).toBeFocused();
     await card.evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
-    const bounds = (await card.getByRole('button', { name: 'Expand field settings', exact: true }).boundingBox())!;
-    await page.touchscreen.tap(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+    // A locator tap waits for the new-card scroll to settle before pressing; a
+    // coordinate read during that scroll can land on another control at release.
+    await card.getByRole('button', { name: 'Expand field settings', exact: true }).tap();
     await expect(card.getByRole('textbox', { name: 'Enter field name', exact: true })).toHaveAttribute(
       'aria-invalid',
       'true',

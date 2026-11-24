@@ -67,7 +67,7 @@ async function addNamedField(designer: import('@playwright/test').Locator) {
   await designer.getByRole('button', { name: 'Add field', exact: true }).first().click();
   await designer.getByRole('button', { name: 'Text', exact: true }).click();
   const id = await designer
-    .locator('input[aria-label="Enter field name"]:focus')
+    .locator('[aria-label="Enter field name"]:focus')
     .evaluate((input) => input.closest('[id^=field-card-]')!.id);
   const card = designer.locator('#' + id).locator('app-field-card');
   await card.getByLabel('Enter field name', { exact: true }).fill('Study title');
@@ -287,7 +287,7 @@ test('field error badge aligns its icon and text with the field name', async ({ 
   for (const width of [1280, 700]) {
     await page.setViewportSize({ width, height: 900 });
     const alignment = await card.evaluate((element) => {
-      const input = element.querySelector<HTMLInputElement>('.field-heading > input')!;
+      const input = element.querySelector<HTMLInputElement>('.field-heading > textarea')!;
       const text = element.querySelector('.validation-badge > span')!.getBoundingClientRect();
       const icon = element.querySelector('.validation-badge svg')!.getBoundingClientRect();
       const style = getComputedStyle(input);

@@ -10,7 +10,7 @@ test('comparison page renders the four real components and applies host profiles
   await expect(page.locator('.status-reference .error')).toHaveCSS('background-color', 'rgb(254, 243, 242)');
   await expect(page.locator('#status')).toContainText('Both bundles loaded');
   for (const id of ['cee', 'cef', 'ced', 'cefd']) {
-    await expect(page.locator(`#${id} input`).first()).toBeVisible();
+    await expect(page.locator(`#${id}`).getByRole('textbox').first()).toBeVisible();
   }
   await page.screenshot({ path: testInfo.outputPath('comparison.png'), fullPage: true });
   const email = page.locator('#cef app-cedar-input-email input');

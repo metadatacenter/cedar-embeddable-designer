@@ -142,7 +142,9 @@ for (const kind of ['Template', 'Element']) {
     const original = await currentTemplate(page);
     const root = designer.locator('app-container-editor').first();
     // The header carries the name and version; the identifier sits with the metadata, as a field's does.
-    await expect(directHeader(root).locator('.template-header-card__body input')).toHaveCount(2);
+    await expect(
+      directHeader(root).locator('.template-header-card__body :is(.template-input--name, .template-input--fact)'),
+    ).toHaveCount(2);
     const settings = root.locator(':scope > .template-header-card > app-container-settings');
     await settings.getByRole('button', { name: `Expand ${kind.toLowerCase()} settings`, exact: true }).click();
     await settings.getByRole('tab', { name: 'Metadata', exact: true }).click();
@@ -168,7 +170,9 @@ test('nested element Identifier edits the element in its Metadata tab', async ({
   await applyPreset(page, 'modular');
   await addElementFixture(page, designer);
   const element = designer.locator('app-container-editor').nth(1);
-  await expect(directHeader(element).locator('.template-header-card__body input')).toHaveCount(2);
+  await expect(
+    directHeader(element).locator('.template-header-card__body :is(.template-input--name, .template-input--fact)'),
+  ).toHaveCount(2);
   const card = directHeader(element).locator('app-element-card');
   await card.getByRole('button', { name: 'Expand element settings', exact: true }).click();
   await card.getByRole('tab', { name: 'Metadata', exact: true }).click();
@@ -307,12 +311,14 @@ for (const width of [1280, 375]) {
     await name.fill('Study element');
     await expect(name).toHaveCSS('font-size', '14px');
     await expect(header).toHaveCSS('border-top-width', '1px');
-    await expect(header.locator('textarea.template-input')).toHaveCSS('resize', 'none');
+    await expect(header.locator('.template-input--description')).toHaveCSS('resize', 'none');
     const box = (await header.boundingBox())!;
     expect(box.height).toBeLessThanOrEqual(width === 1280 ? 140 : 200);
     if (width === 1280) {
       await expect(header.locator('.template-header-card__icon')).toBeVisible();
-      const groups = header.locator('.template-header-row > .template-field-group input');
+      const groups = header.locator(
+        '.template-header-row > .template-field-group :is(.template-input--name, .template-input--fact)',
+      );
       const tops = await groups.evaluateAll((inputs) => inputs.map((input) => input.getBoundingClientRect().top));
       expect(Math.max(...tops) - Math.min(...tops)).toBeLessThanOrEqual(1);
     }

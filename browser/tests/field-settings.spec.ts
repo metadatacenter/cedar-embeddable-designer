@@ -252,7 +252,7 @@ test('one Temporal palette entry supports date, time and date-time without chang
   await expect(picker.getByRole('button', { name: 'Temporal', exact: true })).toHaveCount(1);
   await expect(picker.getByRole('button', { name: /^(Date|Time|Date and time)$/ })).toHaveCount(0);
   await picker.getByRole('button', { name: 'Temporal', exact: true }).click();
-  await designer.locator('input[aria-label="Enter field name"]:focus').fill('Temporal');
+  await designer.locator('[aria-label="Enter field name"]:focus').fill('Temporal');
   await expect(designer.locator('app-field-card')).toHaveCount(4);
   const card = designer.locator('app-field-card').last();
   const settings = await openSettings(card, 'Constraints');

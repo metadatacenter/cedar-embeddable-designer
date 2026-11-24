@@ -1,3 +1,4 @@
+import { WrappingNameDirective } from '../../shared/wrapping-name.directive';
 import { ArtifactNameDirective } from '../../shared/artifact-name.directive';
 import { InsertionActionsComponent } from '../insertion-actions/insertion-actions.component';
 import { HeaderToggleDirective } from '../../shared/header-toggle.directive';
@@ -43,6 +44,7 @@ const UNNAMED_TOGGLE = {
   selector: 'app-container-editor',
   host: { '(click)': '$event.stopPropagation()' },
   imports: [
+    WrappingNameDirective,
     ArtifactNameDirective,
     InsertionActionsComponent,
     FormsModule,
@@ -105,6 +107,12 @@ export class ContainerEditorComponent {
    * The dismissal ends when the pointer leaves the gap or focus moves to one of the actions.
    */
   readonly dismissedInsertion = signal<number | null>(null);
+  insertionPointerLeft(id: number): void {
+    // Touch dismissal belongs to the selected card until selection or focus changes.
+    // Layout changes can synthesize mouseleave, including on another insertion row.
+    if (this.dismissedInsertion() !== id || (this.cannotHover && this.service.selectedField() === id)) return;
+    this.dismissedInsertion.set(null);
+  }
   /**
    * Whether this is a device that cannot hover, where the actions show above the selected card
    * instead. The component's stylesheet reveals them under the same query.

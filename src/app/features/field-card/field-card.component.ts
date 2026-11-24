@@ -1,3 +1,4 @@
+import { WrappingNameDirective } from '../../shared/wrapping-name.directive';
 import { valueLanguage } from '../../core/model/value-language';
 import { ArtifactNameDirective } from '../../shared/artifact-name.directive';
 import { FieldSummaryComponent } from '../field-summary/field-summary.component';
@@ -25,6 +26,7 @@ import { ControlledTermConfigComponent } from '../controlled-term-config/control
   selector: 'app-field-card',
   standalone: true,
   imports: [
+    WrappingNameDirective,
     ArtifactNameDirective,
     FieldSummaryComponent,
     HeaderToggleDirective,

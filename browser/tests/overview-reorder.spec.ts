@@ -1,7 +1,45 @@
 import { expectOutlineNames, outlineNames } from './support';
 import { addElementFixture } from './support';
 import { expect, test } from '@playwright/test';
-import { applyPreset, child, currentTemplate, fieldOrder, openDesigner, nestFixtureFields } from './support';
+import {
+  applyPreset,
+  child,
+  currentTemplate,
+  fieldOrder,
+  openDesigner,
+  openPreview,
+  nestFixtureFields,
+} from './support';
+
+test('an ordinary Overview word stays intact beside Preview at the minimum pane width', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const designer = await openDesigner(page, '?cee=stub');
+  await designer.getByRole('textbox', { name: 'Enter field name', exact: true }).first().fill('Checkboxes sample');
+  await openPreview(page);
+  // Opening Preview changes the allocation on the next render; measure its settled minimum.
+  await expect(designer.getByRole('separator', { name: 'Resize Overview' })).toHaveAttribute('aria-valuenow', '224');
+  await expect.poll(async () => (await designer.locator('.overview-panel').boundingBox())!.width).toBe(224);
+  const row = designer.locator('.overview-panel .outline-row').first();
+  const lines = await row.locator('.node-name').evaluate((element) => {
+    const text = element.firstChild!;
+    const start = text.textContent!.indexOf('Checkboxes');
+    const range = document.createRange();
+    range.setStart(text, start);
+    range.setEnd(text, start + 'Checkboxes'.length);
+    return range.getClientRects().length;
+  });
+  expect(lines).toBe(1);
+  const boxes = await row
+    .locator('.outline-move, .outline-drag-handle')
+    .evaluateAll((controls) => controls.map((control) => control.getBoundingClientRect().toJSON()));
+  expect(boxes).toHaveLength(3);
+  for (const [index, box] of boxes.entries()) {
+    expect(box.width).toBeGreaterThanOrEqual(24);
+    expect(box.height).toBeGreaterThanOrEqual(24);
+    if (index) expect(box.x).toBeGreaterThanOrEqual(boxes[index - 1].right);
+  }
+  expect(boxes.at(-1)!.right).toBeLessThanOrEqual((await row.boundingBox())!.x + (await row.boundingBox())!.width);
+});
 
 for (const nested of [false, true]) {
   test(`overview reorders ${nested ? 'nested' : 'root'} fields only on drop`, async ({ page }) => {
@@ -14,7 +52,7 @@ for (const nested of [false, true]) {
       await nestFixtureFields(page, ['Element'], 2);
       await designer.locator('.overview-panel').getByRole('button', { name: 'Element', exact: true }).click();
       editor = designer.locator('app-container-editor').last();
-      await expect(editor.locator('app-field-card input[aria-label="Enter field name"]').first()).toHaveValue('Title');
+      await expect(editor.locator('app-field-card [aria-label="Enter field name"]').first()).toHaveValue('Title');
       await expect(editor.locator('app-field-card')).toHaveCount(2);
     }
     const outline = designer.locator('app-container-outline').last();
@@ -23,7 +61,7 @@ for (const nested of [false, true]) {
     const last = rows.last();
     const before = await currentTemplate(page);
     const names = await editor
-      .locator('app-field-card input[aria-label="Enter field name"]')
+      .locator('app-field-card [aria-label="Enter field name"]')
       .evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value));
     const alignment = await rows.first().evaluate((el) => {
       const icon = el.querySelector('.select-node app-icon')!.getBoundingClientRect();
@@ -43,7 +81,7 @@ for (const nested of [false, true]) {
     expect(await currentTemplate(page)).toEqual(before);
     expect(
       await editor
-        .locator('app-field-card input[aria-label="Enter field name"]')
+        .locator('app-field-card [aria-label="Enter field name"]')
         .evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value)),
     ).toEqual(names);
     await page.mouse.up();
@@ -56,7 +94,7 @@ for (const nested of [false, true]) {
     await expect
       .poll(async () =>
         editor
-          .locator('app-field-card input[aria-label="Enter field name"]')
+          .locator('app-field-card [aria-label="Enter field name"]')
           .evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value)),
       )
       .toEqual(expected);
@@ -99,7 +137,7 @@ test('Move up and Move down reorder a child by single clicks and do nothing at e
   const names = () => outlineNames(rows.locator('.node-name'));
   const cards = () =>
     designer
-      .locator('app-field-card input[aria-label="Enter field name"]')
+      .locator('app-field-card [aria-label="Enter field name"]')
       .evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value));
   const button = (name: string) => designer.getByRole('button', { name, exact: true });
 
@@ -119,8 +157,18 @@ test('Move up and Move down reorder a child by single clicks and do nothing at e
   }
   // At either end the button is marked disabled but stays focusable.
   await expect(button('Move Title up')).toHaveAttribute('aria-disabled', 'true');
+  await page.keyboard.press('Tab');
   await button('Move Title up').focus();
   await expect(button('Move Title up')).toBeFocused();
+  await expect(button('Move Title up')).toHaveCSS('opacity', '1');
+  const disabledOpacity = await button('Move Title up').evaluate((control) =>
+    getComputedStyle(control).getPropertyValue('--cedar-control-disabled-opacity').trim(),
+  );
+  await expect(button('Move Title up').locator('app-icon')).toHaveCSS('opacity', String(Number(disabledOpacity)));
+  expect(await button('Move Title up').evaluate((control) => control.matches(':focus-visible'))).toBe(true);
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Space');
+  expect(await names()).toEqual(['Title', 'Category', 'Publication Date']);
   await expect(button('Move Publication Date down')).toHaveAttribute('aria-disabled', 'true');
   for (const name of ['Move Title down', 'Move Category up', 'Move Category down', 'Move Publication Date up'])
     await expect(button(name)).not.toHaveAttribute('aria-disabled');

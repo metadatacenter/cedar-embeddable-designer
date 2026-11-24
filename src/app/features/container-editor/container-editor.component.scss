@@ -207,7 +207,7 @@
   text-align: right;
 }
 
-textarea.template-input {
+textarea.template-input--description {
   width: 100%;
   field-sizing: content;
   resize: none;
@@ -236,6 +236,17 @@ textarea.template-input {
 // selected card: tapping a card selects it, and the author can add beside it. Escape still dismisses
 // them. A mouse, or keyboard focus, reveals them as before.
 @media (hover: none), (pointer: coarse), (pointer: none) {
+  // Reserve the actions' actual wrapped height. Keep the space while dismissed so
+  // Escape or opening a picker does not move the selected card under the pointer.
+  .field-drop-item:has(> .field-drag-container.selected) > .insert-zone,
+  .field-drop-item:has(> .inline-picker) > .insert-zone,
+  .insert-zone:hover,
+  .insert-zone:focus-within {
+    position: relative;
+    top: auto;
+    height: auto;
+    padding-block: var(--cedar-space-2);
+  }
   .field-drop-item:has(> .field-drag-container.selected) > .insert-zone:not(.dismissed) {
     opacity: 1;
   }
@@ -289,6 +300,7 @@ textarea.template-input {
 
 /* The template's own name, identifier, version and description, each in its shared text role. */
 .template-input--name {
+  width: fit-content;
   font-weight: var(--cedar-font-weight-medium);
   color: var(--cedar-text-title);
   // The placeholder is a hint, not a name, so it keeps the regular weight of every other one.

@@ -387,11 +387,10 @@
   margin-top: var(--cedar-space-4);
 }
 
-/* The CEDAR mark, with the name and the build beside it. The text column has a fixed width, so a
-   longer version ellipses within it rather than moving the header. */
+/* Keep the complete build identity readable beside the mark. */
 .designer-identity {
   display: grid;
-  grid-template-columns: spacing.$brand-mark-size spacing.$designer-identity-width;
+  grid-template-columns: spacing.$brand-mark-size minmax(0, max-content);
   grid-template-rows: 1fr 1fr;
   @include spacing.apply(gap, compact);
   column-gap: var(--cedar-space-2);
@@ -418,9 +417,7 @@
 
 .designer-identity__version {
   align-self: start;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
   font-size: var(--cedar-font-size);
   color: var(--cedar-text-muted);
 }

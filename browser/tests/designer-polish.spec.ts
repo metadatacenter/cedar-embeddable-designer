@@ -56,7 +56,7 @@ test('an Overview name breaks only between words, and an error count that does n
       .first()
       .click();
     await designer.getByRole('button', { name: label, exact: true }).click();
-    await designer.locator('input[aria-label="Enter field name"]:focus').fill(label);
+    await designer.locator('[aria-label="Enter field name"]:focus').fill(label);
   }
   const row = designer.locator('.outline-row').filter({ hasText: 'Checkboxes' });
   const badge = row.locator('.validation-badge');

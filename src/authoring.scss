@@ -4,6 +4,13 @@
 @use '@org.metadatacenter/cedar-design-tokens/controls';
 @use '@org.metadatacenter/cedar-design-tokens/spacing';
 
+/* A host can temporarily suspend editing (for example, while a retained draft awaits a
+   choice). Inert controls must look unavailable too; keep the document text readable. */
+:host([inert]) :is(button, input, textarea, select, [role='button'], [role='tab'], .field-drag-handle, .element-drag-handle) {
+  opacity: var(--cedar-control-disabled-opacity);
+  cursor: default;
+}
+
 /* Checkboxes and radio buttons are the browser's own, in the primary colour, as Workspace draws them. */
 input[type='checkbox'],
 input[type='radio'] {
