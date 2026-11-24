@@ -136,12 +136,12 @@ jobs:
   performance:
     name: Standalone performance
     needs: test
-    uses: metadatacenter/cedar-development/.github/workflows/frontend-performance-paired.yml@bdf9048953bf08c934d9a53faa55ce686897f0e4
+    uses: metadatacenter/cedar-development/.github/workflows/frontend-performance-paired.yml@cea8986e5c7e9fe5f6499aa08f38441e4e05a0b5
     with:
       component: ced
       baseline-ref: ${{ github.event.pull_request.base.sha || github.event.before }}
       candidate-artifact: ced-performance-bundle
-      harness-ref: bdf9048953bf08c934d9a53faa55ce686897f0e4
+      harness-ref: cea8986e5c7e9fe5f6499aa08f38441e4e05a0b5
 
   cef-bundles:
     name: Build real CEE, CEF and CETP integration bundles
