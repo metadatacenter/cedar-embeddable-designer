@@ -199,7 +199,9 @@ jobs:
     name: Real component contracts (${{ matrix.browser }})
     needs: [test, cef-bundles]
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 15
+    # A hosted run takes about 8 minutes. Local CI runs four jobs at once on one workstation,
+    # where the same job takes about twice as long, so the limit allows for that.
+    timeout-minutes: 25
     env:
       CEDAR_TEST_WORKERS: '2'
       PICKER_BUNDLE: ${{ github.workspace }}/cedar-embeddable-term-picker/dist-bundle/cedar-embeddable-term-picker.js
@@ -255,7 +257,9 @@ jobs:
       CEDAR_TEST_WORKERS: '2'
     needs: test
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 25
+    # A hosted shard takes 10 to 14 minutes. Local CI runs four jobs at once on one workstation,
+    # where the same shard takes about twice as long, so the limit allows for that.
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
