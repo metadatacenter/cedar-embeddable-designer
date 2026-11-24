@@ -2,7 +2,7 @@
   "name": "cedar-embeddable-designer",
   "description": "A reusable Web Component for designing CEDAR metadata templates.",
   "license": "BSD-2-Clause",
-  "version": "0.1.4",
+  "version": "0.1.5-dev.20261124.1623c0f",
   "engines": {
     "node": "^24.15.0"
   },
@@ -60,7 +60,7 @@
     "@angular/forms": "^22.2.0",
     "@angular/platform-browser": "^22.2.0",
     "@ngx-translate/core": "~18.0.0",
-    "cedar-model-typescript-library": "1.0.29",
+    "cedar-model-typescript-library": "npm:@org.metadatacenter/cedar-model-typescript-library@1.0.30-dev.20261119.026a31c",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.16.3"
