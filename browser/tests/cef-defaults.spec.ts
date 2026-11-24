@@ -461,11 +461,14 @@ test('the real picker selects a default within the field vocabulary', { tag: NEE
     });
     searchedWithin = true;
     // One term in all, so a page after the first holds nothing, as the server's would.
+    const offset = request.offset ?? 0;
     await route.fulfill({
       json: {
         totalCount: 1,
+        request: { limit: request.limit, offset },
+        currentOffset: offset,
         collection:
-          (request.page ?? 1) > 1
+          offset > 0
             ? []
             : [
                 {

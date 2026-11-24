@@ -1,3 +1,4 @@
+import { WrappingNameDirective } from '../../shared/wrapping-name.directive';
 import { isBlank } from '../../core/model/cedar-model/text-policy';
 import { JsonSourcePolicy } from '../../core/model/cedar-template';
 import { NumericPolicy } from '../../core/model/cedar-template';
@@ -42,6 +43,7 @@ import { TemplateService } from '../../core/services/template.service';
 @Component({
   selector: 'app-field-settings',
   imports: [
+    WrappingNameDirective,
     IconComponent,
     LanguageSelectorComponent,
     AlternateQuestionsComponent,

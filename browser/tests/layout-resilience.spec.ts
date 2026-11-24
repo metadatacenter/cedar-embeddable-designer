@@ -106,6 +106,9 @@ const STATES: Readonly<Record<string, State>> = {
       await expect(
         designer.locator('app-container-editor app-container-editor [id^=field-card-]').first(),
       ).toBeVisible();
+      // The preset dialog's former button position can now be an insertion gap.
+      // Measure the resting layout; hover actions have separate dismissal checks.
+      await page.mouse.move(0, 0);
     },
   },
   'user menu': {

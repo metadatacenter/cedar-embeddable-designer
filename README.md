@@ -191,6 +191,37 @@ inside a parent, including requirement and repetition, is configured in CED.
 [Designing a Single Field](https://metadatacenter.readthedocs.io/en/latest/cedar-embeddable-designer/field-designer/)
 covers the complete workflow.
 
+## Author Preferences
+
+An author sets preferences from the designer's user menu. They select the field
+settings and field types CED offers, the place of the field-type picker, and the
+content of each preset configuration. CED keeps them in memory for one element.
+To keep them longer, store the value each `preferencesChange` event carries and
+assign it to `preferences` on a later element:
+
+```typescript
+import type { CedarEmbeddableDesignerElement, CedPreferences } from 'cedar-embeddable-designer';
+
+const designer = document.createElement('cedar-embeddable-designer') as CedarEmbeddableDesignerElement;
+const stored = localStorage.getItem('designer-preferences');
+designer.preferences = stored ? (JSON.parse(stored) as CedPreferences) : null;
+designer.addEventListener('preferencesChange', (event) => {
+  localStorage.setItem('designer-preferences', JSON.stringify(event.detail));
+});
+document.body.append(designer);
+```
+
+The event carries the complete preferences after each change the author makes.
+CED sends none at startup and none for the host's own assignment, so a host can
+store every value it receives. An assignment replaces the preferences and can
+come at any time. An omitted key takes its default and `null` restores every
+default, so a value stored by an earlier version remains assignable. CED reports
+a value it cannot use to the console, ignores it, and never throws.
+
+Preferences change the controls CED offers and never the document. A field of a
+hidden type, or an element while elements are switched off, stays in the
+artifact. The field designer has no preferences.
+
 ## Appearance and Language
 
 Both elements support English (`en`) and Hungarian (`hu`) through the `language`

@@ -87,7 +87,7 @@ async function designerWithCef(page: Page, type: string): Promise<void> {
   await page.evaluate((value) => {
     (document.querySelector('cedar-embeddable-designer') as unknown as { template: unknown }).template = value;
   }, template);
-  // Semantic is the preset that shows Default Value, which is what mounts CEF.
+  // The default-value control is what mounts CEF. Every preset shows it, and Semantic also offers every field type.
   await applyPreset(page, 'semantic');
   await openSettings(page.locator('app-field-card').first());
   await page.locator('app-field-default-value').first().waitFor({ state: 'visible' });

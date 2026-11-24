@@ -218,7 +218,7 @@ test('occurrence ranges follow limits and repetition beside the field name', asy
   const requirement = configuration.getByLabel('Requirement', { exact: true });
   await requirement.selectOption('required');
   await expect(required).toHaveText('*');
-  await expect(card.locator('.field-heading > input + .required-mark')).toHaveText('*');
+  await expect(card.locator('.field-heading > .field-name + .required-mark')).toHaveText('*');
   await expect(card.locator('.field-summary .occurrence-range')).toHaveText('(3 .. 4)');
   await requirement.selectOption('recommended');
   await expect(required).toHaveCount(0);

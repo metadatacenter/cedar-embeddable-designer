@@ -23,6 +23,8 @@ import {
   CedConfig,
   CedJsonObject,
   CedLanguage,
+  CedPreferences,
+  CedPreferencesInput,
   CedValidationReport,
 } from '../ced-public-api';
 import { SchemaArtifactValidator } from '../core/model/cedar-model/value-policy';
@@ -102,6 +104,30 @@ export class CedarEmbeddableDesignerElementComponent {
   get readOnly(): boolean {
     return this.service.access.readOnly();
   }
+
+  /**
+   * The author's preferences, complete.
+   *
+   * The designer keeps them in memory, so a host that wants them to outlast the element stores what
+   * `preferencesChange` carries and assigns it here on a later element. An assignment replaces the
+   * state and may come at any time. An omitted key takes its default, and `null` restores every
+   * default. A value the designer cannot use is reported to the console rather than thrown, for the
+   * reason an unreadable template is.
+   */
+  @Input()
+  set preferences(value: CedPreferencesInput | null) {
+    this.service.preferencesService.supply(value);
+  }
+  get preferences(): CedPreferences {
+    return structuredClone(this.service.preferencesService.exchanged());
+  }
+  /**
+   * The complete preferences after the author changes one or redefines a preset.
+   *
+   * The host's own assignments are not reported back to it, and nothing is reported at startup, so
+   * a host may store every value it hears without storing the defaults or echoing itself.
+   */
+  @Output() preferencesChange = new EventEmitter<CedPreferences>();
 
   @Input() set childSource(source: CedChildSource | null) {
     this.service.childSource.set(source);
@@ -213,6 +239,17 @@ export class CedarEmbeddableDesignerElementComponent {
       },
     );
     inject(DestroyRef).onDestroy(() => validation.destroy());
+    const preferences = effect(
+      () => {
+        const changed = this.service.preferencesService.takeChange();
+        // The event carries a copy, so a listener cannot change the state the designer holds.
+        if (changed) this.preferencesChange.emit(structuredClone(changed));
+      },
+      {
+        injector: inject(EnvironmentInjector),
+      },
+    );
+    inject(DestroyRef).onDestroy(() => preferences.destroy());
     const changes = effect(
       () => {
         // A loaded document can be editable before it is serializable. The

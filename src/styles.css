@@ -278,3 +278,14 @@ textarea:disabled {
 textarea {
   resize: none;
 }
+
+/* Name editing wraps visually while retaining single-line input semantics. */
+textarea[appWrappingName] {
+  field-sizing: content;
+  height: auto;
+  box-sizing: border-box;
+  resize: none;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}

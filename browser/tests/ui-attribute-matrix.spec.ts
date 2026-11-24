@@ -165,7 +165,7 @@ const CONTROLS: readonly Control[] = [
   },
   {
     name: 'display name',
-    find: (page) => disclosure(page, 'Configuration').locator('input[name="shownName"]'),
+    find: (page) => disclosure(page, 'Configuration').locator('[name="shownName"]'),
     expected: () => true,
   },
   {

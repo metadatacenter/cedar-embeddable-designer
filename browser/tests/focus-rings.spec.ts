@@ -28,7 +28,7 @@ test("a field card's name, option labels and content draw the shared focus ring"
       .click();
     await designer.getByRole('button', { name: type, exact: true }).click();
     const id = await designer
-      .locator('input[aria-label="Enter field name"]:focus')
+      .locator('[aria-label="Enter field name"]:focus')
       .evaluate((input) => input.closest('[id^=field-card-]')!.id);
     return designer.locator('#' + id);
   };

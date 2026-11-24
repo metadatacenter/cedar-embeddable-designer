@@ -97,7 +97,7 @@ for (const mode of ['host', 'published'] as const)
         const before = await currentTemplate(page);
         const root = designer.locator('app-container-editor').first();
         const rootSettings = root.locator(':scope > .template-header-card > app-container-settings');
-        await expect(root.locator(':scope > .template-header-card input').first()).toBeDisabled();
+        await expect(root.locator(':scope > .template-header-card .template-input--name').first()).toBeDisabled();
         await inspectTabs(rootSettings);
         if (kind === 'template') {
           await expect(designer.locator('.nested-header > .container-type-label').first()).toBeVisible();

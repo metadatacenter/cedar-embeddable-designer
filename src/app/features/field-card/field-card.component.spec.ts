@@ -19,7 +19,7 @@ it('draws a Name caption before the name box, which keeps its own accessible nam
   const { fixture } = cardFor('text');
   const heading: HTMLElement = fixture.nativeElement.querySelector('.field-heading');
   const caption = heading.querySelector('.field-name-caption')!;
-  const name = heading.querySelector<HTMLInputElement>('input.field-name')!;
+  const name = heading.querySelector<HTMLInputElement>('.field-name')!;
   expect(caption.textContent?.trim()).toBe('Name');
   expect(caption.nextElementSibling).toBe(name);
   // A label tied to the box would take the header click that toggles the settings.

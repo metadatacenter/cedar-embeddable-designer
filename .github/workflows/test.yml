@@ -136,12 +136,12 @@ jobs:
   performance:
     name: Standalone performance
     needs: test
-    uses: metadatacenter/cedar-development/.github/workflows/frontend-performance-paired.yml@da481d46035a8d8cfac0a088d4ed860da2498073
+    uses: metadatacenter/cedar-development/.github/workflows/frontend-performance-paired.yml@bdf9048953bf08c934d9a53faa55ce686897f0e4
     with:
       component: ced
       baseline-ref: ${{ github.event.pull_request.base.sha || github.event.before }}
       candidate-artifact: ced-performance-bundle
-      harness-ref: da481d46035a8d8cfac0a088d4ed860da2498073
+      harness-ref: bdf9048953bf08c934d9a53faa55ce686897f0e4
 
   cef-bundles:
     name: Build real CEE, CEF and CETP integration bundles
@@ -152,12 +152,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: metadatacenter/cedar-embeddable-editor
-          ref: d7ffb1760e4fda33b246d1df04bb556cd1c33409
+          ref: 5531fa795ba260561f91eaae62d1845cf6035e6c
           path: cedar-embeddable-editor
       - uses: actions/checkout@v4
         with:
           repository: metadatacenter/cedar-embeddable-term-picker
-          ref: 3d2a625616c5a8d57d1a6f08f56fc4cbc5f59cfd
+          ref: 1d1416fee7449a251aef1acb016b84cba0f5616e
           path: cedar-embeddable-term-picker
       - uses: actions/setup-node@v4
         with:
@@ -199,7 +199,9 @@ jobs:
     name: Real component contracts (${{ matrix.browser }})
     needs: [test, cef-bundles]
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 15
+    # A hosted run takes about 8 minutes. Local CI runs four jobs at once on one workstation,
+    # where the same job takes about twice as long, so the limit allows for that.
+    timeout-minutes: 25
     env:
       CEDAR_TEST_WORKERS: '2'
       PICKER_BUNDLE: ${{ github.workspace }}/cedar-embeddable-term-picker/dist-bundle/cedar-embeddable-term-picker.js
@@ -255,7 +257,9 @@ jobs:
       CEDAR_TEST_WORKERS: '2'
     needs: test
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 25
+    # A hosted shard takes 10 to 14 minutes. Local CI runs four jobs at once on one workstation,
+    # where the same shard takes about twice as long, so the limit allows for that.
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:

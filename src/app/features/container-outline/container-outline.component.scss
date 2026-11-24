@@ -20,6 +20,7 @@
   width: var(--cedar-icon-size-small);
   height: var(--cedar-icon-size-large);
   padding: 0;
+  margin-inline-end: var(--cedar-space-1);
   color: var(--cedar-text-muted);
 }
 ul {
@@ -34,7 +35,8 @@ li {
 .outline-row {
   display: flex;
   align-items: center;
-  gap: var(--cedar-space-1);
+  // Keep the three reorder targets together so ordinary names fit at the minimum pane width.
+  gap: 0;
   padding: 0 var(--cedar-space-2);
 }
 .outline-row.invalid {
@@ -67,6 +69,7 @@ button {
   align-items: center;
   gap: var(--cedar-space-2);
   min-width: 0;
+  margin-inline-end: var(--cedar-space-1);
   @include spacing.apply(padding, outline-row);
   color: var(--cedar-text-primary);
   text-align: left;
@@ -112,6 +115,14 @@ button {
 .outline-move[aria-disabled='true'] {
   cursor: default;
 }
+// A boundary action remains a keyboard stop: dim its arrow, not its focus ring.
+.outline-move[aria-disabled='true']:not(:disabled) {
+  opacity: 1;
+
+  app-icon {
+    opacity: var(--cedar-control-disabled-opacity);
+  }
+}
 .outline-drag-handle {
   display: inline-flex;
   align-items: center;
@@ -141,5 +152,5 @@ app-container-outline {
 }
 button:focus-visible {
   outline: var(--cedar-focus-ring-width) solid var(--cedar-color-primary);
-  outline-offset: var(--cedar-focus-ring-offset);
+  outline-offset: calc(-1 * var(--cedar-focus-ring-width));
 }

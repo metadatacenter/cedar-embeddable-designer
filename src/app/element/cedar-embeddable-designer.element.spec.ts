@@ -3,7 +3,7 @@ import { CedarEmbeddableDesignerElementComponent } from './cedar-embeddable-desi
 import { TemplateService } from '../core/services/template.service';
 import { TerminologyService } from '../core/services/terminology.service';
 import { templateToJson, JsonSourcePolicy } from '../core/model/cedar-template';
-import { CedConfig, CedJsonObject } from '../ced-public-api';
+import { CedConfig, CedJsonObject, CedPreferences, CedPreferencesInput } from '../ced-public-api';
 
 /**
  * The element's own contract, at unit level.
@@ -168,6 +168,139 @@ describe('CedarEmbeddableDesignerElementComponent', () => {
 
       expect(terminology.baseUrl()).toBe(config.terminologyBaseUrl);
       expect(fixture.componentInstance.service.fieldEditorConfig().bridgeBaseUrl).toBe(config.bridgeBaseUrl);
+    });
+  });
+
+  /**
+   * Preferences a host stores between elements.
+   *
+   * The service decides what counts as a change and how a stored value is read. What is pinned here
+   * is the wiring a host depends on: the property reads and replaces the state the designer's
+   * controls obey, and the event comes from a root effect, which is the kind that keeps firing.
+   */
+  describe('preferences', () => {
+    it('offers the complete state as a property, in a copy the host may change', () => {
+      const element = create().componentInstance;
+
+      const read = element.preferences;
+      expect(read).toMatchObject({ showElements: true, fieldSelectionStyle: 'inline', hiddenFieldTypes: [] });
+      expect(Object.keys(read.presets)).toEqual(['basic', 'semantic', 'modular']);
+      read.showElements = false;
+      read.presets.basic.hiddenFieldTypes.push('text');
+
+      expect(element.preferences.showElements).toBe(true);
+      expect(element.preferences.presets.basic.hiddenFieldTypes).toEqual(['controlledTerms']);
+    });
+
+    it('applies the state a host assigns to what the designer offers', () => {
+      const fixture = create();
+      const stored: CedPreferencesInput = {
+        showRequired: false,
+        showElements: false,
+        fieldSelectionStyle: 'sidebar',
+        hiddenFieldTypes: ['email'],
+      };
+
+      fixture.componentRef.setInput('preferences', stored);
+
+      expect(service.preferences()).toMatchObject({
+        showRequired: false,
+        showElements: false,
+        fieldSelectionStyle: 'sidebar',
+      });
+      expect(service.preferences().visibleFieldTypes['email']).toBe(false);
+      expect(service.preferences().visibleFieldTypes['text']).toBe(true);
+      expect(fixture.componentInstance.preferences).toMatchObject(stored);
+    });
+
+    it('accepts an assignment at any time, and restores the defaults on null', () => {
+      const fixture = create();
+      const defaults = fixture.componentInstance.preferences;
+
+      fixture.componentRef.setInput('preferences', { showElements: false });
+      fixture.componentRef.setInput('preferences', { showRequired: false });
+      expect(fixture.componentInstance.preferences).toMatchObject({ showElements: true, showRequired: false });
+
+      fixture.componentRef.setInput('preferences', null);
+      expect(fixture.componentInstance.preferences).toEqual(defaults);
+    });
+
+    it('reports a value it cannot use rather than throwing at the host', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const fixture = create();
+      const before = fixture.componentInstance.preferences;
+
+      expect(() => fixture.componentRef.setInput('preferences', 'basic')).not.toThrow();
+
+      expect(fixture.componentInstance.preferences).toEqual(before);
+      expect(warn).toHaveBeenCalledTimes(1);
+      warn.mockRestore();
+    });
+
+    it('announces each change the author makes, and neither its own start nor a host assignment', async () => {
+      const fixture = create();
+      const element = fixture.componentInstance;
+      const heard: CedPreferences[] = [];
+      element.preferencesChange.subscribe((preferences) => heard.push(preferences));
+
+      await fixture.whenStable();
+      expect(heard).toEqual([]);
+
+      fixture.componentRef.setInput('preferences', { showElements: false });
+      await fixture.whenStable();
+      expect(heard).toEqual([]);
+
+      service.updatePreference('showRequired', false);
+      await fixture.whenStable();
+      expect(heard).toHaveLength(1);
+      expect(heard[0]).toEqual(element.preferences);
+      expect(heard[0]).toMatchObject({ showElements: false, showRequired: false });
+
+      // The preset dialog writes the definitions directly.
+      service.presetDefinitions.update((presets) => ({ ...presets, basic: { ...presets.basic, showElements: true } }));
+      await fixture.whenStable();
+      expect(heard).toHaveLength(2);
+      expect(heard[1].presets.basic.showElements).toBe(true);
+
+      service.applyPreset('semantic');
+      await fixture.whenStable();
+      expect(heard).toHaveLength(3);
+      expect(service.getActivePreset()).toBe('semantic');
+    });
+
+    it('announces a copy, so a listener cannot change the state the designer holds', async () => {
+      const fixture = create();
+      const element = fixture.componentInstance;
+      let heard = 0;
+      element.preferencesChange.subscribe((preferences) => {
+        heard += 1;
+        preferences.showRequired = true;
+        preferences.hiddenFieldTypes.push('text');
+      });
+
+      service.updatePreference('showRequired', false);
+      await fixture.whenStable();
+
+      expect(heard).toBe(1);
+      expect(element.preferences).toMatchObject({ showRequired: false, hiddenFieldTypes: [] });
+      // The listener's edit is not a change of the author's, so nothing more is announced.
+      await fixture.whenStable();
+      expect(heard).toBe(1);
+    });
+
+    it('keeps each element to its own preferences and its own announcements', async () => {
+      const first = create();
+      const second = create();
+      const heard: CedPreferences[] = [];
+      second.componentInstance.preferencesChange.subscribe((preferences) => heard.push(preferences));
+
+      first.componentInstance.service.updatePreference('showElements', false);
+      await first.whenStable();
+      await second.whenStable();
+
+      expect(first.componentInstance.preferences.showElements).toBe(false);
+      expect(second.componentInstance.preferences.showElements).toBe(true);
+      expect(heard).toEqual([]);
     });
   });
 

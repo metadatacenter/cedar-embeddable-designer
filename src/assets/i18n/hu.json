@@ -617,10 +617,6 @@
       "allowMultiple": {
         "label": "A „Több érték engedélyezése” jelölőnégyzet megjelenítése",
         "help": "A több érték kapcsolójának megjelenítése a mezőknél"
-      },
-      "defaultValue": {
-        "label": "Az „Alapértelmezett érték” mező megjelenítése",
-        "help": "Az alapértelmezett érték beviteli mezőjének megjelenítése a mezőknél"
       }
     },
     "features": {

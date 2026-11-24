@@ -34,14 +34,17 @@
             <div class="settings-fields configuration-fields">
               <label data-setting="display"
                 >{{ 'settings.shownName' | translate
-                }}<input
+                }}<textarea
+                  appWrappingName
+                  rows="1"
                   spellcheck="false"
                   autocomplete="off"
                   name="shownName"
                   [ngModel]="shownName"
                   (ngModelChange)="rename($event)"
                   (blur)="service.touchName(field.id)"
-              /></label>
+                ></textarea>
+              </label>
               <label class="configuration-wide"
                 >{{ 'settings.shownDescription' | translate
                 }}<input

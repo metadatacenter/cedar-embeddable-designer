@@ -220,7 +220,6 @@ export interface Field {
 export interface UserPreferences {
   showRequired: boolean;
   showAllowMultiple: boolean;
-  showDefaultValue: boolean;
   showElements: boolean;
   fieldSelectionStyle: 'modal' | 'sidebar';
   visibleFieldTypes: Record<string, boolean>;
@@ -229,7 +228,6 @@ export interface UserPreferences {
 export interface PresetDefinition {
   showRequired: boolean;
   showAllowMultiple: boolean;
-  showDefaultValue: boolean;
   showElements: boolean;
   hiddenFieldTypes: string[];
 }

@@ -84,6 +84,17 @@ describe('TerminologyService', () => {
       expect(url.searchParams.has('ontologies')).toBe(false);
     });
 
+    it('asks for its page by limit and offset, never by page number', async () => {
+      respondWith({ collection: [] });
+      await service.search('cancer', 'classes,values');
+
+      // The endpoint refuses `page`, `pageSize` and `page_size` with 400.
+      const url = new URL(calls[0]);
+      expect(url.searchParams.get('limit')).toBe('50');
+      expect(url.searchParams.get('offset')).toBe('0');
+      for (const legacy of ['page', 'pageSize', 'page_size']) expect(url.searchParams.has(legacy)).toBe(false);
+    });
+
     it('omits the restriction when no ontologies are named', async () => {
       respondWith({ collection: [] });
       await service.search('cancer', 'classes,values');

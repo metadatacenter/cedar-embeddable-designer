@@ -99,7 +99,7 @@ async function everyTypeOnPage(page: Page): Promise<string[]> {
     // This fixture measures every card, not pointer targeting during the previous
     // card's smooth scroll. Keyboard activation keeps setup independent of that motion.
     await designer.locator('app-field-type-picker').getByRole('button', { name: label, exact: true }).press('Enter');
-    const name = designer.locator('input[aria-label="Enter field name"]:focus');
+    const name = designer.locator('[aria-label="Enter field name"]:focus');
     await name.fill(label);
     // Finish name validation before opening the next palette. Otherwise its deferred
     // blur update can move the next palette button during a pointer activation.

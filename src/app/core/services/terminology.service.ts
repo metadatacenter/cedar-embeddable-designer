@@ -140,8 +140,8 @@ export class TerminologyService {
     const url = new URL(this.searchUrl);
     url.searchParams.set('q', query);
     url.searchParams.set('scope', scope);
-    url.searchParams.set('page', '1');
-    url.searchParams.set('page_size', '50');
+    url.searchParams.set('limit', '50');
+    url.searchParams.set('offset', '0');
     if (sources.length > 0) {
       /*
        * `sources`, not `ontologies`. The endpoint takes a comma-separated list of

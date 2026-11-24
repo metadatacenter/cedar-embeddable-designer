@@ -277,7 +277,17 @@ test('CED identifies its build beside the logo', async ({ page }) => {
   expect(nameBox.y).toBeGreaterThanOrEqual(logoBox.y);
   expect(versionBox.y + versionBox.height).toBeLessThanOrEqual(logoBox.y + logoBox.height);
   expect(nameBox.y - logoBox.y).toBeCloseTo(logoBox.y + logoBox.height - versionBox.y - versionBox.height, 0);
-  expect(versionBox.width).toBeLessThanOrEqual(72);
+  for (const width of [1280, 768, 375]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect
+      .poll(() =>
+        version.evaluate(
+          (element) =>
+            element.scrollWidth <= element.clientWidth + 1 && element.scrollHeight <= element.clientHeight + 1,
+        ),
+      )
+      .toBe(true);
+  }
 });
 
 for (const width of [1440, 1024, 640]) {
@@ -323,7 +333,9 @@ test('template identity keeps the compact authoring header layout', async ({ pag
   const designer = await openDesigner(page);
   await designer.getByRole('textbox', { name: 'Template name', exact: true }).fill('Named template');
   const header = designer.locator('app-container-editor > .template-header-card').first();
-  const inputs = header.locator('.template-header-row > .template-field-group input');
+  const inputs = header.locator(
+    '.template-header-row > .template-field-group :is(.template-input--name, .template-input--fact)',
+  );
   const boxes = await inputs.evaluateAll((nodes) =>
     nodes.map((node) => {
       const box = node.getBoundingClientRect();
@@ -338,7 +350,7 @@ test('template identity keeps the compact authoring header layout', async ({ pag
   await expect(header.locator('.template-header-card__icon')).toBeVisible();
   await expect(header).toHaveCSS('border-top-width', '1px');
   expect((await header.boundingBox())!.height).toBeLessThanOrEqual(140);
-  await expect(header.locator('textarea.template-input')).toHaveCSS('resize', 'none');
+  await expect(header.locator('.template-input--description')).toHaveCSS('resize', 'none');
 });
 
 for (const width of [1280, 375]) {

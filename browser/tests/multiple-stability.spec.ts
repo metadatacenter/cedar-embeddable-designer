@@ -32,7 +32,7 @@ for (const width of [1280, 375]) {
             [
               '.field-header',
               '.field-heading',
-              '.field-heading > input',
+              '.field-heading > .field-name',
               '.field-type-icon',
               '.field-summary',
               '.field-actions',
@@ -46,7 +46,7 @@ for (const width of [1280, 375]) {
       await checkbox.check();
       await expect(card.getByLabel('Occurrence range')).toBeVisible();
       const nameLineHeight = await card
-        .locator('.field-heading > input')
+        .locator('.field-heading > .field-name')
         .evaluate((el) => getComputedStyle(el).lineHeight);
       await expect(card.getByLabel('Occurrence range')).toHaveCSS('line-height', nameLineHeight);
       const after = await measure();

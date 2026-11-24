@@ -81,7 +81,7 @@ it('edits identifier and key while preserving a hidden preferred label', async (
   openSettings(fixture);
   await fixture.whenStable();
   const edit = async (name: string, value: string) => {
-    const input = fixture.nativeElement.querySelector(`input[name="${name}"]`) as HTMLInputElement;
+    const input = fixture.nativeElement.querySelector(`[name="${name}"]`) as HTMLInputElement;
     input.value = value;
     input.dispatchEvent(new Event('input'));
     openSettings(fixture);
@@ -231,7 +231,7 @@ describe('a field description edited from Configuration and from Presentation', 
     await fixture.whenStable();
   };
   const input = (tab: string, name: string) =>
-    fixture.nativeElement.querySelector(`[role="tabpanel"][id$="-${tab}"] input[name="${name}"]`) as HTMLInputElement;
+    fixture.nativeElement.querySelector(`[role="tabpanel"][id$="-${tab}"] [name="${name}"]`) as HTMLInputElement;
   const type = async (control: HTMLInputElement, value: string) => {
     control.value = value;
     control.dispatchEvent(new Event('input'));

@@ -26,10 +26,11 @@
             keeps the placeholder's text as its name, and its description says which of the field's two names it edits.
           -->
           <span class="field-name-caption">{{ 'fieldCard.name' | translate }}</span>
-          <input
+          <textarea
+            appWrappingName
+            rows="1"
             spellcheck="false"
             autocomplete="off"
-            type="text"
             [appArtifactName]="field.id"
             [attr.aria-invalid]="!!service.nameError(field.id, field.name, 'field')"
             [attr.aria-describedby]="service.nameError(field.id, field.name, 'field') ? 'name-error-' + field.id : null"
@@ -41,7 +42,7 @@
             [placeholder]="'fieldCard.namePlaceholder' | translate"
             [attr.aria-label]="'fieldCard.namePlaceholder' | translate"
             [attr.aria-description]="'settings.shownName' | translate"
-          />
+          ></textarea>
           @if (field.status === 'required' && allowsStatus(field.type)) {
             <sup class="required-mark" role="img" [attr.aria-label]="'common.required' | translate">*</sup>
           }

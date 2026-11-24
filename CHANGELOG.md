@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2026-11-24
+
+Aligns with `cedar-model-typescript-library@1.0.29`.
+
+### Added
+
+- A `preferences` property and a `preferencesChange` event on `<cedar-embeddable-designer>`, with the `CedPreferences`, `CedPreferencesInput`, `CedPreset` and `CedPresetDefinition` types. A host can store an author's preferences and preset definitions and supply them to a later element. They previously lasted only as long as the element that held them.
+
+### Changed
+
+- Searches terms by limit and offset rather than by page number, which the terminology server is withdrawing.
+- Wraps long template, element and field names in their name controls rather than cutting them off, and shows the complete build version beside the CEDAR mark.
+- Keeps the space for the insertion actions above a selected card on touch devices, so dismissing them or opening a picker does not move the card.
+- Keeps the outline's reorder controls together at the minimum pane width, and keeps the focus ring of a disabled boundary action visible.
+
+### Removed
+
+- The "Show Default Value field" preference, from Preferences and from Define Presets. No control has depended on it since default values joined a field's constraints, so every preset already showed them.
+
 ## [0.1.3] - 2026-11-19
 
 Aligns with `cedar-model-typescript-library@1.0.29`.
