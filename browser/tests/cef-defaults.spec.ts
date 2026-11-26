@@ -238,8 +238,8 @@ test('controlled default uses the term picker and verifies field membership', as
     expect(route.request().method()).toBe('POST');
     // The default editor has no declared default; CEF's specification summary retains it.
     expect([
-      { iri, valueConstraints: expectedConstraints },
-      { iri, valueConstraints: { ...expectedConstraints, defaultValue } },
+      { termIri: iri, valueConstraints: expectedConstraints },
+      { termIri: iri, valueConstraints: { ...expectedConstraints, defaultValue } },
     ]).toContainEqual(body);
     await route.fulfill({ json: { iri, status: 'passed', code: 'controlledTermVerified', message: 'Within scope.' } });
   });
@@ -485,7 +485,7 @@ test('the real picker selects a default within the field vocabulary', { tag: NEE
   let browsedPinnedRelease = false;
   await page.route('**/search/hierarchy*', (route) => {
     const query = new URL(route.request().url()).searchParams;
-    expect(query.get('versionId')).toBe('pinned-release');
+    expect(query.get('version_id')).toBe('pinned-release');
     browsedPinnedRelease = true;
     return route.fulfill({
       json: {
@@ -503,8 +503,8 @@ test('the real picker selects a default within the field vocabulary', { tag: NEE
   await page.route('**/fake-terminology/bioportal/validate-term', (route) => {
     expect(route.request().method()).toBe('POST');
     expect([
-      { iri, valueConstraints: expectedConstraints },
-      { iri, valueConstraints: { ...expectedConstraints, defaultValue } },
+      { termIri: iri, valueConstraints: expectedConstraints },
+      { termIri: iri, valueConstraints: { ...expectedConstraints, defaultValue } },
     ]).toContainEqual(route.request().postDataJSON());
     return route.fulfill({ json: { iri, status: 'passed', code: 'controlledTermVerified', message: 'Within scope.' } });
   });

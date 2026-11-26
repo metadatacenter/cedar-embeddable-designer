@@ -205,7 +205,7 @@ test('the real picker preserves saved actions and explicitly clears an invalid d
     // default as a specification fact. Both carry every membership constraint.
     expect(
       (loaded ? [loadedConstraints, summaryConstraints] : [editedConstraints]).map((valueConstraints) => ({
-        iri: 'urn:cancer',
+        termIri: 'urn:cancer',
         valueConstraints,
       })),
     ).toContainEqual(request);

@@ -171,7 +171,7 @@ async function rejectEveryTerm(page: Page): Promise<void> {
     // The answer names the term it was asked about, as the terminology server's does.
     route.fulfill({
       json: {
-        iri: route.request().postDataJSON().iri,
+        iri: route.request().postDataJSON().termIri,
         status: 'failed',
         code: 'controlledTermMembership',
         message: 'Outside.',

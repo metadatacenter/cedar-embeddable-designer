@@ -109,7 +109,7 @@ export class TerminologyService {
       return { iri, status: 'notChecked', code: 'semanticNotChecked', message: english('terminology.notConfigured') };
     return verifySemantic(
       `${base}bioportal/validate-term`,
-      { iri, valueConstraints: field['_valueConstraints'] ?? {} },
+      { termIri: iri, valueConstraints: field['_valueConstraints'] ?? {} },
       iri,
       signal,
     );
