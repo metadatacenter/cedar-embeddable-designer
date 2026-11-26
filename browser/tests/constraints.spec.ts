@@ -203,11 +203,12 @@ test('the real picker preserves saved actions and explicitly clears an invalid d
     expect(route.request().method()).toBe('POST');
     // CED checks the default separately, while CEF's summary retains the declared
     // default as a specification fact. Both carry every membership constraint.
+    // Released CEF uses iri; current sources use termIri. Accept exactly one spelling,
+    // matching the server's compatibility contract while hosts migrate.
     expect(
-      (loaded ? [loadedConstraints, summaryConstraints] : [editedConstraints]).map((valueConstraints) => ({
-        termIri: 'urn:cancer',
-        valueConstraints,
-      })),
+      (loaded ? [loadedConstraints, summaryConstraints] : [editedConstraints]).flatMap((valueConstraints) =>
+        ['termIri', 'iri'].map((key) => ({ [key]: 'urn:cancer', valueConstraints })),
+      ),
     ).toContainEqual(request);
     if (loaded) checkedLoaded = true;
     else checkedEdited = true;
