@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2026-11-27
+
+Aligns with `cedar-model-typescript-library@1.0.29`.
+
+### Changed
+
+- Lets a keyboard user scroll an empty import selection, and keeps focus on a moved item after reordering.
+- Sends terminology requests with the terminology server's canonical parameter names.
+
+### Fixed
+
+- Keeps the wide layout while the host is first laid out, rather than briefly removing the Overview and narrowing the canvas when the host reports a zero width.
+- Looks up no repository versions for a new template or element that was never saved, including after draft recovery.
+
 ## [0.1.4] - 2026-11-24
 
 Aligns with `cedar-model-typescript-library@1.0.29`.
