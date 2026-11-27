@@ -141,7 +141,7 @@ jobs:
       component: ced
       baseline-ref: ${{ github.event.pull_request.base.sha || github.event.before }}
       candidate-artifact: ced-performance-bundle
-      harness-ref: d8cb951aa33c57a09f6a88b0355ccb980e4a0059
+      harness-ref: 43de591e2d07acbba2ee0445addb900759d180b3
 
   cef-bundles:
     name: Build real CEE, CEF and CETP integration bundles
