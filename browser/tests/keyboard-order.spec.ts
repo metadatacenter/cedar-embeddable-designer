@@ -438,8 +438,9 @@ test('the child picker opens on its search box', async ({ page }) => {
   expect(await tabSequence(page, 3, 'Shift+Tab')).toEqual([
     'button "Search"',
     'searchbox "Search fields and elements"',
-    'button "Close"',
+    'region "Selected items"',
   ]);
+  expect(await tabSequence(page, 1, 'Shift+Tab')).toEqual(['button "Close"']);
 });
 
 /** A controlled-terms field named Disease, its settings open, with the stub picker loaded. */

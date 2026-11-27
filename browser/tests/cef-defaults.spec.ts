@@ -237,10 +237,14 @@ test('controlled default uses the term picker and verifies field membership', as
     const body = route.request().postDataJSON();
     expect(route.request().method()).toBe('POST');
     // The default editor has no declared default; CEF's specification summary retains it.
-    expect([
-      { iri, valueConstraints: expectedConstraints },
-      { iri, valueConstraints: { ...expectedConstraints, defaultValue } },
-    ]).toContainEqual(body);
+    // The pinned released CEF sends iri; current sources send termIri. Both are supported
+    // by the terminology server until released hosts migrate, with exactly one spelling.
+    expect(
+      ['termIri', 'iri'].flatMap((key) => [
+        { [key]: iri, valueConstraints: expectedConstraints },
+        { [key]: iri, valueConstraints: { ...expectedConstraints, defaultValue } },
+      ]),
+    ).toContainEqual(body);
     await route.fulfill({ json: { iri, status: 'passed', code: 'controlledTermVerified', message: 'Within scope.' } });
   });
   const control = await openField(
@@ -485,7 +489,9 @@ test('the real picker selects a default within the field vocabulary', { tag: NEE
   let browsedPinnedRelease = false;
   await page.route('**/search/hierarchy*', (route) => {
     const query = new URL(route.request().url()).searchParams;
-    expect(query.get('versionId')).toBe('pinned-release');
+    // The integration gate also exercises the supported released picker.
+    expect(['version_id', 'versionId'].filter((key) => query.has(key))).toHaveLength(1);
+    expect(query.get('version_id') ?? query.get('versionId')).toBe('pinned-release');
     browsedPinnedRelease = true;
     return route.fulfill({
       json: {
@@ -502,10 +508,14 @@ test('the real picker selects a default within the field vocabulary', { tag: NEE
   const defaultValue = { termUri: iri, 'rdfs:label': 'cancer' };
   await page.route('**/fake-terminology/bioportal/validate-term', (route) => {
     expect(route.request().method()).toBe('POST');
-    expect([
-      { iri, valueConstraints: expectedConstraints },
-      { iri, valueConstraints: { ...expectedConstraints, defaultValue } },
-    ]).toContainEqual(route.request().postDataJSON());
+    // The pinned released CEF sends iri; current sources send termIri. Both are supported
+    // by the terminology server until released hosts migrate, with exactly one spelling.
+    expect(
+      ['termIri', 'iri'].flatMap((key) => [
+        { [key]: iri, valueConstraints: expectedConstraints },
+        { [key]: iri, valueConstraints: { ...expectedConstraints, defaultValue } },
+      ]),
+    ).toContainEqual(route.request().postDataJSON());
     return route.fulfill({ json: { iri, status: 'passed', code: 'controlledTermVerified', message: 'Within scope.' } });
   });
   const control = await openField(page, 'controlledTerms', {

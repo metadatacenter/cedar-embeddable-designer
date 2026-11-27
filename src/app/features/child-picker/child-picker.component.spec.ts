@@ -39,6 +39,44 @@ function press(target: HTMLElement, key: string, init: KeyboardEventInit = {}): 
   return event;
 }
 
+it('scrolls the selected region with unmodified arrows without taking keys from its contents or the browser', () => {
+  const { fixture } = picker();
+  const region: HTMLElement = fixture.nativeElement.querySelector('.table-scroll');
+  Object.defineProperties(region, {
+    clientWidth: { configurable: true, value: 100 },
+    scrollWidth: { configurable: true, value: 300 },
+    clientHeight: { configurable: true, value: 100 },
+    scrollHeight: { configurable: true, value: 200 },
+  });
+  const scroll = vi.fn();
+  region.scrollBy = scroll;
+  for (const [key, left, top] of [
+    ['ArrowRight', 40, 0],
+    ['ArrowLeft', -40, 0],
+    ['ArrowDown', 0, 40],
+    ['ArrowUp', 0, -40],
+  ] as const) {
+    expect(press(region, key).defaultPrevented).toBe(true);
+    expect(scroll).toHaveBeenLastCalledWith({ left, top, behavior: 'instant' });
+  }
+  scroll.mockClear();
+  for (const modifier of [
+    { altKey: true },
+    { ctrlKey: true },
+    { metaKey: true },
+    { shiftKey: true },
+    { isComposing: true },
+  ])
+    expect(press(region, 'ArrowRight', modifier).defaultPrevented).toBe(false);
+  expect(press(region.querySelector('table')!, 'ArrowRight').defaultPrevented).toBe(false);
+  expect(press(region, 'Enter').defaultPrevented).toBe(false);
+  Object.defineProperty(region, 'scrollWidth', { value: 100 });
+  Object.defineProperty(region, 'scrollHeight', { value: 100 });
+  expect(press(region, 'ArrowRight').defaultPrevented).toBe(false);
+  expect(press(region, 'ArrowDown').defaultPrevented).toBe(false);
+  expect(scroll).not.toHaveBeenCalled();
+});
+
 it('draws the results as a grid whose rows carry their selected state and keep their names', () => {
   const { fixture, component } = picker();
   const grid: HTMLTableElement = rows(fixture)[0].closest('table')!;

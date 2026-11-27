@@ -13,6 +13,63 @@ import {
   tabKey,
 } from './support';
 import type { CedarEmbeddableDesignerElement, CedJsonObject } from '../../src/app/ced-public-api';
+import { expectAccessible } from './accessibility-gate';
+
+test('the measured import heading still rejects low contrast and partially covered text', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 900 });
+  const dialog = await openPickerWithThreeResults(page);
+  const heading = dialog.locator('#child-picker-title');
+  await heading.evaluate((node) => {
+    node.style.color = 'rgb(200, 200, 200)';
+  });
+  await expect(expectAccessible(page, 'low contrast heading')).rejects.toThrow(/color-contrast/);
+  await heading.evaluate((node) => {
+    node.style.removeProperty('color');
+    const text = [...node.childNodes].find((child) => child.nodeType === Node.TEXT_NODE && child.textContent?.trim())!;
+    const range = document.createRange();
+    range.setStart(text, 0);
+    range.setEnd(text, 1);
+    const box = range.getBoundingClientRect();
+    const cover = document.createElement('div');
+    cover.style.cssText = `position:fixed;left:${box.x}px;top:${box.y}px;width:${box.width}px;height:${box.height}px;background:white;z-index:9999`;
+    node.closest('dialog')!.append(cover);
+  });
+  await expect(expectAccessible(page, 'partly covered heading')).rejects.toThrow(/color-contrast/);
+});
+
+for (const width of [1440, 375])
+  test(`at ${width}: the empty selection can be reached and scrolled by keyboard without changing populated reorder controls`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const dialog = await openPickerWithThreeResults(page);
+    const selection = dialog.getByRole('region', { name: 'Selected items', exact: true });
+    const search = dialog.getByRole('searchbox');
+    await expectAccessible(page, 'keyboard-scrollable empty child selection');
+    await search.focus();
+    await page.keyboard.press(tabKey(page, 'Shift+Tab'));
+    await expect(selection).toBeFocused();
+    if (width === 375) {
+      expect(await selection.evaluate((node) => node.scrollWidth > node.clientWidth)).toBe(true);
+      await page.keyboard.press('ArrowRight');
+      await expect.poll(() => selection.evaluate((node) => node.scrollLeft)).toBeGreaterThan(0);
+    }
+    for (const name of ['Alpha', 'Beta'])
+      await dialog.getByRole('row', { name: `Select ${name}`, exact: true }).click();
+    await expect(selection).not.toHaveAttribute('tabindex');
+    const reorder = selection.getByRole('button', { name: 'Reorder Beta', exact: true });
+    await reorder.focus();
+    await reorder.press('ArrowUp');
+    await expect(selection.locator('tbody .name-cell')).toHaveText(['Beta', 'Alpha']);
+    await expect(reorder).toBeFocused();
+    for (const name of ['Alpha', 'Beta'])
+      await selection.getByRole('button', { name: `Remove ${name}`, exact: true }).click();
+    await expect(selection.locator('tbody .name-cell')).toHaveCount(0);
+    await expect(selection).toHaveAttribute('tabindex', '0');
+    await search.focus();
+    await page.keyboard.press(tabKey(page, 'Shift+Tab'));
+    await expect(selection).toBeFocused();
+  });
 
 for (const width of [1280, 375])
   test(`at ${width}: stages, removes and cancels selections, then inserts first-class fields through the host contract`, async ({

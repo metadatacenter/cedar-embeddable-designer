@@ -8,7 +8,13 @@
   <div class="selection-heading">
     <h3>{{ 'childPicker.selectedHeading' | translate: { count: selected().length } }}</h3>
   </div>
-  <div class="table-scroll">
+  <div
+    class="table-scroll"
+    [attr.tabindex]="!selected().length || saving() ? 0 : null"
+    role="region"
+    [attr.aria-label]="'childPicker.selectedTable' | translate"
+    (keydown)="scrollSelection($event)"
+  >
     <table [attr.aria-label]="'childPicker.selectedTable' | translate">
       <thead>
         <tr>

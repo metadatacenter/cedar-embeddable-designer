@@ -429,13 +429,31 @@ describe('ChildVersionService', () => {
     expect(opened).toEqual([iri('v120')]);
   });
 
-  it('looks for no versions of a document that was never stored', () => {
-    const { source } = repository({ newestPublished: true, readable: true, lookupFails: false, verdict: 'none' });
-    service.childSource.set(source);
-    TestBed.tick();
-    versions.refreshDocument();
-    expect(versions.documentLookup()).toEqual({ status: 'unavailable' });
-  });
+  it.each(['template', 'element'] as const)(
+    'looks for no versions of a new %s, including after draft recovery',
+    (kind) => {
+      service.resetTemplate(kind, false);
+      const { source } = repository({ newestPublished: true, readable: true, lookupFails: false, verdict: 'none' });
+      service.childSource.set(source);
+      TestBed.tick();
+      const lookup = vi.spyOn(source, 'versions');
+      versions.refreshDocument();
+      expect(versions.documentLookup()).toEqual({ status: 'unavailable' });
+      expect(lookup).not.toHaveBeenCalled();
+      const identifier = service.templateJson()['@id'];
+      expect(identifier).toContain(kind === 'element' ? '/template-elements/' : '/templates/');
+      service.templateName.set('Unsaved specimen');
+      expect(service.templateJson()['@id']).toBe(identifier);
+      const draft = service.captureDraft();
+      service.resetTemplate(kind, false);
+      service.restoreDraft(draft);
+      TestBed.tick();
+      versions.refreshDocument();
+      expect(versions.documentLookup()).toEqual({ status: 'unavailable' });
+      expect(lookup).not.toHaveBeenCalled();
+      expect(service.templateJson()['@id']).toBe(identifier);
+    },
+  );
 
   it('looks up the versions of the document itself', async () => {
     const { source } = repository({ newestPublished: true, readable: true, lookupFails: false, verdict: 'none' });

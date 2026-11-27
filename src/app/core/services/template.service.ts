@@ -1011,10 +1011,11 @@ export class TemplateService {
 
   resetTemplate(kind: 'template' | 'element' = 'template', withStarterFields = true) {
     this.loadError.set(null);
-    this.mintedIdentifier.set(newTemplateIdentifier());
     const document = newContainer(kind);
+    // Keep a stable export identity without treating a new root element as already stored.
+    this.mintedIdentifier.set(document.identifier);
+    document.identifier = '';
     if (kind === 'template') {
-      document.identifier = '';
       document.children = withStarterFields ? containerFromFlat({ ...document, fields: starterFields() }).children : [];
     }
     this.validation.reset();

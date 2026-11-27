@@ -113,7 +113,7 @@ test('a chosen default term is named', async ({ page }) => {
   // A verified term brings no warning, which the validation summary would announce after the name.
   await page.route('**/fake-terminology/bioportal/validate-term', (route) =>
     route.fulfill({
-      json: { iri: route.request().postDataJSON().iri, status: 'passed', code: 'controlledTermVerified', message: '' },
+      json: { iri: route.request().postDataJSON().termIri, status: 'passed', code: 'controlledTermVerified', message: '' },
     }),
   );
   await pickConstraint(page, field);

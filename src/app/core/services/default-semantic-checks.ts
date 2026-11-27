@@ -80,7 +80,7 @@ export class DefaultSemanticChecks {
         if (controlled) {
           try {
             const artifact = fieldToJson({ ...field, defaultValue: { kind: 'none' } });
-            body = { iri: value.iri, valueConstraints: artifact['_valueConstraints'] ?? {} };
+            body = { termIri: value.iri, valueConstraints: artifact['_valueConstraints'] ?? {} };
           } catch {
             continue;
           } // The local structural report owns an unreadable definition.

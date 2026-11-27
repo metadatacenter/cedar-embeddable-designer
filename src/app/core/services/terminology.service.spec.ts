@@ -206,7 +206,7 @@ describe('TerminologyService', () => {
         );
       }) as typeof fetch;
       await expect(service.allowsDefault(field, 'urn:chosen', 'a stale label')).resolves.toBe(true);
-      expect(bodies).toEqual([{ iri: 'urn:chosen', valueConstraints: field._valueConstraints }]);
+      expect(bodies).toEqual([{ termIri: 'urn:chosen', valueConstraints: field._valueConstraints }]);
     });
 
     it('distinguishes failed membership from unavailable and omitted verification', async () => {
