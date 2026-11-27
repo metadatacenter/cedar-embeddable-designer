@@ -109,6 +109,19 @@ describe('phone-sized designer hosts', () => {
     expect(root.activeElement).toBe(element('.preview-toggle'));
   });
 
+  it('keeps its layout while the host measures zero before it is laid out', async () => {
+    await resize(1440);
+    const overview = element('.overview-panel');
+    expect(overview.classList.contains('overview-panel--overlay')).toBe(false);
+
+    await resize(0);
+    expect(element('.overview-panel')).toBe(overview);
+    expect(element('.main-content').classList.contains('preview-only')).toBe(false);
+
+    await resize(375);
+    expect(root.querySelector('.overview-panel')).toBeNull();
+  });
+
   it('moves focus out of an editor covered by a resized host, while wider hosts retain both panes', async () => {
     await resize(900);
     fixture.componentInstance.service.showPreview.set(true);

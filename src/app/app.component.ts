@@ -253,7 +253,11 @@ export class AppComponent {
         this.previewToggle()?.nativeElement.focus();
     });
     afterNextRender(() => {
-      const observer = new ResizeObserver(([entry]) => this.availableWidth.set(entry.contentRect.width));
+      // A host not yet laid out, or hidden, measures zero. That width is unknown rather than narrow:
+      // treating it as narrow builds the phone layout and rebuilds the wide one moments later.
+      const observer = new ResizeObserver(([entry]) => {
+        if (entry.contentRect.width > 0) this.availableWidth.set(entry.contentRect.width);
+      });
       observer.observe(this.host.nativeElement);
       const workspace = this.host.nativeElement.querySelector('.designer-workspace');
       const scroller = this.host.nativeElement.querySelector('.designer-scroll');
