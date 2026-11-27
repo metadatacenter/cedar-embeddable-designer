@@ -45,10 +45,19 @@ interface Settled {
    * is at least 24 by 24, or on criterion 2.5.8's spacing exception: a 24px circle centred on it
    * meets no other target and no other undersized target's circle.
    */
-  check: { contrast: number } | { equivalent?: { target: string; within: string } };
+  check: { contrast: number; unobscuredText?: boolean } | { equivalent?: { target: string; within: string } };
 }
 
 const SETTLED: Settled[] = [
+  {
+    rule: 'color-contrast',
+    target: '#child-picker-title',
+    measured: 'On 2026-11-27 at 375px: rgb(23, 63, 62) on white, 11.6:1; both text lines are unobscured.',
+    passes:
+      'Axe cannot resolve the wrapped flex heading beside its decorative icon. Every scan measures ' +
+      'the actual contrast and hit-tests each text character; obscured or off-screen text still fails.',
+    check: { contrast: 4.5, unobscuredText: true },
+  },
   {
     rule: 'color-contrast',
     target: '#host-heading',
@@ -242,6 +251,30 @@ async function unsettled(page: Page, results: Result[]): Promise<string[]> {
       /** Why `element`, matching `entry`, fails the measurement it was settled on, or null when it passes. */
       const fails = (element: Element, entry: (typeof settled)[number]): string | null => {
         if ('contrast' in entry.check) {
+          if (entry.check.unobscuredText) {
+            const root = element.getRootNode() as Document | ShadowRoot;
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+            let node: Node | null;
+            while ((node = walker.nextNode())) {
+              for (let index = 0; index < (node.textContent?.length ?? 0); index++) {
+                if (!node.textContent![index].trim()) continue;
+                const range = document.createRange();
+                range.setStart(node, index);
+                range.setEnd(node, index + 1);
+                const box = range.getBoundingClientRect();
+                if (
+                  !box.width ||
+                  !box.height ||
+                  box.left < 0 ||
+                  box.top < 0 ||
+                  box.right > innerWidth ||
+                  box.bottom > innerHeight ||
+                  root.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2) !== node.parentElement
+                )
+                  return 'Heading text is obscured or outside the viewport';
+              }
+            }
+          }
           const fill = behind(element);
           const text = luminance(over(parse(getComputedStyle(element).color), fill));
           const ground = luminance(fill);

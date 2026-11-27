@@ -148,7 +148,7 @@ export class ChildPickerComponent implements OnDestroy {
    * Move up and Move down move a chosen row one place and say where it went. At either end the button
    * is only marked disabled, so it keeps focus, and a click on it does nothing.
    */
-  moveByClick(event: MouseEvent, index: number, offset: -1 | 1): void {
+  moveByClick(event: MouseEvent | KeyboardEvent, index: number, offset: -1 | 1): void {
     const button = event.currentTarget;
     if (!(button instanceof HTMLButtonElement) || button.getAttribute('aria-disabled') === 'true') return;
     const row = this.selected()[index];
@@ -173,7 +173,32 @@ export class ChildPickerComponent implements OnDestroy {
   moveWithKeyboard(event: KeyboardEvent, index: number): void {
     if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
     event.preventDefault();
-    this.move(index, index + (event.key === 'ArrowUp' ? -1 : 1));
+    this.moveByClick(event, index, event.key === 'ArrowUp' ? -1 : 1);
+  }
+  /** Safari does not reliably scroll a programmatically focused region inside a shadow dialog. */
+  scrollSelection(event: KeyboardEvent): void {
+    const region = event.currentTarget;
+    if (
+      !(region instanceof HTMLElement) ||
+      event.target !== region ||
+      event.defaultPrevented ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      event.isComposing
+    )
+      return;
+    const horizontal = event.key === 'ArrowLeft' || event.key === 'ArrowRight';
+    const vertical = event.key === 'ArrowUp' || event.key === 'ArrowDown';
+    if (
+      (horizontal && region.scrollWidth > region.clientWidth) ||
+      (vertical && region.scrollHeight > region.clientHeight)
+    ) {
+      event.preventDefault();
+      const step = event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -40 : 40;
+      region.scrollBy({ left: horizontal ? step : 0, top: vertical ? step : 0, behavior: 'instant' });
+    }
   }
   close(): void {
     this.dialog().nativeElement.close();
